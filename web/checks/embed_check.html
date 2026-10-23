@@ -1,0 +1,108 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>LSD embed check</title>
+<iframe id="app" src="../index.html?embed&nolive&nostatic" width="540" height="960" style="border:0"></iframe>
+<script type="module">
+// Drives ?embed in the real page (driven by embed_check.mjs): chrome hidden, no radio element playing, PCM
+// pushed in with LSD.feed() reaches the analysis and the beat clock, options and pause/resume work.
+// POSTs {results:[{name, ok, detail}]} to /report.
+const app = document.getElementById('app');
+const results = [];
+const check = (name, ok, detail = '') => results.push({ name, ok: !!ok, detail: String(detail) });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const post = (o) => fetch('/report', { method: 'POST', body: JSON.stringify(o) });
+try {
+  await new Promise((r) => app.addEventListener('load', r));
+  const w = app.contentWindow, d = w.document;
+  for (let i = 0; i < 100 && !(w.LSD && w.LSD.feed); i++) await sleep(100);
+  const errors = [];
+  w.addEventListener('error', (e) => errors.push(e.message));
+  const vis = (id) => { const el = d.getElementById(id); return el && getComputedStyle(el).display !== 'none'; };
+
+  check('Embed class on the body', d.body.classList.contains('embed'));
+  for (let i = 0; i < 100 && !w.LSD.feedReady(); i++) await sleep(100);
+  check('The TV powers itself on and the feed node is ready', w.LSD.powerState.on && w.LSD.feedReady());
+  check('No TV controls, OSD, menu or nameplate', !vis('tv-controls') && !vis('osd') && !vis('tv-menu') && !vis('nameplate'));
+  check('No CRT warm-up', w.LSD.powerState.warmupProgress === 1);
+  const audioEl = d.getElementById('lsdAudio');
+  check('The radio element is never started', !audioEl.getAttribute('src') && audioEl.paused);
+  check('The canvas is not interactive', getComputedStyle(d.getElementById('glCanvas')).pointerEvents === 'none');
+  check('No snow while silent', w.LSD.cvState.noSignal === false);
+
+  // 124 BPM kicks (a 50 Hz thump) at 44.1 kHz, pushed in 40 ms int16 blocks in real time, half of them as base64.
+  const SR = 44100, BPM = 124, P = 60 / BPM;
+  const block = (t0, n) => {
+    const out = new Int16Array(n);
+    for (let i = 0; i < n; i++) {
+      const t = t0 + i / SR, ph = (t % P);
+      const env = Math.exp(-ph * 14);
+      out[i] = Math.round(32767 * (0.8 * Math.sin(2 * Math.PI * (50 + 70 * Math.exp(-ph * 30)) * ph) * env + 0.05 * Math.sin(2 * Math.PI * 1800 * t)));
+    }
+    return out;
+  };
+  const b64 = (i16) => { let s = ''; const u = new Uint8Array(i16.buffer); for (let i = 0; i < u.length; i++) s += String.fromCharCode(u[i]); return btoa(s); };
+  const N = Math.round(SR * 0.04);
+  const start = performance.now();
+  let sent = 0, maxAmp = 0, maxBass = 0, locked = false, bpm = 0, fed = true;
+  while (performance.now() - start < 14000) {
+    const due = Math.floor(((performance.now() - start) / 1000) * SR / N);   // keep real-time pace
+    while (sent < due) {
+      const pcm = block((sent * N) / SR, N);
+      fed = (sent % 2 ? w.LSD.feed(b64(pcm), SR) : w.LSD.feed(pcm, SR)) && fed;
+      sent++;
+    }
+    maxAmp = Math.max(maxAmp, w.LSD.cvState.audio_amp);
+    maxBass = Math.max(maxBass, w.LSD.cvState.audio_bass);
+    locked ||= w.LSD.cvState.beatLocked;
+    bpm = w.LSD.cvState.bpm;
+    await sleep(20);
+  }
+  check('feed() accepted int16 arrays and base64', fed);
+  check('Fed audio reaches the amplitude and bass signals', maxAmp > 0.05 && maxBass > 0.05, `amp ${maxAmp.toFixed(2)} bass ${maxBass.toFixed(2)}`);
+  check('The beat clock locks to the fed tempo', locked && (Math.abs(bpm - BPM) < 2 || Math.abs(bpm * 2 - BPM) < 3), `locked=${locked} bpm=${bpm.toFixed(1)}`);
+
+  // Silence after the feed stops: the signals fall away and no snow appears.
+  await sleep(1500);
+  check('Signals fall to zero when the host stops feeding', w.LSD.cvState.audio_amp < 0.02, w.LSD.cvState.audio_amp);
+  check('Still no snow after 5 s of silence', (await sleep(3500), w.LSD.cvState.noSignal === false));
+
+  // Options
+  const o = (n, v) => w.LSD.setOption(n, v);
+  check('Unknown option is refused', o('nope', 1) === false);
+  o('reactivity', 3); check('reactivity', w.LSD.viewerState.react === 3, w.LSD.viewerState.react);
+  o('reactivity', 99); check('reactivity is clamped', w.LSD.viewerState.react === 4);
+  o('sync', 150); check('sync', w.LSD.viewerState.syncMs === 150);
+  o('quality', 'low'); check('quality low: heavy looks off, coarser picture', w.LSD.viewerState.heavyMode === 'off' && w.LSD.renderSize()[2] <= 0.7, JSON.stringify(w.LSD.renderSize()));
+  o('quality', 'auto'); check('quality auto', w.LSD.viewerState.heavyMode === 'auto');
+  o('reducedMotion', 'on'); check('reduced motion on', w.LSD.viewerState.reducedNow === true);
+  o('reducedMotion', 'off'); check('reduced motion off', w.LSD.viewerState.reducedNow === false);
+  o('live', false); check('live off is accepted without a connection', true);
+
+  // Pause / resume: frames stop, then continue
+  w.LSD.pause();
+  await sleep(300);
+  const t1 = w.LSD.cvState.totalBeats;
+  await sleep(1000);
+  const t2 = w.LSD.cvState.totalBeats;
+  check('Paused: the beat clock does not advance (no frames run)', t2 === t1, `${t1} -> ${t2}`);
+  w.LSD.resume();
+  await sleep(1000);
+  check('Resumed: frames run again', w.LSD.cvState.totalBeats > t2, `${t2} -> ${w.LSD.cvState.totalBeats}`);
+
+  // The picture is not blank
+  // Read inside the app's own rAF, after it has drawn (the drawing buffer is cleared once composited).
+  const cv = d.getElementById('glCanvas');
+  const px = await new Promise((res) => w.requestAnimationFrame(() => {
+    const tmp = document.createElement('canvas'); tmp.width = 64; tmp.height = 64;
+    const g = tmp.getContext('2d'); g.drawImage(cv, 0, 0, 64, 64);
+    res(g.getImageData(0, 0, 64, 64).data);
+  }));
+  let lit = 0;
+  for (let i = 0; i < px.length; i += 4) if (px[i] + px[i + 1] + px[i + 2] > 30) lit++;
+  check('The picture is not black', lit > 20, `${lit} lit pixels`);
+  check('No page errors', errors.length === 0, errors.join(' | '));
+  await post({ results });
+} catch (err) {
+  await post({ fatal: String(err && err.stack || err), results });
+}
+</script>

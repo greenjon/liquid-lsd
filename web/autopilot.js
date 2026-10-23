@@ -1,11 +1,14 @@
 // autopilot.js
 // 24/7 Dual-Queue Autopilot (Foreground A/B Auto-VJ + Background Auto-BG) + Live Relay Client
 
+import { embed } from './embedmode.js';
 import { parseDeckPreset, parseFxChain, parseTransition } from './preset.js';
 import { BeatFlywheel } from './beatclock.js';
 import { chainFits, chainAnswers, dominantBand } from './pairing.js';
 
 const RELAY_URL = 'wss://spaz.org/lsd-relay';
+let relayEnabled = !embed;   // embed mode starts with it off (the host app turns it on with the `live` option)
+let relaySocket = null;
 
 // Wire protocol version this client speaks; see docs/developer/web_subsystem.md.
 const PROTOCOL_VERSION = 2;
@@ -644,6 +647,7 @@ function broadcastStatus(live) {
 function connectRelay() {
   // ?nolive keeps test runs (tools/render_check.mjs) from picking up a real broadcast.
   if (new URLSearchParams(location.search).has('nolive')) return;
+  if (!relayEnabled || relaySocket) return;
   let ws;
   try {
     ws = new WebSocket(RELAY_URL);
@@ -651,6 +655,7 @@ function connectRelay() {
     console.warn('[autopilot] WebSocket unavailable:', err.message);
     return;
   }
+  relaySocket = ws;
 
   ws.addEventListener('open', () => {
     console.log('[autopilot] Connected to relay server');
@@ -663,8 +668,20 @@ function connectRelay() {
   });
 
   ws.addEventListener('close', () => {
-    setTimeout(connectRelay, 5000);
+    if (relaySocket === ws) relaySocket = null;
+    if (relayEnabled) setTimeout(connectRelay, 5000);
   });
+}
+
+/** Turns the live-broadcast connection on or off (embed mode); off also returns to the autopilot. */
+export function setRelayEnabled(on) {
+  relayEnabled = !!on;
+  if (relayEnabled) connectRelay();
+  else {
+    relaySocket?.close();
+    relaySocket = null;
+    handleRelayMessage({ type: 'broadcaster_offline' });
+  }
 }
 
 function noteClock(clock) {

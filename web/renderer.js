@@ -1,4 +1,4 @@
-import { cvState, tick } from './dsp.js';
+import { cvState, tick, suspendAudio, resumeAudio } from './dsp.js';
 import { powerState, viewerState } from './ui.js';
 import { autopilotState, autopilotSettings, tickAutopilot, startAutopilot, handleRelayMessage, advanceForeground, setPrewarm, setHeavyAllowed } from './autopilot.js';
 import { evaluateParameter, makeEvalContext, paramSpec } from './evaluator.js';
@@ -6,6 +6,7 @@ import { lookupParam } from './isf.js';
 import { Library, DeckPipeline, MixerPipeline } from './graph.js';
 import { MandalaRecipes } from './mandala.js';
 import { heardBeats, DelayLine } from './sync.js';
+import { installEmbedApi } from './embed.js';
 
 async function loadText(url) {
   const res = await fetch(url);
@@ -368,7 +369,10 @@ async function init() {
   }
 
   let noSignal = 0;
+  let paused = false;       // embed mode: the host hid the picture
+  let forceResize = false;
   function render(now) {
+    if (paused) return;
     const dt = Math.min((now - lastTime) / 1000, 0.1);
     lastTime = now;
     elapsedTime += dt;
@@ -402,7 +406,8 @@ async function init() {
     const targetW  = Math.max(1, Math.floor(displayW * (window.devicePixelRatio || 1)));
     const targetH  = Math.max(1, Math.floor(displayH * (window.devicePixelRatio || 1)));
     const rescaled = powerState.on && adaptScale(dt, now);
-    if (canvas.width !== targetW || canvas.height !== targetH || rescaled) {
+    if (canvas.width !== targetW || canvas.height !== targetH || rescaled || forceResize) {
+      forceResize = false;
       canvas.width  = targetW;
       canvas.height = targetH;
       curWidth  = targetW;
@@ -455,6 +460,22 @@ async function init() {
   }
 
   requestAnimationFrame(render);
+
+  installEmbedApi({
+    pause() { if (paused) return; paused = true; suspendAudio(); },
+    resume() {
+      if (!paused) return;
+      paused = false;
+      lastTime = performance.now();
+      resumeAudio();
+      requestAnimationFrame(render);
+    },
+    // Quality floor: the render scale never goes finer than SCALES[index]'s step (0 = adaptive over all steps).
+    setQuality(index) {
+      adapt.ceiling = index;
+      if (adapt.idx < index) { adapt.idx = index; forceResize = true; }
+    },
+  });
 }
 
 window.addEventListener('DOMContentLoaded', () => {

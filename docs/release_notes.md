@@ -7,6 +7,12 @@
 - Beat counts are now kept so a bar starts on every multiple of the bar length; LFOs and sequencers set to a bar (or more) jump once when the bar line moves, and nothing else changes. Settings are saved (`beatsPerBar`, `downbeatMode`).
 - The web TV does not use this yet; it still counts bars from its own beat count.
 
+### Web TV: Embed Mode for Spaz Radio (`web/embed.js`, `web/embedmode.js`, `web/feedring.js`, `web/feed-worklet.js`, `web/dsp.js`, `web/ui.js`, `web/autopilot.js`, `web/renderer.js`)
+- **The web TV can now run inside another app.** `index.html?embed` shows only the picture: no TV body, controls, on-screen display, menu, ident or nameplate, no CRT warm-up, nothing that takes touches. It turns itself on, and it never plays the stream, uses the microphone, registers the service worker, polls the track name or follows a desktop live broadcast unless the host asks. This is what the Spaz Radio Android app will bundle in place of its oscilloscope.
+- **The host feeds the audio.** The host app plays the radio itself and pushes the decoded sound in with `LSD.feed(pcm, sampleRate)` (mono 16-bit or float samples, an `ArrayBuffer`, or base64). It goes through the same analysis as the radio did (bass, mid, high, flux, onset worklet, beat clock, energy sections), so the picture moves exactly as on spaz.org. When the host stops feeding, the picture just goes quiet (no "no signal" snow).
+- **Host controls:** `LSD.setOption` takes `quality` (auto / low / high), `reactivity`, `reducedMotion`, `live` and `sync` (milliseconds the picture is delayed to match the speaker); `LSD.pause()` / `LSD.resume()` stop and restart drawing and audio analysis when the picture is hidden. `LSD.next()`, `prev()` and `hold()` exist for later touch controls.
+- New headless check `web/checks/embed_check.mjs` and unit test `web/tools/feedring.test.mjs`.
+
 ### Web TV: At Home (`web/ui.js`, `web/index.html`, `web/tv.css`, `web/autopilot.js`)
 - **Click the TV to turn it on.** The whole set is the power switch: any click on a TV that is off turns it on, and a click on the cabinet (not the picture or the other controls) turns it off.
 - **Quieter by default:** the TV no longer names every new look on screen; MENU › Announce looks turns that back on. Looks you pick with CH or FX are still named, and I shows the info any time.

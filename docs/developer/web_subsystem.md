@@ -181,6 +181,17 @@ To maintain 1:1 visual parity without manual dual-maintenance:
 
 The web TV is served at **https://spaz.org/tv/**: Apache on spaz.org has `Alias /tv /www/spaz/htdocs/lsd-relay/public`, a folder `gj` can write over SSH (key login). `scripts/publish_web_tv.sh` rsyncs `web/` there (checksums, so only changed files go; `web/checks/` and `web/tools/` stay behind). `--dry-run` shows the changes, `--delete` also removes server files that are no longer in `web/` (older deployments left prototype shaders and desktop presets there). The relay's code lives next to it in `/www/spaz/htdocs/lsd-relay/` and is deployed separately (section 7).
 
+## 6b. Embed Mode (`?embed`)
+
+`index.html?embed` is the web TV as a component, built for Spaz Radio's Android WebView (plan: `.planning/spazradio-embed-plan.md`). `embedmode.js` exports the flag; it implies the kiosk layout and adds `body.embed` (`tv.css`: chrome hidden, `pointer-events: none` everywhere, so the host's panels own all touches).
+
+- **Audio in:** `dsp.js` skips the `<audio>` element and builds the same analysis graph from a `feed-worklet.js` node (`lsd-feed`, no inputs) whose output goes to `analysisIn`; the analysers also hang off a muted gain to the destination so the graph keeps being pulled. `feedring.js` is the worklet's mono ring buffer with a linear resampler (stream rate to context rate), a 40 ms prefill, and a skip-ahead to 80 ms when more than 300 ms is queued, so the picture stays close to the sound. `feedPCM(data, rate)` accepts Int16Array, Float32Array, ArrayBuffer (little-endian int16) or base64 and posts to the worklet (transferring buffers it decoded itself). It returns false until the graph exists (`LSD.feedReady()`; `lsd-embed-ready` event).
+- **Silence is not "no signal":** `updateSignal` pins `cvState.noSignal` false in embed mode; there is no reconnect logic.
+- **What is off:** microphone (`micAvailable()` false), service worker, `status-json` polling, media session, wake lock, bumper, ident, and the relay (`autopilot.setRelayEnabled`, off until the `live` option).
+- **Host API (`embed.js`, installed on `window.LSD` by `renderer.js`):** `feed`, `feedReady`, `setOption(name, value)` (`quality`, `reactivity`, `reducedMotion`, `live`, `sync`), `pause`, `resume`, `next`, `prev`, `hold`. `quality: 'low'` turns heavy looks off and floors the render scale at the third step (`adapt.ceiling`); `pause` stops the render loop and suspends the AudioContext, `resume` restarts both and resets the frame clock.
+- **Sync:** the host's sound reaches the speaker after the audio sink's buffer, so the feed leads what is heard; set the `sync` option to delay the picture to match.
+- **Checks:** `node --test web/tools/feedring.test.mjs`; `node web/checks/embed_check.mjs` (headless Firefox: loads the page with `?embed`, pushes a synthetic 124 BPM kick track in real time, expects the signals, the beat lock, no snow in silence, options, pause/resume and a non-black picture).
+
 ## 7. Relay Server Operations (`server/server.js`)
 
 The relay server is a zero-dependency Node.js service using `ws`.

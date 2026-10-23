@@ -2,6 +2,7 @@
 // The TV's controls: power, volume, the viewer controls (channel rocker, FX, HOLD, TIME, REACT), the
 // on-screen display, keyboard and touch. Viewer controls are locked while the desktop broadcasts live.
 import { startAudio, stopAudio, setVolume, setMic, isMicOn, micAvailable, cvState } from './dsp.js';
+import { embed } from './embedmode.js';
 import { autopilotState, advanceForeground, previousForeground, nextFxChain, setHold, setHoldBars, nowShowing, setHeavyAllowed, setReducedMotion } from './autopilot.js';
 import { createMenu } from './menu.js';
 import { heardBeats, tapOffset } from './sync.js';
@@ -156,13 +157,14 @@ function cardUp(ms) {
 
 /** The power-on ident: the Liquid LSD logo and name over the picture for a few seconds. */
 function showIdent() {
+  if (embed) return;
   cardUp(3600);
   const el = document.getElementById('ident');
   el.classList.remove('show');
   void el.offsetWidth;
   el.classList.add('show');
 }
-const kiosk = new URLSearchParams(location.search).has('kiosk');
+const kiosk = embed || new URLSearchParams(location.search).has('kiosk'); // embed is a kiosk without the extras
 
 export function initUI() {
   const powerSwitch = document.getElementById('powerSwitch');
@@ -193,7 +195,7 @@ export function initUI() {
       try { await stopAudio(); } catch (err) { console.error('Audio stop failed:', err); }
     } else {
       powerState.on = true;
-      powerState.warmupProgress = 0;  // renderer will advance this
+      powerState.warmupProgress = embed ? 1 : 0;  // renderer will advance this (embed: no CRT warm-up)
       powerState.shutdownProgress = 0;
       tvBody.classList.remove('shutting-down');
       tvBody.classList.add('powered-on');
@@ -487,6 +489,7 @@ export function initUI() {
   // --- Kiosk (?kiosk): no TV body; turns itself on; the cursor hides when idle ---
   if (kiosk) {
     document.body.classList.add('kiosk');
+    if (embed) document.body.classList.add('embed');
     let idle = null;
     const wake = () => { document.body.classList.remove('idle'); clearTimeout(idle); idle = setTimeout(() => document.body.classList.add('idle'), 3000); };
     window.addEventListener('mousemove', wake);
@@ -495,7 +498,7 @@ export function initUI() {
   }
 
   // --- Installable app: the service worker (sw.js) caches the app shell; not in the headless checks ---
-  if ('serviceWorker' in navigator && !new URLSearchParams(location.search).has('nolive')) {
+  if (!embed && 'serviceWorker' in navigator && !new URLSearchParams(location.search).has('nolive')) {
     navigator.serviceWorker.register('sw.js').catch((err) => console.warn('[lsd] service worker:', err.message));
   }
 
@@ -530,7 +533,7 @@ export function initUI() {
   // while the menu or ABOUT is open; the timer restarts at power-on) ---
   const bumper = document.getElementById('bumper');
   setInterval(() => {
-    if (!powerState.on || live() || menu.open || !about.hidden) return;
+    if (embed || !powerState.on || live() || menu.open || !about.hidden) return;
     if (performance.now() - lastBumper < BUMPER_EVERY_MS) return;
     lastBumper = performance.now();
     showBumper();
@@ -564,6 +567,7 @@ export function initUI() {
 // radio, and the look on air).
 // -------------------------------------------------------
 function updateMediaSession() {
+  if (embed) return;
   if (!('mediaSession' in navigator) || typeof MediaMetadata === 'undefined') return;
   const look = autopilotState.isLiveBroadcast ? 'LIVE' : prettyName(nowShowing().name).toUpperCase();
   navigator.mediaSession.metadata = new MediaMetadata({
@@ -584,6 +588,7 @@ function updateMediaSession() {
 // -------------------------------------------------------
 let wakeLock = null;
 async function holdScreenAwake() {
+  if (embed) return;
   if (!powerState.on || wakeLock || !navigator.wakeLock || document.visibilityState !== 'visible') return;
   try {
     wakeLock = await navigator.wakeLock.request('screen');
@@ -602,6 +607,7 @@ document.addEventListener('visibilitychange', holdScreenAwake);
 // -------------------------------------------------------
 let pollTimer = null;
 async function pollNowPlaying() {
+  if (embed) return;
   clearTimeout(pollTimer);
   if (!powerState.on) return;
   try {

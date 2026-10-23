@@ -3,6 +3,7 @@
 
 import { BeatTracker, BeatClock } from './beattrack.js';
 import { EnergyWatch } from './energy.js';
+import { embed } from './embedmode.js';
 
 export const cvState = {
   // The audio_* signals are scaled exactly as the desktop's AudioEngine publishes them, so a
@@ -38,6 +39,7 @@ let midBuf = null;
 let highBuf = null;
 
 let analysisReady = false;
+let feedNode = null;     // embed mode: the worklet the host's PCM goes into
 
 // ~11.6 ms of samples at 44.1 kHz: the same block length the desktop takes its RMS over
 const ANALYSER_FFT = 512;
@@ -132,6 +134,7 @@ let lastRetryMs = 0;
 const noStatic = typeof location !== 'undefined' && new URLSearchParams(location.search).has('nostatic');
 
 function updateSignal(dt) {
+  if (embed) { cvState.noSignal = false; return; } // the host plays the radio; silence is just a quiet picture
   quietFor = analysisReady && cvState.audio_amp > SILENT_AMP ? 0 : quietFor + dt;
   cvState.noSignal = wantAudio && !noStatic && quietFor > 4;
   const now = performance.now();
@@ -171,7 +174,7 @@ let analysisIn = null;
 let micOn = false;
 let micStream = null;
 let micSource = null;
-export const micAvailable = () => !!navigator.mediaDevices?.getUserMedia;
+export const micAvailable = () => !embed && !!navigator.mediaDevices?.getUserMedia;
 export const isMicOn = () => micOn;
 
 function releaseMic() {
@@ -185,7 +188,7 @@ function releaseMic() {
 
 /** Switches the analysed input to the microphone (`on`) or back to the radio; rejects if the mic is refused. */
 export async function setMic(on) {
-  if (on === micOn || !audioCtx) return micOn;
+  if (embed || on === micOn || !audioCtx) return micOn;
   if (on) {
     // Raw sound: the browser's speech clean-up would flatten the beat.
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -214,7 +217,7 @@ export async function setMic(on) {
 export async function startAudio() {
   const audioEl = document.getElementById('lsdAudio');
 
-  if (!audioEl) {
+  if (!audioEl && !embed) {
     console.error('lsdAudio element not found');
     return;
   }
@@ -222,14 +225,14 @@ export async function startAudio() {
   wantAudio = true;
   quietFor = 0;
   lastRetryMs = performance.now(); // the first reconnect waits for this attempt to fail
-  // Set stream src on user gesture
-  audioEl.src = STREAM_URL;
+  // Set stream src on user gesture (embed mode: the host app plays the radio and feeds us instead)
+  if (!embed) audioEl.src = STREAM_URL;
 
   if (!audioCtx) {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     audioCtx = new AudioContextClass();
 
-    const radio = audioCtx.createMediaElementSource(audioEl);
+    const radio = embed ? null : audioCtx.createMediaElementSource(audioEl);
     // Everything that is analysed comes through `source`: the radio, or the microphone (which is never
     // sent to the speakers, so it cannot feed back).
     const source = audioCtx.createGain();
@@ -274,9 +277,11 @@ export async function startAudio() {
     gainNode.gain.value = currentVolumeRatio * currentVolumeRatio;
 
     // Wire graph
-    radio.connect(source);
-    radio.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
+    if (radio) {
+      radio.connect(source);
+      radio.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+    }
     source.connect(broadbandAnalyser);
     source.connect(bassFilter);
     bassFilter.connect(bassAnalyser);
@@ -284,6 +289,19 @@ export async function startAudio() {
     midFilter.connect(midAnalyser);
     source.connect(highFilter);
     highFilter.connect(highAnalyser);
+
+    if (embed) {
+      // The host's PCM is the input. Nothing is audible from here; the analysers hang off a muted gain so
+      // the graph keeps pulling them.
+      await audioCtx.audioWorklet.addModule('feed-worklet.js');
+      feedNode = new AudioWorkletNode(audioCtx, 'lsd-feed', { numberOfInputs: 0, outputChannelCount: [1] });
+      feedNode.connect(source);
+      const sink = audioCtx.createGain();
+      sink.gain.value = 0;
+      for (const a of [broadbandAnalyser, bassAnalyser, midAnalyser, highAnalyser]) a.connect(sink);
+      sink.connect(audioCtx.destination);
+      window.dispatchEvent(new CustomEvent('lsd-embed-ready'));
+    }
 
     // Onset envelope at audio rate for the beat tracker. The worklet's output only goes to a muted gain,
     // which keeps the graph pulling it.
@@ -314,7 +332,8 @@ export async function startAudio() {
     await audioCtx.resume();
   }
 
-  if (micOn) audioEl.pause();       // the microphone is the input; the radio waits
+  if (embed) { /* the host app plays the radio */ }
+  else if (micOn) audioEl.pause();  // the microphone is the input; the radio waits
   else await audioEl.play();
 
   cvState.isLive = true;
@@ -357,4 +376,39 @@ export function setVolume(volume) {
   if (gainNode && audioCtx) {
     gainNode.gain.setTargetAtTime(volume * volume, audioCtx.currentTime, 0.05);
   }
+}
+
+// -------------------------------------------------------
+// Embed mode: audio from the host app
+// -------------------------------------------------------
+export const feedReady = () => !!feedNode;
+
+/** Pauses / resumes the analysis (embed: the host hides the picture). */
+export async function suspendAudio() {
+  if (audioCtx?.state === 'running') await audioCtx.suspend();
+}
+export async function resumeAudio() {
+  if (audioCtx && wantAudio && audioCtx.state === 'suspended') await audioCtx.resume().catch(() => {});
+}
+
+/**
+ * Hands the analysis a block of the host's decoded audio (mono): an Int16Array / Float32Array, an
+ * ArrayBuffer of little-endian 16-bit samples, or the same as a base64 string. `rate` is its sample
+ * rate. Returns false (and drops the block) until the audio graph exists.
+ */
+export function feedPCM(data, rate) {
+  if (!feedNode) return false;
+  let pcm = data;
+  let own = false;   // a buffer made here can be handed over without copying
+  if (typeof data === 'string') {
+    const bin = atob(data);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    pcm = new Int16Array(bytes.buffer, 0, bytes.length >> 1);
+    own = true;
+  } else if (data instanceof ArrayBuffer) {
+    pcm = new Int16Array(data, 0, data.byteLength >> 1);
+  }
+  feedNode.port.postMessage({ pcm, rate }, own ? [pcm.buffer] : []);
+  return true;
 }

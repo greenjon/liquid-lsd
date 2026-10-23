@@ -558,3 +558,9 @@ body.kiosk #nameplate { display: none; }
 #tv-screen-area:has(#about:not([hidden])) #osd { visibility: hidden; }
 
 #tv-menu .menu-hint.help { opacity: 0.9; font-size: 0.8em; line-height: 1.3; text-transform: none; letter-spacing: 0.02em; }
+
+/* --- Embed (?embed): the picture only, inside a host app. Nothing on the page takes touches or shows chrome --- */
+body.embed { overflow: hidden; user-select: none; -webkit-user-select: none; touch-action: none; }
+body.embed * { pointer-events: none; }
+body.embed #osd, body.embed #title-card, body.embed #ident, body.embed #bumper,
+body.embed #about, body.embed #tv-menu, body.embed #nameplate { display: none !important; }
