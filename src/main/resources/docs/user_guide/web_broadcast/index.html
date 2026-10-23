@@ -1485,7 +1485,8 @@ Each viewer's browser — renders the visuals locally using WebGL
 <p>The standalone browser client (<code>web/index.html</code>) presents the visualizer in a retro CRT television shell.</p>
 <p><strong>Power switch:</strong> Click it (or anywhere on the TV) to turn the visualizer on. The browser requires this interaction to start Web Audio (standard browser security policy). Turning the TV on triggers a CRT warmup animation; turning it off plays a vintage beam-collapse animation.</p>
 <p><strong>Volume dial:</strong> Drag the rotary dial up or down to adjust volume. The curve is tuned to feel perceptually linear — small moves at the bottom, bigger moves at the top.</p>
-<p><strong>Fullscreen:</strong> Double-click the TV screen to expand to full-screen (the on-screen display comes along). Double-click again or press <code>Esc</code> to go back to the TV shell.</p>
+<p><strong>Fullscreen:</strong> Double-click the TV screen, press <code>S</code>, or choose MENU › <strong>Fullscreen</strong> to expand to full-screen (the on-screen display comes along). Do any of them again, or press <code>Esc</code>, to go back to the TV shell.</p>
+<p><strong>Microphone:</strong> press <code>A</code> or choose MENU › <strong>Input</strong> to make the picture follow your microphone instead of the radio, for a room playing its own music. Your browser asks permission the first time; the sound is only analysed, never played through the speakers. Press <code>A</code> again for the radio. Turning the TV off also puts the radio back. Locked during a live broadcast.</p>
 <p><strong>Viewer controls</strong> (Autopilot only; while you broadcast live they are locked and the screen says so):</p>
 <table>
 <thead>
@@ -1498,7 +1499,7 @@ Each viewer's browser — renders the visuals locally using WebGL
 <tbody>
 <tr>
 <td><strong>CH ▲ / ▼</strong></td>
-<td>Next look now / back to the previous one (with the FX chain it had)</td>
+<td>The next / previous channel, now (a channel you've seen keeps the FX chain it had; the autopilot itself still picks channels at random)</td>
 <td><code>→</code> <code>↑</code> <code>N</code> / <code>←</code> <code>↓</code> <code>P</code>; swipe left / right on the picture</td>
 </tr>
 <tr>
@@ -1530,7 +1531,7 @@ Each viewer's browser — renders the visuals locally using WebGL
 <p><strong>Lock screen and media keys:</strong> your phone's lock screen and your keyboard's media keys show the show and the look; play/pause is the power switch, next/previous change the look.</p>
 <p><strong>Install as an app:</strong> use your browser's Install / Add to Home Screen; it opens fullscreen like a TV app.</p>
 <p><strong>Kiosk mode:</strong> <code>index.html?kiosk</code> shows only the picture (no TV body), turns itself on and hides the mouse pointer; use the keyboard or swipes. Browsers that refuse to start sound on their own get a "click or press a key for sound" prompt.</p>
-<p><strong>MENU:</strong> the MENU button or <code>M</code> opens the service menu (arrows or clicks to change, Esc or M to close): <strong>SYNC</strong> (how late the sound reaches you, for Bluetooth and other delayed speakers), <strong>Announce looks</strong> (name each new look on screen; off by default), <strong>REACT</strong>, <strong>TIME</strong>, <strong>Reduced motion</strong> (Auto follows your system setting) and <strong>Big GPU looks</strong> (Auto lets the GPU check decide). The selected row explains itself at the bottom of the menu (and on mouse hover). Settings are remembered in this browser. REACT, TIME and Heavy looks are locked during a live broadcast.</p>
+<p><strong>MENU:</strong> the MENU button or <code>M</code> opens the service menu (arrows or clicks to change, Esc or M to close): <strong>SYNC</strong> (how late the sound reaches you, for Bluetooth and other delayed speakers), <strong>Announce looks</strong> (name each new look on screen; off by default), <strong>REACT</strong>, <strong>TIME</strong>, <strong>Reduced motion</strong> (Auto follows your system setting), <strong>Big GPU looks</strong> (Auto lets the GPU check decide), <strong>Input</strong> (radio or microphone) and <strong>Fullscreen</strong>. The selected row explains itself at the bottom of the menu (and on mouse hover). Settings are remembered in this browser. REACT, TIME and Heavy looks are locked during a live broadcast.</p>
 <p><strong>SYNC:</strong> if the picture's pulses come before the beat you hear (Bluetooth speakers are often 150-250 ms late), open MENU › <strong>TAP SYNC</strong> and tap Space or the picture on 8 beats; or set <strong>SYNC</strong> by hand. It needs the beat light to be green (or a live broadcast).</p>
 <p><strong>Reduced motion:</strong> follows your system's "reduce motion" setting (or MENU › Reduced motion): gentler reaction, no hard looks, no flashes or glitch effects, no cut on the drop, slower changes.</p>
 <p><strong>Going live:</strong> when the desktop starts broadcasting, viewers see a LIVE title card with the broadcaster's name (if one is set in the desktop's Web Broadcast preferences).</p>

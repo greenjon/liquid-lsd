@@ -1264,6 +1264,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#downbeat-detection-and-bar-length-audiodownbeatdetectorkt-audioaudioenginekt-cvcvregistrykt-uitemposyncpanelkt-uiperformanceclockcontrolskt-uiclockknobkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Downbeat Detection and Bar Length (audio/DownbeatDetector.kt, audio/AudioEngine.kt, cv/CVRegistry.kt, ui/TempoSyncPanel.kt, ui/PerformanceClockControls.kt, ui/ClockKnob.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#web-tv-at-home-webuijs-webindexhtml-webtvcss-webautopilotjs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6693,6 +6704,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#downbeat-detection-and-bar-length-audiodownbeatdetectorkt-audioaudioenginekt-cvcvregistrykt-uitemposyncpanelkt-uiperformanceclockcontrolskt-uiclockknobkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Downbeat Detection and Bar Length (audio/DownbeatDetector.kt, audio/AudioEngine.kt, cv/CVRegistry.kt, ui/TempoSyncPanel.kt, ui/PerformanceClockControls.kt, ui/ClockKnob.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#web-tv-at-home-webuijs-webindexhtml-webtvcss-webautopilotjs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -12097,11 +12119,21 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="downbeat-detection-and-bar-length-audiodownbeatdetectorkt-audioaudioenginekt-cvcvregistrykt-uitemposyncpanelkt-uiperformanceclockcontrolskt-uiclockknobkt">Downbeat Detection and Bar Length (<code>audio/DownbeatDetector.kt</code>, <code>audio/AudioEngine.kt</code>, <code>cv/CVRegistry.kt</code>, <code>ui/TempoSyncPanel.kt</code>, <code>ui/PerformanceClockControls.kt</code>, <code>ui/ClockKnob.kt</code>)</h3>
+<ul>
+<li><strong>The app can now find the first beat of the bar.</strong> Before, a "bar" was just every fourth beat counted from wherever the tracker started or you last tapped. Preferences &gt; Tempo &amp; Sync has a new <strong>Bar &amp; Downbeat</strong> section: <strong>Downbeat: Auto (from the music)</strong> listens for where the kick and bass land hardest in the bar and moves the bar line there, so bar-length LFOs and sequences, the bar dots and the Twister clock knob's downbeat flash line up with the music. It needs the Audio Beat Tracker clock, a few bars of steady music, and works best on dance music with a clear kick; it is <strong>off by default</strong> (Manual). A confidence bar shows how sure it is, and the bar dots' tooltip repeats it. It only moves the bar line after a position clearly wins twice in a row, so a breakdown doesn't send it wandering.</li>
+<li><strong>Say where beat 1 is, and it stays said.</strong> <code>SNAP</code> (and <code>RESYNC</code> in Preferences) now makes the beat nearest to now beat 1 of the bar: it moves the beat count to the closest bar line, by at most half a bar, not just to the nearest whole beat. The <strong>first tap of a tap-tempo run</strong> does the same ("tap on the one"); the following taps only set the tempo and keep the bar line. Either one protects your answer from the detector for 16 bars, and afterwards the detector needs strong evidence to overrule it.</li>
+<li><strong>Beats per bar:</strong> a new setting (2 to 8, default 4) for waltzes and other metres. The bar dots, the clock knob flash and the detector follow it, and it sets the Ableton Link quantum too. With Link on, Link's quantum defines the bar and Auto downbeat pauses.</li>
+<li>Beat counts are now kept so a bar starts on every multiple of the bar length; LFOs and sequencers set to a bar (or more) jump once when the bar line moves, and nothing else changes. Settings are saved (<code>beatsPerBar</code>, <code>downbeatMode</code>).</li>
+<li>The web TV does not use this yet; it still counts bars from its own beat count.</li>
+</ul>
 <h3 id="web-tv-at-home-webuijs-webindexhtml-webtvcss-webautopilotjs">Web TV: At Home (<code>web/ui.js</code>, <code>web/index.html</code>, <code>web/tv.css</code>, <code>web/autopilot.js</code>)</h3>
 <ul>
 <li><strong>Click the TV to turn it on.</strong> The whole set is the power switch: any click on a TV that is off turns it on, and a click on the cabinet (not the picture or the other controls) turns it off.</li>
 <li><strong>Quieter by default:</strong> the TV no longer names every new look on screen; MENU › Announce looks turns that back on. Looks you pick with CH or FX are still named, and I shows the info any time.</li>
 <li><strong>Livelier by default:</strong> REACT starts at 200% (the range is now 25-400%), since most radio shows move the picture too little at 100%.</li>
+<li><strong>CH ▲ / ▼ work like a TV's channel buttons.</strong> ▲ goes to the next channel number and ▼ to the one before it, so ▼ then ▲ always brings you back where you were (a channel you've already seen keeps its FX chain). Before, ▼ went back to whatever look had been on before, and ▲ to a random one.</li>
+<li><strong>Fullscreen and microphone from the keyboard or MENU.</strong> <code>S</code> (or MENU › Fullscreen, or a double-click on the picture) toggles fullscreen. <code>A</code> (or MENU › Input) switches the picture from the radio to your microphone, so it follows the music in the room; the browser asks permission first, the mic is only analysed (never played back, so no feedback), and turning the TV off puts the radio back.</li>
 <li><strong>Clearer labels</strong> under the TV's buttons and knobs, and turning a knob no longer switches the TV off when you let go over it.</li>
 <li><strong>The TV says who made it.</strong> A Liquid LSD nameplate under the screen links to liquid-lsd.greenjon.com; the first power-on of a visit plays a short ident with the eye-and-drop logo; MENU › ABOUT describes the desktop app with a QR code to the site; pressing I (or clicking the picture) adds a Liquid LSD line; about every 30 minutes a one-line bumper invites viewers to make their own; the LIVE card says "from Liquid LSD". Shared links now show a preview picture and description.</li>
 </ul>
