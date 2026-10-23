@@ -74,7 +74,7 @@ let fgFadeTargetBalance = 0.0;
 let fgNext = null;         // {line, deck, transition} built ahead of the switch
 let fgPreparing = false;
 let fgHoldStart = 0;       // beat the current look finished fading in
-const fgHistory = [];      // looks that have been on air, newest last (CH down steps back through them)
+const fgHistory = [];      // looks that have been on air, newest last (a channel coming back keeps its chain)
 const HISTORY_MAX = 50;
 
 let bgPlaylist = [];
@@ -522,25 +522,44 @@ function settleCrossfade() {
   if (fgTransitionState === 'crossfading') finishForegroundCrossfade(lastBeats);
 }
 
-/** Skips to the next foreground look now (the crossfade starts this frame) instead of on the next bar line. */
-export async function advanceForeground() {
-  if (autopilotState.isLiveBroadcast || fgPlaylist.length === 0) return;
-  settleCrossfade();
-  if (!fgNext) {
-    while (fgPreparing) await new Promise((r) => setTimeout(r, 20));
-    if (!fgNext) await prepareForeground();
+/**
+ * CH up / down: the playable look `dir` (+1 / -1) channels from the one on air (or the one being tuned
+ * to), in playlist order, now. A look that was on air before comes back with the chain it had.
+ */
+let fgTuning = null;       // the line a channel change is building, so quick presses keep counting
+async function changeChannel(dir) {
+  const n = fgPlaylist.length;
+  if (autopilotState.isLiveBroadcast || n === 0) return;
+  const from = fgPlaylist.indexOf(fgTuning ?? fgHistory.at(-1)?.line);
+  let idx = from < 0 ? fgPlaylistIdx : from;
+  for (let tries = 0; tries < n; tries++) {
+    idx = (idx + dir + n) % n;
+    if (playable(fgPlaylist[idx])) break;
   }
-  if (fgNext && fgTransitionState === 'hold') startForegroundCrossfade(lastBeats);
+  const line = fgPlaylist[idx];
+  fgPlaylistIdx = idx;
+  fgNext = null;
+  if (fgTuning) {
+    fgPrepareToken++;        // drop the change still being built
+    fgPreparing = false;
+    fgTuning = null;
+  }
+  if (line === fgHistory.at(-1)?.line) return; // back to the one on air (or the only channel)
+  const seen = fgHistory.findLast((h) => h.line === line);
+  if (seen) {
+    fgNext = { ...seen };
+  } else {
+    fgTuning = line;
+    await prepareForeground(line);
+    if (fgTuning !== line) return; // a later press took over
+    fgTuning = null;
+  }
+  settleCrossfade();
+  if (fgNext?.line === line && !autopilotState.isLiveBroadcast) startForegroundCrossfade(lastBeats);
 }
 
-/** Steps back to the previous look, with the chain and transition it had. */
-export function previousForeground() {
-  if (autopilotState.isLiveBroadcast || fgHistory.length < 2) return;
-  settleCrossfade();
-  fgHistory.pop();                 // the current look
-  fgNext = fgHistory.pop();        // re-pushed when its crossfade starts
-  startForegroundCrossfade(lastBeats);
-}
+export const advanceForeground = () => changeChannel(1);
+export const previousForeground = () => changeChannel(-1);
 
 /** Puts the next suitable FX chain on the look on air, now. */
 export async function nextFxChain() {

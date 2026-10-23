@@ -4,6 +4,7 @@
 - **Click the TV to turn it on.** The whole set is the power switch: any click on a TV that is off turns it on, and a click on the cabinet (not the picture or the other controls) turns it off.
 - **Quieter by default:** the TV no longer names every new look on screen; MENU › Announce looks turns that back on. Looks you pick with CH or FX are still named, and I shows the info any time.
 - **Livelier by default:** REACT starts at 200% (the range is now 25-400%), since most radio shows move the picture too little at 100%.
+- **CH ▲ / ▼ work like a TV's channel buttons.** ▲ goes to the next channel number and ▼ to the one before it, so ▼ then ▲ always brings you back where you were (a channel you've already seen keeps its FX chain). Before, ▼ went back to whatever look had been on before, and ▲ to a random one.
 - **Clearer labels** under the TV's buttons and knobs, and turning a knob no longer switches the TV off when you let go over it.
 - **The TV says who made it.** A Liquid LSD nameplate under the screen links to liquid-lsd.greenjon.com; the first power-on of a visit plays a short ident with the eye-and-drop logo; MENU › ABOUT describes the desktop app with a QR code to the site; pressing I (or clicking the picture) adds a Liquid LSD line; about every 30 minutes a one-line bumper invites viewers to make their own; the LIVE card says "from Liquid LSD". Shared links now show a preview picture and description.
 

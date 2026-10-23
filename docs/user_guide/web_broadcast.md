@@ -68,7 +68,7 @@ The standalone browser client (`web/index.html`) presents the visualizer in a re
 
 | Control | What it does | Keys / touch |
 |---------|-------------|--------------|
-| **CH ▲ / ▼** | Next look now / back to the previous one (with the FX chain it had) | `→` `↑` `N` / `←` `↓` `P`; swipe left / right on the picture |
+| **CH ▲ / ▼** | The next / previous channel, now (a channel you've seen keeps the FX chain it had; the autopilot itself still picks channels at random) | `→` `↑` `N` / `←` `↓` `P`; swipe left / right on the picture |
 | **FX** | Puts the next FX chain on the look on air | `F` |
 | **HOLD** | Keeps the current look until you press it again (the background keeps changing) | `H` or `Space`; long-press the picture |
 | **TIME** | How long each look holds: 8, 16, 32 or 64 bars (drag, scroll or click) | `[` `]` |
