@@ -61,7 +61,7 @@ object ParametersTabs {
 
         // MST and OUT are both the "Mixer" top tab; they differ by [ParametersState.activeMixerSubTab] (LEVELS/CTRL vs FX/TRANS).
         val tabs = listOf(
-            Triple("MST", "Mixer",   "Master: deck levels and alphas, master level (LEVELS), and queue, clock and randomize triggers (CTRL). Shown with the Clock row."),
+            Triple("MST", "Mixer",   "Master: deck levels, master level (LEVELS), and queue, clock and randomize triggers (CTRL). Shown with the Clock row."),
             Triple("OUT", "Mixer",   "Output stage: Master FX (FX) and Crossfader/Transitions (TRANS)."),
             Triple("A",   "Deck A",  if (deckAEmpty) "Deck A [EMPTY] — Click to assign a source or preset." else "Deck A: its source (SRC) and FX chain (FX)."),
             Triple("B",   "Deck B",  if (deckBEmpty) "Deck B [EMPTY] — Click to assign a source or preset." else "Deck B: its source (SRC) and FX chain (FX)."),

@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Master Knobs Say LEVEL, Not ALPHA (`macro/MacroEngine.kt`, `presets/SessionSerializer.kt`)
+- **The Master bank's first three knobs are now labelled LEVEL A, LEVEL B and LEVEL BG** (they were ALPHA A, ALPHA B, ALPHA BG), matching the Level faders everywhere else.
+- **Saved sessions are relabelled when they load**, but only knobs that still carry the old default label and still control the matching level. Knobs you renamed or rebound keep your label.
+
 ### Speeds Never Jump the Picture (`rendering/isf/PhaseIntegrators.kt`, `rendering/isf/ISFParser.kt`, `rendering/isf/ISFVisualSource.kt`, `rendering/isf/ISFFilter.kt`, `cv/ClockAnchors.kt`, `cv/Evaluators.kt`, every stock source and effect with a speed, `web/isf.js`, `web/evaluator.js`)
 - **Fixed pictures that jumped when a speed changed late in a set.** The shaders multiplied each speed by the time since the app started, so the longer Liquid LSD ran, the further any change of speed threw the picture: an hour in, an LFO or the music on a speed made it jump every frame, and even turning a Speed knob, a macro or a preset morph scrubbed it. Liquid LSD now adds each speed up frame by frame, so changing it only changes how fast things move. This covers all 27 stock sources and the 5 effects with a speed or rate (Flight Speed, Morph Speed, Wave Speed, Hue Cycle Speed, Strobe Rate and the rest), on the desktop and the web TV. A freshly loaded source looks the same as before.
 - **LFOs and step sequencers clocked in seconds or frames no longer jump when their period changes**, whether from the knob, a controller, OSC, a macro or a preset morph. Beat-clocked ones were never affected and stay locked to the bar.

@@ -9,7 +9,7 @@ Order is by risk: persisted-format changes first (DECISIONS §1: cheapest before
 | # | Item | State |
 |---|---|---|
 | 1 | Remove legacy `fb*` / `view3D*` params | **Open.** `feedbackParameters` still in `PresetModels.kt`, `PresetMigrator.kt`, `PresetDependencyAnalyzer.kt`, flame tools |
-| 2 | ALPHA -> LEVEL | **Mostly done.** `MacroEngine` says "LEVEL A". Not checked: relabel-on-load rule, its test, `PerformanceMasterControls` badge, docs |
+| 2 | ALPHA -> LEVEL | **Done.** Labels, relabel-on-load (`MacroEngine.relabelLegacyMasterKnobs`, called from `SessionSerializer`), `LegacyMasterLabelTest`, tooltips, `docs/developer/ui.md`, both release-notes files |
 | 3 | ARM64 in `DECISIONS.md` | **Done** (§11 lists five targets, §12 entry deleted, ARCHITECTURE "Unverified" bullet removed). Uncommitted |
 | 4 | Orphaned shaders | **Done** (deleted in 479f619, rendering.md wording in c79b16a) |
 | 5 | `lwjgl-openal` | **Open** (`build.gradle.kts` lines 40, 49) |

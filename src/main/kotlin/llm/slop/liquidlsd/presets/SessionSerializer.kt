@@ -248,6 +248,9 @@ object SessionSerializer {
                 val targetCount = llm.slop.liquidlsd.macro.MacroEngine.defaultKnobCountFor(canonicalId)
                 val rawBank = session.deckMacroBanks[canonicalId]
                 val bank = if (rawBank != null) {
+                    if (canonicalId == llm.slop.liquidlsd.macro.MacroEngine.MASTER) {
+                        llm.slop.liquidlsd.macro.MacroEngine.relabelLegacyMasterKnobs(rawBank)
+                    }
                     if (rawBank.knobs.size != targetCount) {
                         val clampedKnobs = rawBank.knobs.take(targetCount).toMutableList()
                         while (clampedKnobs.size < targetCount) {

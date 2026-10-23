@@ -152,7 +152,7 @@ internal object PerformanceMasterControls {
             }
         }
         ImGui.popStyleColor(2)
-        itemTooltip("Reset all deck alphas and master level to 100% (1.0).\nRight-click for partial reset options.")
+        itemTooltip("Reset all deck levels and master level to 100% (1.0).\nRight-click for partial reset options.")
 
         pushOpenDropdownPadding()
         if (ImGui.beginPopupContextItem("perf_mix_reset_btn_ctx")) {

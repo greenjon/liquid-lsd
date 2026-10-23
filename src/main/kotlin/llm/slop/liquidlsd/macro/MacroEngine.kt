@@ -69,6 +69,24 @@ object MacroEngine {
      */
     fun defaultKnobCountFor(bankId: String?): Int = if (bankId == GLOBAL) 0 else 4
 
+    private val LEGACY_MASTER_LABELS = mapOf(
+        "ALPHA A" to ("Mixer/levelA" to "LEVEL A"),
+        "ALPHA B" to ("Mixer/levelB" to "LEVEL B"),
+        "ALPHA BG" to ("Mixer/levelBG" to "LEVEL BG")
+    )
+
+    /**
+     * Renames the old default MASTER knob labels ("ALPHA A/B/BG") to "LEVEL ...". A knob is only relabelled when
+     * its first binding targets the matching Mixer level, so labels the user edited are never touched.
+     */
+    fun relabelLegacyMasterKnobs(bank: MacroBank): MacroBank {
+        for (knob in bank.knobs) {
+            val (target, newLabel) = LEGACY_MASTER_LABELS[knob.label] ?: continue
+            if (knob.bindings.firstOrNull()?.parameterId == target) knob.label = newLabel
+        }
+        return bank
+    }
+
     /** Builds a fresh, correctly-sized, blank-labeled or pre-bound default bank for [bankId]. */
     fun newBankFor(bankId: String?): MacroBank = when (bankId) {
         MASTER -> MacroBank(

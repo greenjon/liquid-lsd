@@ -34,7 +34,7 @@ graph TD
     PerformanceMatrixPanel --> PerformanceUiContext[PerformanceUiContext.kt - Shared UI context & styling]
     PerformanceMatrixPanel --> PerformanceTransitionsControls[PerformanceTransitionsControls.kt - Transitions row: picker & queue over crossfader]
     PerformanceMatrixPanel --> PerformanceClockControls[PerformanceClockControls.kt - Clock row tempo bar]
-    PerformanceMatrixPanel --> PerformanceMasterControls[PerformanceMasterControls.kt - Master row: MIX/alphas badge, FX pill, Master FX chain]
+    PerformanceMatrixPanel --> PerformanceMasterControls[PerformanceMasterControls.kt - Master row: MIX/levels badge, FX pill, Master FX chain]
     PerformanceMatrixPanel --> PerformanceDeckControls[PerformanceDeckControls.kt - Deck rows left/right controls + DeckRowMetrics]
     PerformanceMatrixPanel --> PerfRowGeometry[PerfRowGeometry.kt - mode-independent row/knob positions]
     PerformanceMatrixPanel --> PerfKnobSpec[PerfKnobSpec.kt - per-knob content resolver]
@@ -61,11 +61,11 @@ Deck preview monitors (`Deck A`, `Deck B`, `Deck BG`, `Deck PV`) in `MixerPanel`
 
 Each deck preview monitor features a standardized, symmetric dual-column overlay across all four decks:
 - **Left Column**:
-  - Vertical Fader: Channel Level / Alpha fader (`mixer.levelA`, `levelB`, `levelBG`, `levelPV`) starting at the top margin and running downward. Supports drag, scroll wheel, and middle-click reset (100%).
-  - Lower-Left Corner: Deck Badge (`[A]`, `[B]`, `[BG]`, `[PV]`) anchored directly below the Alpha fader. Clicking opens that deck in Edit.
+  - Vertical Fader: Channel Level fader (`mixer.levelA`, `levelB`, `levelBG`, `levelPV`) starting at the top margin and running downward. Supports drag, scroll wheel, and middle-click reset (100%).
+  - Lower-Left Corner: Deck Badge (`[A]`, `[B]`, `[BG]`, `[PV]`) anchored directly below the Level fader. Clicking opens that deck in Edit.
   - Die Button (`[🎲]`): Positioned in the bottom row directly to the right of the deck badge for modulators and base values randomization with undo support.
 - **Right Column**:
-  - Vertical Fader: FX Wet/Dry fader controlling `deck.fxChain.dryWet`, perfectly aligned with the Alpha fader from the top margin downward. Supports drag, scroll wheel, and middle-click reset (100%). Dims automatically when FX is bypassed/killed.
+  - Vertical Fader: FX Wet/Dry fader controlling `deck.fxChain.dryWet`, perfectly aligned with the Level fader from the top margin downward. Supports drag, scroll wheel, and middle-click reset (100%). Dims automatically when FX is bypassed/killed.
   - Lower-Right Corner: Square `[FX]` Kill button positioned directly below the FX fader. Clicking toggles `deck.fxChain.enabled` (active vs. bypassed/killed). Renders in deck theme color when active and high-visibility alert red when bypassed.
 - **Corner Symmetry & Center Interaction**:
   - Both faders share identical vertical extent, stretching from the top margin down to 4px above the bottom corner buttons (`badgeMinY - 4px`).
