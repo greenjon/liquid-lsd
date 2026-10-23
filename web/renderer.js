@@ -7,6 +7,7 @@ import { Library, DeckPipeline, MixerPipeline } from './graph.js';
 import { MandalaRecipes } from './mandala.js';
 import { heardBeats, DelayLine } from './sync.js';
 import { installEmbedApi } from './embed.js';
+import { embed } from './embedmode.js';
 
 async function loadText(url) {
   const res = await fetch(url);
@@ -230,8 +231,11 @@ async function init() {
   // scales the picture up. Internal size is capped at 1080p worth of pixels (a 4K screen gets 1080p scaled
   // up), and steps down while frames take longer than ~22 ms (the GPU cannot keep up), back up when there
   // is headroom. A step that turns out too slow is not tried again, so the size never oscillates.
-  const SCALES = [1.0, 0.85, 0.7, 0.55, 0.4];
-  const MAX_PIXELS = 1920 * 1080;
+  // Embedded in a phone app, smooth beats sharp: a 720p-class budget, finer steps down to a quarter, and a
+  // quicker reaction to a slow frame.
+  const SCALES = embed ? [1.0, 0.85, 0.7, 0.55, 0.42, 0.32, 0.25] : [1.0, 0.85, 0.7, 0.55, 0.4];
+  const MAX_PIXELS = embed ? 1280 * 720 : 1920 * 1080;
+  const SLOW_DT = embed ? 1 / 52 : 1 / 45, SLOW_FOR = embed ? 1 : 2, STEP_GAP_MS = embed ? 1500 : 3000;
   const adapt = { idx: 0, ceiling: 0, ema: 1 / 60, slow: 0, fast: 0, lastChange: 0, wentUp: false };
   function renderSize(w, h) {
     const cap = Math.min(1, Math.sqrt(MAX_PIXELS / (w * h)));
@@ -240,10 +244,10 @@ async function init() {
   }
   function adaptScale(dt, now) {
     adapt.ema += (dt - adapt.ema) * 0.05;
-    if (now - adapt.lastChange < 3000) return false;
-    adapt.slow = adapt.ema > 1 / 45 ? adapt.slow + dt : 0;
+    if (now - adapt.lastChange < STEP_GAP_MS) return false;
+    adapt.slow = adapt.ema > SLOW_DT ? adapt.slow + dt : 0;
     adapt.fast = adapt.ema < 1 / 57 ? adapt.fast + dt : 0;
-    if (adapt.slow > 2 && adapt.idx < SCALES.length - 1) {
+    if (adapt.slow > SLOW_FOR && adapt.idx < SCALES.length - 1) {
       if (adapt.wentUp) adapt.ceiling = adapt.idx + 1; // the last step up was one too many
       adapt.idx++;
       adapt.wentUp = false;
@@ -301,7 +305,9 @@ async function init() {
       n++;
     }
     gpu.ms = total / n;
-    gpu.heavy = gpu.ms <= probe.maxMs;
+    // Embedded on a phone the probe can't be trusted (gl.finish() returned in 0.4 ms on a Pixel 7a): heavy looks
+    // stay off until the host asks for quality 'high'.
+    gpu.heavy = gpu.ms <= probe.maxMs && !embed;
     gpu.state = 'done';
     pipe.dispose();
     if (viewerState.heavyMode === 'auto') setHeavyAllowed(gpu.heavy); // the MENU's ON / OFF wins

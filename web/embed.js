@@ -41,6 +41,20 @@ export function installEmbedApi(hooks) {
 
   // ?debug: a status line every 2 s (the host app logs the console), for working out why a picture is black.
   if (new URLSearchParams(location.search).has('debug')) {
+    // An on-screen readout: frames per second, the render resolution the adaptive scaler settled on, heavy looks.
+    const box = document.createElement('div');
+    box.style.cssText = 'position:fixed;left:6px;top:calc(6px + env(safe-area-inset-top,0px));z-index:1000;padding:3px 6px;' +
+      'font:12px/1.3 monospace;color:#7CFC00;background:rgba(0,0,0,.55);pointer-events:none;white-space:pre';
+    document.body.appendChild(box);
+    let lastFrames = hooks.frames(), lastT = performance.now();
+    setInterval(() => {
+      const f = hooks.frames(), t = performance.now(), L = window.LSD;
+      const fps = ((f - lastFrames) * 1000) / (t - lastT);
+      lastFrames = f; lastT = t;
+      const [w, h, k] = L.renderSize();
+      box.textContent = `${fps.toFixed(0)} fps${hooks.isPaused() ? ' (paused)' : ''}\n${w}x${h} (${Math.round(k * 100)}%)\n` +
+        `heavy ${viewerState.heavyMode}/${L.gpu?.heavy ? 'on' : 'off'}  ${L.autopilotState.deckA?.source ?? ''}`;
+    }, 500);
     setInterval(() => {
       const L = window.LSD, c = document.getElementById('glCanvas'), a = L.autopilotState;
       console.log('[lsd-debug] ' + JSON.stringify({
