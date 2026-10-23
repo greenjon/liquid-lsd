@@ -1,4 +1,4 @@
-# In-app check list (written 2026-10-14, merged 2026-10-22)
+# In-app check list (written 2026-10-14, merged 2026-10-22, updated 2026-10-23)
 
 Everything here is code that exists and has passing tests but that nobody has looked at in the running app or on hardware. Tick a box when it works. Write what you saw next to anything that doesn't.
 
@@ -28,8 +28,8 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [ ] Load a single `.lsdfx` into a full chain by double-click, by audition latch, and from the FX queue / FX playlist: one consistent placement rule.
 - [ ] Drop targets: deck badge takes presets, stock sources, external video, `.lsdfxchain` and `.lsdfx`. Monitor takes FX. Slot drop in Edit accepts the same drags as the slot cell.
 - [ ] A failed FX or transition load shows a toast.
-- [ ] Queue jumps of more than one step from MIDI/CV (+3) move three items.
-- [ ] Unsaved-changes prompt: Enter saves, buttons the same width, "Don't ask again" says loads are undoable. Eject and Copy/Move/Swap are not undoable and the Preferences tooltip says so.
+- [ ] Queue jumps of more than one step from MIDI/CV (+3) move three items. The keyboard queue keys still step once per press (they now run separately from MIDI/CV).
+- [ ] Unsaved-changes prompt: Enter saves, Esc cancels (Esc did nothing there before 2026-10-23), buttons the same width, "Don't ask again" says loads are undoable. Eject and Copy/Move/Swap are not undoable and the Preferences tooltip says so.
 - [ ] Closing Video Export while it waits on the unsaved-changes prompt does NOT start the export.
 - [ ] Click a preset then a source on the same deck within a blink: the last click wins.
 - [ ] Save a transition from the Transitions row's Save, from Edit OUT > TRANS and from the Library.
@@ -144,7 +144,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 
 ## 8. Macros, learn and locks
 
-- [ ] Arm macro Learn, OSC Learn and MIDI Learn at once; Esc cancels all three.
+- [ ] Arm macro Learn, OSC Learn and MIDI Learn at once; Esc cancels all three. MIDI Learn on a parameter, and Learn into a controller profile command, still capture the next control you move (MIDI handling moved earlier in the frame, 2026-10-23).
 - [ ] A MIDI/OSC mapping made before a knob binding is suspended while the knob drives the target, flagged in both tables.
 - [ ] Range sliders lock when `lfoMin/lfoMax` is bound; Randomize min/max inputs too.
 - [ ] Knob- or Metaknob-driven Value: dragging, scrolling or typing in Initial Range moves the knob (through its curve), other targets follow; a Metaknob on a macro knob passes it up. Lobes, Recipe, Max Points and the grid Value cell stay locked.
@@ -173,6 +173,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [ ] Deck-tile level faders: dragging doesn't snap back with a bound knob (the knob follows); the handle shows the fader's own value, the bar the live level.
 - [ ] Output > Output Monitor: Automatic and a named monitor; the output reopens on the chosen screen (try Wayland + projector).
 - [ ] New version available: menu-bar download icon instead of a startup popup.
+- [ ] During Video Export (offline render), controller knobs and MIDI queue steps still work.
 - [ ] Kill the app (`kill -9`) after changing things: preferences and session from the last minute come back.
 - [ ] Web Broadcast tab hidden until Show Advanced Preferences (or already configured).
 - [ ] A Shadertoy-style shader reading `audioFFT` / `iChannel0` row 0 reacts to audio.
@@ -213,8 +214,8 @@ Light wave 2: - [ ] cyclic_ca - [ ] metaballs - [ ] wave_ripples - [ ] harmonogr
 - [ ] Library send-to-deck knobs: in Library FULL a send only loads. Shift + tap on a send knob (9-13) switches pair without sending, not intermittent.
 - [ ] Controller FX tap with nothing bound applies to the live deck (first vacant slot, last when full; Shift + tap queues).
 - [ ] Link All on the Twister; Chain Link: bank change via `B3 0n 7F`.
-- [ ] MIDI input now applies before the frame renders (2026-10-23): knob turns feel at least as tight as before; bank switch, browse cursor (no skipped or lost steps on entering/leaving browse), the unsaved-deck prompt answered from the Twister, and LEDs following while the window is minimised.
-- [ ] Esc on the unsaved-deck prompt cancels it (it did nothing before).
+- [ ] MIDI input now applies before the frame renders (2026-10-23): knob turns feel at least as tight as before; bank switch, browse cursor (no skipped or lost steps on entering/leaving browse), the unsaved-deck prompt answered from the Twister. Minimise the window and turn knobs: LEDs follow, and on restore nothing replays in a burst.
+- [ ] The controller's knob layout is now cached between frames (2026-10-23): right after each of these, the Twister knobs drive the rows now on screen, not the old ones: change page, open and close Edit, switch a row between SRC and FX in Edit, enter and leave a pair view, focus an FX slot, and load a chain with fewer slots filled.
 
 ## 15. Light theme (take notes, do not guess; you decide the fixes)
 
@@ -242,14 +243,14 @@ Known remaining literals: dropdown selected text, ParametersRenderer fills and g
 - [ ] MENU on a laptop and a phone: readable, every row changes with arrows and taps, Esc closes, settings survive a reload.
 - [ ] With Bluetooth headphones/speaker: TAP SYNC lands near their delay (150-250 ms) and the pulses line up with the kicks afterwards.
 - [ ] Viewer controls on a real browser and a phone: CH up/down, FX, HOLD, TIME, REACT, swipe, long-press, keyboard; OSD readable; fullscreen keeps the OSD.
-- [ ] While broadcasting from the desktop, the web TV shows LIVE and its controls are locked.
+- [ ] While broadcasting from the desktop, the web TV shows LIVE and its controls are locked. The desktop uses the rotated relay token (Preferences > Web Broadcast); a wrong token shows [LIVE ERR].
 - [ ] Pull the network while the TV plays: snow and NO SIGNAL within a few seconds; plug it back: the radio and the picture come back within ~10 s.
 - [ ] On a track with a breakdown and drop, a calm look arrives in the breakdown and a hard look cuts in on the drop (not on every quiet moment).
 - [ ] Phase 8 CI is not done yet, so nothing to check there.
 
 ## 17. Before release
 
-- [ ] `ARCHITECTURE.md` refreshed.
+- [ ] `ARCHITECTURE.md` refreshed (frame loop, queues, control surfaces and UI sections updated 2026-10-23 for the MIDI timing change; the rest dates from 2026-10-07).
 - [ ] Walkthrough videos re-rendered where `scripts/tour_staleness.py` says (much of the UI they show changed).
 - [ ] Website deployed (last item).
 - [ ] MIDI phase 5 slice 1 (separate agent): Controller Profiles section, copy / delete / reload, validation problems, "Learned mappings" retitle.
