@@ -131,6 +131,7 @@ export function initUI() {
     if (powerState.on) {
       powerState.on = false;
       letScreenSleep();
+      updateMediaSession();
       powerState.warmupProgress = 0;
       powerState.shutdownProgress = 0;
       tvBody.classList.remove('powered-on');
@@ -147,6 +148,7 @@ export function initUI() {
       setTimeout(() => showLook(), 1600); // after the warm-up
       pollNowPlaying();
       holdScreenAwake();
+      updateMediaSession();
       try {
         await startAudio();
       } catch (err) {
@@ -266,8 +268,19 @@ export function initUI() {
     else document.exitFullscreen().catch(console.error);
   });
 
+  // --- Phone lock screen / media keys: play-pause is the power switch, next/previous change the look ---
+  if ('mediaSession' in navigator) {
+    const ms = navigator.mediaSession;
+    const handle = (action, fn) => { try { ms.setActionHandler(action, fn); } catch { /* action not supported */ } };
+    handle('play', () => { if (!powerState.on) powerSwitch.click(); });
+    handle('pause', () => { if (powerState.on) powerSwitch.click(); });
+    handle('stop', () => { if (powerState.on) powerSwitch.click(); });
+    handle('nexttrack', next);
+    handle('previoustrack', prev);
+  }
+
   // --- Autopilot and broadcast events ---
-  window.addEventListener('lsd-now-showing', (e) => showLook(e.detail));
+  window.addEventListener('lsd-now-showing', (e) => { showLook(e.detail); updateMediaSession(); });
   window.addEventListener('lsd-broadcast-status', (e) => {
     const text = document.querySelector('#station-badge .station-text');
     tvBody.classList.toggle('live', e.detail.live);
@@ -278,6 +291,7 @@ export function initUI() {
       holdBtn.setAttribute('aria-pressed', 'false');
     }
     showLook();
+    updateMediaSession();
   });
 
   // --- Beat LED, and NO SIGNAL while the stream is down ---
@@ -292,6 +306,25 @@ export function initUI() {
     beatLed.classList.toggle('locked', isLive || cvState.beatLocked);
     requestAnimationFrame(blink);
   })();
+}
+
+// -------------------------------------------------------
+// Media Session: what the phone's lock screen and the OS media controls show (the show playing on the
+// radio, and the look on air).
+// -------------------------------------------------------
+function updateMediaSession() {
+  if (!('mediaSession' in navigator) || typeof MediaMetadata === 'undefined') return;
+  const look = autopilotState.isLiveBroadcast ? 'LIVE' : prettyName(nowShowing().name).toUpperCase();
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: nowPlaying || 'Spaz Radio',
+    artist: 'Spaz Radio',
+    album: look ? `Liquid LSD \u00B7 ${look}` : 'Liquid LSD',
+    artwork: [
+      { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
+      { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+  });
+  navigator.mediaSession.playbackState = powerState.on ? 'playing' : 'paused';
 }
 
 // -------------------------------------------------------
@@ -329,6 +362,7 @@ async function pollNowPlaying() {
     const title = (artist && !name.includes(artist) ? `${artist} - ${name}` : name).replace(/_/g, ' ').trim();
     if (title && title !== nowPlaying) {
       nowPlaying = title;
+      updateMediaSession();
       flash('osd-track', `♪ ${nowPlaying}`, 6000);
     }
   } catch { /* status unavailable: no track line */ }

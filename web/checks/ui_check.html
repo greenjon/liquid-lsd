@@ -26,6 +26,8 @@ try {
   check('OSD shows the channel after power on', osd('osd-ch').shown && /^CH \d+/.test(osd('osd-ch').text), JSON.stringify(osd('osd-ch')));
   check('OSD names the look', osd('osd-name').text.length > 0, osd('osd-name').text);
   check('Screen kept awake while on (where the browser has wake lock)', !('wakeLock' in w.navigator) || w.LSD.viewerState.awake);
+  const meta = w.navigator.mediaSession?.metadata;
+  check('Lock screen shows the station and the look', !w.navigator.mediaSession || (meta?.artist === 'Spaz Radio' && /Liquid LSD/.test(meta.album)), meta ? `${meta.title} / ${meta.album}` : 'none');
 
   // GPU probe at power-on: heavy sources only rotate when it is fast enough.
   const gpu = w.LSD.gpu;

@@ -2,6 +2,7 @@
 
 ### Web TV: At Home (`web/ui.js`, `web/index.html`, `web/tv.css`, `web/autopilot.js`)
 - **The screen stays on while the TV is on.** Laptops and phones no longer dim and lock in the middle of a show (where the browser supports it).
+- **Phone lock screen and media keys.** The lock screen (and your keyboard's media keys) show the show playing on Spaz Radio and the look on air; play/pause turns the TV on and off, next and previous change the look.
 
 ### Snappier MIDI, and Esc Cancels the Unsaved-Deck Prompt (`ui/UIManager.kt`, `Main.kt`, `ui/NavigationSurface.kt`)
 - **Controller knobs and buttons now take effect in the same frame.** Incoming MIDI used to be handled after the frame was drawn, so every turn reached the screen one frame late. It is now applied first. MIDI is also handled while the window is minimised, instead of piling up and replaying when you restore it.
