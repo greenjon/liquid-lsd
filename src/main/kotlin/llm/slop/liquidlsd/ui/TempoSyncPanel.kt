@@ -8,6 +8,7 @@ import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.audio.AudioTarget
 import llm.slop.liquidlsd.audio.BeatDetectionSettings
 import llm.slop.liquidlsd.audio.ClockSource
+import llm.slop.liquidlsd.audio.DownbeatMode
 import llm.slop.liquidlsd.link.AbletonLinkEngine
 import llm.slop.liquidlsd.link.LinkSyncManager
 
@@ -72,15 +73,16 @@ object TempoSyncPanel {
 
         ImGui.sameLine(0f, 20f)
 
-        // 4-Beat Bar Indicator Dots
+        // Bar Indicator Dots (one per beat of the bar)
         val dotR = 5f
         val dotGap = 8f
         val dotsStartX = ImGui.getCursorScreenPosX()
         val dotsStartY = ImGui.getCursorScreenPosY() + (ImGui.getTextLineHeight() - dotR * 2f) / 2f
-        val currentBeat = (((totalBeats.toLong() % 4) + 4) % 4).toInt()
+        val beatsPerBar = session.cvRegistry.beatsPerBar
+        val currentBeat = session.cvRegistry.beatInBar(totalBeats)
         val beatFract = (totalBeats - kotlin.math.floor(totalBeats)).toFloat()
 
-        for (i in 0..3) {
+        for (i in 0 until beatsPerBar) {
             val cx = dotsStartX + dotR + (i * (dotR * 2f + dotGap))
             val cy = dotsStartY + dotR
             if (i == currentBeat) {
@@ -98,8 +100,8 @@ object TempoSyncPanel {
                 dl.addCircle(cx, cy, dotR, dimCol, 0, 1.2f)
             }
         }
-        ImGui.dummy((dotR * 2f * 4f) + (dotGap * 3f) + 4f, ImGui.getTextLineHeight())
-        itemTooltip("4/4 Bar phase alignment meter.")
+        ImGui.dummy((dotR * 2f * beatsPerBar) + (dotGap * (beatsPerBar - 1)) + 4f, ImGui.getTextLineHeight())
+        itemTooltip("Bar phase meter: one dot per beat of the bar, the downbeat in the accent colour.")
 
         ImGui.spacing()
 
@@ -149,7 +151,7 @@ object TempoSyncPanel {
         if (ButtonChrome.button("RESYNC##tempo_resync_btn", 85f, 32f)) {
             audioEngine.resyncDownbeat()
         }
-        itemTooltip("Instantly aligns beat phase to 1.0 downbeat and zeros phase slew.")
+        itemTooltip("Makes the beat nearest now beat 1 of the bar: snaps the beat phase and the bar line together and zeros phase slew. The downbeat detector leaves that answer alone for a while.")
 
         ImGui.sameLine(0f, 10f)
 
@@ -257,6 +259,8 @@ object TempoSyncPanel {
         itemTooltip("Clock tracks real-time rhythmic transients and tempo directly from the incoming audio stream.")
 
         ImGui.spacing()
+
+        drawBarSettings(session)
 
         // Sub-panel: Audio Beat Tracker Settings (revealed when Audio Beat Tracker is selected)
         if (isAudioTracker) {
@@ -440,5 +444,80 @@ object TempoSyncPanel {
             ImGui.spacing()
             theme.caption("When Link is active, tempo and downbeats stay phase-aligned with all peers on your local Wi-Fi or Ethernet.")
         }
+    }
+
+    private val barLengths = intArrayOf(2, 3, 4, 5, 6, 7, 8)
+    private val barLengthLabels = Array(barLengths.size) { "${barLengths[it]} beats" }
+
+    /** Beats per bar and the downbeat detector: where beat 1 of the bar comes from. */
+    private fun drawBarSettings(session: SessionContext) {
+        val theme = session.uiTheme
+        val audioEngine = session.audioEngine
+
+        theme.h2("${Icons.PREFERENCES} Bar & Downbeat")
+        ImGui.separator()
+        ImGui.spacing()
+
+        ImGui.alignTextToFramePadding()
+        theme.body("Beats per bar:")
+        ImGui.sameLine()
+        ImGui.setNextItemWidth(110f)
+        val current = audioEngine.beatsPerBar
+        pushOpenDropdownPadding()
+        if (ImGui.beginCombo("##BeatsPerBarCombo", "$current beats", ImGuiComboFlags.HeightLargest)) {
+            pushOpenDropdownFont()
+            for (i in barLengths.indices) {
+                val selected = barLengths[i] == current
+                if (selectableRow(barLengthLabels[i], selected)) {
+                    audioEngine.setBeatsPerBarAndLinkQuantum(barLengths[i])
+                    AppPreferencesStore.savePreferences()
+                }
+                if (selected) ImGui.setItemDefaultFocus()
+            }
+            popOpenDropdownFont()
+            ImGui.endCombo()
+        }
+        popOpenDropdownPadding()
+        itemTooltip("Length of a bar. Bar-length LFOs and sequences, the bar dots and the Twister clock knob's downbeat flash use it. Also sets the Ableton Link quantum.")
+
+        val auto = audioEngine.downbeatMode == DownbeatMode.AUTO
+        ImGui.alignTextToFramePadding()
+        theme.body("Downbeat:")
+        ImGui.sameLine()
+        if (ImGui.radioButton("Manual (TAP / SNAP)##downbeat_off", !auto)) {
+            audioEngine.downbeatMode = DownbeatMode.OFF
+            AppPreferencesStore.savePreferences()
+        }
+        itemTooltip("Beat 1 is wherever you last put it: the first TAP of a run or SNAP.")
+        ImGui.sameLine(0f, 24f)
+        if (ImGui.radioButton("Auto (from the music)##downbeat_auto", auto)) {
+            audioEngine.downbeatMode = DownbeatMode.AUTO
+            AppPreferencesStore.savePreferences()
+        }
+        itemTooltip("Listens for where the music lands hardest in the bar (kick and bass) and moves the bar line there. Works with the Audio Beat Tracker; needs a few bars, and works best on steady dance music. A TAP or SNAP overrides it for 16 bars.")
+
+        if (auto) {
+            val confidence = audioEngine.downbeatConfidence
+            ImGui.alignTextToFramePadding()
+            theme.body("Downbeat Confidence: ")
+            ImGui.sameLine()
+            ImGui.progressBar(confidence, 150f, 16f, "")
+            itemTooltip("How sure the detector is that beat 1 is where it is now. Empty means it is still listening, or the audio has no clear accent.")
+            if (audioEngine.clockSource != ClockSource.AUDIO_TRACKER) {
+                val c = TangoPalette.ALERT.normal
+                ImGui.pushStyleColor(ImGuiCol.Text, c[0], c[1], c[2], 1.0f)
+                ImGui.textWrapped("${Icons.ALERT} Auto downbeat needs the Audio Beat Tracker clock.")
+                ImGui.popStyleColor()
+            } else if (AbletonLinkEngine.isEnabled) {
+                val c = TangoPalette.ALERT.normal
+                ImGui.pushStyleColor(ImGuiCol.Text, c[0], c[1], c[2], 1.0f)
+                ImGui.textWrapped("${Icons.ALERT} Ableton Link is on: its quantum defines the bar, so Auto downbeat is paused.")
+                ImGui.popStyleColor()
+            }
+        }
+
+        ImGui.spacing()
+        ImGui.separator()
+        ImGui.spacing()
     }
 }

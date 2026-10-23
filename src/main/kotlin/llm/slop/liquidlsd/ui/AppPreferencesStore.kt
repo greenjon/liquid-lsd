@@ -104,6 +104,11 @@ object AppPreferencesStore {
                         AudioEngine.clockSource = llm.slop.liquidlsd.audio.ClockSource.fromString(savedSource)
                     } catch (_: Exception) {}
                 }
+                props.getProperty("beatsPerBar")?.toIntOrNull()?.let { AudioEngine.beatsPerBar = it }
+                props.getProperty("downbeatMode")?.let { saved ->
+                    AudioEngine.downbeatMode = llm.slop.liquidlsd.audio.DownbeatMode.values().firstOrNull { it.name == saved.trim().uppercase() }
+                        ?: llm.slop.liquidlsd.audio.DownbeatMode.OFF
+                }
                 props.getBoolean("linkEnabled")?.let {
                     llm.slop.liquidlsd.link.AbletonLinkEngine.setEnabled(it)
                 }
@@ -341,6 +346,8 @@ object AppPreferencesStore {
             props.setProperty("audioBpmLocked", AudioEngine.isBpmLocked.toString())
             props.setProperty("audioManualBpm", AudioEngine.manualBpm.toString())
             props.setProperty("clockSource", AudioEngine.clockSource.name)
+            props.setProperty("beatsPerBar", AudioEngine.beatsPerBar.toString())
+            props.setProperty("downbeatMode", AudioEngine.downbeatMode.name)
             props.setProperty("linkEnabled", llm.slop.liquidlsd.link.AbletonLinkEngine.isEnabled.toString())
             props.setProperty("linkQuantum", llm.slop.liquidlsd.link.AbletonLinkEngine.quantum.toString())
             props.setProperty("linkStartStopSync", llm.slop.liquidlsd.link.AbletonLinkEngine.isStartStopSyncEnabled().toString())

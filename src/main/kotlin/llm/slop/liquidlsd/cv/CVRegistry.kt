@@ -17,6 +17,26 @@ object CVRegistry {
     @Volatile private var lastRenderBeats: Double = 0.0
     @Volatile private var lastRenderTimeNs: Long = System.nanoTime()
 
+    const val MIN_BEATS_PER_BAR = 2
+    const val MAX_BEATS_PER_BAR = 8
+    const val DEFAULT_BEATS_PER_BAR = 4
+
+    /**
+     * Beats in a bar. Beat counts are kept so that a bar starts on every multiple of this (the downbeat detector and
+     * the SNAP/tap resync renumber the count to make it so), which makes `beats / beatsPerBar` the bar clock.
+     */
+    @Volatile var beatsPerBar: Int = DEFAULT_BEATS_PER_BAR
+        set(value) { field = value.coerceIn(MIN_BEATS_PER_BAR, MAX_BEATS_PER_BAR) }
+
+    /** Which beat of the bar [beats] falls in, 0 = the downbeat. */
+    fun beatInBar(beats: Double): Int = Math.floorMod(Math.floor(beats).toLong(), beatsPerBar.toLong()).toInt()
+
+    /** Position within the bar, 0..1. */
+    fun barPhase(beats: Double): Double {
+        val bars = beats / beatsPerBar
+        return bars - Math.floor(bars)
+    }
+
     private val sources = ConcurrentHashMap<String, CVSource>()
     private val histories = ConcurrentHashMap<String, CvHistoryBuffer>()
 

@@ -292,9 +292,9 @@ To maximize vertical space in the matrix and keep the knobs comfortably clustere
 - **Clock & Global (Row 4 in MASTER)**: The two lines beside the `CLOCK` badge have the tempo controls from Preferences > Tempo & Sync, placed here for use mid-set:
   - **`[ MAN ]` / `[ AUDIO ]`**: clock source (manual tempo or the audio beat tracker).
   - **`[ LINK n ]`**: the third button of the top line, with the peer count while Ableton Link is on and dim while it is off. Click it to open Tempo & Sync preferences.
-  - **BPM readout**: click it to open Tempo & Sync preferences. The **4 beat dots** under it show the bar phase; the downbeat is cyan.
-  - **`[ TAP ]`**: tap tempo. Right-click for MIDI Learn. In Audio mode it nudges the detected tempo and phase.
-  - **`[ SNAP ]`**: snaps the beat phase to the downbeat.
+  - **BPM readout**: click it to open Tempo & Sync preferences. The **beat dots** under it (one per beat of the bar, 4 by default) show the bar phase; the downbeat is cyan. Hover for the detector's confidence when Downbeat is on Auto.
+  - **`[ TAP ]`**: tap tempo. Right-click for MIDI Learn. In Audio mode it nudges the detected tempo and phase. The first tap of a run also marks beat 1 of the bar.
+  - **`[ SNAP ]`**: makes the beat nearest now beat 1 of the bar, snapping the beat phase and the bar line together. Press it on the one when the bar dots' cyan dot is in the wrong place. Preferences > Tempo & Sync > **Bar & Downbeat** sets the beats per bar and can let the app find beat 1 from the music (Downbeat: Auto); SNAP, or the first tap of a run, overrides it for 16 bars.
   - **Twister clock knob**: knob 13 on a Midi Fighter Twister pulses its LED on the beat (orange on the downbeat), shows the tempo on its ring and taps tempo when pushed. See [Rings and LEDs](performance_controls.md#twister-lights).
   - **`[ - ][ + ]`**: nudge the tempo by 0.5 BPM. The pair takes the space of one button, so MAN, AUDIO, LINK, TAP, SNAP and the pair make a tidy 3 x 2 grid.
   - **Queue triggers (`QUEUE`)**: right of the tempo controls, captions `A/B`, `A/B FX`, `BG`, `BG FX` and `TRN` over each queue's buttons: `[◀] [▶]`, with a play / pause button beside the caption on the A/B, BG and TRN queues (it toggles that queue's auto-advance and is lit while it runs; the FX queues have none). They are the same triggers as the queue rows of Edit's MST › CTRL tab: right-click a button for MIDI or OSC Learn, and a mapping made there shows on the CTRL row and the other way round.

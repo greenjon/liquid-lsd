@@ -110,7 +110,7 @@ When incoming audio level drops below the analysis threshold (`localAudioEnergy 
 ### 4. Audio Engine Disabled / Internal Manual Clock Mode
 When the Audio Engine is disabled (`UITheme.audioEngineEnabled = false`):
 - **Suspended Audio Capture**: Live audio input capture, backend drivers, and audio-reactive CV signals (`audio_amp`, `audio_bass`, `audio_mid`, `audio_high`, `audio_flux_*`) are stopped to conserve CPU cycles.
-- **Clock Row & Preferences Telemetry**: Both the BPM readout and the 4-beat phase meter remain visible and interactive on the Performance MIXER page's Clock row and within Preferences > Tempo & Sync, reflecting manual fixed clock mode with monotonic phase advance.
+- **Clock Row & Preferences Telemetry**: Both the BPM readout and the bar phase meter remain visible and interactive on the Performance MIXER page's Clock row and within Preferences > Tempo & Sync, reflecting manual fixed clock mode with monotonic phase advance.
 
 ### 5. VJ Tap Tempo & Phase Synchronization
 The application features a real-time Tap Tempo system ([`TapTempoController.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/audio/TapTempoController.kt)) enabling VJs to rhythmically tap in tempos via the Clock row's `[TAP]` button, global keyboard shortcut (`T`), or MIDI CC (`Mixer/tapTempo` or `Global/tapTempo`):
@@ -118,10 +118,37 @@ The application features a real-time Tap Tempo system ([`TapTempoController.kt`]
 - **Immediate Visual Feedback**: While tapping, the `[TAP]` button and Clock row BPM readout instantly confirm incoming taps with an active cadence color highlight and counter readout (`TAP [1]`, `TAP [2]`), returning to standard display once the cadence times out.
 - **Manual / Locked Mode Behavior**:
   - Immediately updates `manualBpm`, `estimatedBpm`, and `CVRegistry.alignBeatPhase` to the tapped tempo.
-  - **Downbeat Phase Quantization**: Every tap represents an arrival on the beat; the engine quantizes `totalBeats` to the nearest whole integer boundary (`round(totalBeats)`), resetting render monotonic progress so visual pulses and the 4-beat meter immediately lock to the musical downbeat.
+  - **Beat Phase Quantization**: Every tap represents an arrival on the beat; the engine quantizes `totalBeats` to the nearest whole integer boundary (`round(totalBeats)`), resetting render monotonic progress so visual pulses and the bar meter immediately lock to the beat.
+  - **Downbeat claim**: the first tap of a run (`registerTap(null)`) additionally calls `barLineBeat`, moving the count to the nearest multiple of `beatsPerBar`, and `DownbeatDetector.claimDownbeat()`. See [Bars and Downbeats](#6-bars-and-downbeats).
 - **Active Audio Tracking Mode Behavior**:
   - **Dynamic Programming Prior Shift**: Recalculates the causal dynamic programming target interval $\tau_0 = \text{fps} \times (60.0 / \text{BPM})$ and sets `stableCandidateBpm` to the tapped tempo with `isLocked = true` and `stableAccumulatedSec = stabilityLockDurationSec`, immediately locking the autocorrelation search window to the tapped tempo and breaking octave traps (half-time/double-time locks).
   - **Phase Slew Nudge**: Injects a phase nudge (`pendingPhaseNudge = 0.0`) into the audio callback's `phaseSlewBuffer`, smoothly slewing the visual flywheel phase without visual jump discontinuities.
+
+### 6. Bars and Downbeats
+
+The tracker locks the beat *phase*; it does not know which beat opens the bar. Bars are therefore a property of the beat **count**: the engine keeps `totalBeats` so that a bar starts on every multiple of `CVRegistry.beatsPerBar` (2..8, default 4). Every consumer (LFO/sequencer `GenUnit.BEAT`, `ClockKnobFeed`, the bar dots, the web serializer) reads that one count, so "where is beat 1" is answered by *renumbering* the count by a whole number of beats; there is no separate offset to forget to apply. `CVRegistry.beatInBar(beats)` and `barPhase(beats)` are the helpers.
+
+Beat 1 can come from four places:
+
+| Source | How |
+| :--- | :--- |
+| `SNAP` / `resyncDownbeat()` | rounds to a whole beat, then to the nearest multiple of `beatsPerBar` (`barLineBeat`, at most half a bar of movement), zeroes phase slew, calls `claimDownbeat()`. |
+| First tap of a run | `registerTap(null)` does the same; later taps keep the bar line (they only round to whole beats). Link mode returns early: the Link quantum owns the bar. |
+| `DownbeatDetector` (Preferences > Tempo & Sync > Downbeat: Auto) | below. |
+| Ableton Link | `AbletonLinkEngine.quantum` is the bar; the setting `setBeatsPerBarAndLinkQuantum` keeps the two equal. The detector is not run under Link. |
+
+**`DownbeatDetector`** (audio thread, no allocation) runs from `AudioEngine.processAudio` right after the flywheel advances, only when `downbeatMode == AUTO`, the clock is `AUDIO_TRACKER`, the signal is `ACTIVE` and the tempo is locked:
+
+1. Each block is assigned to the beat whose window `[n-0.2, n+0.8)` contains the block's centre. When a beat's window ends it yields three numbers: summed low-band flux, summed overall onset strength and mean low-band level, each divided by its own running average (`EMA_RATE` 0.05), so loudness and genre do not matter.
+2. `feature = 0.45 kick + 0.35 onset + 0.2 level`, plus half of any rise over the previous beat (a new bar's first beat is usually a jump). It is added into `score[n mod beatsPerBar]` with a decay of 0.8 per bar (about the last five bars).
+3. Every `beatsPerBar` beats after 4 bars of warm-up it compares positions. The first answer needs the best position to lead the runner-up by 15 % (`SWITCH_MARGIN`). Afterwards position 0 is "the downbeat", and another position must lead it by 15 % for 2 evaluations in a row (30 % after a manual claim) before the bar line moves.
+4. A move is returned from `process` as a whole-beat shift (`shiftToBarLine`: the shorter way, forward on a tie); the engine adds it to `totalBeats` and the detector rotates its scores to match. The fractional phase is untouched.
+5. `confidence` (0..1) is how far position 0 leads the best other position, scaled so a 25 % lead reads 1.0. A jump in the count (tap, resync, lost lock) or a change of `beatsPerBar` throws the gathered scores away.
+6. `claimDownbeat()` (volatile request from the UI thread) clears the scores, marks the current answer as decided and ignores the detector for `LOCK_BARS` = 16 bars.
+
+Known limits: it learns from accents, so a groove with an identical kick on every beat and nothing else that changes per bar (a flat four-on-the-floor loop) leaves it undecided, with low confidence, rather than guessing; breakdowns without a kick pause the evidence; it assumes the beat phase is on the beat, not the off-beat. It is not a meter detector (3 vs 4 beats is a setting). The web TV does not use any of this yet.
+
+Tests: `DownbeatDetectorTest` (synthetic accented grooves for 3/4/6/7 beats per bar, flat groove, warm-up, claim lock, count jump, `shiftToBarLine`) and the SNAP/tap cases in `AudioEngineTest`.
 
 ---
 

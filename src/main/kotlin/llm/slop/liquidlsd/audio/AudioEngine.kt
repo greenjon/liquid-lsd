@@ -141,6 +141,8 @@ object AudioEngine {
     private val extractor = AmplitudeExtractor()
     val beatDetector = BeatDetector()
     val beatTracker: BeatTrackerEngine get() = beatDetector.engine
+    val downbeatDetector = DownbeatDetector()
+    val downbeatConfidence: Float get() = downbeatDetector.confidence
     val confidence: Float get() = beatDetector.confidence
 
     // Pre-allocated buffer for oscilloscope rendering of raw input samples
@@ -185,6 +187,22 @@ object AudioEngine {
     @Volatile var clockSource: ClockSource = ClockSource.MANUAL
     @Volatile var manualBpm = 120f
 
+    /** Whether the audio tracker also decides which beat opens the bar (OFF: only taps and SNAP set it). */
+    @Volatile var downbeatMode: DownbeatMode = DownbeatMode.OFF
+
+    var beatsPerBar: Int
+        get() = CVRegistry.beatsPerBar
+        set(value) {
+            CVRegistry.beatsPerBar = value
+            downbeatDetector.beatsPerBar = CVRegistry.beatsPerBar
+        }
+
+    /** [beatsPerBar] plus Ableton Link's quantum, so a Link session phrases in the same bars. */
+    fun setBeatsPerBarAndLinkQuantum(value: Int) {
+        beatsPerBar = value
+        llm.slop.liquidlsd.link.AbletonLinkEngine.quantum = beatsPerBar.toDouble()
+    }
+
     @Deprecated("Use clockSource == ClockSource.MANUAL instead")
     var isBpmLocked: Boolean
         get() = clockSource == ClockSource.MANUAL
@@ -213,6 +231,7 @@ object AudioEngine {
         lowPass.reset(); midPass.reset(); highPass.reset()
         spectrum.reset()
         beatDetector.reset()
+        downbeatDetector.reset()
         totalSamplesProcessed = 0L
         totalBeats = 0.0
         phaseSlewBuffer = 0.0
@@ -287,20 +306,31 @@ object AudioEngine {
     }
 
     /**
-     * Snaps beat phase immediately to downbeat (1.0) and resets phase slew and detector offsets.
+     * Declares the beat nearest to now to be beat 1 of the bar: snaps the beat count to a whole beat that is a
+     * multiple of [beatsPerBar] (moving it by at most half a bar), zeros phase slew and detector offsets, and
+     * protects the answer from the downbeat detector for a while.
      */
     fun resyncDownbeat(timestampNs: Long = System.nanoTime()) {
         val effectiveBpm = estimatedBpm
         val linkEngine = llm.slop.liquidlsd.link.AbletonLinkEngine
         val currentBeats = if (isActive()) totalBeats else CVRegistry.getSynchronizedTotalBeats()
-        val alignedBeats = kotlin.math.round(currentBeats)
+        val alignedBeats = barLineBeat(currentBeats)
         totalBeats = alignedBeats
         phaseSlewBuffer = 0.0
         beatDetector.pendingPhaseNudge = 0.0
         CVRegistry.alignBeatPhase(alignedBeats, effectiveBpm, timestampNs)
+        downbeatDetector.claimDownbeat()
         if (linkEngine.isEnabled) {
             linkEngine.requestBeatAtTime(alignedBeats)
         }
+    }
+
+    /** The whole beat nearest [beats], moved to the closest bar line. */
+    private fun barLineBeat(beats: Double): Double {
+        val whole = kotlin.math.round(beats)
+        val bpb = CVRegistry.beatsPerBar
+        val position = Math.floorMod(whole.toLong(), bpb.toLong()).toInt()
+        return whole + DownbeatDetector.shiftToBarLine(position, bpb)
     }
 
     /**
@@ -330,13 +360,19 @@ object AudioEngine {
         if (clockSource == ClockSource.AUDIO_TRACKER) {
             beatDetector.pendingPhaseNudge = 0.0
         }
+        // The first tap of a run is "the one": count the bar from it. Later taps only keep the beat phase.
+        val claimsDownbeat = tappedBpm == null
         if (!isActive() || clockSource == ClockSource.MANUAL) {
             val currentBeats = if (isActive()) totalBeats else CVRegistry.getSynchronizedTotalBeats()
-            val alignedBeats = kotlin.math.round(currentBeats)
+            val alignedBeats = if (claimsDownbeat) barLineBeat(currentBeats) else kotlin.math.round(currentBeats)
             totalBeats = alignedBeats
             phaseSlewBuffer = 0.0
             CVRegistry.alignBeatPhase(alignedBeats, effectiveBpm, tapTimestampNs)
+        } else if (claimsDownbeat) {
+            // Tracker-driven count: keep the tracker's phase, only renumber so the nearest beat opens a bar.
+            totalBeats = barLineBeat(totalBeats) + (totalBeats - kotlin.math.round(totalBeats))
         }
+        if (claimsDownbeat) downbeatDetector.claimDownbeat()
     }
 
     /**
@@ -413,6 +449,7 @@ object AudioEngine {
 
         // Reset beat detector (locks to 120 BPM until new tempo is locked)
         beatDetector.reset()
+        downbeatDetector.reset()
 
         // Reset CV anchor
         CVRegistry.resetBeatAnchor(0.0, estimatedBpm, lastSignalTime)
@@ -673,7 +710,13 @@ object AudioEngine {
             }
         } else {
             // Flywheel momentum: always advance totalBeats using effective BPM (smooth coasting even through silence)
-            totalBeats += deltaTimeSec * (effectiveBpm / 60.0)
+            val deltaBeats = deltaTimeSec * (effectiveBpm / 60.0)
+            totalBeats += deltaBeats
+            if (downbeatMode == DownbeatMode.AUTO && clockSource == ClockSource.AUDIO_TRACKER &&
+                currentState == SignalState.ACTIVE && beatDetector.isTempoLocked
+            ) {
+                totalBeats += downbeatDetector.process(totalBeats, deltaBeats, bassFlux, onsetStrength, bass)
+            }
             CVRegistry.updateBeatAnchor(totalBeats, effectiveBpm, currentTime + blockDurationNs)
         }
 

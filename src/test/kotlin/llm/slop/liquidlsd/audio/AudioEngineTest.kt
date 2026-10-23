@@ -337,6 +337,53 @@ class AudioEngineTest {
     }
 
     @Test
+    fun testResyncDownbeatPutsTheCountOnABarLine() {
+        val cv = llm.slop.liquidlsd.cv.CVRegistry
+        AudioEngine.clockSource = ClockSource.MANUAL
+        AudioEngine.setBpmDirectly(120.0f)
+        for (bpb in intArrayOf(4, 3)) {
+            AudioEngine.beatsPerBar = bpb
+            cv.resetBeatAnchor(5.3, 120f)
+            AudioEngine.resyncDownbeat()
+            val bar = cv.barPhase(cv.getSynchronizedTotalBeats())
+            // Within a few milliseconds of the bar line (either side of it).
+            assertTrue(bar < 0.02 || bar > 0.98, "beats per bar $bpb, bar phase $bar")
+        }
+        AudioEngine.beatsPerBar = 4
+    }
+
+    @Test
+    fun testFirstTapOfARunMarksTheDownbeatAndLaterTapsDoNot() {
+        val cv = llm.slop.liquidlsd.cv.CVRegistry
+        AudioEngine.clockSource = ClockSource.MANUAL
+        AudioEngine.beatsPerBar = 4
+        AudioEngine.setBpmDirectly(120.0f)
+        cv.resetBeatAnchor(6.1, 120f)
+        AudioEngine.registerTap(null)
+        val first = cv.barPhase(cv.getSynchronizedTotalBeats())
+        assertTrue(first < 0.02 || first > 0.98, "bar phase $first")
+
+        // Beat 3 of the bar; a later tap with a tempo keeps the bar line where it was.
+        cv.resetBeatAnchor(7.0, 120f)
+        AudioEngine.registerTap(120f)
+        assertEquals(3, cv.beatInBar(cv.getSynchronizedTotalBeats()))
+    }
+
+    @Test
+    fun testBeatsPerBarIsClampedAndReachesTheClock() {
+        val cv = llm.slop.liquidlsd.cv.CVRegistry
+        AudioEngine.beatsPerBar = 99
+        assertEquals(8, cv.beatsPerBar)
+        AudioEngine.beatsPerBar = 1
+        assertEquals(2, cv.beatsPerBar)
+        AudioEngine.beatsPerBar = 3
+        assertEquals(3, AudioEngine.downbeatDetector.beatsPerBar)
+        assertEquals(1, cv.beatInBar(4.5))
+        assertEquals(0.5, cv.barPhase(1.5), 1e-9)
+        AudioEngine.beatsPerBar = 4
+    }
+
+    @Test
     fun testClockSourceFromString() {
         assertEquals(ClockSource.MANUAL, ClockSource.fromString("MANUAL"))
         assertEquals(ClockSource.MANUAL, ClockSource.fromString("MANUAL_TAP"))

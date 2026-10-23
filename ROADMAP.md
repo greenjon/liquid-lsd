@@ -34,6 +34,7 @@ Liquid LSD is a real-time, audio-reactive procedural visual synthesizer and VJ p
 | **Toggle/Select Metaknob Targets** | `rendering/isf/*`, `ui/*` | **v1.1** | **PENDING** | Bool and select inputs as Metaknob targets (Milestone 10). |
 | **Localization** | `ui/*` | **v1.1** | **PENDING** | All user-facing text moved to string tables; translation support with locale selection. |
 | **Live Shader Reload** | `rendering/isf/*`, `rendering/VisualSourceRegistry.kt`, `rendering/Shader.kt` | **v1.1** | **PENDING** | Recompile a saved shader in place, in every deck, slot and transition that uses it, keeping the last good version on error (Milestone 11). |
+| **Downbeat Detection** | `audio/BeatTrackerEngine.kt`, `cv/CVRegistry.kt`, `web/beattrack.js` | **v1.1** | **PENDING** | Bar-start (downbeat) detection on top of the beat tracker, a real `barPhase` source and beats-per-bar setting, tap override and confidence (Milestone 12). |
 | **Expanded FX Chain View** | `ui/PerformanceMatrixPanel.kt`, `ui/FxSlotCell.kt`, `macro/FxMacroSync.kt` | **Compost (v1.2)** | **SHELVED** | Mixxx-style 3-sub-row chain editing on the Performance matrix. Decided 2026-10-13: no milestone. Notes: `.planning/fx-chain-expanded-view-notes.md`. |
 
 ---
@@ -217,6 +218,23 @@ Build it in stages. Stage 1 covers the common case, an edit to the GLSL body onl
 
 **Open decision**
 - [ ] Removed files: what a deck playing a deleted source does. Leading option: keep the last program running, mark the source as missing in Browse, drop it from the catalog.
+
+**Done means:** release notes in both files, user guide and developer docs, tooltips.
+
+
+---
+
+### Milestone 12: Downbeat (Bar Start) Detection
+> **Reference**: [`.planning/downbeat-detection-plan.md`](.planning/downbeat-detection-plan.md)
+> **Status**: Desktop built 2026-10-23 (tests pass, unseen in the app; see `.planning/app-checklist.md`). Web port waits until we see how well it works on real music.
+
+The beat tracker finds tempo and beat phase but not which beat is beat 1. A bar is `beats mod 4` from an arbitrary start or the last tap, so bar-length LFOs, sequencers, the clock knob downbeat flash and the web autopilot's bar-line switching are only as aligned as that accident.
+
+- [x] **Bar plumbing**: `beatsPerBar` in `CVRegistry` (the beat count is renumbered so bars start on multiples of it, instead of carrying a separate offset), SNAP and the first tap of a run set beat 1, Link's quantum follows the setting.
+- [x] **Detection**: `DownbeatDetector`: per-beat kick/onset/level features, scores over the last ~5 bars with margin and hysteresis, a confidence output.
+- [x] **Control**: Off/Auto setting (default Off until tuned), tap/SNAP override that locks out the detector for 16 bars, hold on low confidence.
+- [ ] **Web port** of the above, then phrase-aligned switching in `autopilot.js`.
+- [ ] Tune on real music (labelled clips) before the web port. Not done: 3-vs-4 meter suggestion (a setting instead; unreliable without harmonic features), chroma features, phrase detection.
 
 **Done means:** release notes in both files, user guide and developer docs, tooltips.
 

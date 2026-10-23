@@ -14,7 +14,8 @@ internal class ClockKnobFeed(
     val bpm: () -> Float,
     val bpmFloor: () -> Float,
     val bpmCeiling: () -> Float,
-    val tap: () -> Unit
+    val tap: () -> Unit,
+    val beatsPerBar: () -> Int = { DEFAULT_BEATS_PER_BAR }
 ) {
     fun light(): KnobLight {
         val bpm = bpm()
@@ -22,7 +23,7 @@ internal class ClockKnobFeed(
         val range = bpmCeiling() - floor
         val beats = totalBeats()
         val phase = beats - Math.floor(beats)
-        val bar = Math.floorMod(Math.floor(beats).toLong(), BEATS_PER_BAR.toLong())
+        val bar = Math.floorMod(Math.floor(beats).toLong(), beatsPerBar().toLong())
         // The flash lasts a fixed time, not a fixed share of the beat, so it stays a tick at 60 BPM.
         val flashing = phase < (FLASH_SECONDS * bpm / 60f).coerceAtMost(MAX_FLASH_BEATS)
         val c = when {
@@ -40,7 +41,7 @@ internal class ClockKnobFeed(
     }
 
     companion object {
-        const val BEATS_PER_BAR = 4
+        const val DEFAULT_BEATS_PER_BAR = 4
         const val FLASH_SECONDS = 0.09f
         const val MAX_FLASH_BEATS = 0.5f
         const val REST_RING_BRIGHTNESS = 0.4f

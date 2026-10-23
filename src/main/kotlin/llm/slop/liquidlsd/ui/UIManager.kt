@@ -205,7 +205,8 @@ class UIManager(
         bpm = { session.audioEngine.getEstimatedBpm() },
         bpmFloor = { session.audioEngine.beatDetector.settings.bpmSearchFloor.toFloat() },
         bpmCeiling = { session.audioEngine.beatDetector.settings.bpmSearchCeiling.toFloat() },
-        tap = { session.tapTempoController.tap() }
+        tap = { session.tapTempoController.tap() },
+        beatsPerBar = { session.cvRegistry.beatsPerBar }
     )
 
     /** The controller surfaces, built once per [Mixer] (the knob surface's row cache then holds across frames). */

@@ -5,13 +5,14 @@ import imgui.ImGui
 import imgui.flag.ImGuiCol
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.audio.ClockSource
+import llm.slop.liquidlsd.audio.DownbeatMode
 import llm.slop.liquidlsd.link.AbletonLinkEngine
 
 /**
  * Clock row (Performance MASTER tab) controls left of the knobs, beside the CLOCK title badge
  * drawn by [PerformanceMatrixPanel]. A 3 x 2 grid of equal buttons:
  * [MAN] [AUDIO] [LINK] over [TAP] [SNAP] [-|+] (Ableton Link status, always in its cell, dim while off), then the BPM readout with the
- * 4-beat bar dots under it.
+ * bar dots (one per beat of the bar) under it.
  * Same actions as Preferences > Tempo & Sync ([TempoSyncPanel]) -- surfaced here because they're
  * pressed mid-set. The BPM itself is deliberately not a knob (one bump drifts the whole show); the Twister's clock knob ([ClockKnobFeed]) only shows it and taps.
  */
@@ -39,6 +40,9 @@ internal object PerformanceClockControls {
     private var tapLabel = "TAP##perf_clock_tap"
     private var tapMapping: Any? = null
     private var tapTip = ""
+    private var dotsTipBeats = -1
+    private var dotsTipConfidence = Int.MIN_VALUE
+    private var dotsTip = ""
 
     /** Width of every button in the 3 x 2 grid (MAN, AUDIO, LINK over TAP, SNAP, [-][+]). */
     private const val CELL_W = 48f
@@ -113,7 +117,7 @@ internal object PerformanceClockControls {
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
             if (ButtonChrome.button("SNAP##perf_clock_resync", CELL_W, headerH)) audioEngine.resyncDownbeat()
         }
-        itemTooltip("Snap the beat phase to the downbeat now.")
+        itemTooltip("Make the beat nearest now beat 1 of the bar: snaps the beat phase and the bar line together.\nThe downbeat detector leaves that answer alone for a while.")
 
         val nudgeW = (CELL_W - CELL_GAP) / 2f
         ImGui.setCursorScreenPos(startX + 2 * step, row2Y)
@@ -147,13 +151,14 @@ internal object PerformanceClockControls {
         itemTooltip(BPM_TIPS[currentClock.ordinal])
 
         val totalBeats = session.cvRegistry.getSynchronizedTotalBeats()
-        val currentBeat = (((totalBeats.toLong() % 4) + 4) % 4).toInt()
-        val dotR = 5f
-        val dotGap = 7f
-        val dotsW = dotR * 2f * 4f + dotGap * 3f
+        val beatsPerBar = session.cvRegistry.beatsPerBar
+        val currentBeat = session.cvRegistry.beatInBar(totalBeats)
+        val dotGap = if (beatsPerBar <= 4) 7f else 3f
+        val dotR = minOf(5f, (BPM_W - dotGap * (beatsPerBar - 1)) / (2f * beatsPerBar))
+        val dotsW = dotR * 2f * beatsPerBar + dotGap * (beatsPerBar - 1)
         val dotsX = bpmX + (BPM_W - dotsW) / 2f
         val dotsCy = row2Y + headerH / 2f
-        for (i in 0..3) {
+        for (i in 0 until beatsPerBar) {
             val cx = dotsX + dotR + i * (dotR * 2f + dotGap)
             if (i == currentBeat) {
                 val col = if (i == 0) TangoPalette.BEAT_DOWNBEAT.u32() else TangoPalette.BEAT_DOT.u32()
@@ -164,7 +169,16 @@ internal object PerformanceClockControls {
         }
         ImGui.setCursorScreenPos(dotsX, row2Y)
         ImGui.dummy(dotsW, headerH)
-        itemTooltip("4/4 bar phase. Downbeat is cyan.")
+        val auto = audioEngine.downbeatMode == DownbeatMode.AUTO
+        val confidencePct = if (auto) Math.round(audioEngine.downbeatConfidence * 10f) * 10 else -1
+        if (beatsPerBar != dotsTipBeats || confidencePct != dotsTipConfidence) {
+            dotsTipBeats = beatsPerBar
+            dotsTipConfidence = confidencePct
+            dotsTip = "$beatsPerBar-beat bar phase. Downbeat is cyan." +
+                (if (auto) "\nDownbeat detector: Auto, ${if (confidencePct <= 0) "still listening" else "confidence about $confidencePct%"}." else "") +
+                "\nSNAP, or the first TAP of a run, sets beat 1."
+        }
+        itemTooltip(dotsTip)
 
         // Queue and randomize triggers, right of the tempo controls (the MST > CTRL rows' triggers, one click away).
         PerformanceClockTriggers.draw(session, mixer, startX + TEMPO_BLOCK_W + PerformanceClockTriggers.LEFT_GAP, rightX, headerY, row2Y, headerH)
@@ -181,7 +195,7 @@ internal object PerformanceClockControls {
         if (tapMapping != this.tapMapping || tapTip.isEmpty()) {
             this.tapMapping = tapMapping
             val tapMidiText = tapMapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
-            tapTip = "Tap tempo (hotkey: T).$tapMidiText In Audio Tracker mode, nudges the detected tempo and phase.\nRight-click for MIDI Learn."
+            tapTip = "Tap tempo (hotkey: T).$tapMidiText In Audio Tracker mode, nudges the detected tempo and phase.\nThe first tap of a run also marks beat 1 of the bar.\nRight-click for MIDI Learn."
         }
         if (tapCount != tapCountShown) {
             tapCountShown = tapCount
