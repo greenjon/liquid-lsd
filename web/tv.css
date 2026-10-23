@@ -562,5 +562,8 @@ body.kiosk #nameplate { display: none; }
 /* --- Embed (?embed): the picture only, inside a host app. Nothing on the page takes touches or shows chrome --- */
 body.embed { overflow: hidden; user-select: none; -webkit-user-select: none; touch-action: none; }
 body.embed * { pointer-events: none; }
+/* The picture fills the viewport by position, not by vh: Android's WebView can report 100vh as 0 (the canvas
+   then had no height and the screen stayed black). */
+body.embed #tv-screen-area { position: fixed; inset: 0; width: auto; height: auto; padding: 0; }
 body.embed #osd, body.embed #title-card, body.embed #ident, body.embed #bumper,
 body.embed #about, body.embed #tv-menu, body.embed #nameplate { display: none !important; }

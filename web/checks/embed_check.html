@@ -23,6 +23,8 @@ try {
   for (let i = 0; i < 100 && !w.LSD.feedReady(); i++) await sleep(100);
   check('The TV powers itself on and the feed node is ready', w.LSD.powerState.on && w.LSD.feedReady());
   check('No TV controls, OSD, menu or nameplate', !vis('tv-controls') && !vis('osd') && !vis('tv-menu') && !vis('nameplate'));
+  const cvs = d.getElementById('glCanvas');
+  check('The canvas fills the window (not just drawn into a zero-height box)', cvs.clientWidth === w.innerWidth && cvs.clientHeight === w.innerHeight, `${cvs.clientWidth}x${cvs.clientHeight} in ${w.innerWidth}x${w.innerHeight}`);
   check('No CRT warm-up', w.LSD.powerState.warmupProgress === 1);
   const audioEl = d.getElementById('lsdAudio');
   check('The radio element is never started', !audioEl.getAttribute('src') && audioEl.paused);
