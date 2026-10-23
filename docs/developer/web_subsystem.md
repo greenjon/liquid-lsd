@@ -176,7 +176,11 @@ To maintain 1:1 visual parity without manual dual-maintenance:
 
 ---
 
-## 6. Relay Server Operations (`server/server.js`)
+## 6. Publishing the Web TV
+
+The web TV is served at **https://spaz.org/tv/**: Apache on spaz.org has `Alias /tv /www/spaz/htdocs/lsd-relay/public`, a folder `gj` can write over SSH (key login). `scripts/publish_web_tv.sh` rsyncs `web/` there (checksums, so only changed files go; `web/checks/` and `web/tools/` stay behind). `--dry-run` shows the changes, `--delete` also removes server files that are no longer in `web/` (older deployments left prototype shaders and desktop presets there). The relay's code lives next to it in `/www/spaz/htdocs/lsd-relay/` and is deployed separately (section 7).
+
+## 7. Relay Server Operations (`server/server.js`)
 
 The relay server is a zero-dependency Node.js service using `ws`.
 
