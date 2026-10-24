@@ -57,8 +57,13 @@ class SyphonBridge {
     private var syphonClientClass: Pointer? = null
     private var syphonServerDirectoryClass: Pointer? = null
     
+    private companion object {
+        /** Set after the first failed framework lookup so later bridges skip the reload and stay quiet. */
+        @Volatile var frameworkMissing = false
+    }
+
     init {
-        if (System.getProperty("os.name").lowercase().contains("mac")) {
+        if (System.getProperty("os.name").lowercase().contains("mac") && !frameworkMissing) {
             try {
                 // 1. Add our natives folder to the search path
                 val nativesPath = java.io.File("library/natives").absolutePath
@@ -82,6 +87,7 @@ class SyphonBridge {
                 syphonServerDirectoryClass = objc.objc_getClass("SyphonServerDirectory")
                 
                 if (syphonServerClass == null) {
+                    frameworkMissing = true
                     logger.warn { "SyphonServer class not found. Ensure Syphon.framework is in library/natives/ or /Library/Frameworks/" }
                 }
             } catch (e: Exception) {

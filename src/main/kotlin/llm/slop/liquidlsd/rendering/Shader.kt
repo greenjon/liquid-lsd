@@ -44,8 +44,10 @@ class Shader(vertexSource: String, fragmentSource: String) {
             }
             
             // Validate program
-            glValidateProgram(pId)
-            if (glGetProgrami(pId, GL_VALIDATE_STATUS) == GL_FALSE) {
+            // macOS core profile fails validation without a bound VAO, which is not a real defect
+            if (!System.getProperty("os.name").lowercase().contains("mac")) glValidateProgram(pId)
+            if (!System.getProperty("os.name").lowercase().contains("mac") &&
+                glGetProgrami(pId, GL_VALIDATE_STATUS) == GL_FALSE) {
                 logger.warn { "Shader program validation warning:\n${glGetProgramInfoLog(pId)}" }
             }
             

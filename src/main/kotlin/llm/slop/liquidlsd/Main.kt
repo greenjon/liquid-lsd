@@ -841,6 +841,8 @@ private fun destroySecondaryWindow(win: Long) {
 
 private fun setWindowAppIcons(window: Long) {
     if (window == 0L) return
+    // Cocoa has no per-window icons; GLFW raises GLFW_FEATURE_UNAVAILABLE
+    if (System.getProperty("os.name").lowercase().contains("mac")) return
     val iconSizes = listOf(16, 32, 48, 64, 128, 256)
     val directBuffers = mutableListOf<java.nio.ByteBuffer>()
     val pixelBuffers = mutableListOf<java.nio.ByteBuffer>()
