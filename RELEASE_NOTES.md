@@ -1,8 +1,9 @@
 ## [Unreleased]
 
-### macOS Log Cleanup (`rendering/TextureStreamer.kt`, `rendering/Shader.kt`, `Main.kt`)
+### macOS Log Cleanup and Syphon (`rendering/TextureStreamer.kt`, `rendering/Shader.kt`, `Main.kt`)
 - **The Mac log is quiet again.** A missing Syphon framework is now reported once instead of every two seconds, and the shader "no vertex array object bound" validation warning and the window-icon error no longer appear on macOS. None of these changed behaviour.
-- **Known gap:** the Mac download does not include Syphon.framework, so Syphon video in and out is unavailable there until it is bundled.
+- **Syphon now ships with the Mac downloads.** Both Mac zips include a universal (Apple Silicon and Intel) Syphon.framework, so Syphon video in and out can work there. It is built once by a manual CI workflow, not on every release.
+- **Fewer false warnings:** a Speed knob that feeds a phase (`LSD_PHASES`) no longer logs "Uniform not found" for every such source, and the Flame engine's startup line is no longer a warning.
 
 ### Downbeat Detection and Bar Length (`audio/DownbeatDetector.kt`, `audio/AudioEngine.kt`, `cv/CVRegistry.kt`, `ui/TempoSyncPanel.kt`, `ui/PerformanceClockControls.kt`, `ui/ClockKnob.kt`)
 - **The app can now find the first beat of the bar.** Before, a "bar" was just every fourth beat counted from wherever the tracker started or you last tapped. Preferences > Tempo & Sync has a new **Bar & Downbeat** section: **Downbeat: Auto (from the music)** listens for where the kick and bass land hardest in the bar and moves the bar line there, so bar-length LFOs and sequences, the bar dots and the Twister clock knob's downbeat flash line up with the music. It needs the Audio Beat Tracker clock, a few bars of steady music, and works best on dance music with a clear kick; it is **off by default** (Manual). A confidence bar shows how sure it is, and the bar dots' tooltip repeats it. It only moves the bar line after a position clearly wins twice in a row, so a breakdown doesn't send it wandering.

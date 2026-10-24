@@ -59,7 +59,7 @@ internal class FlameEngine {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
         glBindTexture(GL_TEXTURE_2D, 0)
-        logger.warn { "Flame: ${n * n} points, density ${if (density32) "RGBA32F" else "RGBA16F"}" }
+        logger.info { "Flame: ${n * n} points, density ${if (density32) "RGBA32F" else "RGBA16F"}" }
     }
 
     /** Replaces the colour palette: 768 bytes of RGB, or null for the procedural default. */

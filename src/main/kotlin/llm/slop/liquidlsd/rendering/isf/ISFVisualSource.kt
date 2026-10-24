@@ -248,6 +248,7 @@ class ISFVisualSource(
     }.toTypedArray()
 
     private val phases = PhaseIntegrators(header.LSD_PHASES, parameters)
+    init { shader.quietUniforms = header.LSD_PHASES.values.flatten().toSet() }
 
     override fun setupUniforms(shader: Shader) {
         // TIME, TIMEDELTA, FRAMEINDEX, DATE and RENDERSIZE are set per deck by [llm.slop.liquidlsd.rendering.Renderer].

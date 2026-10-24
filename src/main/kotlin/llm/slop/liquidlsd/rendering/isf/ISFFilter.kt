@@ -335,6 +335,7 @@ class ISFFilter(
 
         cachedParams = parameters.values.toTypedArray()
         phases = PhaseIntegrators(header.LSD_PHASES, parameters)
+        shader.quietUniforms = header.LSD_PHASES.values.flatten().toSet()
 
         val defaultDto = ISFAutoBindEngine.resolveDefault(this)
         defaultDto.parameters.forEach { (name, value) ->

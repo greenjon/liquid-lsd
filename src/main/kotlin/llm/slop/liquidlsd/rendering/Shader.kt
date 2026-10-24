@@ -17,6 +17,9 @@ class Shader(vertexSource: String, fragmentSource: String) {
     private var isDisposed = false
     private val uniformLocationCache = mutableMapOf<String, Int>()
 
+    /** Uniforms the source expects the compiler to drop (LSD_PHASES rate inputs); a missing one is not worth a warning. */
+    var quietUniforms: Set<String> = emptySet()
+
     init {
         var vId = 0
         var fId = 0
@@ -123,7 +126,7 @@ class Shader(vertexSource: String, fragmentSource: String) {
                 location = glGetUniformLocation(programId, "$name[0]")
             }
             if (location == -1) {
-                if (name !in SYSTEM_UNIFORMS) {
+                if (name !in SYSTEM_UNIFORMS && name !in quietUniforms) {
                     logger.warn { "Uniform '$name' not found in shader program $programId" }
                 }
             }
