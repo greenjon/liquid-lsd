@@ -38,6 +38,7 @@ jobs:
       - name: Publish as release asset
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
         run: |
           # ditto keeps the framework's Versions/Current symlinks intact
           ditto -c -k --keepParent out/Syphon.framework Syphon.framework.zip
