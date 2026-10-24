@@ -1,0 +1,49 @@
+name: Build Syphon Framework
+
+# Run by hand, only when the Syphon version needs to change. The universal
+# (arm64 + x86_64) framework is published as a release asset on the
+# `syphon-natives` tag; release.yml and smoke-test.yml download it, so normal
+# builds never compile Syphon.
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Syphon-Framework git ref (tag, branch or commit) to build"
+        default: "main"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Clone Syphon-Framework
+        run: git clone https://github.com/Syphon/Syphon-Framework.git syphon-src && git -C syphon-src checkout "${{ inputs.ref }}"
+
+      - name: Build universal framework
+        working-directory: syphon-src
+        run: |
+          xcodebuild -project Syphon.xcodeproj -scheme Syphon -configuration Release \
+            ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO \
+            CODE_SIGNING_ALLOWED=NO CONFIGURATION_BUILD_DIR="$PWD/../out" build
+          codesign --force --deep -s - ../out/Syphon.framework
+
+      - name: Verify architectures
+        run: |
+          archs=$(lipo -archs out/Syphon.framework/Versions/A/Syphon)
+          echo "Architectures: $archs"
+          echo "$archs" | grep -q arm64 && echo "$archs" | grep -q x86_64
+
+      - name: Publish as release asset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # ditto keeps the framework's Versions/Current symlinks intact
+          ditto -c -k --keepParent out/Syphon.framework Syphon.framework.zip
+          sha=$(git -C syphon-src rev-parse HEAD)
+          gh release view syphon-natives >/dev/null 2>&1 || \
+            gh release create syphon-natives --title "Syphon framework (natives)" \
+              --notes "Universal Syphon.framework used by the macOS builds. Not a Liquid LSD release." --latest=false
+          gh release upload syphon-natives Syphon.framework.zip --clobber
+          gh release edit syphon-natives --notes "Universal (arm64 + x86_64) Syphon.framework used by the macOS builds, built from Syphon-Framework commit $sha. Not a Liquid LSD release."

@@ -201,6 +201,15 @@ jobs:
             -o src/main/resources/natives/linux-arm64/libimgui-java64.so
           file src/main/resources/natives/linux-arm64/libimgui-java64.so
 
+      - name: Download prebuilt Syphon framework (macOS)
+        run: |
+          mkdir -p library/natives
+          curl -fL "https://github.com/greenjon/liquid-lsd/releases/download/syphon-natives/Syphon.framework.zip" \
+            -o syphon.zip
+          unzip -q syphon.zip -d library/natives
+          ls library/natives/Syphon.framework/Versions/A
+          rm syphon.zip
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -369,5 +378,7 @@ jobs:
         with:
           keep_latest: 3
           delete_tags: true
+          # only version tags (vX.Y.Z); never the `syphon-natives` asset release
+          delete_tag_pattern: v
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
