@@ -21,8 +21,7 @@ precision highp float;
         { "NAME": "DotSize", "LABEL": "Dot Size", "TYPE": "float", "DEFAULT": 0.18367, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "Glow", "LABEL": "Glow", "TYPE": "float", "DEFAULT": 0.3, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "HueOffset", "LABEL": "Hue Offset", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 1.0 },
-        { "NAME": "HueSweep", "LABEL": "Hue Sweep", "TYPE": "float", "DEFAULT": 0.09091, "MIN": 0.0, "MAX": 1.0 },
-        { "NAME": "TrailDecay", "LABEL": "Trail Decay", "TYPE": "float", "DEFAULT": 0.86735, "MIN": 0.0, "MAX": 1.0 }
+        { "NAME": "HueSweep", "LABEL": "Hue Sweep", "TYPE": "float", "DEFAULT": 0.09091, "MIN": 0.0, "MAX": 1.0 }
     ],
     "LSD_PHASES": { "SpinPhase": ["Speed"], "WavePhase": ["Speed", "WaveAmp"], "ShearPhase": ["Speed", "Shear"] }
 }
@@ -32,12 +31,9 @@ precision highp float;
 #define Scale_ (0.05+Scale*0.95)
 #define Damping_ (1.0+Damping*499.0)
 #define WaveFreq_ (0.01+WaveFreq*0.99)
-#define WaveAmp_ (WaveAmp*0.02)
-#define Shear_ (Shear*0.5)
 #define DotSize_ (0.001+DotSize*0.049)
 #define Glow_ (Glow*5.0)
 #define HueSweep_ (0.001+HueSweep*0.099)
-#define TrailDecay_ (TrailDecay*0.98)
 
 
 // IQ cosine palette

@@ -3,6 +3,7 @@
 ### macOS Log Cleanup and Syphon (`rendering/TextureStreamer.kt`, `rendering/Shader.kt`, `Main.kt`)
 - **The Mac log is quiet again.** A missing Syphon framework is now reported once instead of every two seconds, and the shader "no vertex array object bound" validation warning and the window-icon error no longer appear on macOS. None of these changed behaviour.
 - **Syphon now ships with the Mac downloads.** Both Mac zips include a universal (Apple Silicon and Intel) Syphon.framework, so Syphon video in and out can work there. It is built once by a manual CI workflow, not on every release.
+- **Dynamic Spiral loses its dead Trail Decay knob.** It did nothing (the shader no longer draws trails); trails belong to the Feedback effect. Presets that mentioned it were cleaned up, and the web TV copy matches.
 - **Fewer false warnings:** a Speed knob that feeds a phase (`LSD_PHASES`) no longer logs "Uniform not found" for every such source, and the Flame engine's startup line is no longer a warning.
 
 ### Downbeat Detection and Bar Length (`audio/DownbeatDetector.kt`, `audio/AudioEngine.kt`, `cv/CVRegistry.kt`, `ui/TempoSyncPanel.kt`, `ui/PerformanceClockControls.kt`, `ui/ClockKnob.kt`)

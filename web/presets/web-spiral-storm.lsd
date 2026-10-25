@@ -147,13 +147,6 @@
           "phaseOffset": 0.0
         }
       ]
-    },
-    "TrailDecay": {
-      "baseValue": 0.88,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
-      "modulators": []
     }
   },
   "tags": [

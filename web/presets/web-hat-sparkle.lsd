@@ -109,13 +109,6 @@
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": []
-    },
-    "TrailDecay": {
-      "baseValue": 0.8,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
-      "modulators": []
     }
   },
   "tags": [
