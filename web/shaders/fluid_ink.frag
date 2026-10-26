@@ -134,6 +134,14 @@ vec4 jacobi(sampler2D prevP) {
     return vec4(clamp(p, -200.0, 200.0), 0.0, 0.0, 1.0);
 }
 
+// Black is transparent: alpha follows the brightest channel (the renderer stores colour x alpha, so the
+// stored pixel is the colour itself and a deck's BG layer shows through wherever this source is dark).
+vec4 blackToAlpha(vec3 c) {
+    c = clamp(c, 0.0, 1.0);
+    float a = max(c.r, max(c.g, c.b));
+    return vec4(c / max(a, 1e-4), a);
+}
+
 void main() {
     vec2 px = vec2(1.0 / N);
     vec2 uv = gl_FragCoord.xy / RENDERSIZE;
@@ -216,5 +224,5 @@ void main() {
     float rim = clamp(-(hx * 0.6 + hy * 0.8) * 2.0, 0.0, 1.0);
     vec3 ink = 1.0 - exp(-c * Brightness_ * 1.2);
     vec3 col = vec3(0.012, 0.010, 0.025) + ink + rim * ink * 0.6 + vec3(lum * lum) * 0.15 * Brightness_;
-    gl_FragColor = vec4(col, 1.0);
+    gl_FragColor = blackToAlpha(col);
 }

@@ -111,6 +111,14 @@ vec3 palette(float t, int mode) {
     return vec3(mod(i, 4.0) < 2.0 ? 1.0 : 0.0, i < 4.0 ? 1.0 : 0.0, mod(i, 2.0) < 1.0 ? 1.0 : 0.0) * 0.9;
 }
 
+// Black is transparent: alpha follows the brightest channel (the renderer stores colour x alpha, so the
+// stored pixel is the colour itself and a deck's BG layer shows through wherever this source is dark).
+vec4 blackToAlpha(vec3 c) {
+    c = clamp(c, 0.0, 1.0);
+    float a = max(c.r, max(c.g, c.b));
+    return vec4(c / max(a, 1e-4), a);
+}
+
 void main() {
     float aspect = RENDERSIZE.x / RENDERSIZE.y;
     vec2 uv = isf_FragNormCoord;
@@ -208,5 +216,5 @@ void main() {
         col = floor(clamp(col, 0.0, 1.0) * lv + 0.5) / lv;
     }
     col = clamp(col, 0.0, 1.0);
-    gl_FragColor = vec4(col, 1.0);
+    gl_FragColor = blackToAlpha(col);
 }

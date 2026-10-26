@@ -160,6 +160,14 @@ vec4 feedbackPass() {
     return vec4(col, 1.0);
 }
 
+// Black is transparent: alpha follows the brightest channel (the renderer stores colour x alpha, so the
+// stored pixel is the colour itself and a deck's BG layer shows through wherever this source is dark).
+vec4 blackToAlpha(vec3 c) {
+    c = clamp(c, 0.0, 1.0);
+    float a = max(c.r, max(c.g, c.b));
+    return vec4(c / max(a, 1e-4), a);
+}
+
 void main() {
     if (PASSINDEX == 0) { gl_FragColor = feedbackPass(); return; }
 
@@ -170,5 +178,5 @@ void main() {
     vec3 c = texture(vfbState, uv).rgb;
     float lum = dot(c, vec3(0.299, 0.587, 0.114));
     c = mix(vec3(lum), c, Saturation_) * Brightness_;
-    gl_FragColor = vec4(clamp(c, 0.0, 1.0), 1.0);
+    gl_FragColor = blackToAlpha(c);
 }

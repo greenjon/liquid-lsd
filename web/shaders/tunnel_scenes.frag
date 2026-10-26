@@ -197,6 +197,14 @@ vec3 sceneWormhole(vec2 oxy, vec3 rd, int sides, int layers, float aa, float tra
     return col;
 }
 
+// Black is transparent: alpha follows the brightest channel (the renderer stores colour x alpha, so the
+// stored pixel is the colour itself and a deck's BG layer shows through wherever this source is dark).
+vec4 blackToAlpha(vec3 c) {
+    c = clamp(c, 0.0, 1.0);
+    float a = max(c.r, max(c.g, c.b));
+    return vec4(c / max(a, 1e-4), a);
+}
+
 void main() {
     float aspect = RENDERSIZE.x / RENDERSIZE.y;
     vec2 uv = (isf_FragNormCoord - 0.5) * vec2(aspect, 1.0) * 2.0;
@@ -234,5 +242,5 @@ void main() {
     col *= Brightness_;
     col = 1.0 - exp(-col * 1.3);
     col *= 1.0 - 0.25 * smoothstep(0.7, 1.8, length(uv));
-    gl_FragColor = vec4(col, 1.0);
+    gl_FragColor = blackToAlpha(col);
 }

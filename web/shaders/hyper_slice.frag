@@ -151,6 +151,14 @@ vec3 adjustColor(vec3 col, float sat, float bright) {
     return max(vec3(0.0), mix(vec3(g), col, sat) * bright);
 }
 
+// Black is transparent: alpha follows the brightest channel (the renderer stores colour x alpha, so the
+// stored pixel is the colour itself and a deck's BG layer shows through wherever this source is dark).
+vec4 blackToAlpha(vec3 c) {
+    c = clamp(c, 0.0, 1.0);
+    float a = max(c.r, max(c.g, c.b));
+    return vec4(c / max(a, 1e-4), a);
+}
+
 void main() {
     float aspect = RENDERSIZE.x / RENDERSIZE.y;
     vec2 uv = (isf_FragNormCoord - 0.5) * vec2(aspect, 1.0);
@@ -167,7 +175,7 @@ void main() {
     float bDisc = bDot * bDot - dot(ro, ro) + bRadius * bRadius;
 
     if (bDisc < 0.0) {
-        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        gl_FragColor = vec4(0.0);
         return;
     }
 
@@ -203,7 +211,7 @@ void main() {
         float glowAlpha = clamp(accumGlow * Glow_, 0.0, 1.0);
         vec3 glowCol = palette(HueOffset, vec3(0.5), vec3(0.5), vec3(1.0), vec3(0.0, 0.33, 0.67));
         glowCol = adjustColor(glowCol, Saturation, Brightness_);
-        gl_FragColor = vec4(glowCol * glowAlpha, 1.0);
+        gl_FragColor = blackToAlpha(glowCol * glowAlpha);
         return;
     }
 
@@ -235,5 +243,5 @@ void main() {
     shadedColor += vec3(1.0) * (hitEdge * EdgeBrightness_);
     shadedColor += baseCol * (accumGlow * Glow_);
 
-    gl_FragColor = vec4(shadedColor * Opacity_, 1.0);
+    gl_FragColor = blackToAlpha(shadedColor * Opacity_);
 }

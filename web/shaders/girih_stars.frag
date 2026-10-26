@@ -241,6 +241,14 @@ vec3 sampleGirih(vec2 p, int lat, float theta, float hw, float ow, float aa,
     return col;
 }
 
+// Black is transparent: alpha follows the brightest channel (the renderer stores colour x alpha, so the
+// stored pixel is the colour itself and a deck's BG layer shows through wherever this source is dark).
+vec4 blackToAlpha(vec3 c) {
+    c = clamp(c, 0.0, 1.0);
+    float a = max(c.r, max(c.g, c.b));
+    return vec4(c / max(a, 1e-4), a);
+}
+
 void main() {
     float aspect = RENDERSIZE.x / RENDERSIZE.y;
     float cells = TileScale_;
@@ -273,5 +281,5 @@ void main() {
     vec3 col = max(acc / float(ns), 0.0) * Brightness_;
     // Soft shoulder above 0.8 so Brightness near max stays shaded instead of clipping to white.
     col = mix(col, 0.8 + 0.2 * (1.0 - exp(-(col - 0.8) * 5.0)), step(0.8, col));
-    gl_FragColor = vec4(col, 1.0);
+    gl_FragColor = blackToAlpha(col);
 }

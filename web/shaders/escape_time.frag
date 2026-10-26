@@ -154,6 +154,14 @@ vec3 shade(vec4 s, vec2 zEnd, int maxIt) {
     return hsv2rgb(vec3(fract(hue), clamp(sat, 0.0, 1.0), clamp(val, 0.0, 1.5)));
 }
 
+// Black is transparent: alpha follows the brightest channel (the renderer stores colour x alpha, so the
+// stored pixel is the colour itself and a deck's BG layer shows through wherever this source is dark).
+vec4 blackToAlpha(vec3 c) {
+    c = clamp(c, 0.0, 1.0);
+    float a = max(c.r, max(c.g, c.b));
+    return vec4(c / max(a, 1e-4), a);
+}
+
 void main() {
     int type = int(FractalType + 0.5);
     int maxIt = int(mix(48.0, float(MAX_IT), Detail));
@@ -182,5 +190,5 @@ void main() {
         }
     }
     col /= float(aa * aa);
-    gl_FragColor = vec4(col, 1.0);
+    gl_FragColor = blackToAlpha(col);
 }

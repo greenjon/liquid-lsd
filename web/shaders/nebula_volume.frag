@@ -121,6 +121,14 @@ vec3 gasColor(float d, vec3 p, int cMode) {
 
 float ign(vec2 p) { return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715)))); }
 
+// Black is transparent: alpha follows the brightest channel (the renderer stores colour x alpha, so the
+// stored pixel is the colour itself and a deck's BG layer shows through wherever this source is dark).
+vec4 blackToAlpha(vec3 c) {
+    c = clamp(c, 0.0, 1.0);
+    float a = max(c.r, max(c.g, c.b));
+    return vec4(c / max(a, 1e-4), a);
+}
+
 void main() {
     drift_ = DriftPhase * 0.25;
     float aspect = RENDERSIZE.x / RENDERSIZE.y;
@@ -194,5 +202,5 @@ void main() {
     vec3 col = acc + bg * trans;
     col = 1.0 - exp(-col);                                // soft tone-map keeps dense cores from clipping
     if (!(col.r == col.r && col.g == col.g && col.b == col.b)) col = vec3(0.0);
-    gl_FragColor = vec4(col, 1.0);
+    gl_FragColor = blackToAlpha(col);
 }

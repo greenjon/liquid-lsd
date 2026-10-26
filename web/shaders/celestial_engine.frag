@@ -48,6 +48,14 @@ vec3 hsv2rgb(vec3 c) {
     return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
 
+// Black is transparent: alpha follows the brightest channel (the renderer stores colour x alpha, so the
+// stored pixel is the colour itself and a deck's BG layer shows through wherever this source is dark).
+vec4 blackToAlpha(vec3 c) {
+    c = clamp(c, 0.0, 1.0);
+    float a = max(c.r, max(c.g, c.b));
+    return vec4(c / max(a, 1e-4), a);
+}
+
 void main() {
     float aspect = RENDERSIZE.x / RENDERSIZE.y;
     vec2 p = (isf_FragNormCoord - 0.5) * vec2(aspect, 1.0) / max(Scale_, 0.05);
@@ -128,5 +136,5 @@ void main() {
     float centerGlow = exp(-r * 4.0) * (Glow_ * 0.5);
     col += vec3(centerGlow) * hsv2rgb(vec3(HueOffset, 0.5, 1.0));
 
-    gl_FragColor = vec4(col, 1.0);
+    gl_FragColor = blackToAlpha(col);
 }
