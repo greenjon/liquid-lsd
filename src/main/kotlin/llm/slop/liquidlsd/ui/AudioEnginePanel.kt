@@ -5,6 +5,7 @@ import imgui.flag.ImGuiTableColumnFlags
 import imgui.flag.ImGuiTableFlags
 import imgui.type.ImBoolean
 import imgui.type.ImInt
+import llm.slop.liquidlsd.audio.AudioAgc
 import llm.slop.liquidlsd.audio.AudioEngine
 import llm.slop.liquidlsd.audio.AudioChannelRouting
 import llm.slop.liquidlsd.audio.BeatDetectionSettings
@@ -37,6 +38,7 @@ object AudioEnginePanel {
 
     // Device & Backend UI wrappers
     private val isAudioEnabled = ImBoolean()
+    private val isAgcEnabled = ImBoolean()
     private val currentBackendIdx = ImInt()
     private val currentDeviceIdx = ImInt()
 
@@ -236,6 +238,37 @@ object AudioEnginePanel {
                     AppPreferencesStore.savePreferences()
                 }
             )
+
+            // Auto gain for the audio CV signals (amp/bass/mid/high and flux); beat detection is unaffected.
+            val agc = audioEngine.agc
+            isAgcEnabled.set(agc.enabled)
+            if (ImGui.checkbox("Auto Gain (AGC)", isAgcEnabled)) {
+                agc.enabled = isAgcEnabled.get()
+                AppPreferencesStore.savePreferences()
+            }
+            itemTooltip("Normalizes each audio band (amp, bass, mid, high) against its own recent peak so audio-reactive parameters respond the same at any input level. Beat detection is unaffected. Off = fixed scale.")
+            if (agc.enabled) {
+                CustomRangeSlider.drawCompactSlider(
+                    session = session,
+                    label = "AGC Headroom",
+                    currentValue = agc.headroom,
+                    minLimit = AudioAgc.MIN_HEADROOM,
+                    maxLimit = 1.0f,
+                    defaultValue = AudioAgc.DEFAULT_HEADROOM,
+                    formatValue = { "%.2f".format(it) },
+                    idPrefix = "audio_engine_agc_headroom",
+                    themeColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.9f, 0.4f, 0.9f),
+                    showCurrentLabel = false,
+                    customBoxWidth = sliderBoxW,
+                    onValueChanged = { newVal ->
+                        agc.headroom = newVal
+                        AppPreferencesStore.savePreferences()
+                    }
+                )
+                itemTooltip("How hot the normalized signals run. Lower = more of the music reaches full scale (hotter); 1.0 = recent peaks just touch full scale.")
+                theme.body("Boost  amp %.1fx  bass %.1fx  mid %.1fx  high %.1fx".format(
+                    agc.boost(AudioAgc.AMP), agc.boost(AudioAgc.BASS), agc.boost(AudioAgc.MID), agc.boost(AudioAgc.HIGH)))
+            }
 
             if (SystemAudioVolume.isSupported) {
                 SystemAudioVolume.queryAsync()

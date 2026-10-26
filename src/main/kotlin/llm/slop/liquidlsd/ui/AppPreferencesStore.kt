@@ -2,6 +2,7 @@ package llm.slop.liquidlsd.ui
 
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import llm.slop.liquidlsd.audio.AudioAgc
 import llm.slop.liquidlsd.audio.AudioEngine
 import llm.slop.liquidlsd.audio.AudioTarget
 import llm.slop.liquidlsd.audio.BeatDetectionSettings
@@ -89,6 +90,10 @@ object AppPreferencesStore {
                 if (savedGain != null) {
                     AudioEngine.inputGain = savedGain.coerceIn(0.0f, 10.0f)
                     logger.info { "Loaded audioInputGain from settings file: $savedGain" }
+                }
+                props.getBoolean("audioAgcEnabled")?.let { AudioEngine.agc.enabled = it }
+                props.getProperty("audioAgcHeadroom")?.toFloatOrNull()?.let {
+                    AudioEngine.agc.headroom = it.coerceIn(AudioAgc.MIN_HEADROOM, 1f)
                 }
                 props.getBoolean("audioBpmLocked")?.let { savedBpmLocked ->
                     AudioEngine.isBpmLocked = savedBpmLocked
@@ -343,6 +348,8 @@ object AppPreferencesStore {
             props.setProperty("audioChannelRouting", AudioEngine.channelRouting.name)
             props.setProperty("audioDeviceName", AudioEngine.selectedDeviceName ?: "")
             props.setProperty("audioInputGain", AudioEngine.inputGain.toString())
+            props.setProperty("audioAgcEnabled", AudioEngine.agc.enabled.toString())
+            props.setProperty("audioAgcHeadroom", AudioEngine.agc.headroom.toString())
             props.setProperty("audioBpmLocked", AudioEngine.isBpmLocked.toString())
             props.setProperty("audioManualBpm", AudioEngine.manualBpm.toString())
             props.setProperty("clockSource", AudioEngine.clockSource.name)

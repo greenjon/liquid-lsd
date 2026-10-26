@@ -176,6 +176,9 @@ object AudioEngine {
     @Volatile private var estimatedBpm = 120f
     @Volatile var inputGain = 1.0f
 
+    /** Per-band auto gain for the audio CV signals (see [AudioAgc]). */
+    val agc = AudioAgc()
+
     // ── Channel Routing & Stereo Metering ────────────────────────────────────
     @Volatile var channelRouting: AudioChannelRouting = AudioChannelRouting.MIX
     @Volatile var meterPeakL: Float = 0f
@@ -720,15 +723,24 @@ object AudioEngine {
             CVRegistry.updateBeatAnchor(totalBeats, effectiveBpm, currentTime + blockDurationNs)
         }
 
-        val ampNorm      = (amp  / 0.25f).coerceIn(0f, 1f)
-        val bassNorm     = (bass / 0.25f).coerceIn(0f, 1f)
-        val midNorm      = (mid  / 0.25f).coerceIn(0f, 1f)
-        val highNorm     = (high / 0.25f).coerceIn(0f, 1f)
+        // AGC only rescales the CV normalisation; the detectors above keep the raw band RMS.
+        val dtSec = deltaTimeSec
+        val ampDiv  = agc.update(AudioAgc.AMP,  amp,  dtSec)
+        val bassDiv = agc.update(AudioAgc.BASS, bass, dtSec)
+        val midDiv  = agc.update(AudioAgc.MID,  mid,  dtSec)
+        val highDiv = agc.update(AudioAgc.HIGH, high, dtSec)
+        val fixed = AudioAgc.FIXED_SCALE
 
-        val fluxAmpNorm  = (onsetStrength / 0.1f).coerceIn(0f, 1f)
-        val fluxBassNorm = (bassFlux / 0.05f).coerceIn(0f, 1f)
-        val fluxMidNorm  = (midFlux  / 0.05f).coerceIn(0f, 1f)
-        val fluxHighNorm = (highFlux / 0.05f).coerceIn(0f, 1f)
+        val ampNorm      = (amp  / ampDiv).coerceIn(0f, 1f)
+        val bassNorm     = (bass / bassDiv).coerceIn(0f, 1f)
+        val midNorm      = (mid  / midDiv).coerceIn(0f, 1f)
+        val highNorm     = (high / highDiv).coerceIn(0f, 1f)
+
+        // Flux keeps its own fixed scale, stretched by the same per-band ratio as the level.
+        val fluxAmpNorm  = (onsetStrength / (0.1f  * ampDiv  / fixed)).coerceIn(0f, 1f)
+        val fluxBassNorm = (bassFlux / (0.05f * bassDiv / fixed)).coerceIn(0f, 1f)
+        val fluxMidNorm  = (midFlux  / (0.05f * midDiv  / fixed)).coerceIn(0f, 1f)
+        val fluxHighNorm = (highFlux / (0.05f * highDiv / fixed)).coerceIn(0f, 1f)
 
         CVRegistry.updatePushedValue("amp",       ampNorm)
         CVRegistry.updatePushedValue("bass",      bassNorm)

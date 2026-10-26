@@ -33,6 +33,8 @@ You can hide columns you're not using via the **⋮** kebab menu, positioned jus
 
 Clicking an **AUD** cell opens the audio modulator config. Each parameter supports two independent audio connections (Audio 1 and Audio 2).
 
+**Auto Gain:** audio signals are normalized against each band's own recent peak (Preferences > Audio > Auto Gain, on by default), so a modulator behaves the same whether the feed is quiet or hot. Switch it off for a fixed scale.
+
 ### Frequency bands
 
 | Band | What it tracks                                     |

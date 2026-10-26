@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Audio Auto Gain (`audio/AudioAgc.kt`, `audio/AudioEngine.kt`, `ui/AudioEnginePanel.kt`, `ui/AppPreferencesStore.kt`)
+- **Audio-reactive parameters now respond the same at any input level.** Amp, bass, mid and high (and their flux signals) used to be divided by a fixed scale, so a quiet feed barely moved anything and a hot one pinned everything at full. A new **Auto Gain (AGC)** option in Preferences > Audio, on by default, tracks each band's recent peak (instant attack, about 8 seconds to let go) and normalizes against it, so the peaks of the music reach full scale whatever the level. Silence and room noise are not boosted (at most about 12x). **AGC Headroom** sets how hot it runs, and a readout shows the boost per band. Switch AGC off to get the old fixed scale back.
+- Beat detection, downbeat detection and the silence gate still see the raw levels, so tempo tracking is unchanged. Settings are saved (`audioAgcEnabled`, `audioAgcHeadroom`). The web TV still uses the fixed scale.
+
 ### macOS Log Cleanup and Syphon (`rendering/TextureStreamer.kt`, `rendering/Shader.kt`, `Main.kt`)
 - **The Mac log is quiet again.** A missing Syphon framework is now reported once instead of every two seconds, and the shader "no vertex array object bound" validation warning and the window-icon error no longer appear on macOS. None of these changed behaviour.
 - **Syphon now ships with the Mac downloads.** Both Mac zips include a universal (Apple Silicon and Intel) Syphon.framework, so Syphon video in and out can work there. It is built once by a manual CI workflow, not on every release.
