@@ -112,12 +112,14 @@ class WebEvaluatorVectorsTest {
 
     private fun case(
         name: String, spec: Spec, p: ModulatableParameter, points: List<Point>,
-        bpm: Float = 120f, extras: Map<String, JsonElement> = emptyMap()
+        bpm: Float = 120f, extras: Map<String, JsonElement> = emptyMap(), reactivity: Float = 1f
     ) {
+        Reactivity.amount = reactivity
         val pts = points.map { pt ->
-            val ctx = apply(pt, bpm, 1.0 / 60.0)
+            val ctx = apply(pt, bpm, 1.0 / 60.0).let { if (reactivity == 1f) it else JsonObject(it + ("reactivity" to JsonPrimitive(reactivity.toDouble()))) }
             buildJsonObject { put("ctx", ctx); put("expected", p.evaluate().toDouble()) }
         }
+        Reactivity.amount = 1f
         cases.add(buildJsonObject {
             put("name", name); put("spec", specJson(spec)); put("param", paramJson(p, extras)); put("points", JsonArray(pts))
         })
@@ -176,6 +178,14 @@ class WebEvaluatorVectorsTest {
         case("lfo frame", uni, param(0.5f, uni, lfo(unit = GenUnit.FRAME, sub = 40f)), clockPoints())
         case("lfo MUL", uni, param(0.5f, uni, lfo(op = ModulationOperator.MUL, depth = 0.4f)), clockPoints())
         case("lfo SCALE", uni, param(0.8f, uni, lfo(op = ModulationOperator.SCALE, depth = 0.5f)), clockPoints())
+        for (r in listOf(0f, 1f, 2f)) {
+            for (op in ModulationOperator.values()) {
+                case("recipe lfo $op reactivity $r", uni, param(0.5f, uni, lfo(sub = 2f, depth = 0.3f, op = op).copy(recipe = true)), clockPoints(), reactivity = r)
+            }
+            case("recipe audio bipolar reactivity $r", bi, param(0f, bi, audio(depth = 0.6f).copy(recipe = true)),
+                clockPoints(mapOf("audio_bass" to 0.7f)), reactivity = r)
+            case("non-recipe ignores reactivity $r", uni, param(0.5f, uni, lfo(sub = 2f, depth = 0.3f)), clockPoints().take(3), reactivity = r)
+        }
         case("lfo bypassed", uni, param(0.5f, uni, lfo(bypassed = true)), clockPoints().take(2))
 
         for (unit in GenUnit.values()) {

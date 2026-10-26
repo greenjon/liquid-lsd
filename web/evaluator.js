@@ -328,10 +328,12 @@ export function evaluateParameter(param, ctx, spec = {}, fallback = 0) {
   const isBipolar = min < 0;
   const range = hasRange ? max - min : 1;
   const addScalar = isBipolar ? range / 2 : range;
+  // Global reactivity amount (desktop Reactivity.amount): scales only recipe modulators' depth.
+  const reactivity = F(ctx.reactivity ?? 1.0);
   let result = base;
   for (const mod of active) {
     const cv = evaluateModulator(mod, ctx);
-    const depth = F(mod.depth ?? (mod.sourceId === 'seq' ? 1.0 : 0.0));
+    const depth = F(mod.depth ?? (mod.sourceId === 'seq' ? 1.0 : 0.0)) * (mod.recipe ? reactivity : 1.0);
     const dc = F(mod.dcOffset ?? 0.0);
     const bipolarSource = BIPOLAR_SOURCES.has(mod.sourceId);
     const rawAmount = (mod.sourceId !== 'seq' && bipolarSource && !isBipolar)

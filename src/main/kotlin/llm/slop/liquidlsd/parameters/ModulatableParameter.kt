@@ -225,18 +225,19 @@ class ModulatableParameter(
                 continue
             }
             val finalCv = evaluateModulator(mod, clockAnchors)
+            val depth = Reactivity.effectiveDepth(mod)
             val isSourceBipolar = llm.slop.liquidlsd.cv.isCvSourceBipolar(mod.sourceId)
             val rawModAmount = if (mod.sourceId == "seq") {
-                finalCv * mod.depth + mod.dcOffset
+                finalCv * depth + mod.dcOffset
             } else if (isSourceBipolar) {
                 if (isBipolar) {
-                    finalCv * mod.depth + mod.dcOffset
+                    finalCv * depth + mod.dcOffset
                 } else {
-                    ((finalCv + 1f) / 2f) * mod.depth + mod.dcOffset
+                    ((finalCv + 1f) / 2f) * depth + mod.dcOffset
                 }
             } else {
                 // Unipolar source (Audio, Trigger, MIDI CC): 0 is silence/rest, 1 is peak
-                finalCv * mod.depth + mod.dcOffset
+                finalCv * depth + mod.dcOffset
             }
             
             val scalar = if (mod.operator == ModulationOperator.ADD) addScalar else 1.0f
@@ -245,7 +246,7 @@ class ModulatableParameter(
             result = when (mod.operator) {
                 ModulationOperator.ADD -> result + modAmount
                 ModulationOperator.MUL -> result * (1.0f + modAmount)
-                ModulationOperator.SCALE -> result * (1.0f - mod.depth + modAmount)
+                ModulationOperator.SCALE -> result * (1.0f - depth + modAmount)
             }
         }
 

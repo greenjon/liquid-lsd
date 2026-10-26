@@ -109,6 +109,9 @@ data class CvModulator(
 
     val lfoMinMaxMode: Boolean = false,
 
+    /** True for modulators that come from a shader's reactivity recipe; only these follow [Reactivity.amount]. */
+    val recipe: Boolean = false,
+
     val id: String = llm.slop.liquidlsd.utils.DeterministicRandom.uuid()
 ) {
     fun getLfoMin(): Float = dcOffset - depth

@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Reactivity Amount (`parameters/Reactivity.kt`, `parameters/ModulatableParameter.kt`, `parameters/CvModulator.kt`, `ui/AudioEnginePanel.kt`, `web/evaluator.js`)
+- **A global Reactivity slider** in Preferences > Audio (0% to 200%, default 100%, saved) scales how strongly the built-in audio and beat response plays. It applies only to modulators marked as part of a shader's reactivity recipe (new `recipe` flag, saved in presets); modulators you add by hand, MIDI and macros are not affected. At 0% every parameter sits exactly at its set value. Nothing ships with recipes yet; they arrive source by source.
+- The web evaluator honours the same flag and an optional `reactivity` in its context, with new golden vectors at 0%, 100% and 200%.
+
 ### Audio Auto Gain (`audio/AudioAgc.kt`, `audio/AudioEngine.kt`, `ui/AudioEnginePanel.kt`, `ui/AppPreferencesStore.kt`)
 - **Audio-reactive parameters now respond the same at any input level.** Amp, bass, mid and high (and their flux signals) used to be divided by a fixed scale, so a quiet feed barely moved anything and a hot one pinned everything at full. A new **Auto Gain (AGC)** option in Preferences > Audio, on by default, tracks each band's recent peak (instant attack, about 8 seconds to let go) and normalizes against it, so the peaks of the music reach full scale whatever the level. Silence and room noise are not boosted (at most about 12x). **AGC Headroom** sets how hot it runs, and a readout shows the boost per band. Switch AGC off to get the old fixed scale back.
 - Beat detection, downbeat detection and the silence gate still see the raw levels, so tempo tracking is unchanged. Settings are saved (`audioAgcEnabled`, `audioAgcHeadroom`). The web TV still uses the fixed scale.
