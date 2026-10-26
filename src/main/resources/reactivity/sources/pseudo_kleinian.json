@@ -1,0 +1,148 @@
+{
+  "version": 1,
+  "params": {
+    "InversionRadius": {
+      "stack": [
+        {
+          "name": "bass pulse",
+          "active": true,
+          "sourceId": "audio_bass",
+          "depth": 0.1,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        },
+        {
+          "name": "sine 8-beat",
+          "active": false,
+          "sourceId": "lfo",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 8,
+          "depth": 0.08
+        }
+      ],
+      "note": "Folds breathe with the kick."
+    },
+    "InversionStrength": {
+      "stack": [
+        {
+          "name": "high shimmer",
+          "active": false,
+          "sourceId": "audio_high",
+          "depth": 0.15,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 110
+        }
+      ],
+      "note": "Highs sharpen the inversion; off by default."
+    },
+    "SlabSize": {
+      "stack": [
+        {
+          "name": "triangle 16-beat",
+          "active": false,
+          "sourceId": "lfo",
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 16,
+          "depth": 0.1
+        }
+      ],
+      "note": "Slow slab breathing; off by default."
+    },
+    "OffsetX": {
+      "stack": [
+        {
+          "name": "sine 64-beat",
+          "active": true,
+          "sourceId": "lfo",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 64,
+          "depth": 0.15
+        }
+      ],
+      "note": "Slow beat-locked drift of the fold."
+    },
+    "OffsetY": {
+      "stack": [
+        {
+          "name": "mid body",
+          "active": true,
+          "sourceId": "audio_mid",
+          "depth": 0.12,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ],
+      "note": "Mids nudge the fold."
+    },
+    "FlightSpeed": {
+      "stack": [
+        {
+          "name": "loudness swell",
+          "active": true,
+          "sourceId": "audio_amp",
+          "depth": 0.25,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ],
+      "note": "Flies faster when loud."
+    },
+    "Brightness": {
+      "stack": [
+        {
+          "name": "loudness swell",
+          "active": true,
+          "sourceId": "audio_amp",
+          "depth": 0.12,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        },
+        {
+          "name": "kick hit",
+          "active": false,
+          "sourceId": "audio_flux_bass",
+          "depth": 0.2,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        }
+      ],
+      "note": "Gentle loudness lift."
+    },
+    "RotateY": {
+      "stack": [
+        {
+          "name": "sine 64-beat",
+          "active": true,
+          "sourceId": "lfo",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 64,
+          "depth": 0.08
+        }
+      ],
+      "note": "Slow turntable sway."
+    },
+    "HueOffset": {
+      "stack": [
+        {
+          "name": "slow hue drift",
+          "active": true,
+          "sourceId": "lfo",
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 64,
+          "depth": 0.35
+        }
+      ]
+    }
+  }
+}

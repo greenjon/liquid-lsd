@@ -1,7 +1,7 @@
 ## [Unreleased]
 
-### Reactivity Recipes: Batch 1 of Sources (`presets/ReactivityRecipes.kt`, `presets/GeneratorDefaults.kt`, `resources/reactivity/sources/`)
-- **Twelve sources now react to the music out of the box:** Apollonian, Dynamic Spiral, Tunnel Scenes, Kali Set, Aurora Ribbons, Domain Warp Fluid, Voronoi Cells, Wave Ripples, Glitch Blocks, Metaballs, Halftone Matrix and Video Feedback. Each has a hand-written set of audio and beat responses on its key parameters (for example the gasket breathing on the kick, aurora curtains rising with loudness, glitches landing on kick and hat hits). Where a parameter has more than one idea, the extra ones are wired but **bypassed**, so you only click an AUD or LFO cell to switch them on.
+### Reactivity Recipes: Sources (`presets/ReactivityRecipes.kt`, `presets/GeneratorDefaults.kt`, `resources/reactivity/sources/`)
+- **Eighteen sources now react to the music out of the box:** Apollonian, Dynamic Spiral, Tunnel Scenes, Kali Set, Aurora Ribbons, Domain Warp Fluid, Voronoi Cells, Wave Ripples, Glitch Blocks, Metaballs, Halftone Matrix, Video Feedback, Mandelbulb, Mandelbox, KIFS, Pseudo-Kleinian, Hyperbolic Tiling and Icosa H3. Each has a hand-written set of audio and beat responses on its key parameters (for example the gasket breathing on the kick, aurora curtains rising with loudness, glitches landing on kick and hat hits). Where a parameter has more than one idea, the extra ones are wired but **bypassed**, so you only click an AUD or LFO cell to switch them on.
 - These are recipe modulators, so the **Reactivity** slider scales them. A default you saved yourself still wins over the shipped recipe. Recipes are read from files in the app (`reactivity/sources/<source>.json`); a test checks every file against its shader's parameters.
 
 ### Reactivity Amount (`parameters/Reactivity.kt`, `parameters/ModulatableParameter.kt`, `parameters/CvModulator.kt`, `ui/AudioEnginePanel.kt`, `web/evaluator.js`)
