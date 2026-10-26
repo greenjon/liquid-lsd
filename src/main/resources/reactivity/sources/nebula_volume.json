@@ -1,0 +1,217 @@
+{
+  "version": 1,
+  "params": {
+    "Density": {
+      "stack": [
+        {
+          "name": "bass pulse",
+          "active": true,
+          "sourceId": "audio_bass",
+          "depth": 0.12,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        },
+        {
+          "name": "loudness swell",
+          "active": false,
+          "sourceId": "audio_amp",
+          "depth": 0.15,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ],
+      "note": "Gas thickens on the bass."
+    },
+    "Turbulence": {
+      "stack": [
+        {
+          "name": "mid body",
+          "active": true,
+          "sourceId": "audio_mid",
+          "depth": 0.2,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        },
+        {
+          "name": "sine 16-beat",
+          "active": false,
+          "sourceId": "lfo",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 16,
+          "depth": 0.2
+        }
+      ],
+      "note": "Mids stir the gas."
+    },
+    "Glow": {
+      "stack": [
+        {
+          "name": "kick hit",
+          "active": true,
+          "sourceId": "audio_flux_bass",
+          "depth": 0.3,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        },
+        {
+          "name": "high shimmer",
+          "active": false,
+          "sourceId": "audio_high",
+          "depth": 0.25,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 110
+        }
+      ],
+      "note": "Kick flashes the glow."
+    },
+    "FlightSpeed": {
+      "stack": [
+        {
+          "name": "loudness swell",
+          "active": true,
+          "sourceId": "audio_amp",
+          "depth": 0.25,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ],
+      "note": "Flies faster when loud."
+    },
+    "Drift": {
+      "stack": [
+        {
+          "name": "sine 32-beat",
+          "active": true,
+          "sourceId": "lfo",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 32,
+          "depth": 0.2
+        },
+        {
+          "name": "mid body",
+          "active": false,
+          "sourceId": "audio_mid",
+          "depth": 0.2,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ],
+      "note": "Slow beat-locked drift."
+    },
+    "Brightness": {
+      "stack": [
+        {
+          "name": "loudness swell",
+          "active": true,
+          "sourceId": "audio_amp",
+          "depth": 0.12,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        },
+        {
+          "name": "kick hit",
+          "active": false,
+          "sourceId": "audio_flux_bass",
+          "depth": 0.2,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        }
+      ],
+      "note": "Gentle loudness lift."
+    },
+    "Coverage": {
+      "stack": [
+        {
+          "name": "mid body",
+          "active": false,
+          "sourceId": "audio_mid",
+          "depth": 0.12,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ],
+      "note": "Mids spread the gas; off by default."
+    },
+    "Lighting": {
+      "stack": [
+        {
+          "name": "high shimmer",
+          "active": false,
+          "sourceId": "audio_high",
+          "depth": 0.2,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 110
+        }
+      ],
+      "note": "Highs sharpen the shading; off by default."
+    },
+    "Scale": {
+      "stack": [
+        {
+          "name": "triangle 32-beat",
+          "active": false,
+          "sourceId": "lfo",
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 32,
+          "depth": 0.08
+        }
+      ],
+      "note": "Slow breathing; off by default."
+    },
+    "Zoom": {
+      "stack": [
+        {
+          "name": "bass pulse",
+          "active": false,
+          "sourceId": "audio_bass",
+          "depth": 0.05,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        }
+      ],
+      "note": "Kick push; off by default."
+    },
+    "RotateY": {
+      "stack": [
+        {
+          "name": "sine 64-beat",
+          "active": true,
+          "sourceId": "lfo",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 64,
+          "depth": 0.08
+        }
+      ],
+      "note": "Slow turntable sway."
+    },
+    "HueOffset": {
+      "stack": [
+        {
+          "name": "slow hue drift",
+          "active": true,
+          "sourceId": "lfo",
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 64,
+          "depth": 0.35
+        }
+      ]
+    }
+  }
+}

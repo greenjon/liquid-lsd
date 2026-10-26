@@ -1,0 +1,154 @@
+{
+  "version": 1,
+  "params": {
+    "Feed": {
+      "stack": [
+        {
+          "name": "sine 64-beat",
+          "active": true,
+          "sourceId": "lfo",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 64,
+          "depth": 0.15
+        }
+      ],
+      "note": "Very slow beat-locked breathing between neighbouring patterns."
+    },
+    "Kill": {
+      "stack": [
+        {
+          "name": "sine 64-beat",
+          "active": false,
+          "sourceId": "lfo",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 64,
+          "depth": 0.15,
+          "phaseOffset": 0.25
+        }
+      ],
+      "note": "Second axis of the same breathing; off by default."
+    },
+    "SimSpeed": {
+      "stack": [
+        {
+          "name": "loudness swell",
+          "active": true,
+          "sourceId": "audio_amp",
+          "depth": 0.25,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ],
+      "note": "Pattern grows faster when loud."
+    },
+    "Relief": {
+      "stack": [
+        {
+          "name": "kick hit",
+          "active": true,
+          "sourceId": "audio_flux_bass",
+          "depth": 0.3,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        },
+        {
+          "name": "loudness swell",
+          "active": false,
+          "sourceId": "audio_amp",
+          "depth": 0.2,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ],
+      "note": "Relief lighting flashes on the kick."
+    },
+    "Brightness": {
+      "stack": [
+        {
+          "name": "loudness swell",
+          "active": true,
+          "sourceId": "audio_amp",
+          "depth": 0.1,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ],
+      "note": "Gentle loudness lift."
+    },
+    "Diffusion": {
+      "stack": [
+        {
+          "name": "bass pulse",
+          "active": false,
+          "sourceId": "audio_bass",
+          "depth": 0.1,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        }
+      ],
+      "note": "Bass spreads the pattern; off by default."
+    },
+    "Regime": {
+      "stack": [
+        {
+          "name": "triangle 128-beat",
+          "active": false,
+          "sourceId": "lfo",
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 128,
+          "depth": 0.1
+        }
+      ],
+      "note": "Very slow regime morph; off by default."
+    },
+    "Reseed": {
+      "stack": [
+        {
+          "name": "drop reseed (hard kick wipes and reseeds)",
+          "active": false,
+          "sourceId": "audio_flux_bass",
+          "depth": 1.0,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        }
+      ],
+      "note": "Drop trigger; off by default."
+    },
+    "Zoom": {
+      "stack": [
+        {
+          "name": "bass pulse",
+          "active": false,
+          "sourceId": "audio_bass",
+          "depth": 0.05,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        }
+      ],
+      "note": "Kick push; off by default."
+    },
+    "HueOffset": {
+      "stack": [
+        {
+          "name": "slow hue drift",
+          "active": true,
+          "sourceId": "lfo",
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 64,
+          "depth": 0.35
+        }
+      ]
+    }
+  }
+}
