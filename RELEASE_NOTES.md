@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Knob Track and Master/Clock Colors (`ui/MacroKnobWidget.kt`, `ui/PerformanceUiContext.kt`)
+- **The unlit part of a knob's arc is easier to see.** It was the deck color at 35% brightness, which nearly vanished into the dark knob face on Deck B (blue) and PV (plum). It is now brighter for every deck; the lit arc is unchanged.
+- **Master and Clock now have real colors on screen:** Master is red and Clock is yellow, replacing the greys. The Twister's LEDs can only show plain RGB, so greys came out wrong; the controller now simply uses the same colors as the screen (Clock used to be plum on the hardware, the same as PV).
+
 ### Black Is Transparent in Sources (`rendering/Renderer.kt`, `library/sources/*`)
 - **Generator sources now let the BG deck show through wherever they are black.** Video Feedback and 29 other generators (everything except Chladni Cymatics, Dynamic Spiral, Icosa H3, Mandala and Fractal Flame, which keep their own alpha) write an alpha that follows their brightest channel, the way Fractal Flame does. Bright areas cover what is behind them and dark areas reveal it; the picture over a black BG is unchanged.
 - The renderer now stores source alpha as alpha instead of squaring it (colour x alpha, alpha kept as written), so sources with a partial alpha such as Chladni Cymatics blend a little more evenly.

@@ -364,7 +364,7 @@ object MacroKnobWidget {
             1f
         )
         val fillCol   = ImGui.colorConvertFloat4ToU32(ar, ag, ab, 1f)
-        val trackCol  = ImGui.colorConvertFloat4ToU32(ar * 0.35f, ag * 0.35f, ab * 0.35f, 1f)
+        val trackCol  = ImGui.colorConvertFloat4ToU32(ar * 0.55f + 0.10f, ag * 0.55f + 0.10f, ab * 0.55f + 0.10f, 1f)  // lifted so dark accents (blue, plum) stay visible on the near-black face
 
         dl.addCircleFilled(cx, cy, radius - 2f, faceCol, 32)
 

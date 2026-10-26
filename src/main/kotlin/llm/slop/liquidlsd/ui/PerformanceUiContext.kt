@@ -18,18 +18,18 @@ internal object PerformanceColors {
     val COLOR_DECK_PV  = TangoPalette.DECK_PV.normal // #75507B plum
     // These 4 badge the MASTER tab's rows, shown stacked together, so they need to read apart from
     // each other as much as from the DECKS tab's deck hues -- neither Master nor Global is deck-
-    // specific, so neutral Aluminium tones; Transitions keeps the Sync cyan (crossfading decks is
+    // specific, so they take the two hues no deck uses (Scarlet, Butter), which also survive on an RGB
+    // controller LED where Aluminium greys do not; Transitions keeps the Sync cyan (crossfading decks is
     // a "sync" concept); FX Wet/Dry uses Chocolate (freed up now that Deck BG is Chameleon) so it
     // doesn't read as just a lighter/darker copy of the Transitions row.
     val COLOR_TRANS    = TangoPalette.SYNC.normal          // #06AFDF
-    val COLOR_MASTER   = TangoPalette.NEUTRAL_LIGHT.normal // #D3D7CF
+    val COLOR_MASTER   = TangoPalette.SCARLET_RED.normal    // #CC0000
     val COLOR_FX       = TangoPalette.CHOCOLATE.normal     // #C17D11
-    val COLOR_GLOBAL   = TangoPalette.NEUTRAL_DARK.normal  // #555753
+    val COLOR_GLOBAL   = TangoPalette.BUTTER.normal         // #EDD400
 
-    // Controller LED colours. An RGB LED can't show the Aluminium greys that badge Master and Global
-    // on screen, so those two rows get a hue of their own on the hardware (the screen keeps its greys).
-    val LED_MASTER     = TangoPalette.SCARLET_RED.normal
-    val LED_GLOBAL     = TangoPalette.PLUM.normal
+    // Controller LED colours: the on-screen badge hues (an RGB LED can't show greys, so none are used).
+    val LED_MASTER     = COLOR_MASTER
+    val LED_GLOBAL     = COLOR_GLOBAL
 
     /** Uniform height of every row-side control (buttons, badges, preset combo) left/right of the knobs. */
     const val CTRL_H = 24f
