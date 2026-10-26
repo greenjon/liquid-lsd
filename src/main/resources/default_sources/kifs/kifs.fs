@@ -289,8 +289,9 @@ void main() {
         }
         vec3 base = palette(tv, HueOffset + spreadShift, Saturation, cMode) * Brightness_;
 
-        vec3 ldir = normalize(vec3(0.6, 0.8, -0.4));
-        vec3 ldir2 = normalize(vec3(-0.7, -0.2, 0.5));
+        // Camera-relative lights (built on the view basis, so every start face is lit the same way)
+        vec3 ldir = normalize(rot * (rgt * 0.6 + upv * 0.8 - fwd * 0.4));
+        vec3 ldir2 = normalize(rot * (-rgt * 0.7 - upv * 0.2 + fwd * 0.5));
         float diff = max(dot(n, ldir), 0.0);
         float fill = max(dot(n, ldir2), 0.0);
         float fres = pow(1.0 - clamp(dot(n, -rd), 0.0, 1.0), 3.0);

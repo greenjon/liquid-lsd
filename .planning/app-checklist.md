@@ -261,6 +261,7 @@ Known remaining literals: dropdown selected text, ParametersRenderer fills and g
 
 ## 17. Before release
 
+- [ ] Camera-relative light: Mandelbulb, Mandelbox and KIFS: turn Rotate X/Y/Z (and let Mandelbulb's Flight Speed spin) through a full circle; the lit side stays toward you and no side goes dark. KIFS: try every start face. Icosa H3, Pseudo-Kleinian and Apollonian look as before.
 - [ ] `ARCHITECTURE.md` refreshed (frame loop, queues, control surfaces and UI sections updated 2026-10-23 for the MIDI timing change; the rest dates from 2026-10-07).
 - [ ] Walkthrough videos re-rendered where `scripts/tour_staleness.py` says (much of the UI they show changed).
 - [ ] Website deployed (last item).

@@ -202,7 +202,8 @@ void main() {
             }
             vec3 base = palette(tc, HueOffset, Saturation, cMode) * Brightness_;
 
-            vec3 ldir = normalize(vec3(0.55, 0.8, -0.35));
+            // Camera-relative light: it orbits with the view, so the lit side always faces the viewer
+            vec3 ldir = rot * normalize(vec3(0.55, 0.8, -0.35));
             float diff = max(dot(nor, ldir), 0.0);
             float fres = pow(1.0 - max(dot(nor, -rd), 0.0), 3.0);
             float spec = pow(max(dot(reflect(rd, nor), ldir), 0.0), 24.0);

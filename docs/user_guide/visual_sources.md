@@ -123,7 +123,7 @@ A physical 2D acoustic plate resonance simulation computing standing wave nodal 
 
 ### Mandelbox (`mandelbox`)
 
-A raymarched Mandelbox: space is repeatedly folded into a box, inverted in a sphere and scaled, producing cathedral-like chambers. The camera glides in and out and stays outside the solid.
+A raymarched Mandelbox: space is repeatedly folded into a box, inverted in a sphere and scaled, producing cathedral-like chambers. The camera glides in and out and stays outside the solid. The light is camera-relative, so the lit side always faces you as the view turns.
 
 - **Scale**: The fold scale. Right of centre gives the classic box, left of centre the inverted variants. It jumps at the centre, so avoid automating across it.
 - **Fold Limit, Min Radius, Max Radius**: Box-fold size and the two sphere-fold radii; they reshape the chambers.
@@ -133,7 +133,7 @@ A raymarched Mandelbox: space is repeatedly folded into a box, inverted in a sph
 
 ### KIFS (`kifs`)
 
-A kaleidoscopic iterated-function-system fractal: repeated folds, a scale and an offset toward a fixed vertex, with a rotation added at every iteration.
+A kaleidoscopic iterated-function-system fractal: repeated folds, a scale and an offset toward a fixed vertex, with a rotation added at every iteration. The light is camera-relative, so the lit side always faces you as the view turns.
 
 - **Fractal Type**: Menger-like, Sierpinski tetrahedron, octahedral, or a mixed construction.
 - **Scale, Offset**: Look controls on the construction; away from the centre it stops tiling exactly.
@@ -145,7 +145,7 @@ A kaleidoscopic iterated-function-system fractal: repeated folds, a scale and an
 
 ### Mandelbulb (`mandelbulb`)
 
-A raymarched Mandelbulb, the 3D analogue of the Mandelbrot set built on a power map in spherical coordinates, with a turntable camera.
+A raymarched Mandelbulb, the 3D analogue of the Mandelbrot set built on a power map in spherical coordinates, with a turntable camera. The light is camera-relative, so the lit side always faces you as the view turns.
 
 - **Power**: Exponent from 2 to 16 (default 8). Non-integer values show a cut seam.
 - **Power Swing**: A slow automatic oscillation of the power; 0 keeps it fixed.

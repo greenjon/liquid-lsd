@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Camera-Relative Lighting in Mandelbulb, Mandelbox and KIFS (`library/sources/{mandelbulb,mandelbox,kifs}`)
+- **The lit side of these fractals now always faces you.** The light used to be fixed in the scene, so as the camera orbited (or you rotated) the view, the shaded side swung round and one side looked very dim. The light now turns with the camera, so the brightness stays steady all the way round. The KIFS fill light turns with it too. The web TV copies match.
+
 ### Knob Track and Master/Clock Colors (`ui/MacroKnobWidget.kt`, `ui/PerformanceUiContext.kt`)
 - **The unlit part of a knob's arc is easier to see.** It was the deck color at 35% brightness, which nearly vanished into the dark knob face on Deck B (blue) and PV (plum). It is now brighter for every deck; the lit arc is unchanged.
 - **Master and Clock now have real colors on screen:** Master is red and Clock is yellow, replacing the greys. The Twister's LEDs can only show plain RGB, so greys came out wrong; the controller now simply uses the same colors as the screen (Clock used to be plum on the hardware, the same as PV).

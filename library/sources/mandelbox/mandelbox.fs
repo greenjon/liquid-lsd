@@ -224,7 +224,7 @@ void main() {
         vec3 trap;
         de(p, trap);
 
-        vec3 L = normalize(vec3(0.5, 0.8, -0.4));
+        vec3 L = rot * normalize(vec3(0.5, 0.8, -0.4));   // camera-relative: the lit side always faces the viewer
         float diff = max(dot(n, L), 0.0);
         float back = 0.5 + 0.5 * dot(n, -L);
         float fres = pow(1.0 - clamp(dot(n, -rd), 0.0, 1.0), 3.0);
