@@ -115,6 +115,7 @@ class RackDisclosureTest {
     @Test
     fun leavingThePairViewEndsTheDockBinding() {
         val state = ParametersState()
+        state.pageHasRow = { false } // the pair view, whatever the saved Perform page happens to show
         state.openBrowse(MacroEngine.DECK_A, ParametersState.BrowseTarget.Gen)
         assertEquals("A", state.focusedPair)
 
