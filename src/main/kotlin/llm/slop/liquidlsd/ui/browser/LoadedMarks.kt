@@ -65,7 +65,8 @@ internal object LoadedMarks {
         )
     }
 
-    fun snapshot(mixer: Mixer, presets: PresetManager): Snapshot = Snapshot(DeckSlot.entries.associateWith { slot ->
+    /** An empty deck holds nothing, even though its placeholder source is Mandala: it is left out so no row is marked for it. */
+    fun snapshot(mixer: Mixer, presets: PresetManager): Snapshot = Snapshot(DeckSlot.entries.filterNot { it.deck(mixer).isEmpty }.associateWith { slot ->
         val source = slot.deck(mixer).source
         Held(presets.activePreset(slot), source.id, (source as? ExternalVideoSource)?.serverName)
     })

@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Browse Badges Skip Empty Decks (`ui/browser/LoadedMarks.kt`)
+- **Fixed a stray deck badge on Mandala.** An empty deck quietly holds a Mandala placeholder, so Browse showed its letter (for example B) beside Mandala even though nothing was loaded there. Empty decks no longer get a badge; loading something puts it back, and ejecting removes it.
+
 ### Camera-Relative Lighting in Mandelbulb, Mandelbox and KIFS (`library/sources/{mandelbulb,mandelbox,kifs}`)
 - **The lit side of these fractals now always faces you.** The light used to be fixed in the scene, so as the camera orbited (or you rotated) the view, the shaded side swung round and one side looked very dim. The light now turns with the camera, so the brightness stays steady all the way round. The KIFS fill light turns with it too. The web TV copies match.
 
