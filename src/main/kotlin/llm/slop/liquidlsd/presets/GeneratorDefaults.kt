@@ -327,14 +327,16 @@ object GeneratorDefaults {
             return GeneratorDefaultDto(
                 version = 1,
                 sourceId = sourceId,
-                parameters = baseParams,
+                parameters = ReactivityRecipes.overlay(sourceId, baseParams),
                 globalAlpha = baseAlpha,
                 macroBank = MacroBank(knobs = knobs)
             )
         }
 
         // 3. Automated heuristic fallback
-        return resolveHeuristic(source, sourceId, baseParams, baseAlpha)
+        return resolveHeuristic(source, sourceId, baseParams, baseAlpha).let {
+            it.copy(parameters = ReactivityRecipes.overlay(sourceId, it.parameters))
+        }
     }
 
     private fun resolveHeuristic(

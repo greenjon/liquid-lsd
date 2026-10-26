@@ -1,0 +1,138 @@
+{
+  "version": 1,
+  "params": {
+    "Intensity": {
+      "stack": [
+        {
+          "name": "kick hit",
+          "active": true,
+          "sourceId": "audio_flux_bass",
+          "depth": 0.5,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        },
+        {
+          "name": "loudness swell",
+          "active": false,
+          "sourceId": "audio_amp",
+          "depth": 0.3,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ],
+      "note": "Glitches land on the kick."
+    },
+    "Split": {
+      "stack": [
+        {
+          "name": "hat tick",
+          "active": true,
+          "sourceId": "audio_flux_high",
+          "depth": 0.5,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        },
+        {
+          "name": "high shimmer",
+          "active": false,
+          "sourceId": "audio_high",
+          "depth": 0.35,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 110
+        }
+      ],
+      "note": "Channel split on hats."
+    },
+    "Tear": {
+      "stack": [
+        {
+          "name": "snare tick",
+          "active": true,
+          "sourceId": "audio_flux_mid",
+          "depth": 0.4,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        },
+        {
+          "name": "mid body",
+          "active": false,
+          "sourceId": "audio_mid",
+          "depth": 0.3,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ],
+      "note": "Tearing on snares."
+    },
+    "Rate": {
+      "stack": [
+        {
+          "name": "loudness swell",
+          "active": true,
+          "sourceId": "audio_amp",
+          "depth": 0.3,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        },
+        {
+          "name": "triangle 16-beat",
+          "active": false,
+          "sourceId": "lfo",
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 16,
+          "depth": 0.25
+        }
+      ],
+      "note": "Glitch rate follows loudness."
+    },
+    "Crush": {
+      "stack": [
+        {
+          "name": "kick hit",
+          "active": false,
+          "sourceId": "audio_flux_bass",
+          "depth": 0.6,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        }
+      ],
+      "note": "Posterise drops on the kick; off by default."
+    },
+    "BlockSize": {
+      "stack": [
+        {
+          "name": "triangle 16-beat",
+          "active": false,
+          "sourceId": "lfo",
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 16,
+          "depth": 0.2
+        }
+      ],
+      "note": "Slow block-size wander; off by default."
+    },
+    "HueOffset": {
+      "stack": [
+        {
+          "name": "slow hue drift",
+          "active": true,
+          "sourceId": "lfo",
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 64,
+          "depth": 0.4
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "version": 1,
+  "params": {
+    "CurtainHeight": {
+      "stack": [
+        {
+          "name": "loudness swell",
+          "active": true,
+          "sourceId": "audio_amp",
+          "depth": 0.3,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        },
+        {
+          "name": "bass pulse",
+          "active": false,
+          "sourceId": "audio_bass",
+          "depth": 0.25,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ],
+      "note": "Curtains rise with loudness."
+    },
+    "WaveAmp": {
+      "stack": [
+        {
+          "name": "mid body",
+          "active": true,
+          "sourceId": "audio_mid",
+          "depth": 0.3,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        },
+        {
+          "name": "sine 16-beat",
+          "active": false,
+          "sourceId": "lfo",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 16,
+          "depth": 0.25
+        }
+      ],
+      "note": "Curtains ripple with the mids."
+    },
+    "Shimmer": {
+      "stack": [
+        {
+          "name": "high shimmer",
+          "active": true,
+          "sourceId": "audio_high",
+          "depth": 0.4,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 110
+        },
+        {
+          "name": "hat tick",
+          "active": false,
+          "sourceId": "audio_flux_high",
+          "depth": 0.4,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        }
+      ],
+      "note": "Highs make it shimmer."
+    },
+    "Brightness": {
+      "stack": [
+        {
+          "name": "loudness swell",
+          "active": true,
+          "sourceId": "audio_amp",
+          "depth": 0.15,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        },
+        {
+          "name": "kick hit",
+          "active": false,
+          "sourceId": "audio_flux_bass",
+          "depth": 0.2,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        }
+      ],
+      "note": "Gentle loudness lift."
+    },
+    "WaveSpeed": {
+      "stack": [
+        {
+          "name": "loudness swell",
+          "active": false,
+          "sourceId": "audio_amp",
+          "depth": 0.25,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ],
+      "note": "Drifts faster when loud."
+    },
+    "SkyDarkness": {
+      "stack": [
+        {
+          "name": "loudness lightens sky",
+          "active": false,
+          "sourceId": "audio_amp",
+          "depth": -0.15,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ],
+      "note": "Sky lightens when loud."
+    },
+    "HueShift": {
+      "stack": [
+        {
+          "name": "slow hue drift",
+          "active": true,
+          "sourceId": "lfo",
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 128,
+          "depth": 0.35
+        }
+      ]
+    }
+  }
+}

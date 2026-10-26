@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Reactivity Recipes: Batch 1 of Sources (`presets/ReactivityRecipes.kt`, `presets/GeneratorDefaults.kt`, `resources/reactivity/sources/`)
+- **Twelve sources now react to the music out of the box:** Apollonian, Dynamic Spiral, Tunnel Scenes, Kali Set, Aurora Ribbons, Domain Warp Fluid, Voronoi Cells, Wave Ripples, Glitch Blocks, Metaballs, Halftone Matrix and Video Feedback. Each has a hand-written set of audio and beat responses on its key parameters (for example the gasket breathing on the kick, aurora curtains rising with loudness, glitches landing on kick and hat hits). Where a parameter has more than one idea, the extra ones are wired but **bypassed**, so you only click an AUD or LFO cell to switch them on.
+- These are recipe modulators, so the **Reactivity** slider scales them. A default you saved yourself still wins over the shipped recipe. Recipes are read from files in the app (`reactivity/sources/<source>.json`); a test checks every file against its shader's parameters.
+
 ### Reactivity Amount (`parameters/Reactivity.kt`, `parameters/ModulatableParameter.kt`, `parameters/CvModulator.kt`, `ui/AudioEnginePanel.kt`, `web/evaluator.js`)
 - **A global Reactivity slider** in Preferences > Audio (0% to 200%, default 100%, saved) scales how strongly the built-in audio and beat response plays. It applies only to modulators marked as part of a shader's reactivity recipe (new `recipe` flag, saved in presets); modulators you add by hand, MIDI and macros are not affected. At 0% every parameter sits exactly at its set value. Nothing ships with recipes yet; they arrive source by source.
 - The web evaluator honours the same flag and an optional `reactivity` in its context, with new golden vectors at 0%, 100% and 200%.

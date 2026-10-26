@@ -1,0 +1,129 @@
+{
+  "version": 1,
+  "params": {
+    "Zoom": {
+      "stack": [
+        {
+          "name": "bass pulse",
+          "active": true,
+          "sourceId": "audio_bass",
+          "depth": 0.08,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        },
+        {
+          "name": "sine 16-beat",
+          "active": false,
+          "sourceId": "lfo",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 16,
+          "depth": 0.1
+        }
+      ],
+      "note": "Kick pushes the feedback zoom."
+    },
+    "Rotation": {
+      "stack": [
+        {
+          "name": "sine 32-beat",
+          "active": true,
+          "sourceId": "lfo",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 32,
+          "depth": 0.15
+        },
+        {
+          "name": "mid body",
+          "active": false,
+          "sourceId": "audio_mid",
+          "depth": 0.2,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ],
+      "note": "Slow beat-locked twirl."
+    },
+    "SeedSize": {
+      "stack": [
+        {
+          "name": "kick hit",
+          "active": true,
+          "sourceId": "audio_flux_bass",
+          "depth": 0.3,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        },
+        {
+          "name": "loudness swell",
+          "active": false,
+          "sourceId": "audio_amp",
+          "depth": 0.2,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ],
+      "note": "Kick injects a bigger seed."
+    },
+    "HueShift": {
+      "stack": [
+        {
+          "name": "slow hue drift",
+          "active": true,
+          "sourceId": "lfo",
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 64,
+          "depth": 0.3
+        }
+      ]
+    },
+    "Drift": {
+      "stack": [
+        {
+          "name": "mid body",
+          "active": true,
+          "sourceId": "audio_mid",
+          "depth": 0.2,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ],
+      "note": "Mids push the drift."
+    },
+    "Decay": {
+      "stack": [
+        {
+          "name": "loudness swell",
+          "active": false,
+          "sourceId": "audio_amp",
+          "depth": 0.2,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ],
+      "note": "Trails lengthen when loud; off by default."
+    },
+    "Brightness": {
+      "stack": [
+        {
+          "name": "kick hit",
+          "active": false,
+          "sourceId": "audio_flux_bass",
+          "depth": 0.2,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        }
+      ],
+      "note": "Kick flash; off by default."
+    }
+  }
+}

@@ -3,6 +3,7 @@ package llm.slop.liquidlsd.presets
 import io.mockk.every
 import io.mockk.mockk
 import llm.slop.liquidlsd.macro.MacroBank
+import llm.slop.liquidlsd.models.applyDto
 import llm.slop.liquidlsd.macro.MacroBinding
 import llm.slop.liquidlsd.macro.MacroControl
 import llm.slop.liquidlsd.macro.MacroCurveType
@@ -368,5 +369,21 @@ class GeneratorDefaultsTest {
         assertEquals(4.0f, masterLobes.baseValue, "Master registry source must remain clean and unmutated")
 
         VisualSourceRegistry.availableSources.clear()
+    }
+
+    @Test
+    fun stockDefaultCarriesTheShippedReactivityRecipe() {
+        val src = TestSource(id = "apollonian", displayName = "Apollonian", parameters = mapOf(
+            "InversionRadius" to ModulatableParameter(0.57f),
+            "Brightness" to ModulatableParameter(0.6f)
+        ))
+        val dto = GeneratorDefaults.resolve(src)
+        val mods = dto.parameters.getValue("InversionRadius").modulators
+        assertTrue(mods.isNotEmpty() && mods.all { it.recipe })
+        assertEquals(1, mods.count { !it.bypassed })
+        assertEquals(0.57f, dto.parameters.getValue("InversionRadius").baseValue)
+        // resolving again from a source that already carries the recipe must not stack it
+        src.parameters.getValue("InversionRadius").applyDto(dto.parameters.getValue("InversionRadius"))
+        assertEquals(mods.size, GeneratorDefaults.resolve(src).parameters.getValue("InversionRadius").modulators.size)
     }
 }

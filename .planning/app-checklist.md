@@ -169,6 +169,12 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [ ] After the app has run 15+ minutes: sweep a Time-clocked LFO's period (and a sequencer's Time interval) by hand and from a macro. It speeds up or slows down, never jumps. A preset morph between two different LFO periods glides too (2026-10-23).
 - [ ] Ctrl+Z undoes sequencer, LFO, Audio and MIDI CC edits (one step per drag).
 
+## 9b. Audio response (2026-10-25)
+
+- [ ] Preferences > Audio: Auto Gain (AGC) is on; feed quiet and loud music and the band meters/boost readout adapt within a few seconds, silence does not boost noise. Turn AGC off: old fixed scale. Headroom slider hotter/cooler.
+- [ ] Reactivity slider (0-200%, saved): at 0% every recipe parameter sits at its set value, 100% as designed, 200% exaggerated; modulators you add yourself do not change.
+- [ ] Batch 1 source recipes (apollonian, dynamic_spiral, tunnel_scenes, kali_set, aurora_ribbons, domain_warp_fluid, voronoi_cells, wave_ripples, glitch_blocks, metaballs, halftone_matrix, video_feedback): load each on a deck with music. Judge by eye: is the active response tasteful, are depths too high or low, do the bypassed alternates (AUD/LFO cells) turn on cleanly and look good? Note changes per source.
+
 ## 10. Mixer, output and app
 
 - [ ] Deck-tile level faders: dragging doesn't snap back with a bound knob (the knob follows); the handle shows the fader's own value, the bar the live level.

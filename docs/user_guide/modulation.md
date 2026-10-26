@@ -35,6 +35,8 @@ Clicking an **AUD** cell opens the audio modulator config. Each parameter suppor
 
 **Auto Gain:** audio signals are normalized against each band's own recent peak (Preferences > Audio > Auto Gain, on by default), so a modulator behaves the same whether the feed is quiet or hot. Switch it off for a fixed scale.
 
+**Built-in responses:** many sources ship with audio and beat modulators already wired (one running, alternates bypassed). They respond to **Preferences > Audio > Reactivity**; modulators you add yourself do not.
+
 ### Frequency bands
 
 | Band | What it tracks                                     |
