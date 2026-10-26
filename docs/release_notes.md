@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Black Is Transparent in Sources (`rendering/Renderer.kt`, `library/sources/*`)
+- **Generator sources now let the BG deck show through wherever they are black.** Video Feedback and 29 other generators (everything except Chladni Cymatics, Dynamic Spiral, Icosa H3, Mandala and Fractal Flame, which keep their own alpha) write an alpha that follows their brightest channel, the way Fractal Flame does. Bright areas cover what is behind them and dark areas reveal it; the picture over a black BG is unchanged.
+- The renderer now stores source alpha as alpha instead of squaring it (colour x alpha, alpha kept as written), so sources with a partial alpha such as Chladni Cymatics blend a little more evenly.
+
 ### Reactivity Recipes: Sources (`presets/ReactivityRecipes.kt`, `presets/GeneratorDefaults.kt`, `resources/reactivity/sources/`)
 - **Eighteen sources now react to the music out of the box:** Apollonian, Dynamic Spiral, Tunnel Scenes, Kali Set, Aurora Ribbons, Domain Warp Fluid, Voronoi Cells, Wave Ripples, Glitch Blocks, Metaballs, Halftone Matrix, Video Feedback, Mandelbulb, Mandelbox, KIFS, Pseudo-Kleinian, Hyperbolic Tiling and Icosa H3. Each has a hand-written set of audio and beat responses on its key parameters (for example the gasket breathing on the kick, aurora curtains rising with loudness, glitches landing on kick and hat hits). Where a parameter has more than one idea, the extra ones are wired but **bypassed**, so you only click an AUD or LFO cell to switch them on.
 - These are recipe modulators, so the **Reactivity** slider scales them. A default you saved yourself still wins over the shipped recipe. Recipes are read from files in the app (`reactivity/sources/<source>.json`); a test checks every file against its shader's parameters.

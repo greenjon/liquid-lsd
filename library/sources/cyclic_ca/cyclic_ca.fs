@@ -140,6 +140,14 @@ vec3 cellColor(ivec2 c, int n) {
     return stateColor(stateOf(texelFetch(simD, c, 0), n), n);
 }
 
+// Black is transparent: alpha follows the brightest channel (the renderer stores colour x alpha, so the
+// stored pixel is the colour itself and a deck's BG layer shows through wherever this source is dark).
+vec4 blackToAlpha(vec3 c) {
+    c = clamp(c, 0.0, 1.0);
+    float a = max(c.r, max(c.g, c.b));
+    return vec4(c / max(a, 1e-4), a);
+}
+
 vec4 displayPass() {
     int n = int(floor(States_ + 0.5));
     float aspect = RENDERSIZE.x / RENDERSIZE.y;
@@ -165,7 +173,7 @@ vec4 displayPass() {
     col = mix(vec3(lum), col, Saturation_) * Brightness_;
     col = clamp(col, 0.0, 1.0);
     if (!(col.r == col.r && col.g == col.g && col.b == col.b)) col = vec3(0.0);
-    return vec4(col, 1.0);
+    return blackToAlpha(col);
 }
 
 void main() {

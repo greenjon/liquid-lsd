@@ -265,6 +265,7 @@ Known remaining literals: dropdown selected text, ParametersRenderer fills and g
 - [ ] Walkthrough videos re-rendered where `scripts/tour_staleness.py` says (much of the UI they show changed).
 - [ ] Website deployed (last item).
 - [ ] MIDI phase 5 slice 1 (separate agent): Controller Profiles section, copy / delete / reload, validation problems, "Learned mappings" retitle.
+- [ ] Black-is-transparent sources (30 generators + Renderer separate-alpha blend): put Video Feedback and a few others (Kali Set, Lenia, Fluid Ink, Hyper Slice) on a deck over a coloured BG deck; dark areas should show the BG, bright areas cover it; Chladni / Dynamic Spiral / Icosa H3 should look as before (alpha now linear, not squared).
 
 ---
 Notes:

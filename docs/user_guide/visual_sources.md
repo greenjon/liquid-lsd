@@ -34,6 +34,8 @@ The raymarchers (Icosa-H3, Gyroid Hyperspace, 4D Hyper-Slice, Nebula Volume and 
 
 **Decks off air cost less.** Deck PV only feeds its monitor, so it renders at half the output size (full size when you send it out over Spout / Syphon / PipeWire). With **Off-air decks at half frame rate** on (*Preferences > General*, on by default), a deck the output can't show at the moment (A or B faded fully across, a deck or the master at level 0, and PV) renders every other frame, leaving the GPU to the decks on air. Its monitor runs at half rate, and simulations and feedback trails on it advance at half speed until it comes on air. A deck you stream always renders every frame.
 
+**Black is transparent.** Generators let the BG deck (or any layer beneath them) show through wherever they are black: a source's alpha follows its brightest colour channel, so bright areas cover what is behind and dark areas reveal it. Over a black BG nothing changes.
+
 **Updates.** When you install a new version, bundled generator files you haven't changed are updated to the new version; a file you edited is kept as it is (the log says so).
 
 ### Mandala (`mandala`)

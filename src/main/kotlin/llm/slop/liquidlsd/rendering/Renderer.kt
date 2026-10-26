@@ -73,7 +73,7 @@ class Renderer {
             glBindTexture(GL_TEXTURE_2D, source.getCurrentHistoryFBO()!!.texture)
         } else {
             glEnable(GL_BLEND)
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+            glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA)
         }
 
         source.shader.bind()
@@ -193,7 +193,7 @@ class Renderer {
         val tex = source.currentTextureId
         if (tex != 0) {
             glEnable(GL_BLEND)
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+            glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA)
 
             view2DShader.bind()
             glActiveTexture(GL_TEXTURE0)
