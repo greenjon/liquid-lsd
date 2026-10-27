@@ -419,7 +419,7 @@ object ParametersTabs {
                     ImGui.openPopup("MixerTransKebabPopup")
                 }
             }
-            itemTooltip("Transition Options (Save, Reset to Default)")
+            itemTooltip("Transition Options (Save, Reset, Save as Default)")
 
             pushOpenDropdownPadding()
             if (ImGui.beginPopup("MixerTransKebabPopup")) {
@@ -431,6 +431,7 @@ object ParametersTabs {
                     llm.slop.liquidlsd.presets.TransitionOps.setStock("linear_crossfade")
                     onPushUndo()
                 }
+                TransitionSave.drawDefaultMenuItems(mixer)
                 popOpenDropdownFont()
                 ImGui.endPopup()
             }

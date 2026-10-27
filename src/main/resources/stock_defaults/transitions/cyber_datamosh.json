@@ -1,0 +1,48 @@
+{
+  "version": 3,
+  "params": {
+    "packetLoss": {
+      "note": "Hats tear more scan lines and blocks loose.",
+      "modulators": [
+        {
+          "name": "hat tears",
+          "sourceId": "audio_flux_high",
+          "operator": "ADD",
+          "depth": 0.3,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 60
+        }
+      ]
+    },
+    "rgbSplit": {
+      "note": "The kick shears red and blue apart.",
+      "modulators": [
+        {
+          "name": "kick shear",
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "depth": 0.4,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 80
+        }
+      ]
+    },
+    "blockiness": {
+      "note": "The macroblock grid flips size on every beat; off by default.",
+      "modulators": [
+        {
+          "name": "square 2-beat (flips on the beat)",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "waveform": "SQUARE",
+          "genUnit": "BEAT",
+          "subdivision": 2,
+          "depth": 0.2,
+          "bypassed": true
+        }
+      ]
+    }
+  }
+}

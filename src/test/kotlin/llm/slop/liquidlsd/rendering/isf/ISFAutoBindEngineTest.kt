@@ -293,7 +293,8 @@ class ISFAutoBindEngineTest {
 
     private fun bundled(dir: String, id: String, hash: String): ISFFilter {
         val source = javaClass.classLoader.getResource("$dir/$id.fs")!!.readText()
-        return ISFFilter(id, id, ISFParser.parseHeader(source)!!, mockk<Shader>(relaxed = true), contentHash = hash)
+        return ISFFilter(id, id, ISFParser.parseHeader(source)!!, mockk<Shader>(relaxed = true), contentHash = hash,
+            isTransition = dir == "default_transitions")
     }
 
     @Test
@@ -313,8 +314,38 @@ class ISFAutoBindEngineTest {
     }
 
     @Test
-    fun `transition sharing a stock filter id gets no filter response`() {
+    fun `transition sharing a stock filter id gets its own response, not the filter's`() {
         val transition = bundled("default_transitions", "vortex_swirl", "test_trans_${System.nanoTime()}")
-        assertTrue(transition.parameters.values.all { it.modulators.isEmpty() })
+        assertEquals(listOf("audio_bass"), transition.parameters["rotations"]!!.modulators.map { it.sourceId })
+        assertTrue(transition.parameters["progress"]!!.modulators.isEmpty())
+    }
+
+    @Test
+    fun `new instances of a transition pick up a default saved or removed since the first was built`() {
+        val hash = "test_trans_default_${System.nanoTime()}"
+        val prototype = bundled("default_transitions", "luminous_flash", hash)
+        assertEquals(2, prototype.newInstance().parameters["intensity"]!!.modulators.size)
+
+        val edited = prototype.newInstance()
+        edited.parameters["intensity"]!!.modulators.clear()
+        edited.parameters["intensity"]!!.baseValue = 0.9f
+        ISFAutoBindEngine.saveFilterDefault(edited)
+        val saved = prototype.newInstance().parameters["intensity"]!!
+        assertTrue(saved.modulators.isEmpty())
+        assertEquals(0.9f, saved.baseValue)
+
+        ISFAutoBindEngine.deleteOverride(hash)
+        val restored = prototype.newInstance().parameters["intensity"]!!
+        assertEquals(2, restored.modulators.size)
+        assertEquals(0.5f, restored.baseValue)
+    }
+
+    @Test
+    fun `a stock transition with its shipped response is not modified`() {
+        val transition = bundled("default_transitions", "kinetic_zoom", "test_trans_mod_${System.nanoTime()}")
+        assertTrue(transition.parameters["zoomFactor"]!!.modulators.isNotEmpty())
+        assertFalse(llm.slop.liquidlsd.presets.TransitionOps.isModified(transition))
+        transition.parameters["zoomFactor"]!!.modulators.clear()
+        assertTrue(llm.slop.liquidlsd.presets.TransitionOps.isModified(transition))
     }
 }

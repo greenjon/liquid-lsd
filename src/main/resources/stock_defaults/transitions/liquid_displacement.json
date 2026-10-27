@@ -1,0 +1,33 @@
+{
+  "version": 3,
+  "params": {
+    "warpStrength": {
+      "note": "Bass pushes the melt further.",
+      "modulators": [
+        {
+          "name": "bass warp",
+          "sourceId": "audio_bass",
+          "operator": "ADD",
+          "depth": 0.3,
+          "followerMode": "SMOOTH",
+          "attackMs": 20,
+          "decayMs": 250
+        }
+      ]
+    },
+    "chromaticDispersion": {
+      "note": "Highs split the colours along the flow lines.",
+      "modulators": [
+        {
+          "name": "high dispersion",
+          "sourceId": "audio_high",
+          "operator": "ADD",
+          "depth": 0.3,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 120
+        }
+      ]
+    }
+  }
+}

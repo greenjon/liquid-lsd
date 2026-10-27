@@ -1,0 +1,29 @@
+{
+  "version": 3,
+  "params": {
+    "glowIntensity": {
+      "note": "The kick flares the ember edge (it only shows on the burn front). Burn Spread is left alone: above about 0.45 the burn shows at the start of a fade.",
+      "modulators": [
+        {
+          "name": "kick flare",
+          "sourceId": "audio_flux_bass",
+          "operator": "MUL",
+          "depth": 0.6,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 180
+        },
+        {
+          "name": "bass glow",
+          "sourceId": "audio_bass",
+          "operator": "MUL",
+          "depth": 0.5,
+          "followerMode": "SMOOTH",
+          "attackMs": 20,
+          "decayMs": 300,
+          "bypassed": true
+        }
+      ]
+    }
+  }
+}

@@ -21,9 +21,9 @@
         {
             "NAME": "blockiness", "LABEL": "Blockiness",
             "TYPE": "float",
-            "MIN": 8.0,
-            "MAX": 64.0,
-            "DEFAULT": 28.0
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.35714
         },
         {
             "NAME": "rgbSplit", "LABEL": "RGB Split",
@@ -43,6 +43,7 @@
 }*/
 
 // Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define blockiness_ (8.0+blockiness*56.0)
 #define rgbSplit_ (rgbSplit*0.2)
 #define packetLoss_ (packetLoss*2.0)
 
@@ -65,7 +66,7 @@ void main() {
     float glitchPower = pow(env, 1.4) * packetLoss_;
 
     // Discrete macroblock coordinates
-    vec2 blockCoord = floor(uv * vec2(blockiness, blockiness * 0.5));
+    vec2 blockCoord = floor(uv * vec2(blockiness_, blockiness_ * 0.5));
     float blockRand = hash21(blockCoord + floor(TIME * 15.0));
 
     // Horizontal sync tearing on random scan bands

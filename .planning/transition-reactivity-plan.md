@@ -1,7 +1,11 @@
 # Transitions: shipped defaults + audio response — plan (2026-10-27)
 
-Status: audit DONE (read-only, below). Build after the FX pass lands (`.planning/fx-reactivity-handoff.md`); it edits
-the same files (`StockDefaults`, `ISFAutoBindEngine`, `StockDefaultsTest`, docs).
+Status: **BUILT 2026-10-27, uncommitted, unseen in app** (judging entry in `.planning/app-checklist.md` 9b). All six
+build steps done. Differences from the plan below: transition files carry no `metaBindings` (the TRANS knobs don't use
+the Metaknob; the heuristic one is kept); registries now hand out `ISFFilter.newInstance()` so a default saved or removed
+in-session applies to the next copy (it didn't, for effects either); "modified" (`TransitionOps.isModified`) compares
+against the resolved default; Inferno Film Burn's Burn Spread went 0.46429 -> 0.45 to meet the at-rest limit; the
+blockiness LFO is a 2-beat square (flips on every beat).
 
 ## Why it needed an audit
 The transition shader used to render every frame, including at rest. **Since 2026-10-27 it doesn't:** at progress

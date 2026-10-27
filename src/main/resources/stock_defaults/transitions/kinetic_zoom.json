@@ -1,0 +1,48 @@
+{
+  "version": 3,
+  "params": {
+    "zoomFactor": {
+      "note": "The kick punches the zoom deeper.",
+      "modulators": [
+        {
+          "name": "kick punch",
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "depth": 0.25,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        }
+      ]
+    },
+    "motionBlur": {
+      "note": "Loud passages streak harder.",
+      "modulators": [
+        {
+          "name": "loudness streak",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.3,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "chromatic": {
+      "note": "Highs fringe the streaks; off by default.",
+      "modulators": [
+        {
+          "name": "high fringe",
+          "sourceId": "audio_high",
+          "operator": "ADD",
+          "depth": 0.4,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 120,
+          "bypassed": true
+        }
+      ]
+    }
+  }
+}

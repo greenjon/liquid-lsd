@@ -165,7 +165,9 @@ object ISFTransitionRegistry {
                 ownsShader = true,
                 categories = allCategories,
                 folderPath = relFolder,
-                baseDir = file?.parentFile
+                baseDir = file?.parentFile,
+                contentHash = ISFAutoBindEngine.contentHash(source),
+                isTransition = true
             )
             transitions[id] = filter
             logger.debug { "Registered ISF transition: $id ($parsedDisplayName)" }
@@ -177,7 +179,7 @@ object ISFTransitionRegistry {
 
 
     fun createTransition(id: String): ISFFilter? {
-        return transitions[id]?.clone()
+        return transitions[id]?.newInstance()
     }
 }
 

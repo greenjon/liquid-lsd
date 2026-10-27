@@ -14,25 +14,53 @@
     },
     "parameters": {
       "blockiness": {
-        "baseValue": 32.0,
-        "baseMin": 8.0,
-        "baseMax": 64.0,
+        "baseValue": 0.42857,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
         "randomizeBase": false,
-        "modulators": []
+        "modulators": [
+          {
+            "sourceId": "lfo",
+            "operator": "ADD",
+            "waveform": "SQUARE",
+            "genUnit": "BEAT",
+            "subdivision": 2,
+            "depth": 0.2,
+            "bypassed": true
+          }
+        ]
       },
       "rgbSplit": {
         "baseValue": 0.4,
         "baseMin": 0.0,
         "baseMax": 1.0,
         "randomizeBase": false,
-        "modulators": []
+        "modulators": [
+          {
+            "sourceId": "audio_flux_bass",
+            "operator": "ADD",
+            "depth": 0.4,
+            "followerMode": "SNAP",
+            "attackMs": 0,
+            "decayMs": 80
+          }
+        ]
       },
       "packetLoss": {
         "baseValue": 0.6,
         "baseMin": 0.0,
         "baseMax": 1.0,
         "randomizeBase": false,
-        "modulators": []
+        "modulators": [
+          {
+            "sourceId": "audio_flux_high",
+            "operator": "ADD",
+            "depth": 0.3,
+            "followerMode": "SNAP",
+            "attackMs": 0,
+            "decayMs": 60
+          }
+        ]
       }
     }
   }

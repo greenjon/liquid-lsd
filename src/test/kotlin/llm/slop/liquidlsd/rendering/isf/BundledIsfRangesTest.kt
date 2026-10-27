@@ -9,7 +9,7 @@ import kotlin.test.assertTrue
 class BundledIsfRangesTest {
     private val discrete = setOf(
         "colorMode", "palette", "mode", "segments", "pixelSize", "latticeMode", "colorDepth", "symmetry",
-        "scanlineCount", "strobeMode", "rate", "spiralArms", "fbKaleido", "blockiness",
+        "scanlineCount", "strobeMode", "rate", "spiralArms", "fbKaleido",
         "Symmetries", "ColorMode", "FrequencyM", "FrequencyN", "FrequencyL", "PaletteMode", "Detail",
         "MaxPoints", "SurfaceType", "ColorMethod", "FractalType", "SeedShape", "P", "Q", "Outside", "Neighborhood", "RatioPreset", "Ribbons"
     )

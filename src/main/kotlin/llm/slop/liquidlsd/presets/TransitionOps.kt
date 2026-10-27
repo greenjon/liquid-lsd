@@ -1,8 +1,11 @@
 package llm.slop.liquidlsd.presets
 
+import llm.slop.liquidlsd.models.ParameterDto
 import llm.slop.liquidlsd.models.TransitionPresetDto
 import llm.slop.liquidlsd.models.toDto
 import llm.slop.liquidlsd.rendering.Mixer
+import llm.slop.liquidlsd.rendering.isf.ISFAutoBindEngine
+import llm.slop.liquidlsd.rendering.isf.ISFFilter
 import llm.slop.liquidlsd.ui.ToastOverlay
 import mu.KotlinLogging
 import java.io.File
@@ -105,6 +108,52 @@ object TransitionOps {
 
     internal fun stockIdFor(file: File): String =
         file.nameWithoutExtension.ifBlank { file.name.ifBlank { DEFAULT_ID } }
+
+    /** [filter]'s untouched parameters (its resolved default over the shader's own values), computed once per instance. */
+    @Volatile private var defaultsOf: Pair<ISFFilter, Map<String, ParameterDto>>? = null
+
+    /** Forgets the cached default, after the user saves or removes one. */
+    fun invalidateDefault() {
+        defaultsOf = null
+    }
+
+    private fun defaultsFor(filter: ISFFilter): Map<String, ParameterDto> {
+        defaultsOf?.takeIf { it.first === filter }?.let { return it.second }
+        val dto = ISFAutoBindEngine.resolveDefault(filter)
+        val map = filter.parameters.mapValues { (name, p) ->
+            dto.params?.get(name) ?: ParameterDto(dto.parameters[name] ?: p.defaultValue, p.defaultValue, p.defaultValue, false, emptyList())
+        }
+        defaultsOf = filter to map
+        return map
+    }
+
+    /**
+     * True when [filter]'s dry/wet, a parameter's value or a parameter's modulators differ from the transition's
+     * default (user-saved, else shipped, else the shader's), so a stock transition with a shipped response is not
+     * "modified". Allocation-free after the first call for an instance: indexed loops, field-by-field modulator checks.
+     */
+    fun isModified(filter: ISFFilter?): Boolean {
+        if (filter == null) return false
+        if (filter.dryWet.baseValue != 1.0f) return true
+        val defaults = defaultsFor(filter)
+        val inputs = filter.header.INPUTS
+        for (i in inputs.indices) {
+            val name = inputs[i].NAME
+            if (name.equals("progress", ignoreCase = true)) continue
+            val param = filter.parameters[name] ?: continue
+            val d = defaults[name] ?: continue
+            if (kotlin.math.abs(param.baseValue - d.baseValue) > 0.001f) return true
+            val mods = param.modulators
+            if (mods.size != d.modulators.size) return true
+            for (j in mods.indices) {
+                val m = mods[j]
+                val e = d.modulators[j]
+                if (m.sourceId != e.sourceId || m.operator.name != e.operator || m.bypassed != e.bypassed ||
+                    kotlin.math.abs(m.depth - e.depth) > 0.001f) return true
+            }
+        }
+        return false
+    }
 
     /** Applies every queued change. Main/GL thread only -- called once per frame from the render loop. */
     fun drainOnGlThread(mixer: Mixer) {

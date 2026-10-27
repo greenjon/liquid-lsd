@@ -1,0 +1,44 @@
+{
+  "version": 3,
+  "params": {
+    "intensity": {
+      "note": "The kick punches the midpoint flash, scaled by the set intensity. Spread is left alone: above about 0.45 the flash leaks to the ends of the fade and pops the moment a fade starts.",
+      "modulators": [
+        {
+          "name": "kick flash",
+          "sourceId": "audio_flux_bass",
+          "operator": "MUL",
+          "depth": 1.0,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        },
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "MUL",
+          "depth": 0.5,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400,
+          "bypassed": true
+        }
+      ]
+    },
+    "colorTemp": {
+      "note": "Highs cool the flash toward icy blue; off by default.",
+      "modulators": [
+        {
+          "name": "high chill",
+          "sourceId": "audio_high",
+          "operator": "ADD",
+          "depth": -0.4,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 120,
+          "bypassed": true
+        }
+      ]
+    }
+  }
+}

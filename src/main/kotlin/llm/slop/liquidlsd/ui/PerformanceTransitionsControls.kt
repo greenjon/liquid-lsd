@@ -10,7 +10,6 @@ import llm.slop.liquidlsd.osc.OscMapModeState
 import llm.slop.liquidlsd.osc.OscMappingManager
 import llm.slop.liquidlsd.presets.TransitionQueueManager
 import llm.slop.liquidlsd.rendering.Mixer
-import llm.slop.liquidlsd.rendering.isf.ISFFilter
 import llm.slop.liquidlsd.ui.browser.BrowserDeckButtons
 import java.io.File
 
@@ -90,7 +89,7 @@ internal object PerformanceTransitionsControls {
             ImGui.openPopup("##perf_trans_more_menu")
         }
         llm.slop.liquidlsd.tour.WidgetRegistry.note { "perf_trans_more" }
-        itemTooltip("Transition operations (Save As, Browse, Edit).")
+        itemTooltip("Transition operations (Save As, Browse, Save as Default).")
         pushOpenDropdownPadding()
         if (ImGui.beginPopup("##perf_trans_more_menu")) {
             pushOpenDropdownFont()
@@ -98,6 +97,7 @@ internal object PerformanceTransitionsControls {
             ImGui.separator()
             if (ImGui.menuItem("Save As…")) TransitionSave.requestSaveCurrent(session, mixer)
             if (ImGui.menuItem("Browse Transitions")) parametersState.selectTransition()
+            TransitionSave.drawDefaultMenuItems(mixer)
             popOpenDropdownFont()
             ImGui.endPopup()
         }
@@ -106,7 +106,7 @@ internal object PerformanceTransitionsControls {
 
     /** Same look as the FX chain's Save (amber when the transition differs from its defaults); transitions are always saved as a new preset. */
     private fun drawSaveButton(session: SessionContext, mixer: Mixer, ctrlH: Float, width: Float) {
-        val isDirty = isTransitionModified(mixer.transitionFilter)
+        val isDirty = llm.slop.liquidlsd.presets.TransitionOps.isModified(mixer.transitionFilter)
         val saveCol = if (isDirty) TangoPalette.u32(TangoPalette.ALERT.dark) else TangoPalette.FX_SAVE_BG.u32()
         val inkCol = if (isDirty) TangoPalette.u32(TangoPalette.inkFor(TangoPalette.ALERT.dark)) else TangoPalette.FX_SAVE_INK.u32()
         ButtonChrome.pushColor(saveCol)
@@ -159,29 +159,6 @@ internal object PerformanceTransitionsControls {
         ImGui.endGroup()
     }
 
-    /**
-     * True when the transition filter's dry/wet or any parameter differs from its default or carries an active
-     * modulator. Indexed loops over the filter's own lists, so a per-frame call allocates nothing.
-     */
-    private fun isTransitionModified(filter: ISFFilter?): Boolean {
-        if (filter == null) return false
-        if (filter.dryWet.baseValue != 1.0f) return true
-        // ISFFilter creates exactly one parameter per header input, so walking the inputs list (no map
-        // iterator) visits every parameter with its default alongside.
-        val inputs = filter.header.INPUTS
-        val params = filter.parameters
-        for (i in inputs.indices) {
-            val input = inputs[i]
-            val param = params[input.NAME] ?: continue
-            val d = input.DEFAULT
-            val defaultVal = if (d is Number) d.toFloat() else d?.toString()?.toFloatOrNull() ?: 0.0f
-            if (kotlin.math.abs(param.baseValue - defaultVal) > 0.001f) return true
-            val mods = param.modulators
-            for (j in mods.indices) if (!mods[j].bypassed) return true
-        }
-        return false
-    }
-
     private fun drawTransitionPicker(
         session: SessionContext,
         mixer: Mixer,
@@ -198,7 +175,7 @@ internal object PerformanceTransitionsControls {
 
         // 1. Transition Picker Button [ Settings Icon + Name * ]
         val transName = mixer.transitionFilter?.displayName ?: "Default Blend"
-        val isTransModified = isTransitionModified(mixer.transitionFilter)
+        val isTransModified = llm.slop.liquidlsd.presets.TransitionOps.isModified(mixer.transitionFilter)
         val modBadge = if (isTransModified) " *" else ""
 
         if (ButtonChrome.button(tipPickerLabel.get(transName, modBadge) { "${Icons.SETTINGS} $transName$modBadge##perf_trans_picker_btn" }, transBtnW, headerH)) {

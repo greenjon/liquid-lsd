@@ -18,7 +18,16 @@
         "baseMin": 0.0,
         "baseMax": 1.0,
         "randomizeBase": false,
-        "modulators": []
+        "modulators": [
+          {
+            "sourceId": "audio_bass",
+            "operator": "ADD",
+            "depth": 0.3,
+            "followerMode": "SMOOTH",
+            "attackMs": 20,
+            "decayMs": 250
+          }
+        ]
       },
       "viscosity": {
         "baseValue": 0.52,
@@ -32,7 +41,16 @@
         "baseMin": 0.0,
         "baseMax": 1.0,
         "randomizeBase": false,
-        "modulators": []
+        "modulators": [
+          {
+            "sourceId": "audio_high",
+            "operator": "ADD",
+            "depth": 0.3,
+            "followerMode": "PUNCHY",
+            "attackMs": 5,
+            "decayMs": 120
+          }
+        ]
       }
     }
   }

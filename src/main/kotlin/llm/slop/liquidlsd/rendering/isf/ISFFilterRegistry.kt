@@ -177,7 +177,7 @@ object ISFFilterRegistry {
 
 
     fun createFilter(id: String): ISFFilter? {
-        return filters[id]?.clone()
+        return filters[id]?.newInstance()
     }
 }
 

@@ -18,14 +18,42 @@
         "baseMin": 0.0,
         "baseMax": 1.0,
         "randomizeBase": false,
-        "modulators": []
+        "modulators": [
+          {
+            "sourceId": "audio_flux_bass",
+            "operator": "MUL",
+            "depth": 1.0,
+            "followerMode": "PUNCHY",
+            "attackMs": 5,
+            "decayMs": 150
+          },
+          {
+            "sourceId": "audio_amp",
+            "operator": "MUL",
+            "depth": 0.5,
+            "followerMode": "SMOOTH",
+            "attackMs": 40,
+            "decayMs": 400,
+            "bypassed": true
+          }
+        ]
       },
       "colorTemp": {
         "baseValue": 0.1,
         "baseMin": -1.0,
         "baseMax": 1.0,
         "randomizeBase": false,
-        "modulators": []
+        "modulators": [
+          {
+            "sourceId": "audio_high",
+            "operator": "ADD",
+            "depth": -0.4,
+            "followerMode": "PUNCHY",
+            "attackMs": 5,
+            "decayMs": 120,
+            "bypassed": true
+          }
+        ]
       },
       "spread": {
         "baseValue": 0.27778,

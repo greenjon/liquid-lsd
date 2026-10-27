@@ -49,7 +49,7 @@ data class FxDefaultDto(
  * Resolution priority, most-specific wins (note this is the reverse of the tier numbering below,
  * which reflects the original design doc's authoring order, not the order these are checked in):
  *   1. User override cache, keyed by a content hash of the shader source (Tier 3)
- *   2. The default shipped for a bundled filter, `stock_defaults/filters/<id>.json` (Tier 1)
+ *   2. The default shipped for a bundled filter or transition, `stock_defaults/filters|transitions/<id>.json` (Tier 1)
  *   3. Automated heuristic over the shader's declared INPUTS (Tier 2)
  */
 object ISFAutoBindEngine {
@@ -68,7 +68,8 @@ object ISFAutoBindEngine {
 
     /**
      * Resolves the default bindings and parameters for [filter]: user override, then the default shipped for a stock
-     * filter (resources/stock_defaults/filters/<id>.json, see [StockDefaults]), then the heuristic. Nothing is written to disk.
+     * filter or transition (resources/stock_defaults/filters/<id>.json or transitions/<id>.json, see [StockDefaults]),
+     * then the heuristic. Nothing is written to disk.
      */
     fun resolveDefault(filter: ISFFilter): FxDefaultDto {
         filter.contentHash?.let { hash -> loadOverride(hash)?.let { return it } }
@@ -77,20 +78,21 @@ object ISFAutoBindEngine {
     }
 
     /**
-     * The shipped default for [filter], or null. Files are keyed by filter id, so a shader that happens to share a stock
-     * id but lacks a bound or responding input (a user shader, or a transition: `vortex_swirl` is both) falls through
-     * to the heuristic. `params` holds only the inputs the file names, laid over the filter's own.
+     * The shipped default for [filter], or null. Effects and transitions read separate folders, since their ids may
+     * collide (`vortex_swirl` is both). A user shader that happens to share a stock id but lacks a bound or responding
+     * input falls through to the heuristic. `params` holds only the inputs the file names, laid over the filter's own;
+     * a file without `metaBindings` (transitions: the TRANS knobs follow the inputs, not a Metaknob) keeps the heuristic's.
      */
     private fun shippedDefault(filter: ISFFilter): FxDefaultDto? {
-        val file = StockDefaults.forId("filters", filter.id) ?: return null
+        val kind = if (filter.isTransition) "transitions" else "filters"
+        val file = StockDefaults.forId(kind, filter.id) ?: return null
         val bindings = (file["metaBindings"] as? JsonArray)?.map { json.decodeFromJsonElement(FxMetaBindingDto.serializer(), it) }
-            ?: return null
-        if (bindings.any { it.targetParamName != null && it.targetParamName !in filter.parameters }) return null
+        if (bindings?.any { it.targetParamName != null && it.targetParamName !in filter.parameters } == true) return null
         if ((file["params"] as? JsonObject)?.keys?.any { it !in filter.parameters } == true) return null
         val baseline = filter.parameters.mapValues { it.value.toGeneratorDefaultDto() }
-        val params = StockDefaults.overlayParameters(file, "params", baseline, "filters/${filter.id}")
+        val params = StockDefaults.overlayParameters(file, "params", baseline, "$kind/${filter.id}")
         return FxDefaultDto(
-            metaBindings = bindings,
+            metaBindings = bindings ?: listOf(resolveHeuristic(filter).toDto()),
             params = params.ifEmpty { null },
             knobLayout = (file["knobLayout"] as? JsonArray)?.map { it.jsonPrimitive.content }
         )

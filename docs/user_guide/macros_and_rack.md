@@ -496,6 +496,10 @@ A slot's Metaknob targets, knob order and parameter values can be saved as the e
   - When a saved default exists, `Remove Saved Default for <Filter>` deletes it, so new copies go back to the stock (or auto-mapped) default, and resets this slot to it too.
 - Targets themselves are edited in the slot's **Metaknob targets** block or on the Edit-row strip.
 
+### Transition Defaults
+
+The transition's **⋮** menu (on the Transitions row, and the kebab beside the transition picker in the Mixer TRANS tab) has `Save as Default for <Transition>`: it saves the running transition's parameter values and modulators (not MIDI mappings) the same way, keyed by shader content. Picking that transition from then on starts from it; saved `.lsdtrans` presets keep their own values. `Remove Saved Default for <Transition>` deletes it and resets the running transition to the built-in values and audio response.
+
 ---
 
 ## Shortcuts

@@ -19,8 +19,8 @@ private val logger = KotlinLogging.logger {}
 
 /**
  * The defaults shipped with the app for stock sources and effects: `stock_defaults/<kind>/<id>.json` on the classpath
- * (`kind` = `sources` or `filters`). Each file has the shape of the default a user saves (`GeneratorDefaultDto`
- * for a source, `FxDefaultDto` for an effect) but is sparse: it names only what differs from the shader (a
+ * (`kind` = `sources`, `filters` or `transitions`). Each file has the shape of the default a user saves (`GeneratorDefaultDto`
+ * for a source, `FxDefaultDto` for an effect or transition) but is sparse: it names only what differs from the shader (a
  * parameter's `baseValue`, its `modulators`, the knobs) and the shader supplies the rest. Keys the DTOs do not
  * know (`name`, `note`) are notes for whoever edits the file.
  *

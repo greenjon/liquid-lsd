@@ -14,7 +14,7 @@
     },
     "parameters": {
       "burnSpread": {
-        "baseValue": 0.46429,
+        "baseValue": 0.45,
         "baseMin": 0.0,
         "baseMax": 1.0,
         "randomizeBase": false,
@@ -25,7 +25,25 @@
         "baseMin": 0.0,
         "baseMax": 1.0,
         "randomizeBase": false,
-        "modulators": []
+        "modulators": [
+          {
+            "sourceId": "audio_flux_bass",
+            "operator": "MUL",
+            "depth": 0.6,
+            "followerMode": "PUNCHY",
+            "attackMs": 5,
+            "decayMs": 180
+          },
+          {
+            "sourceId": "audio_bass",
+            "operator": "MUL",
+            "depth": 0.5,
+            "followerMode": "SMOOTH",
+            "attackMs": 20,
+            "decayMs": 300,
+            "bypassed": true
+          }
+        ]
       },
       "tintMode": {
         "baseValue": 0.0,

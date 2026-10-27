@@ -179,21 +179,92 @@ class StockDefaultsTest {
         }
     }
 
+    private val transitionFiles get() = files("transitions")
+
+    /** (min, default, max) of each float input of a bundled transition. */
+    private fun transitionRanges(id: String): Map<String, Triple<Float, Float, Float>> =
+        isfInputs(File(root, "src/main/resources/default_transitions/$id.fs")).associate {
+            it["NAME"]!!.jsonPrimitive.content to Triple(
+                it["MIN"]!!.jsonPrimitive.content.toFloat(), it["DEFAULT"]!!.jsonPrimitive.content.toFloat(), it["MAX"]!!.jsonPrimitive.content.toFloat())
+        }
+
+    private fun shippedTransitionParams(id: String) = StockDefaults.overlayParameters(
+        parse(File(root, "src/main/resources/stock_defaults/transitions/$id.json")), "params",
+        transitionRanges(id).mapValues { (_, r) -> ParameterDto(r.second, r.first, r.third, false, emptyList()) },
+        "transitions/$id")
+
+    /** The shipped transition presets, the `.lsdtrans` files in `defaults/transitions`. */
+    private val transitionPresets get() =
+        File(root, "defaults/transitions").listFiles { f -> f.extension == "lsdtrans" }!!.sortedBy { it.name }
+            .map { it.name to json.decodeFromString(llm.slop.liquidlsd.models.TransitionPresetDto.serializer(), it.readText()) }
+
     /**
-     * Transitions are ISF filters too and resolve their default the same way, by id. A shipped filter default must
-     * never land on a transition that shares its id: it is rejected unless every input it names exists there.
+     * Inputs that make the picture pop the instant a fade leaves rest when pushed past a limit: the flash or the burn
+     * edge leaks to the ends of the fade (see `.planning/transition-reactivity-plan.md`). Checked against the highest
+     * value any modulator, running or bypassed, can push the input to.
      */
+    private val atRestLimits = mapOf("luminous_flash" to mapOf("spread" to 0.45f), "film_burn" to mapOf("burnSpread" to 0.45f))
+
+    /** The highest value [p]'s modulators can push it to: unipolar followers add `depth`, bipolar LFOs `dcOffset + |depth|`. */
+    private fun reach(p: ParameterDto, min: Float, max: Float): Float {
+        val scalar = if (min < 0f) (max - min) / 2f else max - min
+        return p.modulators.fold(p.baseValue) { top, m ->
+            val swing = if (m.sourceId == "lfo") m.dcOffset + kotlin.math.abs(m.depth) else maxOf(m.depth, 0f)
+            maxOf(top, if (m.operator == "MUL") p.baseValue * (1f + swing) else p.baseValue + swing * scalar)
+        }
+    }
+
     @Test
-    fun noShippedFilterDefaultFitsATransition() {
-        for (file in filterFiles) {
+    fun everyShippedTransitionDefaultIsValid() {
+        assertTrue(transitionFiles.isNotEmpty())
+        for (file in transitionFiles) {
             val id = file.nameWithoutExtension
-            val transition = File(root, "src/main/resources/default_transitions/$id.fs")
-            if (!transition.exists()) continue
-            val inputs = isfInputs(transition).map { it["NAME"]!!.jsonPrimitive.content }.toSet()
-            val obj = parse(file)
-            val named = obj["metaBindings"]!!.jsonArray.mapNotNull { it.jsonObject["targetParamName"]?.jsonPrimitive?.content } +
-                (obj["params"] as? JsonObject)?.keys.orEmpty()
-            assertTrue(named.any { it !in inputs }, "$id: the shipped filter default would apply to the transition of the same id")
+            assertTrue(File(root, "src/main/resources/default_transitions/$id.fs").exists(), "$id: no bundled transition with this id")
+            val raw = parse(file)["params"] as JsonObject
+            assertTrue("progress" !in raw.keys, "$id: progress is the crossfader and must never be modulated")
+            val parsed = shippedTransitionParams(id)
+            assertModulatorsValid(id, raw, parsed)
+            assertLfoSwingsFit(id, parsed, transitionRanges(id))
+        }
+    }
+
+    @Test
+    fun transitionResponsesStayInsideTheAtRestLimits() {
+        for ((id, limits) in atRestLimits) {
+            val ranges = transitionRanges(id)
+            val shipped = shippedTransitionParams(id)
+            for ((name, limit) in limits) {
+                val (min, default, max) = ranges.getValue(name)
+                val p = shipped[name] ?: ParameterDto(default, min, max, false, emptyList())
+                assertTrue(reach(p, min, max) <= limit, "$id.$name: the shipped default reaches ${reach(p, min, max)}, over $limit")
+            }
+        }
+        for ((file, preset) in transitionPresets) {
+            val limits = atRestLimits[preset.slot.filterId] ?: continue
+            val ranges = transitionRanges(preset.slot.filterId)
+            for ((name, limit) in limits) {
+                val p = preset.slot.parameters[name] ?: continue
+                val (min, _, max) = ranges.getValue(name)
+                assertTrue(reach(p, min, max) <= limit, "$file: $name reaches ${reach(p, min, max)}, over $limit")
+            }
+        }
+    }
+
+    /** A preset stores full parameters, so it must carry the shipped response itself or AutoVJ and playlists never show it. */
+    @Test
+    fun shippedTransitionPresetsCarryTheShippedResponse() {
+        assertTrue(transitionPresets.isNotEmpty())
+        for ((file, preset) in transitionPresets) {
+            val id = preset.slot.filterId
+            val ranges = transitionRanges(id)
+            for ((name, p) in preset.slot.parameters) {
+                val (min, _, max) = ranges[name] ?: continue
+                assertTrue(p.baseValue in min..max, "$file: $name = ${p.baseValue} is outside $min..$max")
+            }
+            if (!File(root, "src/main/resources/stock_defaults/transitions/$id.json").exists()) continue
+            for ((name, shipped) in shippedTransitionParams(id)) {
+                assertEquals(shipped.modulators, preset.slot.parameters[name]?.modulators, "$file: $name does not carry the shipped response")
+            }
         }
     }
 

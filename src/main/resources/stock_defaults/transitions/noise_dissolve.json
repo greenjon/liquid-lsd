@@ -1,0 +1,48 @@
+{
+  "version": 3,
+  "params": {
+    "chromaShift": {
+      "note": "The kick fringes the dissolve edge.",
+      "modulators": [
+        {
+          "name": "kick fringe",
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "depth": 0.4,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 90
+        }
+      ]
+    },
+    "softness": {
+      "note": "Loud passages soften the edge into a wider haze.",
+      "modulators": [
+        {
+          "name": "loudness haze",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.25,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "noiseScale": {
+      "note": "Mids reshape the dissolve pattern mid-move; may look like boiling. Off by default.",
+      "modulators": [
+        {
+          "name": "mid grain",
+          "sourceId": "audio_mid",
+          "operator": "ADD",
+          "depth": 0.2,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400,
+          "bypassed": true
+        }
+      ]
+    }
+  }
+}

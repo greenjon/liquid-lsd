@@ -20,7 +20,9 @@ class ISFFilter(
     val importedTextures: Map<String, Int> = emptyMap(),
     val ownsTextures: Boolean = false,
     /** Stable hash of the shader source, used to key user Metaknob-binding overrides (see [ISFAutoBindEngine]). */
-    val contentHash: String? = null
+    val contentHash: String? = null,
+    /** A crossfader transition rather than an effect: its shipped default comes from `stock_defaults/transitions/`. */
+    val isTransition: Boolean = false
 ) : VisualEffect {
 
     /**
@@ -659,20 +661,27 @@ class ISFFilter(
         }
     }
 
+    /**
+     * A fresh instance sharing this one's shader and textures, its default resolved now rather than copied from this
+     * instance: what the registries hand out, so a default saved or removed since this one was built applies.
+     */
+    fun newInstance(): ISFFilter = ISFFilter(
+        id = id,
+        displayName = displayName,
+        header = header,
+        shader = shader,
+        ownsShader = false,
+        categories = this.categories,
+        folderPath = this.folderPath,
+        baseDir = this.baseDir,
+        importedTextures = this.activeImportedTextures,
+        ownsTextures = false,
+        contentHash = this.contentHash,
+        isTransition = this.isTransition
+    )
+
     override fun clone(): ISFFilter {
-        val copy = ISFFilter(
-            id = id,
-            displayName = displayName,
-            header = header,
-            shader = shader,
-            ownsShader = false,
-            categories = this.categories,
-            folderPath = this.folderPath,
-            baseDir = this.baseDir,
-            importedTextures = this.activeImportedTextures,
-            ownsTextures = false,
-            contentHash = this.contentHash
-        )
+        val copy = newInstance()
         copy.enabled = this.enabled
         copy.dryWet.baseValue = this.dryWet.baseValue
         // Note: modulators are not cloned here as they are managed by the Preset/Deck logic
