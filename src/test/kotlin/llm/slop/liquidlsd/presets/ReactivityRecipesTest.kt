@@ -22,6 +22,7 @@ class ReactivityRecipesTest {
 
     /** Float input names of a bundled ISF source (the JSON header comment). */
     private fun floatInputs(id: String): Set<String> {
+        if (id == "fractal_flame") return llm.slop.liquidlsd.rendering.FlameGenome.buildParameters().keys
         val meta = File(root, "src/main/resources/default_sources/$id/meta.json")
         if (meta.exists()) {
             return json.parseToJsonElement(meta.readText()).jsonObject["parameters"]!!.jsonArray

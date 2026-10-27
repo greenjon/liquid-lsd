@@ -1,0 +1,190 @@
+{
+  "version": 1,
+  "params": {
+    "Breathe": {
+      "stack": [
+        {
+          "name": "bass pulse",
+          "active": true,
+          "sourceId": "audio_bass",
+          "depth": 0.08,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        },
+        {
+          "name": "sine 8-beat",
+          "active": false,
+          "sourceId": "lfo",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 8,
+          "depth": 0.06
+        }
+      ],
+      "note": "Every xform swells a little on the kick, so the flame pulses."
+    },
+    "Warp": {
+      "stack": [
+        {
+          "name": "mid body",
+          "active": true,
+          "sourceId": "audio_mid",
+          "depth": 0.12,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        },
+        {
+          "name": "sine 16-beat",
+          "active": false,
+          "sourceId": "lfo",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 16,
+          "depth": 0.1
+        }
+      ],
+      "note": "Mids pull the non-linear variations up against linear."
+    },
+    "Spin": {
+      "stack": [
+        {
+          "name": "sine 32-beat",
+          "active": true,
+          "sourceId": "lfo",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 32,
+          "depth": 0.08
+        },
+        {
+          "name": "loudness spin",
+          "active": false,
+          "sourceId": "audio_amp",
+          "depth": 0.06,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ],
+      "note": "A slow beat-locked sway of every xform rotation (about 14 degrees each way)."
+    },
+    "Drift": {
+      "stack": [
+        {
+          "name": "sine 16-beat",
+          "active": true,
+          "sourceId": "lfo",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 16,
+          "depth": 0.25
+        },
+        {
+          "name": "loudness swell",
+          "active": false,
+          "sourceId": "audio_amp",
+          "depth": 0.25,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ],
+      "note": "Colour flow speeds up and slows down over 16 beats."
+    },
+    "Magnify": {
+      "stack": [
+        {
+          "name": "bass pulse",
+          "active": true,
+          "sourceId": "audio_bass",
+          "depth": 0.05,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        }
+      ],
+      "note": "The camera pushes in on the kick."
+    },
+    "Exposure": {
+      "stack": [
+        {
+          "name": "kick hit",
+          "active": true,
+          "sourceId": "audio_flux_bass",
+          "depth": 0.06,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        },
+        {
+          "name": "loudness swell",
+          "active": false,
+          "sourceId": "audio_amp",
+          "depth": 0.06,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ],
+      "note": "Kick flashes the exposure; loudness as the alternative."
+    },
+    "Brightness": {
+      "stack": [
+        {
+          "name": "loudness swell",
+          "active": true,
+          "sourceId": "audio_amp",
+          "depth": 0.06,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ],
+      "note": "Gentle loudness lift."
+    },
+    "Decay": {
+      "stack": [
+        {
+          "name": "loudness swell",
+          "active": false,
+          "sourceId": "audio_amp",
+          "depth": 0.3,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ],
+      "note": "Trails build up when loud; off by default."
+    },
+    "Vibrancy": {
+      "stack": [
+        {
+          "name": "high shimmer",
+          "active": false,
+          "sourceId": "audio_high",
+          "depth": 0.2,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 110
+        }
+      ],
+      "note": "Highs bring out the colour; off by default."
+    },
+    "Mutation": {
+      "stack": [
+        {
+          "name": "loudness swell",
+          "active": false,
+          "sourceId": "audio_amp",
+          "depth": 0.3,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ],
+      "note": "Louder music lets the next morph target wander further; off by default."
+    }
+  }
+}
