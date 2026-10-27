@@ -25,9 +25,17 @@ class LevelFaderMirrorTest {
         every { it.getParameterPaths("Mixer") } returns listOf("Mixer/levelA" to level)
     }
 
+    // MacroEngine is a process-wide singleton. A bank another test left registered (e.g. the stock MASTER bank,
+    // whose LEVEL A knob also drives Mixer/levelA at 1.0) would fight this test's knob, so every resident bank is
+    // set aside for the test and put back afterwards.
+    private val setAside = mutableMapOf<String?, MacroBank>()
+
     @BeforeTest
     fun setUp() {
         ParameterResolver.clearCache()
+        for (id in MacroEngine.CANONICAL_BANK_IDS + null) {
+            MacroEngine.getBank(id)?.let { setAside[id] = it; MacroEngine.unregisterBank(id) }
+        }
         MacroEngine.registerBank(null, MacroBank(knobs = listOf(knob)))
         MacroEngine.tick(mixer)
     }
@@ -35,7 +43,8 @@ class LevelFaderMirrorTest {
     @AfterTest
     fun tearDown() {
         ParameterResolver.clearCache()
-        MacroEngine.registerBank(null, MacroBank())
+        MacroEngine.unregisterBank(null)
+        setAside.forEach { (id, bank) -> MacroEngine.registerBank(id, bank) }
     }
 
     @Test
