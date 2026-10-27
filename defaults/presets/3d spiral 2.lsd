@@ -18,11 +18,11 @@
                 {
                     "sourceId": "lfo",
                     "operator": "ADD",
-                    "depth": 1.0,
+                    "depth": 0.5,
                     "genUnit": "BEAT",
-                    "dcOffset": 0.0011199218,
-                    "dcOffsetMin": 0.0011199218,
-                    "dcOffsetMax": 0.0011199218,
+                    "dcOffset": 0.5011199218,
+                    "dcOffsetMin": 0.5011199218,
+                    "dcOffsetMax": 0.5011199218,
                     "seqSteps": [
                         0.0,
                         0.0,

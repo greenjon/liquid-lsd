@@ -25,7 +25,7 @@
                 {
                     "sourceId": "lfo",
                     "operator": "ADD",
-                    "depth": 1.0,
+                    "depth": 0.5,
                     "waveform": "RANDOM",
                     "seqSteps": [
                         0.0,
@@ -61,7 +61,8 @@
                         0.0,
                         0.0
                     ],
-                    "id": "virtual_lfo"
+                    "id": "virtual_lfo",
+                    "dcOffset": 0.5
                 }
             ]
         },
@@ -74,7 +75,7 @@
                 {
                     "sourceId": "lfo",
                     "operator": "ADD",
-                    "depth": 1.0,
+                    "depth": 0.5,
                     "waveform": "RANDOM",
                     "subdivision": 0.999,
                     "seqSteps": [
@@ -111,7 +112,8 @@
                         0.0,
                         0.0
                     ],
-                    "id": "virtual_lfo"
+                    "id": "virtual_lfo",
+                    "dcOffset": 0.5
                 }
             ]
         },
@@ -124,7 +126,7 @@
                 {
                     "sourceId": "lfo",
                     "operator": "ADD",
-                    "depth": 1.0,
+                    "depth": 0.5,
                     "waveform": "RANDOM",
                     "subdivision": 0.998,
                     "seqSteps": [
@@ -161,7 +163,8 @@
                         0.0,
                         0.0
                     ],
-                    "id": "virtual_lfo"
+                    "id": "virtual_lfo",
+                    "dcOffset": 0.5
                 }
             ]
         },
@@ -174,7 +177,7 @@
                 {
                     "sourceId": "lfo",
                     "operator": "ADD",
-                    "depth": 1.0,
+                    "depth": 0.5,
                     "waveform": "RANDOM",
                     "subdivision": 0.99700004,
                     "seqSteps": [
@@ -211,7 +214,8 @@
                         0.0,
                         0.0
                     ],
-                    "id": "virtual_lfo"
+                    "id": "virtual_lfo",
+                    "dcOffset": 0.5
                 }
             ]
         },
