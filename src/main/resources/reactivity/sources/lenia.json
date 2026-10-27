@@ -84,7 +84,7 @@
       "stack": [
         {
           "name": "drop reseed (hard kick wipes and reseeds)",
-          "active": false,
+          "active": true,
           "sourceId": "audio_flux_bass",
           "depth": 1.0,
           "followerMode": "SNAP",
@@ -92,7 +92,7 @@
           "decayMs": 35
         }
       ],
-      "note": "Drop trigger; off by default."
+      "note": "Hard kicks wipe and reseed the life."
     },
     "Zoom": {
       "stack": [
