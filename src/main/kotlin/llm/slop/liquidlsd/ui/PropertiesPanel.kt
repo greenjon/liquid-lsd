@@ -310,7 +310,7 @@ object PropertiesPanel {
         ImGui.pushID("${cell.paramKey}_${cell.cvSourceId}")
         if (ImGui.beginChild("##cell_config_mods_scroll", 0f, 0f, false, childFlags)) {
             for ((idx, existing) in modsToDraw.withIndex()) {
-                ImGui.pushID(existing.sourceId.ifEmpty { existing.id })
+                ImGui.pushID("${existing.sourceId.ifEmpty { existing.id }}_$idx")
                 
                 val bypassed = existing.bypassed
                 val currentThemeColor = CvTheme.getThemeColor(existing.sourceId)
