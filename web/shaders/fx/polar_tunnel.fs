@@ -94,11 +94,14 @@ void main() {
     p.x *= aspect;
 
     float r = length(p);
-    float a = atan(p.y, p.x); // [-PI, PI]
+    // Angle measured from straight up, so the wrap seam (where the image's left and right
+    // edges meet) sits at the bottom: the tunnel stays left/right balanced, the image's
+    // horizontal center runs along the top and its edges fold together underneath.
+    float a = atan(p.x, p.y); // [-PI, PI], 0 = up, +PI/2 = right
 
     // Symmetry repeats around the tunnel circumference
     float sym = max(floor(symmetry + 0.5), 1.0);
-    float u = (a / 6.28318530718 + 0.5) * sym;
+    float u = (0.5 - a / 6.28318530718) * sym;
 
     // Perspective depth_ projection with singularity protection
     float safeZoom = max(zoom_, 0.001);

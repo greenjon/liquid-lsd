@@ -83,11 +83,13 @@ void main() {
     p.x *= aspect;
 
     float r = length(p);
-    float a = atan(p.y, p.x) + rotation;
-
     // Multi-axis sector folding
     float seg = max(floor(segments + 0.5), 2.0);
     float segAngle = 6.28318530718 / seg;
+
+    // Even counts always mirror across both screen axes. Odd counts mirror across only one,
+    // so turn them a quarter so that axis is the vertical one: left/right stays balanced.
+    float a = atan(p.y, p.x) + rotation - (mod(seg, 2.0) > 0.5 ? 1.57079632679 : 0.0);
     float halfSeg = segAngle * 0.5;
 
     // Continuous triangle-wave angular reflection to avoid seam artifacts

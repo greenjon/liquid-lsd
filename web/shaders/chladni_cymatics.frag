@@ -68,7 +68,9 @@ void main() {
 
     // 2. Circular plate standing wave calculation (Bessel-like radial nodes)
     float r = length(p) * 2.0;
-    float theta = atan(p.y, p.x);
+    // Angle from straight up: with a fractional M the wrap seam lands at the bottom, not the left,
+    // and cos(m * theta) mirrors left to right for every M
+    float theta = atan(p.x, p.y);
     float wCirc = sin(r * n * PI) * cos(m * theta)
                 + 0.4 * cos(r * l * PI);
 

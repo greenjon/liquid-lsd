@@ -145,7 +145,8 @@ void main() {
         // Kaleidoscope / radial symmetry
         float segments = floor(fbKaleido + 0.5);
         if (segments > 1.0) {
-            float angle = atan(uv.y, uv.x);
+            // Odd counts mirror across one screen axis only: make it the vertical one
+            float angle = atan(uv.y, uv.x) - (mod(segments, 2.0) > 0.5 ? 1.57079632679 : 0.0);
             float radius = length(uv);
             float segmentAngle = 6.28318530718 / segments;
 
