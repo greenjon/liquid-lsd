@@ -75,6 +75,8 @@ The oscilloscope shows two traces: the raw audio energy (faint ghost trace) and 
 
 The dual-handled range slider at the bottom sets the floor and ceiling of the modulation output. For example, if you want bass energy to push Lobes between 3 and 8, set Min to 3 and Max to 8.
 
+Min and Max are measured from the parameter's set value, and moving one never moves the other. Audio sources only push upward from silence, so Min is the resting offset and Max is the loudest peak.
+
 Enabling randomization adds independent drift sliders for the Min and Max bounds, so the range itself wanders gently over time.
 
 ---
@@ -103,7 +105,7 @@ Clicking an **LFO** cell opens the LFO config. Each cell has a primary oscillato
 - **Morph** — Softens sharp corners. At 0.0 you get a pure triangle; at 1.0 you get a smooth sine-like curve.
 - **Hold** — Compresses the transition into a shorter moment and adds a plateau at the peak.
 
-**Range (Min / Max):** Sets the output range directly. No need to think in terms of depth and offset — just say "I want this to move between 2.0 and 6.0" and set those values.
+**Range (Min / Max):** Sets the output range directly. No need to think in terms of depth and offset — just say "I want this to move between 2.0 and 6.0" and set those values. Min and Max are the lowest and highest the LFO reaches, whatever the parameter's own range, and moving one leaves the other where it is. (The LFO swings evenly either side of the midpoint, so on a 0-to-1 parameter a Min below the set value pulls the parameter down as well as up; the result is clamped at the parameter's limits.)
 
 ### Secondary Modulator (LFO 2)
 

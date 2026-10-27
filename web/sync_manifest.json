@@ -442,7 +442,7 @@
       "web": "web/evaluator.js",
       "mode": "manual_review",
       "description": "Modulation signal evaluators and math function parity",
-      "last_synced_hash": "9b8d0806863db79c836a61fccc4aa3daf2e1b41ac7234778f098a71a7436066b"
+      "last_synced_hash": "0022765f72b09dc118f601545234cd9eedd0029b5e87bd2351856bca3e7a722a"
     },
     {
       "desktop": "src/main/kotlin/llm/slop/liquidlsd/broadcast/WebPresetSerializer.kt",

@@ -310,9 +310,8 @@ fun isAudioSource(sourceId: String): Boolean = when (sourceId) {
 
 /**
  * Calculates combined effective modulator value with correct formula per parameter polarity:
- *   Bipolar source on Bipolar param:   modAmount = cv * depth + dc         → in [-1, 1]
- *   Bipolar source on Monopolar param: modAmount = ((cv+1)/2) * depth + dc → in [ 0, 1]
- *   Unipolar source (Audio/Trigger/MIDI): modAmount = cv * depth + dc       → in [ 0, 1] (silence is 0)
+ *   Every source and target: modAmount = cv * depth + dc (bipolar sources swing dc±depth,
+ *   unipolar ones — Audio/Trigger/MIDI, where silence is 0 — span dc..dc+depth).
  *
  * Used by the O-scope in PropertiesPanel and Parameters knob indicators so displays match engine output.
  */
@@ -327,19 +326,7 @@ fun getCombinedEffectiveValueAtOffset(mods: List<CvModulator>, isBipolar: Boolea
     for (mod in mods) {
         if (mod.bypassed && !includeBypassed) continue
         val cv = evaluateModulatorAtOffset(mod, timeOffsetSec)
-        val isSourceBipolar = isCvSourceBipolar(mod.sourceId)
-        val modAmount = if (mod.sourceId == "seq") {
-            cv * mod.depth + mod.dcOffset
-        } else if (isSourceBipolar) {
-            if (isBipolar) {
-                cv * mod.depth + mod.dcOffset
-            } else {
-                ((cv + 1f) / 2f) * mod.depth + mod.dcOffset
-            }
-        } else {
-            // Unipolar source (Audio, Trigger, MIDI CC)
-            cv * mod.depth + mod.dcOffset
-        }
+        val modAmount = mod.lfoShape(cv, mod.depth)
         if (first) {
             result = when (mod.operator) {
                 llm.slop.liquidlsd.parameters.ModulationOperator.ADD -> modAmount

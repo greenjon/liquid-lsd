@@ -12,8 +12,8 @@
         {
           "sourceId": "lfo",
           "operator": "ADD",
-          "depth": 0.34,
-          "dcOffset": 0.0,
+          "depth": 0.17,
+          "dcOffset": 0.17,
           "waveform": "SQUARE",
           "genUnit": "BEAT",
           "subdivision": 32.0,
@@ -62,8 +62,8 @@
         {
           "sourceId": "lfo",
           "operator": "ADD",
-          "depth": 0.2,
-          "dcOffset": 0.0,
+          "depth": 0.1,
+          "dcOffset": 0.1,
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 16.0,
@@ -102,8 +102,8 @@
         {
           "sourceId": "lfo",
           "operator": "ADD",
-          "depth": 0.3,
-          "dcOffset": 0.0,
+          "depth": 0.15,
+          "dcOffset": 0.15,
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 1.0,
@@ -121,8 +121,8 @@
         {
           "sourceId": "lfo",
           "operator": "ADD",
-          "depth": 1.0,
-          "dcOffset": 0.0,
+          "depth": 0.5,
+          "dcOffset": 0.5,
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 48.0,

@@ -33,7 +33,7 @@
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 8,
-          "depth": 0.12
+          "depth": 0.06
         }
       ],
       "note": "Pattern pulses on the kick."
@@ -47,7 +47,7 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 64,
-          "depth": 0.3
+          "depth": 0.15
         }
       ],
       "note": "Slow grid sway."
@@ -126,7 +126,7 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 64,
-          "depth": 0.35
+          "depth": 0.175
         }
       ]
     }

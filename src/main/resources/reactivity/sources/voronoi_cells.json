@@ -19,7 +19,7 @@
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 16,
-          "depth": -0.3
+          "depth": -0.15
         }
       ],
       "note": "Cells regularise when the mids are loud."
@@ -84,7 +84,7 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 32,
-          "depth": 0.15
+          "depth": 0.075
         }
       ],
       "note": "Slow zoom; off by default."
@@ -112,7 +112,7 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 64,
-          "depth": 0.4
+          "depth": 0.2
         }
       ]
     }

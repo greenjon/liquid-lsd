@@ -19,7 +19,7 @@
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 8,
-          "depth": 0.06
+          "depth": 0.03
         }
       ],
       "note": "The grating tightens on the bass."
@@ -126,7 +126,7 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 64,
-          "depth": 0.35
+          "depth": 0.175
         }
       ]
     }

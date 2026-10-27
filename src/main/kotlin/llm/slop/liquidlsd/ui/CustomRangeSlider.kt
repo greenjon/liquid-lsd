@@ -206,6 +206,7 @@ object CustomRangeSlider {
 
         ImGui.setCursorScreenPos(startX, startY + (buttonSize - session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() }) / 2f)
         session.uiTheme.body(label)
+        if (label.isNotEmpty()) itemTooltip("The lowest and highest the modulator takes this parameter, measured from its set value.\nMoving Max never moves Min, and the other way round.")
 
         if (session.uiTheme.randomizationEnabled) {
             val randBtnX = startX + labelColW - buttonSize

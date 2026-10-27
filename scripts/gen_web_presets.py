@@ -10,8 +10,9 @@ and `node web/checks/render_check.mjs`.
 
 Modulator semantics (identical on desktop and web, see web/evaluator.js):
   * ADD adds  (cv * depth + dcOffset) * range  to the parameter (range/2 for bipolar parameters).
-  * A bipolar source (lfo, beatSine) on a unipolar parameter is first remapped to 0..1, so a
-    depth-d lfo sweeps base .. base + d*range. On a bipolar parameter it swings base +/- d*range/2... (cv*depth*range/2).
+  * A bipolar source (lfo, beatSine) swings dcOffset +/- depth on every parameter. The helpers below
+    are written as "depth-d lfo sweeps base .. base + d*range" on a unipolar parameter; P() rewrites
+    that to depth d/2, dcOffset d/2 (on a bipolar parameter it swings base +/- d*range/2).
   * audio_* sources are 0..1. A *gate* is ADD with dcOffset = -threshold*depth: below the
     threshold the amount is negative and the parameter is clamped at its minimum, so a gate only
     works on a parameter whose base IS its minimum (0 = "off": WaveAmp, StellationBoost,
@@ -86,8 +87,25 @@ def kick(depth, decay=220): return audio("audio_flux_bass", depth, 4, decay)
 def hat(depth, decay=120): return audio("audio_flux_high", depth, 3, decay)
 
 
+BIPOLAR_SOURCES = {"lfo", "beatSine", "beatPhase", "sampleAndHold"}
+
+
+def _keep_swing(m, lo):
+    """Authoring helper semantics: a depth-d lfo on a unipolar parameter sweeps base .. base + d*range.
+    The engine swings every bipolar source dcOffset +/- depth, so rewrite those to the same sweep:
+    half the depth, centred d/2 higher (SCALE also subtracts depth, which the halving already shifts)."""
+    if m["sourceId"] not in BIPOLAR_SOURCES or lo < 0:
+        return m
+    d = m["depth"]
+    out = dict(m, depth=d / 2)
+    if m["operator"] != "SCALE":
+        out["dcOffset"] = m["dcOffset"] + d / 2
+    return out
+
+
 def P(base, lo, hi, *mods):
-    return {"baseValue": base, "baseMin": lo, "baseMax": hi, "randomizeBase": False, "modulators": list(mods)}
+    return {"baseValue": base, "baseMin": lo, "baseMax": hi, "randomizeBase": False,
+            "modulators": [_keep_swing(m, lo) for m in mods]}
 
 
 def isf_params(source, spec):

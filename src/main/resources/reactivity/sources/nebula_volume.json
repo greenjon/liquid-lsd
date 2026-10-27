@@ -42,7 +42,7 @@
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 16,
-          "depth": 0.2
+          "depth": 0.1
         }
       ],
       "note": "Mids stir the gas."
@@ -167,7 +167,7 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 32,
-          "depth": 0.08
+          "depth": 0.04
         }
       ],
       "note": "Slow breathing; off by default."
@@ -209,7 +209,7 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 64,
-          "depth": 0.35
+          "depth": 0.175
         }
       ]
     }

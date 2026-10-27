@@ -164,7 +164,7 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 64,
-          "depth": 0.35
+          "depth": 0.175
         }
       ]
     }

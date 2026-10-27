@@ -42,7 +42,7 @@
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 16,
-          "depth": 0.25
+          "depth": 0.125
         }
       ],
       "note": "Curtains ripple with the mids."
@@ -130,7 +130,7 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 128,
-          "depth": 0.35
+          "depth": 0.175
         }
       ]
     }

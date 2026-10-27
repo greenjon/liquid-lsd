@@ -25,14 +25,15 @@
                 {
                     "sourceId": "lfo",
                     "operator": "ADD",
-                    "depth": 0.3297192,
+                    "depth": 0.1648596,
                     "bypassed": true,
                     "subdivision": 8.0,
                     "genUnit": "BEAT",
                     "hold": 0.98260325,
                     "holdMin": 0.98260325,
                     "holdMax": 0.98260325,
-                    "id": "virtual_lfo"
+                    "id": "virtual_lfo",
+                    "dcOffset": 0.1648596
                 }
             ]
         },
@@ -45,14 +46,15 @@
                 {
                     "sourceId": "lfo",
                     "operator": "ADD",
-                    "depth": 0.3297192,
+                    "depth": 0.1648596,
                     "bypassed": true,
                     "subdivision": 8.0,
                     "genUnit": "BEAT",
                     "hold": 0.98260325,
                     "holdMin": 0.98260325,
                     "holdMax": 0.98260325,
-                    "id": "virtual_lfo"
+                    "id": "virtual_lfo",
+                    "dcOffset": 0.1648596
                 }
             ]
         },
@@ -65,14 +67,15 @@
                 {
                     "sourceId": "lfo",
                     "operator": "ADD",
-                    "depth": 0.3297192,
+                    "depth": 0.1648596,
                     "bypassed": true,
                     "subdivision": 8.0,
                     "genUnit": "BEAT",
                     "hold": 0.98260325,
                     "holdMin": 0.98260325,
                     "holdMax": 0.98260325,
-                    "id": "virtual_lfo"
+                    "id": "virtual_lfo",
+                    "dcOffset": 0.1648596
                 }
             ]
         },
@@ -85,13 +88,14 @@
                 {
                     "sourceId": "lfo",
                     "operator": "ADD",
-                    "depth": 0.3297192,
+                    "depth": 0.1648596,
                     "subdivision": 8.0,
                     "genUnit": "BEAT",
                     "hold": 0.98260325,
                     "holdMin": 0.98260325,
                     "holdMax": 0.98260325,
-                    "id": "virtual_lfo"
+                    "id": "virtual_lfo",
+                    "dcOffset": 0.1648596
                 }
             ]
         },

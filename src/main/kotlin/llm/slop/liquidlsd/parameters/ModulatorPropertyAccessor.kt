@@ -24,14 +24,14 @@ object ModulatorPropertyAccessor {
         when (propertyName) {
             "depth" -> mod.depth = value
             "lfoMin" -> {
-                val max = mod.getLfoMax()
-                mod.dcOffset = (value + max) / 2f
-                mod.depth = (max - value) / 2f
+                val r = mod.withLfoRange(value, mod.getLfoMax())
+                mod.dcOffset = r.dcOffset
+                mod.depth = r.depth
             }
             "lfoMax" -> {
-                val min = mod.getLfoMin()
-                mod.dcOffset = (min + value) / 2f
-                mod.depth = (value - min) / 2f
+                val r = mod.withLfoRange(mod.getLfoMin(), value)
+                mod.dcOffset = r.dcOffset
+                mod.depth = r.depth
             }
             "subdivision" -> mod.subdivision = value
             "phaseOffset" -> mod.phaseOffset = value

@@ -226,19 +226,9 @@ class ModulatableParameter(
             }
             val finalCv = evaluateModulator(mod, clockAnchors)
             val depth = Reactivity.effectiveDepth(mod)
-            val isSourceBipolar = llm.slop.liquidlsd.cv.isCvSourceBipolar(mod.sourceId)
-            val rawModAmount = if (mod.sourceId == "seq") {
-                finalCv * depth + mod.dcOffset
-            } else if (isSourceBipolar) {
-                if (isBipolar) {
-                    finalCv * depth + mod.dcOffset
-                } else {
-                    ((finalCv + 1f) / 2f) * depth + mod.dcOffset
-                }
-            } else {
-                // Unipolar source (Audio, Trigger, MIDI CC): 0 is silence/rest, 1 is peak
-                finalCv * depth + mod.dcOffset
-            }
+            // Same shape for every source and target: cv * depth + dcOffset, so the LFO Min/Max slider
+            // (see CvModulator.getLfoMin) is exact regardless of the parameter's polarity.
+            val rawModAmount = mod.lfoShape(finalCv, depth)
             
             val scalar = if (mod.operator == ModulationOperator.ADD) addScalar else 1.0f
             val modAmount = rawModAmount * scalar

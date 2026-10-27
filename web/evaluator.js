@@ -15,7 +15,6 @@ export const GEN_MOD_MODES = ['NONE', 'AM', 'PM', 'ADD'];
 // CV sources the desktop CVRegistry registers (beatPhase / sampleAndHold are legacy and skipped there too).
 // midi_cc_* are not available on the web and are skipped.
 const GENERATORS = new Set(['lfo', 'seq']);
-const BIPOLAR_SOURCES = new Set(['lfo', 'beatSine']);
 const AUDIO_SOURCES = new Set([
   'audio_amp', 'audio_bass', 'audio_mid', 'audio_high',
   'audio_flux_amp', 'audio_flux_bass', 'audio_flux_mid', 'audio_flux_high',
@@ -335,10 +334,7 @@ export function evaluateParameter(param, ctx, spec = {}, fallback = 0) {
     const cv = evaluateModulator(mod, ctx);
     const depth = F(mod.depth ?? (mod.sourceId === 'seq' ? 1.0 : 0.0)) * (mod.recipe ? reactivity : 1.0);
     const dc = F(mod.dcOffset ?? 0.0);
-    const bipolarSource = BIPOLAR_SOURCES.has(mod.sourceId);
-    const rawAmount = (mod.sourceId !== 'seq' && bipolarSource && !isBipolar)
-      ? ((cv + 1) / 2) * depth + dc
-      : cv * depth + dc;
+    const rawAmount = cv * depth + dc;
     const op = mod.operator ?? 'ADD';
     const amount = rawAmount * (op === 'ADD' ? addScalar : 1);
     if (op === 'ADD') result += amount;

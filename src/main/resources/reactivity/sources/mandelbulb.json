@@ -10,7 +10,7 @@
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 32,
-          "depth": 0.12
+          "depth": 0.06
         },
         {
           "name": "bass pulse",
@@ -149,7 +149,7 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 64,
-          "depth": 0.35
+          "depth": 0.175
         }
       ]
     }

@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### LFO Min/Max Moves Independently (`parameters/CvModulator.kt`, `parameters/ModulatableParameter.kt`, `cv/Evaluators.kt`, `web/evaluator.js`, `resources/reactivity/`, `defaults/presets/`, `web/presets/`)
+- **Fixed: changing an LFO's Max also moved its Min.** The Min/Max slider assumed every modulator swings evenly either side of its centre, but a beat LFO on a 0-to-1 parameter was secretly remapped to swing only upward from the centre, so the real minimum shifted whenever you moved Max. Every bipolar source (LFO, beat sine, beat phase, sample and hold) now swings evenly around its centre on any parameter, and the slider's Min and Max are exactly the lowest and highest the modulator reaches, relative to the base value. Audio, trigger and MIDI sources never go below zero, so their Min is the offset and Max is offset plus depth.
+- **Behaviour change:** an LFO with depth *d* on a 0-to-1 parameter used to sweep from the base up to base + *d*; it now sweeps base ± *d*, clamped at the parameter's limits. The stock presets (the web TV presets and FX chains, Mandala 7 and 10) and all reactivity recipes were rewritten to keep their original sweep. Recipe LFO depths on 0-to-1 parameters were halved, so they now sway evenly around the base instead of rising above it. Presets you saved yourself keep their numbers and will swing wider; lower their Depth, or raise Min, to taste.
+- The web evaluator and its golden vectors match.
+
 ### Harmonograph Removed From the Stock Set (`rendering/VisualSourceRegistry.kt`, `presets/GeneratorDefaults.kt`, `web/`)
 - **Harmonograph is gone for now.** It drew one thin curve of at most 128 segments, which read as a single piece of string rather than the dense rosette a harmonograph should make. It is out of the stock sources, the web TV (its shader and three presets, so the playlists no longer include them) and the tour scripts (which now use Quasicrystal). A copy already in your library stays and still loads. A rebuilt version that builds up many windings is planned for v1.1.
 

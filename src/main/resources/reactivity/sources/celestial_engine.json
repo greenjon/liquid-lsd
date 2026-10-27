@@ -42,7 +42,7 @@
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 16,
-          "depth": 0.1
+          "depth": 0.05
         }
       ],
       "note": "Rings tighten with the bass."
@@ -172,7 +172,7 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 64,
-          "depth": 0.35
+          "depth": 0.175
         }
       ]
     }

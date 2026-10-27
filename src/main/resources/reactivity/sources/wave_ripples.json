@@ -19,7 +19,7 @@
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 8,
-          "depth": 0.08
+          "depth": 0.04
         }
       ],
       "note": "Ripples stretch on the kick."
@@ -121,7 +121,7 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 64,
-          "depth": 0.35
+          "depth": 0.175
         }
       ]
     }

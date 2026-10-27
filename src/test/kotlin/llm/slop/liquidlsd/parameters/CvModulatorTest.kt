@@ -85,11 +85,11 @@ class CvModulatorTest {
         evaluated = param.evaluate()
         assertEquals(0.5f, evaluated, 0.001f)
 
-        // With rawCV at trough = -1.0 (frame 0) -> (( -1 + 1 ) / 2 ) * depth = 0.0:
-        // result = baseValue * (1 - depth + 0) = 0.5 * (1 - 0.4) = 0.3
+        // With rawCV at trough = -1.0 (frame 0) -> modAmount = -1 * depth = -0.4 (symmetric on any target):
+        // result = baseValue * (1 - depth + modAmount) = 0.5 * (1 - 0.4 - 0.4) = 0.1
         CVRegistry.setRenderFrameCount(0L)
         evaluated = param.evaluate()
-        assertEquals(0.3f, evaluated, 0.001f)
+        assertEquals(0.1f, evaluated, 0.001f)
     }
 
     @Test

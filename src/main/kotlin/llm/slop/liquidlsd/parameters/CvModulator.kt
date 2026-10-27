@@ -114,12 +114,25 @@ data class CvModulator(
 
     val id: String = llm.slop.liquidlsd.utils.DeterministicRandom.uuid()
 ) {
-    fun getLfoMin(): Float = dcOffset - depth
+    /**
+     * Unipolar sources (audio, trigger, MIDI CC) swing 0..1, so their output spans dcOffset..dcOffset+depth;
+     * bipolar sources and the sequencer swing -1..1 and span dcOffset±depth.
+     */
+    private val halfRange: Boolean
+        get() = sourceId != "seq" && !llm.slop.liquidlsd.cv.isCvSourceBipolar(sourceId)
+
+    /** Modulator output before the operator scalar: cv * depth + dcOffset. */
+    fun lfoShape(cv: Float, effectiveDepth: Float): Float = cv * effectiveDepth + dcOffset
+
+    fun getLfoMin(): Float = if (halfRange) dcOffset else dcOffset - depth
     fun getLfoMax(): Float = dcOffset + depth
 
+    /** Splits a min/max range into (depth, dcOffset) for this source's polarity. */
+    private fun depthAndOffset(min: Float, max: Float): Pair<Float, Float> =
+        if (halfRange) Pair(max - min, min) else Pair((max - min) / 2f, (max + min) / 2f)
+
     fun withLfoRange(min: Float, max: Float): CvModulator {
-        val d = (max - min) / 2f
-        val o = (max + min) / 2f
+        val (d, o) = depthAndOffset(min, max)
         return this.copy(
             depth = d,
             dcOffset = o,
@@ -141,13 +154,13 @@ data class CvModulator(
         val (newDepth, newDcOffset) = if (lfoMinMaxMode) {
             val rMin = if (randomizeDcOffset) {
                 if (dcOffsetMin == dcOffsetMax) dcOffsetMin else random.nextFloat() * (dcOffsetMax - dcOffsetMin) + dcOffsetMin
-            } else (dcOffset - depth)
+            } else getLfoMin()
 
             val rMax = if (randomizeDepth) {
                 if (depthMin == depthMax) depthMin else random.nextFloat() * (depthMax - depthMin) + depthMin
-            } else (dcOffset + depth)
+            } else getLfoMax()
 
-            Pair((rMax - rMin) / 2f, (rMax + rMin) / 2f)
+            depthAndOffset(rMin, rMax)
         } else {
             val d = if (randomizeDepth) {
                 if (depthMin == depthMax) depthMin else random.nextFloat() * (depthMax - depthMin) + depthMin
@@ -270,9 +283,9 @@ data class CvModulator(
     fun randomizeDepth(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng): CvModulator {
         if (!randomizeDepth) return this
         if (lfoMinMaxMode) {
-            val rMin = dcOffset - depth
             val rMax = if (depthMin == depthMax) depthMin else random.nextFloat() * (depthMax - depthMin) + depthMin
-            return this.copy(depth = (rMax - rMin) / 2f, dcOffset = (rMax + rMin) / 2f)
+            val (d, o) = depthAndOffset(getLfoMin(), rMax)
+            return this.copy(depth = d, dcOffset = o)
         }
         val newDepth = if (depthMin == depthMax) depthMin else random.nextFloat() * (depthMax - depthMin) + depthMin
         return this.copy(depth = newDepth)
@@ -281,9 +294,9 @@ data class CvModulator(
     fun randomizeDcOffset(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng): CvModulator {
         if (!randomizeDcOffset) return this
         if (lfoMinMaxMode) {
-            val rMax = dcOffset + depth
             val rMin = if (dcOffsetMin == dcOffsetMax) dcOffsetMin else random.nextFloat() * (dcOffsetMax - dcOffsetMin) + dcOffsetMin
-            return this.copy(depth = (rMax - rMin) / 2f, dcOffset = (rMax + rMin) / 2f)
+            val (d, o) = depthAndOffset(rMin, getLfoMax())
+            return this.copy(depth = d, dcOffset = o)
         }
         val newDcOffset = if (dcOffsetMin == dcOffsetMax) dcOffsetMin else random.nextFloat() * (dcOffsetMax - dcOffsetMin) + dcOffsetMin
         return this.copy(dcOffset = newDcOffset)

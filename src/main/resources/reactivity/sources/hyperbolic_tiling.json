@@ -33,7 +33,7 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 16,
-          "depth": 0.2
+          "depth": 0.1
         }
       ],
       "note": "Mids push the view."
@@ -144,7 +144,7 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 64,
-          "depth": 0.35
+          "depth": 0.175
         }
       ]
     }

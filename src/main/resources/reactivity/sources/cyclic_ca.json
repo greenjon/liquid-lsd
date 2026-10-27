@@ -61,7 +61,7 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 64,
-          "depth": 0.05
+          "depth": 0.025
         }
       ],
       "note": "Very slow wander of the rule; off by default (can change the pattern type)."
@@ -89,7 +89,7 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 64,
-          "depth": 0.35
+          "depth": 0.175
         }
       ]
     }

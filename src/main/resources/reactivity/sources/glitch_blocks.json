@@ -88,7 +88,7 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 16,
-          "depth": 0.25
+          "depth": 0.125
         }
       ],
       "note": "Glitch rate follows loudness."
@@ -116,7 +116,7 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 16,
-          "depth": 0.2
+          "depth": 0.1
         }
       ],
       "note": "Slow block-size wander; off by default."
@@ -130,7 +130,7 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 64,
-          "depth": 0.4
+          "depth": 0.2
         }
       ]
     }

@@ -85,8 +85,8 @@
             {
               "sourceId": "lfo",
               "operator": "ADD",
-              "depth": 0.06,
-              "dcOffset": 0.0,
+              "depth": 0.03,
+              "dcOffset": 0.03,
               "waveform": "TRIANGLE",
               "genUnit": "BEAT",
               "subdivision": 1.0,

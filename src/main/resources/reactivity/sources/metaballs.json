@@ -42,7 +42,7 @@
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 16,
-          "depth": 0.2
+          "depth": 0.1
         }
       ],
       "note": "Orbits widen with loudness."
@@ -70,7 +70,7 @@
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 16,
-          "depth": 0.2
+          "depth": 0.1
         },
         {
           "name": "kick hit",
@@ -121,7 +121,7 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 64,
-          "depth": 0.4
+          "depth": 0.2
         }
       ]
     }

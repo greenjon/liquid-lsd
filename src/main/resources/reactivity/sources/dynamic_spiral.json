@@ -19,7 +19,7 @@
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 4,
-          "depth": 0.08
+          "depth": 0.04
         }
       ],
       "note": "Spiral breathes with the kick."
@@ -88,7 +88,7 @@
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 8,
-          "depth": 0.3
+          "depth": 0.15
         }
       ],
       "note": "Arms ripple with the mids."
@@ -148,7 +148,7 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 64,
-          "depth": 0.4
+          "depth": 0.2
         }
       ]
     }

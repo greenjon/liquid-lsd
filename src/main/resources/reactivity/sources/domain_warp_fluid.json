@@ -121,7 +121,7 @@
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 32,
-          "depth": 0.15
+          "depth": 0.075
         }
       ],
       "note": "Slow breathing."
