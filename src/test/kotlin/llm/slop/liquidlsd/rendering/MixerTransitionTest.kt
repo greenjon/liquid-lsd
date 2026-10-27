@@ -130,4 +130,12 @@ class MixerTransitionTest {
         tapTempoParam.evaluate()
         assertTrue(mixer.pollTapTempo())
     }
+
+    @Test
+    fun restingFaderCopiesTheVisibleDeckAndAFadeRunsTheTransition() {
+        assertEquals(11, Renderer.restingTexture(0f, 11, 22))
+        assertEquals(22, Renderer.restingTexture(1f, 11, 22))
+        assertNull(Renderer.restingTexture(0.001f, 11, 22))
+        assertNull(Renderer.restingTexture(0.999f, 11, 22))
+    }
 }

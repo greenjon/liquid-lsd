@@ -59,8 +59,9 @@ void main() {
     vec2 uv = isf_FragNormCoord;
     float p = clamp(progress, 0.0, 1.0);
 
-    // Glitch envelope peaking violently around crossfade midpoint
-    float env = sin(p * PI);
+    // Glitch envelope peaking violently around crossfade midpoint. PI rounds just above pi, so sin() dips a hair
+    // below zero at p = 1, and pow() of a negative number is undefined (NaN): clamp it.
+    float env = max(sin(p * PI), 0.0);
     float glitchPower = pow(env, 1.4) * packetLoss_;
 
     // Discrete macroblock coordinates

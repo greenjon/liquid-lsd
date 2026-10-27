@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Transitions Rest Exactly on A or B (`rendering/Renderer.kt`)
+- **With the crossfader fully on A or B, the transition shader no longer runs.** The visible deck is copied straight through, so the resting picture is exactly that deck whatever the transition or its settings do, and the GPU skips a full-screen pass (up to 48 texture reads per pixel for Kinetic Zoom). Fades look the same as before.
+
+### Cyber Datamosh Resting on Deck B (`default_transitions/cyber_datamosh.fs`, `web/shaders/transitions/cyber_datamosh.fs`)
+- **Fixed: Cyber Datamosh could garble deck B's colours with the crossfader fully on B.** At the very end of the fade the glitch envelope dipped a hair below zero (the shader's value of pi rounds slightly high), and raising a negative number to a fractional power is undefined on the GPU, so the red and blue channels sampled from a bad position. The envelope is now clamped at zero. The web TV copy has the same fix.
+
 ### FX "Save as Default" Keeps Modulators (`rendering/isf/ISFAutoBindEngine.kt`, `rendering/isf/ISFFilter.kt`, `ui/FXChainMacroStrip.kt`)
 - **Fixed: saving an effect as its default dropped its modulators.** "Save as Default for <effect>" kept only the Metaknob targets, knob order and base values, so any LFO or audio modulator on the slot was lost on new copies. The default now stores full parameters, modulators included (MIDI mappings are left out, as for generator defaults, and each new copy gets its own modulator ids). Defaults saved before this keep loading as before.
 

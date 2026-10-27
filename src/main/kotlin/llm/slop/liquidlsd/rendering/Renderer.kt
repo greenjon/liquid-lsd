@@ -258,7 +258,17 @@ class Renderer {
         glClear(GL_COLOR_BUFFER_BIT)
         glDisable(GL_BLEND)
 
-        if (activeTransition != null && activeTransition.enabled) {
+        val resting = restingTexture(progress, mixer.deckA.getOutputTexture(), mixer.deckB.getOutputTexture())
+        if (resting != null) {
+            // Fader fully on one side: copy that deck through instead of running the transition, so the resting
+            // picture is exact whatever the shader or its modulators do (and the pass is skipped).
+            blitShader.bind()
+            glActiveTexture(GL_TEXTURE0)
+            glBindTexture(GL_TEXTURE_2D, resting)
+            blitShader.setUniform("uTexture", 0)
+            Geometry.drawFullscreenQuad()
+            blitShader.unbind()
+        } else if (activeTransition != null && activeTransition.enabled) {
             activeTransition.renderTransition(
                 startTexture = mixer.deckA.getOutputTexture(),
                 endTexture = mixer.deckB.getOutputTexture(),
@@ -470,6 +480,16 @@ class Renderer {
     companion object {
         private val MONTH_STARTS_NORMAL = intArrayOf(0,31,59,90,120,151,181,212,243,273,304,334,365)
         private val MONTH_STARTS_LEAP   = intArrayOf(0,31,60,91,121,152,182,213,244,274,305,335,366)
+
+        /**
+         * The deck texture to copy straight through when the crossfader rests fully on one side ([progress] 0 = A,
+         * 1 = B, the same ends `DeckRenderBudget.isOffAir` uses), or null while a transition is in progress.
+         */
+        internal fun restingTexture(progress: Float, startTexture: Int, endTexture: Int): Int? = when {
+            progress <= 0f -> startTexture
+            progress >= 1f -> endTexture
+            else -> null
+        }
     }
 }
 
