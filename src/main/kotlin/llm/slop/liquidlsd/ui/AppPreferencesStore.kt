@@ -3,7 +3,6 @@ package llm.slop.liquidlsd.ui
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import llm.slop.liquidlsd.audio.AudioAgc
-import llm.slop.liquidlsd.parameters.Reactivity
 import llm.slop.liquidlsd.audio.AudioEngine
 import llm.slop.liquidlsd.audio.AudioTarget
 import llm.slop.liquidlsd.audio.BeatDetectionSettings
@@ -92,7 +91,7 @@ object AppPreferencesStore {
                     AudioEngine.inputGain = savedGain.coerceIn(0.0f, 10.0f)
                     logger.info { "Loaded audioInputGain from settings file: $savedGain" }
                 }
-                props.getProperty("reactivityAmount")?.toFloatOrNull()?.let { Reactivity.amount = it }
+                props.getProperty("audioResponse")?.toFloatOrNull()?.let { AudioEngine.response = it }
                 props.getBoolean("audioAgcEnabled")?.let { AudioEngine.agc.enabled = it }
                 props.getProperty("audioAgcHeadroom")?.toFloatOrNull()?.let {
                     AudioEngine.agc.headroom = it.coerceIn(AudioAgc.MIN_HEADROOM, 1f)
@@ -350,7 +349,7 @@ object AppPreferencesStore {
             props.setProperty("audioChannelRouting", AudioEngine.channelRouting.name)
             props.setProperty("audioDeviceName", AudioEngine.selectedDeviceName ?: "")
             props.setProperty("audioInputGain", AudioEngine.inputGain.toString())
-            props.setProperty("reactivityAmount", Reactivity.amount.toString())
+            props.setProperty("audioResponse", AudioEngine.response.toString())
             props.setProperty("audioAgcEnabled", AudioEngine.agc.enabled.toString())
             props.setProperty("audioAgcHeadroom", AudioEngine.agc.headroom.toString())
             props.setProperty("audioBpmLocked", AudioEngine.isBpmLocked.toString())

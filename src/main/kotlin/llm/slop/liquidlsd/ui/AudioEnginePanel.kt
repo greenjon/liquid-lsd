@@ -6,7 +6,6 @@ import imgui.flag.ImGuiTableFlags
 import imgui.type.ImBoolean
 import imgui.type.ImInt
 import llm.slop.liquidlsd.audio.AudioAgc
-import llm.slop.liquidlsd.parameters.Reactivity
 import llm.slop.liquidlsd.audio.AudioEngine
 import llm.slop.liquidlsd.audio.AudioChannelRouting
 import llm.slop.liquidlsd.audio.BeatDetectionSettings
@@ -239,26 +238,27 @@ object AudioEnginePanel {
                     AppPreferencesStore.savePreferences()
                 }
             )
+            itemTooltip("Level of the incoming audio before analysis. Affects beat detection too. With Auto Gain on, the audio signals level themselves, so use Audio Response to change how much the picture moves.")
 
-            // Global reactivity: scales the depth of every shader's curated audio/beat recipe (not hand-built modulators).
+            // Audio Response: scales every audio CV signal after auto gain (beat detection is unaffected).
             CustomRangeSlider.drawCompactSlider(
                 session = session,
-                label = "Reactivity",
-                currentValue = Reactivity.amount,
+                label = "Audio Response",
+                currentValue = audioEngine.response,
                 minLimit = 0.0f,
-                maxLimit = Reactivity.MAX,
+                maxLimit = AudioEngine.MAX_RESPONSE,
                 defaultValue = 1.0f,
                 formatValue = { "%.0f%%".format(it * 100f) },
-                idPrefix = "audio_engine_reactivity",
+                idPrefix = "audio_engine_response",
                 themeColor = ImGui.colorConvertFloat4ToU32(0.9f, 0.6f, 0.2f, 0.9f),
                 showCurrentLabel = false,
                 customBoxWidth = sliderBoxW,
                 onValueChanged = { newVal ->
-                    Reactivity.amount = newVal
+                    audioEngine.response = newVal
                     AppPreferencesStore.savePreferences()
                 }
             )
-            itemTooltip("How strongly the built-in audio and beat response of sources, effects and transitions plays. 0% = every parameter sits at its set value, 100% = as designed, up to 200% = exaggerated. Modulators you add yourself, MIDI and macros are not affected.")
+            itemTooltip("How strongly everything that follows the music moves: scales the Amp, Bass, Mid, High and Flux signals that every audio modulator reads. 0% = nothing follows the music, 100% = as tuned, 200% = twice as much (loud passages hit the top sooner). Beat detection, LFOs and the beat clock are not affected.")
 
             // Auto gain for the audio CV signals (amp/bass/mid/high and flux); beat detection is unaffected.
             val agc = audioEngine.agc

@@ -1341,10 +1341,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#reactivity-amount-parametersreactivitykt-parametersmodulatableparameterkt-parameterscvmodulatorkt-uiaudioenginepanelkt-webevaluatorjs" class="md-nav__link">
+  <a href="#audio-response-audioaudioenginekt-uiaudioenginepanelkt-uiapppreferencesstorekt" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Reactivity Amount (parameters/Reactivity.kt, parameters/ModulatableParameter.kt, parameters/CvModulator.kt, ui/AudioEnginePanel.kt, web/evaluator.js)
+        Audio Response (audio/AudioEngine.kt, ui/AudioEnginePanel.kt, ui/AppPreferencesStore.kt)
       
     </span>
   </a>
@@ -6902,10 +6902,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#reactivity-amount-parametersreactivitykt-parametersmodulatableparameterkt-parameterscvmodulatorkt-uiaudioenginepanelkt-webevaluatorjs" class="md-nav__link">
+  <a href="#audio-response-audioaudioenginekt-uiaudioenginepanelkt-uiapppreferencesstorekt" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Reactivity Amount (parameters/Reactivity.kt, parameters/ModulatableParameter.kt, parameters/CvModulator.kt, ui/AudioEnginePanel.kt, web/evaluator.js)
+        Audio Response (audio/AudioEngine.kt, ui/AudioEnginePanel.kt, ui/AppPreferencesStore.kt)
       
     </span>
   </a>
@@ -12392,12 +12392,12 @@
 <h3 id="reactivity-recipes-sources-presetsreactivityrecipeskt-presetsgeneratordefaultskt-resourcesreactivitysources">Reactivity Recipes: Sources (<code>presets/ReactivityRecipes.kt</code>, <code>presets/GeneratorDefaults.kt</code>, <code>resources/reactivity/sources/</code>)</h3>
 <ul>
 <li><strong>Thirty-three sources now react to the music out of the box:</strong> Apollonian, Dynamic Spiral, Tunnel Scenes, Kali Set, Aurora Ribbons, Domain Warp Fluid, Voronoi Cells, Wave Ripples, Glitch Blocks, Metaballs, Halftone Matrix, Video Feedback, Mandelbulb, Mandelbox, KIFS, Pseudo-Kleinian, Hyperbolic Tiling, Icosa H3, Reaction Diffusion, Lenia, Cyclic CA, Nebula Volume, Celestial Engine, Chladni Cymatics, Escape Time, Girih Stars, Gyroid Hyperspace, Hyper Slice, Isometric Voxels, Quasicrystal, Thin Film, Mandala and Fractal Flame. Fractal Flame's recipe moves only the performance handles, camera push and tone (Breathe and Warp, a slow Spin sway, colour Drift, kick push on Magnify, kick flashes on Exposure), never the xform parameters the morph evolves. Mandala's four arm lengths each move differently (L1 jiggles with the amplitude, L2 is an 8-beat sine, L3 jumps to a new length every 16 beats, L4 rides a 6-beat ramp), the colours cycle once a beat, a new shape recipe arrives every 32 beats and a new lobe count every 256. On the simulations the always-on responses touch only the look and the speed; anything that could change what the pattern does (growth rules, thresholds) is gentle and bypassed, and Reaction Diffusion and Cyclic CA have a bypassed <strong>Reseed</strong> response that restarts the pattern on a hard kick (on by default in Lenia). Each has a hand-written set of audio and beat responses on its key parameters (for example the gasket breathing on the kick, aurora curtains rising with loudness, glitches landing on kick and hat hits). Where a parameter has more than one idea, the extra ones are wired but <strong>bypassed</strong>, so you only click an AUD or LFO cell to switch them on.</li>
-<li>These are recipe modulators, so the <strong>Reactivity</strong> slider scales them. A default you saved yourself still wins over the shipped recipe. Recipes are read from files in the app (<code>reactivity/sources/&lt;source&gt;.json</code>); a test checks every file against its shader's parameters.</li>
+<li>They are ordinary modulators: edit, bypass or delete them like any other. A default you saved yourself still wins over the shipped recipe. Recipes are read from files in the app (<code>reactivity/sources/&lt;source&gt;.json</code>); a test checks every file against its shader's parameters.</li>
 </ul>
-<h3 id="reactivity-amount-parametersreactivitykt-parametersmodulatableparameterkt-parameterscvmodulatorkt-uiaudioenginepanelkt-webevaluatorjs">Reactivity Amount (<code>parameters/Reactivity.kt</code>, <code>parameters/ModulatableParameter.kt</code>, <code>parameters/CvModulator.kt</code>, <code>ui/AudioEnginePanel.kt</code>, <code>web/evaluator.js</code>)</h3>
+<h3 id="audio-response-audioaudioenginekt-uiaudioenginepanelkt-uiapppreferencesstorekt">Audio Response (<code>audio/AudioEngine.kt</code>, <code>ui/AudioEnginePanel.kt</code>, <code>ui/AppPreferencesStore.kt</code>)</h3>
 <ul>
-<li><strong>A global Reactivity slider</strong> in Preferences &gt; Audio Hardware (0% to 200%, default 100%, saved) scales how strongly the built-in audio and beat response plays (both the size and the offset of each response, so 0% is exactly the set value). It applies only to modulators marked as part of a shader's reactivity recipe (new <code>recipe</code> flag, saved in presets); modulators you add by hand, MIDI and macros are not affected. At 0% every parameter sits exactly at its set value. The stock sources carry recipes (see Reactivity Recipes: Sources above).</li>
-<li>The web evaluator honours the same flag and an optional <code>reactivity</code> in its context, with new golden vectors at 0%, 100% and 200%.</li>
+<li><strong>One Audio Response slider</strong> in Preferences &gt; Audio Hardware (0% to 200%, default 100%, saved) sets how strongly everything that follows the music moves. It scales the Amp, Bass, Mid, High and Flux signals after auto gain, so every audio modulator follows it the same way, whether it came with a source or you added it. 0% means nothing follows the music; above 100% quiet passages move more and loud ones reach the top sooner. Beat detection, LFOs and the beat clock are not affected.</li>
+<li>Use it instead of Input Gain to calm the picture down or wake it up: with Auto Gain on, the audio signals level themselves, so Input Gain mostly changes what beat detection hears. Input Gain now has a tooltip saying so.</li>
 </ul>
 <h3 id="audio-auto-gain-audioaudioagckt-audioaudioenginekt-uiaudioenginepanelkt-uiapppreferencesstorekt">Audio Auto Gain (<code>audio/AudioAgc.kt</code>, <code>audio/AudioEngine.kt</code>, <code>ui/AudioEnginePanel.kt</code>, <code>ui/AppPreferencesStore.kt</code>)</h3>
 <ul>

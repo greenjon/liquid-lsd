@@ -4,6 +4,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import llm.slop.liquidlsd.models.ModulatorDto
 import llm.slop.liquidlsd.models.ParameterDto
 import java.io.File
 import kotlin.test.Test
@@ -51,7 +52,6 @@ class ReactivityRecipesTest {
                 assertTrue(recipe.stack.count { !it.bypassed } <= 1, "$id.$name: more than one active modulator")
                 assertTrue(recipe.stack.any { !it.bypassed } || recipe.stack.isNotEmpty(), "$id.$name: empty")
                 recipe.stack.forEach {
-                    assertTrue(it.recipe, "$id.$name: not flagged recipe")
                     assertTrue(kotlin.math.abs(it.depth) <= 1f, "$id.$name: depth ${it.depth} out of range")
                 }
             }
@@ -59,7 +59,7 @@ class ReactivityRecipesTest {
     }
 
     @Test
-    fun overlayReplacesRecipeModulatorsAndKeepsOthers() {
+    fun overlayReplacesTheModulatorsOfRecipeParameters() {
         val file = recipeFiles.first()
         val id = file.nameWithoutExtension
         val name = ReactivityRecipes.forSource(id).keys.first()
@@ -67,11 +67,11 @@ class ReactivityRecipesTest {
         val once = ReactivityRecipes.overlay(id, mapOf(name to base))
         val twice = ReactivityRecipes.overlay(id, once)
         assertEquals(once[name]!!.modulators.size, twice[name]!!.modulators.size)
-        assertTrue(once[name]!!.modulators.all { it.recipe })
         assertEquals(0.3f, once[name]!!.baseValue)
-        val user = ParameterDto(0.3f, 0f, 1f, false, listOf(base.modulators.firstOrNull() ?: once[name]!!.modulators.first().copy(recipe = false)))
-        val mixed = ReactivityRecipes.overlay(id, mapOf(name to user))[name]!!.modulators
-        assertEquals(1, mixed.count { !it.recipe })
+        val stray = ModulatorDto(sourceId = "audio_high", operator = "ADD", depth = 0.123f)
+        val withStray = ParameterDto(0.3f, 0f, 1f, false, listOf(stray))
+        val replaced = ReactivityRecipes.overlay(id, mapOf(name to withStray))[name]!!.modulators
+        assertEquals(once[name]!!.modulators, replaced)
     }
 
     @Test
@@ -82,7 +82,7 @@ class ReactivityRecipesTest {
         assertTrue(entries("""{"sourceId":"nope","depth":0.2}""").isEmpty())
         val ok = entries("""{"sourceId":"lfo","depth":0.2,"subdivision":8}""").single()
         assertEquals("BEAT", ok.genUnit)
-        assertTrue(ok.bypassed && ok.recipe)
+        assertTrue(ok.bypassed)
         assertFalse(entries("""{"sourceId":"audio_bass","depth":0.2,"active":true,"attackMs":5,"decayMs":100}""").single().bypassed)
     }
 

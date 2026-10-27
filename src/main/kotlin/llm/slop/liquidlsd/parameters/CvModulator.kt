@@ -109,9 +109,6 @@ data class CvModulator(
 
     val lfoMinMaxMode: Boolean = false,
 
-    /** True for modulators that come from a shader's reactivity recipe; only these follow [Reactivity.amount]. */
-    val recipe: Boolean = false,
-
     val id: String = llm.slop.liquidlsd.utils.DeterministicRandom.uuid()
 ) {
     /**
@@ -122,7 +119,7 @@ data class CvModulator(
         get() = sourceId != "seq" && !llm.slop.liquidlsd.cv.isCvSourceBipolar(sourceId)
 
     /** Modulator output before the operator scalar: cv * depth + dcOffset. */
-    fun lfoShape(cv: Float, effectiveDepth: Float, effectiveOffset: Float = dcOffset): Float = cv * effectiveDepth + effectiveOffset
+    fun lfoShape(cv: Float): Float = cv * depth + dcOffset
 
     fun getLfoMin(): Float = if (halfRange) dcOffset else dcOffset - depth
     fun getLfoMax(): Float = dcOffset + depth

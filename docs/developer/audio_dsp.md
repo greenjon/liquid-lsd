@@ -86,7 +86,7 @@ RMS values are normalized and published to `CVRegistry`:
 - `audio_amp`: Full-band input RMS.
 - `audio_bass`, `audio_mid`, `audio_high`: Per-band filter RMS values.
 
-The divisor is per band and comes from `AudioAgc`: `max(peakEnvelope * headroom, 0.02)`, with instant attack and an 8 s release (AGC off = the fixed 0.25). Flux uses its fixed scale (0.05 / 0.1) times the same per-band ratio. The beat detector, downbeat detector and silence gate take the raw RMS, before this stage.
+The divisor is per band and comes from `AudioAgc`: `max(peakEnvelope * headroom, 0.02)`, with instant attack and an 8 s release (AGC off = the fixed 0.25). Flux uses its fixed scale (0.05 / 0.1) times the same per-band ratio. Every normalized signal (levels and flux) is then multiplied by `AudioEngine.response` (Audio Response, 0..2, default 1, preference `audioResponse`) and clamped to 0..1, so one setting scales every audio modulator. `inputGain` is applied to the raw samples instead, so with AGC on it mostly changes what the detectors hear. The beat detector, downbeat detector and silence gate take the raw RMS, before this stage; the audio texture (FFT / waveform) is not scaled either.
 
 ---
 

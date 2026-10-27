@@ -21,12 +21,11 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Hand-curated audio / beat response ("reactivity recipes") shipped per shader as
  * `reactivity/<kind>/<id>.json` on the classpath. Per parameter an ordered `stack` of modulators; entries with
- * `"active": true` run, the rest are wired but bypassed so a click turns them on. Every recipe modulator is
- * flagged `recipe` so the global [llm.slop.liquidlsd.parameters.Reactivity] amount scales it.
+ * `"active": true` run, the rest are wired but bypassed so a click turns them on. Once laid over a source they
+ * are ordinary modulators; the Audio Response preference (`AudioEngine.response`) scales the audio signals they read.
  *
  * Entry keys are [ModulatorDto] fields plus `active`, `name` and `note` (ignored). Defaults: operator ADD,
- * LFO unit BEAT, follower PUNCHY when an attack/decay is given. Depth and
- * `dcOffset` both scale with the reactivity amount, so 0 reproduces the base value exactly. A bipolar source (LFO,
+ * LFO unit BEAT, follower PUNCHY when an attack/decay is given. A bipolar source (LFO,
  * sample-and-hold) swings `dcOffset` +- `depth`: on a parameter whose set value is its minimum, `dcOffset = depth`
  * swings it upward from there. A parameter may also carry `base` to move its set value.
  *
@@ -88,15 +87,15 @@ object ReactivityRecipes {
             ((m["attackMs"]?.jsonPrimitive?.floatOrNull ?: 0f) > 0f || (m["decayMs"]?.jsonPrimitive?.floatOrNull ?: 0f) > 0f)
         ) m["followerMode"] = JsonPrimitive("PUNCHY")
         m["bypassed"] = JsonPrimitive(!active)
-        m["recipe"] = JsonPrimitive(true)
         val dto = json.decodeFromJsonElement(ModulatorDto.serializer(), JsonObject(m))
         require(dto.depth != 0f) { "depth is 0" }
         return dto
     }
 
     /**
-     * [params] with the recipe for [sourceId] laid over it: each recipe parameter keeps its non-recipe
-     * modulators, replaces its old recipe ones with fresh copies, and takes the recipe's `base` if it has one.
+     * [params] with the recipe for [sourceId] laid over it: each recipe parameter's modulators become fresh
+     * copies of the stack (so laying it over twice does not stack it), and it takes the recipe's `base` if it
+     * has one. Parameters the recipe does not name are untouched.
      */
     fun overlay(sourceId: String, params: Map<String, ParameterDto>): Map<String, ParameterDto> {
         val recipe = forSource(sourceId)
@@ -110,7 +109,7 @@ object ReactivityRecipes {
             }
             out[name] = p.copy(
                 baseValue = r.base ?: p.baseValue,
-                modulators = p.modulators.filterNot { it.recipe } + r.stack.map { it.copy(id = null) }
+                modulators = r.stack.map { it.copy(id = null) }
             )
         }
         return out

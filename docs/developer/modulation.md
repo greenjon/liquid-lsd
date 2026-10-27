@@ -47,9 +47,8 @@ for (mod in modulators) {
 
     rawCV = evaluateModulator(mod)          // Evaluators.kt — see below
 
-    // Same shape for every source and target. Recipe modulators (CvModulator.recipe) get their
-    // depth and dcOffset multiplied by the global Reactivity.amount first.
-    rawModAmount = rawCV * effectiveDepth + effectiveOffset   // CvModulator.lfoShape
+    // Same shape for every source and target.
+    rawModAmount = rawCV * depth + dcOffset   // CvModulator.lfoShape
 
     // Scale to parameter range
     scalar = if (ADD) then (range / 2) for bipolar, else range for monopolar; else 1.0
@@ -285,13 +284,12 @@ evaluateModulator(mod) → Float   (range [-1, 1])
 
 ---
 
-## Reactivity Recipes and the Reactivity Amount
+## Reactivity Recipes
 
-Shaders ship hand-written audio and beat responses ("recipes"), and one global slider scales them.
+Shaders ship hand-written audio and beat responses ("recipes"). Once applied they are ordinary modulators; how strongly audio modulators respond is set by Audio Response, on the signals (see [audio_dsp.md](audio_dsp.md)), not per modulator.
 
 - **Files:** `src/main/resources/reactivity/sources/<id>.json` (`ReactivityRecipes.forId(kind, id)`; only `sources` exist so far). Per parameter an ordered `stack` of modulators; entries with `"active": true` run, the others are wired but bypassed. Entry keys are `ModulatorDto` fields plus `active`, `name`, `note`; defaults are operator `ADD`, LFO unit `BEAT`, follower `PUNCHY` when an attack/decay is given. A parameter may carry `base` to move its set value. The `RANDOM` waveform is the sample-and-hold.
-- **Applying:** `GeneratorDefaults.resolve` lays the recipe over the stock (curated or heuristic) default through `ReactivityRecipes.overlay`; a saved user default wins and carries whatever modulators the user left. Overlay replaces a parameter's old `recipe` modulators with fresh copies (new ids, so envelope followers are never shared between decks) and keeps hand-built ones. Loading a preset that stores its own parameters replaces the recipe, like any default.
-- **Flag and scaling:** `CvModulator.recipe` (saved in presets) marks recipe modulators. `Reactivity.amount` (0..2, an app preference, `reactivityAmount`, set under Preferences > Audio Hardware) multiplies both `depth` and `dcOffset` of those only, so 0 gives the set value exactly. The web evaluator reads `ctx.reactivity` and the same flag; golden vectors cover 0, 1 and 2.
+- **Applying:** `GeneratorDefaults.resolve` lays the recipe over the stock (curated or heuristic) default through `ReactivityRecipes.overlay`; a saved user default wins and carries whatever modulators the user left. Overlay sets each named parameter's modulators to fresh copies of its stack (new ids, so envelope followers are never shared between decks; laying it over twice does not stack it) and leaves other parameters alone. It runs on a freshly cloned source, so nothing hand-built is lost. Loading a preset that stores its own parameters replaces the recipe, like any default.
 - **Authoring rule:** an LFO on a 0..1 parameter that sits at (or near) its minimum swings both ways around the set value. To sweep upward use `depth = dcOffset = d/2` (range `base .. base + d`). `ReactivityRecipesTest.lfoSwingsFitTheirParameters` fails when any LFO swing leaves its parameter's range (the clamp would flatten part of every cycle); `everyShippedSourceRecipeIsValid` checks parameter names against the shader, one active modulator per parameter, and `|depth| <= 1`.
 - **Audio levels:** recipes are tuned against the AGC (`audio/AudioAgc.kt`), which normalises each band against its own recent peak. The web TV still uses the fixed 0.25 scale, so recipes will read quieter there until the AGC is ported.
 - **Not covered yet:** FX (`FxDefaultDto.parameters` cannot hold modulators), transitions (no defaults store), a UI marker for recipe modulators and a "reset to recipe" action. Fractal Flame's recipe only touches Breathe, Warp, Spin, Drift, Magnify, Exposure, Brightness, Decay, Vibrancy and Mutation, never the morph-driven xform parameters. Fluid Ink has none, and Harmonograph left the stock set.

@@ -10,7 +10,6 @@ data class ModulatorDto(
     val operator: String, // "ADD" or "MUL"
     val depth: Float,
     val bypassed: Boolean = false,
-    val recipe: Boolean = false,
     val waveform: String = "SINE",
     val subdivision: Float = 1.0f,
     val phaseOffset: Float = 0.0f,
@@ -79,7 +78,6 @@ data class ModulatorDto(
         if (sourceId != other.sourceId) return false
         if (operator != other.operator) return false
         if (bypassed != other.bypassed) return false
-        if (recipe != other.recipe) return false
         if (waveform != other.waveform) return false
         if (lfoSpeedMode != other.lfoSpeedMode) return false
         
@@ -133,7 +131,6 @@ data class ModulatorDto(
         var result = sourceId.hashCode()
         result = 31 * result + operator.hashCode()
         result = 31 * result + bypassed.hashCode()
-        result = 31 * result + recipe.hashCode()
         result = 31 * result + waveform.hashCode()
         result = 31 * result + lfoSpeedMode.hashCode()
         
@@ -347,7 +344,6 @@ fun CvModulator.toDto(): ModulatorDto = ModulatorDto(
     operator = operator.name,
     depth = depth,
     bypassed = bypassed,
-    recipe = recipe,
     waveform = waveform.name,
     subdivision = subdivision,
     phaseOffset = phaseOffset,
@@ -404,7 +400,6 @@ fun ModulatorDto.toDomain(): CvModulator = CvModulator(
     operator = ModulationOperator.valueOf(operator),
     depth = depth,
     bypassed = bypassed,
-    recipe = recipe,
     waveform = Waveform.valueOf(waveform),
     subdivision = subdivision,
     phaseOffset = phaseOffset,

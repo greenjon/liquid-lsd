@@ -326,7 +326,7 @@ fun getCombinedEffectiveValueAtOffset(mods: List<CvModulator>, isBipolar: Boolea
     for (mod in mods) {
         if (mod.bypassed && !includeBypassed) continue
         val cv = evaluateModulatorAtOffset(mod, timeOffsetSec)
-        val modAmount = mod.lfoShape(cv, mod.depth)
+        val modAmount = mod.lfoShape(cv)
         if (first) {
             result = when (mod.operator) {
                 llm.slop.liquidlsd.parameters.ModulationOperator.ADD -> modAmount

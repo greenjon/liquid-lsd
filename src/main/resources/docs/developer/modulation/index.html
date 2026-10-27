@@ -1065,10 +1065,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#reactivity-recipes-and-the-reactivity-amount" class="md-nav__link">
+  <a href="#reactivity-recipes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Reactivity Recipes and the Reactivity Amount
+        Reactivity Recipes
       
     </span>
   </a>
@@ -1813,10 +1813,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#reactivity-recipes-and-the-reactivity-amount" class="md-nav__link">
+  <a href="#reactivity-recipes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Reactivity Recipes and the Reactivity Amount
+        Reactivity Recipes
       
     </span>
   </a>
@@ -1959,9 +1959,8 @@ for (mod in modulators) {
 
     rawCV = evaluateModulator(mod)          // Evaluators.kt — see below
 
-    // Same shape for every source and target. Recipe modulators (CvModulator.recipe) get their
-    // depth and dcOffset multiplied by the global Reactivity.amount first.
-    rawModAmount = rawCV * effectiveDepth + effectiveOffset   // CvModulator.lfoShape
+    // Same shape for every source and target.
+    rawModAmount = rawCV * depth + dcOffset   // CvModulator.lfoShape
 
     // Scale to parameter range
     scalar = if (ADD) then (range / 2) for bipolar, else range for monopolar; else 1.0
@@ -2380,12 +2379,11 @@ in <code>Evaluators.kt</code>).</p>
   else            → CVRegistry.get(id) — any registered custom source
 </code></pre>
 <hr />
-<h2 id="reactivity-recipes-and-the-reactivity-amount">Reactivity Recipes and the Reactivity Amount</h2>
-<p>Shaders ship hand-written audio and beat responses ("recipes"), and one global slider scales them.</p>
+<h2 id="reactivity-recipes">Reactivity Recipes</h2>
+<p>Shaders ship hand-written audio and beat responses ("recipes"). Once applied they are ordinary modulators; how strongly audio modulators respond is set by Audio Response, on the signals (see <a href="../audio_dsp/">audio_dsp.md</a>), not per modulator.</p>
 <ul>
 <li><strong>Files:</strong> <code>src/main/resources/reactivity/sources/&lt;id&gt;.json</code> (<code>ReactivityRecipes.forId(kind, id)</code>; only <code>sources</code> exist so far). Per parameter an ordered <code>stack</code> of modulators; entries with <code>"active": true</code> run, the others are wired but bypassed. Entry keys are <code>ModulatorDto</code> fields plus <code>active</code>, <code>name</code>, <code>note</code>; defaults are operator <code>ADD</code>, LFO unit <code>BEAT</code>, follower <code>PUNCHY</code> when an attack/decay is given. A parameter may carry <code>base</code> to move its set value. The <code>RANDOM</code> waveform is the sample-and-hold.</li>
-<li><strong>Applying:</strong> <code>GeneratorDefaults.resolve</code> lays the recipe over the stock (curated or heuristic) default through <code>ReactivityRecipes.overlay</code>; a saved user default wins and carries whatever modulators the user left. Overlay replaces a parameter's old <code>recipe</code> modulators with fresh copies (new ids, so envelope followers are never shared between decks) and keeps hand-built ones. Loading a preset that stores its own parameters replaces the recipe, like any default.</li>
-<li><strong>Flag and scaling:</strong> <code>CvModulator.recipe</code> (saved in presets) marks recipe modulators. <code>Reactivity.amount</code> (0..2, an app preference, <code>reactivityAmount</code>, set under Preferences &gt; Audio Hardware) multiplies both <code>depth</code> and <code>dcOffset</code> of those only, so 0 gives the set value exactly. The web evaluator reads <code>ctx.reactivity</code> and the same flag; golden vectors cover 0, 1 and 2.</li>
+<li><strong>Applying:</strong> <code>GeneratorDefaults.resolve</code> lays the recipe over the stock (curated or heuristic) default through <code>ReactivityRecipes.overlay</code>; a saved user default wins and carries whatever modulators the user left. Overlay sets each named parameter's modulators to fresh copies of its stack (new ids, so envelope followers are never shared between decks; laying it over twice does not stack it) and leaves other parameters alone. It runs on a freshly cloned source, so nothing hand-built is lost. Loading a preset that stores its own parameters replaces the recipe, like any default.</li>
 <li><strong>Authoring rule:</strong> an LFO on a 0..1 parameter that sits at (or near) its minimum swings both ways around the set value. To sweep upward use <code>depth = dcOffset = d/2</code> (range <code>base .. base + d</code>). <code>ReactivityRecipesTest.lfoSwingsFitTheirParameters</code> fails when any LFO swing leaves its parameter's range (the clamp would flatten part of every cycle); <code>everyShippedSourceRecipeIsValid</code> checks parameter names against the shader, one active modulator per parameter, and <code>|depth| &lt;= 1</code>.</li>
 <li><strong>Audio levels:</strong> recipes are tuned against the AGC (<code>audio/AudioAgc.kt</code>), which normalises each band against its own recent peak. The web TV still uses the fixed 0.25 scale, so recipes will read quieter there until the AGC is ported.</li>
 <li><strong>Not covered yet:</strong> FX (<code>FxDefaultDto.parameters</code> cannot hold modulators), transitions (no defaults store), a UI marker for recipe modulators and a "reset to recipe" action. Fractal Flame's recipe only touches Breathe, Warp, Spin, Drift, Magnify, Exposure, Brightness, Decay, Vibrancy and Mutation, never the morph-driven xform parameters. Fluid Ink has none, and Harmonograph left the stock set.</li>

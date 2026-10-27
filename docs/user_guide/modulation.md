@@ -33,9 +33,9 @@ You can hide columns you're not using via the **⋮** kebab menu, positioned jus
 
 Clicking an **AUD** cell opens the audio modulator config. Each parameter supports two independent audio connections (Audio 1 and Audio 2).
 
-**Auto Gain:** audio signals are normalized against each band's own recent peak (Preferences > Audio Hardware > Auto Gain, on by default), so a modulator behaves the same whether the feed is quiet or hot. Switch it off for a fixed scale.
+**Auto Gain:** audio signals are normalized against each band's own recent peak (Preferences > Audio Hardware > Auto Gain, on by default), so a modulator behaves the same whether the feed is quiet or hot. Switch it off for a fixed scale. Because of this, turning Input Gain down does not calm the picture for long; use **Audio Response** (below) for that.
 
-**Built-in responses:** most stock sources ship with audio and beat modulators already wired on their key parameters: one running, and one or two alternates sitting bypassed in the same row, so you switch an alternate on (and the running one off) by clicking its AUD or LFO cell. They follow **Preferences > Audio Hardware > Reactivity** (0% = every parameter at its set value, 100% = as designed, up to 200%); modulators you add yourself, MIDI and macros do not. A default you saved yourself replaces the built-in response, and a preset that stores its own parameters replaces it too.
+**Built-in responses:** most stock sources ship with audio and beat modulators already wired on their key parameters: one running, and one or two alternates sitting bypassed in the same row, so you switch an alternate on (and the running one off) by clicking its AUD or LFO cell. They are ordinary modulators, so edit or delete them freely. To make everything that follows the music move more or less, use **Preferences > Audio Hardware > Audio Response** (0% = nothing follows the music, 100% = as tuned, up to 200%); it scales the audio signals themselves, so it applies to built-in and hand-made audio modulators alike, and leaves LFOs and the beat alone. A default you saved yourself replaces the built-in response, and a preset that stores its own parameters replaces it too.
 
 ### Frequency bands
 

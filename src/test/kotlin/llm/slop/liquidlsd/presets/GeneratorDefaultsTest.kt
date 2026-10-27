@@ -378,7 +378,7 @@ class GeneratorDefaultsTest {
         ))
         val dto = GeneratorDefaults.resolve(src)
         val mods = dto.parameters.getValue("InversionRadius").modulators
-        assertTrue(mods.isNotEmpty() && mods.all { it.recipe })
+        assertTrue(mods.isNotEmpty())
         assertEquals(1, mods.count { !it.bypassed })
         assertEquals(0.57f, dto.parameters.getValue("InversionRadius").baseValue)
         // resolving again from a source that already carries the recipe must not stack it
