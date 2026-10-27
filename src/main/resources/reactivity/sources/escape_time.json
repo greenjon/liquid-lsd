@@ -38,29 +38,6 @@
       ],
       "note": "Morph speeds up when loud."
     },
-    "Power": {
-      "stack": [
-        {
-          "name": "loudness swell",
-          "active": true,
-          "sourceId": "audio_amp",
-          "depth": 0.3,
-          "followerMode": "SMOOTH",
-          "attackMs": 40,
-          "decayMs": 400
-        },
-        {
-          "name": "mid body",
-          "active": false,
-          "sourceId": "audio_mid",
-          "depth": 0.3,
-          "followerMode": "SMOOTH",
-          "attackMs": 40,
-          "decayMs": 400
-        }
-      ],
-      "note": "Fractional power swells with loudness."
-    },
     "Rotation": {
       "stack": [
         {
