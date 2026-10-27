@@ -193,6 +193,20 @@ The web TV is served at **https://spaz.org/tv/**: Apache on spaz.org has `Alias 
 - **Sync:** the host's sound reaches the speaker after the audio sink's buffer, so the feed leads what is heard; set the `sync` option to delay the picture to match.
 - **Checks:** `node --test web/tools/feedring.test.mjs`; `node web/checks/embed_check.mjs` (headless Firefox: loads the page with `?embed`, pushes a synthetic 124 BPM kick track in real time, expects the signals, the beat lock, no snow in silence, options, pause/resume and a non-black picture).
 
+## 6c. Content Updates for the Spaz Radio App
+
+`scripts/publish_web_tv.sh` also publishes a signed manifest to `https://spaz.org/tv/update/` so the app can
+fetch new presets and playlists without an app release. `scripts/make_content_manifest.py` lists the data
+files of `web/` (presets, playlists, shaders, FX chains, transitions, `catalog.json`, `settings.json`,
+`mandala_recipes.json`, `autopilot.json`) with sha256 and size; JS/HTML/CSS are never listed (the engine ships
+with the app). `manifest.json.sig` is an ECDSA P-256/SHA-256 signature over the exact manifest bytes. The
+private key is `~/.config/liquid-lsd/content-signing.pem` (not in the repo; back it up, losing it means an app
+release to change the key); the public key is `scripts/content_signing_pub.pem`.
+
+Publishing validates content first (`web/tools/content.test.mjs`) and uploads the manifest last. `CONTENT_ENGINE`
+in the script is the engine level the content needs: bump it when new content depends on a web feature old apps
+lack, so those apps skip the update. `rsync --delete` leaves `update/` alone.
+
 ## 7. Relay Server Operations (`server/server.js`)
 
 The relay server is a zero-dependency Node.js service using `ws`.
