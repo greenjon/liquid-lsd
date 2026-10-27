@@ -130,7 +130,7 @@ class StockDefaultsTest {
         var randomized = 0
         for (file in sourceFiles) {
             val id = file.nameWithoutExtension
-            if (id == "fractal_flame" || id == "mandala") continue // genome / meta.json ranges, not shipped here
+            if (id == "fractal_flame") continue // the genome picks its own morph targets
             val ranges = ranges(id)
             for ((name, p) in shippedParams(file)) {
                 if (!p.randomizeBase) continue

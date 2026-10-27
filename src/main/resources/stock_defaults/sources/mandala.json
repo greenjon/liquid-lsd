@@ -113,7 +113,10 @@
       ]
     },
     "Hue Offset": {
-      "note": "Colours cycle once a beat (a sawtooth over the whole hue wheel); a gentle 1-beat sine as the alternative.",
+      "note": "Colours cycle once a beat (a sawtooth over the whole hue wheel); a gentle 1-beat sine as the alternative. Not randomized: the LFO already sweeps the whole hue circle from 0.",
+      "randomizeBase": false,
+      "baseMin": 0,
+      "baseMax": 0,
       "modulators": [
         {
           "name": "1-beat hue cycle",
@@ -140,7 +143,11 @@
       ]
     },
     "Recipe Select": {
-      "note": "A new shape recipe every 32 beats (100% hold, so it jumps); every 64 beats as the alternative.",
+      "note": "The die picks the recipe; the sample-and-hold wanders a quarter of the list either side of it every 32 beats.",
+      "baseValue": 0.5,
+      "randomizeBase": true,
+      "baseMin": 0.25,
+      "baseMax": 0.75,
       "modulators": [
         {
           "name": "new recipe every 32 beats",
@@ -149,9 +156,9 @@
           "waveform": "RANDOM",
           "genUnit": "BEAT",
           "subdivision": 32,
-          "depth": 0.5,
+          "depth": 0.25,
           "hold": 1.0,
-          "dcOffset": 0.5
+          "dcOffset": 0
         },
         {
           "name": "new recipe every 64 beats",
@@ -161,14 +168,17 @@
           "waveform": "RANDOM",
           "genUnit": "BEAT",
           "subdivision": 64,
-          "depth": 0.5,
+          "depth": 0.25,
           "hold": 1.0,
-          "dcOffset": 0.5
+          "dcOffset": 0
         }
       ]
     },
     "Lobes": {
-      "note": "A new lobe count every 256 beats (100% hold), between 4 and about 15.",
+      "note": "A new lobe count every 256 beats (100% hold), up to about 11 above the base. The die picks the base between 3 and 8, so the drift tops out near 20.",
+      "randomizeBase": true,
+      "baseMin": 3,
+      "baseMax": 8,
       "modulators": [
         {
           "name": "new lobe count every 256 beats",

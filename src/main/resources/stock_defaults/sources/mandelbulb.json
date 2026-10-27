@@ -68,8 +68,8 @@
     "Glow": {
       "note": "Kick flashes the glow.",
       "randomizeBase": true,
-      "baseMin": 0.2,
-      "baseMax": 0.5,
+      "baseMin": 0.3,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "kick hit",
@@ -111,6 +111,7 @@
     },
     "Brightness": {
       "note": "Gentle loudness lift.",
+      "baseValue": 0.65,
       "modulators": [
         {
           "name": "loudness swell",

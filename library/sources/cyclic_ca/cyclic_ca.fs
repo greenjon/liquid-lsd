@@ -37,9 +37,15 @@
 #define Saturation_ (Saturation*2.0)
 #define Brightness_ (Brightness*2.0)
 
-// Grid layout (RGBA8, 256x256, wraps toroidally): R = state byte (0..23), B = last seen Reseed level
-// (for rising-edge detection), A = 1 once written. A = 0 means "empty" (never written, or cleared by a
-// resize), and that cell is seeded from a hash. Nothing depends on FRAMEINDEX.
+// Grid layout (RGBA8, 256x256, wraps toroidally): R = state byte (0..23), G = the state count the cell was
+// written with, B = 128 x the last seen Reseed level (for rising-edge detection) + the threshold it was written
+// with, A = 1 once written (alpha must stay 1: the pass may be blended). A = 0 means "empty" (never written, or
+// cleared by a resize), and that cell is seeded from a hash. Nothing depends on FRAMEINDEX.
+//
+// A rule change under a running pattern (a randomize, a knob): a new state count rescales each cell's state by
+// phase (s/n kept), so spirals keep their shape with more or fewer bands; a new threshold or neighbourhood
+// reseeds, because the old pattern is usually not alive under the new rule (it froze or synchronised into one
+// flat colour).
 //
 // Sub-stepping: four chained persistent passes simA..simD. Pass k reads the previous pass (simA<-simD,
 // simB<-simA, ...) and advances one generation if k < stepsDue, else copies. Generations are due when
@@ -66,15 +72,32 @@ int stateOf(vec4 v, int n) {
     return s % n;
 }
 
+int thresholdFor(int hood) {
+    int total = (hood == 1) ? 4 : ((hood == 2) ? 24 : 8);
+    // Threshold fraction maps to 1..0.6*neighbours (default 0.4: Moore 2, von Neumann 1, extended 6).
+    return clamp(int(floor(Threshold * float(total) * 0.6 + 0.5)), 1, total);
+}
+
+vec4 written(int s, int n, float rs, int thr) {
+    return vec4(float(s) / 255.0, float(n) / 255.0, (rs * 128.0 + float(thr)) / 255.0, 1.0);
+}
+
 vec4 simPass() {
     ivec2 c = ivec2(floor(gl_FragCoord.xy));
     int n = int(floor(States_ + 0.5));
+    int hood = int(floor(Neighborhood + 0.5));
+    int thr = thresholdFor(hood);
     vec4 me = fetchPrev(c);
     float rs = step(0.5, Reseed);
     bool empty = me.a < 0.5;
-    bool edge = Reseed > 0.5 && me.b < 0.5;
+    int b = int(floor(me.b * 255.0 + 0.5));
+    bool edge = Reseed > 0.5 && b < 128;
+    // The stored threshold, which also changes with the neighbourhood (each has its own total); 0 = written before
+    // thresholds were stored.
+    int oldThr = b % 128;
+    bool ruleChanged = !empty && oldThr != 0 && oldThr != thr;
 
-    if (empty || edge) {
+    if (empty || edge || ruleChanged) {
         vec2 salt = vec2(fract(TIME * 0.0137) * 97.0, fract(TIME * 0.0071) * 53.0);
         vec2 p = gl_FragCoord.xy + salt;
         float pick = hash12(p);
@@ -82,17 +105,22 @@ vec4 simPass() {
         int s = 0;
         if (pick < Density_) s = int(floor(val * float(n)));
         s = clamp(s, 0, n - 1);
-        return vec4(float(s) / 255.0, 0.0, rs, 1.0);
+        return written(s, n, rs, thr);
     }
 
     int s = stateOf(me, n);
+    int oldN = int(floor(me.g * 255.0 + 0.5));
+    if (oldN >= 3 && oldN != n) {
+        // Same phase, new count: every cell is remapped the same way, so a cell one state ahead of its neighbour
+        // mostly stays one ahead and the waves keep travelling. Neighbours are remapped the same way below.
+        s = int(floor(float(int(floor(me.r * 255.0 + 0.5)) % oldN) * float(n) / float(oldN) + 0.5)) % n;
+    }
     float dt = clamp(TIMEDELTA, 0.0, 0.1);
     float t0 = max(TIME - dt, 0.0);
     int due = int(floor(TIME * Speed_) - floor(t0 * Speed_));
     if (dt <= 0.0) due = 0;
-    if (PASSINDEX < due) {
+    if (PASSINDEX < due && oldN == n) {
         int nxt = (s + 1) % n;
-        int hood = int(floor(Neighborhood + 0.5));
         int count = 0;
         int total = 8;
         if (hood == 1) {
@@ -112,11 +140,9 @@ vec4 simPass() {
                 }
             }
         }
-        // Threshold fraction maps to 1..0.6*neighbours (default 0.4: Moore 2, von Neumann 1, extended 6).
-        int thr = clamp(int(floor(Threshold * float(total) * 0.6 + 0.5)), 1, total);
         if (count >= thr) s = nxt;
     }
-    return vec4(float(s) / 255.0, 0.0, rs, 1.0);
+    return written(s, n, rs, thr);
 }
 
 // Periodic cosine palettes (integer frequency, so state n-1 -> 0 has no seam).

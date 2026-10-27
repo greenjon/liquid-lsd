@@ -113,11 +113,6 @@
       "baseMin": 0,
       "baseMax": 0.4
     },
-    "Neighborhood": {
-      "randomizeBase": true,
-      "baseMin": 0,
-      "baseMax": 2
-    },
     "PaletteMode": {
       "randomizeBase": true,
       "baseMin": 0,

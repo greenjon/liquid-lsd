@@ -107,10 +107,7 @@ internal class FlameEngine {
         if (density == null || density!!.width != target.width || density!!.height != target.height) {
             density?.dispose()
             density = FBO(target.width, target.height, if (density32) GL_RGBA32F else GL_RGBA16F)
-            // mip chain for the density-estimation blur (only generated while Smooth > 0)
-            glBindTexture(GL_TEXTURE_2D, density!!.texture)
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
-            glBindTexture(GL_TEXTURE_2D, 0)
+            // the min filter is set per frame: mipmapped only while Smooth > 0 builds the mip chain (see the tone-map pass)
         }
         val dens = density!!
 
@@ -199,7 +196,13 @@ internal class FlameEngine {
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, dens.texture)
         val smooth = v("Smooth", 0f)
-        if (smooth > 0.001f) glGenerateMipmap(GL_TEXTURE_2D)
+        // Without a generated mip chain a mipmapped min filter makes the texture incomplete, and it samples as black.
+        if (smooth > 0.001f) {
+            glGenerateMipmap(GL_TEXTURE_2D)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
+        } else {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        }
         src.shader.setUniform("uDensity", 0)
         // fewer points (the quality tier or the governor) mean proportionally fewer hits: keep the brightness. The toe
         // is applied before exposure in the shader, so lone hits stay removed.

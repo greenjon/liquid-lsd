@@ -5,7 +5,7 @@
     "WallThickness": {
       "note": "Walls swell on the bass.",
       "randomizeBase": true,
-      "baseMin": 0.2,
+      "baseMin": 0.15,
       "baseMax": 0.5,
       "modulators": [
         {
@@ -60,8 +60,8 @@
     "FlightSpeed": {
       "note": "Flies faster when loud.",
       "randomizeBase": true,
-      "baseMin": 0.15,
-      "baseMax": 0.4,
+      "baseMin": 0.05,
+      "baseMax": 0.2,
       "modulators": [
         {
           "name": "loudness swell",
@@ -105,8 +105,8 @@
     "Frequency": {
       "note": "Slow breathing of the lattice; off by default.",
       "randomizeBase": true,
-      "baseMin": 0.2,
-      "baseMax": 0.55,
+      "baseMin": 0.35,
+      "baseMax": 0.8,
       "modulators": [
         {
           "name": "triangle 32-beat",
@@ -123,6 +123,9 @@
     },
     "WireframeMode": {
       "note": "Wireframe flickers in on the kick; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 1,
       "modulators": [
         {
           "name": "kick hit",
@@ -138,6 +141,9 @@
     },
     "Zoom": {
       "note": "Kick push; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.3,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "bass pulse",

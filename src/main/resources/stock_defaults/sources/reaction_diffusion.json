@@ -22,8 +22,8 @@
     "Kill": {
       "note": "Second axis of the same breathing; off by default.",
       "randomizeBase": true,
-      "baseMin": -0.2,
-      "baseMax": 0.2,
+      "baseMin": 0.0,
+      "baseMax": 0.3,
       "modulators": [
         {
           "name": "sine 64-beat",
