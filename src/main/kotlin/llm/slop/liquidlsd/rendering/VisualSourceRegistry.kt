@@ -88,7 +88,6 @@ object VisualSourceRegistry {
         "cyclic_ca",
         "metaballs",
         "wave_ripples",
-        "harmonograph",
         "aurora_ribbons",
         "isometric_voxels",
         "halftone_matrix",

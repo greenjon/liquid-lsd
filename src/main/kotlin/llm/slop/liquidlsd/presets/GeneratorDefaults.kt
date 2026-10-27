@@ -213,12 +213,6 @@ object GeneratorDefaults {
             KnobSpec("OrbitSpeed", "ORBIT"),
             KnobSpec("Falloff", "FALL")
         ),
-        "harmonograph" to listOf(
-            KnobSpec("Detune", "DETUNE"),
-            KnobSpec("DriftSpeed", "DRIFT"),
-            KnobSpec("Damping", "DAMP"),
-            KnobSpec("Glow", "GLOW")
-        ),
         "aurora_ribbons" to listOf(
             KnobSpec("CurtainHeight", "HEIGHT"),
             KnobSpec("WaveAmp", "AMP"),

@@ -293,15 +293,6 @@ Interference of two to eight travelling circular waves from orbiting sources.
 - **Wavelength, Wave Speed, Orbit Speed, Falloff**: The wave and how the sources move.
 - **Style**: Shaded height field, banded contours, neon crests or a thin-film ramp.
 
-### Harmonograph (`harmonograph`)
-
-Oscilloscope and harmonograph curves: a damped Lissajous figure drawn as a glowing phosphor line that winds several times into a dense, spiralling rosette. Lower Quality first on integrated graphics.
-
-- **Ratio X:Y, Detune**: The frequency ratio and a small offset that makes the figure slowly rotate and open up.
-- **Phase Drift, Damping, Trail Length, Rotation**: How the curve evolves. Trail Length runs from 2 to 18 windings; Damping shrinks the older windings inward into a spiral.
-- **Line Width, Glow**: Line look.
-- **Quality**: Number of line segments, 48 to 128.
-
 ### Aurora Ribbons (`aurora_ribbons`)
 
 Aurora borealis: three to six layered curtains over a faint starfield.

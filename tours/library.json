@@ -21,7 +21,7 @@
 {"dt":0.8,"action":"key","target":"space","caption":""},
 
 {"dt":1.0,"action":"chapter","target":"load","minimap":"A,B,BG,PV","title":"Loading onto a deck","clipSec":18},
-{"dt":0.0,"action":"move","target":"browser_row_src_harmonograph","durationSec":1.6,"caption":"Double-click a source to load it into the deck that is not on air."},
+{"dt":0.0,"action":"move","target":"browser_row_src_quasicrystal","durationSec":1.6,"caption":"Double-click a source to load it into the deck that is not on air."},
 {"dt":5.0,"action":"click"},
 {"dt":0.18,"action":"click"},
 {"dt":2.5,"action":"move","x":1700,"y":683,"durationSec":1.4,"caption":"The crossfader is on A, so it went to deck B, ready for the next fade."},

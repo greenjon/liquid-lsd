@@ -247,7 +247,6 @@ class GeneratorDefaultsTest {
             "cyclic_ca" to listOf("States", "Threshold", "Speed", "Density"),
             "metaballs" to listOf("BallSize", "OrbitSpeed", "Merge", "Softness"),
             "wave_ripples" to listOf("Wavelength", "WaveSpeed", "OrbitSpeed", "Falloff"),
-            "harmonograph" to listOf("Detune", "DriftSpeed", "Damping", "Glow"),
             "aurora_ribbons" to listOf("CurtainHeight", "WaveAmp", "WaveSpeed", "Shimmer"),
             "isometric_voxels" to listOf("CellSize", "MaxHeight", "Speed", "Frequency"),
             "halftone_matrix" to listOf("Density", "Sharpness", "PatternSpeed", "PatternScale"),

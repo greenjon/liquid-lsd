@@ -10,7 +10,7 @@
 {"dt":0.0,"action":"fx_filter","deck":"A","slot":2,"target":"bloom"},
 {"dt":0.0,"action":"load_source","deck":"BG","target":"aurora_ribbons"},
 {"dt":0.0,"action":"fx_clear","deck":"BG"},
-{"dt":0.0,"action":"load_source","deck":"PV","target":"harmonograph"},
+{"dt":0.0,"action":"load_source","deck":"PV","target":"quasicrystal"},
 {"dt":0.0,"action":"deck_level","deck":"BG","value":1},
 {"dt":0.0,"action":"move","x":960,"y":1150,"durationSec":0.1},
 {"dt":0.8,"action":"pipe_add","target":"decks","durationSec":1.0},

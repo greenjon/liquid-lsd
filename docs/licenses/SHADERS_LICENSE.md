@@ -71,7 +71,6 @@ To preserve the right to commercially distribute or monetize Liquid LSD:
 | **Cyclic CA** | `library/sources/cyclic_ca/cyclic_ca.fs` | Liquid LSD Engine (Cleanroom) | MIT | Approved | Cyclic cellular automaton on a persistent 256 x 256 grid (Moore, von Neumann and extended neighbourhoods). |
 | **Metaballs** | `library/sources/metaballs/metaballs.fs` | Liquid LSD Engine (Cleanroom) | MIT | Approved | 2D metaball field from 4 to 12 orbiting balls with shaded, contour, neon and two-tone styles. |
 | **Wave Ripples** | `library/sources/wave_ripples/wave_ripples.fs` | Liquid LSD Engine (Cleanroom) | MIT | Approved | Interference of 2 to 8 travelling circular waves from orbiting sources. |
-| **Harmonograph** | `library/sources/harmonograph/harmonograph.fs` | Liquid LSD Engine (Cleanroom) | MIT | Approved | Damped Lissajous / harmonograph curve drawn as segment-distance glow. |
 | **Aurora Ribbons** | `library/sources/aurora_ribbons/aurora_ribbons.fs` | Liquid LSD Engine (Cleanroom) | MIT | Approved | Layered aurora curtains over a starfield, with mountain and water-reflection options. |
 | **Isometric Voxels** | `library/sources/isometric_voxels/isometric_voxels.fs` | Liquid LSD Engine (Cleanroom) | MIT | Approved | Isometric cube field with analytic per-layer occlusion. |
 | **Halftone Matrix** | `library/sources/halftone_matrix/halftone_matrix.fs` | Liquid LSD Engine (Cleanroom) | MIT | Approved | Procedural halftone, LED-matrix, line-screen and CMYK-screen dot generator. |

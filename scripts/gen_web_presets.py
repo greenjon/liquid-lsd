@@ -125,7 +125,7 @@ FULL_FRAME_SOURCES = {"cyclic_ca", "kali_set", "glitch_blocks", "halftone_matrix
 
 # Sources drawn as fine dots or thin lines on black: pixelate and halftone chains average them away to
 # nothing, so their presets are tagged `sparse` and skip those chains (web/pairing.js).
-SPARSE_SOURCES = {"dynamic_spiral", "harmonograph"}
+SPARSE_SOURCES = {"dynamic_spiral"}
 
 
 def preset(name, source, spec, tags, notes=""):
@@ -712,26 +712,6 @@ preset("web-halftone-ambient", "halftone_matrix", {
     "HueShift": (0.0, lfo(96, 1.0)), "Saturation": 0.6, "Brightness": 0.5,
 }, ["ambient", "bar", "mid", "amp"],
     "Soft halftone clouds that gain contrast with the overall level.")
-
-# harmonograph: a thin line by default, so line width, glow and brightness are raised.
-preset("web-harmonograph-groove", "harmonograph", {
-    "RatioPreset": (2, lfo(32, 0.15, wave=SQ)), "PaletteMode": 0.0, "Detune": (0.25, lfo(16, 0.2)), "DriftSpeed": 0.3,
-    "Damping": 0.3, "LineWidth": (0.4, bass(0.3)), "Glow": (0.7, pulse(1, 0.3)), "Trail": 0.7, "Rotation": 0.0,
-    "HueOffset": (0.0, lfo(48, 1.0)), "Saturation": 1.0, "Brightness": 0.7,
-}, ["groove", "beat", "bar", "bass"],
-    "A glowing Lissajous rosette that flares on every beat, thickens with the bass and changes ratio every eight bars.")
-preset("web-harmonograph-hard", "harmonograph", {
-    "RatioPreset": (3, lfo(8, 0.15, wave=SQ)), "PaletteMode": 2.0, "Detune": (0.2, bass(0.3)), "DriftSpeed": 0.4,
-    "Damping": (0.3, kick(0.4, 200)), "LineWidth": (0.5, kick(0.3, 150)), "Glow": (0.7, hat(0.3)), "Trail": 0.6,
-    "Rotation": (0.0, lfo(16, 0.5)), "HueOffset": (0.0, lfo(16, 1.0)), "Saturation": 1.0, "Brightness": 0.75,
-}, ["hard", "bar", "bass", "kick", "high"],
-    "Kicks wind the spiral in and thicken the line, the bass detunes it, the ratio jumps every two bars.")
-preset("web-harmonograph-ambient", "harmonograph", {
-    "RatioPreset": 4, "PaletteMode": 1.0, "Detune": (0.1, lfo(48, 0.2)), "DriftSpeed": 0.15,
-    "Damping": (0.4, lfo(64, 0.3)), "LineWidth": 0.35, "Glow": (0.55, amp(0.1, **AMB)), "Trail": 0.9, "Rotation": 0.0,
-    "HueOffset": (0.0, lfo(96, 1.0)), "Saturation": 0.8, "Brightness": 0.6,
-}, ["ambient", "bar", "amp"],
-    "A long-trailed phosphor figure drifting slowly; its glow follows the overall level.")
 
 # hyperbolic_tiling
 preset("web-hyperbolic-groove", "hyperbolic_tiling", {

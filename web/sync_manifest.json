@@ -334,12 +334,6 @@
       "description": "Wave Ripples generator"
     },
     {
-      "desktop": "library/sources/harmonograph/harmonograph.fs",
-      "web": "web/shaders/harmonograph.frag",
-      "mode": "auto_shader",
-      "description": "Harmonograph generator"
-    },
-    {
       "desktop": "library/sources/aurora_ribbons/aurora_ribbons.fs",
       "web": "web/shaders/aurora_ribbons.frag",
       "mode": "auto_shader",
