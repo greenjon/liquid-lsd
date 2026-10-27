@@ -6,5 +6,46 @@
       "minVal": 0.0,
       "maxVal": 1.0
     }
-  ]
+  ],
+  "params": {
+    "bloomIntensity": {
+      "note": "Kick pumps the glow, scaled by the knob (MUL keeps a knob at zero dark).",
+      "modulators": [
+        {
+          "name": "kick bloom",
+          "sourceId": "audio_bass",
+          "operator": "MUL",
+          "depth": 0.8,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        },
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "MUL",
+          "depth": 0.5,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400,
+          "bypassed": true
+        }
+      ]
+    },
+    "threshold": {
+      "note": "Loud passages bloom more of the picture; off by default.",
+      "modulators": [
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": -0.15,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400,
+          "bypassed": true
+        }
+      ]
+    }
+  }
 }

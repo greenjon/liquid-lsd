@@ -6,5 +6,51 @@
       "minVal": 0.0,
       "maxVal": 0.8
     }
-  ]
+  ],
+  "params": {
+    "sphereRadius": {
+      "note": "The sphere pumps on the bass, scaled by the knob.",
+      "modulators": [
+        {
+          "name": "bass pulse",
+          "sourceId": "audio_bass",
+          "operator": "MUL",
+          "depth": 0.15,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        }
+      ]
+    },
+    "fresnelGlow": {
+      "note": "Highs light the rim; off by default.",
+      "modulators": [
+        {
+          "name": "high shimmer",
+          "sourceId": "audio_high",
+          "operator": "ADD",
+          "depth": 0.3,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 110,
+          "bypassed": true
+        }
+      ]
+    },
+    "chromaFringe": {
+      "note": "Kick fringe; off by default.",
+      "modulators": [
+        {
+          "name": "kick hit",
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "depth": 0.25,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35,
+          "bypassed": true
+        }
+      ]
+    }
+  }
 }

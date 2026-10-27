@@ -57,6 +57,52 @@ class StockDefaultsTest {
 
     private fun shippedParams(file: File) = StockDefaults.overlayParameters(parse(file), "parameters", baseline(file.nameWithoutExtension), file.name)
 
+    private val filterFiles get() = files("filters")
+
+    /** (min, default, max) of each float input of a bundled filter. */
+    private fun filterRanges(id: String): Map<String, Triple<Float, Float, Float>> =
+        isfInputs(File(root, "src/main/resources/default_filters/$id.fs")).associate {
+            it["NAME"]!!.jsonPrimitive.content to Triple(
+                it["MIN"]!!.jsonPrimitive.content.toFloat(), it["DEFAULT"]!!.jsonPrimitive.content.toFloat(), it["MAX"]!!.jsonPrimitive.content.toFloat())
+        }
+
+    private fun shippedFilterParams(file: File) = StockDefaults.overlayParameters(
+        parse(file), "params",
+        filterRanges(file.nameWithoutExtension).mapValues { (_, r) -> ParameterDto(r.second, r.first, r.third, false, emptyList()) },
+        file.name)
+
+    /** Every modulator entry under [raw] survived validation, at most one runs per parameter, and no depth exceeds 1. */
+    private fun assertModulatorsValid(id: String, raw: JsonObject, parsed: Map<String, ParameterDto>) {
+        assertEquals(raw.keys, parsed.keys, "$id: a parameter is not a float input")
+        for ((name, p) in parsed) {
+            val rawCount = (raw[name]!!.jsonObject["modulators"] as? JsonArray)?.size ?: 0
+            assertEquals(rawCount, p.modulators.size, "$id.$name: a modulator failed validation")
+            assertTrue(p.modulators.count { !it.bypassed } <= 1, "$id.$name: more than one active modulator")
+            p.modulators.forEach { assertTrue(kotlin.math.abs(it.depth) <= 1f, "$id.$name: depth ${it.depth} out of range") }
+        }
+    }
+
+    /**
+     * A bipolar source (LFO, sample-and-hold) swings dcOffset +- depth. An ADD swing must stay inside the parameter, or
+     * the clamp flattens part of every cycle; a MUL factor (1 + swing) must never go negative.
+     */
+    private fun assertLfoSwingsFit(id: String, parsed: Map<String, ParameterDto>, ranges: Map<String, Triple<Float, Float, Float>>) {
+        for ((name, p) in parsed) {
+            val (min, _, max) = ranges.getValue(name)
+            val scalar = if (min < 0f) (max - min) / 2f else max - min
+            for (m in p.modulators.filter { it.sourceId == "lfo" }) {
+                if (m.operator == "MUL") {
+                    assertTrue(1f + m.dcOffset - kotlin.math.abs(m.depth) >= 0f, "$id.$name (${m.waveform}): MUL factor goes negative")
+                    continue
+                }
+                val lo = p.baseValue + (m.dcOffset - kotlin.math.abs(m.depth)) * scalar
+                val hi = p.baseValue + (m.dcOffset + kotlin.math.abs(m.depth)) * scalar
+                val eps = 1e-4f * (max - min)
+                assertTrue(lo >= min - eps && hi <= max + eps, "$id.$name (${m.waveform}): swings $lo..$hi, outside $min..$max")
+            }
+        }
+    }
+
     @Test
     fun everyShippedSourceDefaultIsValid() {
         assertTrue(sourceFiles.isNotEmpty())
@@ -65,15 +111,7 @@ class StockDefaultsTest {
             val obj = parse(file)
             assertEquals(id, obj["sourceId"]?.jsonPrimitive?.content, "$id: sourceId")
             val inputs = ranges(id).keys
-            val raw = obj["parameters"] as? JsonObject ?: JsonObject(emptyMap())
-            val parsed = shippedParams(file)
-            assertEquals(raw.keys, parsed.keys, "$id: a parameter is not a float input")
-            for ((name, p) in parsed) {
-                val rawCount = (raw[name]!!.jsonObject["modulators"] as? JsonArray)?.size ?: 0
-                assertEquals(rawCount, p.modulators.size, "$id.$name: a modulator failed validation")
-                assertTrue(p.modulators.count { !it.bypassed } <= 1, "$id.$name: more than one active modulator")
-                p.modulators.forEach { assertTrue(kotlin.math.abs(it.depth) <= 1f, "$id.$name: depth ${it.depth} out of range") }
-            }
+            assertModulatorsValid(id, obj["parameters"] as? JsonObject ?: JsonObject(emptyMap()), shippedParams(file))
             val knobs = (obj["macroBank"] as? JsonObject)?.get("knobs")?.jsonArray.orEmpty()
             assertTrue(knobs.size <= 4, "$id: more than 4 knobs")
             for (k in knobs) {
@@ -85,9 +123,8 @@ class StockDefaultsTest {
 
     @Test
     fun everyShippedFilterDefaultTargetsRealInputs() {
-        val fxFiles = files("filters")
-        assertTrue(fxFiles.isNotEmpty())
-        for (file in fxFiles) {
+        assertTrue(filterFiles.isNotEmpty())
+        for (file in filterFiles) {
             val id = file.nameWithoutExtension
             val shader = File(root, "src/main/resources/default_filters/$id.fs")
             assertTrue(shader.exists(), "$id: no bundled filter with this id")
@@ -98,6 +135,35 @@ class StockDefaultsTest {
                 assertTrue(target in inputs, "$id: Metaknob bound to unknown input '$target'")
             }
             (obj["params"] as? JsonObject)?.keys?.forEach { assertTrue(it in inputs, "$id: unknown input '$it'") }
+        }
+    }
+
+    @Test
+    fun everyShippedFilterResponseIsValid() {
+        for (file in filterFiles) {
+            val id = file.nameWithoutExtension
+            val raw = parse(file)["params"] as? JsonObject ?: continue
+            val parsed = shippedFilterParams(file)
+            assertModulatorsValid(id, raw, parsed)
+            assertLfoSwingsFit(id, parsed, filterRanges(id))
+        }
+    }
+
+    /**
+     * Transitions are ISF filters too and resolve their default the same way, by id. A shipped filter default must
+     * never land on a transition that shares its id: it is rejected unless every input it names exists there.
+     */
+    @Test
+    fun noShippedFilterDefaultFitsATransition() {
+        for (file in filterFiles) {
+            val id = file.nameWithoutExtension
+            val transition = File(root, "src/main/resources/default_transitions/$id.fs")
+            if (!transition.exists()) continue
+            val inputs = isfInputs(transition).map { it["NAME"]!!.jsonPrimitive.content }.toSet()
+            val obj = parse(file)
+            val named = obj["metaBindings"]!!.jsonArray.mapNotNull { it.jsonObject["targetParamName"]?.jsonPrimitive?.content } +
+                (obj["params"] as? JsonObject)?.keys.orEmpty()
+            assertTrue(named.any { it !in inputs }, "$id: the shipped filter default would apply to the transition of the same id")
         }
     }
 
@@ -128,22 +194,8 @@ class StockDefaultsTest {
         assertTrue(mod("""{"name":"x","sourceId":"lfo","operator":"ADD","depth":0.2,"bypassed":true}""")!!.bypassed)
     }
 
-    /** A bipolar source (LFO, sample-and-hold) swings dcOffset +- depth; that must stay inside the parameter, or the clamp flattens part of every cycle. */
     @Test
     fun lfoSwingsFitTheirParameters() {
-        for (file in sourceFiles) {
-            val id = file.nameWithoutExtension
-            val ranges = ranges(id)
-            for ((name, p) in shippedParams(file)) {
-                val (min, _, max) = ranges.getValue(name)
-                val scalar = if (min < 0f) (max - min) / 2f else max - min
-                for (m in p.modulators.filter { it.sourceId == "lfo" }) {
-                    val lo = p.baseValue + (m.dcOffset - kotlin.math.abs(m.depth)) * scalar
-                    val hi = p.baseValue + (m.dcOffset + kotlin.math.abs(m.depth)) * scalar
-                    val eps = 1e-4f * (max - min)
-                    assertTrue(lo >= min - eps && hi <= max + eps, "$id.$name (${m.waveform}): swings $lo..$hi, outside $min..$max")
-                }
-            }
-        }
+        for (file in sourceFiles) assertLfoSwingsFit(file.nameWithoutExtension, shippedParams(file), ranges(file.nameWithoutExtension))
     }
 }

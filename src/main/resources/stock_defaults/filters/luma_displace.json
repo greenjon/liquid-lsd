@@ -6,5 +6,61 @@
       "minVal": 0.0,
       "maxVal": 1.0
     }
-  ]
+  ],
+  "params": {
+    "refractAmount": {
+      "note": "Bass melts the surface, scaled by the knob.",
+      "modulators": [
+        {
+          "name": "bass melt",
+          "sourceId": "audio_bass",
+          "operator": "MUL",
+          "depth": 1.0,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        },
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "MUL",
+          "depth": 0.6,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400,
+          "bypassed": true
+        }
+      ]
+    },
+    "flowSpeed": {
+      "note": "Flow quickens when loud (integrated by FlowPhase); off by default.",
+      "modulators": [
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.2,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400,
+          "bypassed": true
+        }
+      ]
+    },
+    "chromaDispersion": {
+      "note": "Highs widen the prism fringe; off by default.",
+      "modulators": [
+        {
+          "name": "high shimmer",
+          "sourceId": "audio_high",
+          "operator": "ADD",
+          "depth": 0.25,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 110,
+          "bypassed": true
+        }
+      ]
+    }
+  }
 }

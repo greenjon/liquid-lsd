@@ -1,5 +1,12 @@
 # Handoff: audio response for FX (filters) — 2026-10-27
 
+> **Status 2026-10-27: done for all 27 filters, awaiting the user's in-app check** (`.planning/app-checklist.md` 9b,
+> FX batches 1 and 2). Decisions taken: a response on the Metaknob's input is `MUL` (knob at zero stays off), `ADD`
+> only on inputs the main amount gates; Invert, Luma Key and Video Strobe ship bypassed responses only; a shipped
+> filter file is ignored when the shader lacks any input it names (keeps it off the `vortex_swirl` transition).
+> **Next, once approved:** rebuild every stock FX chain (`defaults/fx_chains/*.lsdfxchain`) so its slots carry the
+> shipped responses (user agreed). The notes below are the original brief.
+
 ## Goal
 Every stock FX ships hand-curated audio/beat response out of the box, as the 33 stock sources do now: per parameter
 one running modulator plus bypassed alternates, judged by eye. Transitions come after this, as separate work.

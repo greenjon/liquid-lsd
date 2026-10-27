@@ -6,5 +6,36 @@
       "minVal": 0.0,
       "maxVal": 1.0
     }
-  ]
+  ],
+  "params": {
+    "thermalBloom": {
+      "note": "Edges heat up on the bass.",
+      "modulators": [
+        {
+          "name": "bass heat",
+          "sourceId": "audio_bass",
+          "operator": "ADD",
+          "depth": 0.25,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        }
+      ]
+    },
+    "sensorGrain": {
+      "note": "Highs add grain; off by default.",
+      "modulators": [
+        {
+          "name": "high shimmer",
+          "sourceId": "audio_high",
+          "operator": "ADD",
+          "depth": 0.2,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 110,
+          "bypassed": true
+        }
+      ]
+    }
+  }
 }

@@ -6,5 +6,51 @@
       "minVal": 0.0,
       "maxVal": 1.0
     }
-  ]
+  ],
+  "params": {
+    "refraction": {
+      "note": "Bass bends the facets harder, scaled by the knob.",
+      "modulators": [
+        {
+          "name": "bass pulse",
+          "sourceId": "audio_bass",
+          "operator": "MUL",
+          "depth": 0.4,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        }
+      ]
+    },
+    "facetTilt": {
+      "note": "Slow facet tilt; off by default.",
+      "modulators": [
+        {
+          "name": "sine 16-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 16,
+          "depth": 0.15,
+          "bypassed": true
+        }
+      ]
+    },
+    "dispersion": {
+      "note": "Highs spread the spectrum; off by default.",
+      "modulators": [
+        {
+          "name": "high shimmer",
+          "sourceId": "audio_high",
+          "operator": "ADD",
+          "depth": 0.25,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 110,
+          "bypassed": true
+        }
+      ]
+    }
+  }
 }

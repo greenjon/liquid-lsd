@@ -3,6 +3,7 @@ package llm.slop.liquidlsd.rendering.isf
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import llm.slop.liquidlsd.models.ParameterDto
 import llm.slop.liquidlsd.presets.StockDefaults
@@ -76,15 +77,16 @@ object ISFAutoBindEngine {
     }
 
     /**
-     * The shipped default for [filter], or null. Files are keyed by filter id, so a user shader that happens to share
-     * a stock id but lacks a bound input falls through to the heuristic. `params` holds only the inputs the file names,
-     * laid over the filter's own.
+     * The shipped default for [filter], or null. Files are keyed by filter id, so a shader that happens to share a stock
+     * id but lacks a bound or responding input (a user shader, or a transition: `vortex_swirl` is both) falls through
+     * to the heuristic. `params` holds only the inputs the file names, laid over the filter's own.
      */
     private fun shippedDefault(filter: ISFFilter): FxDefaultDto? {
         val file = StockDefaults.forId("filters", filter.id) ?: return null
         val bindings = (file["metaBindings"] as? JsonArray)?.map { json.decodeFromJsonElement(FxMetaBindingDto.serializer(), it) }
             ?: return null
         if (bindings.any { it.targetParamName != null && it.targetParamName !in filter.parameters }) return null
+        if ((file["params"] as? JsonObject)?.keys?.any { it !in filter.parameters } == true) return null
         val baseline = filter.parameters.mapValues { it.value.toGeneratorDefaultDto() }
         val params = StockDefaults.overlayParameters(file, "params", baseline, "filters/${filter.id}")
         return FxDefaultDto(

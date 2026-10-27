@@ -6,5 +6,36 @@
       "minVal": 0.0,
       "maxVal": 0.5
     }
-  ]
+  ],
+  "params": {
+    "edgeStrength": {
+      "note": "Edges flash on the bass, scaled by the knob.",
+      "modulators": [
+        {
+          "name": "bass glow",
+          "sourceId": "audio_bass",
+          "operator": "MUL",
+          "depth": 0.8,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        }
+      ]
+    },
+    "glowSpread": {
+      "note": "Highs spread the glow; off by default.",
+      "modulators": [
+        {
+          "name": "high shimmer",
+          "sourceId": "audio_high",
+          "operator": "ADD",
+          "depth": 0.2,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 110,
+          "bypassed": true
+        }
+      ]
+    }
+  }
 }

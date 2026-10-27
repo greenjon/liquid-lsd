@@ -6,5 +6,22 @@
       "minVal": 0.0,
       "maxVal": 1.0
     }
-  ]
+  ],
+  "params": {
+    "threshold": {
+      "note": "Loud passages key out more, scaled by the knob; off by default (a moving key edge can read as a fault).",
+      "modulators": [
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "MUL",
+          "depth": 0.2,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400,
+          "bypassed": true
+        }
+      ]
+    }
+  }
 }

@@ -6,5 +6,22 @@
       "minVal": 0.0,
       "maxVal": 20.0
     }
-  ]
+  ],
+  "params": {
+    "rate": {
+      "note": "Strobes faster when loud, scaled by the rate (integrated by RatePhase); off by default, a strobe is harsh enough.",
+      "modulators": [
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "MUL",
+          "depth": 0.5,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400,
+          "bypassed": true
+        }
+      ]
+    }
+  }
 }

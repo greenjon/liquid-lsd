@@ -6,5 +6,46 @@
       "minVal": 0.0,
       "maxVal": 1.0
     }
-  ]
+  ],
+  "params": {
+    "amplitude": {
+      "note": "Bass swells the waves, scaled by the knob.",
+      "modulators": [
+        {
+          "name": "bass wave",
+          "sourceId": "audio_bass",
+          "operator": "MUL",
+          "depth": 0.8,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        },
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "MUL",
+          "depth": 0.5,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400,
+          "bypassed": true
+        }
+      ]
+    },
+    "speed": {
+      "note": "Waves run faster when loud (integrated by SpeedPhase); off by default.",
+      "modulators": [
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.2,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400,
+          "bypassed": true
+        }
+      ]
+    }
+  }
 }

@@ -6,5 +6,46 @@
       "minVal": 0.0,
       "maxVal": 1.0
     }
-  ]
+  ],
+  "params": {
+    "amount": {
+      "note": "Kick splits the channels, scaled by the knob.",
+      "modulators": [
+        {
+          "name": "kick split",
+          "sourceId": "audio_flux_bass",
+          "operator": "MUL",
+          "depth": 1.0,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        },
+        {
+          "name": "high shimmer",
+          "sourceId": "audio_high",
+          "operator": "MUL",
+          "depth": 0.6,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 110,
+          "bypassed": true
+        }
+      ]
+    },
+    "angle": {
+      "note": "Slow beat-locked turn of the split; off by default.",
+      "modulators": [
+        {
+          "name": "sine 32-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 32,
+          "depth": 0.25,
+          "bypassed": true
+        }
+      ]
+    }
+  }
 }

@@ -6,5 +6,46 @@
       "minVal": 0.0,
       "maxVal": 1.0
     }
-  ]
+  ],
+  "params": {
+    "streakIntensity": {
+      "note": "Streaks flare on the bass, scaled by the knob.",
+      "modulators": [
+        {
+          "name": "bass flare",
+          "sourceId": "audio_bass",
+          "operator": "MUL",
+          "depth": 0.8,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        },
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "MUL",
+          "depth": 0.5,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400,
+          "bypassed": true
+        }
+      ]
+    },
+    "streakLength": {
+      "note": "Streaks stretch when loud; off by default.",
+      "modulators": [
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.15,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400,
+          "bypassed": true
+        }
+      ]
+    }
+  }
 }

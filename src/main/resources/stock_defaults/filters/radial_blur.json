@@ -6,5 +6,46 @@
       "minVal": 0.0,
       "maxVal": 1.0
     }
-  ]
+  ],
+  "params": {
+    "blurAmount": {
+      "note": "Kick bursts outward, scaled by the knob.",
+      "modulators": [
+        {
+          "name": "kick burst",
+          "sourceId": "audio_flux_bass",
+          "operator": "MUL",
+          "depth": 1.0,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        },
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "MUL",
+          "depth": 0.5,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400,
+          "bypassed": true
+        }
+      ]
+    },
+    "exposure": {
+      "note": "Highs brighten the shafts; off by default.",
+      "modulators": [
+        {
+          "name": "high shimmer",
+          "sourceId": "audio_high",
+          "operator": "ADD",
+          "depth": 0.15,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 110,
+          "bypassed": true
+        }
+      ]
+    }
+  }
 }

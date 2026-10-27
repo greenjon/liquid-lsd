@@ -7,5 +7,51 @@
       "maxVal": 1.0,
       "curve": "EXPONENTIAL"
     }
-  ]
+  ],
+  "params": {
+    "fbZoom": {
+      "note": "Kick pushes the trails outward. Per-frame, so small depths go a long way.",
+      "modulators": [
+        {
+          "name": "kick push",
+          "sourceId": "audio_bass",
+          "operator": "ADD",
+          "depth": 0.02,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        }
+      ]
+    },
+    "fbHueShift": {
+      "note": "Trails turn rainbow when loud; off by default.",
+      "modulators": [
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.04,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400,
+          "bypassed": true
+        }
+      ]
+    },
+    "fbRotate": {
+      "note": "Trails swirl back and forth; off by default.",
+      "modulators": [
+        {
+          "name": "sine 32-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 32,
+          "depth": 0.01,
+          "bypassed": true
+        }
+      ]
+    }
+  }
 }

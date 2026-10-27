@@ -6,5 +6,36 @@
       "minVal": 0.0,
       "maxVal": 1.0
     }
-  ]
+  ],
+  "params": {
+    "dotScale": {
+      "note": "Dots swell on the bass, scaled by the knob.",
+      "modulators": [
+        {
+          "name": "bass pulse",
+          "sourceId": "audio_bass",
+          "operator": "MUL",
+          "depth": 0.3,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        }
+      ]
+    },
+    "screenAngle": {
+      "note": "Slow beat-locked screen turn; off by default.",
+      "modulators": [
+        {
+          "name": "sine 32-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 32,
+          "depth": 0.1,
+          "bypassed": true
+        }
+      ]
+    }
+  }
 }

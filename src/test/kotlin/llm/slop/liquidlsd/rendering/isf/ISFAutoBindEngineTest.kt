@@ -290,4 +290,31 @@ class ISFAutoBindEngineTest {
 
         ISFAutoBindEngine.deleteOverride(hash)
     }
+
+    private fun bundled(dir: String, id: String, hash: String): ISFFilter {
+        val source = javaClass.classLoader.getResource("$dir/$id.fs")!!.readText()
+        return ISFFilter(id, id, ISFParser.parseHeader(source)!!, mockk<Shader>(relaxed = true), contentHash = hash)
+    }
+
+    @Test
+    fun `stock filter gets its shipped response and a saved default replaces it`() {
+        val hash = "test_shipped_${System.nanoTime()}"
+        val shipped = bundled("default_filters", "rgb_split", hash).parameters["amount"]!!.modulators
+        assertEquals(listOf("audio_flux_bass", "audio_high"), shipped.map { it.sourceId })
+        assertEquals(listOf(false, true), shipped.map { it.bypassed })
+
+        val edited = bundled("default_filters", "rgb_split", hash)
+        edited.parameters["amount"]!!.modulators.clear()
+        ISFAutoBindEngine.saveFilterDefault(edited)
+        assertTrue(bundled("default_filters", "rgb_split", hash).parameters["amount"]!!.modulators.isEmpty())
+
+        ISFAutoBindEngine.deleteOverride(hash)
+        assertEquals(2, bundled("default_filters", "rgb_split", hash).parameters["amount"]!!.modulators.size)
+    }
+
+    @Test
+    fun `transition sharing a stock filter id gets no filter response`() {
+        val transition = bundled("default_transitions", "vortex_swirl", "test_trans_${System.nanoTime()}")
+        assertTrue(transition.parameters.values.all { it.modulators.isEmpty() })
+    }
 }

@@ -6,5 +6,51 @@
       "minVal": 0.0,
       "maxVal": 1.0
     }
-  ]
+  ],
+  "params": {
+    "trackingJitter": {
+      "note": "Kick knocks the tracking, scaled by the knob.",
+      "modulators": [
+        {
+          "name": "kick tracking",
+          "sourceId": "audio_flux_bass",
+          "operator": "MUL",
+          "depth": 1.0,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        }
+      ]
+    },
+    "rfDropouts": {
+      "note": "Highs add dropouts; off by default.",
+      "modulators": [
+        {
+          "name": "high shimmer",
+          "sourceId": "audio_high",
+          "operator": "ADD",
+          "depth": 0.2,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 110,
+          "bypassed": true
+        }
+      ]
+    },
+    "ycDelay": {
+      "note": "Colour bleed grows when loud; off by default.",
+      "modulators": [
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.15,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400,
+          "bypassed": true
+        }
+      ]
+    }
+  }
 }

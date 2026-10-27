@@ -6,5 +6,37 @@
       "minVal": 0.0,
       "maxVal": 1.0
     }
-  ]
+  ],
+  "params": {
+    "cycleSpeed": {
+      "note": "The palette cycles when loud (integrated by CyclePhase).",
+      "modulators": [
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.15,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "hueShift": {
+      "note": "Slow hue drift; off by default.",
+      "modulators": [
+        {
+          "name": "slow hue drift",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 64,
+          "depth": 0.25,
+          "dcOffset": 0.25,
+          "bypassed": true
+        }
+      ]
+    }
+  }
 }

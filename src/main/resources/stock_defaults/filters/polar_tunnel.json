@@ -6,5 +6,51 @@
       "minVal": 0.0,
       "maxVal": 1.0
     }
-  ]
+  ],
+  "params": {
+    "zoom": {
+      "note": "Kick pushes into the tunnel.",
+      "modulators": [
+        {
+          "name": "kick push",
+          "sourceId": "audio_bass",
+          "operator": "ADD",
+          "depth": 0.06,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        }
+      ]
+    },
+    "twist": {
+      "note": "Slow beat-locked twist; off by default.",
+      "modulators": [
+        {
+          "name": "sine 32-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 32,
+          "depth": 0.1,
+          "bypassed": true
+        }
+      ]
+    },
+    "depth": {
+      "note": "The tunnel deepens when loud; off by default.",
+      "modulators": [
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "MUL",
+          "depth": 0.3,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400,
+          "bypassed": true
+        }
+      ]
+    }
+  }
 }

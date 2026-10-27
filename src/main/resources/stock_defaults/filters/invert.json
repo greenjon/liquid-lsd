@@ -6,5 +6,22 @@
       "minVal": 0.0,
       "maxVal": 1.0
     }
-  ]
+  ],
+  "params": {
+    "invertIntensity": {
+      "note": "Kick flips the colours even with the knob at zero: an opt-in strobe, so off by default.",
+      "modulators": [
+        {
+          "name": "kick flash",
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "depth": 1.0,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35,
+          "bypassed": true
+        }
+      ]
+    }
+  }
 }

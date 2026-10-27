@@ -6,5 +6,51 @@
       "minVal": -1.0,
       "maxVal": 1.0
     }
-  ]
+  ],
+  "params": {
+    "twist": {
+      "note": "The swirl winds tighter on the bass, scaled by the knob.",
+      "modulators": [
+        {
+          "name": "bass twist",
+          "sourceId": "audio_bass",
+          "operator": "MUL",
+          "depth": 0.5,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        }
+      ]
+    },
+    "radius": {
+      "note": "Slow vortex breathing; off by default.",
+      "modulators": [
+        {
+          "name": "sine 16-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 16,
+          "depth": 0.1,
+          "bypassed": true
+        }
+      ]
+    },
+    "dispersion": {
+      "note": "Highs spread the colours; off by default.",
+      "modulators": [
+        {
+          "name": "high shimmer",
+          "sourceId": "audio_high",
+          "operator": "ADD",
+          "depth": 0.2,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 110,
+          "bypassed": true
+        }
+      ]
+    }
+  }
 }

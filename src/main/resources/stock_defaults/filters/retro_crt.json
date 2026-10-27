@@ -6,5 +6,51 @@
       "minVal": 0.0,
       "maxVal": 1.0
     }
-  ]
+  ],
+  "params": {
+    "brightnessBoost": {
+      "note": "Phosphor flares on the kick.",
+      "modulators": [
+        {
+          "name": "kick flare",
+          "sourceId": "audio_bass",
+          "operator": "ADD",
+          "depth": 0.15,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        }
+      ]
+    },
+    "curvature": {
+      "note": "Tube bulges on the bass; off by default.",
+      "modulators": [
+        {
+          "name": "bass pulse",
+          "sourceId": "audio_bass",
+          "operator": "ADD",
+          "depth": 0.1,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150,
+          "bypassed": true
+        }
+      ]
+    },
+    "scanlineIntensity": {
+      "note": "Highs deepen the scanlines; off by default.",
+      "modulators": [
+        {
+          "name": "high shimmer",
+          "sourceId": "audio_high",
+          "operator": "MUL",
+          "depth": 0.4,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 110,
+          "bypassed": true
+        }
+      ]
+    }
+  }
 }
