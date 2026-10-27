@@ -1,0 +1,157 @@
+{
+  "version": 1,
+  "params": {
+    "Angle": {
+      "stack": [
+        {
+          "name": "sine 32-beat",
+          "active": true,
+          "sourceId": "lfo",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 32,
+          "depth": 0.08
+        },
+        {
+          "name": "bass pulse",
+          "active": false,
+          "sourceId": "audio_bass",
+          "depth": 0.06,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        }
+      ],
+      "note": "The strapwork angle breathes over 32 beats; bass as the alternative."
+    },
+    "Sweep": {
+      "stack": [
+        {
+          "name": "mid body",
+          "active": true,
+          "sourceId": "audio_mid",
+          "depth": 0.2,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ],
+      "note": "Mids sweep the star arms."
+    },
+    "Speed": {
+      "stack": [
+        {
+          "name": "loudness swell",
+          "active": true,
+          "sourceId": "audio_amp",
+          "depth": 0.2,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ],
+      "note": "Quickens when loud."
+    },
+    "LineWidth": {
+      "stack": [
+        {
+          "name": "bass pulse",
+          "active": true,
+          "sourceId": "audio_bass",
+          "depth": 0.15,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        }
+      ],
+      "note": "Lines fatten on the bass."
+    },
+    "Glow": {
+      "stack": [
+        {
+          "name": "kick hit",
+          "active": true,
+          "sourceId": "audio_flux_bass",
+          "depth": 0.3,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        },
+        {
+          "name": "high shimmer",
+          "active": false,
+          "sourceId": "audio_high",
+          "depth": 0.25,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 110
+        }
+      ],
+      "note": "Kick flashes the glow."
+    },
+    "Brightness": {
+      "stack": [
+        {
+          "name": "loudness swell",
+          "active": true,
+          "sourceId": "audio_amp",
+          "depth": 0.12,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        },
+        {
+          "name": "kick hit",
+          "active": false,
+          "sourceId": "audio_flux_bass",
+          "depth": 0.2,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        }
+      ],
+      "note": "Gentle loudness lift."
+    },
+    "TileScale": {
+      "stack": [
+        {
+          "name": "triangle 32-beat",
+          "active": false,
+          "sourceId": "lfo",
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 32,
+          "depth": 0.08
+        }
+      ],
+      "note": "Slow breathing; off by default."
+    },
+    "Interlace": {
+      "stack": [
+        {
+          "name": "high shimmer",
+          "active": false,
+          "sourceId": "audio_high",
+          "depth": 0.15,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 110
+        }
+      ],
+      "note": "Highs tighten the interlace; off by default."
+    },
+    "HueOffset": {
+      "stack": [
+        {
+          "name": "slow hue drift",
+          "active": true,
+          "sourceId": "lfo",
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 64,
+          "depth": 0.35
+        }
+      ]
+    }
+  }
+}
