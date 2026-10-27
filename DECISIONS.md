@@ -153,6 +153,13 @@ Deck loads, FX changes and transition changes each have exactly one mutation pat
 ## Generator and FX defaults
 - A generator's starting bank resolves in three tiers: user file `library/generator_defaults/<sourceId>.json`, hand-curated 4-knob bindings for the stock generators, then a heuristic for third-party ISF shaders (skip discrete selectors, prefer continuous parameters, exponential curves for time/frequency). Swapping the source replaces the deck's bank wholesale, like a preset load, with `Deck/` paths remapped to the resident deck. `MacroCurve.inverse` positions each knob so installing a default causes no visible jump. MIDI mappings are stripped from saved defaults to avoid duplicate CCs across decks. Bindings are not carried over by parameter name (Scale/Speed/Depth mean different things per generator); a toast reports replaced bindings.
 
+## Shaders Ship Hand-Written Audio Response ("Recipes"); One Global Reactivity Amount Scales Them (`presets/ReactivityRecipes.kt`, `parameters/Reactivity.kt`, `resources/reactivity/`)
+- Reactivity is curated per shader, not generated: per parameter one running modulator and bypassed alternates, laid over the stock default by `GeneratorDefaults.resolve`. A user's saved default wins. Recipes are data (`reactivity/<kind>/<id>.json`), validated by tests against the shader's parameters and ranges.
+- Recipe modulators carry `CvModulator.recipe`; the global **Reactivity** amount (0..2, an app preference, never in presets) scales their depth *and* `dcOffset`, so 0% is exactly the set value. Hand-built, MIDI and macro modulators never follow it.
+- Recipes are tuned against the **auto gain** (`audio/AudioAgc.kt`: per-band peak envelope, instant attack, 8 s release, floor 0.02), which only replaces the CV normalisation divisors; beat and downbeat detection keep raw levels. AGC off restores the fixed 0.25 scale.
+- Bipolar sources swing `dcOffset ± depth` on every parameter (2026-10-27 polarity fix). A recipe LFO that should rise from a 0..1 parameter's minimum uses `depth = dcOffset = d/2`; `ReactivityRecipesTest.lfoSwingsFitTheirParameters` guards it.
+- Judged by eye, not by theory: a response nobody notices is removed (Fluid Ink), and parameters whose motion looks like an error are left alone (Escape Time Power: fractional powers show branch-cut seams; Core Size).
+
 ---
 
 # 5. Macros and parameter ownership

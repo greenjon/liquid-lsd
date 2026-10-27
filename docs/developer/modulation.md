@@ -47,11 +47,9 @@ for (mod in modulators) {
 
     rawCV = evaluateModulator(mod)          // Evaluators.kt — see below
 
-    // Polarity normalisation
-    rawModAmount = if (isBipolar)
-        rawCV * depth + dcOffset        // bipolar: symmetric around 0
-    else
-        ((rawCV + 1) / 2) * depth + dcOffset  // monopolar: maps [-1,1] → [0,depth]+dc
+    // Same shape for every source and target. Recipe modulators (CvModulator.recipe) get their
+    // depth and dcOffset multiplied by the global Reactivity.amount first.
+    rawModAmount = rawCV * effectiveDepth + effectiveOffset   // CvModulator.lfoShape
 
     // Scale to parameter range
     scalar = if (ADD) then (range / 2) for bipolar, else range for monopolar; else 1.0
@@ -67,9 +65,11 @@ for (mod in modulators) {
 value = result.coerceIn(minClamp, maxClamp)
 ```
 
-**Polarity**: if `minClamp < 0`, the parameter is bipolar. Monopolar parameters map the raw CV
-signal from `[-1, 1]` into `[0, 1]` before scaling, so negative CV still produces positive
-modulation effect.
+**Polarity**: if `minClamp < 0`, the parameter is bipolar; only the ADD scalar differs (`range / 2` for
+bipolar, `range` otherwise). A bipolar source (LFO, sample-and-hold) swings `dcOffset ± depth` on every
+parameter, so on a 0..1 parameter it goes below the base value unless `dcOffset` lifts it; unipolar sources
+(audio, trigger, MIDI CC) span `dcOffset .. dcOffset + depth`. (Before 2026-10-27 a bipolar source on a
+monopolar parameter was remapped to `[0, 1]` first; stock presets and recipes were rewritten to keep their sweep.)
 
 ---
 
@@ -282,6 +282,19 @@ evaluateModulator(mod) → Float   (range [-1, 1])
   "midi_cc_*"     → MidiEngine.getCcValue(channel, cc)
   else            → CVRegistry.get(id) — any registered custom source
 ```
+
+---
+
+## Reactivity Recipes and the Reactivity Amount
+
+Shaders ship hand-written audio and beat responses ("recipes"), and one global slider scales them.
+
+- **Files:** `src/main/resources/reactivity/sources/<id>.json` (`ReactivityRecipes.forId(kind, id)`; only `sources` exist so far). Per parameter an ordered `stack` of modulators; entries with `"active": true` run, the others are wired but bypassed. Entry keys are `ModulatorDto` fields plus `active`, `name`, `note`; defaults are operator `ADD`, LFO unit `BEAT`, follower `PUNCHY` when an attack/decay is given. A parameter may carry `base` to move its set value. The `RANDOM` waveform is the sample-and-hold.
+- **Applying:** `GeneratorDefaults.resolve` lays the recipe over the stock (curated or heuristic) default through `ReactivityRecipes.overlay`; a saved user default wins and carries whatever modulators the user left. Overlay replaces a parameter's old `recipe` modulators with fresh copies (new ids, so envelope followers are never shared between decks) and keeps hand-built ones. Loading a preset that stores its own parameters replaces the recipe, like any default.
+- **Flag and scaling:** `CvModulator.recipe` (saved in presets) marks recipe modulators. `Reactivity.amount` (0..2, an app preference, `reactivityAmount`, set under Preferences > Audio Hardware) multiplies both `depth` and `dcOffset` of those only, so 0 gives the set value exactly. The web evaluator reads `ctx.reactivity` and the same flag; golden vectors cover 0, 1 and 2.
+- **Authoring rule:** an LFO on a 0..1 parameter that sits at (or near) its minimum swings both ways around the set value. To sweep upward use `depth = dcOffset = d/2` (range `base .. base + d`). `ReactivityRecipesTest.lfoSwingsFitTheirParameters` fails when any LFO swing leaves its parameter's range (the clamp would flatten part of every cycle); `everyShippedSourceRecipeIsValid` checks parameter names against the shader, one active modulator per parameter, and `|depth| <= 1`.
+- **Audio levels:** recipes are tuned against the AGC (`audio/AudioAgc.kt`), which normalises each band against its own recent peak. The web TV still uses the fixed 0.25 scale, so recipes will read quieter there until the AGC is ported.
+- **Not covered yet:** FX (`FxDefaultDto.parameters` cannot hold modulators), transitions (no defaults store), a UI marker for recipe modulators and a "reset to recipe" action. Fractal Flame's recipe only touches Breathe, Warp, Spin, Drift, Magnify, Exposure, Brightness, Decay, Vibrancy and Mutation, never the morph-driven xform parameters. Fluid Ink has none, and Harmonograph left the stock set.
 
 ---
 

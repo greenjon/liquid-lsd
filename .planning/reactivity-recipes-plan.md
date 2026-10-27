@@ -1,5 +1,7 @@
 # Reactivity recipes + global reactivity amount (2026-10-25)
 
+**Status 2026-10-27:** AGC, `recipe` flag, Reactivity amount (desktop + web evaluator), loader and 33 source recipes are DONE and committed. Open: FX and transition recipes (step 6), UI recipe marker / "reset to recipe" (step 4's UI half), web AGC port, Fluid Ink idea. See ROADMAP.md. The format below is as built, with `dcOffset` allowed and scaled by the amount.
+
 Goal: every shipped source, FX and transition ships hand-curated audio/beat response. Per parameter, an ordered
 stack of modulators: ONE active, alternates present but `bypassed`. A global "reactivity amount" scales the
 active recipe modulators.
