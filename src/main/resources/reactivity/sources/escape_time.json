@@ -19,7 +19,8 @@
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 16,
-          "depth": 0.03
+          "depth": 0.03,
+          "dcOffset": 0.03
         }
       ],
       "note": "The Julia constant pulses on the bass, so the shape breathes."
@@ -140,7 +141,8 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 64,
-          "depth": 0.175
+          "depth": 0.175,
+          "dcOffset": 0.175
         }
       ]
     }

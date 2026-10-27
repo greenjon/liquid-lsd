@@ -19,7 +19,8 @@
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 8,
-          "depth": 0.05
+          "depth": 0.05,
+          "dcOffset": 0.05
         }
       ],
       "note": "Fractal pulses on the kick."
@@ -33,7 +34,8 @@
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 32,
-          "depth": 0.04
+          "depth": 0.04,
+          "dcOffset": 0.04
         },
         {
           "name": "mid body",
@@ -187,7 +189,8 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 64,
-          "depth": 0.175
+          "depth": 0.175,
+          "dcOffset": 0.175
         }
       ]
     }

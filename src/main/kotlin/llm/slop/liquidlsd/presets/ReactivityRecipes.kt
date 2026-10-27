@@ -25,8 +25,10 @@ import java.util.concurrent.ConcurrentHashMap
  * flagged `recipe` so the global [llm.slop.liquidlsd.parameters.Reactivity] amount scales it.
  *
  * Entry keys are [ModulatorDto] fields plus `active`, `name` and `note` (ignored). Defaults: operator ADD,
- * LFO unit BEAT, follower PUNCHY when an attack/decay is given. `dcOffset` is rejected so a
- * reactivity of 0 reproduces the base value exactly. A parameter may also carry `base` to move its set value.
+ * LFO unit BEAT, follower PUNCHY when an attack/decay is given. Depth and
+ * `dcOffset` both scale with the reactivity amount, so 0 reproduces the base value exactly. A bipolar source (LFO,
+ * sample-and-hold) swings `dcOffset` +- `depth`: on a parameter whose set value is its minimum, `dcOffset = depth`
+ * swings it upward from there. A parameter may also carry `base` to move its set value.
  *
  * Format and rationale: .planning/reactivity-recipes-plan.md.
  */
@@ -85,9 +87,6 @@ object ReactivityRecipes {
         if (isAudioSource(source) && "followerMode" !in m &&
             ((m["attackMs"]?.jsonPrimitive?.floatOrNull ?: 0f) > 0f || (m["decayMs"]?.jsonPrimitive?.floatOrNull ?: 0f) > 0f)
         ) m["followerMode"] = JsonPrimitive("PUNCHY")
-        val dc = m["dcOffset"]?.jsonPrimitive?.floatOrNull ?: 0f
-        require(dc == 0f) { "dcOffset must be 0 in recipes (use 'base' to move the set value)" }
-        m.remove("dcOffset")
         m["bypassed"] = JsonPrimitive(!active)
         m["recipe"] = JsonPrimitive(true)
         val dto = json.decodeFromJsonElement(ModulatorDto.serializer(), JsonObject(m))

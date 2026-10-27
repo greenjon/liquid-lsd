@@ -228,7 +228,7 @@ class ModulatableParameter(
             val depth = Reactivity.effectiveDepth(mod)
             // Same shape for every source and target: cv * depth + dcOffset, so the LFO Min/Max slider
             // (see CvModulator.getLfoMin) is exact regardless of the parameter's polarity.
-            val rawModAmount = mod.lfoShape(finalCv, depth)
+            val rawModAmount = mod.lfoShape(finalCv, depth, Reactivity.effectiveOffset(mod))
             
             val scalar = if (mod.operator == ModulationOperator.ADD) addScalar else 1.0f
             val modAmount = rawModAmount * scalar

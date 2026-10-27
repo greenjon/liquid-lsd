@@ -16,7 +16,8 @@
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 4,
-          "depth": 0.1
+          "depth": 0.1,
+          "dcOffset": 0.1
         },
         {
           "name": "bass pulse",
@@ -39,7 +40,8 @@
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 8,
-          "depth": 0.175
+          "depth": 0.175,
+          "dcOffset": 0.175
         },
         {
           "name": "mid body",
@@ -63,7 +65,8 @@
           "genUnit": "BEAT",
           "subdivision": 16,
           "depth": 0.2,
-          "hold": 0.5
+          "hold": 0.5,
+          "dcOffset": 0.2
         },
         {
           "name": "16-beat triangle",
@@ -72,7 +75,8 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 16,
-          "depth": 0.15
+          "depth": 0.15,
+          "dcOffset": 0.15
         }
       ],
       "note": "Arm 3 jumps to a new length every 16 beats, gliding for the first half of each (50% hold)."
@@ -87,7 +91,8 @@
           "genUnit": "BEAT",
           "subdivision": 6,
           "depth": 0.15,
-          "slope": 0.85
+          "slope": 0.85,
+          "dcOffset": 0.15
         },
         {
           "name": "bass pulse",
@@ -111,7 +116,8 @@
           "genUnit": "BEAT",
           "subdivision": 1,
           "depth": 0.5,
-          "slope": 0.995
+          "slope": 0.995,
+          "dcOffset": 0.5
         },
         {
           "name": "1-beat hue shimmer",
@@ -120,7 +126,8 @@
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 1,
-          "depth": 0.1
+          "depth": 0.1,
+          "dcOffset": 0.1
         }
       ],
       "note": "Colours cycle once a beat (a sawtooth over the whole hue wheel); a gentle 1-beat sine as the alternative."
@@ -135,7 +142,8 @@
           "genUnit": "BEAT",
           "subdivision": 32,
           "depth": 0.5,
-          "hold": 1.0
+          "hold": 1.0,
+          "dcOffset": 0.5
         },
         {
           "name": "new recipe every 64 beats",
@@ -145,7 +153,8 @@
           "genUnit": "BEAT",
           "subdivision": 64,
           "depth": 0.5,
-          "hold": 1.0
+          "hold": 1.0,
+          "dcOffset": 0.5
         }
       ],
       "note": "A new shape recipe every 32 beats (100% hold, so it jumps); every 64 beats as the alternative."
@@ -160,7 +169,8 @@
           "genUnit": "BEAT",
           "subdivision": 256,
           "depth": 0.25,
-          "hold": 1.0
+          "hold": 1.0,
+          "dcOffset": 0.25
         }
       ],
       "note": "A new lobe count every 256 beats (100% hold), between 4 and about 15."

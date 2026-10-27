@@ -184,6 +184,7 @@ class WebEvaluatorVectorsTest {
             }
             case("recipe audio bipolar reactivity $r", bi, param(0f, bi, audio(depth = 0.6f).copy(recipe = true)),
                 clockPoints(mapOf("audio_bass" to 0.7f)), reactivity = r)
+            case("recipe lfo with dc offset reactivity $r", uni, param(0.2f, uni, lfo(sub = 2f, depth = 0.15f, dc = 0.15f).copy(recipe = true)), clockPoints(), reactivity = r)
             case("non-recipe ignores reactivity $r", uni, param(0.5f, uni, lfo(sub = 2f, depth = 0.3f)), clockPoints().take(3), reactivity = r)
         }
         case("lfo bypassed", uni, param(0.5f, uni, lfo(bypassed = true)), clockPoints().take(2))

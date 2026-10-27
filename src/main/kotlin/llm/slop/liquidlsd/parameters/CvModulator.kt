@@ -122,7 +122,7 @@ data class CvModulator(
         get() = sourceId != "seq" && !llm.slop.liquidlsd.cv.isCvSourceBipolar(sourceId)
 
     /** Modulator output before the operator scalar: cv * depth + dcOffset. */
-    fun lfoShape(cv: Float, effectiveDepth: Float): Float = cv * effectiveDepth + dcOffset
+    fun lfoShape(cv: Float, effectiveDepth: Float, effectiveOffset: Float = dcOffset): Float = cv * effectiveDepth + effectiveOffset
 
     fun getLfoMin(): Float = if (halfRange) dcOffset else dcOffset - depth
     fun getLfoMax(): Float = dcOffset + depth

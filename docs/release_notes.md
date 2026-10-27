@@ -27,7 +27,7 @@
 - These are recipe modulators, so the **Reactivity** slider scales them. A default you saved yourself still wins over the shipped recipe. Recipes are read from files in the app (`reactivity/sources/<source>.json`); a test checks every file against its shader's parameters.
 
 ### Reactivity Amount (`parameters/Reactivity.kt`, `parameters/ModulatableParameter.kt`, `parameters/CvModulator.kt`, `ui/AudioEnginePanel.kt`, `web/evaluator.js`)
-- **A global Reactivity slider** in Preferences > Audio (0% to 200%, default 100%, saved) scales how strongly the built-in audio and beat response plays. It applies only to modulators marked as part of a shader's reactivity recipe (new `recipe` flag, saved in presets); modulators you add by hand, MIDI and macros are not affected. At 0% every parameter sits exactly at its set value. Nothing ships with recipes yet; they arrive source by source.
+- **A global Reactivity slider** in Preferences > Audio (0% to 200%, default 100%, saved) scales how strongly the built-in audio and beat response plays (both the size and the offset of each response, so 0% is exactly the set value). It applies only to modulators marked as part of a shader's reactivity recipe (new `recipe` flag, saved in presets); modulators you add by hand, MIDI and macros are not affected. At 0% every parameter sits exactly at its set value. Nothing ships with recipes yet; they arrive source by source.
 - The web evaluator honours the same flag and an optional `reactivity` in its context, with new golden vectors at 0%, 100% and 200%.
 
 ### Audio Auto Gain (`audio/AudioAgc.kt`, `audio/AudioEngine.kt`, `ui/AudioEnginePanel.kt`, `ui/AppPreferencesStore.kt`)

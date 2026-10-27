@@ -42,7 +42,8 @@
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 16,
-          "depth": 0.06
+          "depth": 0.06,
+          "dcOffset": 0.06
         }
       ],
       "note": "Mids breathe the box fold."
@@ -158,7 +159,8 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 64,
-          "depth": 0.175
+          "depth": 0.175,
+          "dcOffset": 0.175
         }
       ]
     }

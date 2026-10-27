@@ -19,7 +19,8 @@
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 16,
-          "depth": 0.05
+          "depth": 0.05,
+          "dcOffset": 0.05
         }
       ],
       "note": "Film thickens on the bass, which sweeps the interference colours."
@@ -126,7 +127,8 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 32,
-          "depth": 0.04
+          "depth": 0.04,
+          "dcOffset": 0.04
         }
       ],
       "note": "Slow breathing; off by default."
@@ -140,7 +142,8 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 64,
-          "depth": 0.175
+          "depth": 0.175,
+          "dcOffset": 0.175
         }
       ]
     }

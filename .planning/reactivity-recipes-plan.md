@@ -21,8 +21,10 @@ active recipe modulators.
 - `FxDefaultDto.parameters` is `Map<String, Float>` (cannot hold modulators); transitions have no defaults store.
 
 ## Reactivity amount semantics
-- Scale only the `cv*depth` term of modulators with `recipe == true`; leave `dcOffset` alone so r=0 gives the
-  base value exactly. For SCALE use `depth' = depth*r` in both places (`1 - depth' + cv*depth'`).
+- Scale both the `cv*depth` term and `dcOffset` of modulators with `recipe == true`, so r=0 gives the base value
+  exactly. (2026-10-27: after the polarity change every bipolar source swings dcOffset +- depth on any parameter, so
+  an LFO on a 0..1 parameter at its minimum uses depth = dcOffset = d/2 to swing upward from the set value;
+  ReactivityRecipesTest.lfoSwingsFitTheirParameters keeps every swing inside the parameter's range.) For SCALE use `depth' = depth*r` in both places (`1 - depth' + cv*depth'`).
 - User-authored and MIDI/macro modulators unaffected.
 - Global scalar lives next to other settings (UITheme.settings); evaluator receives it via ctx. Web: add
   `reactivity` to evaluator ctx, update sync_manifest, golden vectors at r = 0, 1, 2.

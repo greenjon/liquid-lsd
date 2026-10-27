@@ -53,7 +53,6 @@ class ReactivityRecipesTest {
                 recipe.stack.forEach {
                     assertTrue(it.recipe, "$id.$name: not flagged recipe")
                     assertTrue(kotlin.math.abs(it.depth) <= 1f, "$id.$name: depth ${it.depth} out of range")
-                    assertEquals(0f, it.dcOffset, "$id.$name: dcOffset")
                 }
             }
         }
@@ -76,14 +75,57 @@ class ReactivityRecipesTest {
     }
 
     @Test
-    fun rejectsDcOffsetRandomAndUnknownSources() {
+    fun keepsDcOffsetAndRejectsUnknownSources() {
         fun entries(entry: String) = ReactivityRecipes.parse("""{"params":{"X":{"stack":[$entry]}}}""", "t")["X"]!!.stack
-        assertTrue(entries("""{"sourceId":"lfo","depth":0.2,"dcOffset":0.1}""").isEmpty())
+        assertEquals(0.1f, entries("""{"sourceId":"lfo","depth":0.2,"dcOffset":0.1}""").single().dcOffset)
         assertEquals("RANDOM", entries("""{"sourceId":"lfo","depth":0.2,"waveform":"RANDOM","hold":0.5}""").single().waveform)
         assertTrue(entries("""{"sourceId":"nope","depth":0.2}""").isEmpty())
         val ok = entries("""{"sourceId":"lfo","depth":0.2,"subdivision":8}""").single()
         assertEquals("BEAT", ok.genUnit)
         assertTrue(ok.bypassed && ok.recipe)
         assertFalse(entries("""{"sourceId":"audio_bass","depth":0.2,"active":true,"attackMs":5,"decayMs":100}""").single().bypassed)
+    }
+
+    /** (min, default, max) of each parameter of a bundled source. */
+    private fun ranges(id: String): Map<String, Triple<Float, Float, Float>> {
+        if (id == "fractal_flame") {
+            return llm.slop.liquidlsd.rendering.FlameGenome.buildParameters()
+                .mapValues { Triple(it.value.minClamp, it.value.baseValue, it.value.maxClamp) }
+        }
+        val meta = File(root, "src/main/resources/default_sources/$id/meta.json")
+        if (meta.exists()) {
+            return json.parseToJsonElement(meta.readText()).jsonObject["parameters"]!!.jsonArray.associate {
+                val o = it.jsonObject
+                o["name"]!!.jsonPrimitive.content to Triple(
+                    o["min"]!!.jsonPrimitive.content.toFloat(), o["default"]!!.jsonPrimitive.content.toFloat(), o["max"]!!.jsonPrimitive.content.toFloat())
+            }
+        }
+        val header = File(root, "src/main/resources/default_sources/$id/$id.fs").readText().substringAfter("/*").substringBefore("*/")
+        return json.parseToJsonElement(header).jsonObject["INPUTS"]!!.jsonArray.map { it.jsonObject }
+            .filter { it["TYPE"]?.jsonPrimitive?.content.equals("float", true) }
+            .associate {
+                it["NAME"]!!.jsonPrimitive.content to Triple(
+                    it["MIN"]!!.jsonPrimitive.content.toFloat(), it["DEFAULT"]!!.jsonPrimitive.content.toFloat(), it["MAX"]!!.jsonPrimitive.content.toFloat())
+            }
+    }
+
+    /** A bipolar source (LFO, sample-and-hold) swings dcOffset +- depth; that must stay inside the parameter, or the clamp flattens part of every cycle. */
+    @Test
+    fun lfoSwingsFitTheirParameters() {
+        for (file in recipeFiles) {
+            val id = file.nameWithoutExtension
+            val ranges = ranges(id)
+            for ((name, recipe) in ReactivityRecipes.parse(file.readText(), id)) {
+                val (min, default, max) = ranges.getValue(name)
+                val base = recipe.base ?: default
+                val scalar = if (min < 0f) (max - min) / 2f else max - min
+                for (m in recipe.stack.filter { it.sourceId == "lfo" }) {
+                    val lo = base + (m.dcOffset - kotlin.math.abs(m.depth)) * scalar
+                    val hi = base + (m.dcOffset + kotlin.math.abs(m.depth)) * scalar
+                    val eps = 1e-4f * (max - min)
+                    assertTrue(lo >= min - eps && hi <= max + eps, "$id.$name (${m.waveform}): swings $lo..$hi, outside $min..$max")
+                }
+            }
+        }
     }
 }

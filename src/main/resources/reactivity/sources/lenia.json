@@ -75,7 +75,8 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 64,
-          "depth": 0.015
+          "depth": 0.015,
+          "dcOffset": 0.015
         }
       ],
       "note": "Very slow drift of the growth rule; off by default (can change what survives)."
@@ -117,7 +118,8 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 64,
-          "depth": 0.175
+          "depth": 0.175,
+          "dcOffset": 0.175
         }
       ]
     }

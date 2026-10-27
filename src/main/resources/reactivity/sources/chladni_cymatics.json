@@ -10,7 +10,8 @@
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 32,
-          "depth": 0.02
+          "depth": 0.02,
+          "dcOffset": 0.02
         },
         {
           "name": "bass pulse",
@@ -34,7 +35,8 @@
           "genUnit": "BEAT",
           "subdivision": 64,
           "depth": 0.025,
-          "phaseOffset": 0.25
+          "phaseOffset": 0.25,
+          "dcOffset": 0.025
         }
       ],
       "note": "Second axis of the mode slide; off by default."
@@ -141,7 +143,8 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 64,
-          "depth": 0.175
+          "depth": 0.175,
+          "dcOffset": 0.175
         }
       ]
     }

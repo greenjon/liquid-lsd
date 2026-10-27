@@ -19,7 +19,8 @@
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 8,
-          "depth": 0.03
+          "depth": 0.03,
+          "dcOffset": 0.03
         }
       ],
       "note": "Every xform swells a little on the kick, so the flame pulses."
@@ -42,7 +43,8 @@
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 16,
-          "depth": 0.05
+          "depth": 0.05,
+          "dcOffset": 0.05
         }
       ],
       "note": "Mids pull the non-linear variations up against linear."

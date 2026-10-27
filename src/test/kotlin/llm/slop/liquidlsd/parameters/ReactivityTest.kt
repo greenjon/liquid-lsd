@@ -51,4 +51,18 @@ class ReactivityTest {
         Reactivity.amount = -1f
         assertEquals(0f, Reactivity.amount)
     }
+
+    @Test
+    fun dcOffsetScalesWithAmountSoZeroIsBaseExact() {
+        CVRegistry.updatePushedValue("audio_bass", 0.5f)
+        val p = ModulatableParameter(0.4f, minClamp = 0f, maxClamp = 1f).also {
+            it.modulators.add(CvModulator(sourceId = "audio_bass", depth = 0.2f, dcOffset = 0.1f, recipe = true))
+        }
+        Reactivity.amount = 1f
+        assertEquals(0.4f + 0.5f * 0.2f + 0.1f, p.evaluate(), 1e-5f)
+        Reactivity.amount = 2f
+        assertEquals(0.4f + 0.5f * 0.4f + 0.2f, p.evaluate(), 1e-5f)
+        Reactivity.amount = 0f
+        assertEquals(0.4f, p.evaluate(), 1e-6f)
+    }
 }

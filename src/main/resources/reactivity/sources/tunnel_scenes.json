@@ -88,7 +88,8 @@
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 8,
-          "depth": 0.075
+          "depth": 0.075,
+          "dcOffset": 0.075
         }
       ],
       "note": "Lines fatten on the kick."
@@ -111,7 +112,8 @@
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 16,
-          "depth": 0.15
+          "depth": 0.15,
+          "dcOffset": 0.15
         }
       ],
       "note": "Camera drifts with the mids."
@@ -162,7 +164,8 @@
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
           "subdivision": 64,
-          "depth": 0.15
+          "depth": 0.15,
+          "dcOffset": 0.15
         }
       ]
     }
