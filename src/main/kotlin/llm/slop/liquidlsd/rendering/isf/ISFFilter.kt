@@ -338,9 +338,7 @@ class ISFFilter(
         shader.quietUniforms = header.LSD_PHASES.values.flatten().toSet()
 
         val defaultDto = ISFAutoBindEngine.resolveDefault(this)
-        defaultDto.parameters.forEach { (name, value) ->
-            parameters[name]?.baseValue = value
-        }
+        defaultDto.applyParametersTo(this)
         applyMetaBindingsFromPreset(defaultDto.metaBindings.map { it.toBinding() })
         applyKnobLayoutFromPreset(defaultDto.knobLayout)
         // Start the Metaknob at the position that reproduces the target's own authored default,

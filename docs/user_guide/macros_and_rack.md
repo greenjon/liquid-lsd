@@ -492,7 +492,7 @@ When swapping sources on any deck (via the source badge or the empty-deck card),
 A slot's Metaknob targets, knob order and parameter values can be saved as the effect's own default:
 - Tweaking parameters or targets during performance is purely temporary and does **not** silently overwrite defaults on disk.
 - **Right-click a Metaknob row** in Edit's SUPER KNOB & METAKNOBS block:
-  - `Save as Default for <Filter>` saves this slot's Metaknob targets, knob order and parameter values into `library/isf_overrides/<contentHash>.json`. New copies of the effect start from it; slots already in chains keep their own.
+  - `Save as Default for <Filter>` saves this slot's Metaknob targets, knob order, parameter values and modulators (not MIDI mappings) into `library/isf_overrides/<contentHash>.json`. New copies of the effect start from it; slots already in chains keep their own.
   - When a saved default exists, `Remove Saved Default for <Filter>` deletes it, so new copies go back to the curated/auto-mapped targets, and resets this slot to them too.
 - Targets themselves are edited in the slot's **Metaknob targets** block or on the Edit-row strip.
 

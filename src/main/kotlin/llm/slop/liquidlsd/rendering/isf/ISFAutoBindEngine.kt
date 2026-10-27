@@ -2,6 +2,9 @@ package llm.slop.liquidlsd.rendering.isf
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import llm.slop.liquidlsd.models.ParameterDto
+import llm.slop.liquidlsd.models.applyDto
+import llm.slop.liquidlsd.models.toGeneratorDefaultDto
 import llm.slop.liquidlsd.ui.FileSystemManager
 import mu.KotlinLogging
 import java.io.File
@@ -11,16 +14,29 @@ import java.util.concurrent.ConcurrentHashMap
 private val logger = KotlinLogging.logger {}
 
 /**
- * Serializable DTO representing default Metaknob bindings and parameter values for an ISF filter.
+ * Serializable DTO representing default Metaknob bindings and parameters for an ISF filter.
  */
 @Serializable
 data class FxDefaultDto(
-    val version: Int = 2,
+    val version: Int = 3,
     val metaBindings: List<FxMetaBindingDto>,
+    /** Version 2 and older: base values only. Read for old files; [params] wins when present. */
     val parameters: Map<String, Float> = emptyMap(),
+    /** Full parameters (base value, range, modulators), MIDI mappings stripped. Null in files from before version 3. */
+    val params: Map<String, ParameterDto>? = null,
     /** Focus-knob parameter order for the slot (see [ISFFilter.knobLayout]); null = authored order. */
     val knobLayout: List<String>? = null
-)
+) {
+    /** Puts these default parameters on [filter]: full parameters when saved, else the old base values. */
+    fun applyParametersTo(filter: ISFFilter) {
+        val full = params
+        if (full != null) {
+            full.forEach { (name, dto) -> filter.parameters[name]?.applyDto(dto) }
+        } else {
+            parameters.forEach { (name, value) -> filter.parameters[name]?.baseValue = value }
+        }
+    }
+}
 
 /**
  * Resolves a sensible default Metaknob binding for any ISF filter so that loading one of the
@@ -185,13 +201,15 @@ object ISFAutoBindEngine {
         }
     }
 
-    /** Persists a filter's current bindings and parameter baselines as its user default. */
+    /** Persists a filter's current bindings, knob order and parameters (with their modulators) as its user default. */
     fun saveFilterDefault(filter: ISFFilter) {
         val hash = filter.contentHash ?: return
         val dto = FxDefaultDto(
-            version = 2,
             metaBindings = filter.metaBindings.map { it.toDto() },
-            parameters = filter.parameters.mapValues { it.value.baseValue },
+            // Modulator ids dropped so each new copy gets its own (envelope follower state is keyed by id).
+            params = filter.parameters.mapValues { (_, p) ->
+                p.toGeneratorDefaultDto().let { d -> d.copy(modulators = d.modulators.map { it.copy(id = null) }) }
+            },
             knobLayout = filter.knobLayout
         )
         try {

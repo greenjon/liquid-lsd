@@ -196,14 +196,14 @@ object FXChainMacroStrip {
     private fun truncateLabel(name: String, maxChars: Int = 16): String =
         if (name.length <= maxChars) name else name.take(maxChars - 1).trimEnd() + "…"
 
-    /** Save / remove the effect's own default (Metaknob targets, knob order and parameter values, keyed by shader content). */
+    /** Save / remove the effect's own default (Metaknob targets, knob order, parameters and modulators, keyed by shader content). */
     private fun drawDefaultMenuItems(fx: llm.slop.liquidlsd.rendering.isf.ISFFilter, edit: ((llm.slop.liquidlsd.rendering.isf.ISFFilter) -> Unit) -> Unit) {
         if (fx.contentHash == null) return
         ImGui.separator()
         if (ImGui.menuItem("Save as Default for ${fx.displayName}")) {
             ISFAutoBindEngine.saveFilterDefault(fx)
         }
-        itemTooltip("New copies of ${fx.displayName} start with this slot's Metaknob targets, knob order and parameter values.\nSlots already in chains keep their own.")
+        itemTooltip("New copies of ${fx.displayName} start with this slot's Metaknob targets, knob order, parameter values and modulators (MIDI mappings are not saved).\nSlots already in chains keep their own.")
         if (ISFAutoBindEngine.hasFilterDefault(fx)) {
             if (ImGui.menuItem("Remove Saved Default for ${fx.displayName}")) {
                 ISFAutoBindEngine.deleteFilterDefault(fx)
@@ -211,9 +211,7 @@ object FXChainMacroStrip {
                 edit { f ->
                     f.applyMetaBindingsFromPreset(defaultDto.metaBindings.map { it.toBinding() })
                     f.applyKnobLayoutFromPreset(defaultDto.knobLayout)
-                    defaultDto.parameters.forEach { (name, value) ->
-                        f.parameters[name]?.baseValue = value
-                    }
+                    defaultDto.applyParametersTo(f)
                 }
             }
             itemTooltip("New copies of ${fx.displayName} go back to the built-in Metaknob targets.\nThis slot is reset to them too; other slots keep their own.")

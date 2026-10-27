@@ -2,6 +2,7 @@ package llm.slop.liquidlsd.rendering.isf
 
 import io.mockk.mockk
 import kotlinx.serialization.json.JsonPrimitive
+import llm.slop.liquidlsd.parameters.CvModulator
 import llm.slop.liquidlsd.rendering.Shader
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -241,6 +242,51 @@ class ISFAutoBindEngineTest {
         val filter = ISFFilter("unbound_legacy", "Unbound", header, shader, contentHash = hash)
         assertEquals("legacyParam", filter.metaBinding.targetParamName)
         assertEquals(5.0f, filter.metaBinding.maxVal)
+
+        ISFAutoBindEngine.deleteOverride(hash)
+    }
+
+    @Test
+    fun `saved default keeps modulators and gives each copy its own ids`() {
+        val hash = "test_mods_${System.nanoTime()}"
+        val header = ISFHeader(INPUTS = listOf(
+            ISFInput(NAME = "inputImage", TYPE = "image"),
+            ISFInput(NAME = "gain", TYPE = "float", MIN = JsonPrimitive(0.0f), MAX = JsonPrimitive(1.0f), DEFAULT = JsonPrimitive(0.5f))
+        ))
+        val shader = mockk<Shader>(relaxed = true)
+        val filter1 = ISFFilter("unbound_mods", "Unbound", header, shader, contentHash = hash)
+        filter1.parameters["gain"]!!.modulators.add(CvModulator(sourceId = "audio_bass", depth = 0.3f, bypassed = true))
+        filter1.parameters["gain"]!!.mappedMidiId = "cc_7"
+
+        ISFAutoBindEngine.saveFilterDefault(filter1)
+        val a = ISFFilter("unbound_mods", "Unbound", header, shader, contentHash = hash).parameters["gain"]!!
+        val b = ISFFilter("unbound_mods", "Unbound", header, shader, contentHash = hash).parameters["gain"]!!
+
+        val mod = a.modulators.single()
+        assertEquals("audio_bass", mod.sourceId)
+        assertEquals(0.3f, mod.depth)
+        assertTrue(mod.bypassed)
+        assertNull(a.mappedMidiId)
+        assertTrue(mod.id != b.modulators.single().id && mod.id != filter1.parameters["gain"]!!.modulators.single().id)
+
+        ISFAutoBindEngine.deleteOverride(hash)
+    }
+
+    @Test
+    fun `version 2 default with base values only still loads`() {
+        val hash = "test_v2file_${System.nanoTime()}"
+        val header = ISFHeader(INPUTS = listOf(
+            ISFInput(NAME = "inputImage", TYPE = "image"),
+            ISFInput(NAME = "gain", TYPE = "float", MIN = JsonPrimitive(0.0f), MAX = JsonPrimitive(2.0f), DEFAULT = JsonPrimitive(1.0f))
+        ))
+        val shader = mockk<Shader>(relaxed = true)
+        val file = java.io.File(ISFAutoBindEngine.overridesDir, "$hash.json")
+        file.parentFile?.mkdirs()
+        file.writeText("""{"version":2,"metaBindings":[{"targetParamName":"gain","minVal":0.0,"maxVal":2.0}],"parameters":{"gain":1.6}}""")
+
+        val filter = ISFFilter("unbound_v2file", "Unbound", header, shader, contentHash = hash)
+        assertEquals(1.6f, filter.parameters["gain"]?.baseValue)
+        assertTrue(filter.parameters["gain"]!!.modulators.isEmpty())
 
         ISFAutoBindEngine.deleteOverride(hash)
     }

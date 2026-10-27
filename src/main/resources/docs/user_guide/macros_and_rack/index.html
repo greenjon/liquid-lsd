@@ -2437,7 +2437,7 @@ with the parameter selected.</p>
 <p>A slot's Metaknob targets, knob order and parameter values can be saved as the effect's own default:
 - Tweaking parameters or targets during performance is purely temporary and does <strong>not</strong> silently overwrite defaults on disk.
 - <strong>Right-click a Metaknob row</strong> in Edit's SUPER KNOB &amp; METAKNOBS block:
-  - <code>Save as Default for &lt;Filter&gt;</code> saves this slot's Metaknob targets, knob order and parameter values into <code>library/isf_overrides/&lt;contentHash&gt;.json</code>. New copies of the effect start from it; slots already in chains keep their own.
+  - <code>Save as Default for &lt;Filter&gt;</code> saves this slot's Metaknob targets, knob order, parameter values and modulators (not MIDI mappings) into <code>library/isf_overrides/&lt;contentHash&gt;.json</code>. New copies of the effect start from it; slots already in chains keep their own.
   - When a saved default exists, <code>Remove Saved Default for &lt;Filter&gt;</code> deletes it, so new copies go back to the curated/auto-mapped targets, and resets this slot to them too.
 - Targets themselves are edited in the slot's <strong>Metaknob targets</strong> block or on the Edit-row strip.</p>
 <hr />

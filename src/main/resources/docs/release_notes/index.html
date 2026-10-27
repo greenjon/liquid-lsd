@@ -1264,6 +1264,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#fx-save-as-default-keeps-modulators-renderingisfisfautobindenginekt-renderingisfisffilterkt-uifxchainmacrostripkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX "Save as Default" Keeps Modulators (rendering/isf/ISFAutoBindEngine.kt, rendering/isf/ISFFilter.kt, ui/FXChainMacroStrip.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#lfo-minmax-moves-independently-parameterscvmodulatorkt-parametersmodulatableparameterkt-cvevaluatorskt-webevaluatorjs-resourcesreactivity-defaultspresets-webpresets" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6825,6 +6836,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#fx-save-as-default-keeps-modulators-renderingisfisfautobindenginekt-renderingisfisffilterkt-uifxchainmacrostripkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX "Save as Default" Keeps Modulators (rendering/isf/ISFAutoBindEngine.kt, rendering/isf/ISFFilter.kt, ui/FXChainMacroStrip.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#lfo-minmax-moves-independently-parameterscvmodulatorkt-parametersmodulatableparameterkt-cvevaluatorskt-webevaluatorjs-resourcesreactivity-defaultspresets-webpresets" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -12361,6 +12383,10 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="fx-save-as-default-keeps-modulators-renderingisfisfautobindenginekt-renderingisfisffilterkt-uifxchainmacrostripkt">FX "Save as Default" Keeps Modulators (<code>rendering/isf/ISFAutoBindEngine.kt</code>, <code>rendering/isf/ISFFilter.kt</code>, <code>ui/FXChainMacroStrip.kt</code>)</h3>
+<ul>
+<li><strong>Fixed: saving an effect as its default dropped its modulators.</strong> "Save as Default for <effect>" kept only the Metaknob targets, knob order and base values, so any LFO or audio modulator on the slot was lost on new copies. The default now stores full parameters, modulators included (MIDI mappings are left out, as for generator defaults, and each new copy gets its own modulator ids). Defaults saved before this keep loading as before.</li>
+</ul>
 <h3 id="lfo-minmax-moves-independently-parameterscvmodulatorkt-parametersmodulatableparameterkt-cvevaluatorskt-webevaluatorjs-resourcesreactivity-defaultspresets-webpresets">LFO Min/Max Moves Independently (<code>parameters/CvModulator.kt</code>, <code>parameters/ModulatableParameter.kt</code>, <code>cv/Evaluators.kt</code>, <code>web/evaluator.js</code>, <code>resources/reactivity/</code>, <code>defaults/presets/</code>, <code>web/presets/</code>)</h3>
 <ul>
 <li><strong>Fixed: changing an LFO's Max also moved its Min.</strong> The Min/Max slider assumed every modulator swings evenly either side of its centre, but a beat LFO on a 0-to-1 parameter was secretly remapped to swing only upward from the centre, so the real minimum shifted whenever you moved Max. Every bipolar source (LFO, beat sine, beat phase, sample and hold) now swings evenly around its centre on any parameter, and the slider's Min and Max are exactly the lowest and highest the modulator reaches, relative to the base value. Audio, trigger and MIDI sources never go below zero, so their Min is the offset and Max is offset plus depth.</li>
