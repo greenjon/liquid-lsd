@@ -4,6 +4,9 @@
   "parameters": {
     "JuliaRadius": {
       "note": "The Julia constant pulses on the bass, so the shape breathes.",
+      "randomizeBase": true,
+      "baseMin": 0.5,
+      "baseMax": 0.85,
       "modulators": [
         {
           "name": "bass pulse",
@@ -29,6 +32,9 @@
     },
     "MorphSpeed": {
       "note": "Morph speeds up when loud.",
+      "randomizeBase": true,
+      "baseMin": 0.08,
+      "baseMax": 0.3,
       "modulators": [
         {
           "name": "loudness swell",
@@ -43,6 +49,9 @@
     },
     "Rotation": {
       "note": "Slow turn.",
+      "randomizeBase": true,
+      "baseMin": -0.5,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "sine 64-beat",
@@ -57,6 +66,9 @@
     },
     "ColorCycle": {
       "note": "Mids cycle the colours.",
+      "randomizeBase": true,
+      "baseMin": 0.2,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "mid body",
@@ -71,6 +83,9 @@
     },
     "TrapGlow": {
       "note": "Kick flashes the orbit-trap glow.",
+      "randomizeBase": true,
+      "baseMin": 0.2,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "kick hit",
@@ -109,6 +124,9 @@
     },
     "JuliaAngle": {
       "note": "Mids swing the constant; off by default.",
+      "randomizeBase": true,
+      "baseMin": -1,
+      "baseMax": 1,
       "modulators": [
         {
           "name": "mid body",
@@ -138,6 +156,9 @@
       ]
     },
     "HueOffset": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "slow hue drift",
@@ -150,6 +171,21 @@
           "dcOffset": 0.175
         }
       ]
+    },
+    "FractalType": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 3
+    },
+    "ColorMode": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 3
+    },
+    "Saturation": {
+      "randomizeBase": true,
+      "baseMin": 0.65,
+      "baseMax": 0.95
     }
   },
   "macroBank": {

@@ -4,6 +4,9 @@
   "parameters": {
     "WarpStrength": {
       "note": "Fluid kneads on the kick.",
+      "randomizeBase": true,
+      "baseMin": 0.25,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "bass pulse",
@@ -28,6 +31,9 @@
     },
     "Swirl": {
       "note": "Slow beat-locked swirl reversal.",
+      "randomizeBase": true,
+      "baseMin": -0.5,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "sine 16-beat",
@@ -52,6 +58,9 @@
     },
     "Speed": {
       "note": "Flows faster when loud.",
+      "randomizeBase": true,
+      "baseMin": 0.1,
+      "baseMax": 0.35,
       "modulators": [
         {
           "name": "loudness swell",
@@ -66,6 +75,9 @@
     },
     "Gloss": {
       "note": "Highs glint.",
+      "randomizeBase": true,
+      "baseMin": 0.3,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "high shimmer",
@@ -90,6 +102,9 @@
     },
     "Viscosity": {
       "note": "Thins out on bass.",
+      "randomizeBase": true,
+      "baseMin": 0.1,
+      "baseMax": 0.45,
       "modulators": [
         {
           "name": "bass thins fluid",
@@ -120,6 +135,9 @@
     },
     "Zoom": {
       "note": "Slow breathing.",
+      "randomizeBase": true,
+      "baseMin": 0.35,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "sine 32-beat",
@@ -133,6 +151,16 @@
           "dcOffset": 0.075
         }
       ]
+    },
+    "PaletteMode": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 4
+    },
+    "HueOffset": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 1
     }
   },
   "macroBank": {

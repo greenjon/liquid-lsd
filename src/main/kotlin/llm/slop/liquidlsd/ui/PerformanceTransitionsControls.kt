@@ -143,7 +143,7 @@ internal object PerformanceTransitionsControls {
         ImGui.pushStyleColor(ImGuiCol.ButtonHovered, randBtnHov)
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             if (ButtonChrome.button("${Icons.DICES}##perf_trans_rand", width, ctrlH)) {
-                ParametersUndo.pushUndoState(session.parametersState, mixer)
+                ParametersUndo.pushRandomizeUndo(session.parametersState, mixer)
                 mixer.transitionFilter?.let { filter ->
                     filter.parameters.values.forEach { param ->
                         val min = param.minClamp

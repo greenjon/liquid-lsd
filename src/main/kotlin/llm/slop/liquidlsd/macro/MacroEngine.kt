@@ -345,6 +345,13 @@ object MacroEngine {
         for (bank in snapshot) {
             resolveControls(bank.knobs, mixer, list)
         }
+        // The first enabled base binding of a parameter drives it (as findBaseBindingInfo reports); randomize writes through it.
+        for (rb in resolvedBindings) rb.param.baseDriver = null
+        for (rb in list) {
+            if (rb.binding.targetType == MacroTargetType.PARAM_BASE_VALUE && rb.param.baseDriver == null) {
+                rb.param.baseDriver = KnobDrive.driver(rb.control, rb.binding)
+            }
+        }
         resolvedBindings = list.toTypedArray()
         baseBindingCache = java.util.concurrent.ConcurrentHashMap()
         bindingsDirty = false

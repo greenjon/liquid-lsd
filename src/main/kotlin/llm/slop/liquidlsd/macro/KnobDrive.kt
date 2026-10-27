@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.macro
 
+import llm.slop.liquidlsd.parameters.BaseDriver
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 
 /**
@@ -28,5 +29,11 @@ object KnobDrive {
         if (!setViaKnob(metaKey, knobParam, knob, depth + 1)) knobParam.set(knob)
         param.baseValue = binding.mapKnobToTarget(knob)
         return true
+    }
+
+    /** The [BaseDriver] for a parameter whose base value [control] drives through [binding]: moves the knob there. */
+    fun driver(control: MacroControl, binding: MacroBinding) = BaseDriver { param, value ->
+        control.value = MacroCurve.inverse(value, binding).coerceIn(0f, 1f)
+        param.baseValue = MacroCurve.mapToRange(control.value, binding)
     }
 }

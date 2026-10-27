@@ -4,6 +4,9 @@
   "parameters": {
     "PatternSpeed": {
       "note": "Pattern races when loud.",
+      "randomizeBase": true,
+      "baseMin": 0.15,
+      "baseMax": 0.45,
       "modulators": [
         {
           "name": "loudness swell",
@@ -18,6 +21,9 @@
     },
     "PatternScale": {
       "note": "Pattern pulses on the kick.",
+      "randomizeBase": true,
+      "baseMin": 0.25,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "bass pulse",
@@ -43,6 +49,9 @@
     },
     "GridRotation": {
       "note": "Slow grid sway.",
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "triangle 64-beat",
@@ -58,6 +67,9 @@
     },
     "Contrast": {
       "note": "Kick snaps the contrast.",
+      "randomizeBase": true,
+      "baseMin": 0.35,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "kick hit",
@@ -96,6 +108,9 @@
     },
     "Sharpness": {
       "note": "Highs sharpen; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.4,
+      "baseMax": 0.85,
       "modulators": [
         {
           "name": "high shimmer",
@@ -111,6 +126,9 @@
     },
     "Density": {
       "note": "Grid density kick; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.25,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "kick hit",
@@ -125,6 +143,9 @@
       ]
     },
     "HueShift": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "slow hue drift",
@@ -137,6 +158,26 @@
           "dcOffset": 0.175
         }
       ]
+    },
+    "SurfaceType": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 3
+    },
+    "ColorMethod": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 3
+    },
+    "PaletteMode": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 3
+    },
+    "Saturation": {
+      "randomizeBase": true,
+      "baseMin": 0.5,
+      "baseMax": 0.9
     }
   },
   "macroBank": {

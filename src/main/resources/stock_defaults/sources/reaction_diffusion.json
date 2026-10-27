@@ -4,6 +4,9 @@
   "parameters": {
     "Feed": {
       "note": "Very slow beat-locked breathing between neighbouring patterns.",
+      "randomizeBase": true,
+      "baseMin": -0.15,
+      "baseMax": 0.15,
       "modulators": [
         {
           "name": "sine 64-beat",
@@ -18,6 +21,9 @@
     },
     "Kill": {
       "note": "Second axis of the same breathing; off by default.",
+      "randomizeBase": true,
+      "baseMin": -0.2,
+      "baseMax": 0.2,
       "modulators": [
         {
           "name": "sine 64-beat",
@@ -48,6 +54,9 @@
     },
     "Relief": {
       "note": "Relief lighting flashes on the kick.",
+      "randomizeBase": true,
+      "baseMin": 0.3,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "kick hit",
@@ -86,6 +95,9 @@
     },
     "Diffusion": {
       "note": "Bass spreads the pattern; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.35,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "bass pulse",
@@ -101,6 +113,9 @@
     },
     "Regime": {
       "note": "Very slow regime morph; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.1,
+      "baseMax": 0.85,
       "modulators": [
         {
           "name": "triangle 128-beat",
@@ -146,6 +161,9 @@
       ]
     },
     "HueOffset": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "slow hue drift",
@@ -158,6 +176,16 @@
           "dcOffset": 0.175
         }
       ]
+    },
+    "ColorMode": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 3
+    },
+    "Saturation": {
+      "randomizeBase": true,
+      "baseMin": 0.6,
+      "baseMax": 0.9
     }
   },
   "macroBank": {

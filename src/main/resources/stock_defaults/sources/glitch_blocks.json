@@ -4,6 +4,9 @@
   "parameters": {
     "Intensity": {
       "note": "Glitches land on the kick.",
+      "randomizeBase": true,
+      "baseMin": 0.25,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "kick hit",
@@ -28,6 +31,9 @@
     },
     "Split": {
       "note": "Channel split on hats.",
+      "randomizeBase": true,
+      "baseMin": 0.15,
+      "baseMax": 0.45,
       "modulators": [
         {
           "name": "hat tick",
@@ -52,6 +58,9 @@
     },
     "Tear": {
       "note": "Tearing on snares.",
+      "randomizeBase": true,
+      "baseMin": 0.2,
+      "baseMax": 0.55,
       "modulators": [
         {
           "name": "snare tick",
@@ -76,6 +85,9 @@
     },
     "Rate": {
       "note": "Glitch rate follows loudness.",
+      "randomizeBase": true,
+      "baseMin": 0.15,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "loudness swell",
@@ -101,6 +113,9 @@
     },
     "Crush": {
       "note": "Posterise drops on the kick; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "kick hit",
@@ -116,6 +131,9 @@
     },
     "BlockSize": {
       "note": "Slow block-size wander; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.2,
+      "baseMax": 0.7,
       "modulators": [
         {
           "name": "triangle 16-beat",
@@ -131,6 +149,9 @@
       ]
     },
     "HueOffset": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "slow hue drift",
@@ -143,6 +164,21 @@
           "dcOffset": 0.2
         }
       ]
+    },
+    "SurfaceType": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 3
+    },
+    "PaletteMode": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 3
+    },
+    "Saturation": {
+      "randomizeBase": true,
+      "baseMin": 0.4,
+      "baseMax": 0.8
     }
   },
   "macroBank": {

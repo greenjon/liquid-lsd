@@ -4,6 +4,9 @@
   "parameters": {
     "Density": {
       "note": "Gas thickens on the bass.",
+      "randomizeBase": true,
+      "baseMin": 0.35,
+      "baseMax": 0.7,
       "modulators": [
         {
           "name": "bass pulse",
@@ -28,6 +31,9 @@
     },
     "Turbulence": {
       "note": "Mids stir the gas.",
+      "randomizeBase": true,
+      "baseMin": 0.3,
+      "baseMax": 0.7,
       "modulators": [
         {
           "name": "mid body",
@@ -53,6 +59,9 @@
     },
     "Glow": {
       "note": "Kick flashes the glow.",
+      "randomizeBase": true,
+      "baseMin": 0.35,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "kick hit",
@@ -77,6 +86,9 @@
     },
     "FlightSpeed": {
       "note": "Flies faster when loud.",
+      "randomizeBase": true,
+      "baseMin": 0.15,
+      "baseMax": 0.4,
       "modulators": [
         {
           "name": "loudness swell",
@@ -91,6 +103,9 @@
     },
     "Drift": {
       "note": "Slow beat-locked drift.",
+      "randomizeBase": true,
+      "baseMin": 0.1,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "sine 32-beat",
@@ -139,6 +154,9 @@
     },
     "Coverage": {
       "note": "Mids spread the gas; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.35,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "mid body",
@@ -154,6 +172,9 @@
     },
     "Lighting": {
       "note": "Highs sharpen the shading; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.25,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "high shimmer",
@@ -169,6 +190,9 @@
     },
     "Scale": {
       "note": "Slow breathing; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.25,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "triangle 32-beat",
@@ -213,6 +237,9 @@
       ]
     },
     "HueOffset": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "slow hue drift",
@@ -225,6 +252,26 @@
           "dcOffset": 0.175
         }
       ]
+    },
+    "ColorMode": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 3
+    },
+    "Saturation": {
+      "randomizeBase": true,
+      "baseMin": 0.55,
+      "baseMax": 0.9
+    },
+    "RotateX": {
+      "randomizeBase": true,
+      "baseMin": -0.5,
+      "baseMax": 0.5
+    },
+    "RotateZ": {
+      "randomizeBase": true,
+      "baseMin": -0.5,
+      "baseMax": 0.5
     }
   },
   "macroBank": {

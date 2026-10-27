@@ -129,7 +129,7 @@ class MixerPanel(
             val isDieHovered = ImGui.isItemHovered()
             val isDieActive = ImGui.isItemActive()
             if (isDieClicked) {
-                ParametersUndo.pushUndoState(parametersState, mixer)
+                ParametersUndo.pushRandomizeUndo(parametersState, mixer)
                 mixer.randomizeAll()
             }
             itemTooltip("Randomize all Decks (A, B, BG, PV) and Master parameters (Mixer/randAll).\nClick to randomize with undo support.")

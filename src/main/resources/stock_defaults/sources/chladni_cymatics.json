@@ -4,6 +4,9 @@
   "parameters": {
     "FrequencyM": {
       "note": "The plate slides slowly between neighbouring modes (a fraction of a mode over 32 beats).",
+      "randomizeBase": true,
+      "baseMin": 2,
+      "baseMax": 7,
       "modulators": [
         {
           "name": "sine 32-beat",
@@ -29,6 +32,9 @@
     },
     "FrequencyN": {
       "note": "Second axis of the mode slide; off by default.",
+      "randomizeBase": true,
+      "baseMin": 3,
+      "baseMax": 9,
       "modulators": [
         {
           "name": "sine 64-beat",
@@ -46,6 +52,9 @@
     },
     "NodeSharpness": {
       "note": "Highs sharpen the nodal lines.",
+      "randomizeBase": true,
+      "baseMin": 0.15,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "high shimmer",
@@ -60,6 +69,9 @@
     },
     "VibrationSpeed": {
       "note": "The plate vibrates harder when loud.",
+      "randomizeBase": true,
+      "baseMin": 0.08,
+      "baseMax": 0.3,
       "modulators": [
         {
           "name": "loudness swell",
@@ -74,6 +86,9 @@
     },
     "Glow": {
       "note": "Kick flashes the glow.",
+      "randomizeBase": true,
+      "baseMin": 0.25,
+      "baseMax": 0.55,
       "modulators": [
         {
           "name": "kick hit",
@@ -98,6 +113,9 @@
     },
     "SandAccumulation": {
       "note": "Sand gathers with loudness; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.5,
+      "baseMax": 0.9,
       "modulators": [
         {
           "name": "loudness swell",
@@ -113,6 +131,9 @@
     },
     "InvertMode": {
       "note": "Antinodes flip on a hard kick; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 1,
       "modulators": [
         {
           "name": "kick hit",
@@ -128,6 +149,9 @@
     },
     "Scale": {
       "note": "Kick push; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.35,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "bass pulse",
@@ -142,6 +166,9 @@
       ]
     },
     "HueOffset": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "slow hue drift",
@@ -154,6 +181,21 @@
           "dcOffset": 0.175
         }
       ]
+    },
+    "FrequencyL": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 6
+    },
+    "PlateShape": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 1
+    },
+    "PaletteMode": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 3
     }
   },
   "macroBank": {

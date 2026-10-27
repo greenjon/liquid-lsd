@@ -4,6 +4,9 @@
   "parameters": {
     "Jitter": {
       "note": "Cells regularise when the mids are loud.",
+      "randomizeBase": true,
+      "baseMin": 0.5,
+      "baseMax": 1,
       "modulators": [
         {
           "name": "mids regularise cells",
@@ -29,6 +32,9 @@
     },
     "EdgeGlow": {
       "note": "Cracks flash on the kick.",
+      "randomizeBase": true,
+      "baseMin": 0.3,
+      "baseMax": 0.55,
       "modulators": [
         {
           "name": "kick hit",
@@ -53,6 +59,9 @@
     },
     "EdgeWidth": {
       "note": "Edges fatten on the kick.",
+      "randomizeBase": true,
+      "baseMin": 0.15,
+      "baseMax": 0.45,
       "modulators": [
         {
           "name": "bass pulse",
@@ -67,6 +76,9 @@
     },
     "Speed": {
       "note": "Cells orbit faster when loud.",
+      "randomizeBase": true,
+      "baseMin": 0.15,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "loudness swell",
@@ -81,6 +93,9 @@
     },
     "CellScale": {
       "note": "Slow zoom; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.2,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "triangle 32-beat",
@@ -111,6 +126,9 @@
       ]
     },
     "HueOffset": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "slow hue drift",
@@ -123,6 +141,26 @@
           "dcOffset": 0.2
         }
       ]
+    },
+    "ColorMethod": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 3
+    },
+    "SurfaceType": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 2
+    },
+    "PaletteMode": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 3
+    },
+    "Saturation": {
+      "randomizeBase": true,
+      "baseMin": 0.5,
+      "baseMax": 0.9
     }
   },
   "macroBank": {

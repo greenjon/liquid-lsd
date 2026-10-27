@@ -4,6 +4,9 @@
   "parameters": {
     "Speed": {
       "note": "Waves rotate faster when loud.",
+      "randomizeBase": true,
+      "baseMin": 0.2,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "loudness swell",
@@ -56,6 +59,9 @@
     },
     "Threshold": {
       "note": "Very slow wander of the rule; off by default (can change the pattern type).",
+      "randomizeBase": true,
+      "baseMin": 0.25,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "triangle 64-beat",
@@ -86,6 +92,9 @@
       ]
     },
     "HueOffset": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "slow hue drift",
@@ -98,6 +107,21 @@
           "dcOffset": 0.175
         }
       ]
+    },
+    "States": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 0.4
+    },
+    "Neighborhood": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 2
+    },
+    "PaletteMode": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 3
     }
   },
   "macroBank": {

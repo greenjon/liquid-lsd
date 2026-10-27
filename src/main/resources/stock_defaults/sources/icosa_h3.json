@@ -4,6 +4,9 @@
   "parameters": {
     "Morph": {
       "note": "Icosahedron and dodecahedron trade places over 32 beats; bass as the alternative.",
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "triangle 32-beat",
@@ -29,6 +32,9 @@
     },
     "StellationBoost": {
       "note": "Spikes grow on the bass.",
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "bass pulse",
@@ -81,6 +87,9 @@
     },
     "SpikeSharpness": {
       "note": "Highs sharpen the spikes; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.4,
+      "baseMax": 0.8,
       "modulators": [
         {
           "name": "high shimmer",
@@ -96,6 +105,9 @@
     },
     "BlockerSize": {
       "note": "Mids breathe the blockers; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.25,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "mid body",
@@ -111,6 +123,9 @@
     },
     "SpikePhase": {
       "note": "Slow spike drift; off by default.",
+      "randomizeBase": true,
+      "baseMin": -3.14159,
+      "baseMax": 3.14159,
       "modulators": [
         {
           "name": "triangle 64-beat",
@@ -183,6 +198,9 @@
       ]
     },
     "HueOffset": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "slow hue drift",
@@ -195,6 +213,41 @@
           "dcOffset": 0.175
         }
       ]
+    },
+    "SpikeMode": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 1
+    },
+    "SupportH": {
+      "randomizeBase": true,
+      "baseMin": -0.5,
+      "baseMax": 0.5
+    },
+    "ColorMode": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 4
+    },
+    "Saturation": {
+      "randomizeBase": true,
+      "baseMin": 0.65,
+      "baseMax": 0.95
+    },
+    "Opacity": {
+      "randomizeBase": true,
+      "baseMin": 0.55,
+      "baseMax": 0.9
+    },
+    "RotateX": {
+      "randomizeBase": true,
+      "baseMin": -0.6,
+      "baseMax": 0.6
+    },
+    "RotateZ": {
+      "randomizeBase": true,
+      "baseMin": -0.6,
+      "baseMax": 0.6
     }
   },
   "macroBank": {

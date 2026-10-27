@@ -110,7 +110,7 @@ object ValueParamSection {
             val metaOwner = if (isMacroBound) null else param.metaDrivenBy
             val isLocked = isMacroBound || metaOwner != null
             if (macroInfo != null) {
-                session.uiTheme.caption("${Icons.LINK} Driven by ${macroInfo.controlName} [${macroInfo.badgeLabel}]. Editing the value moves the knob.")
+                session.uiTheme.caption("${Icons.LINK} Driven by ${macroInfo.controlName} [${macroInfo.badgeLabel}]. Editing or randomizing the value moves the knob.")
                 ImGui.spacing()
             } else if (metaOwner != null) {
                 session.uiTheme.caption("${Icons.LINK} Driven by its $metaOwner${llm.slop.liquidlsd.macro.MacroEngine.metaKnobBindingInfo(paramKey)?.let { " [${it.badgeLabel}]" } ?: ""}. Editing the value moves the knob.")
@@ -379,7 +379,7 @@ object ValueParamSection {
                 minLimit = param.minClamp * scale,
                 maxLimit = param.maxClamp * scale,
                 defaultValue = param.defaultValue * scale,
-                isRandomizable = param.randomizeBase && !isLocked,
+                isRandomizable = param.randomizeBase && metaOwner == null, // a macro knob follows a randomize (BaseDriver)
                 showControls = true,
                 isRandomizeDisabled = param.isRandomizeDisabled,
                 randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
@@ -432,7 +432,8 @@ object ValueParamSection {
                     val safeMax = maxOf(nextMin, nextMax) * invScale
                     param.baseMin = safeMin
                     param.baseMax = safeMax
-                    param.baseValue = param.baseValue.coerceIn(safeMin, safeMax)
+                    val inRange = param.baseValue.coerceIn(safeMin, safeMax)
+                    if (inRange != param.baseValue) param.writeBase(inRange)
                 },
                 onValueChanged = { newVal ->
                     val radianVal = newVal * invScale

@@ -4,6 +4,9 @@
   "parameters": {
     "WallThickness": {
       "note": "Walls swell on the bass.",
+      "randomizeBase": true,
+      "baseMin": 0.2,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "bass pulse",
@@ -29,6 +32,9 @@
     },
     "CoreGlow": {
       "note": "Core flashes on the kick.",
+      "randomizeBase": true,
+      "baseMin": 0.15,
+      "baseMax": 0.45,
       "modulators": [
         {
           "name": "kick hit",
@@ -53,6 +59,9 @@
     },
     "FlightSpeed": {
       "note": "Flies faster when loud.",
+      "randomizeBase": true,
+      "baseMin": 0.15,
+      "baseMax": 0.4,
       "modulators": [
         {
           "name": "loudness swell",
@@ -95,6 +104,9 @@
     },
     "Frequency": {
       "note": "Slow breathing of the lattice; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.2,
+      "baseMax": 0.55,
       "modulators": [
         {
           "name": "triangle 32-beat",
@@ -140,6 +152,9 @@
       ]
     },
     "HueOffset": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "slow hue drift",
@@ -152,6 +167,31 @@
           "dcOffset": 0.175
         }
       ]
+    },
+    "SurfaceType": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 2
+    },
+    "ColorMode": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 3
+    },
+    "Saturation": {
+      "randomizeBase": true,
+      "baseMin": 0.65,
+      "baseMax": 0.95
+    },
+    "RotateX": {
+      "randomizeBase": true,
+      "baseMin": -0.5,
+      "baseMax": 0.5
+    },
+    "RotateZ": {
+      "randomizeBase": true,
+      "baseMin": -0.5,
+      "baseMax": 0.5
     }
   },
   "macroBank": {

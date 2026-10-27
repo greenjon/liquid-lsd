@@ -121,6 +121,36 @@ class StockDefaultsTest {
         }
     }
 
+    /**
+     * A randomized base range lies inside the parameter and leaves room for the parameter's running ADD responses: an
+     * LFO's whole swing, a follower's full depth. Otherwise the clamp flattens the response at one end of the range.
+     */
+    @Test
+    fun shippedRandomRangesFitTheirParameters() {
+        var randomized = 0
+        for (file in sourceFiles) {
+            val id = file.nameWithoutExtension
+            if (id == "fractal_flame" || id == "mandala") continue // genome / meta.json ranges, not shipped here
+            val ranges = ranges(id)
+            for ((name, p) in shippedParams(file)) {
+                if (!p.randomizeBase) continue
+                randomized++
+                val (min, _, max) = ranges.getValue(name)
+                val eps = 1e-4f * (max - min)
+                assertTrue(p.baseMin < p.baseMax, "$id.$name: empty random range")
+                assertTrue(p.baseMin >= min - eps && p.baseMax <= max + eps, "$id.$name: random range ${p.baseMin}..${p.baseMax} outside $min..$max")
+                val scalar = if (min < 0f) (max - min) / 2f else max - min
+                for (m in p.modulators.filter { !it.bypassed && it.operator == "ADD" }) {
+                    val (down, up) = if (m.sourceId == "lfo") (m.dcOffset - kotlin.math.abs(m.depth)) to (m.dcOffset + kotlin.math.abs(m.depth))
+                        else minOf(m.depth, 0f) to maxOf(m.depth, 0f)
+                    assertTrue(p.baseMin + down * scalar >= min - eps && p.baseMax + up * scalar <= max + eps,
+                        "$id.$name: '${m.sourceId}' pushes the random range ${p.baseMin}..${p.baseMax} outside $min..$max")
+                }
+            }
+        }
+        assertTrue(randomized > 0)
+    }
+
     @Test
     fun everyShippedFilterDefaultTargetsRealInputs() {
         assertTrue(filterFiles.isNotEmpty())
@@ -174,12 +204,12 @@ class StockDefaultsTest {
         val obj = parse(file)
         val name = (obj["parameters"] as JsonObject).keys.first()
         val stray = ModulatorDto(sourceId = "audio_high", operator = "ADD", depth = 0.123f)
-        val base = baseline(id).getValue(name).copy(baseMin = 0.1f, modulators = listOf(stray))
+        val base = baseline(id).getValue(name).copy(midiMapMin = 0.1f, modulators = listOf(stray))
         val once = StockDefaults.overlayParameters(obj, "parameters", mapOf(name to base), "t").getValue(name)
         val twice = StockDefaults.overlayParameters(obj, "parameters", mapOf(name to once), "t").getValue(name)
         assertEquals(once.modulators, twice.modulators)
         assertTrue(stray !in once.modulators)
-        assertEquals(0.1f, once.baseMin)
+        assertEquals(0.1f, once.midiMapMin) // shipped files name base values and random ranges, never MIDI fields
         assertTrue(once.modulators.all { it.id == null })
     }
 

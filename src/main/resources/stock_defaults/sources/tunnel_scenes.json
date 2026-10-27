@@ -4,6 +4,9 @@
   "parameters": {
     "Speed": {
       "note": "Flight surges with loudness.",
+      "randomizeBase": true,
+      "baseMin": 0.2,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "loudness swell",
@@ -28,6 +31,9 @@
     },
     "Glow": {
       "note": "Kick flashes the glow.",
+      "randomizeBase": true,
+      "baseMin": 0.3,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "kick hit",
@@ -52,6 +58,9 @@
     },
     "Twist": {
       "note": "Slow spiral sway.",
+      "randomizeBase": true,
+      "baseMin": -0.4,
+      "baseMax": 0.4,
       "modulators": [
         {
           "name": "sine 32-beat",
@@ -76,6 +85,9 @@
     },
     "LineWidth": {
       "note": "Lines fatten on the kick.",
+      "randomizeBase": true,
+      "baseMin": 0.2,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "bass pulse",
@@ -101,6 +113,9 @@
     },
     "Sway": {
       "note": "Camera drifts with the mids.",
+      "randomizeBase": true,
+      "baseMin": 0.2,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "mid body",
@@ -126,6 +141,9 @@
     },
     "Fog": {
       "note": "Fog clears when loud.",
+      "randomizeBase": true,
+      "baseMin": 0.3,
+      "baseMax": 0.7,
       "modulators": [
         {
           "name": "loudness clears fog",
@@ -164,6 +182,9 @@
       ]
     },
     "HueOffset": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 0.7,
       "modulators": [
         {
           "name": "slow hue drift",
@@ -176,6 +197,21 @@
           "dcOffset": 0.15
         }
       ]
+    },
+    "SurfaceType": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 2
+    },
+    "Symmetries": {
+      "randomizeBase": true,
+      "baseMin": 3,
+      "baseMax": 12
+    },
+    "Saturation": {
+      "randomizeBase": true,
+      "baseMin": 0.6,
+      "baseMax": 1
     }
   },
   "macroBank": {

@@ -317,4 +317,57 @@ class MorphStateTest {
         assertEquals(b1, c.state1.parameters[p]!!.baseValue)
         assertTrue(c.state0.parameters[p]!!.baseValue != a1)
     }
+
+    @Test
+    fun steppedBaseDrawsEveryStepEvenly() {
+        val param = ModulatableParameter(baseValue = 0f, minClamp = 0f, maxClamp = 3f, randomizeBase = true, steps = 4).apply {
+            baseMin = 0f
+            baseMax = 3f
+        }
+        val random = kotlin.random.Random(7)
+        val counts = IntArray(4)
+        repeat(4000) { counts[param.sampleBase(random).toInt()]++ }
+        counts.forEach { assertTrue(it in 850..1150, "uneven steps: ${counts.toList()}") }
+        // A range that reaches only some steps draws only those, as whole steps.
+        param.baseMin = 0.6f
+        param.baseMax = 2.2f
+        repeat(200) { assertTrue(param.sampleBase(random) in setOf(1f, 2f)) }
+    }
+
+    @Test
+    fun steppedBaseJumpsAtTheMidpointInsteadOfPassingThroughSteps() {
+        val param = ModulatableParameter(baseValue = 0f, minClamp = 0f, maxClamp = 4f, randomizeBase = true, steps = 5).apply {
+            baseMin = 0f
+            baseMax = 4f
+        }
+        val controller = DeckMorphController { listOf(param) }
+        controller.initFromCurrentState()
+        controller.state0.parameters[param]!!.baseValue = 0f
+        controller.state1.parameters[param]!!.baseValue = 4f
+        controller.update(0.3f)
+        assertEquals(0f, param.baseValue)
+        controller.update(0.45f)
+        assertEquals(0f, param.baseValue)
+        controller.update(0.6f)
+        assertEquals(4f, param.baseValue)
+    }
+
+    @Test
+    fun randomizeWritesThroughTheDrivingKnob() {
+        val param = ModulatableParameter(baseValue = 0.5f, minClamp = 0f, maxClamp = 1f, randomizeBase = true).apply {
+            baseMin = 0.2f
+            baseMax = 0.4f
+        }
+        var knob = 0.5f
+        param.baseDriver = llm.slop.liquidlsd.parameters.BaseDriver { p, v -> knob = v; p.baseValue = v }
+        param.randomizeBaseValue(kotlin.random.Random(3))
+        assertTrue(param.baseValue in 0.2f..0.4f)
+        assertEquals(param.baseValue, knob)
+
+        val controller = DeckMorphController { listOf(param) }
+        controller.forceRandomize(kotlin.random.Random(4))
+        assertEquals(param.baseValue, knob)
+        controller.update(0.5f)
+        assertEquals(param.baseValue, knob)
+    }
 }

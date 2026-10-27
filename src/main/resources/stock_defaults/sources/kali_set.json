@@ -4,6 +4,9 @@
   "parameters": {
     "OrbitRadius": {
       "note": "Fractal morphs with the kick.",
+      "randomizeBase": true,
+      "baseMin": 0.15,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "bass pulse",
@@ -29,6 +32,9 @@
     },
     "Twist": {
       "note": "Slow twist sway.",
+      "randomizeBase": true,
+      "baseMin": -0.4,
+      "baseMax": 0.4,
       "modulators": [
         {
           "name": "sine 32-beat",
@@ -53,6 +59,9 @@
     },
     "Zoom": {
       "note": "Breathes with loudness.",
+      "randomizeBase": true,
+      "baseMin": 0.3,
+      "baseMax": 0.55,
       "modulators": [
         {
           "name": "loudness swell",
@@ -77,6 +86,9 @@
     },
     "TrapScale": {
       "note": "Highs shift the colouring traps.",
+      "randomizeBase": true,
+      "baseMin": 0.3,
+      "baseMax": 0.7,
       "modulators": [
         {
           "name": "high shimmer",
@@ -102,6 +114,9 @@
     },
     "Drift": {
       "note": "Centre wanders with the mids.",
+      "randomizeBase": true,
+      "baseMin": 0.15,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "mid body",
@@ -127,6 +142,9 @@
     },
     "Speed": {
       "note": "Orbit quickens when loud.",
+      "randomizeBase": true,
+      "baseMin": 0.15,
+      "baseMax": 0.45,
       "modulators": [
         {
           "name": "loudness swell",
@@ -155,6 +173,9 @@
       ]
     },
     "HueOffset": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "slow hue drift",
@@ -167,6 +188,31 @@
           "dcOffset": 0.2
         }
       ]
+    },
+    "Iterations": {
+      "randomizeBase": true,
+      "baseMin": 0.45,
+      "baseMax": 0.8
+    },
+    "SurfaceType": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 3
+    },
+    "ColorMode": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 3
+    },
+    "PaletteMode": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 3
+    },
+    "Saturation": {
+      "randomizeBase": true,
+      "baseMin": 0.6,
+      "baseMax": 0.9
     }
   },
   "macroBank": {

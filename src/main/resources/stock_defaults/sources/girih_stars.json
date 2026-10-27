@@ -4,6 +4,9 @@
   "parameters": {
     "Angle": {
       "note": "The strapwork angle breathes over 32 beats; bass as the alternative.",
+      "randomizeBase": true,
+      "baseMin": 0.35,
+      "baseMax": 0.75,
       "modulators": [
         {
           "name": "sine 32-beat",
@@ -29,6 +32,9 @@
     },
     "Sweep": {
       "note": "Mids sweep the star arms.",
+      "randomizeBase": true,
+      "baseMin": 0.15,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "mid body",
@@ -43,6 +49,9 @@
     },
     "Speed": {
       "note": "Quickens when loud.",
+      "randomizeBase": true,
+      "baseMin": 0.15,
+      "baseMax": 0.45,
       "modulators": [
         {
           "name": "loudness swell",
@@ -57,6 +66,9 @@
     },
     "LineWidth": {
       "note": "Lines fatten on the bass.",
+      "randomizeBase": true,
+      "baseMin": 0.2,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "bass pulse",
@@ -71,6 +83,9 @@
     },
     "Glow": {
       "note": "Kick flashes the glow.",
+      "randomizeBase": true,
+      "baseMin": 0.2,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "kick hit",
@@ -119,6 +134,9 @@
     },
     "TileScale": {
       "note": "Slow breathing; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.25,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "triangle 32-beat",
@@ -135,6 +153,9 @@
     },
     "Interlace": {
       "note": "Highs tighten the interlace; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.4,
+      "baseMax": 1,
       "modulators": [
         {
           "name": "high shimmer",
@@ -149,6 +170,9 @@
       ]
     },
     "HueOffset": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "slow hue drift",
@@ -161,6 +185,26 @@
           "dcOffset": 0.175
         }
       ]
+    },
+    "Symmetries": {
+      "randomizeBase": true,
+      "baseMin": 4,
+      "baseMax": 8
+    },
+    "SurfaceType": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 2
+    },
+    "PaletteMode": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 3
+    },
+    "Saturation": {
+      "randomizeBase": true,
+      "baseMin": 0.35,
+      "baseMax": 0.75
     }
   },
   "macroBank": {

@@ -4,6 +4,9 @@
   "parameters": {
     "FilmThickness": {
       "note": "Film thickens on the bass, which sweeps the interference colours.",
+      "randomizeBase": true,
+      "baseMin": 0.2,
+      "baseMax": 0.7,
       "modulators": [
         {
           "name": "bass pulse",
@@ -29,6 +32,9 @@
     },
     "FlowSpeed": {
       "note": "The oil flows faster when loud.",
+      "randomizeBase": true,
+      "baseMin": 0.15,
+      "baseMax": 0.45,
       "modulators": [
         {
           "name": "loudness swell",
@@ -43,6 +49,9 @@
     },
     "Contrast": {
       "note": "Kick sharpens the film.",
+      "randomizeBase": true,
+      "baseMin": 0.3,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "kick hit",
@@ -57,6 +66,9 @@
     },
     "Turbulence": {
       "note": "Mids stir the surface.",
+      "randomizeBase": true,
+      "baseMin": 0.25,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "mid body",
@@ -71,6 +83,9 @@
     },
     "Sheen": {
       "note": "Highs glint.",
+      "randomizeBase": true,
+      "baseMin": 0.3,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "high shimmer",
@@ -109,6 +124,9 @@
     },
     "ThicknessRange": {
       "note": "Mids widen the colour range; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.3,
+      "baseMax": 0.75,
       "modulators": [
         {
           "name": "mid body",
@@ -124,6 +142,9 @@
     },
     "Scale": {
       "note": "Slow breathing; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.2,
+      "baseMax": 0.55,
       "modulators": [
         {
           "name": "triangle 32-beat",
@@ -139,6 +160,9 @@
       ]
     },
     "HueShift": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "slow hue drift",
@@ -151,6 +175,11 @@
           "dcOffset": 0.175
         }
       ]
+    },
+    "Saturation": {
+      "randomizeBase": true,
+      "baseMin": 0.55,
+      "baseMax": 0.9
     }
   },
   "macroBank": {

@@ -524,7 +524,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, randBtnHov)
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
                 if (ButtonChrome.button(str.randId, dieW, ctrlH)) {
-                    ParametersUndo.pushUndoState(parametersState, mixer)
+                    ParametersUndo.pushRandomizeUndo(parametersState, mixer)
                     when {
                         isDeckA -> mixer.randomizeDeckA()
                         isDeckB -> mixer.randomizeDeckB()

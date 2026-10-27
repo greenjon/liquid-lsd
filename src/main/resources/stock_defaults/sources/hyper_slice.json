@@ -4,6 +4,9 @@
   "parameters": {
     "SliceOffset": {
       "note": "The 4D slice sweeps slowly through the object; bass as the alternative.",
+      "randomizeBase": true,
+      "baseMin": -0.5,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "sine 32-beat",
@@ -28,6 +31,9 @@
     },
     "RotateXW": {
       "note": "Slow 4D rotation.",
+      "randomizeBase": true,
+      "baseMin": -1.5,
+      "baseMax": 1.5,
       "modulators": [
         {
           "name": "sine 64-beat",
@@ -42,6 +48,9 @@
     },
     "Morph": {
       "note": "Facets morph with loudness.",
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 0.7,
       "modulators": [
         {
           "name": "loudness swell",
@@ -118,6 +127,9 @@
     },
     "RotateYW": {
       "note": "Second 4D rotation; off by default.",
+      "randomizeBase": true,
+      "baseMin": -1.5,
+      "baseMax": 1.5,
       "modulators": [
         {
           "name": "sine 48-beat",
@@ -134,6 +146,9 @@
     },
     "RotateZW": {
       "note": "Mids nudge the third 4D rotation; off by default.",
+      "randomizeBase": true,
+      "baseMin": -1.5,
+      "baseMax": 1.5,
       "modulators": [
         {
           "name": "mid body",
@@ -163,6 +178,9 @@
       ]
     },
     "HueOffset": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "slow hue drift",
@@ -175,6 +193,46 @@
           "dcOffset": 0.175
         }
       ]
+    },
+    "RotateX": {
+      "randomizeBase": true,
+      "baseMin": -0.6,
+      "baseMax": 0.6
+    },
+    "RotateY": {
+      "randomizeBase": true,
+      "baseMin": -0.6,
+      "baseMax": 0.6
+    },
+    "RotateZ": {
+      "randomizeBase": true,
+      "baseMin": -0.6,
+      "baseMax": 0.6
+    },
+    "SupportH": {
+      "randomizeBase": true,
+      "baseMin": 0.2,
+      "baseMax": 0.6
+    },
+    "ColorMethod": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 2
+    },
+    "Saturation": {
+      "randomizeBase": true,
+      "baseMin": 0.65,
+      "baseMax": 0.95
+    },
+    "Opacity": {
+      "randomizeBase": true,
+      "baseMin": 0.55,
+      "baseMax": 0.9
+    },
+    "EdgeThickness": {
+      "randomizeBase": true,
+      "baseMin": 0.1,
+      "baseMax": 0.3
     }
   },
   "macroBank": {

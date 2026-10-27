@@ -241,7 +241,7 @@ class DeckMorphController(
 
             // Randomize base value if enabled
             val newBase = if (param.randomizeBase) {
-                if (param.baseMin == param.baseMax) param.baseMin else random.nextFloat() * (param.baseMax - param.baseMin) + param.baseMin
+                param.sampleBase(random)
             } else {
                 param.baseValue
             }
@@ -340,12 +340,13 @@ class DeckMorphController(
             // 1. Interpolate base value if enabled
             if (param.randomizeBase) {
                 val lerpedBase = when {
-                    genome?.isDiscreteMorph(param) == true -> if (v < 0.5f) snap0.baseValue else snap1.baseValue
+                    // A stepped parameter jumps at the midpoint instead of passing through every step in between.
+                    param.isStepped || genome?.isDiscreteMorph(param) == true -> if (v < 0.5f) snap0.baseValue else snap1.baseValue
                     param.isAngle -> MorphMath.shortestPathLerpAngle(snap0.baseValue, snap1.baseValue, v)
                     param.meterType == MeterType.ENDLESS -> MorphMath.shortestPathLerpHue(snap0.baseValue, snap1.baseValue, v)
                     else -> MorphMath.lerp(snap0.baseValue, snap1.baseValue, v)
                 }
-                param.baseValue = lerpedBase
+                param.writeBase(lerpedBase)
             } else {
                 // Keep snapshots synchronized with current base value when randomization is disabled
                 snap0.baseValue = param.baseValue
@@ -524,7 +525,7 @@ class DeckMorphController(
             val snap0 = state0.parameters[param] ?: continue
             val snap1 = state1.parameters[param]
             if (param.randomizeBase) {
-                param.baseValue = snap0.baseValue
+                param.writeBase(snap0.baseValue)
             } else {
                 snap0.baseValue = param.baseValue
                 snap1?.baseValue = param.baseValue

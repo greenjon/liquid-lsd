@@ -4,6 +4,9 @@
   "parameters": {
     "CurtainHeight": {
       "note": "Curtains rise with loudness.",
+      "randomizeBase": true,
+      "baseMin": 0.3,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "loudness swell",
@@ -28,6 +31,9 @@
     },
     "WaveAmp": {
       "note": "Curtains ripple with the mids.",
+      "randomizeBase": true,
+      "baseMin": 0.3,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "mid body",
@@ -53,6 +59,9 @@
     },
     "Shimmer": {
       "note": "Highs make it shimmer.",
+      "randomizeBase": true,
+      "baseMin": 0.3,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "high shimmer",
@@ -101,6 +110,9 @@
     },
     "WaveSpeed": {
       "note": "Drifts faster when loud.",
+      "randomizeBase": true,
+      "baseMin": 0.15,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "loudness swell",
@@ -116,6 +128,9 @@
     },
     "SkyDarkness": {
       "note": "Sky lightens when loud.",
+      "randomizeBase": true,
+      "baseMin": 0.45,
+      "baseMax": 0.8,
       "modulators": [
         {
           "name": "loudness lightens sky",
@@ -130,6 +145,9 @@
       ]
     },
     "HueShift": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "slow hue drift",
@@ -142,6 +160,26 @@
           "dcOffset": 0.175
         }
       ]
+    },
+    "Ribbons": {
+      "randomizeBase": true,
+      "baseMin": 3,
+      "baseMax": 6
+    },
+    "PaletteMode": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 3
+    },
+    "SurfaceType": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 2
+    },
+    "Saturation": {
+      "randomizeBase": true,
+      "baseMin": 0.5,
+      "baseMax": 0.85
     }
   },
   "macroBank": {

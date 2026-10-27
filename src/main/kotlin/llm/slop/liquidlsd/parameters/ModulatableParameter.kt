@@ -48,6 +48,13 @@ class ModulatableParameter(
     var metaDrivenBinding: llm.slop.liquidlsd.rendering.isf.FxMetaBinding? = null
     @Volatile
     var metaDrivenKnob: ModulatableParameter? = null
+
+    /**
+     * Non-null while a macro knob drives [baseValue]; set by MacroEngine when it resolves its bindings. A randomize
+     * writes through it ([writeBase]) so the knob moves too, instead of being overwritten by the knob next frame.
+     */
+    @Volatile
+    var baseDriver: BaseDriver? = null
     val history = CvHistoryBuffer(historySize)
 
     /**
@@ -158,7 +165,31 @@ class ModulatableParameter(
      */
     fun randomizeBaseValue(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng) {
         if (isRandomizeDisabled || !randomizeBase) return
-        baseValue = if (baseMin == baseMax) baseMin else random.nextFloat() * (baseMax - baseMin) + baseMin
+        writeBase(sampleBase(random))
+    }
+
+    /**
+     * A random base value in [baseMin]..[baseMax]. On a stepped parameter every step the range snaps to is equally
+     * likely (a uniform draw would give the two end steps half a share each).
+     */
+    fun sampleBase(random: kotlin.random.Random): Float {
+        if (baseMin == baseMax) return baseMin
+        val n = steps
+        if (n != null && n >= 2) {
+            val stepSize = (maxClamp - minClamp) / (n - 1)
+            if (stepSize > 0f) {
+                val lo = Math.round((minOf(baseMin, baseMax) - minClamp) / stepSize).coerceIn(0, n - 1)
+                val hi = Math.round((maxOf(baseMin, baseMax) - minClamp) / stepSize).coerceIn(0, n - 1)
+                return minClamp + random.nextInt(lo, hi + 1) * stepSize
+            }
+        }
+        return random.nextFloat() * (baseMax - baseMin) + baseMin
+    }
+
+    /** Sets [baseValue] through the macro knob that drives it, when one does ([baseDriver]), so the two stay linked. */
+    fun writeBase(v: Float) {
+        val driver = baseDriver
+        if (driver != null && metaDrivenBy == null) driver.drive(this, v) else baseValue = v
     }
 
     companion object {
@@ -172,6 +203,9 @@ class ModulatableParameter(
             else -> MeterType.MONOPOLAR
         }
     }
+
+    /** True when the parameter takes discrete values ([steps] of at least 2). */
+    val isStepped: Boolean get() = (steps ?: 0) >= 2
 
     /**
      * Rounds [v] to the nearest step when this parameter is stepped; otherwise returns it unchanged.
@@ -283,4 +317,9 @@ class ModulatableParameter(
         copy.midiMapMax = this.midiMapMax
         return copy
     }
+}
+
+/** Whatever owns a parameter's base value and must move with it (a macro knob, see [ModulatableParameter.baseDriver]). */
+fun interface BaseDriver {
+    fun drive(param: ModulatableParameter, value: Float)
 }

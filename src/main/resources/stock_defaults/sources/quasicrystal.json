@@ -4,6 +4,9 @@
   "parameters": {
     "Frequency": {
       "note": "The grating tightens on the bass.",
+      "randomizeBase": true,
+      "baseMin": 0.25,
+      "baseMax": 0.55,
       "modulators": [
         {
           "name": "bass pulse",
@@ -29,6 +32,9 @@
     },
     "Sharpness": {
       "note": "Highs sharpen the pattern.",
+      "randomizeBase": true,
+      "baseMin": 0.4,
+      "baseMax": 0.75,
       "modulators": [
         {
           "name": "high shimmer",
@@ -43,6 +49,9 @@
     },
     "Rotation": {
       "note": "Slow turn.",
+      "randomizeBase": true,
+      "baseMin": -0.8,
+      "baseMax": 0.8,
       "modulators": [
         {
           "name": "sine 64-beat",
@@ -57,6 +66,9 @@
     },
     "SpinSpeed": {
       "note": "Spins faster when loud.",
+      "randomizeBase": true,
+      "baseMin": 0.03,
+      "baseMax": 0.25,
       "modulators": [
         {
           "name": "loudness swell",
@@ -71,6 +83,9 @@
     },
     "DriftSpeed": {
       "note": "Mids push the drift.",
+      "randomizeBase": true,
+      "baseMin": 0.1,
+      "baseMax": 0.4,
       "modulators": [
         {
           "name": "mid body",
@@ -109,6 +124,9 @@
     },
     "Bands": {
       "note": "Bands multiply with the mids; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.2,
+      "baseMax": 0.7,
       "modulators": [
         {
           "name": "mid body",
@@ -123,6 +141,9 @@
       ]
     },
     "HueOffset": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "slow hue drift",
@@ -135,6 +156,26 @@
           "dcOffset": 0.175
         }
       ]
+    },
+    "Symmetries": {
+      "randomizeBase": true,
+      "baseMin": 5,
+      "baseMax": 8
+    },
+    "ColorMethod": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 3
+    },
+    "PaletteMode": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 3
+    },
+    "Saturation": {
+      "randomizeBase": true,
+      "baseMin": 0.65,
+      "baseMax": 0.95
     }
   },
   "macroBank": {

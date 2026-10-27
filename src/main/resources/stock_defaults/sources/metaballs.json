@@ -4,6 +4,9 @@
   "parameters": {
     "BallSize": {
       "note": "Balls swell on the kick.",
+      "randomizeBase": true,
+      "baseMin": 0.4,
+      "baseMax": 0.75,
       "modulators": [
         {
           "name": "bass pulse",
@@ -28,6 +31,9 @@
     },
     "OrbitSpread": {
       "note": "Orbits widen with loudness.",
+      "randomizeBase": true,
+      "baseMin": 0.4,
+      "baseMax": 0.75,
       "modulators": [
         {
           "name": "loudness swell",
@@ -53,6 +59,9 @@
     },
     "OrbitSpeed": {
       "note": "Orbits quicken with the mids.",
+      "randomizeBase": true,
+      "baseMin": 0.2,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "mid body",
@@ -67,6 +76,9 @@
     },
     "Merge": {
       "note": "Slow merge breathing.",
+      "randomizeBase": true,
+      "baseMin": 0.4,
+      "baseMax": 0.75,
       "modulators": [
         {
           "name": "sine 16-beat",
@@ -92,6 +104,9 @@
     },
     "Softness": {
       "note": "Highs soften edges; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.15,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "high shimmer",
@@ -121,6 +136,9 @@
       ]
     },
     "HueOffset": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "slow hue drift",
@@ -133,6 +151,31 @@
           "dcOffset": 0.2
         }
       ]
+    },
+    "MaxPoints": {
+      "randomizeBase": true,
+      "baseMin": 5,
+      "baseMax": 10
+    },
+    "ColorMethod": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 3
+    },
+    "PaletteMode": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 3
+    },
+    "SizeVariance": {
+      "randomizeBase": true,
+      "baseMin": 0.2,
+      "baseMax": 0.8
+    },
+    "Saturation": {
+      "randomizeBase": true,
+      "baseMin": 0.65,
+      "baseMax": 0.95
     }
   },
   "macroBank": {

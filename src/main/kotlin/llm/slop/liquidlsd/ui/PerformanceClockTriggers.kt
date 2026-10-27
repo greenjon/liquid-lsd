@@ -143,7 +143,7 @@ internal object PerformanceClockTriggers {
 
     /** Randomizing is undoable (Ctrl+Z), like the decks' dice: the snapshot is taken first. */
     private inline fun undoThen(session: SessionContext, mixer: Mixer, randomize: () -> Unit) {
-        ParametersUndo.pushUndoState(session.parametersState, mixer)
+        ParametersUndo.pushRandomizeUndo(session.parametersState, mixer)
         randomize()
     }
 

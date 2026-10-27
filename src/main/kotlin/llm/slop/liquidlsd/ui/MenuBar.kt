@@ -405,7 +405,7 @@ class MenuBar(
             ImGui.pushStyleColor(ImGuiCol.Text,          ImGui.colorConvertFloat4ToU32(0.95f, 0.85f, 1.0f, 1f))
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
                 if (ButtonChrome.button("${Icons.DICES} ALL##perf_rand_all", 76f, tabH)) {
-                    ParametersUndo.pushUndoState(parametersState, mixer)
+                    ParametersUndo.pushRandomizeUndo(parametersState, mixer)
                     mixer.randomizeAll()
                 }
             }

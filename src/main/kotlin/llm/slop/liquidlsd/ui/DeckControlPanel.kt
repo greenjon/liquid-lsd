@@ -231,7 +231,7 @@ class DeckControlPanel(
             val isDieHovered = ImGui.isItemHovered()
             val isDieActive = ImGui.isItemActive()
             if (isDieClicked) {
-                ParametersUndo.pushUndoState(parametersState, mixer)
+                ParametersUndo.pushRandomizeUndo(parametersState, mixer)
                 when (label) {
                     "Deck A" -> mixer.randomizeDeckA()
                     "Deck B" -> mixer.randomizeDeckB()

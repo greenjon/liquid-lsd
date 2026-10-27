@@ -4,6 +4,9 @@
   "parameters": {
     "InversionRadius": {
       "note": "Gasket breathes with the kick; a slow beat sine as the calm alternative.",
+      "randomizeBase": true,
+      "baseMin": 0.45,
+      "baseMax": 0.75,
       "modulators": [
         {
           "name": "bass pulse",
@@ -29,6 +32,9 @@
     },
     "Twist": {
       "note": "Slow beat-locked sway; mids as the alternative.",
+      "randomizeBase": true,
+      "baseMin": -0.4,
+      "baseMax": 0.4,
       "modulators": [
         {
           "name": "sine 32-beat",
@@ -53,6 +59,9 @@
     },
     "FlightSpeed": {
       "note": "Flies faster as the music gets louder; surging LFO alternative.",
+      "randomizeBase": true,
+      "baseMin": 0.15,
+      "baseMax": 0.4,
       "modulators": [
         {
           "name": "loudness swell",
@@ -101,6 +110,9 @@
     },
     "InversionStrength": {
       "note": "Highs sharpen the fold.",
+      "randomizeBase": true,
+      "baseMin": 0.4,
+      "baseMax": 0.8,
       "modulators": [
         {
           "name": "high shimmer",
@@ -129,6 +141,9 @@
       ]
     },
     "HueOffset": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "slow hue drift",
@@ -141,6 +156,31 @@
           "dcOffset": 0.175
         }
       ]
+    },
+    "CellSize": {
+      "randomizeBase": true,
+      "baseMin": 0.3,
+      "baseMax": 0.7
+    },
+    "ColorMode": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 3
+    },
+    "Saturation": {
+      "randomizeBase": true,
+      "baseMin": 0.55,
+      "baseMax": 0.9
+    },
+    "RotateX": {
+      "randomizeBase": true,
+      "baseMin": -0.5,
+      "baseMax": 0.5
+    },
+    "RotateZ": {
+      "randomizeBase": true,
+      "baseMin": -0.5,
+      "baseMax": 0.5
     }
   },
   "macroBank": {

@@ -4,6 +4,9 @@
   "parameters": {
     "Offset": {
       "note": "Fractal pulses on the kick.",
+      "randomizeBase": true,
+      "baseMin": 0.35,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "bass pulse",
@@ -29,6 +32,9 @@
     },
     "Scale": {
       "note": "Slow beat-locked morph.",
+      "randomizeBase": true,
+      "baseMin": 0.35,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "sine 32-beat",
@@ -54,6 +60,9 @@
     },
     "TwistY": {
       "note": "Slow twist sway.",
+      "randomizeBase": true,
+      "baseMin": -0.4,
+      "baseMax": 0.4,
       "modulators": [
         {
           "name": "sine 32-beat",
@@ -78,6 +87,9 @@
     },
     "TwistX": {
       "note": "Second axis of twist; off by default.",
+      "randomizeBase": true,
+      "baseMin": -0.3,
+      "baseMax": 0.3,
       "modulators": [
         {
           "name": "sine 64-beat",
@@ -94,6 +106,9 @@
     },
     "TwistZ": {
       "note": "Mids twist the third axis; off by default.",
+      "randomizeBase": true,
+      "baseMin": -0.3,
+      "baseMax": 0.3,
       "modulators": [
         {
           "name": "mid body",
@@ -109,6 +124,9 @@
     },
     "MorphSpeed": {
       "note": "The morph runs only as loud as the music.",
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 0.3,
       "modulators": [
         {
           "name": "loudness swell",
@@ -138,6 +156,9 @@
     },
     "Glow": {
       "note": "Kick flashes the glow.",
+      "randomizeBase": true,
+      "baseMin": 0.25,
+      "baseMax": 0.55,
       "modulators": [
         {
           "name": "kick hit",
@@ -190,6 +211,9 @@
       ]
     },
     "HueOffset": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "slow hue drift",
@@ -202,6 +226,31 @@
           "dcOffset": 0.175
         }
       ]
+    },
+    "SurfaceType": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 3
+    },
+    "ColorMode": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 4
+    },
+    "ColorSpread": {
+      "randomizeBase": true,
+      "baseMin": 0.5,
+      "baseMax": 1
+    },
+    "RotateX": {
+      "randomizeBase": true,
+      "baseMin": -0.4,
+      "baseMax": 0.4
+    },
+    "RotateZ": {
+      "randomizeBase": true,
+      "baseMin": -0.4,
+      "baseMax": 0.4
     }
   },
   "macroBank": {
