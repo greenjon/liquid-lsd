@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -29,10 +29,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -2787,7 +2787,7 @@
 <h3 id="66-ring-and-led-feedback-phase-4">6.6 Ring and LED feedback (phase 4)</h3>
 <ul>
 <li>Profile <code>output.knobs</code>: <code>input</code> (the encoder group, e.g. <code>knob</code>), <code>ringChannel</code> (default: the encoder's channel), <code>colorChannel</code> (null = no LEDs) and <code>color</code>, a <code>HueWheel</code> (<code>min</code>/<code>max</code> value range, <code>off</code>, <code>white</code>, <code>hueAtMin</code>, <code>degreesPerStep</code>; defaults are the Twister's wheel: blue = 1, hue decreasing 2.88 degrees per step). The ring is set by sending the encoder's own CC on <code>ringChannel</code>; the LED by sending the same CC number on <code>colorChannel</code>.</li>
-<li><code>KnobLightSource.knobLights()</code> (implemented by <code>ui/PerformSurface</code>) returns 16 <code>KnobLight</code>s: ring value, LED colour (<code>PerformPages.ledColor</code>: the row accent, except <code>PerformanceColors.LED_MASTER</code>/<code>LED_GLOBAL</code>), <code>lit</code>. <code>ControllerFeedback.update(lights, activeBank, nowMs)</code> expands them to the encoder CCs of the group and writes only changed values, for the active bank only (all banks while it is unknown; the whole new bank when it changes, since the Twister showed its stored colours on banks that were not on screen). <code>resync()</code> forces a full rewrite. Each bank's own CC numbers are used (CC = knob + stride * bank; verified with amidi on the Twister: CC 16 is live on bank 2, CC 0 is not). <code>output.trace</code> (or env <code>LSD_MIDI_TRACE=1</code>) logs every feedback message (<code>TracingSink</code>), bank change and encoder message at INFO.</li>
+<li><code>KnobLightSource.knobLights()</code> (implemented by <code>ui/PerformSurface</code>) returns 16 <code>KnobLight</code>s: ring value, LED colour (<code>PerformPages.ledColor</code>: the row accent; Master is Scarlet and Global Butter, which <code>LED_MASTER</code>/<code>LED_GLOBAL</code> alias), <code>lit</code>. <code>ControllerFeedback.update(lights, activeBank, nowMs)</code> expands them to the encoder CCs of the group and writes only changed values, for the active bank only (all banks while it is unknown; the whole new bank when it changes, since the Twister showed its stored colours on banks that were not on screen). <code>resync()</code> forces a full rewrite. Each bank's own CC numbers are used (CC = knob + stride * bank; verified with amidi on the Twister: CC 16 is live on bank 2, CC 0 is not). <code>output.trace</code> (or env <code>LSD_MIDI_TRACE=1</code>) logs every feedback message (<code>TracingSink</code>), bank change and encoder message at INFO.</li>
 <li><code>MidiOutputPorts.openFor(name, minIntervalMs)</code> writes through a <code>CcQueue</code> (one pending value per channel/CC, so a slow device never accumulates stale values) from a daemon thread that keeps at least <code>output.minIntervalMs</code> (default 2) between messages, because the Twister drops bursts. It logs send time and backlog every 5 s (INFO when a send takes over 5 ms or the backlog exceeds 40).</li>
 <li><code>ControllerManager.updateFeedback</code> runs once per frame from <code>UIManager.processInput</code>, right after the MIDI drain. Once a second it scans <code>MidiEngine.getConnectedDeviceNames()</code>: matching devices get a <code>ControllerFeedback</code> over <code>MidiOutputPorts.openFor(name)</code> (an output port with the same device name, written from a daemon thread); devices that left or whose sink is unhealthy are dropped, and a failed open is retried after 10 s.</li>
 </ul>
@@ -2859,10 +2859,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
       
     
   </body>

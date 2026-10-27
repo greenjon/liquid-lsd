@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -29,10 +29,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -1065,6 +1065,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#reactivity-recipes-and-the-reactivity-amount" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reactivity Recipes and the Reactivity Amount
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#serialization" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1802,6 +1813,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#reactivity-recipes-and-the-reactivity-amount" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reactivity Recipes and the Reactivity Amount
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#serialization" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1937,11 +1959,9 @@ for (mod in modulators) {
 
     rawCV = evaluateModulator(mod)          // Evaluators.kt — see below
 
-    // Polarity normalisation
-    rawModAmount = if (isBipolar)
-        rawCV * depth + dcOffset        // bipolar: symmetric around 0
-    else
-        ((rawCV + 1) / 2) * depth + dcOffset  // monopolar: maps [-1,1] → [0,depth]+dc
+    // Same shape for every source and target. Recipe modulators (CvModulator.recipe) get their
+    // depth and dcOffset multiplied by the global Reactivity.amount first.
+    rawModAmount = rawCV * effectiveDepth + effectiveOffset   // CvModulator.lfoShape
 
     // Scale to parameter range
     scalar = if (ADD) then (range / 2) for bipolar, else range for monopolar; else 1.0
@@ -1956,9 +1976,11 @@ for (mod in modulators) {
 
 value = result.coerceIn(minClamp, maxClamp)
 </code></pre>
-<p><strong>Polarity</strong>: if <code>minClamp &lt; 0</code>, the parameter is bipolar. Monopolar parameters map the raw CV
-signal from <code>[-1, 1]</code> into <code>[0, 1]</code> before scaling, so negative CV still produces positive
-modulation effect.</p>
+<p><strong>Polarity</strong>: if <code>minClamp &lt; 0</code>, the parameter is bipolar; only the ADD scalar differs (<code>range / 2</code> for
+bipolar, <code>range</code> otherwise). A bipolar source (LFO, sample-and-hold) swings <code>dcOffset ± depth</code> on every
+parameter, so on a 0..1 parameter it goes below the base value unless <code>dcOffset</code> lifts it; unipolar sources
+(audio, trigger, MIDI CC) span <code>dcOffset .. dcOffset + depth</code>. (Before 2026-10-27 a bipolar source on a
+monopolar parameter was remapped to <code>[0, 1]</code> first; stock presets and recipes were rewritten to keep their sweep.)</p>
 <hr />
 <h2 id="cvmodulator-full-field-reference">CvModulator — Full Field Reference</h2>
 <p><strong>File</strong>: <code>parameters/CvModulator.kt</code><br />
@@ -2358,6 +2380,17 @@ in <code>Evaluators.kt</code>).</p>
   else            → CVRegistry.get(id) — any registered custom source
 </code></pre>
 <hr />
+<h2 id="reactivity-recipes-and-the-reactivity-amount">Reactivity Recipes and the Reactivity Amount</h2>
+<p>Shaders ship hand-written audio and beat responses ("recipes"), and one global slider scales them.</p>
+<ul>
+<li><strong>Files:</strong> <code>src/main/resources/reactivity/sources/&lt;id&gt;.json</code> (<code>ReactivityRecipes.forId(kind, id)</code>; only <code>sources</code> exist so far). Per parameter an ordered <code>stack</code> of modulators; entries with <code>"active": true</code> run, the others are wired but bypassed. Entry keys are <code>ModulatorDto</code> fields plus <code>active</code>, <code>name</code>, <code>note</code>; defaults are operator <code>ADD</code>, LFO unit <code>BEAT</code>, follower <code>PUNCHY</code> when an attack/decay is given. A parameter may carry <code>base</code> to move its set value. The <code>RANDOM</code> waveform is the sample-and-hold.</li>
+<li><strong>Applying:</strong> <code>GeneratorDefaults.resolve</code> lays the recipe over the stock (curated or heuristic) default through <code>ReactivityRecipes.overlay</code>; a saved user default wins and carries whatever modulators the user left. Overlay replaces a parameter's old <code>recipe</code> modulators with fresh copies (new ids, so envelope followers are never shared between decks) and keeps hand-built ones. Loading a preset that stores its own parameters replaces the recipe, like any default.</li>
+<li><strong>Flag and scaling:</strong> <code>CvModulator.recipe</code> (saved in presets) marks recipe modulators. <code>Reactivity.amount</code> (0..2, an app preference, <code>reactivityAmount</code>, set under Preferences &gt; Audio Hardware) multiplies both <code>depth</code> and <code>dcOffset</code> of those only, so 0 gives the set value exactly. The web evaluator reads <code>ctx.reactivity</code> and the same flag; golden vectors cover 0, 1 and 2.</li>
+<li><strong>Authoring rule:</strong> an LFO on a 0..1 parameter that sits at (or near) its minimum swings both ways around the set value. To sweep upward use <code>depth = dcOffset = d/2</code> (range <code>base .. base + d</code>). <code>ReactivityRecipesTest.lfoSwingsFitTheirParameters</code> fails when any LFO swing leaves its parameter's range (the clamp would flatten part of every cycle); <code>everyShippedSourceRecipeIsValid</code> checks parameter names against the shader, one active modulator per parameter, and <code>|depth| &lt;= 1</code>.</li>
+<li><strong>Audio levels:</strong> recipes are tuned against the AGC (<code>audio/AudioAgc.kt</code>), which normalises each band against its own recent peak. The web TV still uses the fixed 0.25 scale, so recipes will read quieter there until the AGC is ported.</li>
+<li><strong>Not covered yet:</strong> FX (<code>FxDefaultDto.parameters</code> cannot hold modulators), transitions (no defaults store), a UI marker for recipe modulators and a "reset to recipe" action. Fractal Flame's recipe only touches Breathe, Warp, Spin, Drift, Magnify, Exposure, Brightness, Decay, Vibrancy and Mutation, never the morph-driven xform parameters. Fluid Ink has none, and Harmonograph left the stock set.</li>
+</ul>
+<hr />
 <h2 id="serialization">Serialization</h2>
 <p><code>CvModulator</code> is <code>@Serializable</code> (kotlinx-serialization). The DTO conversion lives in
 <code>models/PresetModels.kt</code>:</p>
@@ -2448,10 +2481,10 @@ using the standard hierarchical path format (e.g. <code>"Deck A/Mandala/Lobes"</
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
       
     
   </body>

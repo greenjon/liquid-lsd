@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -29,10 +29,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -1898,6 +1898,8 @@
 <hr />
 <h2 id="audio-modulation">Audio Modulation</h2>
 <p>Clicking an <strong>AUD</strong> cell opens the audio modulator config. Each parameter supports two independent audio connections (Audio 1 and Audio 2).</p>
+<p><strong>Auto Gain:</strong> audio signals are normalized against each band's own recent peak (Preferences &gt; Audio Hardware &gt; Auto Gain, on by default), so a modulator behaves the same whether the feed is quiet or hot. Switch it off for a fixed scale.</p>
+<p><strong>Built-in responses:</strong> most stock sources ship with audio and beat modulators already wired on their key parameters: one running, and one or two alternates sitting bypassed in the same row, so you switch an alternate on (and the running one off) by clicking its AUD or LFO cell. They follow <strong>Preferences &gt; Audio Hardware &gt; Reactivity</strong> (0% = every parameter at its set value, 100% = as designed, up to 200%); modulators you add yourself, MIDI and macros do not. A default you saved yourself replaces the built-in response, and a preset that stores its own parameters replaces it too.</p>
 <h3 id="frequency-bands">Frequency bands</h3>
 <table>
 <thead>
@@ -1975,6 +1977,7 @@
 <p>The oscilloscope shows two traces: the raw audio energy (faint ghost trace) and the smoothed follower output (solid line). This makes it easy to see how the profile is shaping the signal before it reaches your parameter.</p>
 <h3 id="range-min-max">Range (Min / Max)</h3>
 <p>The dual-handled range slider at the bottom sets the floor and ceiling of the modulation output. For example, if you want bass energy to push Lobes between 3 and 8, set Min to 3 and Max to 8.</p>
+<p>Min and Max are measured from the parameter's set value, and moving one never moves the other. Audio sources only push upward from silence, so Min is the resting offset and Max is the loudest peak.</p>
 <p>Enabling randomization adds independent drift sliders for the Min and Max bounds, so the range itself wanders gently over time.</p>
 <hr />
 <h2 id="lfo-modulation">LFO Modulation</h2>
@@ -1998,7 +2001,7 @@
 <li><strong>Morph</strong> — Softens sharp corners. At 0.0 you get a pure triangle; at 1.0 you get a smooth sine-like curve.</li>
 <li><strong>Hold</strong> — Compresses the transition into a shorter moment and adds a plateau at the peak.</li>
 </ul>
-<p><strong>Range (Min / Max):</strong> Sets the output range directly. No need to think in terms of depth and offset — just say "I want this to move between 2.0 and 6.0" and set those values.</p>
+<p><strong>Range (Min / Max):</strong> Sets the output range directly. No need to think in terms of depth and offset — just say "I want this to move between 2.0 and 6.0" and set those values. Min and Max are the lowest and highest the LFO reaches, whatever the parameter's own range, and moving one leaves the other where it is. (The LFO swings evenly either side of the midpoint, so on a 0-to-1 parameter a Min below the set value pulls the parameter down as well as up; the result is clamped at the parameter's limits.)</p>
 <h3 id="secondary-modulator-lfo-2">Secondary Modulator (LFO 2)</h3>
 <p>LFO 2 modulates LFO 1 to add movement and complexity:</p>
 <ul>
@@ -2173,10 +2176,10 @@ Edit receives them when several are open).</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
       
     
   </body>

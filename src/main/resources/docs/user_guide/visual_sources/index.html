@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -29,10 +29,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -748,17 +748,6 @@
     <span class="md-ellipsis">
       
         Wave Ripples (wave_ripples)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#harmonograph-harmonograph" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Harmonograph (harmonograph)
       
     </span>
   </a>
@@ -2174,17 +2163,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#harmonograph-harmonograph" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Harmonograph (harmonograph)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#aurora-ribbons-aurora_ribbons" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2453,6 +2431,7 @@
 <p>Liquid LSD includes a curated suite of 34 built-in procedural generators spanning harmonic geometry, 3D raymarching, 3D fractals, volumetric gas, 4D polytopes, organic fluid dynamics, living simulations, acoustic wavefields, and a set of light generators that run comfortably on integrated graphics.</p>
 <p>The raymarchers (Icosa-H3, Gyroid Hyperspace, 4D Hyper-Slice, Nebula Volume and the fractals below) show a gauge mark in the browser: they are GPU-intensive and can run slowly on integrated graphics. The fractals are tuned for a mid-range discrete GPU (an RTX A2000 or better); every one has a <strong>Quality</strong> knob, and lowering it is the first thing to try if a deck stutters.</p>
 <p><strong>Decks off air cost less.</strong> Deck PV only feeds its monitor, so it renders at half the output size (full size when you send it out over Spout / Syphon / PipeWire). With <strong>Off-air decks at half frame rate</strong> on (<em>Preferences &gt; General</em>, on by default), a deck the output can't show at the moment (A or B faded fully across, a deck or the master at level 0, and PV) renders every other frame, leaving the GPU to the decks on air. Its monitor runs at half rate, and simulations and feedback trails on it advance at half speed until it comes on air. A deck you stream always renders every frame.</p>
+<p><strong>Black is transparent.</strong> Generators let the BG deck (or any layer beneath them) show through wherever they are black: a source's alpha follows its brightest colour channel, so bright areas cover what is behind and dark areas reveal it. Over a black BG nothing changes.</p>
 <p><strong>Updates.</strong> When you install a new version, bundled generator files you haven't changed are updated to the new version; a file you edited is kept as it is (the log says so).</p>
 <h3 id="mandala-mandala">Mandala (<code>mandala</code>)</h3>
 <p>The signature parametric harmonic curve engine. Mandala generates intricate symmetrical geometry using over 300 curated harmonic ratios. Built-in size normalization guarantees the outer boundary stays stable and fills your frame cleanly no matter how aggressively you modulate parameters.</p>
@@ -2530,7 +2509,7 @@
 <li><strong>Palette Modes</strong>: Obsidian &amp; Gold Sand, Electric Cymatic Blue, Prismatic Spectrum, and Bioluminescent Emerald.</li>
 </ul>
 <h3 id="mandelbox-mandelbox">Mandelbox (<code>mandelbox</code>)</h3>
-<p>A raymarched Mandelbox: space is repeatedly folded into a box, inverted in a sphere and scaled, producing cathedral-like chambers. The camera glides in and out and stays outside the solid.</p>
+<p>A raymarched Mandelbox: space is repeatedly folded into a box, inverted in a sphere and scaled, producing cathedral-like chambers. The camera glides in and out and stays outside the solid. The light is camera-relative, so the lit side always faces you as the view turns.</p>
 <ul>
 <li><strong>Scale</strong>: The fold scale. Right of centre gives the classic box, left of centre the inverted variants. It jumps at the centre, so avoid automating across it.</li>
 <li><strong>Fold Limit, Min Radius, Max Radius</strong>: Box-fold size and the two sphere-fold radii; they reshape the chambers.</li>
@@ -2539,7 +2518,7 @@
 <li><strong>Color Mode</strong>: Orbit trap (origin), orbit trap (planes), sphere-fold fraction, normal spectrum, depth.</li>
 </ul>
 <h3 id="kifs-kifs">KIFS (<code>kifs</code>)</h3>
-<p>A kaleidoscopic iterated-function-system fractal: repeated folds, a scale and an offset toward a fixed vertex, with a rotation added at every iteration.</p>
+<p>A kaleidoscopic iterated-function-system fractal: repeated folds, a scale and an offset toward a fixed vertex, with a rotation added at every iteration. The light is camera-relative, so the lit side always faces you as the view turns.</p>
 <ul>
 <li><strong>Fractal Type</strong>: Menger-like, Sierpinski tetrahedron, octahedral, or a mixed construction.</li>
 <li><strong>Scale, Offset</strong>: Look controls on the construction; away from the centre it stops tiling exactly.</li>
@@ -2550,7 +2529,7 @@
 <li><strong>Color Spread</strong>: Folding makes every copy of a detail identical, so this shifts hue by fold depth, position in space and facing direction to bring in more colours. 0 is the plain ramp; the gold ramp ignores it.</li>
 </ul>
 <h3 id="mandelbulb-mandelbulb">Mandelbulb (<code>mandelbulb</code>)</h3>
-<p>A raymarched Mandelbulb, the 3D analogue of the Mandelbrot set built on a power map in spherical coordinates, with a turntable camera.</p>
+<p>A raymarched Mandelbulb, the 3D analogue of the Mandelbrot set built on a power map in spherical coordinates, with a turntable camera. The light is camera-relative, so the lit side always faces you as the view turns.</p>
 <ul>
 <li><strong>Power</strong>: Exponent from 2 to 16 (default 8). Non-integer values show a cut seam.</li>
 <li><strong>Power Swing</strong>: A slow automatic oscillation of the power; 0 keeps it fixed.</li>
@@ -2682,14 +2661,6 @@
 <li><strong>Sources, Layout</strong>: How many sources, arranged on Lissajous paths, one ring or two counter-rotating rings.</li>
 <li><strong>Wavelength, Wave Speed, Orbit Speed, Falloff</strong>: The wave and how the sources move.</li>
 <li><strong>Style</strong>: Shaded height field, banded contours, neon crests or a thin-film ramp.</li>
-</ul>
-<h3 id="harmonograph-harmonograph">Harmonograph (<code>harmonograph</code>)</h3>
-<p>Oscilloscope and harmonograph curves: a damped Lissajous figure drawn as a glowing phosphor line that winds several times into a dense, spiralling rosette. Lower Quality first on integrated graphics.</p>
-<ul>
-<li><strong>Ratio X:Y, Detune</strong>: The frequency ratio and a small offset that makes the figure slowly rotate and open up.</li>
-<li><strong>Phase Drift, Damping, Trail Length, Rotation</strong>: How the curve evolves. Trail Length runs from 2 to 18 windings; Damping shrinks the older windings inward into a spiral.</li>
-<li><strong>Line Width, Glow</strong>: Line look.</li>
-<li><strong>Quality</strong>: Number of line segments, 48 to 128.</li>
 </ul>
 <h3 id="aurora-ribbons-aurora_ribbons">Aurora Ribbons (<code>aurora_ribbons</code>)</h3>
 <p>Aurora borealis: three to six layered curtains over a faint starfield.</p>
@@ -2923,10 +2894,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
       
     
   </body>
