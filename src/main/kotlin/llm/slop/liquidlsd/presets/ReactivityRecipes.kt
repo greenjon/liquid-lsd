@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap
  * flagged `recipe` so the global [llm.slop.liquidlsd.parameters.Reactivity] amount scales it.
  *
  * Entry keys are [ModulatorDto] fields plus `active`, `name` and `note` (ignored). Defaults: operator ADD,
- * LFO unit BEAT, follower PUNCHY when an attack/decay is given. `dcOffset` is rejected (forced to 0) so a
+ * LFO unit BEAT, follower PUNCHY when an attack/decay is given. `dcOffset` is rejected so a
  * reactivity of 0 reproduces the base value exactly. A parameter may also carry `base` to move its set value.
  *
  * Format and rationale: .planning/reactivity-recipes-plan.md.
@@ -81,7 +81,6 @@ object ReactivityRecipes {
         m.getOrPut("operator") { JsonPrimitive(ModulationOperator.ADD.name) }
         require(m["operator"]!!.jsonPrimitive.content in ModulationOperator.values().map { it.name }) { "bad operator" }
         m["waveform"]?.let { require(it.jsonPrimitive.content in Waveform.values().map { w -> w.name }) { "bad waveform" } }
-        require(m["waveform"]?.jsonPrimitive?.contentOrNull != "RANDOM") { "RANDOM is not allowed in recipes (seeded by modulator id)" }
         if (source == "lfo") m.getOrPut("genUnit") { JsonPrimitive("BEAT") }
         if (isAudioSource(source) && "followerMode" !in m &&
             ((m["attackMs"]?.jsonPrimitive?.floatOrNull ?: 0f) > 0f || (m["decayMs"]?.jsonPrimitive?.floatOrNull ?: 0f) > 0f)

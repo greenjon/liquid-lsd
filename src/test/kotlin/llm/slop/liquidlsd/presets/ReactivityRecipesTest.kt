@@ -22,6 +22,11 @@ class ReactivityRecipesTest {
 
     /** Float input names of a bundled ISF source (the JSON header comment). */
     private fun floatInputs(id: String): Set<String> {
+        val meta = File(root, "src/main/resources/default_sources/$id/meta.json")
+        if (meta.exists()) {
+            return json.parseToJsonElement(meta.readText()).jsonObject["parameters"]!!.jsonArray
+                .map { it.jsonObject["name"]!!.jsonPrimitive.content }.toSet()
+        }
         val text = File(root, "src/main/resources/default_sources/$id/$id.fs").readText()
         val header = text.substringAfter("/*").substringBefore("*/")
         return json.parseToJsonElement(header).jsonObject["INPUTS"]!!.jsonArray
@@ -73,7 +78,7 @@ class ReactivityRecipesTest {
     fun rejectsDcOffsetRandomAndUnknownSources() {
         fun entries(entry: String) = ReactivityRecipes.parse("""{"params":{"X":{"stack":[$entry]}}}""", "t")["X"]!!.stack
         assertTrue(entries("""{"sourceId":"lfo","depth":0.2,"dcOffset":0.1}""").isEmpty())
-        assertTrue(entries("""{"sourceId":"lfo","depth":0.2,"waveform":"RANDOM"}""").isEmpty())
+        assertEquals("RANDOM", entries("""{"sourceId":"lfo","depth":0.2,"waveform":"RANDOM","hold":0.5}""").single().waveform)
         assertTrue(entries("""{"sourceId":"nope","depth":0.2}""").isEmpty())
         val ok = entries("""{"sourceId":"lfo","depth":0.2,"subdivision":8}""").single()
         assertEquals("BEAT", ok.genUnit)
