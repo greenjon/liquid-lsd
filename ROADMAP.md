@@ -37,6 +37,7 @@ Liquid LSD is a real-time, audio-reactive procedural visual synthesizer and VJ p
 | **Reactivity Recipes: FX, Transitions, Tooling** | `resources/stock_defaults/`, `presets/StockDefaults.kt`, `rendering/isf/ISFAutoBindEngine.kt`, `web/dsp.js` | **TBD** | **PENDING** | 33 stock sources ship recipes (2026-10-27); all 27 effects too (2026-10-27; MUL on the Metaknob input). Still to do: once the effect responses are approved, rebuild every stock FX chain so its slots carry them, transition recipes (needs a transition defaults store), the auto gain ported to the web TV, and a recipe idea for Fluid Ink. |
 | **Harmonograph Rework** | `default_sources/harmonograph/*` (removed from the stock set 2026-10-27), `web/shaders/*` | **v1.1** | **PENDING** | Rebuild the harmonograph as a persistent accumulation (many windings building into a dense rosette, slow decay) instead of one 128-segment polyline, which read as a single thin string. Restore it to the stock set, the web TV (3 presets) and its reactivity recipe from git history (commit before `Remove Harmonograph`); the old files are the starting point. |
 | **Downbeat Detection** | `audio/BeatTrackerEngine.kt`, `cv/CVRegistry.kt`, `web/beattrack.js` | **v1.1** | **PENDING** | Bar-start (downbeat) detection on top of the beat tracker, a real `barPhase` source and beats-per-bar setting, tap override and confidence (Milestone 12). |
+| **Effect / Transition Crossovers** | `default_filters/*`, `default_transitions/*`, `rendering/isf/*` | **v1.1** | **PENDING** | Datamosh as an effect, Pixelate as a transition, and a design for running any effect as a transition (Milestone 13). |
 | **Expanded FX Chain View** | `ui/PerformanceMatrixPanel.kt`, `ui/FxSlotCell.kt`, `macro/FxMacroSync.kt` | **Compost (v1.2)** | **SHELVED** | Mixxx-style 3-sub-row chain editing on the Performance matrix. Decided 2026-10-13: no milestone. Notes: `.planning/fx-chain-expanded-view-notes.md`. |
 
 ---
@@ -239,6 +240,17 @@ The beat tracker finds tempo and beat phase but not which beat is beat 1. A bar 
 - [ ] Tune on real music (labelled clips) before the web port. Not done: 3-vs-4 meter suggestion (a setting instead; unreliable without harmonic features), chroma features, phrase detection.
 
 **Done means:** release notes in both files, user guide and developer docs, tooltips.
+
+### Milestone 13: Effect / Transition Crossovers
+> **Status**: Idea, agreed 2026-10-27. Comparison of the 8 stock transitions with the 27 stock effects: six transitions already have an effect counterpart (Vortex Swirl both ways; Kinetic Zoom ~ Radial Blur + RGB Split; Liquid Displacement ~ Luma/Wave Displace; Luminous Flash ~ Video Strobe + Bloom).
+
+- [ ] **Datamosh effect**: the Cyber Datamosh look (macroblock displacement, scan-line tearing, RGB shear, inverted blocks) as an FX filter, with its envelope driven by an amount input (packet loss) instead of fade progress. No current effect gives the compression look; VHS Glitch is tape damage, not codec damage. Ship it with an audio response (hats on packet loss, kick on RGB split).
+- [ ] **Pixelate transition**: pixelate deck A up to coarse blocks, swap at the midpoint, resolve deck B back down. A classic VJ transition with nothing like it in the stock eight. It must be exact at rest (block size 1 at progress 0 and 1).
+- [ ] **Any effect as a transition** (design first): a wrapper that runs a stock effect on both decks with its amount ramping up and back down across the fade (peaking at the midpoint) and swaps decks there, so every effect is also a transition without hand-writing one per effect. Questions: which input is the "amount" (the Metaknob target is the obvious choice), how the user picks the effect (a transition with an effect slot?), and cost (two effect passes per frame during a fade).
+- Maybes, only if wanted: Film Burn and Noise Dissolve as effects that reveal what is behind the deck (black is transparent, so a burn or noise mask over deck A shows BG through the holes; Luma Key partly covers this).
+- Keep existing ids: `vortex_swirl` stays both an effect and a transition (renaming breaks saved chains, presets and the `festival_elite` playlist); shipped defaults key the two by kind (see `.planning/transition-reactivity-plan.md`).
+
+**Done means:** stock-set lists in DECISIONS.md and the user guide, web sync entries, release notes in both files, tooltips, shipped default (with audio response) for each new shader.
 
 ---
 
