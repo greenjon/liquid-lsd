@@ -475,8 +475,8 @@ Similar to Ableton's default presets, you can configure your favorite parameter 
 
 When swapping sources on any deck (via the source badge or the empty-deck card), the incoming source's default configuration is resolved across three tiers:
 1. **User Default**: Custom parameter baselines, `globalAlpha`, and 4-knob macro layout saved in `library/generator_defaults/<sourceId>.json`.
-2. **Curated Stock Default**: Hand-curated 4-knob macro targets for bundled generators (`mandala`, `dynamic_spiral`, `icosa_h3`, `domain_warp_fluid`, `gyroid_hyperspace`, `celestial_engine`, `hyper_slice`, `chladni_cymatics`, `mandelbox`, `kifs`, `mandelbulb`, `pseudo_kleinian`, `apollonian`, `escape_time`, `nebula_volume`, `reaction_diffusion`, `fluid_ink`, `lenia`, `quasicrystal`, `thin_film`, `tunnel_scenes`, `video_feedback`, `hyperbolic_tiling`, `cyclic_ca`, `metaballs`, `wave_ripples`, `aurora_ribbons`, `isometric_voxels`, `halftone_matrix`, `kali_set`, `girih_stars`, `glitch_blocks`, `voronoi_cells`).
-3. **Automated Heuristic Fallback**: For third-party ISF shaders, continuous floats (e.g. speed, rate, zoom, scale, morph, depth, detail) are prioritized, discrete stepped selectors are filtered out, and speed/frequency parameters are shaped with exponential response curves.
+2. **Stock Default**: the default shipped with each bundled generator: its 4-knob macro targets and its built-in audio and beat responses (`mandala`, `dynamic_spiral`, `icosa_h3`, `domain_warp_fluid`, `gyroid_hyperspace`, `celestial_engine`, `hyper_slice`, `chladni_cymatics`, `mandelbox`, `kifs`, `mandelbulb`, `pseudo_kleinian`, `apollonian`, `escape_time`, `nebula_volume`, `reaction_diffusion`, `fluid_ink`, `lenia`, `quasicrystal`, `thin_film`, `tunnel_scenes`, `video_feedback`, `hyperbolic_tiling`, `cyclic_ca`, `metaballs`, `wave_ripples`, `aurora_ribbons`, `isometric_voxels`, `halftone_matrix`, `kali_set`, `girih_stars`, `glitch_blocks`, `voronoi_cells`).
+3. **Automated Heuristic Fallback**: For third-party ISF shaders (nothing is written to disk; it is worked out again on every load until you save a default yourself), continuous floats (e.g. speed, rate, zoom, scale, morph, depth, detail) are prioritized, discrete stepped selectors are filtered out, and speed/frequency parameters are shaped with exponential response curves.
 
 **Bank Replacement Behavior**: Applying a default replaces the resident 4-knob deck bank wholesale, identical to preset loading. Stored `Deck/*` targets are dynamically remapped to the target deck slot (e.g., `Deck A`, `Deck B`). Knobs are positioned via inverse-curve mapping so parameter values do not jump on load. Hardware MIDI mappings are stripped on save to avoid duplicate hardware CC collisions across decks.
 
@@ -484,7 +484,7 @@ When swapping sources on any deck (via the source badge or the empty-deck card),
 - **Right-click the generator badge** on any deck row in the Perform view to open the context menu:
   - `Save as Default for <Generator>`: Saves current parameters, Gain, and 4-knob macro layout as the generator default.
   - `Apply Default Now`: Reapplies the default layout and parameters to the current deck.
-  - `Reset to Factory Default`: Deletes the user default file and restores curated/heuristic factory defaults.
+  - `Reset to Factory Default`: Deletes the user default file and restores the stock (or heuristic) default.
 - Alternatively, open the **Save menu** in Edit's monitor toolbar and select `Save as Default for <Generator>`.
 
 ### Explicit ISF FX Defaults
@@ -493,7 +493,7 @@ A slot's Metaknob targets, knob order and parameter values can be saved as the e
 - Tweaking parameters or targets during performance is purely temporary and does **not** silently overwrite defaults on disk.
 - **Right-click a Metaknob row** in Edit's SUPER KNOB & METAKNOBS block:
   - `Save as Default for <Filter>` saves this slot's Metaknob targets, knob order, parameter values and modulators (not MIDI mappings) into `library/isf_overrides/<contentHash>.json`. New copies of the effect start from it; slots already in chains keep their own.
-  - When a saved default exists, `Remove Saved Default for <Filter>` deletes it, so new copies go back to the curated/auto-mapped targets, and resets this slot to them too.
+  - When a saved default exists, `Remove Saved Default for <Filter>` deletes it, so new copies go back to the stock (or auto-mapped) default, and resets this slot to it too.
 - Targets themselves are edited in the slot's **Metaknob targets** block or on the Edit-row strip.
 
 ---

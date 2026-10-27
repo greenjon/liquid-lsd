@@ -1,0 +1,169 @@
+{
+  "version": 1,
+  "sourceId": "lenia",
+  "parameters": {
+    "SimSpeed": {
+      "note": "Life moves faster when loud.",
+      "modulators": [
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.2,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "Relief": {
+      "note": "Relief lighting flashes on the kick.",
+      "modulators": [
+        {
+          "name": "kick hit",
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "depth": 0.3,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        },
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.2,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "Brightness": {
+      "note": "Gentle loudness lift.",
+      "modulators": [
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.1,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "GrowthWidth": {
+      "note": "Mids loosen the growth rule a little; off by default (can change what survives).",
+      "modulators": [
+        {
+          "name": "mid body",
+          "sourceId": "audio_mid",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.08,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "GrowthCenter": {
+      "note": "Very slow drift of the growth rule; off by default (can change what survives).",
+      "modulators": [
+        {
+          "name": "triangle 64-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "bypassed": true,
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 64,
+          "depth": 0.015,
+          "dcOffset": 0.015
+        }
+      ]
+    },
+    "Reseed": {
+      "note": "Hard kicks wipe and reseed the life.",
+      "modulators": [
+        {
+          "name": "drop reseed (hard kick wipes and reseeds)",
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "depth": 1.0,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        }
+      ]
+    },
+    "Zoom": {
+      "note": "Kick push; off by default.",
+      "modulators": [
+        {
+          "name": "bass pulse",
+          "sourceId": "audio_bass",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.05,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        }
+      ]
+    },
+    "HueOffset": {
+      "modulators": [
+        {
+          "name": "slow hue drift",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 64,
+          "depth": 0.175,
+          "dcOffset": 0.175
+        }
+      ]
+    }
+  },
+  "macroBank": {
+    "knobs": [
+      {
+        "label": "CENTER",
+        "bindings": [
+          {
+            "parameterId": "GrowthCenter"
+          }
+        ]
+      },
+      {
+        "label": "WIDTH",
+        "bindings": [
+          {
+            "parameterId": "GrowthWidth"
+          }
+        ]
+      },
+      {
+        "label": "RADIUS",
+        "bindings": [
+          {
+            "parameterId": "Radius"
+          }
+        ]
+      },
+      {
+        "label": "SPEED",
+        "bindings": [
+          {
+            "parameterId": "SimSpeed",
+            "curve": "EXPONENTIAL"
+          }
+        ]
+      }
+    ]
+  }
+}

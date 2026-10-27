@@ -1,0 +1,217 @@
+{
+  "version": 1,
+  "sourceId": "tunnel_scenes",
+  "parameters": {
+    "Speed": {
+      "note": "Flight surges with loudness.",
+      "modulators": [
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.3,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        },
+        {
+          "name": "triangle 16-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "bypassed": true,
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 16,
+          "depth": 0.25
+        }
+      ]
+    },
+    "Glow": {
+      "note": "Kick flashes the glow.",
+      "modulators": [
+        {
+          "name": "kick hit",
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "depth": 0.3,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        },
+        {
+          "name": "high shimmer",
+          "sourceId": "audio_high",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.25,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 110
+        }
+      ]
+    },
+    "Twist": {
+      "note": "Slow spiral sway.",
+      "modulators": [
+        {
+          "name": "sine 32-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 32,
+          "depth": 0.25
+        },
+        {
+          "name": "mid body",
+          "sourceId": "audio_mid",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.3,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "LineWidth": {
+      "note": "Lines fatten on the kick.",
+      "modulators": [
+        {
+          "name": "bass pulse",
+          "sourceId": "audio_bass",
+          "operator": "ADD",
+          "depth": 0.2,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        },
+        {
+          "name": "sine 8-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "bypassed": true,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 8,
+          "depth": 0.075,
+          "dcOffset": 0.075
+        }
+      ]
+    },
+    "Sway": {
+      "note": "Camera drifts with the mids.",
+      "modulators": [
+        {
+          "name": "mid body",
+          "sourceId": "audio_mid",
+          "operator": "ADD",
+          "depth": 0.3,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        },
+        {
+          "name": "sine 16-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "bypassed": true,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 16,
+          "depth": 0.15,
+          "dcOffset": 0.15
+        }
+      ]
+    },
+    "Fog": {
+      "note": "Fog clears when loud.",
+      "modulators": [
+        {
+          "name": "loudness clears fog",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": -0.3,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "Brightness": {
+      "note": "Kick flash; off by default.",
+      "modulators": [
+        {
+          "name": "kick hit",
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.2,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        },
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.15,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "HueOffset": {
+      "modulators": [
+        {
+          "name": "slow hue drift",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 64,
+          "depth": 0.15,
+          "dcOffset": 0.15
+        }
+      ]
+    }
+  },
+  "macroBank": {
+    "knobs": [
+      {
+        "label": "SPEED",
+        "bindings": [
+          {
+            "parameterId": "Speed"
+          }
+        ]
+      },
+      {
+        "label": "TWIST",
+        "bindings": [
+          {
+            "parameterId": "Twist"
+          }
+        ]
+      },
+      {
+        "label": "GLOW",
+        "bindings": [
+          {
+            "parameterId": "Glow"
+          }
+        ]
+      },
+      {
+        "label": "SWAY",
+        "bindings": [
+          {
+            "parameterId": "Sway"
+          }
+        ]
+      }
+    ]
+  }
+}

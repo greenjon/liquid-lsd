@@ -1,0 +1,174 @@
+{
+  "version": 1,
+  "sourceId": "metaballs",
+  "parameters": {
+    "BallSize": {
+      "note": "Balls swell on the kick.",
+      "modulators": [
+        {
+          "name": "bass pulse",
+          "sourceId": "audio_bass",
+          "operator": "ADD",
+          "depth": 0.2,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        },
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.2,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "OrbitSpread": {
+      "note": "Orbits widen with loudness.",
+      "modulators": [
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.2,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        },
+        {
+          "name": "sine 16-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "bypassed": true,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 16,
+          "depth": 0.1,
+          "dcOffset": 0.1
+        }
+      ]
+    },
+    "OrbitSpeed": {
+      "note": "Orbits quicken with the mids.",
+      "modulators": [
+        {
+          "name": "mid body",
+          "sourceId": "audio_mid",
+          "operator": "ADD",
+          "depth": 0.25,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "Merge": {
+      "note": "Slow merge breathing.",
+      "modulators": [
+        {
+          "name": "sine 16-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 16,
+          "depth": 0.1,
+          "dcOffset": 0.1
+        },
+        {
+          "name": "kick hit",
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.2,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        }
+      ]
+    },
+    "Softness": {
+      "note": "Highs soften edges; off by default.",
+      "modulators": [
+        {
+          "name": "high shimmer",
+          "sourceId": "audio_high",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.2,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 110
+        }
+      ]
+    },
+    "Brightness": {
+      "note": "Kick flash; off by default.",
+      "modulators": [
+        {
+          "name": "kick hit",
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.2,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        }
+      ]
+    },
+    "HueOffset": {
+      "modulators": [
+        {
+          "name": "slow hue drift",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 64,
+          "depth": 0.2,
+          "dcOffset": 0.2
+        }
+      ]
+    }
+  },
+  "macroBank": {
+    "knobs": [
+      {
+        "label": "SIZE",
+        "bindings": [
+          {
+            "parameterId": "BallSize"
+          }
+        ]
+      },
+      {
+        "label": "ORBIT",
+        "bindings": [
+          {
+            "parameterId": "OrbitSpeed"
+          }
+        ]
+      },
+      {
+        "label": "MERGE",
+        "bindings": [
+          {
+            "parameterId": "Merge"
+          }
+        ]
+      },
+      {
+        "label": "SOFT",
+        "bindings": [
+          {
+            "parameterId": "Softness"
+          }
+        ]
+      }
+    ]
+  }
+}

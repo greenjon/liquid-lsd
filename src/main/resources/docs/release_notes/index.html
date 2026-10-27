@@ -1275,10 +1275,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#lfo-minmax-moves-independently-parameterscvmodulatorkt-parametersmodulatableparameterkt-cvevaluatorskt-webevaluatorjs-resourcesreactivity-defaultspresets-webpresets" class="md-nav__link">
+  <a href="#lfo-minmax-moves-independently-parameterscvmodulatorkt-parametersmodulatableparameterkt-cvevaluatorskt-webevaluatorjs-resourcesstock_defaultssources-defaultspresets-webpresets" class="md-nav__link">
     <span class="md-ellipsis">
       
-        LFO Min/Max Moves Independently (parameters/CvModulator.kt, parameters/ModulatableParameter.kt, cv/Evaluators.kt, web/evaluator.js, resources/reactivity/, defaults/presets/, web/presets/)
+        LFO Min/Max Moves Independently (parameters/CvModulator.kt, parameters/ModulatableParameter.kt, cv/Evaluators.kt, web/evaluator.js, resources/stock_defaults/sources/, defaults/presets/, web/presets/)
       
     </span>
   </a>
@@ -1341,10 +1341,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#reactivity-recipes-sources-presetsreactivityrecipeskt-presetsgeneratordefaultskt-resourcesreactivitysources" class="md-nav__link">
+  <a href="#reactivity-recipes-sources-presetsstockdefaultskt-presetsgeneratordefaultskt-resourcesstock_defaultssources" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Reactivity Recipes: Sources (presets/ReactivityRecipes.kt, presets/GeneratorDefaults.kt, resources/reactivity/sources/)
+        Reactivity Recipes: Sources (presets/StockDefaults.kt, presets/GeneratorDefaults.kt, resources/stock_defaults/sources/)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stock-defaults-are-files-presetsstockdefaultskt-presetsgeneratordefaultskt-renderingisfisfautobindenginekt-resourcesstock_defaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stock Defaults Are Files (presets/StockDefaults.kt, presets/GeneratorDefaults.kt, rendering/isf/ISFAutoBindEngine.kt, resources/stock_defaults/)
       
     </span>
   </a>
@@ -6847,10 +6858,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#lfo-minmax-moves-independently-parameterscvmodulatorkt-parametersmodulatableparameterkt-cvevaluatorskt-webevaluatorjs-resourcesreactivity-defaultspresets-webpresets" class="md-nav__link">
+  <a href="#lfo-minmax-moves-independently-parameterscvmodulatorkt-parametersmodulatableparameterkt-cvevaluatorskt-webevaluatorjs-resourcesstock_defaultssources-defaultspresets-webpresets" class="md-nav__link">
     <span class="md-ellipsis">
       
-        LFO Min/Max Moves Independently (parameters/CvModulator.kt, parameters/ModulatableParameter.kt, cv/Evaluators.kt, web/evaluator.js, resources/reactivity/, defaults/presets/, web/presets/)
+        LFO Min/Max Moves Independently (parameters/CvModulator.kt, parameters/ModulatableParameter.kt, cv/Evaluators.kt, web/evaluator.js, resources/stock_defaults/sources/, defaults/presets/, web/presets/)
       
     </span>
   </a>
@@ -6913,10 +6924,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#reactivity-recipes-sources-presetsreactivityrecipeskt-presetsgeneratordefaultskt-resourcesreactivitysources" class="md-nav__link">
+  <a href="#reactivity-recipes-sources-presetsstockdefaultskt-presetsgeneratordefaultskt-resourcesstock_defaultssources" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Reactivity Recipes: Sources (presets/ReactivityRecipes.kt, presets/GeneratorDefaults.kt, resources/reactivity/sources/)
+        Reactivity Recipes: Sources (presets/StockDefaults.kt, presets/GeneratorDefaults.kt, resources/stock_defaults/sources/)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stock-defaults-are-files-presetsstockdefaultskt-presetsgeneratordefaultskt-renderingisfisfautobindenginekt-resourcesstock_defaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stock Defaults Are Files (presets/StockDefaults.kt, presets/GeneratorDefaults.kt, rendering/isf/ISFAutoBindEngine.kt, resources/stock_defaults/)
       
     </span>
   </a>
@@ -12387,7 +12409,7 @@
 <ul>
 <li><strong>Fixed: saving an effect as its default dropped its modulators.</strong> "Save as Default for <effect>" kept only the Metaknob targets, knob order and base values, so any LFO or audio modulator on the slot was lost on new copies. The default now stores full parameters, modulators included (MIDI mappings are left out, as for generator defaults, and each new copy gets its own modulator ids). Defaults saved before this keep loading as before.</li>
 </ul>
-<h3 id="lfo-minmax-moves-independently-parameterscvmodulatorkt-parametersmodulatableparameterkt-cvevaluatorskt-webevaluatorjs-resourcesreactivity-defaultspresets-webpresets">LFO Min/Max Moves Independently (<code>parameters/CvModulator.kt</code>, <code>parameters/ModulatableParameter.kt</code>, <code>cv/Evaluators.kt</code>, <code>web/evaluator.js</code>, <code>resources/reactivity/</code>, <code>defaults/presets/</code>, <code>web/presets/</code>)</h3>
+<h3 id="lfo-minmax-moves-independently-parameterscvmodulatorkt-parametersmodulatableparameterkt-cvevaluatorskt-webevaluatorjs-resourcesstock_defaultssources-defaultspresets-webpresets">LFO Min/Max Moves Independently (<code>parameters/CvModulator.kt</code>, <code>parameters/ModulatableParameter.kt</code>, <code>cv/Evaluators.kt</code>, <code>web/evaluator.js</code>, <code>resources/stock_defaults/sources/</code>, <code>defaults/presets/</code>, <code>web/presets/</code>)</h3>
 <ul>
 <li><strong>Fixed: changing an LFO's Max also moved its Min.</strong> The Min/Max slider assumed every modulator swings evenly either side of its centre, but a beat LFO on a 0-to-1 parameter was secretly remapped to swing only upward from the centre, so the real minimum shifted whenever you moved Max. Every bipolar source (LFO, beat sine, beat phase, sample and hold) now swings evenly around its centre on any parameter, and the slider's Min and Max are exactly the lowest and highest the modulator reaches, relative to the base value. Audio, trigger and MIDI sources never go below zero, so their Min is the offset and Max is offset plus depth.</li>
 <li><strong>Behaviour change:</strong> an LFO with depth <em>d</em> on a 0-to-1 parameter used to sweep from the base up to base + <em>d</em>; it now sweeps base ± <em>d</em>, clamped at the parameter's limits. The stock presets (the web TV presets and FX chains, Mandala 7 and 10) and all reactivity recipes were rewritten to keep their original sweep. Recipe LFOs on 0-to-1 parameters got a matching offset, so their sweep is unchanged; the 3d mandala and 3d spiral 2 factory presets were converted the same way. Presets you saved yourself keep their numbers and will swing wider; lower their Depth, or raise Min, to taste.</li>
@@ -12415,10 +12437,15 @@
 <li><strong>Generator sources now let the BG deck show through wherever they are black.</strong> Video Feedback and 29 other generators (everything except Chladni Cymatics, Dynamic Spiral, Icosa H3, Mandala and Fractal Flame, which keep their own alpha) write an alpha that follows their brightest channel, the way Fractal Flame does. Bright areas cover what is behind them and dark areas reveal it; the picture over a black BG is unchanged.</li>
 <li>The renderer now stores source alpha as alpha instead of squaring it (colour x alpha, alpha kept as written), so sources with a partial alpha such as Chladni Cymatics blend a little more evenly.</li>
 </ul>
-<h3 id="reactivity-recipes-sources-presetsreactivityrecipeskt-presetsgeneratordefaultskt-resourcesreactivitysources">Reactivity Recipes: Sources (<code>presets/ReactivityRecipes.kt</code>, <code>presets/GeneratorDefaults.kt</code>, <code>resources/reactivity/sources/</code>)</h3>
+<h3 id="reactivity-recipes-sources-presetsstockdefaultskt-presetsgeneratordefaultskt-resourcesstock_defaultssources">Reactivity Recipes: Sources (<code>presets/StockDefaults.kt</code>, <code>presets/GeneratorDefaults.kt</code>, <code>resources/stock_defaults/sources/</code>)</h3>
 <ul>
 <li><strong>Thirty-three sources now react to the music out of the box:</strong> Apollonian, Dynamic Spiral, Tunnel Scenes, Kali Set, Aurora Ribbons, Domain Warp Fluid, Voronoi Cells, Wave Ripples, Glitch Blocks, Metaballs, Halftone Matrix, Video Feedback, Mandelbulb, Mandelbox, KIFS, Pseudo-Kleinian, Hyperbolic Tiling, Icosa H3, Reaction Diffusion, Lenia, Cyclic CA, Nebula Volume, Celestial Engine, Chladni Cymatics, Escape Time, Girih Stars, Gyroid Hyperspace, Hyper Slice, Isometric Voxels, Quasicrystal, Thin Film, Mandala and Fractal Flame. Fractal Flame's recipe moves only the performance handles, camera push and tone (Breathe and Warp, a slow Spin sway, colour Drift, kick push on Magnify, kick flashes on Exposure), never the xform parameters the morph evolves. Mandala's four arm lengths each move differently (L1 jiggles with the amplitude, L2 is an 8-beat sine, L3 jumps to a new length every 16 beats, L4 rides a 6-beat ramp), the colours cycle once a beat, a new shape recipe arrives every 32 beats and a new lobe count every 256. On the simulations the always-on responses touch only the look and the speed; anything that could change what the pattern does (growth rules, thresholds) is gentle and bypassed, and Reaction Diffusion and Cyclic CA have a bypassed <strong>Reseed</strong> response that restarts the pattern on a hard kick (on by default in Lenia). Each has a hand-written set of audio and beat responses on its key parameters (for example the gasket breathing on the kick, aurora curtains rising with loudness, glitches landing on kick and hat hits). Where a parameter has more than one idea, the extra ones are wired but <strong>bypassed</strong>, so you only click an AUD or LFO cell to switch them on.</li>
-<li>They are ordinary modulators: edit, bypass or delete them like any other. A default you saved yourself still wins over the shipped recipe. Recipes are read from files in the app (<code>reactivity/sources/&lt;source&gt;.json</code>); a test checks every file against its shader's parameters.</li>
+<li>They are ordinary modulators: edit, bypass or delete them like any other. A default you saved yourself still wins over the shipped recipe. Recipes are part of each source's shipped default (see Stock Defaults Are Files below); a test checks every file against its shader's parameters.</li>
+</ul>
+<h3 id="stock-defaults-are-files-presetsstockdefaultskt-presetsgeneratordefaultskt-renderingisfisfautobindenginekt-resourcesstock_defaults">Stock Defaults Are Files (<code>presets/StockDefaults.kt</code>, <code>presets/GeneratorDefaults.kt</code>, <code>rendering/isf/ISFAutoBindEngine.kt</code>, <code>resources/stock_defaults/</code>)</h3>
+<ul>
+<li><strong>Each stock source and effect now ships one default file</strong> (<code>stock_defaults/sources/&lt;id&gt;.json</code>, <code>stock_defaults/filters/&lt;id&gt;.json</code>) in the same shape as the default you save yourself, listing only what differs from the shader: knob targets, Metaknob targets, and the built-in audio responses. It replaces the separate recipe files and the knob tables that lived in code. Nothing changes on screen; a default you save still replaces the stock one, and Reset/Remove Saved Default goes back to it.</li>
+<li>Third-party shaders are unchanged: their knobs are worked out each time they load, and nothing is written until you choose Save as Default.</li>
 </ul>
 <h3 id="audio-response-audioaudioenginekt-uiaudioenginepanelkt-uiapppreferencesstorekt">Audio Response (<code>audio/AudioEngine.kt</code>, <code>ui/AudioEnginePanel.kt</code>, <code>ui/AppPreferencesStore.kt</code>)</h3>
 <ul>

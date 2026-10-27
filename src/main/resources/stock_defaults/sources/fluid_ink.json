@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "sourceId": "fluid_ink",
+  "macroBank": {
+    "knobs": [
+      {
+        "label": "FORCE",
+        "bindings": [
+          {
+            "parameterId": "Force"
+          }
+        ]
+      },
+      {
+        "label": "SWIRL",
+        "bindings": [
+          {
+            "parameterId": "Swirl"
+          }
+        ]
+      },
+      {
+        "label": "TURB",
+        "bindings": [
+          {
+            "parameterId": "Turbulence"
+          }
+        ]
+      },
+      {
+        "label": "FADE",
+        "bindings": [
+          {
+            "parameterId": "DyeFade"
+          }
+        ]
+      }
+    ]
+  }
+}

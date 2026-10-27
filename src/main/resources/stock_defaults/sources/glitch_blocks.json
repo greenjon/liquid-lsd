@@ -1,0 +1,184 @@
+{
+  "version": 1,
+  "sourceId": "glitch_blocks",
+  "parameters": {
+    "Intensity": {
+      "note": "Glitches land on the kick.",
+      "modulators": [
+        {
+          "name": "kick hit",
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "depth": 0.5,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        },
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.3,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "Split": {
+      "note": "Channel split on hats.",
+      "modulators": [
+        {
+          "name": "hat tick",
+          "sourceId": "audio_flux_high",
+          "operator": "ADD",
+          "depth": 0.5,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        },
+        {
+          "name": "high shimmer",
+          "sourceId": "audio_high",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.35,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 110
+        }
+      ]
+    },
+    "Tear": {
+      "note": "Tearing on snares.",
+      "modulators": [
+        {
+          "name": "snare tick",
+          "sourceId": "audio_flux_mid",
+          "operator": "ADD",
+          "depth": 0.4,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        },
+        {
+          "name": "mid body",
+          "sourceId": "audio_mid",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.3,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "Rate": {
+      "note": "Glitch rate follows loudness.",
+      "modulators": [
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.3,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        },
+        {
+          "name": "triangle 16-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "bypassed": true,
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 16,
+          "depth": 0.125,
+          "dcOffset": 0.125
+        }
+      ]
+    },
+    "Crush": {
+      "note": "Posterise drops on the kick; off by default.",
+      "modulators": [
+        {
+          "name": "kick hit",
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.6,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        }
+      ]
+    },
+    "BlockSize": {
+      "note": "Slow block-size wander; off by default.",
+      "modulators": [
+        {
+          "name": "triangle 16-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "bypassed": true,
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 16,
+          "depth": 0.1,
+          "dcOffset": 0.1
+        }
+      ]
+    },
+    "HueOffset": {
+      "modulators": [
+        {
+          "name": "slow hue drift",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 64,
+          "depth": 0.2,
+          "dcOffset": 0.2
+        }
+      ]
+    }
+  },
+  "macroBank": {
+    "knobs": [
+      {
+        "label": "GLITCH",
+        "bindings": [
+          {
+            "parameterId": "Intensity"
+          }
+        ]
+      },
+      {
+        "label": "BLOCK",
+        "bindings": [
+          {
+            "parameterId": "BlockSize"
+          }
+        ]
+      },
+      {
+        "label": "RATE",
+        "bindings": [
+          {
+            "parameterId": "Rate"
+          }
+        ]
+      },
+      {
+        "label": "TEAR",
+        "bindings": [
+          {
+            "parameterId": "Tear"
+          }
+        ]
+      }
+    ]
+  }
+}

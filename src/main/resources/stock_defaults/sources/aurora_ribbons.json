@@ -1,0 +1,183 @@
+{
+  "version": 1,
+  "sourceId": "aurora_ribbons",
+  "parameters": {
+    "CurtainHeight": {
+      "note": "Curtains rise with loudness.",
+      "modulators": [
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.3,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        },
+        {
+          "name": "bass pulse",
+          "sourceId": "audio_bass",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.25,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "WaveAmp": {
+      "note": "Curtains ripple with the mids.",
+      "modulators": [
+        {
+          "name": "mid body",
+          "sourceId": "audio_mid",
+          "operator": "ADD",
+          "depth": 0.3,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        },
+        {
+          "name": "sine 16-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "bypassed": true,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 16,
+          "depth": 0.125,
+          "dcOffset": 0.125
+        }
+      ]
+    },
+    "Shimmer": {
+      "note": "Highs make it shimmer.",
+      "modulators": [
+        {
+          "name": "high shimmer",
+          "sourceId": "audio_high",
+          "operator": "ADD",
+          "depth": 0.4,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 110
+        },
+        {
+          "name": "hat tick",
+          "sourceId": "audio_flux_high",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.4,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        }
+      ]
+    },
+    "Brightness": {
+      "note": "Gentle loudness lift.",
+      "modulators": [
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.15,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        },
+        {
+          "name": "kick hit",
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.2,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        }
+      ]
+    },
+    "WaveSpeed": {
+      "note": "Drifts faster when loud.",
+      "modulators": [
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.25,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "SkyDarkness": {
+      "note": "Sky lightens when loud.",
+      "modulators": [
+        {
+          "name": "loudness lightens sky",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": -0.15,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "HueShift": {
+      "modulators": [
+        {
+          "name": "slow hue drift",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 128,
+          "depth": 0.175,
+          "dcOffset": 0.175
+        }
+      ]
+    }
+  },
+  "macroBank": {
+    "knobs": [
+      {
+        "label": "HEIGHT",
+        "bindings": [
+          {
+            "parameterId": "CurtainHeight"
+          }
+        ]
+      },
+      {
+        "label": "AMP",
+        "bindings": [
+          {
+            "parameterId": "WaveAmp"
+          }
+        ]
+      },
+      {
+        "label": "SPEED",
+        "bindings": [
+          {
+            "parameterId": "WaveSpeed"
+          }
+        ]
+      },
+      {
+        "label": "SHIMMER",
+        "bindings": [
+          {
+            "parameterId": "Shimmer"
+          }
+        ]
+      }
+    ]
+  }
+}

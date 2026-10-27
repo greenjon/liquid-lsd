@@ -4,6 +4,8 @@
 
 **SUPERSEDED 2026-10-27 (user):** the `recipe` flag and the per-modulator Reactivity amount were REMOVED (two invisible classes of modulator was not worth the complexity). Replaced by **Audio Response** (`AudioEngine.response`, 0..2): one multiplier on the eight audio CV signals after AGC, applying to every audio modulator. LFOs are not scaled. The "Reactivity amount semantics" section and the web `ctx.reactivity` notes below are history.
 
+**FORMAT SUPERSEDED 2026-10-27 (user):** the separate `reactivity/<kind>/<id>.json` recipe files (and the knob tables in code) were folded into one shipped default per shader, `resources/stock_defaults/{sources,filters}/<id>.json` (`presets/StockDefaults.kt`), in the shape of a saved default. The "Recipe format" section below is history; see docs/developer/modulation.md.
+
 Goal: every shipped source, FX and transition ships hand-curated audio/beat response. Per parameter, an ordered
 stack of modulators: ONE active, alternates present but `bypassed`. A global "reactivity amount" scales the
 active recipe modulators.

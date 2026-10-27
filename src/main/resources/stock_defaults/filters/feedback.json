@@ -1,0 +1,11 @@
+{
+  "version": 3,
+  "metaBindings": [
+    {
+      "targetParamName": "fbDecay",
+      "minVal": 0.0,
+      "maxVal": 1.0,
+      "curve": "EXPONENTIAL"
+    }
+  ]
+}

@@ -2,7 +2,10 @@ package llm.slop.liquidlsd.rendering.isf
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.jsonPrimitive
 import llm.slop.liquidlsd.models.ParameterDto
+import llm.slop.liquidlsd.presets.StockDefaults
 import llm.slop.liquidlsd.models.applyDto
 import llm.slop.liquidlsd.models.toGeneratorDefaultDto
 import llm.slop.liquidlsd.ui.FileSystemManager
@@ -45,7 +48,7 @@ data class FxDefaultDto(
  * Resolution priority, most-specific wins (note this is the reverse of the tier numbering below,
  * which reflects the original design doc's authoring order, not the order these are checked in):
  *   1. User override cache, keyed by a content hash of the shader source (Tier 3)
- *   2. Hand-curated bindings for bundled/core filters (Tier 1)
+ *   2. The default shipped for a bundled filter, `stock_defaults/filters/<id>.json` (Tier 1)
  *   3. Automated heuristic over the shader's declared INPUTS (Tier 2)
  */
 object ISFAutoBindEngine {
@@ -62,48 +65,33 @@ object ISFAutoBindEngine {
     // Time/frequency-like names default to an exponential curve instead of linear.
     private val EXPONENTIAL_NAMES = setOf("rate", "speed", "frequency", "decay", "feedback")
 
-    // Hand-curated bindings for ISFFilterRegistry.bundledFilters. First pass at sensible
-    // defaults based on each filter's actual declared inputs — expected to be refined by ear
-    // over time, not the final word.
-    private val CURATED: Map<String, FxMetaBinding> = mapOf(
-        "invert" to FxMetaBinding("invertIntensity", 0f, 1f),
-        "luma_key" to FxMetaBinding("threshold", 0f, 1f),
-        "bloom" to FxMetaBinding("bloomIntensity", 0.0f, 1.0f),
-        "feedback" to FxMetaBinding("fbDecay", 0f, 1f, curve = MetaCurve.EXPONENTIAL),
-        "3d_elevation" to FxMetaBinding("separation", 0.33333f, 1.0f),
-        "kaleidoscope" to FxMetaBinding("rotation", -3.14159f, 3.14159f),
-        "radial_blur" to FxMetaBinding("blurAmount", 0f, 1f),
-        "rgb_split" to FxMetaBinding("amount", 0.0f, 1.0f),
-        "polar_tunnel" to FxMetaBinding("depth", 0.0f, 1.0f),
-        "color_levels" to FxMetaBinding("contrast", 0.0f, 1.0f),
-        "gradient_map" to FxMetaBinding("mixAmount", 0f, 1f),
-        "directional_blur" to FxMetaBinding("blurAmount", 0f, 1f),
-        "wave_displace" to FxMetaBinding("amplitude", 0.0f, 1.0f),
-        "pixelate" to FxMetaBinding("pixelSize", 1f, 64f),
-        "retro_crt" to FxMetaBinding("scanlineIntensity", 0f, 1f),
-        "pinch_bulge" to FxMetaBinding("amount", -1f, 1f),
-        "neon_edge" to FxMetaBinding("edgeStrength", 0.0f, 0.5f),
-        "luma_displace" to FxMetaBinding("refractAmount", 0.0f, 1.0f),
-        "video_strobe" to FxMetaBinding("rate", 0f, 20f),
-        "fluid_smear" to FxMetaBinding("smearAmount", 0f, 1f),
-        "thermal_scanner" to FxMetaBinding("intensity", 0f, 1f),
-        "mirror_sphere" to FxMetaBinding("sphereRadius", 0f, 0.8f),
-        "halftone" to FxMetaBinding("dotScale", 0.0f, 1.0f),
-        "anamorphic_streak" to FxMetaBinding("streakIntensity", 0.0f, 1.0f),
-        "vhs_glitch" to FxMetaBinding("trackingJitter", 0f, 1f),
-        "vortex_swirl" to FxMetaBinding("twist", -1.0f, 1.0f),
-        "faceted_glass" to FxMetaBinding("refraction", 0f, 1f)
-    )
-
-    /** Resolves the default bindings and parameters for [filter]: user override, then curated, then heuristic. */
+    /**
+     * Resolves the default bindings and parameters for [filter]: user override, then the default shipped for a stock
+     * filter (resources/stock_defaults/filters/<id>.json, see [StockDefaults]), then the heuristic. Nothing is written to disk.
+     */
     fun resolveDefault(filter: ISFFilter): FxDefaultDto {
         filter.contentHash?.let { hash -> loadOverride(hash)?.let { return it } }
-        // Curated entries are keyed by filter id, so a user shader that happens to share a stock id falls through to the heuristic.
-        CURATED[filter.id]?.takeIf { it.targetParamName == null || it.targetParamName in filter.parameters }?.let {
-            return FxDefaultDto(version = 2, metaBindings = listOf(it.toDto()), parameters = emptyMap())
-        }
-        val heuristic = resolveHeuristic(filter)
-        return FxDefaultDto(version = 2, metaBindings = listOf(heuristic.toDto()), parameters = emptyMap())
+        shippedDefault(filter)?.let { return it }
+        return FxDefaultDto(metaBindings = listOf(resolveHeuristic(filter).toDto()))
+    }
+
+    /**
+     * The shipped default for [filter], or null. Files are keyed by filter id, so a user shader that happens to share
+     * a stock id but lacks a bound input falls through to the heuristic. `params` holds only the inputs the file names,
+     * laid over the filter's own.
+     */
+    private fun shippedDefault(filter: ISFFilter): FxDefaultDto? {
+        val file = StockDefaults.forId("filters", filter.id) ?: return null
+        val bindings = (file["metaBindings"] as? JsonArray)?.map { json.decodeFromJsonElement(FxMetaBindingDto.serializer(), it) }
+            ?: return null
+        if (bindings.any { it.targetParamName != null && it.targetParamName !in filter.parameters }) return null
+        val baseline = filter.parameters.mapValues { it.value.toGeneratorDefaultDto() }
+        val params = StockDefaults.overlayParameters(file, "params", baseline, "filters/${filter.id}")
+        return FxDefaultDto(
+            metaBindings = bindings,
+            params = params.ifEmpty { null },
+            knobLayout = (file["knobLayout"] as? JsonArray)?.map { it.jsonPrimitive.content }
+        )
     }
 
     /** Resolves all Metaknob bindings for [filter]. */

@@ -1,0 +1,175 @@
+{
+  "version": 1,
+  "sourceId": "domain_warp_fluid",
+  "parameters": {
+    "WarpStrength": {
+      "note": "Fluid kneads on the kick.",
+      "modulators": [
+        {
+          "name": "bass pulse",
+          "sourceId": "audio_bass",
+          "operator": "ADD",
+          "depth": 0.25,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        },
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.25,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "Swirl": {
+      "note": "Slow beat-locked swirl reversal.",
+      "modulators": [
+        {
+          "name": "sine 16-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 16,
+          "depth": 0.4
+        },
+        {
+          "name": "mid body",
+          "sourceId": "audio_mid",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.4,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "Speed": {
+      "note": "Flows faster when loud.",
+      "modulators": [
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.25,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "Gloss": {
+      "note": "Highs glint.",
+      "modulators": [
+        {
+          "name": "high shimmer",
+          "sourceId": "audio_high",
+          "operator": "ADD",
+          "depth": 0.3,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 110
+        },
+        {
+          "name": "hat tick",
+          "sourceId": "audio_flux_high",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.3,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        }
+      ]
+    },
+    "Viscosity": {
+      "note": "Thins out on bass.",
+      "modulators": [
+        {
+          "name": "bass thins fluid",
+          "sourceId": "audio_bass",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": -0.15,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "HueCycleSpeed": {
+      "note": "Colour spins faster when loud.",
+      "modulators": [
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.3,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "Zoom": {
+      "note": "Slow breathing.",
+      "modulators": [
+        {
+          "name": "sine 32-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "bypassed": true,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 32,
+          "depth": 0.075,
+          "dcOffset": 0.075
+        }
+      ]
+    }
+  },
+  "macroBank": {
+    "knobs": [
+      {
+        "label": "WARP",
+        "bindings": [
+          {
+            "parameterId": "WarpStrength"
+          }
+        ]
+      },
+      {
+        "label": "SWIRL",
+        "bindings": [
+          {
+            "parameterId": "Swirl"
+          }
+        ]
+      },
+      {
+        "label": "SPEED",
+        "bindings": [
+          {
+            "parameterId": "Speed",
+            "curve": "EXPONENTIAL"
+          }
+        ]
+      },
+      {
+        "label": "ZOOM",
+        "bindings": [
+          {
+            "parameterId": "Zoom"
+          }
+        ]
+      }
+    ]
+  }
+}

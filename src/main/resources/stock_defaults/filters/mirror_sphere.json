@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "metaBindings": [
+    {
+      "targetParamName": "sphereRadius",
+      "minVal": 0.0,
+      "maxVal": 0.8
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "metaBindings": [
+    {
+      "targetParamName": "rotation",
+      "minVal": -3.14159,
+      "maxVal": 3.14159
+    }
+  ]
+}

@@ -11,7 +11,12 @@ import llm.slop.liquidlsd.macro.MacroCurveType
 import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.macro.MacroLinkMode
 import llm.slop.liquidlsd.macro.MacroTargetType
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 import llm.slop.liquidlsd.models.GeneratorDefaultDto
+import llm.slop.liquidlsd.models.ParameterDto
 import llm.slop.liquidlsd.models.applyDto
 import llm.slop.liquidlsd.models.toGeneratorDefaultDto
 import llm.slop.liquidlsd.rendering.Deck
@@ -28,7 +33,7 @@ import java.io.File
  *
  * Provides a 3-tier fallback strategy:
  *   1. User-saved default (stored in library/generator_defaults/<sourceId>.json)
- *   2. Hand-curated defaults for bundled stock generators
+ *   2. The default shipped for a stock generator ([StockDefaults], resources/stock_defaults/sources/<sourceId>.json)
  *   3. Automated heuristic fallback for third-party shaders
  */
 object GeneratorDefaults {
@@ -50,220 +55,6 @@ object GeneratorDefaults {
         "intensity", "density", "depth", "detail", "complexity", "iterations"
     )
 
-    private data class KnobSpec(
-        val paramName: String,
-        val label: String,
-        val curve: MacroCurveType = MacroCurveType.LINEAR
-    )
-
-    private val CURATED_KNOBS: Map<String, List<KnobSpec>> = mapOf(
-        "mandala" to listOf(
-            KnobSpec("Lobes", "LOBES"),
-            KnobSpec("Thickness", "THICK"),
-            KnobSpec("Depth", "DEPTH"),
-            KnobSpec("Hue Offset", "HUE")
-        ),
-        "dynamic_spiral" to listOf(
-            KnobSpec("Speed", "SPEED", MacroCurveType.EXPONENTIAL),
-            KnobSpec("Scale", "SCALE"),
-            KnobSpec("WaveAmp", "WAVE AMP"),
-            KnobSpec("Shear", "SHEAR")
-        ),
-        "icosa_h3" to listOf(
-            KnobSpec("Morph", "MORPH"),
-            KnobSpec("StellationBoost", "BOOST"),
-            KnobSpec("Zoom", "ZOOM"),
-            KnobSpec("HueOffset", "HUE")
-        ),
-        "domain_warp_fluid" to listOf(
-            KnobSpec("WarpStrength", "WARP"),
-            KnobSpec("Swirl", "SWIRL"),
-            KnobSpec("Speed", "SPEED", MacroCurveType.EXPONENTIAL),
-            KnobSpec("Zoom", "ZOOM")
-        ),
-        "gyroid_hyperspace" to listOf(
-            KnobSpec("FlightSpeed", "SPEED", MacroCurveType.EXPONENTIAL),
-            KnobSpec("WallThickness", "WALLS"),
-            KnobSpec("Frequency", "FREQ", MacroCurveType.EXPONENTIAL),
-            KnobSpec("CoreGlow", "GLOW")
-        ),
-        "celestial_engine" to listOf(
-            KnobSpec("Speed", "SPEED", MacroCurveType.EXPONENTIAL),
-            KnobSpec("Symmetries", "SYMMETRY"),
-            KnobSpec("PhaseTwist", "TWIST"),
-            KnobSpec("Glow", "GLOW")
-        ),
-        "hyper_slice" to listOf(
-            KnobSpec("SliceOffset", "SLICE"),
-            KnobSpec("RotateXW", "ROTATE XW"),
-            KnobSpec("Morph", "MORPH"),
-            KnobSpec("Zoom", "ZOOM")
-        ),
-        "chladni_cymatics" to listOf(
-            KnobSpec("FrequencyM", "FREQ M", MacroCurveType.EXPONENTIAL),
-            KnobSpec("FrequencyN", "FREQ N", MacroCurveType.EXPONENTIAL),
-            KnobSpec("VibrationSpeed", "SPEED", MacroCurveType.EXPONENTIAL),
-            KnobSpec("NodeSharpness", "NODES")
-        ),
-        "mandelbox" to listOf(
-            KnobSpec("Scale", "SCALE"),
-            KnobSpec("FoldLimit", "FOLD"),
-            KnobSpec("MinRadius", "RADIUS"),
-            KnobSpec("FlightSpeed", "SPEED", MacroCurveType.EXPONENTIAL)
-        ),
-        "kifs" to listOf(
-            KnobSpec("SurfaceType", "TYPE"),
-            KnobSpec("Scale", "SCALE"),
-            KnobSpec("TwistY", "TWIST"),
-            KnobSpec("MorphSpeed", "MORPH", MacroCurveType.EXPONENTIAL)
-        ),
-        "mandelbulb" to listOf(
-            KnobSpec("Power", "POWER"),
-            KnobSpec("PowerSwing", "SWING"),
-            KnobSpec("JuliaMix", "JULIA"),
-            KnobSpec("FlightSpeed", "SPEED", MacroCurveType.EXPONENTIAL)
-        ),
-        "pseudo_kleinian" to listOf(
-            KnobSpec("SlabSize", "SLAB"),
-            KnobSpec("InversionRadius", "INVERT"),
-            KnobSpec("CoreSize", "CORE"),
-            KnobSpec("FlightSpeed", "SPEED", MacroCurveType.EXPONENTIAL)
-        ),
-        "apollonian" to listOf(
-            KnobSpec("CellSize", "CELL"),
-            KnobSpec("InversionRadius", "INVERT"),
-            KnobSpec("Twist", "TWIST"),
-            KnobSpec("FlightSpeed", "SPEED", MacroCurveType.EXPONENTIAL)
-        ),
-        "escape_time" to listOf(
-            KnobSpec("JuliaAngle", "ANGLE"),
-            KnobSpec("JuliaRadius", "RADIUS"),
-            KnobSpec("Power", "POWER"),
-            KnobSpec("MorphSpeed", "MORPH", MacroCurveType.EXPONENTIAL)
-        ),
-        "nebula_volume" to listOf(
-            KnobSpec("Density", "DENSITY"),
-            KnobSpec("Coverage", "COVER"),
-            KnobSpec("Turbulence", "TURB"),
-            KnobSpec("FlightSpeed", "SPEED", MacroCurveType.EXPONENTIAL)
-        ),
-        "reaction_diffusion" to listOf(
-            KnobSpec("Regime", "REGIME"),
-            KnobSpec("Diffusion", "DIFFUSE"),
-            KnobSpec("SimSpeed", "SPEED", MacroCurveType.EXPONENTIAL),
-            KnobSpec("Relief", "RELIEF")
-        ),
-        "fluid_ink" to listOf(
-            KnobSpec("Force", "FORCE"),
-            KnobSpec("Swirl", "SWIRL"),
-            KnobSpec("Turbulence", "TURB"),
-            KnobSpec("DyeFade", "FADE")
-        ),
-        "lenia" to listOf(
-            KnobSpec("GrowthCenter", "CENTER"),
-            KnobSpec("GrowthWidth", "WIDTH"),
-            KnobSpec("Radius", "RADIUS"),
-            KnobSpec("SimSpeed", "SPEED", MacroCurveType.EXPONENTIAL)
-        ),
-        "quasicrystal" to listOf(
-            KnobSpec("Frequency", "FREQ"),
-            KnobSpec("Sharpness", "SHARP"),
-            KnobSpec("SpinSpeed", "SPIN"),
-            KnobSpec("DriftSpeed", "DRIFT")
-        ),
-        "thin_film" to listOf(
-            KnobSpec("FlowSpeed", "FLOW"),
-            KnobSpec("Scale", "SCALE"),
-            KnobSpec("FilmThickness", "FILM"),
-            KnobSpec("Turbulence", "TURB")
-        ),
-        "tunnel_scenes" to listOf(
-            KnobSpec("Speed", "SPEED"),
-            KnobSpec("Twist", "TWIST"),
-            KnobSpec("Glow", "GLOW"),
-            KnobSpec("Sway", "SWAY")
-        ),
-        "video_feedback" to listOf(
-            KnobSpec("Zoom", "ZOOM"),
-            KnobSpec("Rotation", "ROT"),
-            KnobSpec("HueShift", "HUE"),
-            KnobSpec("Decay", "DECAY")
-        ),
-        "hyperbolic_tiling" to listOf(
-            KnobSpec("Speed", "SPEED"),
-            KnobSpec("Drift", "DRIFT"),
-            KnobSpec("EdgeWidth", "EDGE"),
-            KnobSpec("Glow", "GLOW")
-        ),
-        "cyclic_ca" to listOf(
-            KnobSpec("States", "STATES"),
-            KnobSpec("Threshold", "THRESH"),
-            KnobSpec("Speed", "SPEED"),
-            KnobSpec("Density", "SEED")
-        ),
-        "metaballs" to listOf(
-            KnobSpec("BallSize", "SIZE"),
-            KnobSpec("OrbitSpeed", "ORBIT"),
-            KnobSpec("Merge", "MERGE"),
-            KnobSpec("Softness", "SOFT")
-        ),
-        "wave_ripples" to listOf(
-            KnobSpec("Wavelength", "WAVE"),
-            KnobSpec("WaveSpeed", "SPEED"),
-            KnobSpec("OrbitSpeed", "ORBIT"),
-            KnobSpec("Falloff", "FALL")
-        ),
-        "aurora_ribbons" to listOf(
-            KnobSpec("CurtainHeight", "HEIGHT"),
-            KnobSpec("WaveAmp", "AMP"),
-            KnobSpec("WaveSpeed", "SPEED"),
-            KnobSpec("Shimmer", "SHIMMER")
-        ),
-        "isometric_voxels" to listOf(
-            KnobSpec("CellSize", "CELL"),
-            KnobSpec("MaxHeight", "HEIGHT"),
-            KnobSpec("Speed", "SPEED"),
-            KnobSpec("Frequency", "SCALE")
-        ),
-        "halftone_matrix" to listOf(
-            KnobSpec("Density", "DENSITY"),
-            KnobSpec("Sharpness", "SHARP"),
-            KnobSpec("PatternSpeed", "SPEED"),
-            KnobSpec("PatternScale", "SCALE")
-        ),
-        "kali_set" to listOf(
-            KnobSpec("OrbitRadius", "RADIUS"),
-            KnobSpec("Speed", "SPEED"),
-            KnobSpec("Zoom", "ZOOM"),
-            KnobSpec("Twist", "TWIST")
-        ),
-        "girih_stars" to listOf(
-            KnobSpec("Angle", "ANGLE"),
-            KnobSpec("Sweep", "SWEEP"),
-            KnobSpec("Speed", "SPEED"),
-            KnobSpec("Interlace", "WEAVE")
-        ),
-        "glitch_blocks" to listOf(
-            KnobSpec("Intensity", "GLITCH"),
-            KnobSpec("BlockSize", "BLOCK"),
-            KnobSpec("Rate", "RATE"),
-            KnobSpec("Tear", "TEAR")
-        ),
-        "voronoi_cells" to listOf(
-            KnobSpec("CellScale", "SCALE"),
-            KnobSpec("Jitter", "JITTER"),
-            KnobSpec("Speed", "SPEED"),
-            KnobSpec("EdgeGlow", "GLOW")
-        ),
-        // Fractal Flame: the global handles that move every xform at once (one binding does what 6+ would otherwise)
-        "fractal_flame" to listOf(
-            KnobSpec("Magnify", "ZOOM"),   // not Zoom: that one morphs with the genome (stored 0..1, 0.5 = 1x, exponential already)
-            KnobSpec("Spin", "SPIN"),
-            KnobSpec("Warp", "WARP"),
-            KnobSpec("Mutation", "EVOLVE")   // how far the next target drifts from the current genome
-        )
-    )
-
     /**
      * The deck-agnostic path of [source]'s parameter [paramName]: `Deck/<displayName>/<param>`, the form a source
      * registers its parameters under once a deck label is put in front (see `VisualSource.getParameterPaths`).
@@ -277,7 +68,7 @@ object GeneratorDefaults {
 
     /**
      * Resolves the default configuration for [source].
-     * Resolves in order: User override -> Curated stock default -> Heuristic default.
+     * Resolves in order: user-saved default -> shipped default -> heuristic default. Nothing is written to disk here.
      */
     fun resolve(source: VisualSource): GeneratorDefaultDto {
         val sourceId = sourceIdFor(source)
@@ -296,41 +87,51 @@ object GeneratorDefaults {
         val baseParams = source.parameters.mapValues { it.value.toGeneratorDefaultDto() }
         val baseAlpha = source.globalAlpha.toGeneratorDefaultDto()
 
-        // 2. Curated stock defaults
-        val curatedSpecs = CURATED_KNOBS[sourceId]
-        if (curatedSpecs != null) {
-            val knobs = mutableListOf<MacroControl>()
-            for (i in 0 until 4) {
-                val spec = curatedSpecs.getOrNull(i)
-                val param = spec?.paramName?.let { source.parameters[it] }
-                if (spec != null && param != null) {
-                    val binding = MacroBinding(
-                        parameterId = deckParamId(source, spec.paramName),
-                        targetType = MacroTargetType.PARAM_BASE_VALUE,
-                        minVal = param.minClamp,
-                        maxVal = param.maxClamp,
-                        curve = spec.curve,
-                        linkMode = MacroLinkMode.FULL
-                    )
-                    val knobVal = MacroCurve.inverse(param.baseValue, binding)
-                    knobs.add(MacroControl(label = spec.label, value = knobVal, bindings = mutableListOf(binding)))
-                } else {
-                    knobs.add(MacroControl(label = "", value = 0f, bindings = mutableListOf()))
-                }
-            }
+        // 2. The default shipped with the app (resources/stock_defaults/sources/<sourceId>.json), laid over the shader's own
+        val shipped = StockDefaults.forId("sources", sourceId)
+        if (shipped != null) {
+            val params = baseParams + StockDefaults.overlayParameters(shipped, "parameters", baseParams, "sources/$sourceId")
+            val bank = shippedBank(shipped, source, params)
+                ?: return resolveHeuristic(source, sourceId, params, baseAlpha)
             return GeneratorDefaultDto(
                 version = 1,
                 sourceId = sourceId,
-                parameters = ReactivityRecipes.overlay(sourceId, baseParams),
+                parameters = params,
                 globalAlpha = baseAlpha,
-                macroBank = MacroBank(knobs = knobs)
+                macroBank = bank
             )
         }
 
         // 3. Automated heuristic fallback
-        return resolveHeuristic(source, sourceId, baseParams, baseAlpha).let {
-            it.copy(parameters = ReactivityRecipes.overlay(sourceId, it.parameters))
-        }
+        return resolveHeuristic(source, sourceId, baseParams, baseAlpha)
+    }
+
+    /**
+     * The 4-knob bank of a shipped default. A binding's `parameterId` is the bare parameter name (expanded to
+     * [deckParamId]); a missing `targetType` means the base value and a missing range the parameter's own. Each knob
+     * starts where it reproduces its parameter's starting value. A knob whose parameter the source lacks is left blank.
+     */
+    private fun shippedBank(file: JsonObject, source: VisualSource, params: Map<String, ParameterDto>): MacroBank? {
+        val knobs = (file["macroBank"] as? JsonObject)?.get("knobs") as? JsonArray ?: return null
+        return MacroBank(knobs = List(4) { i ->
+            val k = knobs.getOrNull(i) as? JsonObject
+            val b = (k?.get("bindings") as? JsonArray)?.firstOrNull() as? JsonObject
+            val name = (b?.get("parameterId") as? JsonPrimitive)?.contentOrNull
+            val param = name?.let { source.parameters[it] }
+            if (k == null || b == null || param == null) {
+                if (name != null) logger.warn { "Shipped default for ${sourceIdFor(source)}: knob ${i + 1} names unknown parameter '$name'" }
+                return@List MacroControl(label = "", value = 0f, bindings = mutableListOf())
+            }
+            val filled = JsonObject(mapOf(
+                "targetType" to JsonPrimitive(MacroTargetType.PARAM_BASE_VALUE.name),
+                "minVal" to JsonPrimitive(param.minClamp),
+                "maxVal" to JsonPrimitive(param.maxClamp)
+            ) + b + ("parameterId" to JsonPrimitive(deckParamId(source, name))))
+            val binding = json.decodeFromJsonElement(MacroBinding.serializer(), filled)
+            val label = (k["label"] as? JsonPrimitive)?.contentOrNull ?: ""
+            val start = params[name]?.baseValue ?: param.baseValue
+            MacroControl(label = label, value = MacroCurve.inverse(start, binding), bindings = mutableListOf(binding))
+        })
     }
 
     private fun resolveHeuristic(

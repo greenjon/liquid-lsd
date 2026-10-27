@@ -1,0 +1,198 @@
+{
+  "version": 1,
+  "sourceId": "chladni_cymatics",
+  "parameters": {
+    "FrequencyM": {
+      "note": "The plate slides slowly between neighbouring modes (a fraction of a mode over 32 beats).",
+      "modulators": [
+        {
+          "name": "sine 32-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 32,
+          "depth": 0.02,
+          "dcOffset": 0.02
+        },
+        {
+          "name": "bass pulse",
+          "sourceId": "audio_bass",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.03,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        }
+      ]
+    },
+    "FrequencyN": {
+      "note": "Second axis of the mode slide; off by default.",
+      "modulators": [
+        {
+          "name": "sine 64-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "bypassed": true,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 64,
+          "depth": 0.025,
+          "phaseOffset": 0.25,
+          "dcOffset": 0.025
+        }
+      ]
+    },
+    "NodeSharpness": {
+      "note": "Highs sharpen the nodal lines.",
+      "modulators": [
+        {
+          "name": "high shimmer",
+          "sourceId": "audio_high",
+          "operator": "ADD",
+          "depth": 0.25,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 110
+        }
+      ]
+    },
+    "VibrationSpeed": {
+      "note": "The plate vibrates harder when loud.",
+      "modulators": [
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.3,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "Glow": {
+      "note": "Kick flashes the glow.",
+      "modulators": [
+        {
+          "name": "kick hit",
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "depth": 0.3,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        },
+        {
+          "name": "high shimmer",
+          "sourceId": "audio_high",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.25,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 110
+        }
+      ]
+    },
+    "SandAccumulation": {
+      "note": "Sand gathers with loudness; off by default.",
+      "modulators": [
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.15,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "InvertMode": {
+      "note": "Antinodes flip on a hard kick; off by default.",
+      "modulators": [
+        {
+          "name": "kick hit",
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.8,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        }
+      ]
+    },
+    "Scale": {
+      "note": "Kick push; off by default.",
+      "modulators": [
+        {
+          "name": "bass pulse",
+          "sourceId": "audio_bass",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.05,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        }
+      ]
+    },
+    "HueOffset": {
+      "modulators": [
+        {
+          "name": "slow hue drift",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 64,
+          "depth": 0.175,
+          "dcOffset": 0.175
+        }
+      ]
+    }
+  },
+  "macroBank": {
+    "knobs": [
+      {
+        "label": "FREQ M",
+        "bindings": [
+          {
+            "parameterId": "FrequencyM",
+            "curve": "EXPONENTIAL"
+          }
+        ]
+      },
+      {
+        "label": "FREQ N",
+        "bindings": [
+          {
+            "parameterId": "FrequencyN",
+            "curve": "EXPONENTIAL"
+          }
+        ]
+      },
+      {
+        "label": "SPEED",
+        "bindings": [
+          {
+            "parameterId": "VibrationSpeed",
+            "curve": "EXPONENTIAL"
+          }
+        ]
+      },
+      {
+        "label": "NODES",
+        "bindings": [
+          {
+            "parameterId": "NodeSharpness"
+          }
+        ]
+      }
+    ]
+  }
+}

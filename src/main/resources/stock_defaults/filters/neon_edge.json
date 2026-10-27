@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "metaBindings": [
+    {
+      "targetParamName": "edgeStrength",
+      "minVal": 0.0,
+      "maxVal": 0.5
+    }
+  ]
+}

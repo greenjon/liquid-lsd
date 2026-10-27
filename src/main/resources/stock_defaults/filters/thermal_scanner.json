@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "metaBindings": [
+    {
+      "targetParamName": "intensity",
+      "minVal": 0.0,
+      "maxVal": 1.0
+    }
+  ]
+}

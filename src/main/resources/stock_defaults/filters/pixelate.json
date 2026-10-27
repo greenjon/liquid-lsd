@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "metaBindings": [
+    {
+      "targetParamName": "pixelSize",
+      "minVal": 1.0,
+      "maxVal": 64.0
+    }
+  ]
+}

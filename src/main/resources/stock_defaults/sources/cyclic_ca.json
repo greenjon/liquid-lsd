@@ -1,0 +1,139 @@
+{
+  "version": 1,
+  "sourceId": "cyclic_ca",
+  "parameters": {
+    "Speed": {
+      "note": "Waves rotate faster when loud.",
+      "modulators": [
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.3,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "Brightness": {
+      "note": "Kick flash.",
+      "modulators": [
+        {
+          "name": "kick hit",
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "depth": 0.2,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        },
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.15,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "Saturation": {
+      "note": "Mids colour it in.",
+      "modulators": [
+        {
+          "name": "mid body",
+          "sourceId": "audio_mid",
+          "operator": "ADD",
+          "depth": 0.2,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "Threshold": {
+      "note": "Very slow wander of the rule; off by default (can change the pattern type).",
+      "modulators": [
+        {
+          "name": "triangle 64-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "bypassed": true,
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 64,
+          "depth": 0.025,
+          "dcOffset": 0.025
+        }
+      ]
+    },
+    "Reseed": {
+      "note": "Drop trigger; off by default.",
+      "modulators": [
+        {
+          "name": "drop reseed (hard kick wipes and reseeds)",
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 1.0,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        }
+      ]
+    },
+    "HueOffset": {
+      "modulators": [
+        {
+          "name": "slow hue drift",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 64,
+          "depth": 0.175,
+          "dcOffset": 0.175
+        }
+      ]
+    }
+  },
+  "macroBank": {
+    "knobs": [
+      {
+        "label": "STATES",
+        "bindings": [
+          {
+            "parameterId": "States"
+          }
+        ]
+      },
+      {
+        "label": "THRESH",
+        "bindings": [
+          {
+            "parameterId": "Threshold"
+          }
+        ]
+      },
+      {
+        "label": "SPEED",
+        "bindings": [
+          {
+            "parameterId": "Speed"
+          }
+        ]
+      },
+      {
+        "label": "SEED",
+        "bindings": [
+          {
+            "parameterId": "Density"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "metaBindings": [
+    {
+      "targetParamName": "rate",
+      "minVal": 0.0,
+      "maxVal": 20.0
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "metaBindings": [
+    {
+      "targetParamName": "separation",
+      "minVal": 0.33333,
+      "maxVal": 1.0
+    }
+  ]
+}

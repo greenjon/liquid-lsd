@@ -1,0 +1,183 @@
+{
+  "version": 1,
+  "sourceId": "apollonian",
+  "parameters": {
+    "InversionRadius": {
+      "note": "Gasket breathes with the kick; a slow beat sine as the calm alternative.",
+      "modulators": [
+        {
+          "name": "bass pulse",
+          "sourceId": "audio_bass",
+          "operator": "ADD",
+          "depth": 0.12,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        },
+        {
+          "name": "sine 8-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "bypassed": true,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 8,
+          "depth": 0.05,
+          "dcOffset": 0.05
+        }
+      ]
+    },
+    "Twist": {
+      "note": "Slow beat-locked sway; mids as the alternative.",
+      "modulators": [
+        {
+          "name": "sine 32-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 32,
+          "depth": 0.22
+        },
+        {
+          "name": "mid body",
+          "sourceId": "audio_mid",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.3,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "FlightSpeed": {
+      "note": "Flies faster as the music gets louder; surging LFO alternative.",
+      "modulators": [
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.3,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        },
+        {
+          "name": "triangle 16-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "bypassed": true,
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 16,
+          "depth": 0.3
+        }
+      ]
+    },
+    "Brightness": {
+      "note": "Gentle loudness lift; kick flash as the alternative.",
+      "modulators": [
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.15,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        },
+        {
+          "name": "kick hit",
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.25,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        }
+      ]
+    },
+    "InversionStrength": {
+      "note": "Highs sharpen the fold.",
+      "modulators": [
+        {
+          "name": "high shimmer",
+          "sourceId": "audio_high",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.15,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 110
+        }
+      ]
+    },
+    "RotateY": {
+      "note": "Slow turn of the whole gasket.",
+      "modulators": [
+        {
+          "name": "sine 64-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 64,
+          "depth": 0.08
+        }
+      ]
+    },
+    "HueOffset": {
+      "modulators": [
+        {
+          "name": "slow hue drift",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 64,
+          "depth": 0.175,
+          "dcOffset": 0.175
+        }
+      ]
+    }
+  },
+  "macroBank": {
+    "knobs": [
+      {
+        "label": "CELL",
+        "bindings": [
+          {
+            "parameterId": "CellSize"
+          }
+        ]
+      },
+      {
+        "label": "INVERT",
+        "bindings": [
+          {
+            "parameterId": "InversionRadius"
+          }
+        ]
+      },
+      {
+        "label": "TWIST",
+        "bindings": [
+          {
+            "parameterId": "Twist"
+          }
+        ]
+      },
+      {
+        "label": "SPEED",
+        "bindings": [
+          {
+            "parameterId": "FlightSpeed",
+            "curve": "EXPONENTIAL"
+          }
+        ]
+      }
+    ]
+  }
+}

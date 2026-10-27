@@ -1,0 +1,193 @@
+{
+  "version": 1,
+  "sourceId": "pseudo_kleinian",
+  "parameters": {
+    "InversionRadius": {
+      "note": "Folds breathe with the kick.",
+      "modulators": [
+        {
+          "name": "bass pulse",
+          "sourceId": "audio_bass",
+          "operator": "ADD",
+          "depth": 0.1,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        },
+        {
+          "name": "sine 8-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "bypassed": true,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 8,
+          "depth": 0.04,
+          "dcOffset": 0.04
+        }
+      ]
+    },
+    "InversionStrength": {
+      "note": "Highs sharpen the inversion; off by default.",
+      "modulators": [
+        {
+          "name": "high shimmer",
+          "sourceId": "audio_high",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.15,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 110
+        }
+      ]
+    },
+    "SlabSize": {
+      "note": "Slow slab breathing; off by default.",
+      "modulators": [
+        {
+          "name": "triangle 16-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "bypassed": true,
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 16,
+          "depth": 0.05,
+          "dcOffset": 0.05
+        }
+      ]
+    },
+    "OffsetX": {
+      "note": "Slow beat-locked drift of the fold.",
+      "modulators": [
+        {
+          "name": "sine 64-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 64,
+          "depth": 0.15
+        }
+      ]
+    },
+    "OffsetY": {
+      "note": "Mids nudge the fold.",
+      "modulators": [
+        {
+          "name": "mid body",
+          "sourceId": "audio_mid",
+          "operator": "ADD",
+          "depth": 0.12,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "FlightSpeed": {
+      "note": "Flies faster when loud.",
+      "modulators": [
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.25,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "Brightness": {
+      "note": "Gentle loudness lift.",
+      "modulators": [
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.12,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        },
+        {
+          "name": "kick hit",
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.2,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        }
+      ]
+    },
+    "RotateY": {
+      "note": "Slow turntable sway.",
+      "modulators": [
+        {
+          "name": "sine 64-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 64,
+          "depth": 0.08
+        }
+      ]
+    },
+    "HueOffset": {
+      "modulators": [
+        {
+          "name": "slow hue drift",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 64,
+          "depth": 0.175,
+          "dcOffset": 0.175
+        }
+      ]
+    }
+  },
+  "macroBank": {
+    "knobs": [
+      {
+        "label": "SLAB",
+        "bindings": [
+          {
+            "parameterId": "SlabSize"
+          }
+        ]
+      },
+      {
+        "label": "INVERT",
+        "bindings": [
+          {
+            "parameterId": "InversionRadius"
+          }
+        ]
+      },
+      {
+        "label": "CORE",
+        "bindings": [
+          {
+            "parameterId": "CoreSize"
+          }
+        ]
+      },
+      {
+        "label": "SPEED",
+        "bindings": [
+          {
+            "parameterId": "FlightSpeed",
+            "curve": "EXPONENTIAL"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "metaBindings": [
+    {
+      "targetParamName": "mixAmount",
+      "minVal": 0.0,
+      "maxVal": 1.0
+    }
+  ]
+}

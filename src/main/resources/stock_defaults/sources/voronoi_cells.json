@@ -1,0 +1,164 @@
+{
+  "version": 1,
+  "sourceId": "voronoi_cells",
+  "parameters": {
+    "Jitter": {
+      "note": "Cells regularise when the mids are loud.",
+      "modulators": [
+        {
+          "name": "mids regularise cells",
+          "sourceId": "audio_mid",
+          "operator": "ADD",
+          "depth": -0.35,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        },
+        {
+          "name": "sine 16-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "bypassed": true,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 16,
+          "depth": -0.15,
+          "dcOffset": -0.15
+        }
+      ]
+    },
+    "EdgeGlow": {
+      "note": "Cracks flash on the kick.",
+      "modulators": [
+        {
+          "name": "kick hit",
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "depth": 0.4,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        },
+        {
+          "name": "high shimmer",
+          "sourceId": "audio_high",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.3,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 110
+        }
+      ]
+    },
+    "EdgeWidth": {
+      "note": "Edges fatten on the kick.",
+      "modulators": [
+        {
+          "name": "bass pulse",
+          "sourceId": "audio_bass",
+          "operator": "ADD",
+          "depth": 0.2,
+          "followerMode": "PUNCHY",
+          "attackMs": 5,
+          "decayMs": 150
+        }
+      ]
+    },
+    "Speed": {
+      "note": "Cells orbit faster when loud.",
+      "modulators": [
+        {
+          "name": "loudness swell",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.25,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        }
+      ]
+    },
+    "CellScale": {
+      "note": "Slow zoom; off by default.",
+      "modulators": [
+        {
+          "name": "triangle 32-beat",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "bypassed": true,
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 32,
+          "depth": 0.075,
+          "dcOffset": 0.075
+        }
+      ]
+    },
+    "Brightness": {
+      "note": "Kick flash; off by default.",
+      "modulators": [
+        {
+          "name": "kick hit",
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.2,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        }
+      ]
+    },
+    "HueOffset": {
+      "modulators": [
+        {
+          "name": "slow hue drift",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 64,
+          "depth": 0.2,
+          "dcOffset": 0.2
+        }
+      ]
+    }
+  },
+  "macroBank": {
+    "knobs": [
+      {
+        "label": "SCALE",
+        "bindings": [
+          {
+            "parameterId": "CellScale"
+          }
+        ]
+      },
+      {
+        "label": "JITTER",
+        "bindings": [
+          {
+            "parameterId": "Jitter"
+          }
+        ]
+      },
+      {
+        "label": "SPEED",
+        "bindings": [
+          {
+            "parameterId": "Speed"
+          }
+        ]
+      },
+      {
+        "label": "GLOW",
+        "bindings": [
+          {
+            "parameterId": "EdgeGlow"
+          }
+        ]
+      }
+    ]
+  }
+}
