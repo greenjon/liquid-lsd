@@ -245,6 +245,59 @@ internal object LibraryNavigation {
         }
     }
 
+    /**
+     * Fires once for a key that has stayed the same for [delayMs]: auto-preview's "the cursor has come to rest". [update] returns the
+     * key the first time it has rested long enough, else null; a key that was already fired doesn't fire again until another came between.
+     */
+    internal class Dwell(private val delayMs: Long) {
+        private var key: String? = null
+        private var since = 0L
+        private var fired: String? = null
+
+        fun update(current: String?, nowMs: Long): String? {
+            if (current != key) { key = current; since = nowMs }
+            if (current == null || current == fired || nowMs - since < delayMs) return null
+            fired = current
+            return current
+        }
+
+        fun reset() { key = null; fired = null }
+    }
+
+    /** Auto-preview: while on, PV loads the Sources or FX cursor item once the cursor rests ([AUTO_PREVIEW_DELAY_MS]). Library view only. */
+    var autoPreview: Boolean = false
+        private set
+    private val previewDwell = Dwell(AUTO_PREVIEW_DELAY_MS)
+    private var warnedEmptyPv = false
+    const val AUTO_PREVIEW_DELAY_MS = 400L
+
+    /** The controller's shift + tap on the PV send knob in the Library view. */
+    fun toggleAutoPreview() {
+        autoPreview = !autoPreview
+        previewDwell.reset()
+        warnedEmptyPv = false
+        ToastOverlay.show(if (autoPreview) "Auto-preview on: PV loads the item the cursor rests on" else "Auto-preview off")
+    }
+
+    /** Once per frame: turns auto-preview off outside the Library view, else sends the rested cursor item to PV. */
+    fun tickAutoPreview(session: SessionContext, mixer: Mixer, parametersState: ParametersState, inLibraryView: Boolean, nowMs: Long) {
+        if (!autoPreview) return
+        if (!inLibraryView) { autoPreview = false; return }
+        val asset = sendAsset()
+        val rested = previewDwell.update(asset?.path, nowMs) ?: return
+        if (asset == null || asset.path != rested || SendTarget.PV !in sendTargets()) return
+        // Never a dirty-deck prompt in the middle of a scroll: tweaks made on PV (knobs 1-8) are kept until you save or send by hand.
+        if (DeckOps.isDirty(mixer.deckPV, mixer)) {
+            ToastOverlay.show("Auto-preview paused: PV has unsaved changes (save them, or send to PV with knob 12)")
+            return
+        }
+        if (asset.type in FX_TYPES && mixer.deckPV.isEmpty && !warnedEmptyPv) {
+            warnedEmptyPv = true
+            ToastOverlay.show("PV has no source, so an FX preview shows nothing: send a source to PV (knob 12) first")
+        }
+        send(SendTarget.PV, session, mixer, parametersState)
+    }
+
     /** The cursor item a send knob would act on: the Sources or FX list row, when the cursor is in that list. */
     private fun sendAsset(): AssetItem? {
         if (LibraryPanel.activeSelectionSource != SelectionSource.PRESETS) return null

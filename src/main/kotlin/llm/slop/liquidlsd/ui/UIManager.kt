@@ -262,6 +262,7 @@ class UIManager(
         val navSurface = navSurfaceFor(mixer)
         val performSurface = performSurfaceFor(mixer)
         navSurface.sampleBrowsing()
+        LibraryNavigation.tickAutoPreview(session, mixer, parametersState, viewStateOf(session).maximized, llm.slop.liquidlsd.utils.TimeSource.getEpochMillis())
         val (midiCcDelta, bgMidiCcDelta, transMidiCcDelta, fxMidiDelta, fxBgMidiDelta) = session.midiMappingManager.processGlobalMidiEvents(
             midiEnabled = session.uiTheme.midiEnabled,
             parametersState = parametersState,

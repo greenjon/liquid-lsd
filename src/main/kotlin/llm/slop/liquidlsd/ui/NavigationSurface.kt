@@ -75,6 +75,7 @@ internal class NavigationSurface(
     /** Chain view loading: knobs 1-3 load the cursor item into slots 1-3. Library view: the queue knobs ([QueueKnobs], 14-15). */
     override fun browseKnobTap(knob: Int, shifted: Boolean): Boolean {
         if (confirming) return false
+        if (inLibraryView && shifted && knob == SendTarget.PV.knob) { LibraryNavigation.toggleAutoPreview(); return true }
         if (inLibraryView) return QueueKnobs.tap(knob, shifted, browseSession, session, mixer)
         if (!chainLoading || shifted || knob !in 0 until CHAIN_CURSOR_KNOB) return false
         ChainLoad.loadCursorInto(session, mixer, parametersState, knob)
