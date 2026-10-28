@@ -1264,6 +1264,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#web-tv-menu-clicks-no-longer-turn-the-tv-off-webmenujs-webuijs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web TV: Menu Clicks No Longer Turn the TV Off (web/menu.js, web/ui.js)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-slot-youre-browsing-breathes-uitangopalettekt-uidockoutlinekt-uibayheaderkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Slot You're Browsing Breathes (ui/TangoPalette.kt, ui/DockOutline.kt, ui/BayHeader.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#song-sections-as-modulation-sources-audiosectionwatchkt-cvsectiondropkt-cvcvregistrykt-cvevaluatorskt-audioaudioenginekt-uiaudiomodulatorsectionkt-uiaudioenginepanelkt-webenergyjs-webdspjs-webrendererjs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7045,6 +7067,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#web-tv-menu-clicks-no-longer-turn-the-tv-off-webmenujs-webuijs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web TV: Menu Clicks No Longer Turn the TV Off (web/menu.js, web/ui.js)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-slot-youre-browsing-breathes-uitangopalettekt-uidockoutlinekt-uibayheaderkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Slot You're Browsing Breathes (ui/TangoPalette.kt, ui/DockOutline.kt, ui/BayHeader.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#song-sections-as-modulation-sources-audiosectionwatchkt-cvsectiondropkt-cvcvregistrykt-cvevaluatorskt-audioaudioenginekt-uiaudiomodulatorsectionkt-uiaudioenginepanelkt-webenergyjs-webdspjs-webrendererjs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -12801,6 +12845,16 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="web-tv-menu-clicks-no-longer-turn-the-tv-off-webmenujs-webuijs">Web TV: Menu Clicks No Longer Turn the TV Off (<code>web/menu.js</code>, <code>web/ui.js</code>)</h3>
+<ul>
+<li><strong>Fixed: clicking a menu row's name could switch the TV off.</strong> The click redrew the menu, and by the time it reached the cabinet it no longer looked like it came from the menu, so it counted as a click on the cabinet. Menu clicks now stay in the menu, and a click on the cabinet while the menu is open just closes the menu.</li>
+</ul>
+<h3 id="the-slot-youre-browsing-breathes-uitangopalettekt-uidockoutlinekt-uibayheaderkt">The Slot You're Browsing Breathes (<code>ui/TangoPalette.kt</code>, <code>ui/DockOutline.kt</code>, <code>ui/BayHeader.kt</code>)</h3>
+<ul>
+<li><strong>The outline around the slot the Library is applying to now breathes slowly</strong> (a source badge, chain name, FX slot or transition name), and it is a little thicker, so it's easier to spot on a busy screen. It never fades out completely.</li>
+<li><strong>The name on the Library's tab line and the Edit view's header sits in a pill of the row's colour that breathes in step with that outline</strong>, so you can see at a glance which title goes with which slot. The label itself stays in the normal text colour so it stays readable.</li>
+<li>The breath is much slower than the amber OSC-learn pulse, so the two can't be confused.</li>
+</ul>
 <h3 id="song-sections-as-modulation-sources-audiosectionwatchkt-cvsectiondropkt-cvcvregistrykt-cvevaluatorskt-audioaudioenginekt-uiaudiomodulatorsectionkt-uiaudioenginepanelkt-webenergyjs-webdspjs-webrendererjs">Song Sections as Modulation Sources (<code>audio/SectionWatch.kt</code>, <code>cv/SectionDrop.kt</code>, <code>cv/CVRegistry.kt</code>, <code>cv/Evaluators.kt</code>, <code>audio/AudioEngine.kt</code>, <code>ui/AudioModulatorSection.kt</code>, <code>ui/AudioEnginePanel.kt</code>, <code>web/energy.js</code>, <code>web/dsp.js</code>, <code>web/renderer.js</code>)</h3>
 <ul>
 <li><strong>New: breakdowns and drops can drive parameters.</strong> The Audio tab's detection mode has a third choice, <strong>Section</strong>, next to Continuous and Transient. Pick <strong>Energy</strong> or <strong>Drop</strong> under it.</li>
