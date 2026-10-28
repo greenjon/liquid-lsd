@@ -61,8 +61,9 @@ internal class NavigationSurface(
     /**
      * In the pair view its two rows are the only rows on screen, so Twister rows one and two (knobs 1-8) drive them. Bound in place,
      * the same knobs drive the page's first two rows (the rest of the page is sends and the cursor while the list has the controller).
+     * In the Library view they drive the live pair, the deck the last send loaded ([ParametersState.libraryLivePair]).
      */
-    override val browseLiveKnobs: Int get() = if (inPicker && !confirming) PAIR_LIVE_KNOBS else 0
+    override val browseLiveKnobs: Int get() = if ((inPicker || inLibraryView) && !confirming) PAIR_LIVE_KNOBS else 0
 
     /** Chain view loading: the three slot rows (knobs 5-16) stay live under the load row. */
     override fun isBrowseLive(knob: Int): Boolean =

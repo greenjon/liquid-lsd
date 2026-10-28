@@ -78,13 +78,15 @@ internal object PerformPages {
         parametersState: ParametersState,
         mixer: Mixer,
         rowsCache: PerfRows.RowsCache?,
-        knobs: Array<PageKnob?>
+        knobs: Array<PageKnob?>,
+        /** Rows to resolve instead of the page's (the Library view's live pair). */
+        rowsOverride: List<RowDescriptor>? = null
     ): Int {
         var clockKnob = -1
         java.util.Arrays.fill(knobs, null)
         val pages = PerfPageStore.default.all()
         val page = pages.firstOrNull { it.id == pageId } ?: pages.first()
-        val rows = if (rowsCache != null) rowsCache.rows(page, ctx, parametersState, IDENTITY, pages)
+        val rows = rowsOverride ?: if (rowsCache != null) rowsCache.rows(page, ctx, parametersState, IDENTITY, pages)
         else PerfRows.visibleRowsForPage(page, ctx, parametersState, IDENTITY, pages)
         val rowCount = minOf(rows.size, KnobCommands.KNOB_COUNT / COLS)
         for (rowIdx in 0 until rowCount) {
@@ -124,18 +126,38 @@ internal class PerformSurface(
     /** The Clock knob of the page [knobBuffer] holds (-1 if none): it shows the tempo, taps on push and ignores turns. */
     private var clockKnob = -1
 
+    private var liveTag: String? = null
+    private var liveRows: List<RowDescriptor> = emptyList()
+
+    /**
+     * The Library view hides the page, so knobs 1-8 play the live pair there ([ParametersState.libraryLivePair]): the deck the last
+     * send loaded, PV to begin with. Null elsewhere (the page's rows, or the pair view's).
+     */
+    private fun libraryLiveRows(): List<RowDescriptor>? {
+        if (theme.libraryMode != UITheme.LibraryMode.FULL || parametersState.focusedPair != null) return null
+        val tag = parametersState.libraryLivePair
+        if (tag != liveTag) {
+            liveTag = tag
+            liveRows = PerfRows.pairFor(tag)?.let(PerfRows::rowsForPair) ?: emptyList()
+        }
+        return liveRows
+    }
+
+    private fun resolvePage(): Int =
+        PerformPages.resolveInto(theme.performancePageId, ctx, parametersState, mixer, rowsCache, knobBuffer, libraryLiveRows())
+
     /** Fresh specs every call (chain state is live), but the page's rows come from the cache. Callers run on one thread at a time. */
     @Synchronized
     private fun knob(index: Int): PageKnob? {
         if (index !in knobBuffer.indices) return null
-        clockKnob = PerformPages.resolveInto(theme.performancePageId, ctx, parametersState, mixer, rowsCache, knobBuffer)
+        clockKnob = resolvePage()
         return knobBuffer[index]
     }
 
     @Synchronized
     override fun pressDown(knob: Int): Boolean {
         if (clock == null || knob !in knobBuffer.indices) return false
-        clockKnob = PerformPages.resolveInto(theme.performancePageId, ctx, parametersState, mixer, rowsCache, knobBuffer)
+        clockKnob = resolvePage()
         if (knob != clockKnob) return false
         clock.tap()
         return true
@@ -186,7 +208,7 @@ internal class PerformSurface(
      */
     @Synchronized
     override fun toggleChainLink() {
-        clockKnob = PerformPages.resolveInto(theme.performancePageId, ctx, parametersState, mixer, rowsCache, knobBuffer)
+        clockKnob = resolvePage()
         val touched = lastTouchedKnob?.let { knobBuffer.getOrNull(it) }?.bankId
         val bankId = touched?.let { fxBankFor(it) } ?: knobBuffer.firstNotNullOfOrNull { it?.bankId?.let(::fxBankFor) } ?: return
         FxMacroSync.chainFor(bankId, mixer)?.toggleAllSlotsLinked()
@@ -234,7 +256,7 @@ internal class PerformSurface(
      */
     @Synchronized
     override fun knobLights(): List<KnobLight?> {
-        clockKnob = PerformPages.resolveInto(theme.performancePageId, ctx, parametersState, mixer, rowsCache, knobBuffer)
+        clockKnob = resolvePage()
         // The returned list is reused on the next poll; the poller reads it before polling again.
         lightBuffer.clear()
         val blinkOn = (nowNanos() / PICKUP_BLINK_HALF_PERIOD_NANOS) % 2L == 0L

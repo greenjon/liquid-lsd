@@ -267,6 +267,32 @@ class PerformSurfaceTest {
         assertNull(state.focusedPair)
     }
 
+    @Test
+    fun inTheLibraryViewKnobsOneToEightPlayTheLivePairAndTheRestAreEmpty() {
+        val savedMode = UITheme.libraryMode
+        try {
+            UITheme.libraryMode = UITheme.LibraryMode.FULL
+            val surface = surface()
+            surface.turn(0, 0f) // resolves
+            val lights = surface.knobLights()
+            assertEquals(PerformanceColors.COLOR_DECK_PV.toList(), lights[0]!!.let { listOf(it.r, it.g, it.b) }, "PV to begin with")
+            assertNull(lights[8], "rows 3-4 belong to the sends and the cursor")
+
+            state.libraryLivePair = "B"
+            val b = surface.knobLights()[0]!!
+            assertEquals(PerformanceColors.COLOR_DECK_B.toList(), listOf(b.r, b.g, b.b))
+            state.libraryLivePair = PerfRows.PAIR_MASTER
+            assertNotNull(surface.knobLights()[4], "Master FX row")
+
+            UITheme.libraryMode = UITheme.LibraryMode.HALF
+            val a = surface.knobLights()[0]!!
+            assertEquals(PerformanceColors.COLOR_DECK_A.toList(), listOf(a.r, a.g, a.b), "the page again outside the Library view")
+        } finally {
+            UITheme.libraryMode = savedMode
+            state.libraryLivePair = "PV"
+        }
+    }
+
     // --- Lights (ring + LED feedback) ---
 
     @Test

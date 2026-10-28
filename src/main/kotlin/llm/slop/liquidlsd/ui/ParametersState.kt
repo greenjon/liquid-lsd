@@ -187,6 +187,12 @@ class ParametersState : MidiLearnSink {
     // -- Pair focus view ---------------------------------------------------------------------
 
     /**
+     * The pair a controller's knobs 1-8 play in the Library view (the page's rows aren't on screen there): the last deck (or Master)
+     * a send knob loaded, starting on PV, where previews go. A deck tag or [PerfRows.PAIR_MASTER]; not persisted.
+     */
+    var libraryLivePair: String = "PV"
+
+    /**
      * The focused pair's tag (a deck tag or [PerfRows.PAIR_MASTER]), or null. The pair view shows the
      * pair's two rows over the Browse dock; it is mutually exclusive with a Params Edit module and, unlike that module, is not persisted.
      */

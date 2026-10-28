@@ -234,6 +234,9 @@ object LibraryPanel {
 
             val windowBtnW = (btnH * 1.15f).coerceIn(20f, 32f)
             if (binding != null) drawBoundChip(session, parametersState, binding, btnH, yOffset, safeW - windowBtnW - 16f)
+            else if (session.uiTheme.libraryMode == UITheme.LibraryMode.FULL && llm.slop.liquidlsd.midi.MidiMappingManager.controllers.anyConnected) {
+                drawLivePairChip(session, parametersState, yOffset)
+            }
 
             // Right-aligned: the queue-split toggle (Library view, browser tabs only; see QueueSplit), then Maximize / Restore
             val isFull = session.uiTheme.libraryMode == UITheme.LibraryMode.FULL
@@ -301,6 +304,24 @@ object LibraryPanel {
             if (ButtonChrome.button("${Icons.X}##dock_unbind", btnH, btnH)) parametersState.clearDockSelection()
             itemTooltip("Stop applying to ${binding.label}: the list goes back to the plain Library (Esc).")
             ImGui.popStyleVar()
+        }
+    }
+
+    /**
+     * Library view with a controller connected: which deck its knobs 1-8 play ([ParametersState.libraryLivePair]), in that deck's colour,
+     * since the deck's rows aren't on screen here.
+     */
+    private fun drawLivePairChip(session: SessionContext, parametersState: ParametersState, yOffset: Float) {
+        val tag = parametersState.libraryLivePair
+        val row = PerfRows.pairFor(tag)?.let(PerfRows::rowsForPair)?.firstOrNull() ?: return
+        val name = if (tag == PerfRows.PAIR_MASTER) "Master" else "Deck $tag"
+        ImGui.sameLine(0f, 14f)
+        ImGui.setCursorPosY(yOffset)
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            ImGui.alignTextToFramePadding()
+            ImGui.textColored(row.accent[0], row.accent[1], row.accent[2], 1f, "Knobs 1-8: $name")
+            itemTooltip("The controller's first two rows of knobs play $name's source and FX rows while you're in the Library. " +
+                "Sending an item with knobs 9-13 moves them to that deck; previews go to PV.")
         }
     }
 

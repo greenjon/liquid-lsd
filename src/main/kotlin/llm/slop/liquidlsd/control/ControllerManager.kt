@@ -29,6 +29,11 @@ class ControllerManager(
     private val lightBuffer = arrayOfNulls<KnobLight>(KnobCommands.KNOB_COUNT)
 
     /** Handles [event] via its device's profile; false if the device has no profile or the profile ignores the input. */
+    /** True while a controller with a profile and an output (lights) is connected, as of the last [updateFeedback]. */
+    @Volatile
+    var anyConnected: Boolean = false
+        private set
+
     fun handle(event: MidiEvent, ctx: CommandContext): Boolean {
         if (event.deviceId.isEmpty()) return false
         if (!runtimes.containsKey(event.deviceId)) {
@@ -54,6 +59,7 @@ class ControllerManager(
             lastScanMs = nowMs
             scanDevices(nowMs)
         }
+        anyConnected = feedbacks.isNotEmpty()
         if (feedbacks.isEmpty()) return
         source.fillKnobLights(lightBuffer)
         for ((name, feedback) in feedbacks) {

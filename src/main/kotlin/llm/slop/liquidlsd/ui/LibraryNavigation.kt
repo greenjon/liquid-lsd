@@ -281,8 +281,10 @@ internal object LibraryNavigation {
         val deckSlot = DeckSlot.entries.firstOrNull { it.name == target.name }
         val deckLabel = deckSlot?.label
         val bankId = deckSlot?.bankId ?: MacroEngine.MASTER
-        // From a bound dock (pair view or in place) the binding follows the send; from Library FULL a send only loads.
+        // From a bound dock (pair view or in place) the binding follows the send; from Library FULL a send only loads, and the
+        // controller's knobs 1-8 move to the target's rows.
         val retarget = parametersState.focusedPair != null || parametersState.boundInPlace
+        if (!retarget) parametersState.libraryLivePair = if (target == SendTarget.MASTER) PerfRows.PAIR_MASTER else target.name
         when (asset.type) {
             AssetType.SOURCE_STOCK -> {
                 val source = VisualSourceRegistry.availableSources.find { it.id == asset.path.removePrefix(PresetListPanel.STOCK_PATH_PREFIX) } ?: return
