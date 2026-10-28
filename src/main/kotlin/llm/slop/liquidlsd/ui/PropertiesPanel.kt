@@ -344,17 +344,7 @@ object PropertiesPanel {
 
                 val isMultiBand = if (cvId == "audio") activeMods.size > 1 else modsToDraw.size > 1
                 val isBandActive = !existing.bypassed && existing.depth != 0.0f
-                val bandLabel = when (existing.sourceId) {
-                    "audio_amp" -> "Full Mix (RMS)"
-                    "audio_bass" -> "Low / Bass (RMS)"
-                    "audio_mid" -> "Mid (RMS)"
-                    "audio_high" -> "High (RMS)"
-                    "audio_flux_amp" -> "Full Mix (Flux)"
-                    "audio_flux_bass" -> "Low / Kick (Flux)"
-                    "audio_flux_mid" -> "Mid / Snare (Flux)"
-                    "audio_flux_high" -> "High / Hat (Flux)"
-                    else -> "Modulator ${idx + 1}"
-                }
+                val bandLabel = AudioModulatorSection.sourceLabel(existing.sourceId) ?: "Modulator ${idx + 1}"
                 val dirtyMarker = if (isBandActive) " [ACTIVE] •" else if (!existing.bypassed) " •" else ""
                 val headerTitle = if (cvId == "audio") "Audio ${idx + 1}: $bandLabel$dirtyMarker###audio_slot_${idx + 1}" else "$bandLabel$dirtyMarker###band_header"
                 val defaultOpen = 0

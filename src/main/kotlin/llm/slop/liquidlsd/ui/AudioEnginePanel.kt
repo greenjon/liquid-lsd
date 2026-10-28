@@ -80,10 +80,13 @@ object AudioEnginePanel {
         CvSignalDef("audio_flux_high", "Hat Transient (Flux)", CvTheme.getThemeColor("audio_flux_high"))
     )
 
+    private val energySignal = CvSignalDef("audio_energy", "Section Energy", CvTheme.getThemeColor("audio_energy"))
+    private val dropSignal = CvSignalDef("audio_drop", "Section Drop", CvTheme.getThemeColor("audio_drop"))
+
     private fun drawCvScope(session: llm.slop.liquidlsd.SessionContext, sig: CvSignalDef) {
         val history = session.cvRegistry.getHistory(sig.id) ?: return
         history.copyTo(cvSamples)
-        val minV = if (sig.id == "beatSine") -1.0f else 0.0f
+        val minV = if (sig.id == "beatSine" || sig.id == "audio_energy") -1.0f else 0.0f
         val maxV = 1.0f
         OscilloscopeDrawer.drawBufferOscilloscope(
             session,
@@ -421,6 +424,15 @@ object AudioEnginePanel {
                     drawCvScope(session, fluxSignals[i])
                     ImGui.spacing()
                 }
+
+                // Last row: song sections
+                ImGui.tableNextRow()
+                ImGui.tableSetColumnIndex(0)
+                drawCvScope(session, energySignal)
+                ImGui.spacing()
+                ImGui.tableSetColumnIndex(1)
+                drawCvScope(session, dropSignal)
+                ImGui.spacing()
 
                 ImGui.endTable()
             }

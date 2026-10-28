@@ -54,6 +54,11 @@ Stock **effects** and **transitions** ship random ranges the same way. The deck 
 
 - **Continuous** — Tracks the ongoing energy level of the band. Good for sustained movement, breathing dynamics, amplitude-following effects.
 - **Transient** — Fires on attacks and hits. Detects the moment energy *increases* in the band, making it sharp and percussive. Great for triggering flashes, jumps, or snaps on drum hits.
+- **Section** — Follows the shape of the song instead of its beats. Pick one of two signals:
+  - **Energy** compares how loud the music is now with the last 20 seconds or so. It rests in the middle of the range during normal playing, sinks toward Min in a breakdown and stays there until the drop, and rises toward Max when the song gets louder. Use it to calm things down in a breakdown (smaller, slower, darker) and open them up when the music builds.
+  - **Drop** jumps to Max when a breakdown ends with the bass coming back, then falls back to Min over 4 bars. Use it for one big hit on the drop: a flash, a zoom punch, an effect swept in. The drop is detected a second or two late, so the hit is dated back to the beat the bass came back on. It starts slightly decayed, but in time with the music.
+
+  Section signals need about 20 seconds of music before they react. They are not scaled by Audio Response and have no response profile (they're already smooth), so only the range applies. A breakdown has to last at least 4 seconds before its end counts as a drop.
 
 ### Response profiles
 
@@ -79,7 +84,7 @@ The oscilloscope shows two traces: the raw audio energy (faint ghost trace) and 
 
 The dual-handled range slider at the bottom sets the floor and ceiling of the modulation output. For example, if you want bass energy to push Lobes between 3 and 8, set Min to 3 and Max to 8.
 
-Min and Max are measured from the parameter's set value, and moving one never moves the other. Audio sources only push upward from silence, so Min is the resting offset and Max is the loudest peak.
+Min and Max are measured from the parameter's set value, and moving one never moves the other. Audio sources only push upward from silence, so Min is the resting offset and Max is the loudest peak. Section **Energy** is the exception: it swings both ways, so it rests halfway between Min and Max, with Min the depth of a breakdown and Max a much louder passage.
 
 Enabling randomization adds independent drift sliders for the Min and Max bounds, so the range itself wanders gently over time.
 

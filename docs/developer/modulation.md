@@ -81,7 +81,7 @@ monopolar parameter was remapped to `[0, 1]` first; stock presets and recipes we
 
 | Field | Type | Purpose |
 |-------|------|---------|
-| `sourceId` | `String` | Which CV signal drives this modulator. Registered IDs: `lfo`, `beatPhase`, `sampleAndHold`, `audio_amp`, `audio_bass`, `audio_mid`, `audio_high`, `audio_flux_amp`, `audio_flux_bass`, `audio_flux_mid`, `audio_flux_high`, `bpm`, `midi_cc_<ch>_<cc>` (`trigger_onset`/`trigger_accent` exist only in the WebGL2 web client's `dsp.js`/`evaluator.js` — see `docs/developer/web_subsystem.md` — not as a desktop `CvModulator` source) |
+| `sourceId` | `String` | Which CV signal drives this modulator. Registered IDs: `lfo`, `beatPhase`, `sampleAndHold`, `audio_amp`, `audio_bass`, `audio_mid`, `audio_high`, `audio_flux_amp`, `audio_flux_bass`, `audio_flux_mid`, `audio_flux_high`, `audio_energy`, `audio_drop`, `bpm`, `midi_cc_<ch>_<cc>` (`trigger_onset`/`trigger_accent` exist only in the WebGL2 web client's `dsp.js`/`evaluator.js` — see `docs/developer/web_subsystem.md` — not as a desktop `CvModulator` source) |
 | `operator` | `ModulationOperator` | How this modulator combines with the accumulated result |
 | `bypassed` | `Boolean` | If true, skipped entirely in `evaluate()` |
 | `id` | `String` (UUID) | Unique identity for undo/copy-paste tracking |

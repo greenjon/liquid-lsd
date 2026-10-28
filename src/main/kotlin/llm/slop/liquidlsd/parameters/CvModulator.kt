@@ -113,10 +113,10 @@ data class CvModulator(
 ) {
     /**
      * Unipolar sources (audio, trigger, MIDI CC) swing 0..1, so their output spans dcOffset..dcOffset+depth;
-     * bipolar sources and the sequencer swing -1..1 and span dcOffset±depth.
+     * bipolar sources, the sequencer and section energy swing -1..1 and span dcOffset±depth.
      */
     private val halfRange: Boolean
-        get() = sourceId != "seq" && !llm.slop.liquidlsd.cv.isCvSourceBipolar(sourceId)
+        get() = sourceId != "seq" && sourceId != "audio_energy" && !llm.slop.liquidlsd.cv.isCvSourceBipolar(sourceId)
 
     /** Modulator output before the operator scalar: cv * depth + dcOffset. */
     fun lfoShape(cv: Float): Float = cv * depth + dcOffset

@@ -233,7 +233,7 @@ fun evaluateModulatorAtOffset(modulator: CvModulator, timeOffsetSec: Double, anc
         }
         else -> {
             val rawVal = CVRegistry.get(modulator.sourceId)
-            if (isAudioSource(modulator.sourceId)) {
+            if (isAudioSource(modulator.sourceId) && !isSectionSource(modulator.sourceId)) {
                 if (modulator.followerMode == llm.slop.liquidlsd.parameters.AudioFollowerMode.RAW || 
                     (modulator.attackMs <= 0f && modulator.decayMs <= 0f)) {
                     rawVal
@@ -305,8 +305,12 @@ fun isCvSourceBipolar(sourceId: String): Boolean = when (sourceId) {
 fun isAudioSource(sourceId: String): Boolean = when (sourceId) {
     "audio_amp", "audio_bass", "audio_mid", "audio_high",
     "audio_flux_amp", "audio_flux_bass", "audio_flux_mid", "audio_flux_high" -> true
-    else -> false
+    else -> isSectionSource(sourceId)
 }
+
+/** Song-section signals (audio/SectionWatch.kt): already shaped, so no envelope follower and no Audio Response. */
+fun isSectionSource(sourceId: String): Boolean = sourceId == "audio_energy" || sourceId == "audio_drop"
+
 
 /**
  * Calculates combined effective modulator value with correct formula per parameter polarity:

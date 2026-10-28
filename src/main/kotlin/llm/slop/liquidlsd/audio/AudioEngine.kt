@@ -160,6 +160,7 @@ object AudioEngine {
     private val fluxBassHistory = CVRegistry.getHistory("audio_flux_bass")
     private val fluxMidHistory  = CVRegistry.getHistory("audio_flux_mid")
     private val fluxHighHistory = CVRegistry.getHistory("audio_flux_high")
+    private val energyHistory   = CVRegistry.getHistory("audio_energy")
 
     // Temporary processing buffers — sized to standard maximum JACK limits to guarantee no allocations.
     private val mixedBuffer = FloatArray(16384)
@@ -771,6 +772,12 @@ object AudioEngine {
         fluxBassHistory?.add(fluxBassNorm)
         fluxMidHistory?.add(fluxMidNorm)
         fluxHighHistory?.add(fluxHighNorm)
+
+        // Song sections: not scaled by Audio Response, they say where the music is, not how hard it hits.
+        val energy = agc.watch.energy
+        CVRegistry.updatePushedValue("audio_energy", energy)
+        energyHistory?.add(energy)
+        CVRegistry.sectionDrop.report(agc.watch.drops, agc.watch.dropLag)
 
         val callbackNanos = System.nanoTime() - currentTime
         callbackLatencyNanos.set(callbackNanos)

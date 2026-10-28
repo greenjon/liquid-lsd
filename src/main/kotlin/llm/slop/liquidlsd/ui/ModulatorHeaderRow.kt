@@ -30,17 +30,7 @@ object ModulatorHeaderRow {
             ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f)
         }
         
-        val bandLabel = when (existing.sourceId) {
-            "audio_amp" -> "Full Mix (RMS)"
-            "audio_bass" -> "Low / Bass (RMS)"
-            "audio_mid" -> "Mid (RMS)"
-            "audio_high" -> "High (RMS)"
-            "audio_flux_amp" -> "Full Mix (Flux)"
-            "audio_flux_bass" -> "Low / Kick (Flux)"
-            "audio_flux_mid" -> "Mid / Snare (Flux)"
-            "audio_flux_high" -> "High / Hat (Flux)"
-            else -> null
-        }
+        val bandLabel = AudioModulatorSection.sourceLabel(existing.sourceId)
         val typeLabel = if (isLfo) "LFO" else if (hasAdvanced) "Oscillator" else if (existing.sourceId.startsWith("audio_")) "Audio" else "Modulator"
         val titleText = if (modsToDraw.size > 1) "Audio ${idx + 1}: ${bandLabel ?: typeLabel}" else (bandLabel ?: typeLabel)
 

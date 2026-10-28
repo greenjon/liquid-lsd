@@ -49,6 +49,10 @@ object CvTheme {
     val AUDIO_FLUX_MID    = Signal(1.00f, 0.45f, 0.25f) // Flame Snare
     val AUDIO_FLUX_HIGH   = Signal(1.00f, 0.70f, 0.30f) // Neon Gold Hat
 
+    // -- Song sections -----------------------------------------------------------------------------
+    val AUDIO_ENERGY      = Signal(0.85f, 0.45f, 1.00f) // Orchid
+    val AUDIO_DROP        = Signal(1.00f, 0.50f, 0.85f) // Hot Pink
+
     val UNKNOWN           = Signal(0.60f, 0.60f, 0.60f)
 
     private val byId: Map<String, Signal> = mapOf(
@@ -67,7 +71,9 @@ object CvTheme {
         "audio_flux_amp" to AUDIO_FLUX_AMP,
         "audio_flux_bass" to AUDIO_FLUX_BASS,
         "audio_flux_mid" to AUDIO_FLUX_MID,
-        "audio_flux_high" to AUDIO_FLUX_HIGH
+        "audio_flux_high" to AUDIO_FLUX_HIGH,
+        "audio_energy" to AUDIO_ENERGY,
+        "audio_drop" to AUDIO_DROP
     )
 
     /**

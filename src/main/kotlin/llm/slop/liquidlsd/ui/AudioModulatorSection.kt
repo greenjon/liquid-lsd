@@ -8,9 +8,10 @@ import llm.slop.liquidlsd.parameters.CvModulator
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 
 /**
- * Dedicated UI section for Audio CV modulators (audio_amp, audio_bass, audio_mid, audio_high).
- * Renders the dynamics Envelope Follower preset dropdown, contextual Custom Attack/Decay sliders,
- * DC Offset, and Depth.
+ * Dedicated UI section for Audio CV modulators (audio_amp, audio_bass, audio_mid, audio_high, their flux, and the
+ * song-section signals audio_energy / audio_drop). Renders the dynamics Envelope Follower preset dropdown,
+ * contextual Custom Attack/Decay sliders, DC Offset, and Depth. Section signals are already shaped, so they get
+ * only a signal choice and the range.
  */
 object AudioModulatorSection {
 
@@ -23,6 +24,23 @@ object AudioModulatorSection {
 
     private val RMS_SOURCES = arrayOf("audio_amp", "audio_bass", "audio_mid", "audio_high")
     private val FLUX_SOURCES = arrayOf("audio_flux_amp", "audio_flux_bass", "audio_flux_mid", "audio_flux_high")
+    private val SECTION_SOURCES = arrayOf("audio_energy", "audio_drop")
+    private val SECTION_LABELS = arrayOf("Energy (vs. the song)", "Drop (4-bar hit)")
+
+    /** Title for an Audio-tab source in modulator headers, or null for any other source. */
+    fun sourceLabel(sourceId: String): String? = when (sourceId) {
+        "audio_amp" -> "Full Mix (RMS)"
+        "audio_bass" -> "Low / Bass (RMS)"
+        "audio_mid" -> "Mid (RMS)"
+        "audio_high" -> "High (RMS)"
+        "audio_flux_amp" -> "Full Mix (Flux)"
+        "audio_flux_bass" -> "Low / Kick (Flux)"
+        "audio_flux_mid" -> "Mid / Snare (Flux)"
+        "audio_flux_high" -> "High / Hat (Flux)"
+        "audio_energy" -> "Energy (Section)"
+        "audio_drop" -> "Drop (Section)"
+        else -> null
+    }
 
     fun draw(
         session: SessionContext,
@@ -37,6 +55,7 @@ object AudioModulatorSection {
         val fontScale = 0.95f
 
         val isTransient = existing.sourceId.startsWith("audio_flux_")
+        val isSection = llm.slop.liquidlsd.cv.isSectionSource(existing.sourceId)
         val currentBandIdx = when (existing.sourceId) {
             "audio_amp", "audio_flux_amp"   -> 0
             "audio_bass", "audio_flux_bass" -> 1
@@ -54,8 +73,8 @@ object AudioModulatorSection {
         val btnW = 125f * fontScale
         val btnH = ImGui.getFrameHeight()
 
-        // Continuous / Transient toggle pair
-        if (ButtonChrome.toggleButton("Continuous (RMS)##mode_cont_${existing.id}", !isTransient, themeColor, btnW, btnH) && isTransient) {
+        // Continuous / Transient / Section toggles
+        if (ButtonChrome.toggleButton("Continuous (RMS)##mode_cont_${existing.id}", !isTransient && !isSection, themeColor, btnW, btnH) && (isTransient || isSection)) {
             onReplace(existing.copy(sourceId = RMS_SOURCES[currentBandIdx]))
         }
         itemTooltip("Continuous Envelope: Tracks continuous volume and sustained body of audio frequencies.")
@@ -67,7 +86,22 @@ object AudioModulatorSection {
         }
         itemTooltip("Transient Trigger: Tracks sudden onsets, drum strikes, and energy growth (Spectral Flux).")
 
+        ImGui.sameLine(0f, 4f * fontScale)
+
+        if (ButtonChrome.toggleButton("Section##mode_section_${existing.id}", isSection, themeColor, btnW, btnH) && !isSection) {
+            onReplace(existing.copy(sourceId = SECTION_SOURCES[0]))
+        }
+        itemTooltip("Song Section: Follows the shape of the song (breakdowns and drops) rather than its beats.")
+
         ImGui.spacing()
+
+        if (isSection) {
+            drawSectionSignal(session, existing, fontScale, onReplace)
+            if (bypassed) ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.Alpha, 0.5f)
+            ImGui.spacing()
+            drawRange(session, param, existing, paramKey, modulatorIndex, themeColor, onReplace)
+            return
+        }
 
         // 2. Frequency Band Selector
         session.uiTheme.body("Frequency Band:")
@@ -196,6 +230,39 @@ object AudioModulatorSection {
             ImGui.spacing()
         }
 
+        drawRange(session, param, existing, paramKey, modulatorIndex, themeColor, onReplace)
+    }
+
+    private fun drawSectionSignal(
+        session: SessionContext,
+        existing: CvModulator,
+        fontScale: Float,
+        onReplace: (CvModulator) -> Unit
+    ) {
+        session.uiTheme.body("Signal:")
+        ImGui.sameLine(0f, 8f * fontScale)
+        ImGui.pushItemWidth(180f * fontScale)
+        val idx = ImInt(SECTION_SOURCES.indexOf(existing.sourceId).coerceAtLeast(0))
+        if (ImGui.combo("##section_${existing.id}", idx, SECTION_LABELS)) {
+            onReplace(existing.copy(sourceId = SECTION_SOURCES[idx.get().coerceIn(0, SECTION_SOURCES.size - 1)]))
+        }
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "aud_section" }
+        itemTooltip("Section Signal:\nEnergy: how loud the music is now against the last ~20 s. Rests mid-range;\n" +
+            "falls in a breakdown, rises when the song gets louder. Needs ~20 s of music first.\n" +
+            "Drop: jumps to full when a breakdown ends with the bass back, then falls away over 4 bars.\n" +
+            "Dated back to the beat the drop landed on.")
+        ImGui.popItemWidth()
+    }
+
+    private fun drawRange(
+        session: SessionContext,
+        param: ModulatableParameter,
+        existing: CvModulator,
+        paramKey: String,
+        modulatorIndex: Int,
+        themeColor: Int,
+        onReplace: (CvModulator) -> Unit
+    ) {
         // -- Modulation Range (Min/Max) ---------------------------
         CustomRangeSlider.drawMinMaxRangeSlider(
             session = session,

@@ -25,7 +25,8 @@ object ClipboardManager {
             "audio" -> {
                 when (dto.sourceId) {
                     "audio_amp", "audio_bass", "audio_mid", "audio_high",
-                    "audio_flux_amp", "audio_flux_bass", "audio_flux_mid", "audio_flux_high" -> dto.sourceId
+                    "audio_flux_amp", "audio_flux_bass", "audio_flux_mid", "audio_flux_high",
+                    "audio_energy", "audio_drop" -> dto.sourceId
                     "amp" -> "audio_amp"
                     "bass" -> "audio_bass"
                     "mid" -> "audio_mid"

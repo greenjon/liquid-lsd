@@ -7,7 +7,7 @@ import kotlin.test.assertEquals
 
 /** The same synthetic level curves as web/tools/energy.test.mjs. */
 class SectionWatchTest {
-    private class Event(val t: Double, val event: String)
+    private class Event(val t: Double, val event: String, val lag: Float = 0f)
 
     /** Runs `segments` (seconds, bass, amp) at 60 fps with a little wobble; returns the events. */
     private fun run(vararg segments: Triple<Int, Float, Float>): Pair<SectionWatch, List<Event>> {
@@ -20,7 +20,7 @@ class SectionWatchTest {
                 val before = w.section
                 val drops = w.drops
                 w.update(bass * wobble, amp * wobble, 1f / 60)
-                if (w.drops != drops) events += Event(t, "drop")
+                if (w.drops != drops) events += Event(t, "drop", w.dropLag)
                 else if (w.section != before && w.section == SectionWatch.Section.BREAKDOWN) events += Event(t, "breakdown")
                 t += 1.0 / 60
             }
@@ -65,5 +65,21 @@ class SectionWatchTest {
         val (w, events) = run(Triple(40, 0.2f, 0.2f), Triple(6, 0.6f, 0.5f))
         assertEquals(emptyList(), events.map { it.event })
         assertEquals(w.short, w.long, 0.05f)
+    }
+
+    @Test
+    fun aDropIsDatedBackToWhenTheLowEndCameBack() {
+        val (_, events) = run(Triple(40, 0.6f, 0.5f), Triple(16, 0.1f, 0.25f), Triple(10, 0.65f, 0.55f))
+        val drop = events.single { it.event == "drop" }
+        assert(drop.lag > 0.5f) { "lag ${drop.lag}" }
+        assertEquals(56.0, drop.t - drop.lag, 0.3)
+    }
+
+    @Test
+    fun energyRestsAtZeroAndFallsInABreakdown() {
+        assertEquals(0f, run(Triple(10, 0.6f, 0.5f)).first.energy) // warm-up
+        assertEquals(0f, run(Triple(40, 0.6f, 0.5f)).first.energy, 0.15f)
+        assertEquals(-1f, run(Triple(40, 0.6f, 0.5f), Triple(10, 0.1f, 0.25f)).first.energy, 0.05f)
+        assert(run(Triple(40, 0.4f, 0.4f), Triple(3, 0.7f, 0.6f)).first.energy > 0.4f)
     }
 }

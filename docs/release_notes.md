@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Song Sections as Modulation Sources (`audio/SectionWatch.kt`, `cv/SectionDrop.kt`, `cv/CVRegistry.kt`, `cv/Evaluators.kt`, `audio/AudioEngine.kt`, `ui/AudioModulatorSection.kt`, `ui/AudioEnginePanel.kt`, `web/energy.js`, `web/dsp.js`, `web/renderer.js`)
+- **New: breakdowns and drops can drive parameters.** The Audio tab's detection mode has a third choice, **Section**, next to Continuous and Transient. Pick **Energy** or **Drop** under it.
+- **Energy** compares how loud the music is now with the last 20 seconds or so. It sits in the middle of the range during normal playing, sinks in a breakdown (and stays down until the drop) and rises when the song gets louder.
+- **Drop** jumps to full when a breakdown ends with the bass back, then falls away over 4 bars. The detector calls a drop a second or two late, so the hit is dated back to the beat the bass came back on.
+- Both need about 20 seconds of music first. Audio Response doesn't scale them, and there is no response profile to choose (they're already smooth). Preferences > Audio Hardware has a scope for each under the band scopes.
+- The web TV computes both the same way, so presets that use them behave alike there (SYNC delays the drop like everything else, and reduced motion softens it).
+
 ### Twister: Queue Knobs, Queueing at a Place, Auto-Preview (`ui/browser/QueueKnobs.kt`, `ui/browser/QueueOps.kt`, `ui/NavigationSurface.kt`, `ui/PerformSurface.kt`, `control/KnobCommands.kt`)
 - **New: knobs 14 and 15 are queue knobs in the Library view** while the queues are under the browser. Knob 14 is the tab's main queue (A/B, A/B FX or Transitions), knob 15 its BG queue. Turn to move the highlight, hold down and turn to carry the item up or down, tap to use it now, Shift + tap to remove it. Their columns are outlined on screen, and the rings show where the highlight is.
 - **New: Shift + tap on knob 16 queues the item at a place**: after the highlight of the queue knob you touched last. Put that highlight on the playing item and the new item plays next. With no queue knob touched, it goes to the end as before.
