@@ -378,6 +378,47 @@ class PerformSurfaceTest {
 
     private fun pageOf(vararg rows: String) = PerfPageDef("t", "T", rows = rows.map(::RowPlacement))
 
+    // --- Chain-view slot rows ---
+
+    @Test
+    fun everyChainHasThreeSlotRowsInTheCatalog() {
+        for (id in PerfRows.DECK_TAGS.map { "deck.$it" } + "master") {
+            for (n in 1..FxChain.SLOT_COUNT) {
+                val row = assertNotNull(PerfRows.CATALOG["$id.fx$n"], "$id.fx$n")
+                assertEquals(n - 1, row.slotIndex)
+                assertEquals(n - 1, FxMacroSync.slotBankTarget(row.bankId)?.second)
+            }
+        }
+    }
+
+    @Test
+    fun aSlotRowShowsItsOwnSlotOnItsOwnPageWhateverTheChainFocus() {
+        deckAChain.slots[0] = filter("one", listOf("a1", "a2", "a3"))
+        deckAChain.slots[1] = filter("two", listOf("b1", "b2", "b3", "b4"))
+        deckAChain.stepParamPage(1, 1)
+        deckAChain.focusSlot(0)
+        FxMacroSync.syncFor(MacroEngine.DECK_A_FX, mixer)
+        try {
+            val row = PerfRows.CATALOG.getValue("deck.A.fx2")
+            val specs = PerfKnobResolver.resolve(MacroEngine.getBank(row.bankId)!!, 0, FxRowState.forRow(row, mixer), mixer)
+            assertEquals(1, (specs[0].under as UnderKnob.SlotCell).slotIndex)
+            assertEquals("b4", (specs[1].under as UnderKnob.ParamCell).name)
+            assertNull((specs[2].under as UnderKnob.ParamCell).name)
+        } finally {
+            for (id in FxMacroSync.SLOT_BANK_IDS) MacroEngine.unregisterBank(id)
+        }
+    }
+
+    @Test
+    fun slotRowsStepTheirLedHueSoAChainViewReadsApart() {
+        val wheel = llm.slop.liquidlsd.control.HueWheel()
+        for (id in PerfRows.DECK_TAGS.map { "deck.$it" } + "master") {
+            val rows = (1..FxChain.SLOT_COUNT).map { PerfRows.CATALOG.getValue("$id.fx$it") } + PerfRows.CATALOG.getValue(if (id == "master") "trans" else "$id.src")
+            val hues = rows.map { PerformPages.ledColor(it).let { c -> wheel.valueFor(c[0], c[1], c[2]) } }
+            assertEquals(rows.size, hues.distinct().size, "$id LEDs: $hues")
+        }
+    }
+
     @Test
     fun rowsOnAPageIgnoreTheEditBayTabs() {
         val page = pageOf("deck.A.src", "deck.A.fx", "master.mix", "master.fx")

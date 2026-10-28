@@ -190,6 +190,7 @@ object FxOps {
         }
         c.slots[slotIndex]?.dispose()
         c.slots[slotIndex] = filter
+        c.slotParamPage[slotIndex] = 0
         c.armSlotTakeover(slotIndex)
     }
 

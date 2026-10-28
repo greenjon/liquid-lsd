@@ -21,7 +21,8 @@ class PerfLayoutPinnedRowsTest {
         val state = ParametersState().apply {
             activeDeckASubTab = "FX"; activeDeckBSubTab = "FX"; activeDeckBGSubTab = "FX"; activeDeckPVSubTab = "FX"; activeMixerSubTab = "FX"
         }
-        assertEquals(pinnedIds.toSet(), PerfRows.CATALOG.filterValues { it.pinnedMode != null }.keys)
+        // Chain-view slot rows are pinned FX rows too, but each shows its own slot bank (see PerformSurfaceTest).
+        assertEquals(pinnedIds.toSet(), PerfRows.CATALOG.filterValues { it.pinnedMode != null && it.slotIndex == null }.keys)
         val page = PerfPageDef("t", "T", rows = pinnedIds.take(PerfPageDef.ROWS).map(::RowPlacement))
         assertEquals(page.rows.map { PerfRows.CATALOG.getValue(it.row) }, PerfRows.rowsForPage(page))
         assertTrue(PerfRows.CATALOG.keys.none { it.endsWith(".srcfx") || it == "master" }, "toggle rows are gone")

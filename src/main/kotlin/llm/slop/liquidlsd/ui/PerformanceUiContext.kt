@@ -126,21 +126,25 @@ internal class PerformanceUiContext {
         llm.slop.liquidlsd.macro.FxMacroSync.chainFor(bankId, mixer) ?: mixer.deckA.fxChain
 
     /** Maps sub-modules (DECK_A_FX, MASTER_FX, TRANS, etc.) to their canonical primary module id (DECK_A, MASTER, etc.). */
-    fun canonicalModuleId(moduleId: String): String = when (moduleId) {
+    fun canonicalModuleId(moduleId: String): String = when (val id = chainBankOf(moduleId)) {
         MacroEngine.DECK_A, MacroEngine.DECK_A_FX -> MacroEngine.DECK_A
         MacroEngine.DECK_B, MacroEngine.DECK_B_FX -> MacroEngine.DECK_B
         MacroEngine.DECK_BG, MacroEngine.DECK_BG_FX -> MacroEngine.DECK_BG
         MacroEngine.DECK_PV, MacroEngine.DECK_PV_FX -> MacroEngine.DECK_PV
         MacroEngine.MASTER, MacroEngine.TRANS, MacroEngine.MASTER_FX, "Mixer" -> MacroEngine.MASTER
-        else -> moduleId
+        else -> id
     }
+
+    /** A Chain-view slot bank ([llm.slop.liquidlsd.macro.FxMacroSync.slotBankId]) stands for its chain's FX bank; any other id for itself. */
+    private fun chainBankOf(moduleId: String): String =
+        llm.slop.liquidlsd.macro.FxMacroSync.slotBankTarget(moduleId)?.first ?: moduleId
 
     /**
      * Focuses the Deep Edit tab (and Mixer/deck sub-tab) that belongs to [bankId]. GLOBAL
      * has no tab, so they are left as a no-op.
      */
     fun focusDeepEditTab(parametersState: ParametersState, bankId: String) {
-        when (bankId) {
+        when (chainBankOf(bankId)) {
             MacroEngine.DECK_A -> parametersState.activeTopTab = "Deck A"
             MacroEngine.DECK_B -> parametersState.activeTopTab = "Deck B"
             MacroEngine.DECK_BG -> parametersState.activeTopTab = "Deck BG"
@@ -177,7 +181,7 @@ internal class PerformanceUiContext {
         }
     }
 
-    fun deckLabelForModuleId(moduleId: String): String? = when (moduleId) {
+    fun deckLabelForModuleId(moduleId: String): String? = when (chainBankOf(moduleId)) {
         MacroEngine.DECK_A, MacroEngine.DECK_A_FX -> "Deck A"
         MacroEngine.DECK_B, MacroEngine.DECK_B_FX -> "Deck B"
         MacroEngine.DECK_BG, MacroEngine.DECK_BG_FX -> "Deck BG"

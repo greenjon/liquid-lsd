@@ -27,15 +27,42 @@ class KnobCommandsBrowseTest {
         override fun browseSend(target: SendTarget) { sent += target }
         override val switchTargets get() = this@KnobCommandsBrowseTest.switchable
         override fun browseSwitch(target: SendTarget) { switched += target }
+        override val browseKnob get() = this@KnobCommandsBrowseTest.cursorKnob
+        override fun isBrowseLive(knob: Int) = if (chainLoading) knob >= 4 else knob < browseLiveKnobs
+        override fun browseKnobTap(knob: Int, shifted: Boolean): Boolean {
+            if (!chainLoading || knob > 2) return false
+            loads += knob
+            return true
+        }
     }
+    private var cursorKnob = KnobCommands.BROWSE_KNOB
+    private var chainLoading = false
+    private val loads = mutableListOf<Int>()
+    private val turned = mutableListOf<Int>()
     private val surface = object : KnobSurface {
-        override fun turn(knob: Int, delta: Float) {}
+        override fun turn(knob: Int, delta: Float) { turned += knob }
         override fun primary(knob: Int) { primaries += knob }
         override fun secondary(knob: Int) {}
         override fun showPage(pageId: String) {}
     }
     private val ctx = CommandContext(mockk<Mixer>(relaxed = true), knobSurface = surface, navSurface = nav)
     private val half = KnobCommands.BROWSE_STEP * 0.6f
+
+    @Test
+    fun chainLoadingMovesTheCursorToKnobFourAndLoadsWithKnobsOneToThree() {
+        chainLoading = true
+        cursorKnob = 3
+        live = SendTarget.entries.toSet()   // must not matter: the load tap comes first, and 9-13 are live slot knobs
+        registry.execute("knob.4", CommandInput.Delta(KnobCommands.BROWSE_STEP), ctx)
+        registry.execute("knob.16", CommandInput.Delta(0.05f), ctx)
+        registry.execute("knob.2", CommandInput.Delta(0.05f), ctx)
+        assertEquals(1, steps)
+        assertEquals(listOf(15), turned, "knob 16 plays its slot row; knob 2 is a load button, not a turn")
+        tap(2); tap(3); tap(10)
+        assertEquals(listOf(1, 2), loads)
+        assertEquals(listOf(9), primaries, "knob 10 is a live slot knob, not a send")
+        assertEquals(emptyList(), sent)
+    }
 
     @Test
     fun leftoverBrowseTravelDoesNotLeakIntoTheNextSession() {

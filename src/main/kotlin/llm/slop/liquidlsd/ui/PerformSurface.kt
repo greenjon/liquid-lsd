@@ -26,19 +26,24 @@ internal object PerformPages {
 
     /** The LED colour for [row]: its accent, except the greyscale Master and Global rows (see [PerformanceColors.LED_MASTER]). */
     fun ledColor(row: RowDescriptor): FloatArray {
-        val base = when (row.bankId) {
+        val base = when (FxMacroSync.chainBankIdOf(row.bankId) ?: row.bankId) {
             MacroEngine.MASTER, MacroEngine.MASTER_FX -> PerformanceColors.LED_MASTER
             MacroEngine.GLOBAL -> PerformanceColors.LED_GLOBAL
             else -> row.accent
         }
         // A pinned FX row sits beside its deck's (or Master's) SRC/MST row on one page; a hue shift tells them apart on the LEDs.
+        // Chain view's three slot rows step the shift (20/30/40 degrees) so they read apart from each other too.
         if (row.pinnedMode != "FX") return base
-        val shift = if (row.bankId == MacroEngine.MASTER_FX) -FX_HUE_SHIFT else FX_HUE_SHIFT
-        return rotateHue(base, shift)
+        val magnitude = row.slotIndex?.let { SLOT_HUE_SHIFTS[it.coerceIn(0, SLOT_HUE_SHIFTS.lastIndex)] } ?: FX_HUE_SHIFT
+        val isMasterChain = (FxMacroSync.chainBankIdOf(row.bankId) ?: row.bankId) == MacroEngine.MASTER_FX
+        return rotateHue(base, if (isMasterChain) -magnitude else magnitude)
     }
 
     /** How far a pinned FX row's LED hue moves from its SRC row's (degrees); Master goes the other way to stay clear of Wet/Dry. */
     private const val FX_HUE_SHIFT = 30f
+
+    /** [FX_HUE_SHIFT] per Chain-view slot row. */
+    private val SLOT_HUE_SHIFTS = floatArrayOf(20f, 30f, 40f)
 
     private fun rotateHue(rgb: FloatArray, degrees: Float): FloatArray {
         val hsb = java.awt.Color.RGBtoHSB((rgb[0] * 255f).toInt(), (rgb[1] * 255f).toInt(), (rgb[2] * 255f).toInt(), null)
@@ -84,11 +89,11 @@ internal object PerformPages {
         val rowCount = minOf(rows.size, KnobCommands.KNOB_COUNT / COLS)
         for (rowIdx in 0 until rowCount) {
             val row = rows[rowIdx]
+            // Chain view's load row has no macro knobs; the controller's browse handling owns those four knobs.
+            if (row.loadRow) continue
             if (row.bankId == MacroEngine.GLOBAL) clockKnob = rowIdx * COLS
             val bank = MacroEngine.getBank(row.bankId) ?: MacroEngine.bankForParamPath(row.bankId)
-            val isFxBank = row.bankId in FxMacroSync.FX_BANK_IDS
-            val chain = if (isFxBank && row.hasExtraHeader) ctx.resolveFxChain(mixer, row.bankId) else null
-            for (spec in PerfKnobResolver.resolve(bank, row.knobOffset, chain?.let { FxRowState.of(it) }, mixer)) {
+            for (spec in PerfKnobResolver.resolve(bank, row.knobOffset, FxRowState.forRow(row, mixer), mixer)) {
                 knobs[rowIdx * COLS + spec.col] = PageKnob(row.bankId, spec, ledColor(row))
             }
         }
@@ -158,6 +163,8 @@ internal class PerformSurface(
         val target = knob(knob) ?: return
         when (val under = target.spec.under) {
             is UnderKnob.SlotCell -> {
+                // A Chain-view slot row shows every slot at once, so focusing means nothing there.
+                if (FxMacroSync.slotBankTarget(target.bankId) != null) return
                 // Group mode: knobs 2-4 focus their slot. Focus mode: knob 1 leaves focus.
                 val leaving = target.spec.side is SideButtons.Bypass
                 FxMacroSync.focusSlot(target.bankId, mixer, if (leaving) null else under.slotIndex)
@@ -166,6 +173,9 @@ internal class PerformSurface(
             is UnderKnob.Label -> if (target.spec.side is SideButtons.ChainLink) {
                 FxMacroSync.chainFor(target.bankId, mixer)?.toggleAllSlotsLinked()
                 FxMacroSync.syncFor(target.bankId, mixer)
+            } else {
+                // A deck's SRC row (Master: the Transitions row): Chain view on or off for that deck.
+                chainTagFor(target.bankId)?.let { parametersState.toggleChainView(it) }
             }
         }
     }
@@ -183,8 +193,7 @@ internal class PerformSurface(
         FxMacroSync.syncFor(bankId, mixer)
     }
 
-    private fun fxBankFor(bankId: String): String? = when (bankId) {
-        in FxMacroSync.FX_BANK_IDS -> bankId
+    private fun fxBankFor(bankId: String): String? = FxMacroSync.chainBankIdOf(bankId) ?: when (bankId) {
         MacroEngine.DECK_A -> MacroEngine.DECK_A_FX
         MacroEngine.DECK_B -> MacroEngine.DECK_B_FX
         MacroEngine.DECK_BG -> MacroEngine.DECK_BG_FX
@@ -192,6 +201,10 @@ internal class PerformSurface(
         MacroEngine.MASTER -> MacroEngine.MASTER_FX
         else -> null
     }
+
+    /** The pair whose Chain view a shift + tap on a [bankId] knob toggles: a deck's source row or Transitions, not an FX row. */
+    private fun chainTagFor(bankId: String): String? =
+        if (FxMacroSync.isFxBank(bankId)) null else PerfRows.pairForBank(bankId)?.tag?.takeIf { PerfRows.chainBankFor(it) != null }
 
     override val pairFocused: Boolean get() = parametersState.focusedPair != null
 
@@ -239,16 +252,33 @@ internal class PerformSurface(
             })
         }
         if (clock != null && clockKnob >= 0) lightBuffer[clockKnob] = clock.light()
-        if (nav?.browsing == true) dimForBrowse(nav.browseLiveKnobs, nav.sendTargets, nav.browsePosition)
+        if (nav?.browsing == true) dimForBrowse(nav)
         return lightBuffer
     }
 
-    /** While browsing only the cursor knob (white) and, with the browsed rows on screen, the leading live knobs (their colour) stay lit. */
-    private fun dimForBrowse(liveKnobs: Int, sendTargets: Set<SendTarget>, cursorPosition: Float) {
+    /**
+     * While browsing only the cursor knob (white), the live knobs of the browsed rows on screen (their colour), the live send knobs
+     * and Chain view's load knobs stay lit.
+     */
+    private fun dimForBrowse(nav: NavSurface) {
+        val sendTargets = nav.sendTargets
+        val chainRows = if (parametersState.chainView == ParametersState.ChainViewState.BROWSE)
+            parametersState.focusedPair?.let { PerfRows.chainRowsFor(it, ParametersState.ChainViewState.BROWSE) } else null
         for (i in lightBuffer.indices) {
-            if (i == KnobCommands.BROWSE_KNOB) lightBuffer[i] = KnobLight(cursorPosition, meterType = MeterType.ENDLESS)
-            else if (i >= liveKnobs) lightBuffer[i] = SendTarget.forKnob(i)?.takeIf { it in sendTargets }?.let(::sendLight)
+            if (i == nav.browseKnob) lightBuffer[i] = KnobLight(nav.browsePosition, meterType = MeterType.ENDLESS)
+            else if (!nav.isBrowseLive(i)) {
+                // Chain view's load knobs glow in the colour of the slot row they load into; dark while the cursor item can't go in a slot.
+                val slotRow = chainRows?.getOrNull(i + 1)?.takeIf { i < chainRows.size - 1 }
+                lightBuffer[i] = if (slotRow != null) loadLight(slotRow)
+                else SendTarget.forKnob(i)?.takeIf { it in sendTargets }?.let(::sendLight)
+            }
         }
+    }
+
+    private fun loadLight(slotRow: RowDescriptor): KnobLight {
+        val c = PerformPages.ledColor(slotRow)
+        return KnobLight(1f, c[0], c[1], c[2], lit = ChainLoad.cursorAsset() != null, meterType = MeterType.ENDLESS,
+            ringBrightness = SEND_RING_BRIGHTNESS, marker = true)
     }
 
     /** A live send knob glows in its target's colour (the Master row's LED hue for the master bus). */

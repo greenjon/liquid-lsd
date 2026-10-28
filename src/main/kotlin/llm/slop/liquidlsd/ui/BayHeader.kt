@@ -29,7 +29,9 @@ internal object BayHeader {
         queueDeck: String?,
         onToggle: (() -> Unit)?,
         toggleTooltip: String,
-        toggleUnavailable: String = toggleTooltip
+        toggleUnavailable: String = toggleTooltip,
+        /** The pair whose Chain view the Chain / Load toggles switch, or null where there is none (Edit). */
+        chainTag: String? = null
     ) {
         val y0 = ImGui.getCursorPosY()
         var lineH = 0f
@@ -52,6 +54,24 @@ internal object BayHeader {
                 allowWhenDisabled = true
             )
             ImGui.endGroup()
+            if (chainTag != null) {
+                ImGui.sameLine(0f, 10f)
+                val chainOn = parametersState.chainView != null
+                segment("Chain##bay_chain", lit = chainOn, enabled = true, lineH) { parametersState.toggleChainView(chainTag) }
+                itemTooltip(
+                    if (chainOn) "Chain view: the source row and one row per FX slot. Click to go back to Perform."
+                    else "Chain view: the source row and one row per FX slot, all three slots playable at once."
+                )
+                if (chainOn) {
+                    ImGui.sameLine(0f, 2f)
+                    val loading = parametersState.chainView == ParametersState.ChainViewState.BROWSE
+                    segment("Load##bay_chain_load", lit = loading, enabled = true, lineH) { parametersState.toggleChainBrowse() }
+                    itemTooltip(
+                        if (loading) "Row 1 loads the highlighted effect into a slot. Click to get the source row back."
+                        else "Swap row 1 for a load row: three targets that put the highlighted effect into slot 1, 2 or 3."
+                    )
+                }
+            }
             ImGui.sameLine(0f, 14f)
             drawChip(chip, lineH)
             drawQueueNextUp(session, queueDeck)

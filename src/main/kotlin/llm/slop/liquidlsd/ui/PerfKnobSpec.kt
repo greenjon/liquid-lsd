@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui
 
+import llm.slop.liquidlsd.macro.FxMacroSync
 import llm.slop.liquidlsd.macro.MacroBank
 import llm.slop.liquidlsd.macro.MacroControl
 import llm.slop.liquidlsd.macro.MacroLinkMode
@@ -63,6 +64,19 @@ internal data class FxRowState(
             val slot = chain.focusedSlot
             val params = slot?.let { chain.slots.getOrNull(it) }?.focusParameters?.map { it.key to it.value } ?: emptyList()
             return FxRowState(slot, chain.focusParamPage, params)
+        }
+
+        /** A Chain-view slot row: always slot [slotIndex] on its own page, as if that slot were focused. */
+        fun forSlot(chain: FxChain, slotIndex: Int): FxRowState {
+            val params = chain.slots.getOrNull(slotIndex)?.focusParameters?.map { it.key to it.value } ?: emptyList()
+            return FxRowState(slotIndex, chain.slotParamPage.getOrElse(slotIndex) { 0 }, params)
+        }
+
+        /** The FX state [row]'s knobs need, or null for rows without slot cells (source, Master MIX, Transitions, Clock). */
+        fun forRow(row: RowDescriptor, mixer: Mixer): FxRowState? {
+            if (!row.hasExtraHeader || !FxMacroSync.isFxBank(row.bankId)) return null
+            val chain = FxMacroSync.chainFor(row.bankId, mixer) ?: return null
+            return row.slotIndex?.let { forSlot(chain, it) } ?: of(chain)
         }
     }
 }

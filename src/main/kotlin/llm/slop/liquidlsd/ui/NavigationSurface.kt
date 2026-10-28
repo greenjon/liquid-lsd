@@ -19,6 +19,11 @@ import llm.slop.liquidlsd.ui.browser.BrowserPane
  *    side 3 = next pane (tree > list), shift + side 3 = clear the slot or chain; the cursor is knob 16
  *    (tap = apply, shift + tap = enqueue as in the Library, and a tap on a tree row selects the scope and moves the cursor into the
  *    list). Shift + tap on a send knob (9-13) switches to that deck's (or Master's) pair without sending.
+ *  - Chain view (a pair view state, [ParametersState.chainView]): side 1 = back (leave Chain view), side 3 = Load on/off
+ *    (row 1 swaps between the SRC row and the load row). Playing, nothing browses: all 16 knobs are the four rows and side 2 opens the
+ *    Library as in Perform. Loading, knob 4 is the cursor (tap = apply to the targeted slot), knobs 1-3 load the cursor item into
+ *    slots 1-3, knobs 5-16 stay on the slot rows, there are no sends, and side 2 steps the pane (shift: the tab), shift + side 3
+ *    clears the targeted slot.
  *  - Dirty-deck modal up: back = Cancel, side 2 / knob tap = Save, side 3 / shift+tap = Discard (overrides every other context).
  *  - Perform / Edit view: back (the Esc stack), open the Library, open the picker of the row whose knob
  *    was touched last (an SRC row: its source; an FX row: the slot under the knob, or the chain list for knob 1;
@@ -38,10 +43,16 @@ internal class NavigationSurface(
     /** A bound dock is up: the pair view (its two rows over the Browse dock), or the Perform dock bound in place under the page's rows. */
     private val inPicker: Boolean get() = viewStateOf(session).let { it.pair || it.bound }
 
+    /** Chain view is on screen (it is a pair view, so [inPicker] is true too); null otherwise. */
+    private val chainState: ParametersState.ChainViewState?
+        get() = parametersState.chainView?.takeIf { viewStateOf(session).pair }
+
+    private val chainLoading: Boolean get() = chainState == ParametersState.ChainViewState.BROWSE
+
     internal val confirming: Boolean get() = deckConfirm?.deckConfirmPending == true
 
     /** While the dirty-deck modal is up, the cursor knob and the side buttons answer it (see [DeckConfirmChoice]). */
-    override val browsing: Boolean get() = confirming || inLibraryView || inPicker
+    override val browsing: Boolean get() = confirming || inLibraryView || (inPicker && chainState != ParametersState.ChainViewState.PLAY)
 
     override val browsePosition: Float get() = if (confirming) 1f else LibraryNavigation.cursorPosition(session)
 
@@ -50,6 +61,20 @@ internal class NavigationSurface(
      * the same knobs drive the page's first two rows (the rest of the page is sends and the cursor while the list has the controller).
      */
     override val browseLiveKnobs: Int get() = if (inPicker && !confirming) PAIR_LIVE_KNOBS else 0
+
+    /** Chain view loading: the three slot rows (knobs 5-16) stay live under the load row. */
+    override fun isBrowseLive(knob: Int): Boolean =
+        if (chainLoading && !confirming) knob >= CHAIN_LOAD_ROW_KNOBS else knob < browseLiveKnobs
+
+    /** Chain view loading: the cursor is the load row's last knob (4), next to the load knobs. */
+    override val browseKnob: Int get() = if (chainLoading && !confirming) CHAIN_CURSOR_KNOB else super.browseKnob
+
+    /** Chain view loading: knobs 1-3 load the cursor item into slots 1-3. */
+    override fun browseKnobTap(knob: Int, shifted: Boolean): Boolean {
+        if (!chainLoading || confirming || shifted || knob !in 0 until CHAIN_CURSOR_KNOB) return false
+        ChainLoad.loadCursorInto(session, mixer, parametersState, knob)
+        return true
+    }
 
     // The session counter lives in the companion so short-lived surfaces (tests) share it; sampling on construction,
     // once per frame (UIManager) and on read catches every inactive -> active edge.
@@ -60,12 +85,14 @@ internal class NavigationSurface(
     fun sampleBrowsing() {
         val now = browsing
         val pair = parametersState.focusedPair
+        val chain = parametersState.chainView
         if (now && !wasBrowsing) session_++
-        // Entering, leaving or switching the pair drops partial cursor travel and the touched knob (it named a row of the old layout).
-        if (pair != lastPair) {
+        // Entering, leaving or switching the pair (or Chain view's row 1) drops partial cursor travel and the touched knob (it named a row of the old layout).
+        if (pair != lastPair || chain != lastChain) {
             if (now) session_++
             PerformSurface.lastTouchedKnob = null
             lastPair = pair
+            lastChain = chain
         }
         wasBrowsing = now
     }
@@ -73,9 +100,13 @@ internal class NavigationSurface(
     private companion object {
         /** Two rows of four knobs. */
         const val PAIR_LIVE_KNOBS = 8
+        /** Chain view's load row is the first row: knobs 1-3 load, knob 4 is the cursor. */
+        const val CHAIN_LOAD_ROW_KNOBS = 4
+        const val CHAIN_CURSOR_KNOB = 3
         var session_ = 0
         var wasBrowsing = false
         var lastPair: String? = null
+        var lastChain: ParametersState.ChainViewState? = null
     }
 
     override fun button(index: Int, shifted: Boolean) {
@@ -90,6 +121,7 @@ internal class NavigationSurface(
         }
         when {
             inLibraryView -> libraryButton(index, shifted)
+            chainState != null -> chainButton(index, shifted)
             inPicker -> pickerButton(index, shifted)
             else -> performButton(index, shifted)
         }
@@ -101,6 +133,19 @@ internal class NavigationSurface(
             0 -> if (!shifted) back()
             1 -> LibraryNavigation.stepTab(if (shifted) -1 else 1)
             2 -> if (shifted) BrowserPane.hosted()?.clear?.invoke() else LibraryNavigation.stepPane(1, session, mixer)
+        }
+    }
+
+    private fun chainButton(index: Int, shifted: Boolean) {
+        val loading = chainLoading
+        when (index) {
+            0 -> if (!shifted) back()
+            1 -> when {
+                !loading -> { openLibrary(); if (shifted) LibraryNavigation.setViewMode(LibraryPanel.LibraryViewMode.FX) }
+                shifted -> LibraryNavigation.stepTab(1)
+                else -> LibraryNavigation.stepPane(1, session, mixer)
+            }
+            2 -> if (shifted) { if (loading) BrowserPane.hosted()?.clear?.invoke() } else parametersState.toggleChainBrowse()
         }
     }
 
@@ -155,9 +200,9 @@ internal class NavigationSurface(
         val bankId = target.bankId
         val deckLabel = ctx.deckLabelForModuleId(bankId)
         when {
-            bankId in FxMacroSync.FX_BANK_IDS -> {
+            FxMacroSync.isFxBank(bankId) -> {
                 val chain = FxMacroSync.chainFor(bankId, mixer) ?: return
-                val slot = (target.spec.under as? UnderKnob.SlotCell)?.slotIndex ?: chain.focusedSlot
+                val slot = (target.spec.under as? UnderKnob.SlotCell)?.slotIndex ?: FxMacroSync.slotBankTarget(bankId)?.second ?: chain.focusedSlot
                 parametersState.openFxChainBrowse(ctx.canonicalModuleId(bankId), deckLabel, slot)
             }
             bankId == MacroEngine.TRANS -> parametersState.openTransitionBrowse()
@@ -188,10 +233,12 @@ internal class NavigationSurface(
         AppPreferencesStore.savePreferences()
     }
 
-    override val sendTargets: Set<SendTarget> get() = if ((inLibraryView || inPicker) && !confirming) LibraryNavigation.sendTargets() else emptySet()
+    // Chain view has no sends: every load goes into one of its own slots, and knobs 9-13 are slot rows there.
+    override val sendTargets: Set<SendTarget> get() =
+        if ((inLibraryView || inPicker) && chainState == null && !confirming) LibraryNavigation.sendTargets() else emptySet()
 
     /** With a bound dock every send knob (decks, Master) is also a quick switch to that pair (in place when its row is on the page). */
-    override val switchTargets: Set<SendTarget> get() = if (inPicker && !confirming) SendTarget.entries.toSet() else emptySet()
+    override val switchTargets: Set<SendTarget> get() = if (inPicker && chainState == null && !confirming) SendTarget.entries.toSet() else emptySet()
 
     override fun browseSwitch(target: SendTarget) {
         if (inPicker && !confirming) parametersState.switchBrowseTo(target.name)

@@ -179,7 +179,8 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
                 session, parametersState, mixer, browsing = true, chip = chip,
                 queueDeck = llm.slop.liquidlsd.presets.DeckSlot.entries.firstOrNull { it.name == tag }?.label,
                 onToggle = { parametersState.openParamsForPair(tag) },
-                toggleTooltip = "Edit the parameters, modulation and properties of $half."
+                toggleTooltip = "Edit the parameters, modulation and properties of $half.",
+                chainTag = tag.takeIf { PerfRows.chainBankFor(it) != null }
             )
             browseBay.drawForPair(session, mixer, parametersState, binding)
         }

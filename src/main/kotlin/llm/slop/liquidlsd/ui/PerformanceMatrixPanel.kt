@@ -62,6 +62,17 @@ class PerformanceMatrixPanel {
 
         /** A knob's middle-click that does nothing (the Super Knob's). */
         private val NO_RESET: () -> Unit = {}
+
+        /** Title-badge captions of Chain-view slot rows, by slot. */
+        private val SLOT_CAPTIONS = arrayOf("FX1", "FX2", "FX3")
+
+        private val loadTargetIds = Array(3) { "→ FX${it + 1}##chain_load_$it" }
+        private val LOAD_TARGET_TIPS = Array(3) {
+            "Load the highlighted effect into slot ${it + 1} (Ctrl+Z undoes it). On a controller: push knob ${it + 1}."
+        }
+        private const val LOAD_ROW_TIP = "Chain view, browsing: this row loads effects into the slots below.\n" +
+            "The Load button on the Browse header (or the controller's picker button) goes back to the source row."
+        private const val LIST_COLUMN_TIP = "On a controller, knob 4 scrolls the list below (turn) and applies the highlighted row to the targeted slot (push)."
     }
 
     internal val ctx = PerformanceUiContext()
@@ -374,10 +385,18 @@ class PerformanceMatrixPanel {
             val boxX1 = gridStartX + 2f
             val boxX2 = gridStartX + gridW - 2f
 
+            if (descriptor.loadRow) {
+                drawLoadRow(session, mixer, parametersState, descriptor, geo, gridStartX, rowTopY, rowH, boxX1, boxX2, deckBadgeW, deckBlockW, ctrlH, stackGap)
+                continue
+            }
+
             // Rounded box (faint fill + accent border) around the row.
             val fillCol = TangoPalette.u32(descriptor.accent, 0.07f)
             val borderCol = TangoPalette.u32(descriptor.accent, 0.85f)
-            val rawModuleId = descriptor.bankId
+            // A Chain-view slot row belongs to its chain's FX row: same deck, same Edit module, same drop handling.
+            val baseBankId = llm.slop.liquidlsd.macro.FxMacroSync.slotBankTarget(descriptor.bankId)?.first ?: descriptor.bankId
+            val slotRowIdx = descriptor.slotIndex
+            val rawModuleId = baseBankId
             val canonicalId = ctx.canonicalModuleId(rawModuleId)
             val isModuleExpanded = parametersState.disclosureFor(canonicalId) != ParametersState.DisclosureLevel.COLLAPSED ||
                                    parametersState.disclosureFor(rawModuleId) != ParametersState.DisclosureLevel.COLLAPSED
@@ -385,9 +404,7 @@ class PerformanceMatrixPanel {
             val moduleId = activeModuleId
 
             val bank: MacroBank = MacroEngine.getBank(row.bankId) ?: MacroEngine.bankForParamPath(row.bankId)
-            val isFxBankId = row.bankId in llm.slop.liquidlsd.macro.FxMacroSync.FX_BANK_IDS
-            val rowChain = if (isFxBankId && descriptor.hasExtraHeader) ctx.resolveFxChain(mixer, row.bankId) else null
-            val specs = PerfKnobResolver.resolve(bank, row.knobOffset, rowChain?.let { FxRowState.of(it) }, mixer)
+            val specs = PerfKnobResolver.resolve(bank, row.knobOffset, FxRowState.forRow(row, mixer), mixer)
             // The selected knob's card hangs below the row (see overhangDraws); the row border is
             // left open across its column so the card reads as a tab of the row.
             // Rows showing the macro strip carry their own Learn, so the selected knob's card stays inside the row
@@ -415,15 +432,15 @@ class PerformanceMatrixPanel {
                 }
             }
 
-            val isDeckA = descriptor.bankId == MacroEngine.DECK_A || descriptor.bankId == MacroEngine.DECK_A_FX
-            val isDeckB = descriptor.bankId == MacroEngine.DECK_B || descriptor.bankId == MacroEngine.DECK_B_FX
-            val isDeckBG = descriptor.bankId == MacroEngine.DECK_BG || descriptor.bankId == MacroEngine.DECK_BG_FX
-            val isDeckPV = descriptor.bankId == MacroEngine.DECK_PV || descriptor.bankId == MacroEngine.DECK_PV_FX
+            val isDeckA = baseBankId == MacroEngine.DECK_A || baseBankId == MacroEngine.DECK_A_FX
+            val isDeckB = baseBankId == MacroEngine.DECK_B || baseBankId == MacroEngine.DECK_B_FX
+            val isDeckBG = baseBankId == MacroEngine.DECK_BG || baseBankId == MacroEngine.DECK_BG_FX
+            val isDeckPV = baseBankId == MacroEngine.DECK_PV || baseBankId == MacroEngine.DECK_PV_FX
             val isDeckRow = isDeckA || isDeckB || isDeckBG || isDeckPV
 
             val isTransRow = descriptor.bankId == MacroEngine.TRANS
             val isClockRow = descriptor.bankId == MacroEngine.GLOBAL
-            val isMasterRow = descriptor.bankId == MacroEngine.MASTER || descriptor.bankId == MacroEngine.MASTER_FX
+            val isMasterRow = baseBankId == MacroEngine.MASTER || baseBankId == MacroEngine.MASTER_FX
             val displayLabel = descriptor.groupLabel
 
             var stripMode = if (stripControl != null && descriptor.hasExtraHeader) macroStripModeFor(isEditView, row.bankId, stripBankId) else MacroStripMode.NONE
@@ -464,8 +481,8 @@ class PerformanceMatrixPanel {
                         if (payload != null) {
                             val file = File(payload)
                             if (file.exists() && file.extension.lowercase() in listOf("lsdfx", "lsdfxchain")) {
-                                // A single FX takes the first vacant slot; a full chain needs a slot named (drop on the slot instead).
-                                if (!llm.slop.liquidlsd.presets.FxOps.dropAsset(session, file, targetDeck.fxChain, undoable = true)) {
+                                // A single FX takes the first vacant slot (a slot row's own slot); a full chain needs a slot named (drop on the slot instead).
+                                if (!llm.slop.liquidlsd.presets.FxOps.dropAsset(session, file, targetDeck.fxChain, slot = slotRowIdx, undoable = true)) {
                                     llm.slop.liquidlsd.ui.ToastOverlay.show("${deckLabels[deckTagIndex(dropTag)]} FX slots are full. Drop the effect onto a slot to replace it.")
                                 }
                             } else if (file.exists() && file.extension.lowercase() in listOf("patch", "lsd", "json")) {
@@ -491,6 +508,8 @@ class PerformanceMatrixPanel {
                             val file = File(payload)
                             if (file.exists() && file.extension.lowercase() == "lsdfxchain") {
                                 llm.slop.liquidlsd.presets.FxOps.loadChain(session, file, mixer.masterFxChain, undoable = true)
+                            } else if (file.exists() && slotRowIdx != null && file.extension.lowercase() == "lsdfx") {
+                                llm.slop.liquidlsd.presets.FxOps.dropAsset(session, file, mixer.masterFxChain, slot = slotRowIdx, undoable = true)
                             }
                         }
                         ImGui.endDragDropTarget()
@@ -543,14 +562,21 @@ class PerformanceMatrixPanel {
                     drawTitleBadge(
                         session, badgeX, badgeY, masterTabBadgeW, badgeH * 2f, descriptor.accent, "M", UITheme.FontLevel.H1,
                         tooltip = "Master Unit\nConfigure Master parameters and FX",
-                        caption = pinnedHalf,
+                        caption = slotRowIdx?.let { SLOT_CAPTIONS[it] } ?: pinnedHalf,
                         captionTint = if (pinnedHalf == "FX") TangoPalette.TAG_FX else TangoPalette.TAG_SRC
                     )
                     val editW = if (descriptor.canExpand) ctrlH else 0f
                     ImGui.pushID(rowIdx)
-                    if (!stripOn) PerformanceMasterControls.drawModeControls(session, mixer, parametersState, ctx, masterTabStartX, row1Y, row2YFinal, ctrlH, deckBlockW, pinnedHalf, editW)
-                    if (editW > 0f) drawEditGearAt(session, parametersState, descriptor.bankId, tabIdx, rowIdx, masterTabStartX + deckBlockW - editW, row1Y, editW, ctrlH)
-                    if (descriptor.pinnedMode != "MST") {
+                    if (!stripOn) {
+                        if (slotRowIdx != null) {
+                            drawSlotRowHeader(session, mixer, parametersState, descriptor.bankId, slotRowIdx, masterTabStartX, row1Y, row2YFinal, deckBlockW, editW, ctrlH)
+                        } else {
+                            PerformanceMasterControls.drawModeControls(session, mixer, parametersState, ctx, masterTabStartX, row1Y, row2YFinal, ctrlH, deckBlockW, pinnedHalf, editW)
+                        }
+                    }
+                    if (editW > 0f) drawEditGearAt(session, parametersState, baseBankId, tabIdx, rowIdx, masterTabStartX + deckBlockW - editW, row1Y, editW, ctrlH)
+                    // The chain's on/off sits on its first slot row only (a Chain view shows all three).
+                    if (descriptor.pinnedMode != "MST" && (slotRowIdx ?: 0) == 0) {
                         PerformanceMasterControls.drawBypassControls(session, mixer, boxX2 - pad - masterRightW, row2YFinal, ctrlH, masterRightW)
                     }
                     ImGui.popID()
@@ -593,7 +619,7 @@ class PerformanceMatrixPanel {
                     drawTitleBadge(
                         session, badgeX, badgeY, deckBadgeW, badgeH * 2f, descriptor.accent, deckTag, UITheme.FontLevel.H1,
                         tooltip = deckBadgeTips[deckTagIdx],
-                        caption = pinnedHalf,
+                        caption = slotRowIdx?.let { SLOT_CAPTIONS[it] } ?: pinnedHalf,
                         captionTint = if (pinnedHalf == "FX") TangoPalette.TAG_FX else TangoPalette.TAG_SRC
                     )
 
@@ -602,9 +628,16 @@ class PerformanceMatrixPanel {
                     val editW = if (descriptor.canExpand) ctrlH else 0f
                     // Per-slot ImGui id scope: the same deck may sit in two slots (or pages), so tag-based ids must not collide.
                     ImGui.pushID(rowIdx)
-                    if (!stripOn) deckControls.drawDeckRowLeftControls(session, mixer, parametersState, deckLabel, targetDeck, leftStartX, row1Y, row2YFinal, ctrlH, deckComboW, deckBlockW, pinnedHalf, editW)
-                    if (editW > 0f) drawEditGearAt(session, parametersState, descriptor.bankId, tabIdx, rowIdx, leftStartX + deckBlockW - editW, row1Y, editW, ctrlH)
-                    deckControls.drawDeckRowRightControls(
+                    if (!stripOn) {
+                        if (slotRowIdx != null) {
+                            drawSlotRowHeader(session, mixer, parametersState, descriptor.bankId, slotRowIdx, leftStartX, row1Y, row2YFinal, deckBlockW, editW, ctrlH)
+                        } else {
+                            deckControls.drawDeckRowLeftControls(session, mixer, parametersState, deckLabel, targetDeck, leftStartX, row1Y, row2YFinal, ctrlH, deckComboW, deckBlockW, pinnedHalf, editW)
+                        }
+                    }
+                    if (editW > 0f) drawEditGearAt(session, parametersState, baseBankId, tabIdx, rowIdx, leftStartX + deckBlockW - editW, row1Y, editW, ctrlH)
+                    // The deck's die and FX ON sit on its first slot row only (a Chain view shows all three).
+                    if ((slotRowIdx ?: 0) == 0) deckControls.drawDeckRowRightControls(
                         session, mixer, parametersState, deckLabel, targetDeck,
                         boxX2 - pad - deckRightW, row1Y, row2YFinal, ctrlH, deckRightW, pinnedHalf
                     )
@@ -742,7 +775,7 @@ class PerformanceMatrixPanel {
                         session = session,
                         bankId = row.bankId,
                         knobIndex = knobIdx + 1,
-                        paramName = under.name?.let { ParamLabels.of(llm.slop.liquidlsd.macro.FxMacroSync.chainFor(row.bankId, mixer)?.let { c -> c.focusedSlot?.let { i -> c.slots.getOrNull(i) } }?.header, it) },
+                        paramName = under.name?.let { ParamLabels.of(llm.slop.liquidlsd.macro.FxMacroSync.chainFor(row.bankId, mixer)?.let { c -> (slotRowIdx ?: c.focusedSlot)?.let { i -> c.slots.getOrNull(i) } }?.header, it) },
                         param = under.param,
                         x = stripX,
                         y = stripY,
@@ -761,6 +794,112 @@ class PerformanceMatrixPanel {
             }
         }
 
+    }
+
+    /**
+     * Chain view's load row (browse state, [RowDescriptor.loadRow]) in row 1's place, same box and geometry as the rows it stands in for:
+     * the badge (caption LOAD), the list's cursor item on the left, then in the knob columns a target per FX slot (a click loads the
+     * cursor item there, like the controller's knobs 1-3) and the cursor column (the controller's knob 4).
+     */
+    private fun drawLoadRow(
+        session: llm.slop.liquidlsd.SessionContext,
+        mixer: Mixer,
+        parametersState: ParametersState,
+        row: RowDescriptor,
+        geo: PerfRowGeometry,
+        gridStartX: Float,
+        rowTopY: Float,
+        rowH: Float,
+        boxX1: Float,
+        boxX2: Float,
+        badgeW: Float,
+        blockW: Float,
+        ctrlH: Float,
+        stackGap: Float
+    ) {
+        val dl = ImGui.getWindowDrawList()
+        val boxTopY = rowTopY + PerfRowGeometry.BOX_MARGIN_Y
+        val boxBottomY = rowTopY + rowH - PerfRowGeometry.BOX_MARGIN_Y
+        dl.addRectFilled(boxX1, boxTopY, boxX2, boxBottomY, TangoPalette.u32(row.accent, 0.07f), 8f)
+        dl.addRect(boxX1, boxTopY, boxX2, boxBottomY, TangoPalette.u32(row.accent, 0.85f), 8f, 0, 2f)
+
+        val contentTopY = boxTopY + PerfRowGeometry.BOX_PAD
+        val contentBottomY = boxBottomY - PerfRowGeometry.BOX_PAD
+        val row1Y = contentTopY + ((contentBottomY - contentTopY) - (ctrlH * 2f + stackGap)).coerceAtLeast(0f) * 0.5f
+        val row2Y = row1Y + ctrlH + stackGap
+        val tag = PerfRows.DECK_TAGS.firstOrNull { PerfRows.chainBankFor(it) == row.bankId } ?: "M"
+        drawTitleBadge(
+            session, boxX1, boxTopY, badgeW, (row2Y + ctrlH) - boxTopY, row.accent, tag, UITheme.FontLevel.H1,
+            tooltip = LOAD_ROW_TIP, caption = "LOAD", captionTint = TangoPalette.TAG_FX
+        )
+
+        // Left block: what a load target would put in its slot.
+        val asset = ChainLoad.cursorAsset()
+        val leftX = boxX1 + badgeW + 6f
+        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+            dl.addText(leftX, TextFit.centeredY(row1Y, ctrlH, ImGui.getTextLineHeight()), ImGui.getColorU32(ImGuiCol.TextDisabled), "Load into a slot:")
+            dl.addRectFilled(leftX, row2Y, leftX + blockW, row2Y + ctrlH, TangoPalette.BADGE_BG.u32(), 4f)
+            dl.addRect(leftX, row2Y, leftX + blockW, row2Y + ctrlH, TangoPalette.BADGE_BORDER.u32(), 4f, 0, 1f)
+            val name = TextFit.ellipsize(asset?.name ?: "Highlight an effect in the list below", blockW - 8f)
+            val col = if (asset != null) TangoPalette.BADGE_TEXT.u32() else ImGui.getColorU32(ImGuiCol.TextDisabled)
+            dl.addText(leftX + 4f, TextFit.centeredY(row2Y, ctrlH, ImGui.getTextLineHeight()), col, name)
+        }
+
+        val chain = llm.slop.liquidlsd.macro.FxMacroSync.chainFor(row.bankId, mixer)
+        val knobTopY = rowTopY + geo.knobTop
+        val stripY = rowTopY + geo.stripTop
+        for (col in 0 until 4) {
+            val stripX = gridStartX + geo.stripX(col)
+            if (col < llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT) {
+                ImGui.setCursorScreenPos(stripX, knobTopY)
+                ImGui.beginDisabled(asset == null)
+                session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                    if (ButtonChrome.button(loadTargetIds[col], geo.stripW, geo.diameter)) ChainLoad.loadCursorInto(session, mixer, parametersState, col)
+                }
+                ImGui.endDisabled()
+                itemTooltip(LOAD_TARGET_TIPS[col], allowWhenDisabled = true)
+                drawStripLabel(session, chain?.slots?.getOrNull(col)?.displayName ?: "empty", stripX, stripY, geo.stripW, geo.stripH, false)
+            } else {
+                val x1 = stripX
+                val x2 = stripX + geo.stripW
+                dl.addRect(x1, knobTopY, x2, knobTopY + geo.diameter, TangoPalette.u32(row.accent, 0.5f), 4f, 0, 1f)
+                session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                    val t = "↕ LIST"
+                    val tw = ImGui.calcTextSize(t).x
+                    dl.addText(x1 + (geo.stripW - tw) / 2f, TextFit.centeredY(knobTopY, geo.diameter, ImGui.getTextLineHeight()), ImGui.getColorU32(ImGuiCol.TextDisabled), t)
+                }
+                ImGui.setCursorScreenPos(x1, knobTopY)
+                ImGui.dummy(geo.stripW, geo.diameter)
+                itemTooltip(LIST_COLUMN_TIP)
+                drawStripLabel(session, "BROWSE", stripX, stripY, geo.stripW, geo.stripH, false)
+            }
+        }
+    }
+
+    /** Per-row header actions for Chain-view slot rows, keyed by slot bank id (long-lived, so drawing allocates no closures). */
+    private val slotRowActions = HashMap<String, DeckFxActions>()
+
+    /** A Chain-view slot row's left block: the slot's effect name over `[⋮] [Wet] [page]` (see [FxChainHeader.drawSlotHeader]). */
+    private fun drawSlotRowHeader(
+        session: llm.slop.liquidlsd.SessionContext,
+        mixer: Mixer,
+        parametersState: ParametersState,
+        slotBankId: String,
+        slotIdx: Int,
+        x: Float,
+        row1Y: Float,
+        row2Y: Float,
+        blockW: Float,
+        editW: Float,
+        ctrlH: Float
+    ) {
+        val chain = llm.slop.liquidlsd.macro.FxMacroSync.chainFor(slotBankId, mixer) ?: return
+        val actions = slotRowActions.getOrPut(slotBankId) { DeckFxActions() }.also {
+            it.set(parametersState, ctx.deckLabelForModuleId(slotBankId), ctx.canonicalModuleId(slotBankId))
+        }
+        val chainLabel = llm.slop.liquidlsd.macro.FxMacroSync.labelFor(slotBankId) ?: "FX"
+        val nameW = blockW - if (editW > 0f) editW + DeckRowMetrics.GAP else 0f
+        FxChainHeader.drawSlotHeader(session, mixer, chain, slotBankId, slotIdx, chainLabel, x, row1Y, row2Y, nameW, blockW, ctrlH, actions)
     }
 
     /**

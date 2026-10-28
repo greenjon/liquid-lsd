@@ -1,6 +1,8 @@
 package llm.slop.liquidlsd.ui
 
+import llm.slop.liquidlsd.macro.FxMacroSync
 import llm.slop.liquidlsd.macro.MacroEngine
+import llm.slop.liquidlsd.rendering.FxChain
 
 /**
  * Describes one row of 4 knobs: which bank to pull from, which 4-knob offset within that
@@ -17,7 +19,14 @@ internal data class RowDescriptor(
     /** When false, the modular rack disclosure chevron and collapse controls are omitted. */
     val canExpand: Boolean = true,
     /** Non-null for a deck row (`SRC` / `FX`) or a Master row (`MST` / `FX`): the one half it shows. */
-    val pinnedMode: String? = null
+    val pinnedMode: String? = null,
+    /** Non-null for a Chain-view slot row: the FX slot (0-based) whose own bank ([bankId], `FxMacroSync.slotBankId`) it shows. */
+    val slotIndex: Int? = null,
+    /**
+     * Chain view's load row (browse state): no macro bank; on screen the three "load into slot" targets and the list cursor, on a
+     * controller knobs 1-3 load the cursor item into slots 1-3 and knob 4 is the cursor. [bankId] is the chain's FX bank.
+     */
+    val loadRow: Boolean = false
 )
 
 /**
@@ -45,18 +54,30 @@ internal object PerfRows {
     private fun deckForBank(bankId: String): DeckRowBanks? =
         DECK_ROW_BANKS.firstOrNull { it.srcBankId == bankId || it.fxBankId == bankId }
 
+    /** One slot of an FX chain as its own row (Chain view): knob 1 = the slot's Metaknob, knobs 2-4 = its parameters on its page. */
+    private fun slotRow(chainBankId: String, slot: Int, accent: FloatArray, label: String) = RowDescriptor(
+        FxMacroSync.slotBankId(chainBankId, slot), 0, accent, label, hasExtraHeader = true, pinnedMode = "FX", slotIndex = slot
+    )
+
     /**
      * Every row a page can place, by stable id (persisted in page files): per deck `deck.<tag>.src` and `.fx`,
      * Master `master.mix` (pill MST) and `master.fx`, Transitions and Clock & Global. Every deck and Master row
-     * shows one half, so a row's meaning never depends on a mode.
+     * shows one half, so a row's meaning never depends on a mode. Each FX chain's slots are rows too
+     * (`deck.<tag>.fx1`..`fx3`, `master.fx1`..`fx3`): one slot each, whatever the chain's focus.
      */
     val CATALOG: Map<String, RowDescriptor> = linkedMapOf<String, RowDescriptor>().apply {
         for (d in DECK_ROW_BANKS) {
             put("deck.${d.tag}.src", RowDescriptor(d.srcBankId, 0, d.accent, "DECK ${d.tag}", hasExtraHeader = true, pinnedMode = "SRC"))
             put("deck.${d.tag}.fx", RowDescriptor(d.fxBankId, 0, d.accent, "DECK ${d.tag} (FX)", hasExtraHeader = true, pinnedMode = "FX"))
+            for (slot in 0 until FxChain.SLOT_COUNT) {
+                put("deck.${d.tag}.fx${slot + 1}", slotRow(d.fxBankId, slot, d.accent, "DECK ${d.tag} (FX${slot + 1})"))
+            }
         }
         put("master.mix", RowDescriptor(MacroEngine.MASTER, 0, PerformanceColors.COLOR_MASTER, "MASTER", hasExtraHeader = true, pinnedMode = "MST"))
         put("master.fx", RowDescriptor(MacroEngine.MASTER_FX, 0, PerformanceColors.COLOR_MASTER, "MASTER (FX)", hasExtraHeader = true, pinnedMode = "FX"))
+        for (slot in 0 until FxChain.SLOT_COUNT) {
+            put("master.fx${slot + 1}", slotRow(MacroEngine.MASTER_FX, slot, PerformanceColors.COLOR_MASTER, "MASTER (FX${slot + 1})"))
+        }
         put("trans",  RowDescriptor(MacroEngine.TRANS,    0, PerformanceColors.COLOR_TRANS,  "TRANSITIONS", hasExtraHeader = true))
         put("global", RowDescriptor(MacroEngine.GLOBAL,   0, PerformanceColors.COLOR_GLOBAL, "CLOCK & GLOBAL", hasExtraHeader = true, canExpand = false))
     }
@@ -73,6 +94,29 @@ internal object PerfRows {
         PairDef(PAIR_MASTER, MacroEngine.MASTER, listOf("trans", "master.fx"))
 
     fun pairFor(tag: String): PairDef? = PAIRS.firstOrNull { it.tag == tag }
+
+    /** The FX chain bank Chain view shows for pair [tag] (a deck's FX chain, or Master FX for [PAIR_MASTER]), or null. */
+    fun chainBankFor(tag: String): String? =
+        if (tag == PAIR_MASTER) MacroEngine.MASTER_FX else DECK_ROW_BANKS.firstOrNull { it.tag == tag }?.fxBankId
+
+    /**
+     * Chain view's four rows for pair [tag]: row 1 the deck's SRC row (Master: Transitions) to play, or the load row while
+     * [state] is BROWSE; rows 2-4 the chain's FX slots, which never move between the two states.
+     */
+    fun chainRowsFor(tag: String, state: ParametersState.ChainViewState): List<RowDescriptor> {
+        val chainBank = chainBankFor(tag) ?: return emptyList()
+        val base = if (tag == PAIR_MASTER) "master" else "deck.$tag"
+        val top = when (state) {
+            ParametersState.ChainViewState.PLAY -> CATALOG[if (tag == PAIR_MASTER) "trans" else "$base.src"]
+            ParametersState.ChainViewState.BROWSE -> loadRows.getValue(chainBank)
+        }
+        return listOfNotNull(top) + (1..FxChain.SLOT_COUNT).mapNotNull { CATALOG["$base.fx$it"] }
+    }
+
+    private val loadRows: Map<String, RowDescriptor> by lazy {
+        (DECK_ROW_BANKS.map { it.fxBankId to it.accent } + (MacroEngine.MASTER_FX to PerformanceColors.COLOR_MASTER))
+            .associate { (bank, accent) -> bank to RowDescriptor(bank, 0, accent, "LOAD", hasExtraHeader = true, canExpand = false, loadRow = true) }
+    }
 
     /** The pair whose row is [bankId] (a deck's source or FX bank, `MASTER_FX`, `TRANS`), or null (Master MST and Clock have no pair). */
     fun pairForBank(bankId: String): PairDef? = PAIRS.firstOrNull { pair -> pair.rowIds.any { CATALOG[it]?.bankId == bankId } }
@@ -143,7 +187,10 @@ internal object PerfRows {
         labelFor: (String) -> String,
         pages: List<PerfPageDef> = listOf(page)
     ): List<RowDescriptor> {
-        parametersState.focusedPair?.let { tag -> pairFor(tag)?.let { return rowsForPair(it) } }
+        parametersState.focusedPair?.let { tag ->
+            parametersState.chainView?.let { return chainRowsFor(tag, it) }
+            pairFor(tag)?.let { return rowsForPair(it) }
+        }
         val expandedModuleIds = parametersState.rackModuleDisclosure
             .filterValues { it != ParametersState.DisclosureLevel.COLLAPSED }
             .keys
@@ -174,6 +221,7 @@ internal object PerfRows {
         private var fxMask = -1
         private var mixerSub: String? = null
         private var pairTag: String? = null
+        private var chainState: ParametersState.ChainViewState? = null
         private var expanded = arrayOfNulls<String>(4)
         private var expandedCount = -1
         private var scratch = arrayOfNulls<String>(4)
@@ -187,10 +235,11 @@ internal object PerfRows {
             pages: List<PerfPageDef> = listOf(page)
         ): List<RowDescriptor> {
             parametersState.focusedPair?.let { tag ->
-                // A pair's rows come from the catalog alone, so the tag is the whole key.
-                if (pairTag != tag) {
+                // A pair's rows (and Chain view's) come from the catalog alone, so the tag and the Chain view state are the whole key.
+                if (pairTag != tag || chainState != parametersState.chainView) {
                     result = visibleRowsForPage(page, ctx, parametersState, labelFor, pages)
                     pairTag = tag
+                    chainState = parametersState.chainView
                 }
                 return result
             }

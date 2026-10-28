@@ -196,7 +196,44 @@ class ParametersState : MidiLearnSink {
             val before = bindSessionTag
             field = value
             if (bindSessionTag != before) dirtyAnsweredTag = null
+            if (value == null) chainView = null
         }
+
+    /** Chain view's row 1: the source (or Transitions) row to play, or the load row while browsing from the controller. */
+    enum class ChainViewState { PLAY, BROWSE }
+
+    /**
+     * Non-null while the focused pair is shown as Chain view ([PerfRows.chainRowsFor]): row 1 per [ChainViewState], rows 2-4 the
+     * pair's FX slots. Kept across [focusPair] (stepping decks stays in Chain view); cleared with the pair.
+     */
+    var chainView: ChainViewState? = null
+        private set
+
+    /** Shows [tag]'s pair as Chain view, in the play state, with the dock on its FX slot 1 (the slots are what Chain view is for). */
+    fun enterChainView(tag: String) {
+        val pair = PerfRows.pairFor(tag) ?: return
+        focusPair(tag)
+        chainView = ChainViewState.PLAY
+        if ((dockSelection?.target as? BrowseTarget.FxChain)?.slotIndex == null) openBrowse(pair.moduleId, BrowseTarget.FxChain(0))
+    }
+
+    /** Chain view on or off for [tag]: from Perform, the plain pair view or another pair it enters; in it, back to Perform. */
+    fun toggleChainView(tag: String) {
+        if (chainView != null && focusedPair == tag) leavePair() else enterChainView(tag)
+    }
+
+    /**
+     * Chain view's play / browse toggle (row 1 only; the slot rows never move). Browsing keeps the dock on an FX slot, since the
+     * load row loads into slots.
+     */
+    fun toggleChainBrowse() {
+        val state = chainView ?: return
+        chainView = if (state == ChainViewState.PLAY) ChainViewState.BROWSE else ChainViewState.PLAY
+        if (chainView == ChainViewState.BROWSE && (dockSelection?.target as? BrowseTarget.FxChain)?.slotIndex == null) {
+            val pair = focusedPair?.let { PerfRows.pairFor(it) } ?: return
+            openBrowse(pair.moduleId, BrowseTarget.FxChain(0))
+        }
+    }
 
     /** Focuses [tag]'s pair. Closes any Params Edit module (the two focus kinds never coexist) and drops a FULL Library to HALF. */
     fun focusPair(tag: String) {

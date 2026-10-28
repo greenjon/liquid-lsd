@@ -14,6 +14,10 @@ import llm.slop.liquidlsd.rendering.Mixer
  * always show the current mapping. FX banks are not user-bindable: every sync rewrites all four
  * knobs, so a physical knob's meaning is fixed per mode.
  *
+ * Chain view adds one more bank per slot ([slotBankId], e.g. "deckA_fx_s2"): always that slot's focus-mode mapping (Knob 1 =
+ * its Metaknob, Knobs 2-4 its parameters on its own [FxChain.slotParamPage]), whatever the chain bank's mode. They are synced
+ * together with their chain bank, so a slot knob's meaning only changes when the slot's effect or page does.
+ *
  * Every FX chain -- each deck's and the master bus's -- lives under "<label>/FX/..." (e.g.
  * "Deck A/FX/Super", "Master/FX/FX2/Meta"); [labelFor]/[chainFor] map an FX bank id to it.
  *
@@ -31,8 +35,24 @@ object FxMacroSync {
         MacroEngine.DECK_A_FX, MacroEngine.DECK_B_FX, MacroEngine.DECK_BG_FX, MacroEngine.DECK_PV_FX, MacroEngine.MASTER_FX
     )
 
+    /** Chain view's bank for slot [slotIndex] (0-based) of the chain behind FX bank [chainBankId], e.g. "deckA_fx_s1". */
+    fun slotBankId(chainBankId: String, slotIndex: Int): String = "${chainBankId}_s${slotIndex + 1}"
+
+    /** Every per-slot bank id, grouped by chain in [FX_BANK_IDS] order. */
+    val SLOT_BANK_IDS: List<String> = FX_BANK_IDS.flatMap { id -> (0 until FxChain.SLOT_COUNT).map { slotBankId(id, it) } }
+
+    /** The (chain bank id, slot index) behind per-slot bank [bankId], or null if it isn't one. */
+    fun slotBankTarget(bankId: String?): Pair<String, Int>? {
+        if (bankId == null || bankId !in SLOT_BANK_IDS) return null
+        return bankId.substringBeforeLast("_s") to bankId.substringAfterLast("_s").toInt() - 1
+    }
+
+    /** [bankId]'s chain bank id: itself for a chain bank, its chain's for a per-slot bank, else null. */
+    fun chainBankIdOf(bankId: String): String? =
+        if (bankId in FX_BANK_IDS) bankId else slotBankTarget(bankId)?.first
+
     /** Parameter-path label of [bankId]'s chain ("Deck A", ..., "Master"), or null if [bankId] isn't an FX bank. */
-    fun labelFor(bankId: String): String? = when (bankId) {
+    fun labelFor(bankId: String): String? = when (chainBankIdOf(bankId)) {
         MacroEngine.DECK_A_FX -> "Deck A"
         MacroEngine.DECK_B_FX -> "Deck B"
         MacroEngine.DECK_BG_FX -> "Deck BG"
@@ -42,7 +62,7 @@ object FxMacroSync {
     }
 
     /** The live [FxChain] behind [bankId], or null if [bankId] isn't an FX bank. */
-    fun chainFor(bankId: String, mixer: Mixer): FxChain? = when (bankId) {
+    fun chainFor(bankId: String, mixer: Mixer): FxChain? = when (chainBankIdOf(bankId)) {
         MacroEngine.DECK_A_FX -> mixer.deckA.fxChain
         MacroEngine.DECK_B_FX -> mixer.deckB.fxChain
         MacroEngine.DECK_BG_FX -> mixer.deckBG.fxChain
@@ -51,17 +71,18 @@ object FxMacroSync {
         else -> null
     }
 
-    /** True for banks whose knobs/bindings are owned by [FxMacroSync] (read-only everywhere else). */
-    fun isFxBank(bankId: String?): Boolean = bankId in FX_BANK_IDS
+    /** True for banks whose knobs/bindings are owned by [FxMacroSync] (read-only everywhere else): chain and per-slot banks. */
+    fun isFxBank(bankId: String?): Boolean = bankId in FX_BANK_IDS || bankId in SLOT_BANK_IDS
 
     /** The FX bank id owning [chain] (identity match), or null if it isn't one of [mixer]'s chains. */
     fun bankIdFor(chain: FxChain, mixer: Mixer): String? = FX_BANK_IDS.firstOrNull { chainFor(it, mixer) === chain }
 
-    /** Re-syncs [bankId]'s knobs to its chain. No-op for non-FX bank ids. */
+    /** Re-syncs [bankId]'s chain (its chain bank and every per-slot bank). No-op for non-FX bank ids. */
     fun syncFor(bankId: String, mixer: Mixer) {
-        val chain = chainFor(bankId, mixer) ?: return
-        val label = labelFor(bankId) ?: return
-        syncChain(bankId, label, chain)
+        val chainBankId = chainBankIdOf(bankId) ?: return
+        val chain = chainFor(chainBankId, mixer) ?: return
+        val label = labelFor(chainBankId) ?: return
+        syncChain(chainBankId, label, chain)
     }
 
     /** Focuses slot [slotIndex] (or null to return to Group mode) for [bankId] and re-syncs. */
@@ -71,10 +92,11 @@ object FxMacroSync {
         syncFor(bankId, mixer)
     }
 
-    /** Steps parameter page by [dir] (-1 or +1) for [bankId] and re-syncs. */
+    /** Steps parameter page by [dir] (-1 or +1) for [bankId] (a per-slot bank: its slot; a chain bank: the focused slot) and re-syncs. */
     fun stepParamPage(bankId: String, mixer: Mixer, dir: Int) {
         val chain = chainFor(bankId, mixer) ?: return
-        chain.stepParamPage(dir)
+        val slot = slotBankTarget(bankId)?.second
+        if (slot != null) chain.stepParamPage(dir, slot) else chain.stepParamPage(dir)
         syncFor(bankId, mixer)
     }
 
@@ -108,26 +130,34 @@ object FxMacroSync {
     }
 
     /**
-     * Re-syncs [bankId]'s [MacroBank] knobs 0-3 to [chain].
+     * Re-syncs [bankId]'s [MacroBank] knobs 0-3 to [chain], then each slot's per-slot bank ([slotBankId]).
      * In Group Mode: Knob 0 becomes Super Knob, Knobs 1-3 each slot's Metaknob.
      * In Focus Mode: Knob 0 becomes the focused slot's Metaknob, Knobs 1-3 its top parameters (paged).
+     * A per-slot bank always gets its slot's focus-mode mapping.
      */
     fun syncChain(bankId: String, chainLabel: String, chain: FxChain) {
-        val macroBank = MacroEngine.getBank(bankId) ?: MacroEngine.newBankFor(bankId).also {
-            MacroEngine.registerBank(bankId, it)
-        }
+        val macroBank = bankFor(bankId)
 
+        chain.clampParamPage()
         val focused = chain.focusedSlot
         if (focused != null && focused in 0 until FxChain.SLOT_COUNT) {
-            chain.clampParamPage()
             syncFocusMode(macroBank, chainLabel, chain, focused)
         } else {
             syncGroupMode(macroBank, chainLabel, chain)
         }
-
         MacroEngine.forgetLinkedKnobMirror(macroBank)
+
+        for (slotIdx in 0 until FxChain.SLOT_COUNT) {
+            val slotBank = bankFor(slotBankId(bankId, slotIdx))
+            syncFocusMode(slotBank, chainLabel, chain, slotIdx)
+            MacroEngine.forgetLinkedKnobMirror(slotBank)
+        }
+
         MacroEngine.invalidate()
     }
+
+    private fun bankFor(bankId: String): MacroBank =
+        MacroEngine.getBank(bankId) ?: MacroEngine.newBankFor(bankId).also { MacroEngine.registerBank(bankId, it) }
 
     private fun syncGroupMode(
         macroBank: MacroBank,
@@ -188,7 +218,7 @@ object FxMacroSync {
 
         // Knobs 1..3: Focused slot's parameters for active page
         val paramEntries = slot?.focusParameters ?: emptyList()
-        val page = chain.focusParamPage
+        val page = chain.slotParamPage[slotIdx]
         val startIndex = page * 3
 
         for (k in 0 until 3) {

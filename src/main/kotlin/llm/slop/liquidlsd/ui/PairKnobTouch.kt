@@ -20,17 +20,23 @@ internal object PairKnobTouch {
         seen = knob
         val tag = parametersState.focusedPair
         if (tag == null && !parametersState.boundInPlace) return
-        if (knob == null || knob >= 2 * COLS) return
+        // Chain view: all four rows are live (its load row has no knobs to touch).
+        val chainRows = tag?.let { t -> parametersState.chainView?.let { PerfRows.chainRowsFor(t, it) } }
+        if (knob == null || knob >= (chainRows?.size ?: 2) * COLS) return
         val target = PerformPages.resolve(pageId, ctx, parametersState, mixer).knobs.getOrNull(knob)
         // The pair view's rows are the pair's; bound in place they are the page's, which the resolved knob names.
-        val bankId = if (tag != null) {
-            val pair = PerfRows.pairFor(tag) ?: return
-            PerfRows.CATALOG[pair.rowIds.getOrNull(knob / COLS) ?: return]?.bankId ?: return
-        } else target?.bankId ?: return
+        val bankId = when {
+            chainRows != null -> chainRows[knob / COLS].takeIf { !it.loadRow }?.bankId ?: return
+            tag != null -> {
+                val pair = PerfRows.pairFor(tag) ?: return
+                PerfRows.CATALOG[pair.rowIds.getOrNull(knob / COLS) ?: return]?.bankId ?: return
+            }
+            else -> target?.bankId ?: return
+        }
         val browse = when {
-            bankId in FxMacroSync.FX_BANK_IDS -> {
+            FxMacroSync.isFxBank(bankId) -> {
                 val chain = FxMacroSync.chainFor(bankId, mixer)
-                val slot = (target?.spec?.under as? UnderKnob.SlotCell)?.slotIndex ?: chain?.focusedSlot
+                val slot = (target?.spec?.under as? UnderKnob.SlotCell)?.slotIndex ?: FxMacroSync.slotBankTarget(bankId)?.second ?: chain?.focusedSlot
                 ParametersState.BrowseTarget.FxChain(slot)
             }
             bankId == MacroEngine.TRANS -> ParametersState.BrowseTarget.Transition

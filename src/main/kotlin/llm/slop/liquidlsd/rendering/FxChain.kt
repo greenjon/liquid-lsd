@@ -42,9 +42,16 @@ class FxChain(val label: String) {
     var focusedSlot: Int? = null
 
     /**
-     * Active parameter page (0-indexed) when in Focus Mode. Each page exposes up to 3 parameters.
+     * Each slot's parameter page (0-indexed; a page exposes up to 3 parameters). Per slot so the focus-mode FX row and the
+     * slot's own Chain-view row ([llm.slop.liquidlsd.macro.FxMacroSync.slotBankId]) always show the same page. A page
+     * follows its effect: it resets when a slot gets a new effect and moves with the effect on a swap.
      */
-    var focusParamPage: Int = 0
+    val slotParamPage = IntArray(SLOT_COUNT)
+
+    /** The focused slot's [slotParamPage] entry; 0 (and not writable) in Group mode. */
+    var focusParamPage: Int
+        get() = focusedSlot?.let { slotParamPage[it] } ?: 0
+        set(value) { focusedSlot?.let { slotParamPage[it] = value } }
 
     fun isFocused(): Boolean = focusedSlot != null
 
@@ -54,7 +61,6 @@ class FxChain(val label: String) {
 
     fun focusSlot(slotIndex: Int?) {
         focusedSlot = if (slotIndex != null && slotIndex in 0 until SLOT_COUNT) slotIndex else null
-        focusParamPage = 0
     }
 
     fun totalParamPages(slotIndex: Int = focusedSlot ?: 0): Int {
@@ -62,15 +68,17 @@ class FxChain(val label: String) {
         return if (count == 0) 1 else kotlin.math.ceil(count / 3.0).toInt().coerceAtLeast(1)
     }
 
-    /** Pulls [focusParamPage] back onto the focused slot's last page after its effect or knob layout changed. */
+    /** Pulls every slot's [slotParamPage] back onto its last page after an effect or knob layout changed. */
     fun clampParamPage() {
-        focusParamPage = focusParamPage.coerceIn(0, totalParamPages() - 1)
+        for (i in 0 until SLOT_COUNT) slotParamPage[i] = slotParamPage[i].coerceIn(0, totalParamPages(i) - 1)
     }
 
-    fun stepParamPage(dir: Int) {
-        val total = totalParamPages()
+    /** Steps [slotIndex]'s parameter page by [dir], wrapping; defaults to the focused slot (no-op in Group mode). */
+    fun stepParamPage(dir: Int, slotIndex: Int? = focusedSlot) {
+        if (slotIndex == null || slotIndex !in 0 until SLOT_COUNT) return
+        val total = totalParamPages(slotIndex)
         if (total <= 1) return
-        focusParamPage = Math.floorMod(focusParamPage + dir, total)
+        slotParamPage[slotIndex] = Math.floorMod(slotParamPage[slotIndex] + dir, total)
     }
 
     // Armed (false) until the Super Knob's movement converges with a linked slot's current
@@ -279,6 +287,9 @@ class FxChain(val label: String) {
         val filter = slots[a]
         slots[a] = other.slots[b]
         other.slots[b] = filter
+        val page = slotParamPage[a]
+        slotParamPage[a] = other.slotParamPage[b]
+        other.slotParamPage[b] = page
         if (other === this) {
             if (focusedSlot == a) focusedSlot = b
             else if (focusedSlot == b) focusedSlot = a
@@ -371,7 +382,7 @@ class FxChain(val label: String) {
             armSlotTakeover(i)
         }
         focusedSlot = null
-        focusParamPage = 0
+        slotParamPage.fill(0)
         name = ""
         tags = emptyList()
         for (i in 0 until SLOT_COUNT) { slotPending[i] = null; resetSlotFade(i) }
@@ -414,6 +425,7 @@ class FxChain(val label: String) {
         if (slotIndex !in slots.indices) return
         slots[slotIndex]?.dispose()
         slots[slotIndex] = null
+        slotParamPage[slotIndex] = 0
 
         if (dto.filterId.isNotBlank()) {
             val filter = ISFFilterRegistry.createFilter(dto.filterId)
@@ -445,6 +457,7 @@ class FxChain(val label: String) {
         if (slotIndex in slots.indices) {
             slots[slotIndex]?.dispose()
             slots[slotIndex] = null
+            slotParamPage[slotIndex] = 0
         }
     }
 
@@ -528,7 +541,7 @@ class FxChain(val label: String) {
         cachedIsDirty = false
         lastDirtyCheckTimeMs = 0L
         focusedSlot = null
-        focusParamPage = 0
+        slotParamPage.fill(0)
         dto.dryWet?.let { dryWet.applyDto(it) }
         dto.superKnob?.let { superKnob.applyDto(it) }
         val linkFlags = dto.slotSuperKnobLink

@@ -449,8 +449,11 @@ object MacroEngine {
     // reflected in the cache and won't re-broadcast themselves.
     private val lastBroadcastValues = HashMap<String, Float>()
 
+    // The resident banks plus Chain view's per-slot FX banks (not canonical: derived from the chains, never saved).
+    private val oscBankIds by lazy { CANONICAL_BANK_IDS + FxMacroSync.SLOT_BANK_IDS }
+
     private fun broadcastChangedKnobsToOsc() {
-        for (bankId in CANONICAL_BANK_IDS) {
+        for (bankId in oscBankIds) {
             val bank = synchronized(lock) { banks[bankId] } ?: continue
             for (i in bank.knobs.indices) {
                 val value = bank.knobs[i].value
@@ -511,12 +514,18 @@ object MacroEngine {
             if (chain.slotSuperKnobLink.getOrNull(focused) == true) {
                 macroBank.knobs.getOrNull(0)?.let { mirrorLinkedKnob(it, chain, focused) }
             }
-            return
-        }
-        for (i in 0 until FxChain.SLOT_COUNT) {
-            if (chain.slotSuperKnobLink.getOrNull(i) == true) {
-                macroBank.knobs.getOrNull(i + 1)?.let { mirrorLinkedKnob(it, chain, i) }
+        } else {
+            for (i in 0 until FxChain.SLOT_COUNT) {
+                if (chain.slotSuperKnobLink.getOrNull(i) == true) {
+                    macroBank.knobs.getOrNull(i + 1)?.let { mirrorLinkedKnob(it, chain, i) }
+                }
             }
+        }
+        // Chain view's per-slot banks: knob 0 is always the slot's Metaknob.
+        for (i in 0 until FxChain.SLOT_COUNT) {
+            if (chain.slotSuperKnobLink.getOrNull(i) != true) continue
+            val slotBank = synchronized(lock) { banks[FxMacroSync.slotBankId(bankId, i)] } ?: continue
+            slotBank.knobs.getOrNull(0)?.let { mirrorLinkedKnob(it, chain, i) }
         }
     }
 

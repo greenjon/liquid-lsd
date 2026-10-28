@@ -99,7 +99,7 @@ object MacroLearnState {
     /** True if a knob in [bankId] may bind to [parameterId] (see [sectionFor]). */
     fun acceptsTarget(bankId: String?, parameterId: String): Boolean {
         // FX-bank knobs are owned by FxMacroSync (re-synced from the chain), so nothing can be added by hand.
-        if (bankId in FxMacroSync.FX_BANK_IDS) return false
+        if (FxMacroSync.isFxBank(bankId)) return false
         // Likewise the Transitions row (TransitionMacroSync): it follows the active transition.
         if (TransitionMacroSync.isTransBank(bankId)) return false
         when (bankId) {
@@ -114,10 +114,10 @@ object MacroLearnState {
     }
 
     /** What [bankId]'s knobs may bind to, for the "Cannot add target" status message. */
-    private fun targetHint(bankId: String?): String = when (bankId) {
-        in FxMacroSync.FX_BANK_IDS -> "an FX-chain knob (it follows the chain) -- edit the chain instead"
-        MacroEngine.TRANS -> "a Transitions knob (it follows the active transition) -- change the transition instead"
-        MacroEngine.MASTER -> "a Master knob -- click a Master parameter"
+    private fun targetHint(bankId: String?): String = when {
+        FxMacroSync.isFxBank(bankId) -> "an FX-chain knob (it follows the chain) -- edit the chain instead"
+        bankId == MacroEngine.TRANS -> "a Transitions knob (it follows the active transition) -- change the transition instead"
+        bankId == MacroEngine.MASTER -> "a Master knob -- click a Master parameter"
         else -> "a ${sectionLabel(bankId)} knob -- click a ${sectionLabel(bankId)} parameter"
     }
 

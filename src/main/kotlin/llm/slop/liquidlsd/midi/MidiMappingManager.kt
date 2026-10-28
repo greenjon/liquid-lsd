@@ -22,7 +22,8 @@ import mu.KotlinLogging
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 
-private val fxMacroSyncBankIds = llm.slop.liquidlsd.macro.FxMacroSync.FX_BANK_IDS.toSet() + llm.slop.liquidlsd.macro.MacroEngine.TRANS
+private val fxMacroSyncBankIds = (llm.slop.liquidlsd.macro.FxMacroSync.FX_BANK_IDS + llm.slop.liquidlsd.macro.FxMacroSync.SLOT_BANK_IDS).toSet() +
+    llm.slop.liquidlsd.macro.MacroEngine.TRANS
 private val macroKnobPathPattern = Regex("""^Macro/([^/]+)/knob_([1-4])$""")
 
 /** True for "Macro/<bankId>/knob_N" paths on any FX row (deck or master) -- see [MidiLearnTarget.MacroTarget]. */

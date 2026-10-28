@@ -150,7 +150,7 @@ object FxChainHeader {
             drawFocusedDryWet(chain, st, focusedSlot, ctrlH, wetW)
             if (totalPages > 1) {
                 ImGui.sameLine()
-                drawPageStepper(session, mixer, chain, bankId, st, totalPages, ctrlH)
+                drawPageStepper(session, mixer, chain, bankId, st, focusedSlot, totalPages, ctrlH)
             }
             ImGui.sameLine()
             drawSlotPills(mixer, chain, bankId, st, ctrlH, focusedSlot, actions, pillW)
@@ -177,7 +177,55 @@ object FxChainHeader {
         ImGui.popStyleVar()
     }
 
-    private fun drawPageStepper(session: SessionContext, mixer: Mixer, chain: FxChain, bankId: String, st: Strings, totalPages: Int, ctrlH: Float) {
+    /**
+     * The two lines of a Chain-view slot row ([slotBankId] is the slot's own bank, `FxMacroSync.slotBankId`): line 1 the
+     * effect's name (click to browse that slot), line 2 `[⋮] [Wet %] [◀ Px/y ▶]` -- the focus-mode header for this slot,
+     * without the focus pills, since a slot row is always "focused" on its slot. The ⋮ menu is the chain's.
+     */
+    fun drawSlotHeader(
+        session: SessionContext,
+        mixer: Mixer,
+        chain: FxChain,
+        slotBankId: String,
+        slotIdx: Int,
+        chainLabel: String,
+        x: Float,
+        row1Y: Float,
+        row2Y: Float,
+        nameW: Float,
+        width: Float,
+        ctrlH: Float,
+        actions: Actions
+    ) {
+        val st = stringsFor(slotBankId)
+        val chainBankId = FxMacroSync.chainBankIdOf(slotBankId) ?: slotBankId
+
+        ImGui.setCursorScreenPos(x, row1Y)
+        ImGui.beginGroup()
+        drawFocusedEffectButton(session, chain, st, slotIdx, ctrlH, nameW, actions)
+        ImGui.endGroup()
+
+        ImGui.setCursorScreenPos(x, row2Y)
+        ImGui.beginGroup()
+        val gap = 3f
+        ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, gap, 0f)
+        if (ButtonChrome.button(st.moreBtn, MORE_BTN_W, ctrlH)) ImGui.openPopup(st.menuId)
+        itemTooltip("Chain operations (Focus, Save As, Revert, Clear, Copy/Paste).")
+        drawChainMenu(session, mixer, chain, chainBankId, chainLabel, st.menuId)
+        val totalPages = chain.totalParamPages(slotIdx)
+        val stepperW = if (totalPages > 1) gap + ARROW_W * 2f + PAGE_TEXT_W + gap * 2f else 0f
+        ImGui.sameLine()
+        drawFocusedDryWet(chain, st, slotIdx, ctrlH, (width - MORE_BTN_W - gap - stepperW).coerceAtLeast(DRYWET_W))
+        if (totalPages > 1) {
+            ImGui.sameLine()
+            drawPageStepper(session, mixer, chain, slotBankId, st, slotIdx, totalPages, ctrlH)
+        }
+        ImGui.popStyleVar()
+        ImGui.endGroup()
+    }
+
+    private fun drawPageStepper(session: SessionContext, mixer: Mixer, chain: FxChain, bankId: String, st: Strings, slotIdx: Int, totalPages: Int, ctrlH: Float) {
+        val page = chain.slotParamPage[slotIdx]
         if (ButtonChrome.button(st.prevPage, ARROW_W, ctrlH)) {
             FxMacroSync.stepParamPage(bankId, mixer, -1)
         }
@@ -186,7 +234,7 @@ object FxChainHeader {
 
         ImGui.sameLine()
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-            val pageText = st.pageText.get(chain.focusParamPage, totalPages) { "P${chain.focusParamPage + 1}/$totalPages" }
+            val pageText = st.pageText.get(page, totalPages) { "P${page + 1}/$totalPages" }
             val curX = ImGui.getCursorScreenPosX()
             val curY = ImGui.getCursorScreenPosY()
             ImGui.dummy(PAGE_TEXT_W, ctrlH)
@@ -195,7 +243,7 @@ object FxChainHeader {
             val textY = curY + (ctrlH - textSz.y) * 0.5f
             ImGui.getWindowDrawList().addText(textX, textY, TangoPalette.FX_PAGE_TEXT.u32(), pageText)
         }
-        itemTooltip(st.pageTip.get(chain.focusParamPage, totalPages) { "Parameter page ${chain.focusParamPage + 1} of $totalPages." })
+        itemTooltip(st.pageTip.get(page, totalPages) { "Parameter page ${page + 1} of $totalPages." })
 
         ImGui.sameLine()
         if (ButtonChrome.button(st.nextPage, ARROW_W, ctrlH)) {
@@ -299,8 +347,8 @@ object FxChainHeader {
         if (ImGui.isItemHovered() && ImGui.isMouseClicked(2)) slot?.let { setSlotWet(st.bankId, slotIdx, it, 1f) }
         ImGui.endDisabled()
         itemTooltip(
-            if (slot?.dryWet?.metaDrivenBy != null) "Dry/Wet of the focused effect, driven by its Metaknob: moving this moves the Metaknob.\nMiddle-click to reset (100%)."
-            else "Dry/Wet of the focused effect.\nMiddle-click to reset (100%)."
+            if (slot?.dryWet?.metaDrivenBy != null) "Dry/Wet of this effect, driven by its Metaknob: moving this moves the Metaknob.\nMiddle-click to reset (100%)."
+            else "Dry/Wet of this effect.\nMiddle-click to reset (100%)."
         )
     }
 
@@ -351,7 +399,7 @@ object FxChainHeader {
             dl.addRect(curX, curY, curX + nameW, curY + ctrlH, hoverBorderCol, 4f, 0, 1.5f)
         }
         itemTooltip(st.focusedTip.get(slotName, focusedSlot) {
-            if (slot != null) "Focused Effect: ${slot.displayName} (Slot ${focusedSlot + 1})\nClick to browse/replace the effect in the list below (click again to stop)."
+            if (slot != null) "${slot.displayName} (Slot ${focusedSlot + 1})\nClick to browse/replace the effect in the list below (click again to stop)."
             else "Slot ${focusedSlot + 1} is empty.\nClick to browse and load an effect in the list below (click again to stop)."
         })
     }
@@ -471,6 +519,11 @@ object FxChainHeader {
                     ImGui.endMenu()
                 }
             }
+            // Chain view: this chain's slots as rows of their own, under the deck's source row (Master: Transitions).
+            val chainTag = (FxMacroSync.chainBankIdOf(bankId) ?: bankId).let { id -> PerfRows.DECK_TAGS.firstOrNull { PerfRows.chainBankFor(it) == id } ?: PerfRows.PAIR_MASTER }
+            val inChainView = session.parametersState.chainView != null && session.parametersState.focusedPair == chainTag
+            if (ImGui.menuItem(if (inChainView) "Leave Chain View" else "Chain View")) session.parametersState.toggleChainView(chainTag)
+            itemTooltip("Shows the source row and one row per FX slot, all three slots playable at once, over the Browse list.")
             ImGui.separator()
 
             if (ImGui.menuItem("Save As…")) {

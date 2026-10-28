@@ -12,6 +12,7 @@ import llm.slop.liquidlsd.rendering.Mixer
  *      silently keeps running underneath.
  *   2. The Preferences window.
  *   2b. The Perform dock bound in place unbinds ([ParametersState.boundInPlace]).
+ *   2c. Chain view closes, either state (back to Perform).
  *   3. FX focus mode (back to the chain's group mode).
  *   4. The pair focus view closes (one press, back to Perform).
  *   5. Any Rack module above Tier 1 collapses back to Tier 1.
@@ -33,6 +34,11 @@ internal object BackNavigation {
         // Perform with its dock bound in place: Esc unbinds it (the rows never moved, so there is nothing else to undo).
         if (parametersState.boundInPlace) {
             parametersState.clearDockSelection()
+            return true
+        }
+        // Chain view shows no chain row, so it leaves in one press even with a slot focused there.
+        if (parametersState.chainView != null) {
+            parametersState.leavePair()
             return true
         }
         if (mixer != null) {

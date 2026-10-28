@@ -5,8 +5,9 @@ package llm.slop.liquidlsd.control
  *  - `knob.<n>` turns knob n. Turning while its switch is held is a fine adjustment.
  *  - `knob.<n>.press` is the switch: a tap (released without turning) runs the knob's primary action.
  *  - `knob.<n>.press_alt` is the same switch with shift held: a tap runs the secondary action.
- * While a browse context is active, knob 16 browses and the others are inert, except the leading knobs while the
- * browsed rows are on screen ([NavSurface.browseLiveKnobs]) and the tap of a send knob ([SendTarget], row three plus knob 13) in the Library or picker.
+ * While a browse context is active, the cursor knob ([NavSurface.browseKnob], normally 16) browses and the others are inert, except the
+ * knobs of browsed rows still on screen ([NavSurface.isBrowseLive]), context taps ([NavSurface.browseKnobTap]: Chain view's load knobs)
+ * and the tap of a send knob ([SendTarget], row three plus knob 13) in the Library or picker.
  * Hold state lives here, not in the device, because the Twister sends identical turn messages whether
  * or not its switch is down. One instance serves all devices; the switch is expected to be held on
  * one device at a time.
@@ -43,7 +44,7 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
                     val session = nav.browseSession
                     if (session != lastBrowseSession) { lastBrowseSession = session; browseAccum = 0f }
                     browseWasActive = true
-                    if (knob == BROWSE_KNOB) browseTurn(delta, nav)
+                    if (knob == nav.browseKnob) browseTurn(delta, nav)
                     else if (isLiveRowKnob(knob, nav)) ctx.knobSurface?.turn(knob, if (held[knob]) delta * fineFactor else delta)
                     return@Command // every other knob is inert while browsing
                 }
@@ -72,8 +73,8 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
         }
     }
 
-    /** The leading knobs stay on the browsed rows while they are on screen ([NavSurface.browseLiveKnobs]). */
-    private fun isLiveRowKnob(knob: Int, nav: NavSurface) = knob < nav.browseLiveKnobs
+    /** The knobs that stay on the browsed rows while they are on screen ([NavSurface.isBrowseLive]). */
+    private fun isLiveRowKnob(knob: Int, nav: NavSurface) = knob != nav.browseKnob && nav.isBrowseLive(knob)
 
     private fun press(knob: Int, down: Boolean, shifted: Boolean, ctx: CommandContext) {
         if (down) {
@@ -93,10 +94,12 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
         if (!wasHeld || turnedWhileHeld[knob]) return
         val nav = ctx.navSurface
         if (nav != null && nav.browsing) {
-            if (knob == BROWSE_KNOB) nav.browseAccept(shifted)
+            if (knob == nav.browseKnob) nav.browseAccept(shifted)
             else if (isLiveRowKnob(knob, nav)) {
                 val surface = ctx.knobSurface ?: return
                 if (shifted) surface.secondary(knob) else surface.primary(knob)
+            } else if (nav.browseKnobTap(knob, shifted)) {
+                return
             } else if (shifted && SendTarget.forKnob(knob)?.let { it in nav.switchTargets } == true) {
                 SendTarget.forKnob(knob)?.let(nav::browseSwitch)
             } else SendTarget.forKnob(knob)?.takeIf { it in nav.sendTargets }?.let(nav::browseSend)

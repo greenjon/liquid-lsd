@@ -8,10 +8,11 @@ import llm.slop.liquidlsd.macro.MacroEngine
  */
 internal class DeckFxActions : FxChainHeader.Actions {
     private lateinit var parametersState: ParametersState
-    private var deckLabel = ""
+    private var deckLabel: String? = ""
     private var canonicalBankId = ""
 
-    fun set(parametersState: ParametersState, deckLabel: String, canonicalBankId: String) {
+    /** [deckLabel] is null for the Master chain (as [MasterFxActions] passes). */
+    fun set(parametersState: ParametersState, deckLabel: String?, canonicalBankId: String) {
         this.parametersState = parametersState
         this.deckLabel = deckLabel; this.canonicalBankId = canonicalBankId
     }

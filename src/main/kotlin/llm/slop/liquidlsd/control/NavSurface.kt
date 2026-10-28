@@ -16,6 +16,18 @@ interface NavSurface {
      */
     val browseLiveKnobs: Int get() = 0
 
+    /** Whether [knob] stays on its Perform row while [browsing]: by default the leading [browseLiveKnobs]. */
+    fun isBrowseLive(knob: Int): Boolean = knob < browseLiveKnobs
+
+    /** The knob that is the cursor while [browsing]: knob 16 ([KnobCommands.BROWSE_KNOB]) unless the context puts it elsewhere. */
+    val browseKnob: Int get() = KnobCommands.BROWSE_KNOB
+
+    /**
+     * A tap on a knob that is neither the cursor nor live while [browsing], before the send knobs get it. Returns true when the
+     * context used it (Chain view's load knobs); the default uses none.
+     */
+    fun browseKnobTap(knob: Int, shifted: Boolean): Boolean = false
+
     /** Increases every time [browsing] turns on, so consumers can drop per-session state (e.g. partial knob travel). */
     val browseSession: Int
 
