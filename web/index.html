@@ -39,7 +39,7 @@
       <div id="tv-screen-border">
         <div id="tv-screen-area">
           <canvas id="glCanvas"></canvas>
-          <!-- On-screen display: channel and look on every change, control feedback, now playing -->
+          <!-- On-screen display: channel and scene on every change, control feedback, now playing -->
           <div id="osd" aria-live="polite">
             <div id="osd-ch"></div>
             <div id="osd-msg"></div>
@@ -103,27 +103,27 @@
           <span class="control-label">CH</span>
         </div>
 
-        <!-- Next FX chain on the look on air -->
+        <!-- Next FX chain on the scene on air -->
         <div class="control-group">
-          <button id="fxBtn" class="push-btn" title="Next FX chain on this look (F)" aria-label="Next FX chain"></button>
+          <button id="fxBtn" class="push-btn" title="Next FX chain on this scene (F)" aria-label="Next FX chain"></button>
           <span class="control-label">FX</span>
         </div>
 
-        <!-- Hold the current look -->
+        <!-- Hold the current scene -->
         <div class="control-group">
-          <button id="holdBtn" class="push-btn latch" title="Hold this look (H or Space)" aria-label="Hold this look" aria-pressed="false"><span class="btn-led"></span></button>
+          <button id="holdBtn" class="push-btn latch" title="Hold this scene (H or Space)" aria-label="Hold this scene" aria-pressed="false"><span class="btn-led"></span></button>
           <span class="control-label">HOLD</span>
         </div>
 
-        <!-- Service menu: SYNC, REACT, TIME, Reduced motion, Heavy looks -->
+        <!-- Service menu: SYNC, REACT, TIME, Reduced motion, Heavy scenes -->
         <div class="control-group">
-          <button id="menuBtn" class="push-btn" title="Menu: sync, reaction, look length, input, fullscreen, reduced motion, heavy looks (M)" aria-label="Menu"></button>
+          <button id="menuBtn" class="push-btn" title="Menu: sync, reaction, scene length, input, fullscreen, reduced motion, heavy scenes (M)" aria-label="Menu"></button>
           <span class="control-label">MENU</span>
         </div>
 
-        <!-- How long each look holds, in bars -->
+        <!-- How long each scene holds, in bars -->
         <div class="control-group">
-          <div id="timeDial" class="rotary-dial" title="How long each look holds: drag, scroll or click ([ and ])" role="slider" aria-label="Look length in bars" tabindex="0">
+          <div id="timeDial" class="rotary-dial" title="How long each scene holds: drag, scroll or click ([ and ])" role="slider" aria-label="Scene length in bars" tabindex="0">
             <div class="dial-marker"></div>
           </div>
           <span class="control-label" id="timeLabel">16 BARS</span>

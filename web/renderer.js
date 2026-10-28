@@ -268,7 +268,7 @@ async function init() {
     adapt.slow = adapt.fast = 0;
     return true;
   }
-  // Shader prewarm for looks the autopilot has queued (Library.get starts the fetch and compile).
+  // Shader prewarm for scenes the autopilot has queued (Library.get starts the fetch and compile).
   setPrewarm((deck, transition) => {
     if (deck?.source && deck.source !== 'mandala') ctx.library.get('sources', deck.source.toLowerCase());
     for (const slot of deck?.fx ?? []) if (slot?.id) ctx.library.get('filters', slot.id);
@@ -276,7 +276,7 @@ async function init() {
   });
   // GPU probe, once, at the first power-on: render the heaviest source a few times with gl.finish() and let
   // the heavy sources (settings.json heavySources) into the rotation only if it is fast enough. Integrated
-  // GPUs and phones keep the light looks; discrete GPUs, Apple Silicon and fast integrated chips get all.
+  // GPUs and phones keep the light scenes; discrete GPUs, Apple Silicon and fast integrated chips get all.
   // ?heavy=1 / ?heavy=0 overrides it. The result is window.LSD.gpu.
   const gpu = { state: 'pending', ms: null, heavy: false };
   const heavyParam = new URLSearchParams(location.search).get('heavy');
@@ -292,7 +292,7 @@ async function init() {
     const probe = autopilotSettings.gpuProbe;
     if (gpu.state !== 'pending' || !probe) return;
     if (!ctx.library.get('sources', probe.source)) {
-      // Still compiling; if it never becomes ready (failed), stay with the light looks.
+      // Still compiling; if it never becomes ready (failed), stay with the light scenes.
       probeWaitedSince ??= now;
       if (now - probeWaitedSince > 8000 || ctx.library.failed.has(`sources/${probe.source}`)) gpu.state = 'failed';
       return;
@@ -312,7 +312,7 @@ async function init() {
       n++;
     }
     gpu.ms = total / n;
-    // Embedded on a phone the probe can't be trusted (gl.finish() returned in 0.4 ms on a Pixel 7a): heavy looks
+    // Embedded on a phone the probe can't be trusted (gl.finish() returned in 0.4 ms on a Pixel 7a): heavy scenes
     // stay off until the host asks for quality 'high'.
     gpu.heavy = gpu.ms <= probe.maxMs && !embed;
     gpu.state = 'done';

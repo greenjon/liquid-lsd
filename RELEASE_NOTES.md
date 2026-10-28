@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Web TV: "Looks" Are Now "Scenes" (`web/ui.js`, `web/index.html`, `web/autopilot.js`)
+- **The web TV calls what's on air a scene**: the picture plus the effects on it. The menu rows are now **ANNOUNCE SCENES** and **BIG GPU SCENES**, TIME reads "BARS PER SCENE", and the button tooltips, help lines and the web player guide say "scene" too. Your saved settings carry over. The web TV is now **v2**.
+
 ### Web TV: Version in the Menu, Esc in Full Screen (`web/ui.js`, `web/menu.js`, `web/tv.css`, `scripts/publish_web_tv.sh`)
 - **The MENU title shows the TV's version** (starting at v1), so you can tell at a glance whether your browser has picked up the latest update. `scripts/publish_web_tv.sh` warns when spaz.org already has the version you are about to publish.
 - **Fixed: closing the menu with Esc after choosing FULLSCREEN also left full screen.** Choosing FULLSCREEN now closes the menu. In Chrome and Edge, Esc in full screen now closes the menu if it is open and otherwise leaves full screen, and holding Esc always leaves full screen. Other browsers always leave full screen on Esc; the page can't change that.

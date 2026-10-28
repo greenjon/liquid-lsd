@@ -10,7 +10,7 @@ import { heardBeats, tapOffset } from './sync.js';
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v1';
+export const TV_VERSION = 'v2';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -21,11 +21,11 @@ export const powerState = {
 // Viewer settings — renderer.js scales every audio signal by `react`
 export const viewerState = {
   react: 1.0,
-  announce: false,     // show the look and its FX on every change (off: only when asked, or after a control)
+  announce: false,     // show the scene and its FX on every change (off: only when asked, or after a control)
   awake: false,        // a screen wake lock is held
   syncMs: 0,           // SYNC: how late the sound reaches the viewer (speakers, Bluetooth), in ms
   reducedMode: 'auto', // Reduced motion: 'auto' (follows the system setting), 'on', 'off'
-  heavyMode: 'auto',   // Heavy looks: 'auto' (the GPU probe decides), 'on', 'off'
+  heavyMode: 'auto',   // Heavy scenes: 'auto' (the GPU probe decides), 'on', 'off'
   reducedNow: false,   // reduced motion in effect (updated by applyReduced; the renderer reads it)
   /** Reduced motion as the setting and the system ask for it now. */
   get reduced() {
@@ -36,7 +36,7 @@ export const viewerState = {
 const SYNC_MIN = -100, SYNC_MAX = 400;
 const MODES = ['auto', 'on', 'off'];
 
-const TIME_STEPS = [8, 16, 32, 64];   // bars per look on the TIME dial
+const TIME_STEPS = [8, 16, 32, 64];   // bars per scene on the TIME dial
 // 100% = the desktop's Audio Response at 100%. Auto gain levels the stream, so no boost is needed by default.
 const REACT_MIN = 0.25, REACT_MAX = 2.0, REACT_DEFAULT = 1.0;
 // Saved under a new key: values saved before auto gain (200% was the default) would run twice as hot.
@@ -145,7 +145,7 @@ function makeDial(el, { initial, onChange, steps = 0, locked = () => false }) {
 // -------------------------------------------------------
 let audioBlocked = false;  // the browser refused to start audio without a click
 let lastUserChange = -Infinity; // a viewer's CH / FX press: its result is announced even with ANNOUNCE off
-/** A new look is on: show it if ANNOUNCE LOOKS is on, or if the viewer just asked for the change. */
+/** A new scene is on: show it if ANNOUNCE SCENES is on, or if the viewer just asked for the change. */
 function announceLook(info) {
   if (viewerState.announce || performance.now() - lastUserChange < 4000) showLook(info);
 }
@@ -208,7 +208,7 @@ export function initUI() {
       tvBody.classList.add('powered-on');
       powerSwitch.classList.add('active');
       if (!identShown) {
-        // First power-on of the visit: the Liquid LSD ident over the end of the warm-up, then the look.
+        // First power-on of the visit: the Liquid LSD ident over the end of the warm-up, then the scene.
         identShown = true;
         setTimeout(showIdent, 900);
         setTimeout(() => announceLook(), 4600);
@@ -259,7 +259,7 @@ export function initUI() {
   document.getElementById('fxBtn').addEventListener('click', fx);
   holdBtn.addEventListener('click', hold);
 
-  // --- TIME: bars per look ---
+  // --- TIME: bars per scene ---
   const timeLabel = document.getElementById('timeLabel');
   const showTime = (bars) => { timeLabel.textContent = `${bars} BARS`; };
   const savedBars = TIME_STEPS.includes(load('lsd.timeBars', 16)) ? load('lsd.timeBars', 16) : 16;
@@ -272,7 +272,7 @@ export function initUI() {
       setHoldBars(bars);
       showTime(bars);
       save('lsd.timeBars', bars);
-      if (powerState.on) message(`${bars} BARS PER LOOK`);
+      if (powerState.on) message(`${bars} BARS PER SCENE`);
     },
   });
   setHoldBars(savedBars);
@@ -305,7 +305,7 @@ export function initUI() {
 
   const about = document.getElementById('about');
 
-  // --- Service MENU (menu.js): SYNC, REACT, TIME, Reduced motion, Heavy looks, About ---
+  // --- Service MENU (menu.js): SYNC, REACT, TIME, Reduced motion, Heavy scenes, About ---
   viewerState.syncMs = Math.max(SYNC_MIN, Math.min(SYNC_MAX, Number(load('lsd.sync', 0)) || 0));
   viewerState.announce = load('lsd.announce', false) === true;
   viewerState.reducedMode = MODES.includes(load('lsd.reduced', 'auto')) ? load('lsd.reduced', 'auto') : 'auto';
@@ -329,20 +329,20 @@ export function initUI() {
       } },
     { label: 'TAP SYNC', value: () => 'TAP 8 BEATS', run: () => startTapSync(),
       help: 'Press Enter, then tap Space or the picture on 8 beats you hear: sets SYNC for you.' },
-    { label: 'ANNOUNCE LOOKS', value: () => onOff(viewerState.announce),
+    { label: 'ANNOUNCE SCENES', value: () => onOff(viewerState.announce),
       step: () => { viewerState.announce = !viewerState.announce; save('lsd.announce', viewerState.announce); },
-      help: 'Show the name of each new look and its effects when it comes on. Off: only when you press I or click the picture.' },
+      help: 'Show the name of each new scene and its effects when it comes on. Off: only when you press I or click the picture.' },
     { label: 'REACT', locked: live, help: 'How strongly the picture moves with the music. Raise it for quiet shows, lower it if it is too busy.', value: () => `${Math.round(viewerState.react * 100)}%`,
       step: (dir) => reactDial.set(toDial(Math.max(REACT_MIN, Math.min(REACT_MAX, viewerState.react + dir * 0.05)))) },
-    { label: 'TIME', locked: live, help: 'How long each look stays before the next one, in bars of the music.', value: () => timeLabel.textContent,
+    { label: 'TIME', locked: live, help: 'How long each scene stays before the next one, in bars of the music.', value: () => timeLabel.textContent,
       step: (dir) => {
         const i = Math.round(timeDial.get() * (TIME_STEPS.length - 1));
         timeDial.set(Math.max(0, Math.min(TIME_STEPS.length - 1, i + dir)) / (TIME_STEPS.length - 1));
       } },
-    { label: 'REDUCED MOTION', help: 'Gentler: no flashes, no hard looks, slower changes. Auto follows your system setting.',
+    { label: 'REDUCED MOTION', help: 'Gentler: no flashes, no hard scenes, slower changes. Auto follows your system setting.',
       value: () => (viewerState.reducedMode === 'auto' ? `AUTO (${onOff(viewerState.reduced)})` : viewerState.reducedMode.toUpperCase()),
       step: (dir) => { viewerState.reducedMode = cycle(viewerState.reducedMode, dir); save('lsd.reduced', viewerState.reducedMode); applyReduced(); } },
-    { label: 'BIG GPU LOOKS', locked: live,
+    { label: 'BIG GPU SCENES', locked: live,
       help: 'The most demanding 3D fractals and simulations. Auto: on if your graphics card passed a quick test at power-on. On: always (may stutter on laptops and phones). Off: never, for a smoother picture.',
       value: () => {
         if (viewerState.heavyMode !== 'auto') return viewerState.heavyMode.toUpperCase();
@@ -458,7 +458,7 @@ export function initUI() {
     fn();
   });
 
-  // --- Touch on the picture: swipe left = next look, right = previous, tap = info, long press = hold ---
+  // --- Touch on the picture: swipe left = next scene, right = previous, tap = info, long press = hold ---
   let touch = null;
   canvas.addEventListener('pointerdown', () => { if (tapping) tapSync(); });
   canvas.addEventListener('touchstart', (e) => {
@@ -486,7 +486,7 @@ export function initUI() {
   // --- Fullscreen: double-click the picture, S, or MENU (the OSD comes along) ---
   canvas.addEventListener('dblclick', toggleFullscreen);
 
-  // --- Phone lock screen / media keys: play-pause is the power switch, next/previous change the look ---
+  // --- Phone lock screen / media keys: play-pause is the power switch, next/previous change the scene ---
   if ('mediaSession' in navigator) {
     const ms = navigator.mediaSession;
     const handle = (action, fn) => { try { ms.setActionHandler(action, fn); } catch { /* action not supported */ } };
@@ -583,7 +583,7 @@ export function initUI() {
 
 // -------------------------------------------------------
 // Media Session: what the phone's lock screen and the OS media controls show (the show playing on the
-// radio, and the look on air).
+// radio, and the scene on air).
 // -------------------------------------------------------
 function updateMediaSession() {
   if (embed) return;

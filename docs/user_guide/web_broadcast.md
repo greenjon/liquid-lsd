@@ -73,30 +73,30 @@ The standalone browser client (`web/index.html`) presents the visualizer in a re
 | Control | What it does | Keys / touch |
 |---------|-------------|--------------|
 | **CH ▲ / ▼** | The next / previous channel, now (a channel you've seen keeps the FX chain it had; the autopilot itself still picks channels at random) | `→` `↑` `N` / `←` `↓` `P`; swipe left / right on the picture |
-| **FX** | Puts the next FX chain on the look on air | `F` |
-| **HOLD** | Keeps the current look until you press it again (the background keeps changing) | `H` or `Space`; long-press the picture |
-| **TIME** | How long each look holds: 8, 16, 32 or 64 bars (drag, scroll or click) | `[` `]` |
+| **FX** | Puts the next FX chain on the scene on air | `F` |
+| **HOLD** | Keeps the current scene until you press it again (the background keeps changing) | `H` or `Space`; long-press the picture |
+| **TIME** | How long each scene holds: 8, 16, 32 or 64 bars (drag, scroll or click) | `[` `]` |
 | **REACT** | How strongly the picture reacts to the music, 25-200%, 100% to start (double-click for 100%). The TV levels quiet and loud shows itself, so this is about taste, not volume | `-` `=` |
 
-Click or tap the picture (or press `I`) to show the channel, the look, its FX chain and the track playing on the radio. TIME and REACT are remembered in the browser.
+Click or tap the picture (or press `I`) to show the channel, the scene, its FX chain and the track playing on the radio. TIME and REACT are remembered in the browser.
 
 **No signal:** if the radio stream drops or goes quiet, the screen shows snow and NO SIGNAL, and the TV reconnects by itself.
 
-**Big GPU looks:** the most demanding 3D fractals and simulations only play on computers fast enough for them (the TV checks at power-on; MENU › Big GPU looks overrides it). Add `?heavy=1` to the address to force them on, `?heavy=0` to keep them off.
+**Big GPU scenes:** the most demanding 3D fractals and simulations only play on computers fast enough for them (the TV checks at power-on; MENU › Big GPU scenes overrides it). Add `?heavy=1` to the address to force them on, `?heavy=0` to keep them off.
 
 **Screen:** while the TV is on, your computer or phone won't dim or lock (in browsers that support it).
 
-**Lock screen and media keys:** your phone's lock screen and your keyboard's media keys show the show and the look; play/pause is the power switch, next/previous change the look.
+**Lock screen and media keys:** your phone's lock screen and your keyboard's media keys show the show and the scene; play/pause is the power switch, next/previous change the scene.
 
 **Install as an app:** use your browser's Install / Add to Home Screen; it opens fullscreen like a TV app.
 
 **Kiosk mode:** `index.html?kiosk` shows only the picture (no TV body), turns itself on and hides the mouse pointer; use the keyboard or swipes. Browsers that refuse to start sound on their own get a "click or press a key for sound" prompt.
 
-**MENU:** the MENU button or `M` opens the service menu (arrows or clicks to change, Esc or M to close): **SYNC** (how late the sound reaches you, for Bluetooth and other delayed speakers), **Announce looks** (name each new look on screen; off by default), **REACT**, **TIME**, **Reduced motion** (Auto follows your system setting), **Big GPU looks** (Auto lets the GPU check decide), **Input** (radio or microphone) and **Fullscreen**. The selected row explains itself at the bottom of the menu (and on mouse hover). Settings are remembered in this browser. REACT, TIME and Heavy looks are locked during a live broadcast.
+**MENU:** the MENU button or `M` opens the service menu (arrows or clicks to change, Esc or M to close): **SYNC** (how late the sound reaches you, for Bluetooth and other delayed speakers), **Announce scenes** (name each new scene on screen; off by default), **REACT**, **TIME**, **Reduced motion** (Auto follows your system setting), **Big GPU scenes** (Auto lets the GPU check decide), **Input** (radio or microphone) and **Fullscreen**. The selected row explains itself at the bottom of the menu (and on mouse hover). Settings are remembered in this browser. REACT, TIME and Heavy scenes are locked during a live broadcast.
 
 **SYNC:** if the picture's pulses come before the beat you hear (Bluetooth speakers are often 150-250 ms late), open MENU › **TAP SYNC** and tap Space or the picture on 8 beats; or set **SYNC** by hand. It needs the beat light to be green (or a live broadcast).
 
-**Reduced motion:** follows your system's "reduce motion" setting (or MENU › Reduced motion): gentler reaction, no hard looks, no flashes or glitch effects, no cut on the drop, slower changes.
+**Reduced motion:** follows your system's "reduce motion" setting (or MENU › Reduced motion): gentler reaction, no hard scenes, no flashes or glitch effects, no cut on the drop, slower changes.
 
 **Going live:** when the desktop starts broadcasting, viewers see a LIVE title card with the broadcaster's name (if one is set in the desktop's Web Broadcast preferences).
 
@@ -114,7 +114,7 @@ The viewer's browser also connects to a live audio stream and runs its own audio
 
 ## Autopilot mode
 
-When no broadcaster is connected, the web player switches to **Autopilot** — running its own curated visual playlist against the live audio stream. It keeps the visualizer interesting and audio-reactive 24/7 without needing a human operator. It finds the beat of the radio stream itself, so beat-synced movement lands on the music, and changes looks on the bar: every 16 bars by default (the TIME dial), with the background changing half as often. It also follows the song: when the bass drops out for a breakdown a calm or building look comes in, and when the drop lands a hard look cuts in on it (unless HOLD is on).
+When no broadcaster is connected, the web player switches to **Autopilot** — running its own curated visual playlist against the live audio stream. It keeps the visualizer interesting and audio-reactive 24/7 without needing a human operator. It finds the beat of the radio stream itself, so beat-synced movement lands on the music, and changes scenes on the bar: every 16 bars by default (the TIME dial), with the background changing half as often. It also follows the song: when the bass drops out for a breakdown a calm or building scene comes in, and when the drop lands a hard scene cuts in on it (unless HOLD is on).
 
 When a broadcaster connects, Autopilot smoothly hands off control to the live stream. When the broadcast ends, it picks up again automatically.
 

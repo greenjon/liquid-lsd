@@ -55,7 +55,7 @@ export const autopilotState = {
   masterAlpha: 1.0,
   isLiveBroadcast: false,
   broadcaster: null,   // the live broadcaster's name, if they set one
-  // Viewer HOLD: the foreground look stays until it is released (the background keeps changing).
+  // Viewer HOLD: the foreground scene stays until it is released (the background keeps changing).
   hold: false,
   // Flywheel following the broadcaster's beat clock; `clock.read(performance.now())` is the beat position.
   clock: new BeatFlywheel()
@@ -76,8 +76,8 @@ let fgFadeStartBalance = 0.0;
 let fgFadeTargetBalance = 0.0;
 let fgNext = null;         // {line, deck, transition} built ahead of the switch
 let fgPreparing = false;
-let fgHoldStart = 0;       // beat the current look finished fading in
-const fgHistory = [];      // looks that have been on air, newest last (a channel coming back keeps its chain)
+let fgHoldStart = 0;       // beat the current scene finished fading in
+const fgHistory = [];      // scenes that have been on air, newest last (a channel coming back keeps its chain)
 const HISTORY_MAX = 50;
 
 let bgPlaylist = [];
@@ -186,7 +186,7 @@ async function buildDeck(line) {
   const raw = await fetchPreset(presetName);
   const deck = parseDeckPreset(raw);
   deck.tags = raw?.tags ?? [];
-  deck.dominant = dominantBand(raw); // the band the look mostly follows (pairing.js)
+  deck.dominant = dominantBand(raw); // the band the scene mostly follows (pairing.js)
   let dto = null;
   if (pinned && pinned !== 'none') dto = await fetchContent(catalog.fxChains, pinned);
   else if (!pinned) dto = await pickChain(deck.tags, deck.dominant);
@@ -210,14 +210,14 @@ async function pickChain(tags, dominant = null) {
 }
 
 // -------------------------------------------------------
-// Reduced motion (ui.js: the MENU setting, or the system's prefers-reduced-motion): no hard looks, no
+// Reduced motion (ui.js: the MENU setting, or the system's prefers-reduced-motion): no hard scenes, no
 // flashing chains or transitions, no cut on the drop, crossfades twice as long. ui.js also caps REACT.
 // -------------------------------------------------------
 let reducedMotion = false;
 export function setReducedMotion(on) {
   if (!!on === reducedMotion) return;
   reducedMotion = !!on;
-  if (reducedMotion) { fgPrepareToken++; fgPreparing = false; fgNext = null; dropLook = null; } // rebuild the queued look calmly
+  if (reducedMotion) { fgPrepareToken++; fgPreparing = false; fgNext = null; dropLook = null; } // rebuild the queued scene calmly
 }
 const CALM_SKIP_LOOK_TAGS = ['hard'];
 const CALM_SKIP_CHAIN_TAGS = ['strobe', 'glitch'];
@@ -297,14 +297,14 @@ export function tickAutopilot(dt, beats, music = {}) {
   }
 }
 
-// renderer.js registers a function that loads and compiles a deck's shaders; prepared looks are warmed
-// with it during the hold, so the new look's source and effects are ready the frame its crossfade starts.
+// renderer.js registers a function that loads and compiles a deck's shaders; prepared scenes are warmed
+// with it during the hold, so the new scene's source and effects are ready the frame its crossfade starts.
 let prewarm = () => {};
 export function setPrewarm(fn) { prewarm = fn; }
 
 /**
- * Builds the next foreground look (and its FX chain and transition) ahead of the switch: the next
- * playlist line, or `line` when the music asks for a particular kind of look. A newer request
+ * Builds the next foreground scene (and its FX chain and transition) ahead of the switch: the next
+ * playlist line, or `line` when the music asks for a particular kind of scene. A newer request
  * supersedes one still being built.
  */
 let fgPrepareToken = 0;
@@ -334,7 +334,7 @@ async function buildLook(line) {
 
 // -------------------------------------------------------
 // Following the music's sections (energy.js via dsp.js): in a breakdown the next bar line brings a calm
-// or building look; when the drop lands, a hard look cuts in on it.
+// or building scene; when the drop lands, a hard scene cuts in on it.
 // -------------------------------------------------------
 const CALM_TAGS = ['ambient', 'build'];
 const DROP_TAGS = ['hard', 'bass-gated'];
@@ -348,8 +348,8 @@ const playable = (line) => (heavyAllowed || !autopilotSettings.heavySources.incl
   && !(reducedMotion && (presetTags.get(line) ?? []).some((t) => CALM_SKIP_LOOK_TAGS.includes(t)));
 
 // -------------------------------------------------------
-// Tempo-aware picks: with a locked beat, a random pick leans towards looks that suit the tempo (slow:
-// ambient, groove, mid; fast: hard, kick, hat). A weighting, not a filter, so every look still comes up.
+// Tempo-aware picks: with a locked beat, a random pick leans towards scenes that suit the tempo (slow:
+// ambient, groove, mid; fast: hard, kick, hat). A weighting, not a filter, so every scene still comes up.
 // -------------------------------------------------------
 let lastMusic = {};
 export function tempoWeight(tags, bpm) {
@@ -373,7 +373,7 @@ export function weightedPick(list, weights, current, rand = Math.random) {
   return list.length - 1 === current ? list.length - 2 : list.length - 1;
 }
 
-/** Next index in `list` (as getNextIndex) whose look this machine can play; the plain next one if none can. */
+/** Next index in `list` (as getNextIndex) whose scene this machine can play; the plain next one if none can. */
 function nextPlayable(idx, list, order) {
   let next = idx;
   for (let tries = 0; tries < list.length; tries++) {
@@ -384,9 +384,9 @@ function nextPlayable(idx, list, order) {
 }
 let lastSection = 'normal';
 let lastDrops = 0;
-let dropLook = null;          // hard look built when the breakdown starts, ready for the drop
+let dropLook = null;          // hard scene built when the breakdown starts, ready for the drop
 
-/** A random line from both playlists whose preset has one of `tags`, not the look on air. */
+/** A random line from both playlists whose preset has one of `tags`, not the scene on air. */
 function pickLine(tags) {
   const current = fgHistory.at(-1)?.line;
   const pool = [...new Set([...fgPlaylist, ...bgPlaylist])]
@@ -394,7 +394,7 @@ function pickLine(tags) {
   return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
 }
 
-let calmForBreakdown = false;  // the look on air (or queued) was brought in by a breakdown
+let calmForBreakdown = false;  // the scene on air (or queued) was brought in by a breakdown
 function followSections(beats, { section = 'normal', drops = 0 }) {
   if (section !== lastSection) {
     lastSection = section;
@@ -431,7 +431,7 @@ function followSections(beats, { section = 'normal', drops = 0 }) {
       calmForBreakdown = false;
     }
   }
-  // The energy came back without a drop (a short dip): the calm look goes again at the next bar line.
+  // The energy came back without a drop (a short dip): the calm scene goes again at the next bar line.
   if (section === 'normal' && calmForBreakdown && drops === lastDrops) {
     calmForBreakdown = false;
     if (!autopilotState.hold) {
@@ -449,7 +449,7 @@ async function dropTransition() {
   return dto ? parseTransition(dto) : null;
 }
 
-/** Loads every playlist preset's tags (cached), so section changes can pick a fitting look. */
+/** Loads every playlist preset's tags (cached), so section changes can pick a fitting scene. */
 async function loadPresetTags() {
   await Promise.all([...new Set([...fgPlaylist, ...bgPlaylist])].map(async (line) => {
     const raw = await fetchPreset(line.split('|')[0].trim());
@@ -526,8 +526,8 @@ function settleCrossfade() {
 }
 
 /**
- * CH up / down: the playable look `dir` (+1 / -1) channels from the one on air (or the one being tuned
- * to), in playlist order, now. A look that was on air before comes back with the chain it had.
+ * CH up / down: the playable scene `dir` (+1 / -1) channels from the one on air (or the one being tuned
+ * to), in playlist order, now. A scene that was on air before comes back with the chain it had.
  */
 let fgTuning = null;       // the line a channel change is building, so quick presses keep counting
 async function changeChannel(dir) {
@@ -564,7 +564,7 @@ async function changeChannel(dir) {
 export const advanceForeground = () => changeChannel(1);
 export const previousForeground = () => changeChannel(-1);
 
-/** Puts the next suitable FX chain on the look on air, now. */
+/** Puts the next suitable FX chain on the scene on air, now. */
 export async function nextFxChain() {
   if (autopilotState.isLiveBroadcast) return;
   const deck = fgActiveDeck === 'A' ? autopilotState.deckA : autopilotState.deckB;
@@ -574,13 +574,13 @@ export async function nextFxChain() {
   announce();
 }
 
-/** HOLD: keep the current look until released; on release the look changes at the next bar line due. */
+/** HOLD: keep the current scene until released; on release the scene changes at the next bar line due. */
 export function setHold(on) {
   autopilotState.hold = !!on;
   if (!on) replanForeground();
 }
 
-/** How long a look holds, in bars; the background holds twice as long. */
+/** How long a scene holds, in bars; the background holds twice as long. */
 let viewerHoldBars = null; // the TIME dial's setting; outlives settings.json loading after it
 export function setHoldBars(bars) {
   viewerHoldBars = bars;

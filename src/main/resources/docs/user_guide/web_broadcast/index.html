@@ -1505,17 +1505,17 @@ Each viewer's browser — renders the visuals locally using WebGL
 </tr>
 <tr>
 <td><strong>FX</strong></td>
-<td>Puts the next FX chain on the look on air</td>
+<td>Puts the next FX chain on the scene on air</td>
 <td><code>F</code></td>
 </tr>
 <tr>
 <td><strong>HOLD</strong></td>
-<td>Keeps the current look until you press it again (the background keeps changing)</td>
+<td>Keeps the current scene until you press it again (the background keeps changing)</td>
 <td><code>H</code> or <code>Space</code>; long-press the picture</td>
 </tr>
 <tr>
 <td><strong>TIME</strong></td>
-<td>How long each look holds: 8, 16, 32 or 64 bars (drag, scroll or click)</td>
+<td>How long each scene holds: 8, 16, 32 or 64 bars (drag, scroll or click)</td>
 <td><code>[</code> <code>]</code></td>
 </tr>
 <tr>
@@ -1525,16 +1525,16 @@ Each viewer's browser — renders the visuals locally using WebGL
 </tr>
 </tbody>
 </table>
-<p>Click or tap the picture (or press <code>I</code>) to show the channel, the look, its FX chain and the track playing on the radio. TIME and REACT are remembered in the browser.</p>
+<p>Click or tap the picture (or press <code>I</code>) to show the channel, the scene, its FX chain and the track playing on the radio. TIME and REACT are remembered in the browser.</p>
 <p><strong>No signal:</strong> if the radio stream drops or goes quiet, the screen shows snow and NO SIGNAL, and the TV reconnects by itself.</p>
-<p><strong>Big GPU looks:</strong> the most demanding 3D fractals and simulations only play on computers fast enough for them (the TV checks at power-on; MENU › Big GPU looks overrides it). Add <code>?heavy=1</code> to the address to force them on, <code>?heavy=0</code> to keep them off.</p>
+<p><strong>Big GPU scenes:</strong> the most demanding 3D fractals and simulations only play on computers fast enough for them (the TV checks at power-on; MENU › Big GPU scenes overrides it). Add <code>?heavy=1</code> to the address to force them on, <code>?heavy=0</code> to keep them off.</p>
 <p><strong>Screen:</strong> while the TV is on, your computer or phone won't dim or lock (in browsers that support it).</p>
-<p><strong>Lock screen and media keys:</strong> your phone's lock screen and your keyboard's media keys show the show and the look; play/pause is the power switch, next/previous change the look.</p>
+<p><strong>Lock screen and media keys:</strong> your phone's lock screen and your keyboard's media keys show the show and the scene; play/pause is the power switch, next/previous change the scene.</p>
 <p><strong>Install as an app:</strong> use your browser's Install / Add to Home Screen; it opens fullscreen like a TV app.</p>
 <p><strong>Kiosk mode:</strong> <code>index.html?kiosk</code> shows only the picture (no TV body), turns itself on and hides the mouse pointer; use the keyboard or swipes. Browsers that refuse to start sound on their own get a "click or press a key for sound" prompt.</p>
-<p><strong>MENU:</strong> the MENU button or <code>M</code> opens the service menu (arrows or clicks to change, Esc or M to close): <strong>SYNC</strong> (how late the sound reaches you, for Bluetooth and other delayed speakers), <strong>Announce looks</strong> (name each new look on screen; off by default), <strong>REACT</strong>, <strong>TIME</strong>, <strong>Reduced motion</strong> (Auto follows your system setting), <strong>Big GPU looks</strong> (Auto lets the GPU check decide), <strong>Input</strong> (radio or microphone) and <strong>Fullscreen</strong>. The selected row explains itself at the bottom of the menu (and on mouse hover). Settings are remembered in this browser. REACT, TIME and Heavy looks are locked during a live broadcast.</p>
+<p><strong>MENU:</strong> the MENU button or <code>M</code> opens the service menu (arrows or clicks to change, Esc or M to close): <strong>SYNC</strong> (how late the sound reaches you, for Bluetooth and other delayed speakers), <strong>Announce scenes</strong> (name each new scene on screen; off by default), <strong>REACT</strong>, <strong>TIME</strong>, <strong>Reduced motion</strong> (Auto follows your system setting), <strong>Big GPU scenes</strong> (Auto lets the GPU check decide), <strong>Input</strong> (radio or microphone) and <strong>Fullscreen</strong>. The selected row explains itself at the bottom of the menu (and on mouse hover). Settings are remembered in this browser. REACT, TIME and Heavy scenes are locked during a live broadcast.</p>
 <p><strong>SYNC:</strong> if the picture's pulses come before the beat you hear (Bluetooth speakers are often 150-250 ms late), open MENU › <strong>TAP SYNC</strong> and tap Space or the picture on 8 beats; or set <strong>SYNC</strong> by hand. It needs the beat light to be green (or a live broadcast).</p>
-<p><strong>Reduced motion:</strong> follows your system's "reduce motion" setting (or MENU › Reduced motion): gentler reaction, no hard looks, no flashes or glitch effects, no cut on the drop, slower changes.</p>
+<p><strong>Reduced motion:</strong> follows your system's "reduce motion" setting (or MENU › Reduced motion): gentler reaction, no hard scenes, no flashes or glitch effects, no cut on the drop, slower changes.</p>
 <p><strong>Going live:</strong> when the desktop starts broadcasting, viewers see a LIVE title card with the broadcaster's name (if one is set in the desktop's Web Broadcast preferences).</p>
 <p><strong>Power:</strong> click anywhere on the TV to turn it on (the browser needs that click to start the sound). Once it's on, a click on the cabinet turns it off; clicks on the picture show the info instead.</p>
 <p><strong>About:</strong> the nameplate under the screen opens the Liquid LSD website. MENU › <strong>ABOUT</strong> tells you about the desktop app (with a QR code for your phone), and <strong>I</strong> shows a Liquid LSD line with the info.</p>
@@ -1543,7 +1543,7 @@ Each viewer's browser — renders the visuals locally using WebGL
 <p>The viewer's browser also connects to a live audio stream and runs its own audio analysis, keeping the visuals reactive to music even when you're not broadcasting.</p>
 <hr />
 <h2 id="autopilot-mode">Autopilot mode</h2>
-<p>When no broadcaster is connected, the web player switches to <strong>Autopilot</strong> — running its own curated visual playlist against the live audio stream. It keeps the visualizer interesting and audio-reactive 24/7 without needing a human operator. It finds the beat of the radio stream itself, so beat-synced movement lands on the music, and changes looks on the bar: every 16 bars by default (the TIME dial), with the background changing half as often. It also follows the song: when the bass drops out for a breakdown a calm or building look comes in, and when the drop lands a hard look cuts in on it (unless HOLD is on).</p>
+<p>When no broadcaster is connected, the web player switches to <strong>Autopilot</strong> — running its own curated visual playlist against the live audio stream. It keeps the visualizer interesting and audio-reactive 24/7 without needing a human operator. It finds the beat of the radio stream itself, so beat-synced movement lands on the music, and changes scenes on the bar: every 16 bars by default (the TIME dial), with the background changing half as often. It also follows the song: when the bass drops out for a breakdown a calm or building scene comes in, and when the drop lands a hard scene cuts in on it (unless HOLD is on).</p>
 <p>When a broadcaster connects, Autopilot smoothly hands off control to the live stream. When the broadcast ends, it picks up again automatically.</p>
 <p>The web presets and playlists used for Autopilot live in <code>web/presets/</code> and <code>web/playlists/</code>, separate from your desktop preset library. Web presets are ordinary desktop <code>.lsd</code> files, so you can copy one across in either direction (a preset using only sources the web has). A playlist line can add an FX chain after a bar: <code>my-preset | my-chain</code>; the desktop's FX chains and transition presets ship with the web TV.</p>
 

@@ -11,7 +11,7 @@ const MODES = ['auto', 'on', 'off'];
 /**
  * `hooks` come from the renderer: pause(), resume(), setQuality(floorIndex), frames(), isPaused().
  * Options (setOption(name, value)):
- *   quality        'auto' | 'low' | 'high'   low: no heavy looks, coarser picture; high: heavy looks always on
+ *   quality        'auto' | 'low' | 'high'   low: no heavy scenes, coarser picture; high: heavy scenes always on
  *   reactivity     0.25 .. 2                 the REACT knob (1 = default; audio is auto-gained, so 1 suits any feed level)
  *   reducedMotion  'auto' | 'on' | 'off'
  *   live           boolean                   follow a desktop live broadcast (needs the network)
@@ -41,7 +41,7 @@ export function installEmbedApi(hooks) {
 
   // ?debug: a status line every 2 s (the host app logs the console), for working out why a picture is black.
   if (new URLSearchParams(location.search).has('debug')) {
-    // An on-screen readout: frames per second, the render resolution the adaptive scaler settled on, heavy looks.
+    // An on-screen readout: frames per second, the render resolution the adaptive scaler settled on, heavy scenes.
     const box = document.createElement('div');
     box.style.cssText = 'position:fixed;left:6px;top:calc(6px + env(safe-area-inset-top,0px));z-index:1000;padding:3px 6px;' +
       'font:12px/1.3 monospace;color:#7CFC00;background:rgba(0,0,0,.55);pointer-events:none;white-space:pre';

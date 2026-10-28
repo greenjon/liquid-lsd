@@ -2,7 +2,7 @@
 // A preset tagged `fullframe` fills the whole frame with colour (no dark background), so feedback
 // trails and bloom pile up on it until the picture is one flat colour: it skips chains that hold
 // either; a `sparse` preset (fine dots or thin lines) skips pixelate / halftone chains and the
-// tunnel, displacement and motion-blur warps, which average it away to black. And a chain should answer a different part of the music than the look does: a look that
+// tunnel, displacement and motion-blur warps, which average it away to black. And a chain should answer a different part of the music than the scene does: a scene that
 // mostly follows the kick does not get a chain that only follows the kick too (`dominantBand`,
 // `bands`, `chainAnswers`; the autopilot falls back to any fitting chain when none answers).
 // Used by autopilot.js and web/checks/render_check.mjs, so the check shows what goes on air.
@@ -55,10 +55,10 @@ export function bands(chainDto) {
 }
 
 /**
- * chainFits, and the chain does more than echo the look: a chain whose audio modulation follows only
- * the band the look mostly follows doubles it (a kick look under a kick-only chain). Chains that also
+ * chainFits, and the chain does more than echo the scene: a chain whose audio modulation follows only
+ * the band the scene mostly follows doubles it (a kick scene under a kick-only chain). Chains that also
  * follow another band, or none, answer. Most chains punch on the kick, so "only" keeps ~half of them
- * open to kick looks instead of a handful.
+ * open to kick scenes instead of a handful.
  */
 export function chainAnswers(presetTags, dominant, chainDto) {
   if (!chainFits(presetTags, chainDto)) return false;
