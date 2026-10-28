@@ -30,11 +30,19 @@ class KnobCommandsBrowseTest {
         override val browseKnob get() = this@KnobCommandsBrowseTest.cursorKnob
         override fun isBrowseLive(knob: Int) = if (chainLoading) knob >= 4 else knob < browseLiveKnobs
         override fun browseKnobTap(knob: Int, shifted: Boolean): Boolean {
+            if (knob == 13) { queueTaps += if (shifted) -1 else 1; return true }
             if (!chainLoading || knob > 2) return false
             loads += knob
             return true
         }
+        override fun browseKnobTurn(knob: Int, steps: Int, held: Boolean): Boolean {
+            if (knob != 13) return false
+            queueTurns += steps to held
+            return true
+        }
     }
+    private val queueTurns = mutableListOf<Pair<Int, Boolean>>()
+    private val queueTaps = mutableListOf<Int>()
     private var cursorKnob = KnobCommands.BROWSE_KNOB
     private var chainLoading = false
     private val loads = mutableListOf<Int>()
@@ -165,5 +173,27 @@ class KnobCommandsBrowseTest {
         tap(1); tap(4); tap(9)
         assertEquals(listOf(0, 3), primaries)
         assertEquals(listOf(SendTarget.A), sent)
+    }
+
+    @Test
+    fun aContextTurnKnobStepsOneItemPerMessageAndReportsTheHeldSwitch() {
+        registry.execute("knob.14", CommandInput.Delta(half), ctx)
+        assertEquals(emptyList(), queueTurns, "partial travel")
+        registry.execute("knob.14", CommandInput.Delta(half), ctx)
+        registry.execute("knob.14", CommandInput.Delta(KnobCommands.BROWSE_STEP * 5), ctx)   // accelerated: still one item
+        registry.execute("knob.14", CommandInput.Delta(-KnobCommands.BROWSE_STEP * 2), ctx)   // past the leftover 0.2
+        assertEquals(listOf(1 to false, 1 to false, -1 to false), queueTurns)
+
+        // Hold + turn is a carry: unscaled (not fine) and the release that ends it is not a tap.
+        queueTurns.clear()
+        registry.execute("knob.14.press", CommandInput.Press(true), ctx)
+        registry.execute("knob.14", CommandInput.Delta(KnobCommands.BROWSE_STEP * 2), ctx)   // past the leftover -0.6
+        registry.execute("knob.14.press", CommandInput.Press(false), ctx)
+        assertEquals(listOf(1 to true), queueTurns)
+        assertEquals(emptyList(), queueTaps)
+
+        tap(14); tap(14, alt = true)
+        assertEquals(listOf(1, -1), queueTaps)
+        assertEquals(emptyList(), turned, "never a Perform turn while browsing")
     }
 }

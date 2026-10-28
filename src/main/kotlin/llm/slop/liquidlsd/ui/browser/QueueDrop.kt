@@ -46,7 +46,8 @@ object QueueDrop {
 
     private fun isPlaylist(file: File) = LibraryRefs.playlistKindOf(file) != null || file.extension.equals("playlist", ignoreCase = true)
 
-    private fun expand(queue: Queue, file: File): List<File> {
+    /** [file] as the items it puts in [queue]: a playlist its entries, anything else itself. */
+    internal fun expandForQueue(queue: Queue, file: File): List<File> {
         if (!isPlaylist(file)) return listOf(file)
         return when (queue) {
             Queue.AB, Queue.BG -> PlayQueueManager.parsePlaylist(file)
@@ -82,7 +83,7 @@ object QueueDrop {
      */
     fun insert(queue: Queue, index: Int?, payload: String): Int {
         val sorted = sort(queue, payload)
-        val files = sorted.files.flatMap { expand(queue, it) }
+        val files = sorted.files.flatMap { expandForQueue(queue, it) }
         insertFiles(queue, (index ?: size(queue)).coerceIn(0, size(queue)), files)
         if (sorted.skipped > 0) {
             val what = when (queue.kind) { BrowseKind.SRC -> "sources"; BrowseKind.FX -> "FX"; BrowseKind.TRANS -> "transitions" }

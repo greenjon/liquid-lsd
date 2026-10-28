@@ -18,12 +18,14 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
     /** The press already acted on switch-down ([KnobSurface.pressDown]); its release is ignored. */
     private val pressHandled = BooleanArray(knobCount)
     private var browseAccum = 0f
+    /** Partial travel of the other knobs a browse context turns in steps ([NavSurface.browseKnobTurn]), per knob. */
+    private val stepAccum = FloatArray(knobCount)
     private var browseWasActive = false
     private var lastBrowseSession = 0
 
     /** Drops leftover browse travel so it can't leak into the next browse session. */
     private fun endBrowseSession() {
-        if (browseWasActive) { browseWasActive = false; browseAccum = 0f }
+        if (browseWasActive) { browseWasActive = false; browseAccum = 0f; stepAccum.fill(0f) }
     }
 
     fun register(registry: CommandRegistry) {
@@ -32,6 +34,7 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
             turnedWhileHeld.fill(false)
             pressHandled.fill(false)
             browseAccum = 0f
+            stepAccum.fill(0f)
             browseWasActive = false
         }
         for (n in 1..knobCount) {
@@ -42,10 +45,11 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
                 val nav = ctx.navSurface
                 if (nav != null && nav.browsing) {
                     val session = nav.browseSession
-                    if (session != lastBrowseSession) { lastBrowseSession = session; browseAccum = 0f }
+                    if (session != lastBrowseSession) { lastBrowseSession = session; browseAccum = 0f; stepAccum.fill(0f) }
                     browseWasActive = true
                     if (knob == nav.browseKnob) browseTurn(delta, nav)
                     else if (isLiveRowKnob(knob, nav)) ctx.knobSurface?.turn(knob, if (held[knob]) delta * fineFactor else delta)
+                    else stepTurn(knob, delta, nav)
                     return@Command // every other knob is inert while browsing
                 }
                 endBrowseSession()
@@ -70,6 +74,16 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
         if (steps != 0) {
             browseAccum -= steps * BROWSE_STEP
             nav.browseStep(steps.coerceIn(-1, 1))
+        }
+    }
+
+    /** [browseTurn] for any other knob, offered to the context ([NavSurface.browseKnobTurn]); held state passes through unscaled (carry, not fine). */
+    private fun stepTurn(knob: Int, delta: Float, nav: NavSurface) {
+        stepAccum[knob] += delta
+        val steps = (stepAccum[knob] / BROWSE_STEP).toInt()
+        if (steps != 0) {
+            stepAccum[knob] -= steps * BROWSE_STEP
+            nav.browseKnobTurn(knob, steps.coerceIn(-1, 1), held[knob])
         }
     }
 

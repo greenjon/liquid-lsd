@@ -28,6 +28,7 @@ import llm.slop.liquidlsd.ui.browser.FXBrowserPanel
 import llm.slop.liquidlsd.ui.browser.FXQueueActionsPanel
 import llm.slop.liquidlsd.ui.browser.QueueActionsPanel
 import llm.slop.liquidlsd.ui.browser.QueueDrop
+import llm.slop.liquidlsd.ui.browser.QueueKnobs
 import llm.slop.liquidlsd.ui.browser.QueueOps
 import llm.slop.liquidlsd.ui.browser.QueueSplit
 import llm.slop.liquidlsd.ui.browser.TransitionQueuePanel
@@ -168,6 +169,18 @@ internal object LibraryNavigation {
         }
         val file = LibraryPanel.getActiveSelectedFile(session)
         return if (file != null && file.exists()) listOf(file) else emptyList()
+    }
+
+    /**
+     * The cursor knob's shift + tap in the Library view: the cursor item(s), or the tree cursor's playlist, go after the cursor of the
+     * queue knob touched last in browse [browseSession] ([QueueKnobs.insertFromBrowser]). False when no queue knob was touched.
+     */
+    fun enqueueAtQueueKnob(session: SessionContext, browseSession: Int): Boolean {
+        if (QueueKnobs.lastTouched(browseSession) == null) return false
+        val files = if (LibraryPanel.activeSelectionSource == SelectionSource.TREE) {
+            unifiedKind()?.let { BrowserPane.cursorPlaylistFile(it) }?.let(::listOf) ?: emptyList()
+        } else enqueueTargets(session)
+        return QueueKnobs.insertFromBrowser(files, browseSession)
     }
 
     /** Appends the cursor item(s) (on the unified tree: the cursor playlist) to the background queue ([bg]) or the A/B queue of the current tab. Returns false if nothing was added. */

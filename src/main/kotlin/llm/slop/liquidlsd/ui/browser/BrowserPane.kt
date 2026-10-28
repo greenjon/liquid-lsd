@@ -212,6 +212,9 @@ object BrowserPane {
     }
 
     /** Appends the playlist under the tree cursor to the BG ([bg]) or A/B queue of [kind] (the one queue for transitions). False when the cursor is not on a playlist. */
+    /** The playlist file under [kind]'s tree cursor, or null when the cursor is on a folder or group. */
+    fun cursorPlaylistFile(kind: BrowseKind): File? = (treeCursorOf(kind) as? BrowseScope.Playlist)?.let { File(it.path) }
+
     fun enqueueCursorPlaylist(session: SessionContext, kind: BrowseKind, bg: Boolean): Boolean {
         val playlist = treeCursorOf(kind) as? BrowseScope.Playlist ?: return false
         val file = File(playlist.path)

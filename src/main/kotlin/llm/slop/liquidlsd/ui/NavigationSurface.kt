@@ -8,12 +8,14 @@ import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.ui.browser.BrowserDock
 import llm.slop.liquidlsd.ui.browser.BrowserPane
+import llm.slop.liquidlsd.ui.browser.QueueKnobs
 
 /**
  * Applies controller navigation to the live UI. The three side buttons mean different things per context:
  *  - Library view (Library FULL): back, next tab, next list; the cursor is knob 16. Tapping a send knob (9-12 = A, B, BG, PV;
  *    13 = master FX) sends the cursor item there and opens that row in the picker, so it also works in the picker.
- *    With shift: enqueue to the BG queue, previous tab, previous list.
+ *    With shift: enqueue to the BG queue, previous tab, previous list. With the queues under the browser, knobs 14-15 are the tab's
+ *    two queues ([QueueKnobs]) and knob 16's shift + tap puts the item after the cursor of the queue knob touched last.
  *  - Pair view (the unified pane under the focused pair's two rows), or the Perform dock bound in place (same buttons; knobs 1-8
  *    stay live on the page's first two rows): side 1 = back, side 2 = next tab (shift: previous),
  *    side 3 = next pane (tree > list), shift + side 3 = clear the slot or chain; the cursor is knob 16
@@ -69,12 +71,18 @@ internal class NavigationSurface(
     /** Chain view loading: the cursor is the load row's last knob (4), next to the load knobs. */
     override val browseKnob: Int get() = if (chainLoading && !confirming) CHAIN_CURSOR_KNOB else super.browseKnob
 
-    /** Chain view loading: knobs 1-3 load the cursor item into slots 1-3. */
+    /** Chain view loading: knobs 1-3 load the cursor item into slots 1-3. Library view: the queue knobs ([QueueKnobs], 14-15). */
     override fun browseKnobTap(knob: Int, shifted: Boolean): Boolean {
-        if (!chainLoading || confirming || shifted || knob !in 0 until CHAIN_CURSOR_KNOB) return false
+        if (confirming) return false
+        if (inLibraryView) return QueueKnobs.tap(knob, shifted, browseSession, session, mixer)
+        if (!chainLoading || shifted || knob !in 0 until CHAIN_CURSOR_KNOB) return false
         ChainLoad.loadCursorInto(session, mixer, parametersState, knob)
         return true
     }
+
+    /** Library view: knobs 14-15 move the cursor of the tab's two queues; held, they carry the cursor row ([QueueKnobs]). */
+    override fun browseKnobTurn(knob: Int, steps: Int, held: Boolean): Boolean =
+        inLibraryView && !confirming && QueueKnobs.turn(knob, steps, held, browseSession, parametersState)
 
     // The session counter lives in the companion so short-lived surfaces (tests) share it; sampling on construction,
     // once per frame (UIManager) and on read catches every inactive -> active edge.
@@ -259,7 +267,9 @@ internal class NavigationSurface(
             return
         }
         if (!inLibraryView && !inPicker) return
-        if (shifted) LibraryNavigation.enqueue(session, bg = false) else LibraryNavigation.accept(session, mixer, parametersState)
+        if (!shifted) LibraryNavigation.accept(session, mixer, parametersState)
+        // Library view: after the cursor of the queue knob touched last; none touched, the end of the A-side queue as before.
+        else if (!(inLibraryView && LibraryNavigation.enqueueAtQueueKnob(session, browseSession))) LibraryNavigation.enqueue(session, bg = false)
     }
 }
 

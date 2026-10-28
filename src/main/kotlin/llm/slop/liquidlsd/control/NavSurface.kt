@@ -28,6 +28,13 @@ interface NavSurface {
      */
     fun browseKnobTap(knob: Int, shifted: Boolean): Boolean = false
 
+    /**
+     * A turn of a knob that is neither the cursor nor live while [browsing], in whole [steps] (one item per turn message, like the
+     * cursor); [held] is true while its switch is down. Returns true when the context used it (the Library's queue knobs); the default
+     * uses none, so the knob stays inert.
+     */
+    fun browseKnobTurn(knob: Int, steps: Int, held: Boolean): Boolean = false
+
     /** Increases every time [browsing] turns on, so consumers can drop per-session state (e.g. partial knob travel). */
     val browseSession: Int
 

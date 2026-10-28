@@ -139,6 +139,30 @@ class LibraryNavigationTest {
     }
 
     @Test
+    fun shiftTapOnTheCursorPutsTheItemAfterTheTouchedQueueKnobsCursor() = withLibrary(UITheme.LibraryMode.FULL, split = true) {
+        val bg = llm.slop.liquidlsd.presets.BgQueueManager
+        val q = llm.slop.liquidlsd.ui.browser.QueueDrop.Queue.BG
+        try {
+            listOf("p1", "p2").forEach { bg.appendToQueue(java.io.File("/x/$it.lsd")) }
+            val a = AssetItem(path = "/x/new.lsd", name = "new", type = AssetType.PRESET)
+            PresetListPanel.filteredPresets = listOf(a)
+            PresetListPanel.selection.setSingle(a)
+            LibraryPanel.viewMode = LibraryViewMode.PRESETS
+            LibraryPanel.activeSelectionSource = SelectionSource.PRESETS
+            val session = mockk<SessionContext>(relaxed = true)
+            assertFalse(LibraryNavigation.enqueueAtQueueKnob(session, 7), "no queue knob touched yet")
+            llm.slop.liquidlsd.ui.browser.QueueOps.setCursor(q, 0)
+            llm.slop.liquidlsd.ui.browser.QueueKnobs.turn(llm.slop.liquidlsd.ui.browser.QueueKnobs.BG_SIDE_KNOB, 0, false, 7, null)
+            assertTrue(LibraryNavigation.enqueueAtQueueKnob(session, 7))
+            assertEquals(listOf("p1", "new", "p2"), bg.queue.map { it.nameWithoutExtension })
+        } finally {
+            bg.clearQueue()
+            llm.slop.liquidlsd.ui.browser.QueueOps.setCursor(q, -1)
+            llm.slop.liquidlsd.ui.browser.QueueKnobs.reset()
+        }
+    }
+
+    @Test
     fun aQueueCursorUnderTheBrowserHasNothingToEnqueue() = withLibrary(UITheme.LibraryMode.FULL, split = true) {
         LibraryPanel.viewMode = LibraryViewMode.PRESETS
         LibraryPanel.activeSelectionSource = SelectionSource.QUEUE_BG
