@@ -42,12 +42,15 @@ object AppPreferencesStore {
     /** Tour renders neither read nor write the user's preferences file (determinism, no side effects). */
     @Volatile var persistenceDisabled = false
 
+    /** The AGC Headroom default that [AudioAgc.SCALE] was calibrated against. */
+    internal const val LEGACY_DEFAULT_HEADROOM = 0.85f
+
     /**
      * The Audio Response that sounds the same as [response] did with a saved AGC Headroom of [headroom]
-     * (the signals were divided by the headroom, which is now the fixed [AudioAgc.HEADROOM]).
+     * (the signals were divided by the headroom; auto gain now reads like the default one).
      */
     internal fun responseForLegacyHeadroom(response: Float, headroom: Float): Float =
-        (response * AudioAgc.HEADROOM / headroom.coerceIn(0.5f, 1f)).coerceIn(0f, AudioEngine.MAX_RESPONSE)
+        (response * LEGACY_DEFAULT_HEADROOM / headroom.coerceIn(0.5f, 1f)).coerceIn(0f, AudioEngine.MAX_RESPONSE)
 
     fun loadPreferences() {
         if (persistenceDisabled) return

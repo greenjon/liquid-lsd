@@ -241,6 +241,7 @@ object AudioEngine {
     internal fun resetForOfflineFeed(bpm: Float, startTimeNs: Long) {
         lowPass.reset(); midPass.reset(); highPass.reset()
         spectrum.reset()
+        agc.reset()
         beatDetector.reset()
         downbeatDetector.reset()
         totalSamplesProcessed = 0L
@@ -733,10 +734,11 @@ object AudioEngine {
 
         // AGC and Audio Response only rescale the CV signals; the detectors above keep the raw band RMS.
         val dtSec = deltaTimeSec
-        val ampDiv  = agc.update(AudioAgc.AMP,  amp,  dtSec)
-        val bassDiv = agc.update(AudioAgc.BASS, bass, dtSec)
-        val midDiv  = agc.update(AudioAgc.MID,  mid,  dtSec)
-        val highDiv = agc.update(AudioAgc.HIGH, high, dtSec)
+        agc.update(amp, bass, mid, high, dtSec)
+        val ampDiv  = agc.divisor(AudioAgc.AMP)
+        val bassDiv = agc.divisor(AudioAgc.BASS)
+        val midDiv  = agc.divisor(AudioAgc.MID)
+        val highDiv = agc.divisor(AudioAgc.HIGH)
         val fixed = AudioAgc.FIXED_SCALE
 
         val k = response

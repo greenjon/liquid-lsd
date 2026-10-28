@@ -116,7 +116,7 @@ class AudioEnginePreferencesTest {
 
         AppPreferencesStore.loadPreferences()
         val migrated = AudioEngine.response
-        assertEquals(AudioAgc.HEADROOM / 0.5f, migrated, 0.001f)
+        assertEquals(AppPreferencesStore.LEGACY_DEFAULT_HEADROOM / 0.5f, migrated, 0.001f)
 
         val savedContent = preferencesFile.readText()
         assertTrue("audioAgcHeadroom" !in savedContent && "audioAgcEnabled" !in savedContent, "Legacy AGC keys should be dropped")
