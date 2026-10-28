@@ -21,7 +21,11 @@ crate-style groupings. We take a small subset of Mixxx's library management, not
   `LibraryTags` (JSON `tags` field only; follows loaded decks/chains), `TagPopups` (Add / Rename / Delete), row Add Tag / Remove Tag,
   drop onto a tag, saved-FX favorites store. Tag editing for every saved kind is via Add/Remove Tag (Rename stays file-name-only for
   FX/transitions). Tests: `LibraryTagsTest`.
-- Phase 4 not started.
+- **Phase 3 committed** b193556.
+- **Phase 4 DONE 2026-10-27** (uncommitted, tests pass, unseen in app). Deviation: missing items are listed in a block under the
+  playlist's rows (name + Find / Locate... / Remove, and Find all) rather than as dimmed rows inside the list, which would have
+  meant changing all three row renderers and the playlist row mapping. Playlist folders via `BrowseSection.PLAYLISTS`.
+- **All four phases done.** Open: hardware/in-app check (checklist §1); sortable columns are v1.1.
 
 ## Decisions (2026-10-27)
 

@@ -23,6 +23,11 @@ object LibraryFolders {
         }
         BrowseSection.SINGLE -> FileSystemManager.getFxPresetsRoot()
         BrowseSection.CHAIN -> FileSystemManager.getFxChainsRoot()
+        BrowseSection.PLAYLISTS -> when (kind) {
+            BrowseKind.SRC -> FileSystemManager.getPlaylistsRoot()
+            BrowseKind.FX -> FileSystemManager.getFxPlaylistsRoot()
+            BrowseKind.TRANS -> FileSystemManager.getTransitionPlaylistsRoot()
+        }
         BrowseSection.STOCK, BrowseSection.LIVE -> null
     }
 
@@ -31,12 +36,17 @@ object LibraryFolders {
         BrowseSection.SAVED -> if (kind == BrowseKind.SRC) "lsd" else if (kind == BrowseKind.TRANS) "lsdtrans" else null
         BrowseSection.SINGLE -> "lsdfx"
         BrowseSection.CHAIN -> "lsdfxchain"
+        BrowseSection.PLAYLISTS -> when (kind) {
+            BrowseKind.SRC -> "lsdplay"
+            BrowseKind.FX -> "lsdfxplay"
+            BrowseKind.TRANS -> "lsdtransplay"
+        }
         BrowseSection.STOCK, BrowseSection.LIVE -> null
     }
 
-    /** The saved section of [kind] that holds [file], by its extension. */
+    /** The saved section of [kind] (or its playlists) that holds [file], by its extension. */
     fun sectionOf(kind: BrowseKind, file: File): BrowseSection? =
-        BrowseCatalog.sectionsFor(kind).firstOrNull { extensionOf(kind, it).equals(file.extension, ignoreCase = true) }
+        (BrowseCatalog.sectionsFor(kind) + BrowseSection.PLAYLISTS).firstOrNull { extensionOf(kind, it).equals(file.extension, ignoreCase = true) }
 
     /** The directory of [folder] ('/'-separated, "" for the top level) under [root]. */
     fun dirOf(root: File, folder: String): File = if (folder.isEmpty()) root else File(root, folder)
@@ -100,10 +110,10 @@ object LibraryFolders {
         return Result.success(dir)
     }
 
-    /** Saved files (any of the Library's preset extensions) under [dir], at any depth. */
+    /** Saved files (any of the Library's preset or playlist extensions) under [dir], at any depth. */
     fun savedFilesUnder(dir: File): List<File> =
         if (!dir.isDirectory) emptyList()
-        else dir.walkTopDown().filter { it.isFile && LibraryRefs.kindOf(it) != null }.toList()
+        else dir.walkTopDown().filter { it.isFile && LibraryRefs.isLibraryFile(it) }.toList()
 
     /** Renames [folder] of [root] to [newName] in place; the result maps each saved file inside from its old path to its new one. */
     fun renameFolder(root: File, folder: String, newName: String): Result<Map<File, File>> {

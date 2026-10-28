@@ -33,8 +33,31 @@ object LibraryRefs {
         else -> null
     }
 
+    /** The kind a playlist file belongs to by its extension, or null for anything that isn't a playlist. */
+    fun playlistKindOf(file: File): BrowseKind? = when (file.extension.lowercase()) {
+        "lsdplay" -> BrowseKind.SRC
+        "lsdfxplay" -> BrowseKind.FX
+        "lsdtransplay" -> BrowseKind.TRANS
+        else -> null
+    }
+
+    /** A saved preset or playlist, the files the Library's folders hold. */
+    fun isLibraryFile(file: File): Boolean = kindOf(file) != null || playlistKindOf(file) != null
+
+    /** The playlist each kind's browser has selected; a moved or deleted playlist takes the selection with it. */
+    private fun followSelectedPlaylist(old: File, new: File?) {
+        val same = { f: File? -> f?.absolutePath == old.absolutePath }
+        when (playlistKindOf(old)) {
+            BrowseKind.SRC -> if (same(LibraryPanel.selectedPlaylistFile)) LibraryPanel.selectedPlaylistFile = new
+            BrowseKind.FX -> if (same(LibraryPanel.selectedFxPlaylistFile)) LibraryPanel.selectedFxPlaylistFile = new
+            BrowseKind.TRANS -> if (same(LibraryPanel.selectedTransitionPlaylistFile)) LibraryPanel.selectedTransitionPlaylistFile = new
+            null -> {}
+        }
+    }
+
     /** Follows every file in [moves] (old to new, both already on disk as new) wherever it is referenced. [fxChains] are the mixer's. */
     fun relocate(moves: Map<File, File>, fxChains: List<FxChain>) {
+        for ((old, new) in moves) followSelectedPlaylist(old, new)
         for ((kind, entries) in moves.entries.groupBy { kindOf(it.key) }) {
             if (kind == null) continue
             val paths = entries.associate { it.key.absolutePath to it.value.absolutePath }
@@ -69,6 +92,7 @@ object LibraryRefs {
 
     /** Drops every reference to [files], which were just deleted from disk, and deletes their thumbnails. [fxChains] are the mixer's. */
     fun forget(files: List<File>, fxChains: List<FxChain>) {
+        for (file in files) followSelectedPlaylist(file, null)
         for ((kind, group) in files.groupBy { kindOf(it) }) {
             if (kind == null) continue
             val paths = group.mapTo(HashSet()) { it.absolutePath }

@@ -313,14 +313,22 @@ object BrowserPane {
                 // The Playlists and Tags headers are headings, not scopes: plain text, not greyed like a disabled row.
                 ImGui.textUnformatted(label)
                 itemTooltip(
-                    if (node.scope == BrowseScope.TagsHeader) "Your tags, one row each: pick one to list every saved item with it. An item can have any number.\nTag rows with a row's Add Tag item, or drag rows onto a tag."
-                    else "Your playlists. Pick one to list its items in order; right-click one for queue and file actions."
+                    when (node.scope) {
+                        BrowseScope.TagsHeader -> "Your tags, one row each: pick one to list every saved item with it. An item can have any number.\nTag rows with a row's Add Tag item, or drag rows onto a tag."
+                        is BrowseScope.PlaylistFolder -> "A folder of playlists. Drag a playlist onto it to move it there; right-click for folder actions."
+                        else -> "Your playlists. Pick one to list its items in order; right-click one for queue and file actions.\nRight-click here for New Folder; drag a playlist onto a folder to move it."
+                    }
                 )
             } else if (ImGui.selectable("$label##node", node.scope == current)) {
                 select(kind, node.scope)
             }
             if (node.scope == BrowseScope.Recent) itemTooltip("The last ${BrowseRecents.LIMIT} items you loaded or applied, newest first.")
-            val folderPlace = (node.scope as? BrowseScope.Folder)?.let { placeOf(kind, it) }
+            val folderPlace = when (val sc = node.scope) {
+                is BrowseScope.Folder -> placeOf(kind, sc)
+                is BrowseScope.PlaylistFolder -> FolderPopups.Place(kind, BrowseSection.PLAYLISTS, sc.folder)
+                BrowseScope.PlaylistsHeader -> FolderPopups.Place(kind, BrowseSection.PLAYLISTS, "")
+                else -> null
+            }
             if (folderPlace != null && manage) folderNode(mixer, folderPlace)
             (node.scope as? BrowseScope.Tag)?.let { if (manage) tagNode(mixer, kind, it.name) }
             if (node.scope == cursor) {
@@ -336,6 +344,11 @@ object BrowserPane {
                 SmoothScroll.follow(LibraryPanel.shouldScrollToSelection)
             }
             val playlist = node.scope as? BrowseScope.Playlist
+            if (playlist != null && manage && ImGui.beginDragDropSource()) {
+                ImGui.setDragDropPayload(PAYLOAD_PLAYLIST, playlist.path as Any)
+                ImGui.text(node.label)
+                ImGui.endDragDropSource()
+            }
             if (playlist != null) playlistContextMenu(session, mixer, kind, playlist)
             // Counts are items; an empty row shows none, the same rule for folders, playlists and the Playlists header.
             if (node.count > 0) {
@@ -351,6 +364,9 @@ object BrowserPane {
     }
 
     private const val PAYLOAD_FOLDER = "BROWSE_FOLDER"
+
+    /** A playlist dragged by its tree row, to move it into a playlist folder. */
+    private const val PAYLOAD_PLAYLIST = "BROWSE_PLAYLIST"
 
     /** The saved folder a tree scope stands for, or null for stock and live sections. */
     private fun placeOf(kind: BrowseKind, scope: BrowseScope.Folder): FolderPopups.Place? =
@@ -374,6 +390,7 @@ object BrowserPane {
                 val files = payload.lines().map { it.trim() }.filter { it.isNotEmpty() }.map(::File)
                 FolderPopups.moveFiles(files, place, mixer)
             }
+            ImGui.acceptDragDropPayload<String>(PAYLOAD_PLAYLIST)?.let { path -> FolderPopups.moveFiles(listOf(File(path)), place, mixer) }
             ImGui.acceptDragDropPayload<String>(PAYLOAD_FOLDER)?.let { payload ->
                 val (k, sec, folder) = payload.split('|', limit = 3)
                 FolderPopups.moveFolder(FolderPopups.Place(BrowseKind.valueOf(k), BrowseSection.valueOf(sec), folder), place, mixer)
@@ -409,9 +426,21 @@ object BrowserPane {
             else -> f
         }
         val hidden = hiddenOf(kind)
-        val renamed = hidden.map { s -> if (s is BrowseScope.Folder && s.section == section) moved(s.folder)?.let { s.copy(folder = it) } else s }
+        val renamed = hidden.map { s ->
+            when {
+                s is BrowseScope.Folder && s.section == section -> moved(s.folder)?.let { s.copy(folder = it) }
+                s is BrowseScope.PlaylistFolder && section == BrowseSection.PLAYLISTS -> moved(s.folder)?.let { BrowseScope.PlaylistFolder(it) }
+                else -> s
+            }
+        }
         hidden.clear()
         hidden.addAll(renamed.filterNotNull())
+        if (section == BrowseSection.PLAYLISTS) {
+            // Playlist folders aren't scopes; only their parents need opening so the folder is on screen.
+            new?.split('/')?.runningReduce { acc, seg -> "$acc/$seg" }?.dropLast(1)?.forEach { hidden.remove(BrowseScope.PlaylistFolder(it)) }
+            hidden.remove(BrowseScope.PlaylistsHeader)
+            return
+        }
         val current = scopeOf(kind)
         when {
             old == null && new != null -> select(kind, BrowseScope.Folder(section, new))
@@ -637,7 +666,8 @@ object BrowserPane {
             }
             if (missing > 0) {
                 ImGui.spacing()
-                ImGui.textDisabled("$missing playlist item(s) not found")
+                if (playlistRows != null) drawMissing(mixer, catalog, kind, scope, playlistRows)
+                else ImGui.textDisabled("$missing playlist item(s) not found")
             }
             // Ctrl/Cmd+A selects every listed row while the list has the keyboard (unless a shortcut claims it); a bound dock stays single.
             val keys = ImGui.getIO()
@@ -758,6 +788,78 @@ object BrowserPane {
         } catch (e: Exception) {
             importLogger.warn(e) { "Flame import failed for ${file.name}" }
             ToastOverlay.show("Could not import ${file.name}: ${e.message}")
+        }
+    }
+
+    /** The missing item waiting for the Locate file picker: its kind and playlist token. */
+    private var locating: Pair<BrowseKind, String>? = null
+    private val locateBrowser = ImGuiFileBrowser("##locateMissingBrowser")
+
+    /** Where a missing playlist item's file was: the token itself when absolute, else relative to the kind's saved folder. */
+    private fun lostFile(kind: BrowseKind, token: String): File {
+        val f = File(token)
+        if (f.isAbsolute) return f
+        val root = if (kind == BrowseKind.SRC) FileSystemManager.getPresetsRoot()
+        else LibraryFolders.sectionOf(kind, f)?.let { LibraryFolders.rootOf(kind, it) } ?: File(".")
+        return File(root, token)
+    }
+
+    /**
+     * The playlist's missing items under the list, each with Find (files of the same name in the library), Locate... (pick the file)
+     * and Remove. A found file is followed everywhere the lost path was used ([LibraryRefs.relocate]), not just in this playlist.
+     */
+    private fun drawMissing(mixer: Mixer, catalog: BrowseCatalog, kind: BrowseKind, scope: BrowseScope, rows: PlaylistRows) {
+        val missing = catalog.missingItems(scope)
+        if (missing.isEmpty()) return
+        ImGui.pushStyleColor(ImGuiCol.Text, TangoPalette.TEXT_WARN.u32())
+        ImGui.alignTextToFramePadding()
+        ImGui.textUnformatted("${Icons.ALERT} ${missing.size} playlist item${if (missing.size == 1) "" else "s"} not found")
+        ImGui.popStyleColor()
+        val unique = missing.mapNotNull { (_, token) -> catalog.candidatesFor(token).singleOrNull()?.let { lostFile(kind, token) to File(it.key) } }.toMap()
+        if (unique.isNotEmpty()) {
+            ImGui.sameLine()
+            if (ImGui.smallButton("Find all##missing_find_all")) {
+                LibraryRefs.relocate(unique, mixer.fxChains)
+                ToastOverlay.show("Found ${unique.size} of ${missing.size} missing item${if (missing.size == 1) "" else "s"}")
+            }
+            itemTooltip("Point every missing item that has exactly one file of the same name in the library at that file.")
+        }
+        for ((index, token) in missing) {
+            ImGui.pushID("missing_$index")
+            ImGui.textDisabled(token.replace('\\', '/').substringAfterLast('/'))
+            itemTooltip(token)
+            ImGui.sameLine()
+            if (ImGui.smallButton("Find")) ImGui.openPopup("missing_find")
+            itemTooltip("Files of the same name elsewhere in the library.")
+            if (ImGui.beginPopup("missing_find")) {
+                pushOpenDropdownFont()
+                val candidates = catalog.candidatesFor(token)
+                if (candidates.isEmpty()) ImGui.textDisabled("No file of that name in the library")
+                for (c in candidates) {
+                    val label = listOf(BrowseCatalog.sectionLabel(kind, c.section), c.folder).filter { it.isNotEmpty() }.joinToString(" / ") + " / " + c.asset.name
+                    if (ImGui.menuItem(label)) LibraryRefs.relocate(mapOf(lostFile(kind, token) to File(c.key)), mixer.fxChains)
+                }
+                popOpenDropdownFont()
+                ImGui.endPopup()
+            }
+            ImGui.sameLine()
+            if (ImGui.smallButton("Locate...")) {
+                locating = kind to token
+                val start = lostFile(kind, token).parentFile?.takeIf { it.isDirectory } ?: File(".").canonicalFile
+                val ext = token.substringAfterLast('.', "").takeIf { it.isNotEmpty() && '/' !in it }
+                locateBrowser.open(ImGuiFileBrowser.Mode.LOAD, start, "", listOfNotNull(ext?.let { ".$it" }).ifEmpty { listOf(".lsd", ".lsdfx", ".lsdfxchain", ".lsdtrans") })
+            }
+            itemTooltip("Pick the file this item should play.")
+            ImGui.sameLine()
+            if (ImGui.smallButton("Remove")) rows.edit.remove(listOf(index))
+            itemTooltip("Take this item out of the playlist.")
+            ImGui.popID()
+        }
+        locateBrowser.draw { picked ->
+            val (k, token) = locating ?: return@draw
+            if (LibraryRefs.kindOf(picked) == k) LibraryRefs.relocate(mapOf(lostFile(k, token) to picked), mixer.fxChains)
+            else ToastOverlay.show("${picked.name} isn't a saved item of this tab")
+            locating = null
         }
     }
 

@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Missing Playlist Items Can Be Found Again; Playlist Folders (`ui/browser/BrowserPane.kt`, `ui/browser/BrowseModel.kt`, `ui/browser/LibraryRefs.kt`)
+- **New: a playlist item whose file is missing is listed under the playlist** with a ⚠, instead of only being counted. **Find** offers files of the same name elsewhere in the library, **Locate...** lets you pick the file, **Remove** drops the item, and **Find all** fixes every item with exactly one match. A found file is fixed in every playlist and queue that used the old path.
+- **New: folders for playlists.** Right-click **Playlists** in the tree for **New Folder...**, drag playlists onto a folder to move them, and rename, delete or nest playlist folders like the saved sections' folders. A moved playlist stays selected.
+
 ### Tags as Crates, Favorites for Saved FX (`ui/browser/LibraryTags.kt`, `ui/browser/TagPopups.kt`, `ui/browser/BrowseModel.kt`, `ui/browser/BrowseFavorites.kt`)
 - **New: a Tags group in the Library tree.** Every tag used on the tab's saved items gets a row with a count; pick one to list everything tagged with it. An item can have any number of tags, so tags work like crates in a DJ app. The group starts folded.
 - **Tag items from the Library**: right-click a saved row, or a multi-selection, for **Add Tag...** (type tags or click existing ones) and **Remove Tag**, or drag rows onto a tag. Right-click a tag for **Rename Tag...** or **Delete Tag...**. This now works for saved FX, chains and transitions too, not only presets. Tags are written into each file, so they travel with it.

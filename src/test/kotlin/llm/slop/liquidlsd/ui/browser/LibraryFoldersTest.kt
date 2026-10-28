@@ -119,4 +119,43 @@ class LibraryFoldersTest {
             LibraryRefs.Impact(listOf("a"), listOf("A/B Queue", "BG Queue")).describe()
         )
     }
+
+    @Test
+    fun `playlists nest under their folders, folders first`() {
+        val c = BrowseCatalog(
+            BrowseKind.SRC, emptyList(),
+            playlists = listOf(
+                BrowsePlaylist("loose", "/pl/loose.lsdplay", listOf("a", "b")),
+                BrowsePlaylist("friday", "/pl/gigs/friday.lsdplay", listOf("a"), folder = "gigs"),
+                BrowsePlaylist("old", "/pl/gigs/2025/old.lsdplay", listOf("a", "b", "c"), folder = "gigs/2025")
+            ),
+            playlistFolders = listOf("gigs", "gigs/2025", "empty")
+        )
+        val labels = c.tree().map { "${" ".repeat(it.depth)}${it.label}(${it.count})" }
+        assertEquals(
+            listOf("Playlists(6)", " empty(0)", " gigs(4)", "  2025(3)", "   old(3)", "  friday(1)", " loose(2)"),
+            labels.dropWhile { !it.startsWith("Playlists") }
+        )
+        assertFalse(c.tree().first { it.scope is BrowseScope.PlaylistFolder }.selectable)
+    }
+
+    @Test
+    fun `missing playlist items list their positions and same-named candidates`() {
+        val a = BrowseEntry(AssetItem("/lib/presets/yard/a.lsd", "a", AssetType.PRESET), BrowseSection.SAVED, "/lib/presets/yard/a.lsd", "yard")
+        val c = BrowseCatalog(
+            BrowseKind.SRC, listOf(a),
+            playlists = listOf(BrowsePlaylist("set", "/pl/set.lsdplay", listOf("yard/a.lsd", "/lib/presets/garden/a.lsd", "gone/zz.lsd")))
+        )
+        val scope = BrowseScope.Playlist("/pl/set.lsdplay")
+        assertEquals(listOf(1 to "/lib/presets/garden/a.lsd", 2 to "gone/zz.lsd"), c.missingItems(scope))
+        assertEquals(listOf(a), c.candidatesFor("/lib/presets/garden/a.lsd"))
+        assertTrue(c.candidatesFor("gone/zz.lsd").isEmpty())
+    }
+
+    @Test
+    fun `playlist files sort into the playlists section`() {
+        assertEquals(BrowseSection.PLAYLISTS, LibraryFolders.sectionOf(BrowseKind.SRC, File("x.lsdplay")))
+        assertEquals(BrowseSection.PLAYLISTS, LibraryFolders.sectionOf(BrowseKind.FX, File("x.lsdfxplay")))
+        assertTrue(LibraryRefs.isLibraryFile(File("x.lsdtransplay")))
+    }
 }

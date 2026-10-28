@@ -318,6 +318,9 @@ Deck loads, FX changes and transition changes each have exactly one mutation pat
 - **Trash**: `FileSystemManager.deleteFile` and folder delete try `moveToTrash` first (Java's `Desktop` trash on macOS/Windows, `gio trash` on Linux, where Java has none), then delete for good. Test tasks set `-Dlsd.noTrash=true` so tests never fill the developer's trash.
 - **FX favorites**: saved singles and chains are starred in `library/fx_saved_favorites.json` (keyed by path, so `LibraryRefs` moves them); `BrowseFavorites` unions it with `FxShortlist`, which stays stock-only because the slot stepper walks shader ids.
 
+- **Playlists have folders too**: `BrowseSection.PLAYLISTS` names each kind's playlists folder (no rows), so `LibraryFolders` / `FolderPopups` serve it unchanged; `BrowseScope.PlaylistFolder` nodes are non-selectable headings. `LibraryRefs` moves the browser's selected playlist file with a moved playlist.
+- **Missing playlist items** are matched by file name (`BrowseCatalog.candidatesFor`) and fixed through `LibraryRefs.relocate(lost path -> found file)`, so the fix reaches every playlist and queue. The lost path is the token when absolute, else the token under the kind's saved folder.
+
 ## Tags Are the Crates; Only the File's `tags` Field Is Rewritten (`ui/browser/LibraryTags.kt`, `BrowseScope.Tag`)
 - **Decision (2026-10-27)**: there is no crate file format. A crate is a tag; the tree's Tags group lists the saved entries' tags (lowercase, A-Z; stock categories are left out). `LibraryTags.edit` rewrites only the JSON `tags` array of each file (all other fields kept as parsed), then updates decks (`PresetManager.retagActive`) and chains (`FxChain.tags`, `baselineDto.tags`) loaded from it, because a save writes the loaded tags back.
 

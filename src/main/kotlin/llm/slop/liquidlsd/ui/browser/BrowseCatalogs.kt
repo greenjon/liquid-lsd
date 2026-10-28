@@ -38,7 +38,8 @@ object BrowseCatalogs {
             BrowseKind.SRC -> listOf(VisualSourceRegistry.availableSources.toList(), VisualSourceRegistry.compileErrors.keys.toSet(), FileSystemManager.scanAllPresets(), playlistAssets, ExternalVideoDiscovery.availableServers.value)
             BrowseKind.FX -> listOf(ISFFilterRegistry.availableFilters, FileSystemManager.scanAllFxPresets(), FileSystemManager.scanAllFxChains(), playlistAssets)
             BrowseKind.TRANS -> listOf(ISFTransitionRegistry.availableTransitions, FileSystemManager.scanAllTransitionPresets(), playlistAssets)
-        } + BrowseFavorites.version(kind) + BrowseRecents.version(kind) + playlistAssets.map { File(it.path).lastModified() } + savedFolders(kind)
+        } + BrowseFavorites.version(kind) + BrowseRecents.version(kind) + playlistAssets.map { File(it.path).lastModified() } + savedFolders(kind) +
+            listOf(playlistFolders(kind))
         val cached = caches[kind]
         if (cached != null && cached.inputs == inputs) return cached.catalog
         return build(kind, playlistAssets).also { caches[kind] = Cache(inputs, it) }
@@ -56,12 +57,17 @@ object BrowseCatalogs {
             BrowseKind.FX -> fxEntries()
             BrowseKind.TRANS -> transEntries()
         }
+        val playlistRoot = LibraryFolders.rootOf(kind, BrowseSection.PLAYLISTS)
         val playlists = playlistAssets.map { a ->
             val items = try { PlaylistParser.parseFile(File(a.path)) } catch (e: Exception) { emptyList() }
-            BrowsePlaylist(a.name, a.path, items)
+            BrowsePlaylist(a.name, a.path, items, playlistRoot?.let { BrowseCatalog.folderOf(File(a.path), it) } ?: "")
         }
-        return BrowseCatalog(kind, entries, playlists, BrowseFavorites.keys(kind), BrowseRecents.keys(kind).toList(), savedFolders(kind))
+        return BrowseCatalog(kind, entries, playlists, BrowseFavorites.keys(kind), BrowseRecents.keys(kind).toList(), savedFolders(kind), playlistFolders(kind))
     }
+
+    /** The folders of [kind]'s playlists folder, empty ones included. */
+    private fun playlistFolders(kind: BrowseKind): List<String> =
+        LibraryFolders.rootOf(kind, BrowseSection.PLAYLISTS)?.let { LibraryFolders.dirsUnder(it) } ?: emptyList()
 
     /** The folders on disk of each saved section of [kind], empty ones included. */
     private fun savedFolders(kind: BrowseKind): Map<BrowseSection, List<String>> =

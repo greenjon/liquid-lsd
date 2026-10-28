@@ -202,7 +202,7 @@ On a fresh install, Master FX starts with *Subtle Optical Warmth*, Deck A with *
 
 ### FX Playlists (`.lsdfxplay`)
 
-FX playlists are entries under **Playlists** in the FX tree. Select one to edit it like a preset playlist: drag singles/chains in from the list to insert them, drag rows to reorder, and double-click an entry to apply it. Entries whose file is gone are left out of the list, with a "playlist item(s) not found" note below it.
+FX playlists are entries under **Playlists** in the FX tree. Select one to edit it like a preset playlist: drag singles/chains in from the list to insert them, drag rows to reorder, and double-click an entry to apply it. Entries whose file is gone are listed below the playlist's rows instead, with **Find**, **Locate...** and **Remove** (see [Playlists](#playlists-setlists)).
 
 ### A/B FX Queues (A/B and BG)
 
@@ -233,7 +233,9 @@ Playlists are where you build your setlist; they appear under **Playlists** in t
 
   The same menu has **Rename...**, **Clone**, **Delete...** and **Reveal in File Manager**.
 
-If a playlist references a preset that's been moved or deleted, that entry is left out of the list and a "playlist item(s) not found" note appears below it.
+**Missing items.** If a playlist refers to a file that was moved or renamed outside the app, or deleted, that item is listed under the playlist's rows with a ⚠. **Find** lists files of the same name elsewhere in the library; pick one to use it. **Locate...** lets you pick the file yourself, and **Remove** takes the item out of the playlist. **Find all** fixes every missing item that has exactly one same-named file. A found file is fixed everywhere the old path was used, in every playlist and queue, not only this one. (Moves and renames made inside the app never leave items missing.)
+
+**Playlist folders.** Right-click **Playlists** in the tree for **New Folder...**; right-click a playlist folder to rename or delete it. Drag a playlist onto a folder (or onto **Playlists** for the top level) to move it, and drag folders onto each other to nest them. Playlist folders work the same on the Sources, FX and Transitions tabs.
 
 ---
 

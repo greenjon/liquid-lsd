@@ -11,8 +11,11 @@ enum class BrowseKind(
     SRC(false), FX(false), TRANS(true)
 }
 
-/** Where a row comes from, which is also the top level of the folder tree. */
-enum class BrowseSection { STOCK, SAVED, SINGLE, CHAIN, LIVE }
+/**
+ * Where a row comes from, which is also the top level of the folder tree. [PLAYLISTS] holds no rows; it names the playlist files'
+ * own folder, so playlists get folders like the saved sections.
+ */
+enum class BrowseSection { STOCK, SAVED, SINGLE, CHAIN, LIVE, PLAYLISTS }
 
 /**
  * One browsable row. [key] identifies it for favorites and playlist membership: the shader id for stock rows, the file path for saved ones.
@@ -27,8 +30,11 @@ data class BrowseEntry(
     val info: String = ""
 )
 
-/** A saved playlist. [items] are the raw tokens stored in the file (stock ids or saved names/paths), in playlist order. */
-data class BrowsePlaylist(val name: String, val path: String, val items: List<String>)
+/**
+ * A saved playlist. [items] are the raw tokens stored in the file (stock ids or saved names/paths), in playlist order. [folder] is
+ * its '/'-separated folder below the kind's playlists folder ("" for the top level).
+ */
+data class BrowsePlaylist(val name: String, val path: String, val items: List<String>, val folder: String = "")
 
 /** What the middle list shows. */
 sealed interface BrowseScope {
@@ -47,6 +53,9 @@ sealed interface BrowseScope {
     /** Non-selectable "Playlists" header in the tree. */
     data object PlaylistsHeader : BrowseScope
 
+    /** A non-selectable folder of playlists under the Playlists header ([folder] '/'-separated below the playlists folder). */
+    data class PlaylistFolder(val folder: String) : BrowseScope
+
     /** Every saved entry carrying tag [name] (tags are lowercase): a crate, any number of which an entry can be in. */
     data class Tag(val name: String) : BrowseScope
 
@@ -56,7 +65,7 @@ sealed interface BrowseScope {
 
 /** One row of the flattened folder tree. [count] is how many entries the scope holds. */
 data class BrowseNode(val scope: BrowseScope, val label: String, val depth: Int, val count: Int) {
-    val selectable: Boolean get() = scope != BrowseScope.PlaylistsHeader && scope != BrowseScope.TagsHeader
+    val selectable: Boolean get() = scope != BrowseScope.PlaylistsHeader && scope != BrowseScope.TagsHeader && scope !is BrowseScope.PlaylistFolder
 }
 
 /** The selectable tree rows that are on screen: rows below a collapsed ancestor are hidden, headers are skipped. */
@@ -99,7 +108,8 @@ class BrowseCatalog(
     private val playlists: List<BrowsePlaylist> = emptyList(),
     private val favorites: Set<String>? = null,
     private val recent: List<String>? = null,
-    private val folders: Map<BrowseSection, List<String>> = emptyMap()
+    private val folders: Map<BrowseSection, List<String>> = emptyMap(),
+    private val playlistFolders: List<String> = emptyList()
 ) {
     private val byPath: Map<String, BrowsePlaylist> = playlists.associateBy { it.path }
 
@@ -130,11 +140,9 @@ class BrowseCatalog(
         nodes += BrowseNode(BrowseScope.TagsHeader, "Tags", 0, tagged.size)
         nodes += tagNodes
         // Every count means items: each playlist counts its items and the header their total, like a section counts its folders' rows.
-        val playlistNodes = playlists.map { pl ->
-            val count = if (accepts == null) pl.items.size else pl.items.count { item -> resolve(item)?.let(accepts) == true }
-            BrowseNode(BrowseScope.Playlist(pl.path), pl.name, 1, count)
-        }
-        nodes += BrowseNode(BrowseScope.PlaylistsHeader, "Playlists", 0, playlistNodes.sumOf { it.count })
+        fun countOf(pl: BrowsePlaylist) = if (accepts == null) pl.items.size else pl.items.count { item -> resolve(item)?.let(accepts) == true }
+        val playlistNodes = playlistNodes(::countOf)
+        nodes += BrowseNode(BrowseScope.PlaylistsHeader, "Playlists", 0, playlists.sumOf(::countOf))
         nodes += playlistNodes
         return nodes
     }
@@ -149,7 +157,7 @@ class BrowseCatalog(
             is BrowseScope.Folder -> entries.filter { it.section == scope.section && inFolder(it.folder, scope.folder) }
             is BrowseScope.Playlist -> byPath[scope.path]?.items?.mapNotNull { resolve(it) } ?: emptyList()
             is BrowseScope.Tag -> entries.filter { isSaved(it) && scope.name in tagsOf(it) }
-            BrowseScope.PlaylistsHeader, BrowseScope.TagsHeader -> emptyList()
+            BrowseScope.PlaylistsHeader, BrowseScope.TagsHeader, is BrowseScope.PlaylistFolder -> emptyList()
         }
         return base.filter { matches(tokens, it) }
     }
@@ -175,6 +183,23 @@ class BrowseCatalog(
     fun missing(scope: BrowseScope): Int {
         if (scope !is BrowseScope.Playlist) return 0
         return byPath[scope.path]?.items?.count { resolve(it) == null } ?: 0
+    }
+
+    /** The items of a playlist [scope] that match no entry, with their positions in the playlist file. */
+    fun missingItems(scope: BrowseScope): List<Pair<Int, String>> =
+        if (scope !is BrowseScope.Playlist) emptyList()
+        else byPath[scope.path]?.items?.withIndex()?.filter { resolve(it.value) == null }?.map { it.index to it.value } ?: emptyList()
+
+    /**
+     * Saved entries that a missing playlist item could be: the same file name (with or without its extension) anywhere in the
+     * kind's saved sections, so a file moved or renamed outside the app can be found again.
+     */
+    fun candidatesFor(item: String): List<BrowseEntry> {
+        val name = item.replace('\\', '/').substringAfterLast('/')
+        if (name.isEmpty()) return emptyList()
+        return entries.filter { e ->
+            isSaved(e) && e.key.replace('\\', '/').substringAfterLast('/').let { it.equals(name, true) || it.substringBeforeLast('.').equals(name, true) }
+        }
     }
 
     /** Whether [entry] may be added to a playlist or queue-as-playlist (stock rows only for kinds that store stock ids). */
@@ -204,6 +229,23 @@ class BrowseCatalog(
         if (tokens.isEmpty()) return true
         val fields = listOf(e.asset.name, if (e.section == BrowseSection.STOCK) e.key else "", e.folder)
         return SearchMatcher.matches(tokens, fields, e.categories + e.asset.tags)
+    }
+
+    /** The playlists under the header: each folder (A-Z) with its own folders and playlists below it, then the loose playlists. */
+    private fun playlistNodes(countOf: (BrowsePlaylist) -> Int): List<BrowseNode> {
+        val all = (playlists.map { it.folder } + playlistFolders).filter { it.isNotEmpty() }
+            .flatMap { path -> path.split('/').runningReduce { acc, seg -> "$acc/$seg" } }
+            .distinct()
+        val nodes = mutableListOf<BrowseNode>()
+        fun emit(parent: String, depth: Int) {
+            for (f in all.filter { it.substringBeforeLast('/', "") == parent }.sortedWith(String.CASE_INSENSITIVE_ORDER)) {
+                nodes += BrowseNode(BrowseScope.PlaylistFolder(f), f.substringAfterLast('/'), depth, playlists.filter { inFolder(it.folder, f) }.sumOf(countOf))
+                emit(f, depth + 1)
+            }
+            for (pl in playlists.filter { it.folder == parent }) nodes += BrowseNode(BrowseScope.Playlist(pl.path), pl.name, depth, countOf(pl))
+        }
+        emit("", 1)
+        return nodes
     }
 
     private fun folderNodes(section: BrowseSection, inSection: List<BrowseEntry>): List<BrowseNode> {
@@ -241,6 +283,7 @@ class BrowseCatalog(
             BrowseSection.SINGLE -> "Saved single FX"
             BrowseSection.CHAIN -> "Saved chains"
             BrowseSection.LIVE -> "External video"
+            BrowseSection.PLAYLISTS -> "Playlists"
         }
 
         /**
