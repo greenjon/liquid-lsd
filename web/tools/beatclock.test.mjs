@@ -1,5 +1,6 @@
 // node --test web/tools/*.test.mjs : beat flywheel and audio band signals (no browser needed)
 import test from 'node:test';
+import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import { BeatFlywheel } from '../beatclock.js';
 import { bandSignals, AudioAgc } from '../dsp.js';
@@ -51,29 +52,25 @@ test('bandSignals uses the desktop scales and rectified flux', () => {
   assert.ok(Math.abs(s.audio_flux_amp - 0.2) < 1e-9); // 0.01 * 2 / 0.1
 });
 
-test('auto gain levels quiet and loud streams to the same peak, like the desktop AudioAgc', () => {
-  const feed = (level, seconds) => {
-    const agc = new AudioAgc();
-    let div;
-    for (let i = 0; i < seconds * 100; i++) div = agc.update({ amp: level, bass: level, mid: level, high: 0 }, 0.01);
-    return div;
-  };
-  const quiet = feed(0.05, 1), loud = feed(0.5, 1);
-  assert.ok(Math.abs(0.05 / quiet.bass - 0.5 / loud.bass) < 1e-6);
-  assert.ok(Math.abs(0.05 / quiet.bass - 1 / AudioAgc.HEADROOM) < 1e-6);
-  assert.equal(quiet.high, AudioAgc.FLOOR); // silence is not boosted past the floor
-  // Flux is stretched by the band's ratio, so a quiet stream's kicks read as loud as a loud one's.
-  const q = bandSignals({ amp: 0.05, bass: 0.05, mid: 0, high: 0 }, { bass: 0.045, mid: 0, high: 0 }, quiet);
-  const l = bandSignals({ amp: 0.5, bass: 0.5, mid: 0, high: 0 }, { bass: 0.45, mid: 0, high: 0 }, loud);
-  assert.ok(Math.abs(q.audio_flux_bass - l.audio_flux_bass) < 1e-6);
-  assert.equal(q.audio_bass, 1); // 1 / 0.85, clamped
+test('auto gain and the section watch match the desktop (agc_vectors.json from WebAudioAgcVectorsTest)', () => {
+  const v = JSON.parse(fs.readFileSync(new URL('./agc_vectors.json', import.meta.url), 'utf8'));
+  const agc = new AudioAgc();
+  const expect = new Map(v.expect.map((e) => [e.i, e]));
+  v.rms.forEach(([amp, bass, mid, high], i) => {
+    const div = agc.update({ amp, bass, mid, high }, v.dt);
+    const e = expect.get(i);
+    if (!e) return;
+    const got = [div.amp, div.bass, div.mid, div.high];
+    e.div.forEach((d, k) => assert.ok(Math.abs(got[k] - d) <= 1e-4 * Math.max(1, d), `frame ${i} band ${k}: ${got[k]} vs desktop ${d}`));
+    assert.equal(agc.watch.section, e.section, `frame ${i}`);
+    assert.equal(agc.watch.drops, e.drops, `frame ${i}`);
+  });
 });
 
-test('auto gain releases over seconds after a loud passage', () => {
-  const agc = new AudioAgc();
-  for (let i = 0; i < 100; i++) agc.update({ amp: 0.5, bass: 0.5, mid: 0.5, high: 0.5 }, 0.01);
-  const loud = agc.update({ amp: 0.5, bass: 0.5, mid: 0.5, high: 0.5 }, 0.01).bass;
-  let div;
-  for (let i = 0; i < 4000; i++) div = agc.update({ amp: 0.05, bass: 0.05, mid: 0.05, high: 0.05 }, 0.01);
-  assert.ok(div.bass < loud / 3);
+test('flux is stretched like its band, so a quiet stream\'s kicks read as loud as a loud one\'s', () => {
+  const div = (k) => ({ amp: 0.1 * k, bass: 0.1 * k, mid: 0.1 * k, high: 0.1 * k });
+  const q = bandSignals({ amp: 0.05, bass: 0.05, mid: 0, high: 0 }, { bass: 0.045, mid: 0, high: 0 }, div(0.1));
+  const l = bandSignals({ amp: 0.5, bass: 0.5, mid: 0, high: 0 }, { bass: 0.45, mid: 0, high: 0 }, div(1));
+  assert.ok(Math.abs(q.audio_flux_bass - l.audio_flux_bass) < 1e-9);
+  assert.ok(Math.abs(q.audio_bass - l.audio_bass) < 1e-9);
 });

@@ -63,30 +63,69 @@ const FLUX_AMP_SCALE = 0.1;
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const FIXED = { amp: AMP_SCALE, bass: AMP_SCALE, mid: AMP_SCALE, high: AMP_SCALE };
 
+const BANDS = ['amp', 'bass', 'mid', 'high'];
+
 /**
- * Per-band auto gain, a port of the desktop's AudioAgc: each band follows a peak envelope of its RMS
- * (instant attack, 8 s release) and is divided by `max(envelope * 0.85, 0.02)`, so the recent peaks of
- * the music land just over 1.0 whatever the stream's level. Pure, so it is unit-tested in node.
+ * Per-band auto gain, a port of the desktop's AudioAgc (keep the two identical). Each band is divided by
+ * its own long-term level (a ~20 s mean, a running mean while it fills) times SCALE, so steady music
+ * reads as it always has, whatever the stream's level. The long-term levels freeze while `watch` (the
+ * section detector, energy.js) holds (a breakdown, or one being confirmed), so a breakdown reads quiet and a bass dropout is not
+ * boosted into kicks, and they jump to the current level when the watch adopts a new normal (a quieter
+ * or louder song). After two seconds under SILENT_RMS everything waits and starts afresh, so a new feed
+ * levels in at once.
+ * Pure, so it is unit-tested in node.
  */
 export class AudioAgc {
-  static HEADROOM = 0.85;
-  static FLOOR = 0.02;
-  static RELEASE_SEC = 8.0;
+  static LONG_TAU = 20;    // s, the same reference time as the section watch
+  static SHORT_TAU = 1.5;  // s, the "now" level a new normal jumps to
+  static FLOOR = 0.02;     // smallest divisor: silence and room noise get at most 12.5x
+  static SILENT_RMS = 0.003; // about -50 dBFS broadband...
+  static SILENCE_RESET = 2;  // ...for this long (s) resets
+  /** Long-term mean to divisor, per band: calibrated so steady music lands where the old peak-following gain put it. */
+  static SCALE = { amp: 1.5, bass: 2.0, mid: 2.0, high: 2.7 };
 
-  constructor() { this.envelope = { amp: 0, bass: 0, mid: 0, high: 0 }; }
+  constructor() {
+    this.watch = new EnergyWatch();
+    this.ref = { amp: 0, bass: 0, mid: 0, high: 0 };
+    this.short = { amp: 0, bass: 0, mid: 0, high: 0 };
+    this.time = 0;
+    this.quiet = 0;
+  }
 
   /** Feeds this frame's band RMS values (`dt` seconds since the last) and returns the divisors to use. */
   update(rms, dt) {
-    const decay = Math.exp(-dt / AudioAgc.RELEASE_SEC);
-    const out = {};
-    for (const band of ['amp', 'bass', 'mid', 'high']) {
-      this.envelope[band] = Math.max(rms[band], this.envelope[band] * decay);
-      out[band] = Math.max(this.envelope[band] * AudioAgc.HEADROOM, AudioAgc.FLOOR);
+    this.quiet = rms.amp < AudioAgc.SILENT_RMS ? this.quiet + dt : 0;
+    if (this.quiet > AudioAgc.SILENCE_RESET) { // silence: forget the old level and wait, so the next feed levels in at once
+      if (this.time > 0) this.#restart();
+      return this.#divisors();
     }
+    this.watch.update(clamp01(rms.bass / AMP_SCALE), clamp01(rms.amp / AMP_SCALE), dt);
+    this.time += dt;
+    const frozen = this.watch.holding;
+    for (const band of BANDS) {
+      this.short[band] += (rms[band] - this.short[band]) * Math.min(1, dt / AudioAgc.SHORT_TAU);
+      if (this.watch.rebased) this.ref[band] = this.short[band];
+      else if (!frozen) this.ref[band] += (rms[band] - this.ref[band]) * Math.min(1, dt / Math.min(AudioAgc.LONG_TAU, this.time));
+    }
+    return this.#divisors();
+  }
+
+  #divisors() {
+    const out = {};
+    for (const band of BANDS) out[band] = Math.max(this.ref[band] * AudioAgc.SCALE[band], AudioAgc.FLOOR);
     return out;
   }
 
-  reset() { for (const band in this.envelope) this.envelope[band] = 0; }
+  reset() {
+    this.#restart();
+    this.quiet = 0;
+  }
+
+  #restart() {
+    this.watch.reset();
+    for (const band of BANDS) this.ref[band] = this.short[band] = 0;
+    this.time = 0;
+  }
 }
 
 /**
@@ -134,7 +173,6 @@ function updateAmplitudes(dt) {
 // estimate pulls the clock onto the music's beats. With no audio (or no clear beat) the clock coasts at
 // the last tempo, so beat-synced modulators keep running.
 const tracker = new BeatTracker();
-const energy = new EnergyWatch();
 const beatClock = new BeatClock();
 let onsetFromWorklet = false;
 let lastAnalyseMs = -Infinity;
@@ -193,10 +231,10 @@ export function tick(dt) {
   updateSignal(dt);
   if (analysisReady) {
     updateAmplitudes(dt);
-    energy.update(cvState.raw.audio_bass, cvState.raw.audio_amp, dt);
-    cvState.section = energy.section;
-    cvState.drops = energy.drops;
-    cvState.energy = energy; // short / long levels, for tuning (window.LSD.cvState.energy)
+    // Sections come from auto gain's own watch (updated in updateAmplitudes), fed the fixed-scale levels.
+    cvState.section = agc.watch.section;
+    cvState.drops = agc.watch.drops;
+    cvState.energy = agc.watch; // short / long levels, for tuning (window.LSD.cvState.energy)
     // Without the worklet, the per-frame onset strength is the envelope (coarser timing, same tracker).
     if (!onsetFromWorklet) tracker.push(cvState.raw.audio_flux_amp, performance.now() / 1000);
   }
