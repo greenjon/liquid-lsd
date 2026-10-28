@@ -12,20 +12,13 @@ class AudioAgcTest {
     }
 
     @Test
-    fun disabledUsesFixedScale() {
-        val agc = AudioAgc().apply { enabled = false }
-        assertEquals(AudioAgc.FIXED_SCALE, agc.update(AudioAgc.BASS, 0.9f, dt))
-        assertEquals(1f, agc.boost(AudioAgc.BASS))
-    }
-
-    @Test
     fun quietAndLoudInputsNormaliseToTheSamePeak() {
         val quiet = AudioAgc().also { feed(it, 0.05f, 1.0) }
         val loud = AudioAgc().also { feed(it, 0.5f, 1.0) }
         val q = 0.05f / quiet.divisor(AudioAgc.BASS)
         val l = 0.5f / loud.divisor(AudioAgc.BASS)
         assertEquals(q, l, 1e-4f)
-        assertTrue(q > 1f / 0.85f - 1e-3f)
+        assertTrue(q > 1f / AudioAgc.HEADROOM - 1e-3f)
     }
 
     @Test

@@ -18,7 +18,7 @@ import llm.slop.liquidlsd.audio.SystemAudioVolume
  * - Device & backend selection (Auto, JACK, Java Sound).
  * - Real-time BPM readout with flashing beat indicator.
  * - Auto Beat Detection parameters & preset buttons.
- * - Input gain and system recording volume controls.
+ * - Input trim, system recording volume and the Audio Response (reactivity) control.
  * - Raw audio buffer oscilloscope and sound-derived Control Voltage (CV) oscilloscopes.
  *
  * Rendered within the "Audio Engine" category of [PreferencesPanel].
@@ -38,7 +38,6 @@ object AudioEnginePanel {
 
     // Device & Backend UI wrappers
     private val isAudioEnabled = ImBoolean()
-    private val isAgcEnabled = ImBoolean()
     private val currentBackendIdx = ImInt()
     private val currentDeviceIdx = ImInt()
 
@@ -60,6 +59,9 @@ object AudioEnginePanel {
     private var peakHoldTimeL = 0L
     private var peakHoldTimeR = 0L
     private var lastMeterTimeNs = llm.slop.liquidlsd.utils.TimeSource.getTimeNanos()
+
+    /** A post-trim input peak above this (about -40 dBFS) means something is playing, even while the silence gate says SILENT. */
+    private const val AUDIBLE_PEAK = 0.01f
 
     private data class CvSignalDef(val id: String, val title: String, val colorU32: Int)
     private val beatSineSignal = CvSignalDef("beatSine", "Beat Sine (Oscillator)", CvTheme.getThemeColor("beatSine"))
@@ -220,10 +222,10 @@ object AudioEnginePanel {
 
             ImGui.spacing()
 
-            // Input Gain & System Volume
+            // Input Trim & System Volume: setup, so beat detection hears enough (reactivity is Audio Response, below)
             CustomRangeSlider.drawCompactSlider(
                 session = session,
-                label = "Input Gain",
+                label = "Input Trim",
                 currentValue = audioEngine.inputGain,
                 minLimit = 0.0f,
                 maxLimit = 10.0f,
@@ -238,58 +240,7 @@ object AudioEnginePanel {
                     AppPreferencesStore.savePreferences()
                 }
             )
-            itemTooltip("Level of the incoming audio before analysis. Affects beat detection too. With Auto Gain on, the audio signals level themselves, so use Audio Response to change how much the picture moves.")
-
-            // Audio Response: scales every audio CV signal after auto gain (beat detection is unaffected).
-            CustomRangeSlider.drawCompactSlider(
-                session = session,
-                label = "Audio Response",
-                currentValue = audioEngine.response,
-                minLimit = 0.0f,
-                maxLimit = AudioEngine.MAX_RESPONSE,
-                defaultValue = 1.0f,
-                formatValue = { "%.0f%%".format(it * 100f) },
-                idPrefix = "audio_engine_response",
-                themeColor = ImGui.colorConvertFloat4ToU32(0.9f, 0.6f, 0.2f, 0.9f),
-                showCurrentLabel = false,
-                customBoxWidth = sliderBoxW,
-                onValueChanged = { newVal ->
-                    audioEngine.response = newVal
-                    AppPreferencesStore.savePreferences()
-                }
-            )
-            itemTooltip("How strongly everything that follows the music moves: scales the Amp, Bass, Mid, High and Flux signals that every audio modulator reads. 0% = nothing follows the music, 100% = as tuned, 200% = twice as much (loud passages hit the top sooner). Beat detection, LFOs and the beat clock are not affected.")
-
-            // Auto gain for the audio CV signals (amp/bass/mid/high and flux); beat detection is unaffected.
-            val agc = audioEngine.agc
-            isAgcEnabled.set(agc.enabled)
-            if (ImGui.checkbox("Auto Gain (AGC)", isAgcEnabled)) {
-                agc.enabled = isAgcEnabled.get()
-                AppPreferencesStore.savePreferences()
-            }
-            itemTooltip("Normalizes each audio band (amp, bass, mid, high) against its own recent peak so audio-reactive parameters respond the same at any input level. Beat detection is unaffected. Off = fixed scale.")
-            if (agc.enabled) {
-                CustomRangeSlider.drawCompactSlider(
-                    session = session,
-                    label = "AGC Headroom",
-                    currentValue = agc.headroom,
-                    minLimit = AudioAgc.MIN_HEADROOM,
-                    maxLimit = 1.0f,
-                    defaultValue = AudioAgc.DEFAULT_HEADROOM,
-                    formatValue = { "%.2f".format(it) },
-                    idPrefix = "audio_engine_agc_headroom",
-                    themeColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.9f, 0.4f, 0.9f),
-                    showCurrentLabel = false,
-                    customBoxWidth = sliderBoxW,
-                    onValueChanged = { newVal ->
-                        agc.headroom = newVal
-                        AppPreferencesStore.savePreferences()
-                    }
-                )
-                itemTooltip("How hot the normalized signals run. Lower = more of the music reaches full scale (hotter); 1.0 = recent peaks just touch full scale.")
-                theme.body("Boost  amp %.1fx  bass %.1fx  mid %.1fx  high %.1fx".format(
-                    agc.boost(AudioAgc.AMP), agc.boost(AudioAgc.BASS), agc.boost(AudioAgc.MID), agc.boost(AudioAgc.HIGH)))
-            }
+            itemTooltip("Level of the incoming audio before analysis, for setting up the input: raise it if the Sync State stays SILENT while music plays. It does not change how much the picture moves (auto gain levels the audio signals); use Audio Response for that.")
 
             if (SystemAudioVolume.isSupported) {
                 SystemAudioVolume.queryAsync()
@@ -340,6 +291,10 @@ object AudioEnginePanel {
                     }.start()
                 }
                 itemTooltip("Attempts to reconnect to the JACK or PipeWire audio backend.")
+            } else if (state == SignalState.SILENT && maxOf(audioEngine.meterPeakL, audioEngine.meterPeakR) > AUDIBLE_PEAK) {
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 0.95f, 0.75f, 0.35f, 1.0f)
+                ImGui.textWrapped("${Icons.ALERT} Input too quiet for beat detection. Raise Input Trim or the system input volume.")
+                ImGui.popStyleColor()
             } else if (backend == "Java Sound") {
                 ImGui.spacing()
                 // TODO: make this button less annoying
@@ -352,6 +307,33 @@ object AudioEnginePanel {
                 itemTooltip("Stops Java Sound and attempts to connect to a running JACK/PipeWire audio server.")
                 */
             }
+
+            ImGui.spacing()
+
+            // Audio Response: the one reactivity control. Scales every audio CV signal after auto gain
+            // (beat detection is unaffected).
+            CustomRangeSlider.drawCompactSlider(
+                session = session,
+                label = "Audio Response",
+                currentValue = audioEngine.response,
+                minLimit = 0.0f,
+                maxLimit = AudioEngine.MAX_RESPONSE,
+                defaultValue = 1.0f,
+                formatValue = { "%.0f%%".format(it * 100f) },
+                idPrefix = "audio_engine_response",
+                themeColor = ImGui.colorConvertFloat4ToU32(0.9f, 0.6f, 0.2f, 0.9f),
+                showCurrentLabel = false,
+                customBoxWidth = sliderBoxW,
+                onValueChanged = { newVal ->
+                    audioEngine.response = newVal
+                    AppPreferencesStore.savePreferences()
+                }
+            )
+            itemTooltip("How strongly everything that follows the music moves: scales the Amp, Bass, Mid, High and Flux signals that every audio modulator reads. 0% = nothing follows the music, 100% = as tuned, 200% = twice as much (loud passages hit the top sooner). Auto gain keeps this the same at any input level. Beat detection, LFOs and the beat clock are not affected.")
+            val agc = audioEngine.agc
+            theme.caption("Auto gain  amp %.1fx  bass %.1fx  mid %.1fx  high %.1fx".format(
+                agc.boost(AudioAgc.AMP), agc.boost(AudioAgc.BASS), agc.boost(AudioAgc.MID), agc.boost(AudioAgc.HIGH)))
+            itemTooltip("How much auto gain is lifting each band to level it (1.0x = the input is already at the reference level). Each band follows its own recent peak, so quiet and loud feeds move the picture the same.")
 
             ImGui.spacing()
             ImGui.separator()

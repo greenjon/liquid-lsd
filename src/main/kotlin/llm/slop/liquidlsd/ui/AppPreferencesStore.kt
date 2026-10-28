@@ -42,8 +42,16 @@ object AppPreferencesStore {
     /** Tour renders neither read nor write the user's preferences file (determinism, no side effects). */
     @Volatile var persistenceDisabled = false
 
+    /**
+     * The Audio Response that sounds the same as [response] did with a saved AGC Headroom of [headroom]
+     * (the signals were divided by the headroom, which is now the fixed [AudioAgc.HEADROOM]).
+     */
+    internal fun responseForLegacyHeadroom(response: Float, headroom: Float): Float =
+        (response * AudioAgc.HEADROOM / headroom.coerceIn(0.5f, 1f)).coerceIn(0f, AudioEngine.MAX_RESPONSE)
+
     fun loadPreferences() {
         if (persistenceDisabled) return
+        var migratedLegacyKeys = false
         try {
             val fileToRead = when {
                 preferencesFile.exists() -> preferencesFile
@@ -92,9 +100,10 @@ object AppPreferencesStore {
                     logger.info { "Loaded audioInputGain from settings file: $savedGain" }
                 }
                 props.getProperty("audioResponse")?.toFloatOrNull()?.let { AudioEngine.response = it }
-                props.getBoolean("audioAgcEnabled")?.let { AudioEngine.agc.enabled = it }
+                // AGC Headroom was folded into Audio Response; carry a changed headroom over once.
                 props.getProperty("audioAgcHeadroom")?.toFloatOrNull()?.let {
-                    AudioEngine.agc.headroom = it.coerceIn(AudioAgc.MIN_HEADROOM, 1f)
+                    AudioEngine.response = responseForLegacyHeadroom(AudioEngine.response, it)
+                    migratedLegacyKeys = true
                 }
                 props.getBoolean("audioBpmLocked")?.let { savedBpmLocked ->
                     AudioEngine.isBpmLocked = savedBpmLocked
@@ -333,6 +342,8 @@ object AppPreferencesStore {
         } catch (e: Exception) {
             logger.warn(e) { "Failed to load preferences, using defaults" }
         }
+        // Rewrite now, so a migrated value is not migrated again on the next launch.
+        if (migratedLegacyKeys) savePreferences()
     }
 
     fun saveSettings() = savePreferences()
@@ -344,6 +355,8 @@ object AppPreferencesStore {
             val fileToRead = if (preferencesFile.exists()) preferencesFile else if (legacySettingsFile.exists()) legacySettingsFile else null
             fileToRead?.inputStream()?.use { props.load(it) }
             props.remove("workspaceMode") // Classic view removed; drop the stale key
+            props.remove("audioAgcEnabled") // Auto gain is always on
+            props.remove("audioAgcHeadroom") // Folded into audioResponse at load
 
             props.setProperty("presetNameScalePercent", UITheme.presetNameScalePercent.toString())
             props.setProperty("audioEngineEnabled", UITheme.audioEngineEnabled.toString())
@@ -352,8 +365,6 @@ object AppPreferencesStore {
             props.setProperty("audioDeviceName", AudioEngine.selectedDeviceName ?: "")
             props.setProperty("audioInputGain", AudioEngine.inputGain.toString())
             props.setProperty("audioResponse", AudioEngine.response.toString())
-            props.setProperty("audioAgcEnabled", AudioEngine.agc.enabled.toString())
-            props.setProperty("audioAgcHeadroom", AudioEngine.agc.headroom.toString())
             props.setProperty("audioBpmLocked", AudioEngine.isBpmLocked.toString())
             props.setProperty("audioManualBpm", AudioEngine.manualBpm.toString())
             props.setProperty("clockSource", AudioEngine.clockSource.name)

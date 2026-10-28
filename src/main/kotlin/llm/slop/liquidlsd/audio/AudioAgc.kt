@@ -4,20 +4,18 @@ import kotlin.math.exp
 import kotlin.math.max
 
 /**
- * Per-band automatic gain for the audio CV signals (`audio_amp/bass/mid/high` and their flux).
+ * Per-band automatic gain for the audio CV signals (`audio_amp/bass/mid/high` and their flux). Always on:
+ * Audio Response is the only reactivity control the user sees.
  *
  * Only the normalisation stage sees it: beat detection, downbeat detection and the silence gate keep
  * working on the raw band RMS. Each band tracks a peak envelope of its RMS (instant attack, [RELEASE_SEC]
- * release) and normalises against `max(envelope * headroom, FLOOR)`, so the recent peaks of the music
- * land near 1.0 whatever the input level. [FLOOR] stops silence and room noise from being boosted into
+ * release) and normalises against `max(envelope * HEADROOM, FLOOR)`, so the recent peaks of the music
+ * land just over 1.0 whatever the input level. [FLOOR] stops silence and room noise from being boosted into
  * constant motion (at most [FIXED_SCALE] / [FLOOR] of boost).
  *
- * With [enabled] false every divisor is [FIXED_SCALE], the pre-AGC behaviour. No allocation; audio thread only.
+ * No allocation; audio thread only.
  */
 class AudioAgc {
-    @Volatile var enabled: Boolean = true
-    @Volatile var headroom: Float = DEFAULT_HEADROOM
-
     private val envelope = FloatArray(BANDS)
 
     /** Feeds this block's RMS for [band] ([AMP]..[HIGH]) and returns the divisor to normalise it with. */
@@ -28,10 +26,7 @@ class AudioAgc {
     }
 
     /** Current divisor for [band]. */
-    fun divisor(band: Int): Float {
-        if (!enabled) return FIXED_SCALE
-        return max(envelope[band] * headroom.coerceIn(MIN_HEADROOM, 1f), FLOOR)
-    }
+    fun divisor(band: Int): Float = max(envelope[band] * HEADROOM, FLOOR)
 
     /** How much louder than the fixed scale [band] is being made (1 = unchanged). For the meter. */
     fun boost(band: Int): Float = FIXED_SCALE / divisor(band)
@@ -45,11 +40,16 @@ class AudioAgc {
         const val HIGH = 3
         const val BANDS = 4
 
-        /** The pre-AGC normalisation scale: band RMS of this reads 1.0. */
+        /** The pre-AGC normalisation scale: band RMS of this reads 1.0. Flux scales are relative to it. */
         const val FIXED_SCALE = 0.25f
         const val FLOOR = 0.02f
         const val RELEASE_SEC = 8.0
-        const val DEFAULT_HEADROOM = 0.85f
-        const val MIN_HEADROOM = 0.5f
+
+        /**
+         * Recent peaks normalise to 1 / HEADROOM, so the top of the music clips slightly. Fixed: it was a
+         * user setting, but it only scaled every signal the way Audio Response does. Recipes are tuned
+         * against this value at 100% Response.
+         */
+        const val HEADROOM = 0.85f
     }
 }

@@ -34,11 +34,12 @@ Liquid LSD is a real-time, audio-reactive procedural visual synthesizer and VJ p
 | **Toggle/Select Metaknob Targets** | `rendering/isf/*`, `ui/*` | **v1.1** | **PENDING** | Bool and select inputs as Metaknob targets (Milestone 10). |
 | **Localization** | `ui/*` | **v1.1** | **PENDING** | All user-facing text moved to string tables; translation support with locale selection. |
 | **Live Shader Reload** | `rendering/isf/*`, `rendering/VisualSourceRegistry.kt`, `rendering/Shader.kt` | **v1.1** | **PENDING** | Recompile a saved shader in place, in every deck, slot and transition that uses it, keeping the last good version on error (Milestone 11). |
-| **Reactivity Recipes: FX, Transitions, Tooling** | `resources/stock_defaults/`, `presets/StockDefaults.kt`, `rendering/isf/ISFAutoBindEngine.kt`, `web/dsp.js` | **TBD** | **PENDING** | 33 stock sources ship recipes (2026-10-27); all 27 effects too (2026-10-27; MUL on the Metaknob input); 7 of 8 transitions, their stock presets and transition Save as Default (2026-10-27). The 16 stock FX chains carry the effect responses and ranges (2026-10-27). Still to do: the auto gain ported to the web TV, and a recipe idea for Fluid Ink. |
+| **Reactivity Recipes: FX, Transitions, Tooling** | `resources/stock_defaults/`, `presets/StockDefaults.kt`, `rendering/isf/ISFAutoBindEngine.kt`, `web/dsp.js` | **TBD** | **PENDING** | 33 stock sources ship recipes (2026-10-27); all 27 effects too (2026-10-27; MUL on the Metaknob input); 7 of 8 transitions, their stock presets and transition Save as Default (2026-10-27). The 16 stock FX chains carry the effect responses and ranges (2026-10-27). Auto gain always on, Audio Response the one reactivity control (2026-10-28). Still to do: the auto gain ported to the web TV, and a recipe idea for Fluid Ink. |
 | **Random-by-Default Ranges** | `resources/stock_defaults/`, `rendering/MorphState.kt`, `macro/KnobDrive.kt` | **TBD** | **PENDING** | 32 stock shader sources ship random ranges on their look parameters, rolls move the macro knobs, stepped parameters switch at the morph midpoint, die undo restores values (2026-10-27). 25 of 27 stock effects and all 8 transitions ship ranges too (deck die and Rand roll the deck's FX, Metaknob targets never; transition die rolls ranges only; Rand All jumps the transition). The stock FX chains carry them. Still to do: judge them in the app; the stock presets store their own parameters and are not randomized. |
 | **Harmonograph Rework** | `default_sources/harmonograph/*` (removed from the stock set 2026-10-27), `web/shaders/*` | **v1.1** | **PENDING** | Rebuild the harmonograph as a persistent accumulation (many windings building into a dense rosette, slow decay) instead of one 128-segment polyline, which read as a single thin string. Restore it to the stock set, the web TV (3 presets) and its reactivity recipe from git history (commit before `Remove Harmonograph`); the old files are the starting point. |
 | **Downbeat Detection** | `audio/BeatTrackerEngine.kt`, `cv/CVRegistry.kt`, `web/beattrack.js` | **v1.1** | **PENDING** | Bar-start (downbeat) detection on top of the beat tracker, a real `barPhase` source and beats-per-bar setting, tap override and confidence (Milestone 12). |
 | **Effect / Transition Crossovers** | `default_filters/*`, `default_transitions/*`, `rendering/isf/*` | **v1.1** | **PENDING** | Datamosh as an effect, Pixelate as a transition, and a design for running any effect as a transition (Milestone 13). |
+| **Warp Feedback Effect** | `default_filters/*`, `web/shaders/*` | **v1.1** | **PENDING** | Feedback through a warp field that varies with distance and angle from the centre (the MilkDrop look), audio response and random ranges (Milestone 14). |
 | **Expanded FX Chain View** | `ui/PerformanceMatrixPanel.kt`, `ui/FxSlotCell.kt`, `macro/FxMacroSync.kt` | **Compost (v1.2)** | **SHELVED** | Mixxx-style 3-sub-row chain editing on the Performance matrix. Decided 2026-10-13: no milestone. Notes: `.planning/fx-chain-expanded-view-notes.md`. |
 
 ---
@@ -252,6 +253,22 @@ The beat tracker finds tempo and beat phase but not which beat is beat 1. A bar 
 - Keep existing ids: `vortex_swirl` stays both an effect and a transition (renaming breaks saved chains, presets and the `festival_elite` playlist); shipped defaults key the two by kind (see `.planning/transition-reactivity-plan.md`).
 
 **Done means:** stock-set lists in DECISIONS.md and the user guide, web sync entries, release notes in both files, tooltips, shipped default (with audio response) for each new shader.
+
+### Milestone 14: Warp Feedback Effect
+> **Status**: Idea, agreed 2026-10-28, from a look at MilkDrop. Full `.milk` preset compatibility was considered and rejected (expression-language interpreter on desktop and web, HLSL-to-GLSL translation, a separate pipeline outside the ISF/deck model, unclear preset licensing); this takes the one idea that gives MilkDrop its look.
+
+The stock Feedback effect (`default_filters/feedback.fs`) applies one zoom and one rotation to the whole previous frame. MilkDrop's motion comes from warping the previous frame with a field that varies across the screen: each point gets its own zoom, rotation, shift and stretch as a function of its distance and angle from the centre, so the centre can pull inwards while the edges spin, and the whole field can breathe with the bass. That is what reads as fluid tunnels and swirls.
+
+- [ ] **Warp Feedback effect** (new ISF filter, `PERSISTENT` feedback buffer, desktop and web): feed back the previous output through a per-pixel warp field, blend the input on top, decay.
+  - Field controls as curves over radius rather than per-vertex equations: Zoom at centre / Zoom at edge, Rotate at centre / Rotate at edge, Drift X/Y, Warp (a slow sine wobble of the field, amount + speed), Stretch X/Y, Centre X/Y.
+  - Decay, Hue Shift, Blur (to stop fine noise sharpening into grain over many frames), Input Mix.
+  - Compute the field per pixel in the fragment shader rather than a coarse mesh; the mesh was a 2001 GPU constraint, not part of the look.
+- [ ] **Draw-into-the-loop**: an optional input-placement mode where the input is blended *before* the warp, so it smears into trails (MilkDrop draws its waveform and shapes into the frame before warping), versus after the warp (crisp input over moving trails).
+- [ ] **Audio response + random ranges**: bass on zoom-at-centre, flux on warp amount, mids on rotation; random ranges on the field controls so the deck die finds new motion.
+- [ ] Decide whether it replaces the stock Feedback effect or ships beside it. Keep the `feedback` id either way (saved chains and presets).
+- Maybe later: a small "warp preset" set (tunnel, whirlpool, breathing, drift) as shipped defaults.
+
+**Done means:** stock-set lists in DECISIONS.md and the user guide, web sync entry, release notes in both files, tooltips, shipped default with audio response and random ranges.
 
 ---
 

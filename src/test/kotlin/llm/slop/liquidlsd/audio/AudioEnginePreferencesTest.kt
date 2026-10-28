@@ -111,6 +111,22 @@ class AudioEnginePreferencesTest {
     }
 
     @Test
+    fun legacyAgcHeadroomIsFoldedIntoAudioResponseOnce() {
+        preferencesFile.writeText("audioResponse=1.0\naudioAgcEnabled=false\naudioAgcHeadroom=0.5\n")
+
+        AppPreferencesStore.loadPreferences()
+        val migrated = AudioEngine.response
+        assertEquals(AudioAgc.HEADROOM / 0.5f, migrated, 0.001f)
+
+        val savedContent = preferencesFile.readText()
+        assertTrue("audioAgcHeadroom" !in savedContent && "audioAgcEnabled" !in savedContent, "Legacy AGC keys should be dropped")
+
+        AppPreferencesStore.loadPreferences()
+        assertEquals(migrated, AudioEngine.response, 0.001f)
+        AudioEngine.response = 1f
+    }
+
+    @Test
     fun testManualBpmWhenAudioEngineDisabled() {
         UITheme.audioEngineEnabled = false
         AudioEngine.stop()
