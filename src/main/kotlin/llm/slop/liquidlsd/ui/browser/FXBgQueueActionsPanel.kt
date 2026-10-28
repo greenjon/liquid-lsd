@@ -144,9 +144,13 @@ object FXBgQueueActionsPanel {
 
                     val assetPayload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
                     if (assetPayload != null) {
-                        val droppedFile = File(assetPayload)
-                        val insertAt = effectiveSlot.coerceIn(0, FXBgQueueManager.queue.size)
-                        FXBgQueueManager.insertAt(insertAt, droppedFile)
+                        // A multi-row drag carries one path per line.
+                        var insertAt = effectiveSlot.coerceIn(0, FXBgQueueManager.queue.size)
+                        for (path in assetPayload.lines().filter { it.isNotBlank() }) {
+                            val before = FXBgQueueManager.queue.size
+                            FXBgQueueManager.insertAt(insertAt, File(path.trim()))
+                            insertAt += FXBgQueueManager.queue.size - before
+                        }
                     }
                     ImGui.endDragDropTarget()
                 }
@@ -209,8 +213,7 @@ object FXBgQueueActionsPanel {
                 if (ImGui.beginDragDropTarget()) {
                     val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
                     if (payload != null) {
-                        val file = File(payload)
-                        FXBgQueueManager.appendToQueue(file)
+                        payload.lines().filter { it.isNotBlank() }.forEach { FXBgQueueManager.appendToQueue(File(it.trim())) }
                     }
                     ImGui.endDragDropTarget()
                 }

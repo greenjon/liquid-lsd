@@ -149,9 +149,13 @@ object TransitionQueuePanel {
 
                     val assetPayload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
                     if (assetPayload != null) {
-                        val droppedFile = File(assetPayload)
-                        val insertAt = effectiveSlot.coerceIn(0, TransitionQueueManager.queue.size)
-                        TransitionQueueManager.insertAt(insertAt, droppedFile)
+                        // A multi-row drag carries one path per line.
+                        var insertAt = effectiveSlot.coerceIn(0, TransitionQueueManager.queue.size)
+                        for (path in assetPayload.lines().filter { it.isNotBlank() }) {
+                            val before = TransitionQueueManager.queue.size
+                            TransitionQueueManager.insertAt(insertAt, File(path.trim()))
+                            insertAt += TransitionQueueManager.queue.size - before
+                        }
                     }
                     ImGui.endDragDropTarget()
                 }
@@ -214,8 +218,7 @@ object TransitionQueuePanel {
                 if (ImGui.beginDragDropTarget()) {
                     val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
                     if (payload != null) {
-                        val file = File(payload)
-                        TransitionQueueManager.appendToQueue(file)
+                        payload.lines().filter { it.isNotBlank() }.forEach { TransitionQueueManager.appendToQueue(File(it.trim())) }
                     }
                     ImGui.endDragDropTarget()
                 }

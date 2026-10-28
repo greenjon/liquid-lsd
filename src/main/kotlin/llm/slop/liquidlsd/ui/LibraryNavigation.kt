@@ -143,13 +143,21 @@ internal object LibraryNavigation {
         repeat(abs(steps)) { LibraryPanel.navigateSelection(direction, session, mixer) }
     }
 
-    /** The files the enqueue shortcuts act on: the multi-selection in the Sources list, else the cursor item. */
+    /** The files the enqueue shortcuts act on: the list's multi-selection, else the cursor item. */
     fun enqueueTargets(session: SessionContext): List<File> {
         if (LibraryPanel.navMode == LibraryViewMode.QUEUES) return emptyList() // the queues are the destination, not a source
-        if (LibraryPanel.activeSelectionSource == SelectionSource.PRESETS && LibraryPanel.navMode == LibraryViewMode.PRESETS) {
-            return PresetListPanel.selection.getSelectedInOrder(PresetListPanel.filteredPresets)
-                .filter { it.type != AssetType.SOURCE_STOCK && it.type != AssetType.SOURCE_EXTERNAL }
-                .map { File(it.path) }
+        if (LibraryPanel.activeSelectionSource == SelectionSource.PRESETS) {
+            when (LibraryPanel.navMode) {
+                LibraryViewMode.PRESETS -> return PresetListPanel.selection.getSelectedInOrder(PresetListPanel.filteredPresets)
+                    .filter { it.type != AssetType.SOURCE_STOCK && it.type != AssetType.SOURCE_EXTERNAL }
+                    .map { File(it.path) }
+                LibraryViewMode.FX -> if (FXBrowserPanel.selection.count > 1) return FXBrowserPanel.selection.getSelectedInOrder(FXBrowserPanel.filteredRows)
+                    .filter { it.type != AssetType.FX_STOCK }
+                    .map { File(it.path) }
+                LibraryViewMode.TRANS -> if (TransitionBrowserPanel.selection.count > 1) return TransitionBrowserPanel.selection
+                    .getSelectedInOrder(TransitionBrowserPanel.filteredRows).map { TransitionBrowserPanel.fileFor(it) }
+                else -> Unit
+            }
         }
         val file = LibraryPanel.getActiveSelectedFile(session)
         return if (file != null && file.exists()) listOf(file) else emptyList()

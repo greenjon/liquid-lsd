@@ -49,7 +49,12 @@ object FXBrowserPanel {
 
     private const val STOCK_PATH_PREFIX = "stock-fx://"
 
-    var selectedAsset: AssetItem? = null
+    val selection = MultiSelectionModel<AssetItem>()
+    var selectedAsset: AssetItem?
+        get() = selection.leadItem
+        set(value) {
+            selection.setSingle(value)
+        }
     var filteredRows: List<AssetItem> = emptyList()
 
     internal fun drawCreatePopup(session: SessionContext, mixer: Mixer) {
@@ -111,14 +116,14 @@ object FXBrowserPanel {
         val loaded = LoadedMarks.fxSnapshot(mixer)
         rows.forEachIndexed { index, asset ->
             ImGui.pushID(index)
-            drawRow(session, mixer, asset, index, 20f, infoFor?.invoke(asset) ?: "", contextExtras, playlistRows, target, loaded.marksFor(asset))
+            drawRow(session, mixer, rows, asset, index, 20f, infoFor?.invoke(asset) ?: "", contextExtras, playlistRows, target, loaded.marksFor(asset))
             ImGui.popID()
         }
         playlistRows?.finish()
     }
 
     private fun drawRow(
-        session: SessionContext, mixer: Mixer, asset: AssetItem, index: Int, btnW: Float,
+        session: SessionContext, mixer: Mixer, rows: List<AssetItem>, asset: AssetItem, index: Int, btnW: Float,
         info: String = "", contextExtras: ((AssetItem) -> Unit)? = null, playlistRows: PlaylistRows? = null,
         target: ApplyTarget? = null, marks: List<LoadedMarks.Mark> = emptyList()
     ) {
@@ -128,7 +133,7 @@ object FXBrowserPanel {
             AssetType.FX_CHAIN -> Icons.ACTIVITY
             else -> Icons.ZAP
         }
-        val isSelected = selectedAsset?.path == asset.path
+        val isSelected = selection.isSelected(asset)
         val popupId = "fx_browser_context_$index"
 
         val availW = ImGui.getContentRegionAvailX()
@@ -152,17 +157,17 @@ object FXBrowserPanel {
             AssetType.FX_CHAIN -> "Saved 3-slot FX chain (.lsdfxchain) — replaces all 3 slots of the target chain."
             else -> "Saved single FX preset (.lsdfx) — loads into one FX slot."
         }
-        val how = if (target != null) "Click: apply. Right-click: more." else "Double-click or Enter: load to the live deck. Right-click: more."
+        val how = if (target != null) "Click: apply. Right-click: more." else "Double-click or Enter: load to the live deck. Ctrl/Shift+click: select several. Right-click: more."
         itemTooltip(listOfNotNull(PresetListPanel.fullNameTip(asset, nameElided), about, how).joinToString("\n"))
 
         if (ImGui.isItemClicked(0)) {
             LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
-            selectedAsset = asset
+            PresetListPanel.clickSelect(selection, asset, rows, target)
             DockActions.tap(target, asset)
         }
         if (ImGui.isItemClicked(1)) {
             LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
-            selectedAsset = asset
+            if (!selection.isSelected(asset)) selection.setSingle(asset)
             ImGui.openPopup(popupId)
         }
 
@@ -181,10 +186,13 @@ object FXBrowserPanel {
             } else {
                 if (asset.type == AssetType.FX_STOCK) {
                     ImGui.setDragDropPayload(llm.slop.liquidlsd.ui.FxSlotCell.PAYLOAD_STOCK_FILTER, asset.path.removePrefix(STOCK_PATH_PREFIX) as Any)
+                    ImGui.textUnformatted(asset.name)
                 } else {
-                    ImGui.setDragDropPayload("ASSET_ITEM", asset.path as Any)
-            }
-                ImGui.textUnformatted(asset.name)
+                    // A drag from inside a multi-selection carries every selected saved FX, one path per line.
+                    val targets = savedTargets(rows, asset)
+                    ImGui.setDragDropPayload("ASSET_ITEM", targets.joinToString("\n") { it.path } as Any)
+                    ImGui.textUnformatted(if (targets.size > 1) "Moving ${targets.size} FX" else asset.name)
+                }
                 ImGui.endDragDropSource()
             }
         }
@@ -202,11 +210,36 @@ object FXBrowserPanel {
                 contextExtras(asset)
                 ImGui.separator()
             }
-            drawContextMenu(session, mixer, asset)
+            if (selection.count > 1 && selection.isSelected(asset)) drawMultiMenu(rows) else drawContextMenu(session, mixer, asset)
             popOpenDropdownFont()
             ImGui.endPopup()
         }
         popOpenDropdownPadding()
+    }
+
+    /** The saved FX a row action covers: the selected saved rows when [asset] is one of them, else [asset] alone. Stock filters never queue. */
+    private fun savedTargets(rows: List<AssetItem>, asset: AssetItem): List<AssetItem> {
+        val inOrder = selection.getSelectedInOrder(rows).filter { it.type != AssetType.FX_STOCK }
+        return if (inOrder.any { it.path == asset.path }) inOrder else listOf(asset)
+    }
+
+    /** The row menu while several rows are selected: queue, playlist and delete for the saved FX among them (stock filters load one at a time). */
+    private fun drawMultiMenu(rows: List<AssetItem>) {
+        val saved = selection.getSelectedInOrder(rows).filter { it.type != AssetType.FX_STOCK }
+        ImGui.textDisabled("${selection.count} FX Selected")
+        ImGui.separator()
+        if (saved.isEmpty()) {
+            ImGui.textDisabled("Stock filters load one at a time")
+            return
+        }
+        val n = if (saved.size > 1) "${saved.size} FX" else "1 FX"
+        if (ImGui.menuItem("Add $n to A/B FX Queue")) saved.forEach { FXQueueManager.appendToQueue(File(it.path)) }
+        if (ImGui.menuItem("Add $n to BG FX Queue")) saved.forEach { FXBgQueueManager.appendToQueue(File(it.path)) }
+        LibraryPanel.selectedFxPlaylistFile?.let { pl ->
+            if (ImGui.menuItem("Add $n to '${pl.nameWithoutExtension}'")) appendToActiveFxPlaylist(pl, saved.map { it.path })
+        }
+        ImGui.separator()
+        if (ImGui.menuItem("Delete $n...")) BrowserPopupHandler.openDeleteConfirmation(saved)
     }
 
     /** A single FX that found no vacant slot, waiting for the user to pick the slot to overwrite. */
@@ -333,7 +366,7 @@ object FXBrowserPanel {
         val activePlaylist = LibraryPanel.selectedFxPlaylistFile
         if (activePlaylist != null) {
             if (ImGui.menuItem("Add to '${activePlaylist.nameWithoutExtension}'")) {
-                appendToActiveFxPlaylist(activePlaylist, asset.path)
+                appendToActiveFxPlaylist(activePlaylist, listOf(asset.path))
             }
         }
         ImGui.separator()
@@ -346,15 +379,15 @@ object FXBrowserPanel {
         if (ImGui.menuItem("Reveal in File Manager")) BrowserPopupHandler.revealInFileManager(file)
     }
 
-    private fun appendToActiveFxPlaylist(playlistFile: File, fxPath: String) {
+    private fun appendToActiveFxPlaylist(playlistFile: File, fxPaths: List<String>) {
         if (!playlistFile.exists()) return
         try {
             val dto = json.decodeFromString<FXPlaylistDto>(playlistFile.readText())
-            val updated = dto.copy(items = dto.items + fxPath)
+            val updated = dto.copy(items = dto.items + fxPaths)
             playlistFile.writeText(json.encodeToString(FXPlaylistDto.serializer(), updated))
             LibraryPanel.refreshAssets()
         } catch (e: Exception) {
-            logger.error(e) { "Failed to append item $fxPath to FX playlist ${playlistFile.name}" }
+            logger.error(e) { "Failed to append $fxPaths to FX playlist ${playlistFile.name}" }
         }
     }
 }

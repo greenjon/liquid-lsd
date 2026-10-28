@@ -52,6 +52,15 @@ object PresetListPanel {
         }
     var filteredPresets: List<AssetItem> = emptyList()
 
+    /**
+     * A left click on a list row: Ctrl/Cmd and Shift build a multi-selection (see [MultiSelectionModel]); bound to a [target],
+     * a click applies the row, so it stays a single selection.
+     */
+    internal fun <T> clickSelect(selection: MultiSelectionModel<T>, item: T, rows: List<T>, target: ApplyTarget?) {
+        val io = ImGui.getIO()
+        if (target != null) selection.setSingle(item) else selection.handleClick(item, rows, io.keyCtrl || io.keySuper, io.keyShift)
+    }
+
     /** Tour widget key of a list row: `browser_row_<kind>_<stock id or file name without extension>`. */
     internal fun tourRowKey(kind: BrowseKind, asset: AssetItem): String =
         "browser_row_${kind.name.lowercase()}_" + asset.path.substringAfterLast('/').substringBeforeLast('.')
@@ -118,9 +127,7 @@ object PresetListPanel {
             // Keyboard nav also "clicks" the focused row on Enter; Enter's row action is BrowserDock's, so that click is dropped here.
             if (itemClicked && (ImGui.isKeyPressed(ImGuiKey.Enter, false) || ImGui.isKeyPressed(ImGuiKey.KeypadEnter, false))) itemClicked = false
             if (itemClicked) {
-                val isCtrl = io.keyCtrl || io.keySuper
-                val isShift = io.keyShift
-                if (target != null || io.keyAlt) selection.setSingle(asset) else selection.handleClick(asset, filtered, isCtrl, isShift)
+                if (io.keyAlt) selection.setSingle(asset) else clickSelect(selection, asset, filtered, target)
                 LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
                 QueueActionsPanel.clearSelection()
                 llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.clearSelection()
@@ -185,7 +192,7 @@ object PresetListPanel {
                         }
                         if (thumb != 0) ImGui.image(thumb.toLong(), llm.slop.liquidlsd.presets.GardenThumbnails.WIDTH.toFloat(), llm.slop.liquidlsd.presets.GardenThumbnails.HEIGHT.toFloat())
                         if (asset.tags.isNotEmpty()) ImGui.textDisabled("Tags: ${asset.tags.joinToString(", ")}")
-                        ImGui.textDisabled(if (target != null) "Click: apply. Alt+click: preview on Deck PV." else "Double-click or Enter: load. Alt+click: preview on Deck PV.")
+                        ImGui.textDisabled(if (target != null) "Click: apply. Alt+click: preview on Deck PV." else "Double-click or Enter: load. Alt+click: preview on Deck PV. Ctrl/Shift+click: select several.")
                     }
                 }
             }

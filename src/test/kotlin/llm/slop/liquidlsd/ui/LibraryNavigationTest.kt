@@ -23,6 +23,7 @@ class LibraryNavigationTest {
         PresetListPanel.selection.clear()
         PresetListPanel.filteredPresets = emptyList()
         FXBrowserPanel.selectedAsset = null
+        FXBrowserPanel.filteredRows = emptyList()
     }
 
     @Test
@@ -50,6 +51,18 @@ class LibraryNavigationTest {
         LibraryPanel.viewMode = LibraryViewMode.FX
         // FX tab with nothing selected there: must not fall back to the Sources selection.
         assertTrue(LibraryNavigation.enqueueTargets(mockk<SessionContext>(relaxed = true)).isEmpty())
+    }
+
+    @Test
+    fun enqueueTargetsTakeTheFxMultiSelectionInListOrderAndSkipStockFilters() {
+        val glow = AssetItem(path = "stock-fx://glow", name = "Glow", type = AssetType.FX_STOCK)
+        val a = AssetItem(path = "/x/a.lsdfx", name = "a", type = AssetType.FX_PRESET)
+        val b = AssetItem(path = "/x/b.lsdfxchain", name = "b", type = AssetType.FX_CHAIN)
+        FXBrowserPanel.filteredRows = listOf(a, glow, b)
+        FXBrowserPanel.selection.selectAll(listOf(b, glow, a))
+        LibraryPanel.activeSelectionSource = SelectionSource.PRESETS
+        LibraryPanel.viewMode = LibraryViewMode.FX
+        assertEquals(listOf("/x/a.lsdfx", "/x/b.lsdfxchain"), LibraryNavigation.enqueueTargets(mockk<SessionContext>(relaxed = true)).map { it.path })
     }
 
     @Test

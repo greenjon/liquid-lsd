@@ -107,14 +107,16 @@ The `[ Sources ]` list shows two kinds of row side by side, each marked with its
 Pick a section in the folder tree to show only stock sources, saved presets or live streams. Use the **New preset** button above the list to eject a deck to blank so you can build a new preset on it (see [Saving a preset](#saving-a-preset) above).
 
 - **Search** — Type to filter by name, tag, or (for stock sources) category. `Ctrl+F` or `/` jumps focus to the search box of the open tab (Sources, FX or Transitions) from anywhere in the app.
-- **Multi-Selection (Shift-Click & Ctrl/Cmd-Click)**:
-  - **Click** — Selects a single preset, clearing existing selections.
+- **Multi-Selection (Shift-Click & Ctrl/Cmd-Click)** — works the same in the Sources, FX and Transitions lists:
+  - **Click** — Selects a single row, clearing existing selections.
   - **Ctrl+Click** (or **Cmd+Click** on macOS) — Toggles selection of an individual item without affecting others.
-  - **Shift+Click** — Extends selection from the anchor/lead item to the clicked item across all visible rows.
-  - **Batch Queueing** — When multiple presets are selected, pressing `Q` (or the row menu's *Add to A/B Queue*) enqueues all selected presets in order into the A/B Queue. Pressing `Shift+Q` (or *Add to BG Queue*) enqueues them into the BG Queue. The hotkeys and row menu act on the tab you picked the item on: in the FX tab they feed the FX queues, and in the Trans tab `Q` feeds the transition queue (there is no background queue for transitions).
-  - **Batch Context Menu** — Right-clicking with multiple items selected presents options like **Add N Presets to Playlist**, **Add N Presets to Queue**, and **Delete N Presets...**.
-  - **Multi-Item Drag & Drop** — Dragging any item from a multi-selection carries all selected presets simultaneously into Playlists or Queues.
-  - **Batch Deletion** — Pressing `Delete` or selecting **Delete...** from the context menu opens a confirmation modal detailing the exact count and list of presets to be deleted.
+  - **Shift+Click** — Selects every visible row from the last clicked row to this one. **Ctrl+Shift+Click** adds that range to the existing selection.
+  - **Ctrl+A** (**Cmd+A**) — Selects every row the list is showing (after search and the folder pick), while the list has the keyboard.
+  - **Batch Queueing** — When multiple rows are selected, pressing `Q` (or the row menu's *Add N … to A/B Queue*) enqueues them all in list order into the A/B Queue. Pressing `Shift+Q` (or *Add to BG Queue*) enqueues them into the BG Queue. The hotkeys and row menu act on the tab you picked the items on: in the FX tab they feed the FX queues, and in the Transitions tab `Q` feeds the transition queue (there is no background queue for transitions).
+  - **Batch Context Menu** — Right-clicking a row inside the selection shows the count and the actions that make sense for several items: **Add N to A/B Queue**, **Add N to BG Queue**, **Add N to '<playlist>'** and **Delete N...**. Right-clicking a row outside the selection selects just that row. Stock rows that can't be queued (stock sources, stock FX filters) or deleted (any stock row) are skipped and not counted.
+  - **Multi-Item Drag & Drop** — Dragging any row from a multi-selection carries all selected saved items into a playlist or queue at once. A deck, FX slot or the crossfader takes one item, so drag a single row there.
+  - **Batch Deletion** — Pressing `Delete` or choosing **Delete N...** opens a confirmation listing exactly what will be deleted. Inside a playlist, `Delete` removes the selected rows from the playlist instead.
+  - **While the list is bound to a target** (opened from a deck, slot or transition to pick for it), a click applies the row, so selection stays single there.
 - **Double-click** — Loads the item into whichever deck is currently inactive on the crossfader. For a stock source this replaces only the deck's source, leaving its FX chain untouched; for a saved preset it loads the full deck state.
 - **Alt+click** — Previews the source or preset on Deck PV.
 - **Right-click or ⋮ (saved presets)** — Load to a specific deck, add to a queue or to the selected playlist (**Add to '<playlist>'**), **Rename...** (also edits tags), **Clone...**, **Delete...**, or **Reveal in File Manager**.
@@ -133,6 +135,7 @@ The `[ FX ]` list shows three kinds of row side by side, each marked with its ow
 
 Pick a section in the folder tree to show only stock filters, singles or chains. Use the save button above the list to save the current FX state of any deck or Master FX slot (or all 3 slots as a chain) into a new preset.
 
+- **Multi-select**: Ctrl/Cmd+click, Shift+click and Ctrl+A select several rows, as in the Sources list; the row menu, `Q`/`Shift+Q`, drag and `Delete` then act on all the saved singles and chains among them (stock filters load one at a time).
 - **Drag-and-Drop**: Drag a saved single or chain onto Slot 1–3 in a deck's Edit `FX` subtab, onto an FX playlist in the tree, or onto a A/B FX Queue.
 - **Double-click**: Loads into the dominant deck's first vacant slot (singles) or overwrites all 3 slots (chains). If all 3 slots are full, a single effect asks which slot to overwrite. FX always goes to the deck the crossfader is on (it is audible now); presets and generators go to the other deck (the next look). At exactly the middle of the crossfader, FX goes to Deck A and presets to Deck B.
 - **Right-click or ⋮ menu**: `Load to > Deck [A|B|BG|PV] / Master FX > Slot [1|2|3]` (stock filters and singles) or `Load to Deck [A|B|BG|PV] / Master FX` (chains), plus **Add to A/B FX Queue**, **Add to BG FX Queue**, **Add to '<playlist>'**, **Rename...**, **Clone**, **Delete...** and **Reveal in File Manager**. Deleting a saved effect also removes it from the queues and playlists.
@@ -271,6 +274,7 @@ The `[ Transitions ]` list shows two kinds of row side by side, each marked with
 
 Pick a section in the folder tree to show only stock shaders or only saved presets. Use the save button above the list to save the mixer's current transition as a new preset.
 
+- **Multi-select**: Ctrl/Cmd+click, Shift+click and Ctrl+A select several rows, as in the Sources list; the row menu, `Q`, drag and `Delete` then act on all of them (stock shaders queue and go into playlists too; only saved presets can be deleted).
 - **Double-click**: Applies the transition to the mixer immediately.
 - **Keyboard**: **Enter** applies the selected transition (as on every tab); the *Add to A/B Queue* shortcut (**Q** by default, rebindable in Preferences → Shortcuts) adds it to the transition queue.
 - **Failures**: a transition or FX file that can't be loaded or applied now shows a toast instead of failing silently.

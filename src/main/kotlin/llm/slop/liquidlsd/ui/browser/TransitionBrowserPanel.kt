@@ -46,7 +46,12 @@ object TransitionBrowserPanel {
 
     private const val STOCK_PATH_PREFIX = "stock-trans://"
 
-    var selectedAsset: AssetItem? = null
+    val selection = MultiSelectionModel<AssetItem>()
+    var selectedAsset: AssetItem?
+        get() = selection.leadItem
+        set(value) {
+            selection.setSingle(value)
+        }
     var filteredRows: List<AssetItem> = emptyList()
 
     /** The row loop, used by the unified [BrowserPane]. [infoFor] is drawn as a muted second column; [contextExtras] adds items on top of each row menu. */
@@ -58,20 +63,20 @@ object TransitionBrowserPanel {
         val loaded = LoadedMarks.fxSnapshot(mixer)
         rows.forEachIndexed { index, asset ->
             ImGui.pushID(index)
-            drawRow(session, mixer, asset, index, 20f, infoFor?.invoke(asset) ?: "", contextExtras, playlistRows, target, loaded.marksFor(asset))
+            drawRow(session, mixer, rows, asset, index, 20f, infoFor?.invoke(asset) ?: "", contextExtras, playlistRows, target, loaded.marksFor(asset))
             ImGui.popID()
         }
         playlistRows?.finish()
     }
 
     private fun drawRow(
-        session: SessionContext, mixer: Mixer, asset: AssetItem, index: Int, btnW: Float,
+        session: SessionContext, mixer: Mixer, rows: List<AssetItem>, asset: AssetItem, index: Int, btnW: Float,
         info: String = "", contextExtras: ((AssetItem) -> Unit)? = null, playlistRows: PlaylistRows? = null,
         target: ApplyTarget? = null, marks: List<LoadedMarks.Mark> = emptyList()
     ) {
         // Stock shaders leave the icon slot blank; saved transitions keep their mark.
         val icon = if (asset.type == AssetType.TRANSITION_STOCK) null else Icons.ACTIVITY
-        val isSelected = selectedAsset?.path == asset.path
+        val isSelected = selection.isSelected(asset)
         val popupId = "trans_browser_context_$index"
 
         val availW = ImGui.getContentRegionAvailX()
@@ -94,17 +99,17 @@ object TransitionBrowserPanel {
         } else {
             "Saved transition preset (.lsdtrans) — apply, queue, add to a playlist, or manage."
         }
-        val how = if (target != null) "Click: apply. Right-click: more." else "Double-click or Enter: apply to the mixer. Right-click: more."
+        val how = if (target != null) "Click: apply. Right-click: more." else "Double-click or Enter: apply to the mixer. Ctrl/Shift+click: select several. Right-click: more."
         itemTooltip(listOfNotNull(PresetListPanel.fullNameTip(asset, nameElided), about, how).joinToString("\n"))
 
         if (ImGui.isItemClicked(0)) {
             LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
-            selectedAsset = asset
+            PresetListPanel.clickSelect(selection, asset, rows, target)
             DockActions.tap(target, asset)
         }
         if (ImGui.isItemClicked(1)) {
             LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
-            selectedAsset = asset
+            if (!selection.isSelected(asset)) selection.setSingle(asset)
             ImGui.openPopup(popupId)
         }
 
@@ -120,8 +125,10 @@ object TransitionBrowserPanel {
                 ImGui.textUnformatted(asset.name)
                 ImGui.endDragDropSource()
             } else {
-                ImGui.setDragDropPayload("ASSET_ITEM", fileFor(asset).path as Any)
-                ImGui.textUnformatted(asset.name)
+                // A drag from inside a multi-selection carries every selected transition, one path per line.
+                val targets = targetsOf(rows, asset)
+                ImGui.setDragDropPayload("ASSET_ITEM", targets.joinToString("\n") { fileFor(it).path } as Any)
+                ImGui.textUnformatted(if (targets.size > 1) "Moving ${targets.size} transitions" else asset.name)
                 ImGui.endDragDropSource()
             }
         }
@@ -139,11 +146,39 @@ object TransitionBrowserPanel {
                 contextExtras(asset)
                 ImGui.separator()
             }
-            drawContextMenu(session, mixer, asset)
+            if (selection.count > 1 && selection.isSelected(asset)) drawMultiMenu(rows) else drawContextMenu(session, mixer, asset)
             popOpenDropdownFont()
             ImGui.endPopup()
         }
         popOpenDropdownPadding()
+    }
+
+    /** The rows a row action covers: the selection when [asset] is in it, else [asset] alone. */
+    private fun targetsOf(rows: List<AssetItem>, asset: AssetItem): List<AssetItem> {
+        val inOrder = selection.getSelectedInOrder(rows)
+        return if (inOrder.any { it.path == asset.path }) inOrder else listOf(asset)
+    }
+
+    private fun playlistToken(asset: AssetItem): String =
+        if (asset.type == AssetType.TRANSITION_STOCK) asset.path.removePrefix(STOCK_PATH_PREFIX) else asset.path
+
+    /** The row menu while several rows are selected: queue and playlist for all of them, delete for the saved ones. */
+    private fun drawMultiMenu(rows: List<AssetItem>) {
+        val selected = selection.getSelectedInOrder(rows)
+        val n = "${selected.size} Transitions"
+        ImGui.textDisabled("$n Selected")
+        ImGui.separator()
+        if (ImGui.menuItem("Add $n to A/B Queue")) selected.forEach { TransitionQueueManager.appendToQueue(fileFor(it)) }
+        LibraryPanel.selectedTransitionPlaylistFile?.let { pl ->
+            if (ImGui.menuItem("Add $n to '${pl.nameWithoutExtension}'")) appendToActiveTransitionPlaylist(pl, selected.map { playlistToken(it) })
+        }
+        val saved = selected.filter { it.type == AssetType.TRANSITION_PRESET }
+        if (saved.isNotEmpty()) {
+            ImGui.separator()
+            if (ImGui.menuItem(if (saved.size > 1) "Delete ${saved.size} Saved Transitions..." else "Delete 1 Saved Transition...")) {
+                BrowserPopupHandler.openDeleteConfirmation(saved)
+            }
+        }
     }
 
     /** Resolves [asset] to its backing file — a bundled `.fs` for stock shaders, or the saved `.lsdtrans` path. */
@@ -178,9 +213,8 @@ object TransitionBrowserPanel {
         }
         val activePlFile = LibraryPanel.selectedTransitionPlaylistFile
         if (activePlFile != null) {
-            val token = if (asset.type == AssetType.TRANSITION_STOCK) asset.path.removePrefix(STOCK_PATH_PREFIX) else asset.path
             if (ImGui.menuItem("Add to '${activePlFile.nameWithoutExtension}'")) {
-                appendToActiveTransitionPlaylist(activePlFile, token)
+                appendToActiveTransitionPlaylist(activePlFile, listOf(playlistToken(asset)))
             }
         }
 
@@ -198,15 +232,15 @@ object TransitionBrowserPanel {
         }
     }
 
-    private fun appendToActiveTransitionPlaylist(playlistFile: File, token: String) {
+    private fun appendToActiveTransitionPlaylist(playlistFile: File, tokens: List<String>) {
         if (!playlistFile.exists()) return
         try {
             val dto = json.decodeFromString<TransitionPlaylistDto>(playlistFile.readText())
-            val updated = dto.copy(items = dto.items + token)
+            val updated = dto.copy(items = dto.items + tokens)
             playlistFile.writeText(json.encodeToString(TransitionPlaylistDto.serializer(), updated))
             LibraryPanel.refreshAssets()
         } catch (e: Exception) {
-            logger.error(e) { "Failed to append item $token to transition playlist ${playlistFile.name}" }
+            logger.error(e) { "Failed to append $tokens to transition playlist ${playlistFile.name}" }
         }
     }
 }

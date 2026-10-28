@@ -471,6 +471,16 @@ object BrowserPane {
                 ImGui.spacing()
                 ImGui.textDisabled("$missing playlist item(s) not found")
             }
+            // Ctrl/Cmd+A selects every listed row while the list has the keyboard (unless a shortcut claims it); a bound dock stays single.
+            val keys = ImGui.getIO()
+            val mod = if (keys.keySuper) GLFW.GLFW_MOD_SUPER else GLFW.GLFW_MOD_CONTROL
+            if (target == null && !keys.wantTextInput && (keys.keyCtrl || keys.keySuper) && !keys.keyShift && !keys.keyAlt &&
+                ImGui.isWindowFocused(ImGuiFocusedFlags.ChildWindows) && ImGui.isKeyPressed(ImGuiKey.A, false) &&
+                !ShortcutManager.isBound(GLFW.GLFW_KEY_A, mod)
+            ) {
+                selectionOf(kind).selectAll(assets)
+                LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
+            }
         }
         ImGui.endChild()
 
@@ -490,20 +500,16 @@ object BrowserPane {
     private fun isStock(asset: AssetItem): Boolean =
         asset.type == AssetType.SOURCE_STOCK || asset.type == AssetType.SOURCE_EXTERNAL || asset.type == AssetType.FX_STOCK || asset.type == AssetType.TRANSITION_STOCK
 
-    /** The selected rows of the list, in list order. SRC supports multi-select; FX and Transitions keep a single selected row. */
-    private fun selectedAssets(kind: BrowseKind, assets: List<AssetItem>): List<AssetItem> = when (kind) {
-        BrowseKind.SRC -> PresetListPanel.selection.getSelectedInOrder(assets)
-        BrowseKind.FX -> assets.filter { it.path == FXBrowserPanel.selectedAsset?.path }
-        BrowseKind.TRANS -> assets.filter { it.path == TransitionBrowserPanel.selectedAsset?.path }
+    private fun selectionOf(kind: BrowseKind): MultiSelectionModel<AssetItem> = when (kind) {
+        BrowseKind.SRC -> PresetListPanel.selection
+        BrowseKind.FX -> FXBrowserPanel.selection
+        BrowseKind.TRANS -> TransitionBrowserPanel.selection
     }
 
-    private fun clearSelection(kind: BrowseKind) {
-        when (kind) {
-            BrowseKind.SRC -> PresetListPanel.selection.clear()
-            BrowseKind.FX -> FXBrowserPanel.selectedAsset = null
-            BrowseKind.TRANS -> TransitionBrowserPanel.selectedAsset = null
-        }
-    }
+    /** The selected rows of the list, in list order (Ctrl/Shift+click multi-selects in every kind). */
+    private fun selectedAssets(kind: BrowseKind, assets: List<AssetItem>): List<AssetItem> = selectionOf(kind).getSelectedInOrder(assets)
+
+    private fun clearSelection(kind: BrowseKind) = selectionOf(kind).clear()
 
     /** Title row of the list with the per-kind "+" (and, for Sources, "..." maintenance) buttons. */
     private fun drawListHeader(session: SessionContext, mixer: Mixer, parametersState: ParametersState, title: String, kind: BrowseKind) {

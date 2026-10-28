@@ -34,6 +34,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [ ] Click a preset then a source on the same deck within a blink: the last click wins.
 - [ ] Save a transition from the Transitions row's Save, from Edit OUT > TRANS and from the Library.
 - [ ] Star an FX in the Library: it's in your favorites, and the slot shortlist arrows land on it.
+- [ ] Multi-select (2026-10-27) in Sources, FX and Transitions: Ctrl+click toggles, Shift+click ranges, Ctrl+A selects all shown rows (not while typing in search). Right-click inside the selection: Add N to queue / playlist, Delete N. `Q`/`Shift+Q` and Delete act on all. Drag several FX or transitions into a playlist and into their queues: all land, in order. A bound list (picking for a slot) stays single-select.
 
 ## 2. Slots bound in place, pair view and Edit
 
