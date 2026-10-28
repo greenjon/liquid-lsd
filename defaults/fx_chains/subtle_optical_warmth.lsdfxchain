@@ -32,10 +32,19 @@
                 },
                 "saturation": {
                     "baseValue": 0.35,
-                    "baseMin": 0.0,
-                    "baseMax": 1.0,
-                    "randomizeBase": false,
-                    "modulators": []
+                    "baseMin": 0.15,
+                    "baseMax": 0.6,
+                    "randomizeBase": true,
+                    "modulators": [
+                        {
+                            "sourceId": "audio_amp",
+                            "operator": "ADD",
+                            "depth": 0.1,
+                            "followerMode": "SMOOTH",
+                            "attackMs": 40,
+                            "decayMs": 400
+                        }
+                    ]
                 }
             }
         },
@@ -54,14 +63,34 @@
                     "baseMin": 0.0,
                     "baseMax": 1.0,
                     "randomizeBase": false,
-                    "modulators": []
+                    "modulators": [
+                        {
+                            "sourceId": "audio_high",
+                            "operator": "MUL",
+                            "depth": 0.4,
+                            "followerMode": "PUNCHY",
+                            "attackMs": 5,
+                            "decayMs": 110,
+                            "bypassed": true
+                        }
+                    ]
                 },
                 "curvature": {
                     "baseValue": 0.08333,
                     "baseMin": 0.0,
-                    "baseMax": 1.66667,
-                    "randomizeBase": false,
-                    "modulators": []
+                    "baseMax": 0.6,
+                    "randomizeBase": true,
+                    "modulators": [
+                        {
+                            "sourceId": "audio_bass",
+                            "operator": "ADD",
+                            "depth": 0.1,
+                            "followerMode": "PUNCHY",
+                            "attackMs": 5,
+                            "decayMs": 150,
+                            "bypassed": true
+                        }
+                    ]
                 }
             }
         },
@@ -80,14 +109,42 @@
                     "baseMin": 0.0,
                     "baseMax": 1.0,
                     "randomizeBase": false,
-                    "modulators": []
+                    "modulators": [
+                        {
+                            "sourceId": "audio_bass",
+                            "operator": "MUL",
+                            "depth": 0.8,
+                            "followerMode": "PUNCHY",
+                            "attackMs": 5,
+                            "decayMs": 150
+                        },
+                        {
+                            "sourceId": "audio_amp",
+                            "operator": "MUL",
+                            "depth": 0.5,
+                            "followerMode": "SMOOTH",
+                            "attackMs": 40,
+                            "decayMs": 400,
+                            "bypassed": true
+                        }
+                    ]
                 },
                 "threshold": {
                     "baseValue": 0.6,
-                    "baseMin": 0.0,
-                    "baseMax": 1.0,
-                    "randomizeBase": false,
-                    "modulators": []
+                    "baseMin": 0.25,
+                    "baseMax": 0.7,
+                    "randomizeBase": true,
+                    "modulators": [
+                        {
+                            "sourceId": "audio_amp",
+                            "operator": "ADD",
+                            "depth": -0.15,
+                            "followerMode": "SMOOTH",
+                            "attackMs": 40,
+                            "decayMs": 400,
+                            "bypassed": true
+                        }
+                    ]
                 }
             }
         }

@@ -4,8 +4,8 @@
 > FX batches 1 and 2). Decisions taken: a response on the Metaknob's input is `MUL` (knob at zero stays off), `ADD`
 > only on inputs the main amount gates; Invert, Luma Key and Video Strobe ship bypassed responses only; a shipped
 > filter file is ignored when the shader lacks any input it names (keeps it off the `vortex_swirl` transition).
-> **Next, once approved:** rebuild every stock FX chain (`defaults/fx_chains/*.lsdfxchain`) so its slots carry the
-> shipped responses (user agreed). The notes below are the original brief.
+> **Done 2026-10-27:** every stock FX chain (`defaults/fx_chains/*.lsdfxchain`, web copies) carries the shipped
+> responses and random ranges (`StockDefaultsTest.shippedFxChainsCarryTheShippedDefaults`). The notes below are the original brief.
 
 ## Goal
 Every stock FX ships hand-curated audio/beat response out of the box, as the 33 stock sources do now: per parameter

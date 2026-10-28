@@ -29,27 +29,56 @@
                     "baseMin": -1.0,
                     "baseMax": 1.0,
                     "randomizeBase": false,
-                    "modulators": []
+                    "modulators": [
+                        {
+                            "sourceId": "audio_bass",
+                            "operator": "MUL",
+                            "depth": 0.5,
+                            "followerMode": "PUNCHY",
+                            "attackMs": 5,
+                            "decayMs": 150
+                        }
+                    ]
                 },
                 "radius": {
                     "baseValue": 0.33333,
-                    "baseMin": 0.0,
-                    "baseMax": 1.0,
-                    "randomizeBase": false,
-                    "modulators": []
+                    "baseMin": 0.2,
+                    "baseMax": 0.6,
+                    "randomizeBase": true,
+                    "modulators": [
+                        {
+                            "sourceId": "lfo",
+                            "operator": "ADD",
+                            "waveform": "SINE",
+                            "genUnit": "BEAT",
+                            "subdivision": 16,
+                            "depth": 0.1,
+                            "bypassed": true
+                        }
+                    ]
                 },
                 "dispersion": {
                     "baseValue": 0.45,
-                    "baseMin": 0.0,
-                    "baseMax": 1.0,
-                    "randomizeBase": false,
-                    "modulators": []
+                    "baseMin": 0.1,
+                    "baseMax": 0.6,
+                    "randomizeBase": true,
+                    "modulators": [
+                        {
+                            "sourceId": "audio_high",
+                            "operator": "ADD",
+                            "depth": 0.2,
+                            "followerMode": "PUNCHY",
+                            "attackMs": 5,
+                            "decayMs": 110,
+                            "bypassed": true
+                        }
+                    ]
                 },
                 "spiralArms": {
                     "baseValue": 0.0,
                     "baseMin": 0.0,
-                    "baseMax": 12.0,
-                    "randomizeBase": false,
+                    "baseMax": 8.0,
+                    "randomizeBase": true,
                     "modulators": []
                 }
             }
@@ -69,21 +98,49 @@
                     "baseMin": 0.0,
                     "baseMax": 1.0,
                     "randomizeBase": false,
-                    "modulators": []
+                    "modulators": [
+                        {
+                            "sourceId": "audio_bass",
+                            "operator": "MUL",
+                            "depth": 1.0,
+                            "followerMode": "PUNCHY",
+                            "attackMs": 5,
+                            "decayMs": 150
+                        },
+                        {
+                            "sourceId": "audio_amp",
+                            "operator": "MUL",
+                            "depth": 0.6,
+                            "followerMode": "SMOOTH",
+                            "attackMs": 40,
+                            "decayMs": 400,
+                            "bypassed": true
+                        }
+                    ]
                 },
                 "smoothness": {
                     "baseValue": 0.0,
-                    "baseMin": -0.06,
-                    "baseMax": 0.06667,
-                    "randomizeBase": false,
+                    "baseMin": 0.1,
+                    "baseMax": 0.6,
+                    "randomizeBase": true,
                     "modulators": []
                 },
                 "chromaDispersion": {
                     "baseValue": 0.7,
                     "baseMin": 0.0,
-                    "baseMax": 10.0,
-                    "randomizeBase": false,
-                    "modulators": []
+                    "baseMax": 0.6,
+                    "randomizeBase": true,
+                    "modulators": [
+                        {
+                            "sourceId": "audio_high",
+                            "operator": "ADD",
+                            "depth": 0.25,
+                            "followerMode": "PUNCHY",
+                            "attackMs": 5,
+                            "decayMs": 110,
+                            "bypassed": true
+                        }
+                    ]
                 }
             }
         },
@@ -102,14 +159,34 @@
                     "baseMin": 0.0,
                     "baseMax": 1.0,
                     "randomizeBase": false,
-                    "modulators": []
+                    "modulators": [
+                        {
+                            "sourceId": "audio_amp",
+                            "operator": "MUL",
+                            "depth": 0.3,
+                            "followerMode": "SMOOTH",
+                            "attackMs": 40,
+                            "decayMs": 400,
+                            "bypassed": true
+                        }
+                    ]
                 },
                 "twist": {
                     "baseValue": 0.5,
-                    "baseMin": -2.0,
-                    "baseMax": 2.0,
-                    "randomizeBase": false,
-                    "modulators": []
+                    "baseMin": -1.5,
+                    "baseMax": 1.5,
+                    "randomizeBase": true,
+                    "modulators": [
+                        {
+                            "sourceId": "lfo",
+                            "operator": "ADD",
+                            "waveform": "SINE",
+                            "genUnit": "BEAT",
+                            "subdivision": 32,
+                            "depth": 0.1,
+                            "bypassed": true
+                        }
+                    ]
                 }
             }
         }

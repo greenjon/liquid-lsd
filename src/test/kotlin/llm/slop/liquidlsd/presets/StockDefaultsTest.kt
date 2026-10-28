@@ -218,6 +218,35 @@ class StockDefaultsTest {
         }
     }
 
+    /**
+     * The stock FX chains store full slot parameters, so each stored input must carry its effect's shipped response and
+     * random range itself or loading the chain drops them (inputs a chain leaves out keep the effect's default). The
+     * web TV's copies must match.
+     */
+    @Test
+    fun shippedFxChainsCarryTheShippedDefaults() {
+        val chains = File(root, "defaults/fx_chains").listFiles { f -> f.extension == "lsdfxchain" }!!.sortedBy { it.name }
+        assertTrue(chains.isNotEmpty())
+        for (file in chains) {
+            assertEquals(file.readText(), File(root, "web/content/fxchains/${file.name}").readText(), "${file.name}: web copy differs")
+            val chain = json.decodeFromString(llm.slop.liquidlsd.models.FXChainDto.serializer(), file.readText())
+            for (slot in chain.slots.filterNotNull()) {
+                val shippedFile = File(root, "src/main/resources/stock_defaults/filters/${slot.filterId}.json")
+                if (!shippedFile.exists()) continue
+                val label = "${file.name}/${slot.filterId}"
+                val stored = slot.parameters
+                for ((name, shipped) in shippedFilterParams(shippedFile)) {
+                    val p = stored[name] ?: continue
+                    assertEquals(shipped.modulators, p.modulators, "$label: $name does not carry the shipped response")
+                    if (!shipped.randomizeBase && !p.randomizeBase) continue
+                    assertEquals(Triple(shipped.randomizeBase, shipped.baseMin, shipped.baseMax), Triple(p.randomizeBase, p.baseMin, p.baseMax),
+                        "$label: $name does not carry the shipped random range")
+                }
+                assertLfoSwingsFit(label, stored.filterKeys { it in filterRanges(slot.filterId) }, filterRanges(slot.filterId))
+            }
+        }
+    }
+
     private val transitionFiles get() = files("transitions")
 
     /** (min, default, max) of each float input of a bundled transition, and each long (menu) input. */

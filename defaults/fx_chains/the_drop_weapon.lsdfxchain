@@ -30,13 +30,31 @@
                     "baseMin": 0.0,
                     "baseMax": 1.0,
                     "randomizeBase": false,
-                    "modulators": []
+                    "modulators": [
+                        {
+                            "sourceId": "audio_flux_bass",
+                            "operator": "MUL",
+                            "depth": 1.0,
+                            "followerMode": "SNAP",
+                            "attackMs": 0,
+                            "decayMs": 35
+                        },
+                        {
+                            "sourceId": "audio_amp",
+                            "operator": "MUL",
+                            "depth": 0.5,
+                            "followerMode": "SMOOTH",
+                            "attackMs": 40,
+                            "decayMs": 400,
+                            "bypassed": true
+                        }
+                    ]
                 },
                 "decay": {
                     "baseValue": 0.84,
-                    "baseMin": 0.0,
-                    "baseMax": 1.0,
-                    "randomizeBase": false,
+                    "baseMin": 0.8,
+                    "baseMax": 0.97,
+                    "randomizeBase": true,
                     "modulators": []
                 },
                 "exposure": {
@@ -44,20 +62,30 @@
                     "baseMin": 0.0,
                     "baseMax": 1.0,
                     "randomizeBase": false,
-                    "modulators": []
+                    "modulators": [
+                        {
+                            "sourceId": "audio_high",
+                            "operator": "ADD",
+                            "depth": 0.15,
+                            "followerMode": "PUNCHY",
+                            "attackMs": 5,
+                            "decayMs": 110,
+                            "bypassed": true
+                        }
+                    ]
                 },
                 "centerX": {
                     "baseValue": 0.5,
-                    "baseMin": 0.0,
-                    "baseMax": 1.0,
-                    "randomizeBase": false,
+                    "baseMin": 0.3,
+                    "baseMax": 0.7,
+                    "randomizeBase": true,
                     "modulators": []
                 },
                 "centerY": {
                     "baseValue": 0.5,
-                    "baseMin": 0.0,
-                    "baseMax": 1.0,
-                    "randomizeBase": false,
+                    "baseMin": 0.3,
+                    "baseMax": 0.7,
+                    "randomizeBase": true,
                     "modulators": []
                 }
             }
@@ -77,7 +105,17 @@
                     "baseMin": 0.0,
                     "baseMax": 30.0,
                     "randomizeBase": false,
-                    "modulators": []
+                    "modulators": [
+                        {
+                            "sourceId": "audio_amp",
+                            "operator": "MUL",
+                            "depth": 0.5,
+                            "followerMode": "SMOOTH",
+                            "attackMs": 40,
+                            "decayMs": 400,
+                            "bypassed": true
+                        }
+                    ]
                 },
                 "freezeHold": {
                     "baseValue": 0.0,
@@ -90,14 +128,14 @@
                     "baseValue": 1.0,
                     "baseMin": 0.0,
                     "baseMax": 3.0,
-                    "randomizeBase": false,
+                    "randomizeBase": true,
                     "modulators": []
                 },
                 "dutyCycle": {
                     "baseValue": 0.22222,
-                    "baseMin": 0.0,
-                    "baseMax": 1.0,
-                    "randomizeBase": false,
+                    "baseMin": 0.25,
+                    "baseMax": 0.6,
+                    "randomizeBase": true,
                     "modulators": []
                 }
             }
@@ -117,20 +155,38 @@
                     "baseMin": 0.0,
                     "baseMax": 1.0,
                     "randomizeBase": false,
-                    "modulators": []
+                    "modulators": [
+                        {
+                            "sourceId": "audio_flux_bass",
+                            "operator": "MUL",
+                            "depth": 1.0,
+                            "followerMode": "SNAP",
+                            "attackMs": 0,
+                            "decayMs": 35
+                        },
+                        {
+                            "sourceId": "audio_high",
+                            "operator": "MUL",
+                            "depth": 0.6,
+                            "followerMode": "PUNCHY",
+                            "attackMs": 5,
+                            "decayMs": 110,
+                            "bypassed": true
+                        }
+                    ]
                 },
                 "radialMode": {
                     "baseValue": 1.0,
                     "baseMin": 0.0,
                     "baseMax": 1.0,
-                    "randomizeBase": false,
+                    "randomizeBase": true,
                     "modulators": []
                 },
                 "dispersionMode": {
                     "baseValue": 0.0,
                     "baseMin": 0.0,
                     "baseMax": 1.0,
-                    "randomizeBase": false,
+                    "randomizeBase": true,
                     "modulators": []
                 }
             }
