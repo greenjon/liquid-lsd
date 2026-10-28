@@ -105,7 +105,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             label = deckLabel
             saveTip = "Save $deckLabel's current source & parameters as a preset."
             ejectTip = "Eject: empty $deckLabel (its FX chain stays). Ctrl+Z can't undo it."
-            randTip = "Randomize $deckLabel: the source's modulators and base values, Gain, zoom/rotation and the FX chain's Dry/Wet\n(only parameters with randomization enabled). Ctrl+Z undoes it."
+            randTip = "Randomize $deckLabel: the source's modulators and base values, Gain, zoom/rotation, the FX chain's Dry/Wet and its\neffects' inputs (only parameters with randomization enabled). Ctrl+Z undoes it."
             fxTitle = "$deckLabel FX"
             emptyTip = "$deckLabel is empty. Click to browse sources and presets for it in the list below (click again to stop)."
             badgeKeyLabel = null // the badge strings embed the label too

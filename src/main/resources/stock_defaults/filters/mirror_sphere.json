@@ -24,6 +24,9 @@
     },
     "fresnelGlow": {
       "note": "Highs light the rim; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.2,
+      "baseMax": 0.8,
       "modulators": [
         {
           "name": "high shimmer",
@@ -39,6 +42,9 @@
     },
     "chromaFringe": {
       "note": "Kick fringe; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.0,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "kick hit",
@@ -51,6 +57,22 @@
           "bypassed": true
         }
       ]
+    },
+    "centerX": {
+      "randomizeBase": true,
+      "baseMin": 0.3,
+      "baseMax": 0.7
+    },
+    "centerY": {
+      "randomizeBase": true,
+      "baseMin": 0.35,
+      "baseMax": 0.65
+    },
+    "backgroundMix": {
+      "note": "Rolls: how much of the picture shows around the sphere; never black.",
+      "randomizeBase": true,
+      "baseMin": 0.1,
+      "baseMax": 0.6
     }
   }
 }

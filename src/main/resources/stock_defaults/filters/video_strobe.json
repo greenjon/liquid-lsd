@@ -22,6 +22,17 @@
           "bypassed": true
         }
       ]
+    },
+    "strobeMode": {
+      "note": "Rolls: every flash mode; the rate stays the Metaknob's and Freeze Hold is never rolled.",
+      "randomizeBase": true,
+      "baseMin": 0.0,
+      "baseMax": 3.0
+    },
+    "dutyCycle": {
+      "randomizeBase": true,
+      "baseMin": 0.25,
+      "baseMax": 0.6
     }
   }
 }

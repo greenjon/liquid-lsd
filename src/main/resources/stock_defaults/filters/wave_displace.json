@@ -34,6 +34,9 @@
     },
     "speed": {
       "note": "Waves run faster when loud (integrated by SpeedPhase); off by default.",
+      "randomizeBase": true,
+      "baseMin": -0.5,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "loudness swell",
@@ -46,6 +49,33 @@
           "bypassed": true
         }
       ]
+    },
+    "frequency": {
+      "note": "Rolls: long swells to tight ripples.",
+      "randomizeBase": true,
+      "baseMin": 0.1,
+      "baseMax": 0.5
+    },
+    "rippleMode": {
+      "note": "Rolls: cross-waves or rings.",
+      "randomizeBase": true,
+      "baseMin": 0.0,
+      "baseMax": 1.0
+    },
+    "centerX": {
+      "randomizeBase": true,
+      "baseMin": 0.3,
+      "baseMax": 0.7
+    },
+    "centerY": {
+      "randomizeBase": true,
+      "baseMin": 0.3,
+      "baseMax": 0.7
+    },
+    "phaseOffset": {
+      "randomizeBase": true,
+      "baseMin": -3.14159,
+      "baseMax": 3.14159
     }
   }
 }

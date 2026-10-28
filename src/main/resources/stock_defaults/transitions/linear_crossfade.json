@@ -1,0 +1,11 @@
+{
+  "version": 3,
+  "params": {
+    "curveMode": {
+      "note": "Rolls: each crossfade curve.",
+      "randomizeBase": true,
+      "baseMin": 0.0,
+      "baseMax": 2.0
+    }
+  }
+}

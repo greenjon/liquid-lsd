@@ -23,7 +23,10 @@
       ]
     },
     "angle": {
-      "note": "Slow beat-locked turn of the smear; off by default.",
+      "note": "Slow beat-locked turn of the smear; off by default. Rolls: any direction.",
+      "randomizeBase": true,
+      "baseMin": -3.14159,
+      "baseMax": 3.14159,
       "modulators": [
         {
           "name": "sine 32-beat",
@@ -36,6 +39,18 @@
           "bypassed": true
         }
       ]
+    },
+    "decay": {
+      "note": "Rolls: short to long streaks.",
+      "randomizeBase": true,
+      "baseMin": 0.7,
+      "baseMax": 0.97
+    },
+    "bidirectional": {
+      "note": "Rolls: one-sided or both ways.",
+      "randomizeBase": true,
+      "baseMin": 0.0,
+      "baseMax": 1.0
     }
   }
 }

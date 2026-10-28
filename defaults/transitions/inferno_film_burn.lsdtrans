@@ -15,16 +15,16 @@
     "parameters": {
       "burnSpread": {
         "baseValue": 0.45,
-        "baseMin": 0.0,
-        "baseMax": 1.0,
-        "randomizeBase": false,
+        "baseMin": 0.2,
+        "baseMax": 0.42,
+        "randomizeBase": true,
         "modulators": []
       },
       "glowIntensity": {
         "baseValue": 0.73333,
-        "baseMin": 0.0,
-        "baseMax": 1.0,
-        "randomizeBase": false,
+        "baseMin": 0.4,
+        "baseMax": 0.8,
+        "randomizeBase": true,
         "modulators": [
           {
             "sourceId": "audio_flux_bass",
@@ -49,7 +49,7 @@
         "baseValue": 0.0,
         "baseMin": 0.0,
         "baseMax": 2.0,
-        "randomizeBase": false,
+        "randomizeBase": true,
         "modulators": []
       }
     }

@@ -2,7 +2,10 @@
   "version": 3,
   "params": {
     "warpStrength": {
-      "note": "Bass pushes the melt further.",
+      "note": "Bass pushes the melt further. Rolls: leaves room for the bass.",
+      "randomizeBase": true,
+      "baseMin": 0.15,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "bass warp",
@@ -16,7 +19,10 @@
       ]
     },
     "chromaticDispersion": {
-      "note": "Highs split the colours along the flow lines.",
+      "note": "Highs split the colours along the flow lines. Rolls: leaves room for the hats.",
+      "randomizeBase": true,
+      "baseMin": 0.1,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "high dispersion",
@@ -28,6 +34,11 @@
           "decayMs": 120
         }
       ]
+    },
+    "viscosity": {
+      "randomizeBase": true,
+      "baseMin": 0.1,
+      "baseMax": 0.6
     }
   }
 }

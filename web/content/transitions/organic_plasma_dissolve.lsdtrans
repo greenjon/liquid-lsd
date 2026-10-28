@@ -15,9 +15,9 @@
     "parameters": {
       "noiseScale": {
         "baseValue": 0.27778,
-        "baseMin": 0.0,
-        "baseMax": 1.0,
-        "randomizeBase": false,
+        "baseMin": 0.1,
+        "baseMax": 0.6,
+        "randomizeBase": true,
         "modulators": [
           {
             "sourceId": "audio_mid",
@@ -32,9 +32,9 @@
       },
       "softness": {
         "baseValue": 0.28205,
-        "baseMin": 0.0,
-        "baseMax": 1.0,
-        "randomizeBase": false,
+        "baseMin": 0.2,
+        "baseMax": 0.6,
+        "randomizeBase": true,
         "modulators": [
           {
             "sourceId": "audio_amp",
@@ -48,9 +48,9 @@
       },
       "chromaShift": {
         "baseValue": 0.3,
-        "baseMin": 0.0,
-        "baseMax": 1.0,
-        "randomizeBase": false,
+        "baseMin": 0.05,
+        "baseMax": 0.5,
+        "randomizeBase": true,
         "modulators": [
           {
             "sourceId": "audio_flux_bass",

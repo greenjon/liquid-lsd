@@ -119,11 +119,11 @@ internal object PerformanceClockTriggers {
     private const val RAND_B_W = 34f
     private const val RAND_ALL_W = 42f
 
-    private val RAND_A = rand("Mixer/randDeckA", "A", RAND_A_W, "Randomize Deck A", "Randomize Deck A's parameters and modulators.", { it.randDeckA }) { s, m -> undoThen(s, m) { m.randomizeDeckA() } }
-    private val RAND_B = rand("Mixer/randDeckB", "B", RAND_B_W, "Randomize Deck B", "Randomize Deck B's parameters and modulators.", { it.randDeckB }) { s, m -> undoThen(s, m) { m.randomizeDeckB() } }
-    private val RAND_ALL = rand("Mixer/randAll", "ALL", RAND_ALL_W, "Randomize All", "Randomize all decks and the Master parameters.", { it.randAll }) { s, m -> undoThen(s, m) { m.randomizeAll() } }
-    private val RAND_BG = rand("Mixer/randDeckBG", "BG", RAND_A_W, "Randomize Deck BG", "Randomize Deck BG's parameters and modulators.", { it.randDeckBG }) { s, m -> undoThen(s, m) { m.randomizeDeckBG() } }
-    private val RAND_PV = rand("Mixer/randDeckPV", "PV", RAND_B_W, "Randomize Deck PV", "Randomize Deck PV's parameters and modulators.", { it.randDeckPV }) { s, m -> undoThen(s, m) { m.randomizeDeckPV() } }
+    private val RAND_A = rand("Mixer/randDeckA", "A", RAND_A_W, "Randomize Deck A", "Randomize Deck A's parameters and modulators, its effects included.", { it.randDeckA }) { s, m -> undoThen(s, m) { m.randomizeDeckA() } }
+    private val RAND_B = rand("Mixer/randDeckB", "B", RAND_B_W, "Randomize Deck B", "Randomize Deck B's parameters and modulators, its effects included.", { it.randDeckB }) { s, m -> undoThen(s, m) { m.randomizeDeckB() } }
+    private val RAND_ALL = rand("Mixer/randAll", "ALL", RAND_ALL_W, "Randomize All", "Randomize all decks and their effects, the Master parameters and FX, and the transition.", { it.randAll }) { s, m -> undoThen(s, m) { m.randomizeAll() } }
+    private val RAND_BG = rand("Mixer/randDeckBG", "BG", RAND_A_W, "Randomize Deck BG", "Randomize Deck BG's parameters and modulators, its effects included.", { it.randDeckBG }) { s, m -> undoThen(s, m) { m.randomizeDeckBG() } }
+    private val RAND_PV = rand("Mixer/randDeckPV", "PV", RAND_B_W, "Randomize Deck PV", "Randomize Deck PV's parameters and modulators, its effects included.", { it.randDeckPV }) { s, m -> undoThen(s, m) { m.randomizeDeckPV() } }
 
     private val RAND_ROW1 = arrayOf(RAND_A, RAND_B, RAND_ALL)
     private val RAND_ROW2 = arrayOf(RAND_BG, RAND_PV)

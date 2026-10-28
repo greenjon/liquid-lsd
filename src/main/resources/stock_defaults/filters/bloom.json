@@ -33,7 +33,10 @@
       ]
     },
     "threshold": {
-      "note": "Loud passages bloom more of the picture; off by default.",
+      "note": "Loud passages bloom more of the picture; off by default. Rolls: how much of the picture blooms; not lower, or it whites out.",
+      "randomizeBase": true,
+      "baseMin": 0.25,
+      "baseMax": 0.7,
       "modulators": [
         {
           "name": "loudness swell",
@@ -46,6 +49,12 @@
           "bypassed": true
         }
       ]
+    },
+    "blurAmount": {
+      "note": "Rolls: tight halo to wide haze. Rolls: tight halo to wide haze.",
+      "randomizeBase": true,
+      "baseMin": 0.1,
+      "baseMax": 0.85
     }
   }
 }

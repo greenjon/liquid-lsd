@@ -9,7 +9,10 @@
   ],
   "params": {
     "zoom": {
-      "note": "Kick pushes into the tunnel.",
+      "note": "Kick pushes into the tunnel. Rolls: leaves room for the kick.",
+      "randomizeBase": true,
+      "baseMin": 0.35,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "kick push",
@@ -24,6 +27,9 @@
     },
     "twist": {
       "note": "Slow beat-locked twist; off by default.",
+      "randomizeBase": true,
+      "baseMin": -1.5,
+      "baseMax": 1.5,
       "modulators": [
         {
           "name": "sine 32-beat",
@@ -51,6 +57,26 @@
           "bypassed": true
         }
       ]
+    },
+    "symmetry": {
+      "randomizeBase": true,
+      "baseMin": 1.0,
+      "baseMax": 6.0
+    },
+    "centerX": {
+      "randomizeBase": true,
+      "baseMin": 0.4,
+      "baseMax": 0.6
+    },
+    "centerY": {
+      "randomizeBase": true,
+      "baseMin": 0.4,
+      "baseMax": 0.6
+    },
+    "depthFog": {
+      "randomizeBase": true,
+      "baseMin": 0.2,
+      "baseMax": 0.7
     }
   }
 }

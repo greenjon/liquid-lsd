@@ -336,12 +336,7 @@ class Mixer(
         list.addAll(deckPV.getAllRandomizableParameters())
         if (masterFxChain.enabled) {
             list.add(masterFxChain.dryWet)
-            masterFxChain.slots.forEach { fx ->
-                if (fx != null && fx.enabled) {
-                    list.add(fx.dryWet)
-                    list.addAll(fx.parameters.values)
-                }
-            }
+            list.addAll(masterFxChain.slotRandomizableParameters())
         }
         list.add(crossfade)
         list.add(masterLevel)
@@ -421,6 +416,16 @@ class Mixer(
             param.randomizeBaseValue()
         }
         morphControllerAll.forceRandomize()
+        randomizeTransition()
+    }
+
+    /**
+     * The transition die (and part of Rand All): rolls each transition input that ships a random range inside that range,
+     * moving the TRANS knob that drives it. A jump, not a morph: a transition only shows while it fades. Everything else
+     * (and `progress`) keeps its value, so a roll can't break the at-rest limits a fade relies on.
+     */
+    fun randomizeTransition(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng) {
+        transitionFilter?.randomizeTransitionInputs(random)
     }
 
     /**

@@ -2,7 +2,10 @@
   "version": 3,
   "params": {
     "chromaShift": {
-      "note": "The kick fringes the dissolve edge.",
+      "note": "The kick fringes the dissolve edge. Rolls: leaves room for the kick.",
+      "randomizeBase": true,
+      "baseMin": 0.05,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "kick fringe",
@@ -16,7 +19,10 @@
       ]
     },
     "softness": {
-      "note": "Loud passages soften the edge into a wider haze.",
+      "note": "Loud passages soften the edge into a wider haze. Rolls: leaves room for the loudness push.",
+      "randomizeBase": true,
+      "baseMin": 0.2,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "loudness haze",
@@ -30,7 +36,10 @@
       ]
     },
     "noiseScale": {
-      "note": "Mids reshape the dissolve pattern mid-move; may look like boiling. Off by default.",
+      "note": "Mids reshape the dissolve pattern mid-move; may look like boiling. Off by default. Rolls: fine grain to big blotches.",
+      "randomizeBase": true,
+      "baseMin": 0.1,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "mid grain",

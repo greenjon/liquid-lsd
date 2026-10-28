@@ -40,9 +40,9 @@
       },
       "colorTemp": {
         "baseValue": 0.1,
-        "baseMin": -1.0,
-        "baseMax": 1.0,
-        "randomizeBase": false,
+        "baseMin": -0.9,
+        "baseMax": 0.9,
+        "randomizeBase": true,
         "modulators": [
           {
             "sourceId": "audio_high",
@@ -57,9 +57,9 @@
       },
       "spread": {
         "baseValue": 0.27778,
-        "baseMin": 0.0,
-        "baseMax": 1.0,
-        "randomizeBase": false,
+        "baseMin": 0.2,
+        "baseMax": 0.42,
+        "randomizeBase": true,
         "modulators": []
       }
     }

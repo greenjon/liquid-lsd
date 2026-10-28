@@ -9,7 +9,10 @@
   ],
   "params": {
     "flowSpeed": {
-      "note": "Flow quickens when loud (integrated by FlowPhase). Gentle: the fluid keeps state.",
+      "note": "Flow quickens when loud (integrated by FlowPhase). Gentle: the fluid keeps state. Rolls: either way; leaves room for the loudness push.",
+      "randomizeBase": true,
+      "baseMin": -0.6,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "loudness swell",
@@ -38,7 +41,10 @@
       ]
     },
     "gravity": {
-      "note": "Slow drift up and down; off by default.",
+      "note": "Slow drift up and down; off by default. Rolls: drift up or down.",
+      "randomizeBase": true,
+      "baseMin": -0.4,
+      "baseMax": 0.4,
       "modulators": [
         {
           "name": "sine 32-beat",
@@ -51,6 +57,12 @@
           "bypassed": true
         }
       ]
+    },
+    "curlScale": {
+      "note": "Rolls: fine curls to big swirls.",
+      "randomizeBase": true,
+      "baseMin": 0.1,
+      "baseMax": 0.55
     }
   }
 }

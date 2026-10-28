@@ -2,7 +2,10 @@
   "version": 3,
   "params": {
     "zoomFactor": {
-      "note": "The kick punches the zoom deeper.",
+      "note": "The kick punches the zoom deeper. Rolls: leaves room for the kick.",
+      "randomizeBase": true,
+      "baseMin": 0.2,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "kick punch",
@@ -16,7 +19,10 @@
       ]
     },
     "motionBlur": {
-      "note": "Loud passages streak harder.",
+      "note": "Loud passages streak harder. Rolls: leaves room for the loudness push.",
+      "randomizeBase": true,
+      "baseMin": 0.3,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "loudness streak",
@@ -31,6 +37,9 @@
     },
     "chromatic": {
       "note": "Highs fringe the streaks; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.1,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "high fringe",

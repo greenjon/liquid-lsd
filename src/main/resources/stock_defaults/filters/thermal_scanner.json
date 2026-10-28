@@ -9,7 +9,10 @@
   ],
   "params": {
     "thermalBloom": {
-      "note": "Edges heat up on the bass.",
+      "note": "Edges heat up on the bass. Rolls: leaves room for the kick.",
+      "randomizeBase": true,
+      "baseMin": 0.1,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "bass heat",
@@ -24,6 +27,9 @@
     },
     "sensorGrain": {
       "note": "Highs add grain; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.05,
+      "baseMax": 0.4,
       "modulators": [
         {
           "name": "high shimmer",
@@ -36,6 +42,17 @@
           "bypassed": true
         }
       ]
+    },
+    "mode": {
+      "note": "Rolls: every sensor.",
+      "randomizeBase": true,
+      "baseMin": 0.0,
+      "baseMax": 2.0
+    },
+    "vignette": {
+      "randomizeBase": true,
+      "baseMin": 0.1,
+      "baseMax": 0.6
     }
   }
 }

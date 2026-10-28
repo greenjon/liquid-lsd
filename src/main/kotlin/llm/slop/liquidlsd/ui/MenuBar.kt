@@ -410,7 +410,7 @@ class MenuBar(
                 }
             }
             ImGui.popStyleColor(3)
-            itemTooltip("Randomize ALL Decks (A, B, BG, PV) and Modulators.\nClick to randomize all decks with undo support.")
+            itemTooltip("Randomize ALL Decks (A, B, BG, PV) with their effects, the Master FX and the transition.\nClick to randomize with undo support.")
         }
     }
 

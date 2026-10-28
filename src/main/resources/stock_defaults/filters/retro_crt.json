@@ -23,7 +23,10 @@
       ]
     },
     "curvature": {
-      "note": "Tube bulges on the bass; off by default.",
+      "note": "Tube bulges on the bass; off by default. Rolls: flat to a bulging tube.",
+      "randomizeBase": true,
+      "baseMin": 0.0,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "bass pulse",
@@ -51,6 +54,22 @@
           "bypassed": true
         }
       ]
+    },
+    "scanlineCount": {
+      "note": "Rolls: coarse to fine lines.",
+      "randomizeBase": true,
+      "baseMin": 100.0,
+      "baseMax": 600.0
+    },
+    "phosphorMask": {
+      "randomizeBase": true,
+      "baseMin": 0.0,
+      "baseMax": 0.6
+    },
+    "vignette": {
+      "randomizeBase": true,
+      "baseMin": 0.1,
+      "baseMax": 0.6
     }
   }
 }

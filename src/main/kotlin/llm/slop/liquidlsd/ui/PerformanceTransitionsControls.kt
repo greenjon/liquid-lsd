@@ -144,18 +144,12 @@ internal object PerformanceTransitionsControls {
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             if (ButtonChrome.button("${Icons.DICES}##perf_trans_rand", width, ctrlH)) {
                 ParametersUndo.pushRandomizeUndo(session.parametersState, mixer)
-                mixer.transitionFilter?.let { filter ->
-                    filter.parameters.values.forEach { param ->
-                        val min = param.minClamp
-                        val max = param.maxClamp
-                        param.baseValue = (min + llm.slop.liquidlsd.utils.DeterministicRandom.rng.nextFloat() * (max - min)).coerceIn(min, max)
-                    }
-                }
+                mixer.randomizeTransition()
             }
             llm.slop.liquidlsd.tour.WidgetRegistry.note { "perf_trans_rand" }
         }
         ImGui.popStyleColor(2)
-        itemTooltip("Randomize transition parameters.\nClick to randomize with undo support.")
+        itemTooltip("Randomize the transition: each input with a random range jumps to a new value inside it.\nUndo restores the old values.")
         ImGui.endGroup()
     }
 

@@ -48,6 +48,10 @@ class FxChain(val label: String) {
 
     fun isFocused(): Boolean = focusedSlot != null
 
+    /** The enabled slots' Dry/Wets and inputs, for the dice; each one rolls only where its randomizeBase flag is on. */
+    fun slotRandomizableParameters(): List<ModulatableParameter> =
+        slots.filterNotNull().filter { it.enabled }.flatMap { listOf(it.dryWet) + it.parameters.values }
+
     fun focusSlot(slotIndex: Int?) {
         focusedSlot = if (slotIndex != null && slotIndex in 0 until SLOT_COUNT) slotIndex else null
         focusParamPage = 0

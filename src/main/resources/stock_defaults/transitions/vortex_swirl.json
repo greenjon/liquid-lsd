@@ -2,7 +2,10 @@
   "version": 3,
   "params": {
     "rotations": {
-      "note": "Bass surges the swirl.",
+      "note": "Bass surges the swirl. Rolls: leaves room for the bass.",
+      "randomizeBase": true,
+      "baseMin": 0.15,
+      "baseMax": 0.7,
       "modulators": [
         {
           "name": "bass surge",
@@ -16,7 +19,10 @@
       ]
     },
     "chromatic": {
-      "note": "The kick fringes the swirl.",
+      "note": "The kick fringes the swirl. Rolls: leaves room for the kick.",
+      "randomizeBase": true,
+      "baseMin": 0.1,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "kick fringe",
@@ -31,6 +37,9 @@
     },
     "radius": {
       "note": "Loud passages widen the vortex; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.25,
+      "baseMax": 0.7,
       "modulators": [
         {
           "name": "loudness widen",

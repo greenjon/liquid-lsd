@@ -46,6 +46,23 @@
           "bypassed": true
         }
       ]
+    },
+    "centerX": {
+      "note": "Rolls: where the shafts burst from.",
+      "randomizeBase": true,
+      "baseMin": 0.3,
+      "baseMax": 0.7
+    },
+    "centerY": {
+      "randomizeBase": true,
+      "baseMin": 0.3,
+      "baseMax": 0.7
+    },
+    "decay": {
+      "note": "Rolls: short to long shafts.",
+      "randomizeBase": true,
+      "baseMin": 0.8,
+      "baseMax": 0.97
     }
   }
 }

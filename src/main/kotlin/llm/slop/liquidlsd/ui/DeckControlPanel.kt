@@ -239,7 +239,7 @@ class DeckControlPanel(
                     else -> mixer.randomizeDeckPV()
                 }
             }
-            itemTooltip("Randomize $label modulators & base values.\nClick to randomize with undo support.")
+            itemTooltip("Randomize $label modulators & base values, its effects included.\nClick to randomize with undo support.")
 
             val dieBg = when {
                 isDieActive -> ImGui.colorConvertFloat4ToU32(0.48f, 0.36f, 0.46f, 0.95f)

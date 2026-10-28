@@ -10,7 +10,10 @@
   ],
   "params": {
     "fbZoom": {
-      "note": "Kick pushes the trails outward. Per-frame, so small depths go a long way.",
+      "note": "Kick pushes the trails outward. Per-frame, so small depths go a long way. Rolls: gentle: the trail compounds every frame; leaves room for the kick.",
+      "randomizeBase": true,
+      "baseMin": -0.03,
+      "baseMax": 0.03,
       "modulators": [
         {
           "name": "kick push",
@@ -24,7 +27,10 @@
       ]
     },
     "fbHueShift": {
-      "note": "Trails turn rainbow when loud; off by default.",
+      "note": "Trails turn rainbow when loud; off by default. Rolls: colour drift along the trail.",
+      "randomizeBase": true,
+      "baseMin": -0.04,
+      "baseMax": 0.04,
       "modulators": [
         {
           "name": "loudness swell",
@@ -39,7 +45,10 @@
       ]
     },
     "fbRotate": {
-      "note": "Trails swirl back and forth; off by default.",
+      "note": "Trails swirl back and forth; off by default. Rolls: gentle spin of the trail.",
+      "randomizeBase": true,
+      "baseMin": -0.05,
+      "baseMax": 0.05,
       "modulators": [
         {
           "name": "sine 32-beat",
@@ -52,6 +61,23 @@
           "bypassed": true
         }
       ]
+    },
+    "fbKaleido": {
+      "note": "Rolls: off to six segments.",
+      "randomizeBase": true,
+      "baseMin": 1.0,
+      "baseMax": 6.0
+    },
+    "fbMode": {
+      "note": "Rolls: both blend modes.",
+      "randomizeBase": true,
+      "baseMin": 0.0,
+      "baseMax": 1.0
+    },
+    "fbChroma": {
+      "randomizeBase": true,
+      "baseMin": 0.0,
+      "baseMax": 0.35
     }
   }
 }

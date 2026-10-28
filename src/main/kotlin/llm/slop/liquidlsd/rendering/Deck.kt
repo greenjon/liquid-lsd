@@ -116,7 +116,8 @@ class Deck(
     }
 
     /**
-     * Retrieves all randomizable parameters: the source's, its Gain, the FX chain's Dry/Wet and the deck framing.
+     * Retrieves all randomizable parameters: the source's, its Gain, the FX chain's Dry/Wet and enabled slots, and the
+     * deck framing. So the deck die and Rand roll the deck's effects too (only the inputs that ship a random range).
      */
     fun getAllRandomizableParameters(): List<ModulatableParameter> {
         val allParams = mutableListOf<ModulatableParameter>()
@@ -124,6 +125,7 @@ class Deck(
         allParams.add(this.source.globalAlpha)
         
         allParams.add(fxChain.dryWet)
+        allParams.addAll(fxChain.slotRandomizableParameters())
 
         allParams.add(this.viewZoom)
         allParams.add(this.viewRotateZ)

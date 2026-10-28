@@ -31,6 +31,18 @@
           "bypassed": true
         }
       ]
+    },
+    "latticeMode": {
+      "note": "Rolls: square, diamond or hexagonal cells.",
+      "randomizeBase": true,
+      "baseMin": 0.0,
+      "baseMax": 2.0
+    },
+    "colorDepth": {
+      "note": "Rolls: full colour or a few posterized steps.",
+      "randomizeBase": true,
+      "baseMin": 0.0,
+      "baseMax": 12.0
     }
   }
 }

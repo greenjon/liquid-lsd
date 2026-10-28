@@ -415,6 +415,13 @@ class ISFFilter(
         p.metaDrivenKnob = null
     }
 
+    /** Rolls each input that ships a random range inside it (see [ModulatableParameter.randomizeBaseValue]); never `progress`. */
+    fun randomizeTransitionInputs(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng) {
+        for ((name, param) in parameters) {
+            if (!name.equals("progress", ignoreCase = true)) param.randomizeBaseValue(random)
+        }
+    }
+
     /**
      * Renders the filter reading from [inputTexture] into the currently bound FBO.
      */

@@ -132,7 +132,7 @@ class MixerPanel(
                 ParametersUndo.pushRandomizeUndo(parametersState, mixer)
                 mixer.randomizeAll()
             }
-            itemTooltip("Randomize all Decks (A, B, BG, PV) and Master parameters (Mixer/randAll).\nClick to randomize with undo support.")
+            itemTooltip("Randomize all Decks (A, B, BG, PV) with their effects, the Master parameters and FX, and the transition (Mixer/randAll).\nClick to randomize with undo support.")
 
             val dieBg = when {
                 isDieActive -> ImGui.colorConvertFloat4ToU32(0.48f, 0.36f, 0.46f, 0.95f)

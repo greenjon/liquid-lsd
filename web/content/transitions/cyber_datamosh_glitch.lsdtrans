@@ -15,9 +15,9 @@
     "parameters": {
       "blockiness": {
         "baseValue": 0.42857,
-        "baseMin": 0.0,
-        "baseMax": 1.0,
-        "randomizeBase": false,
+        "baseMin": 0.15,
+        "baseMax": 0.7,
+        "randomizeBase": true,
         "modulators": [
           {
             "sourceId": "lfo",
@@ -32,9 +32,9 @@
       },
       "rgbSplit": {
         "baseValue": 0.4,
-        "baseMin": 0.0,
-        "baseMax": 1.0,
-        "randomizeBase": false,
+        "baseMin": 0.1,
+        "baseMax": 0.5,
+        "randomizeBase": true,
         "modulators": [
           {
             "sourceId": "audio_flux_bass",
@@ -48,9 +48,9 @@
       },
       "packetLoss": {
         "baseValue": 0.6,
-        "baseMin": 0.0,
-        "baseMax": 1.0,
-        "randomizeBase": false,
+        "baseMin": 0.25,
+        "baseMax": 0.65,
+        "randomizeBase": true,
         "modulators": [
           {
             "sourceId": "audio_flux_high",

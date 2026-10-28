@@ -24,6 +24,9 @@
     },
     "glowSpread": {
       "note": "Highs spread the glow; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.1,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "high shimmer",
@@ -36,6 +39,23 @@
           "bypassed": true
         }
       ]
+    },
+    "palette": {
+      "note": "Rolls: every neon palette.",
+      "randomizeBase": true,
+      "baseMin": 0.0,
+      "baseMax": 3.0
+    },
+    "threshold": {
+      "note": "Rolls: not higher, or the edges vanish.",
+      "randomizeBase": true,
+      "baseMin": 0.05,
+      "baseMax": 0.25
+    },
+    "backgroundBlend": {
+      "randomizeBase": true,
+      "baseMin": 0.0,
+      "baseMax": 0.5
     }
   }
 }

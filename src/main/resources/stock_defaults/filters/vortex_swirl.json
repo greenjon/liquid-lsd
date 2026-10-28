@@ -24,6 +24,9 @@
     },
     "radius": {
       "note": "Slow vortex breathing; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.2,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "sine 16-beat",
@@ -39,6 +42,9 @@
     },
     "dispersion": {
       "note": "Highs spread the colours; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.1,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "high shimmer",
@@ -51,6 +57,22 @@
           "bypassed": true
         }
       ]
+    },
+    "spiralArms": {
+      "note": "Rolls: smooth swirl or up to eight arms.",
+      "randomizeBase": true,
+      "baseMin": 0.0,
+      "baseMax": 8.0
+    },
+    "centerX": {
+      "randomizeBase": true,
+      "baseMin": 0.35,
+      "baseMax": 0.65
+    },
+    "centerY": {
+      "randomizeBase": true,
+      "baseMin": 0.35,
+      "baseMax": 0.65
     }
   }
 }

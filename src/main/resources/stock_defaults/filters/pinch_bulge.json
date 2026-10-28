@@ -24,6 +24,9 @@
     },
     "radius": {
       "note": "Slow lens breathing; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.25,
+      "baseMax": 0.7,
       "modulators": [
         {
           "name": "sine 16-beat",
@@ -36,6 +39,16 @@
           "bypassed": true
         }
       ]
+    },
+    "centerX": {
+      "randomizeBase": true,
+      "baseMin": 0.3,
+      "baseMax": 0.7
+    },
+    "centerY": {
+      "randomizeBase": true,
+      "baseMin": 0.3,
+      "baseMax": 0.7
     }
   }
 }

@@ -3,6 +3,9 @@
   "params": {
     "glowIntensity": {
       "note": "The kick flares the ember edge (it only shows on the burn front). Burn Spread is left alone: above about 0.45 the burn shows at the start of a fade.",
+      "randomizeBase": true,
+      "baseMin": 0.4,
+      "baseMax": 0.8,
       "modulators": [
         {
           "name": "kick flare",
@@ -24,6 +27,18 @@
           "bypassed": true
         }
       ]
+    },
+    "burnSpread": {
+      "note": "Rolls: never above 0.45, or the burn shows at the start of a fade.",
+      "randomizeBase": true,
+      "baseMin": 0.2,
+      "baseMax": 0.42
+    },
+    "tintMode": {
+      "note": "Rolls: every burn colour.",
+      "randomizeBase": true,
+      "baseMin": 0.0,
+      "baseMax": 2.0
     }
   }
 }

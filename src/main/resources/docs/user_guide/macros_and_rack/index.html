@@ -852,6 +852,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#transition-defaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Transition Defaults
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1863,6 +1874,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#transition-defaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Transition Defaults
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2034,7 +2056,7 @@ the Transitions and Master FX rows its <strong>OUT</strong> side tab).</p>
 <h3 id="who-wins-when-several-things-drive-the-same-value">Who wins when several things drive the same value</h3>
 <p>A parameter's base value can be driven from several places. From strongest to weakest:</p>
 <ol>
-<li><strong>A macro knob target</strong> locks the value against direct writes, but the Value and the knob are linked both ways: dragging, scrolling or typing in <strong>Initial Range</strong> moves the knob (and so every other target of that knob), and the Value follows. Stepped and S-curve targets land on the nearest position, and a typed value outside the target's range stops at the knob's end. Any MIDI or OSC mapping on it is <strong>suspended</strong> (its row in Preferences shows "Suspended: driven by ...") and works again when you release the target.</li>
+<li><strong>A macro knob target</strong> locks the value against direct writes, but the Value and the knob are linked both ways: dragging, scrolling or typing in <strong>Initial Range</strong> moves the knob (and so every other target of that knob), and the Value follows. Stepped and S-curve targets land on the nearest position, and a typed value outside the target's range stops at the knob's end. A randomize (the deck die, Rand, or the Initial Range dice) moves the knob the same way, so a rolled value sticks. Any MIDI or OSC mapping on it is <strong>suspended</strong> (its row in Preferences shows "Suspended: driven by ...") and works again when you release the target.</li>
 <li><strong>An effect Metaknob target</strong> (including through the Super Knob, which moves linked Metaknobs) owns the effect parameter it is aimed at. A macro knob can't be added to that parameter ("driven by its Metaknob"), and an existing macro target on it is ignored while the Metaknob target is enabled. The parameter's row shows the same cyan highlight as a macro target, with a <code>[K1]</code> badge when the Metaknob sits on a macro knob. As with a macro target, editing the Value in Edit moves the Metaknob instead (and the macro knob above it, if it has one). Uncheck the Metaknob target (in the slot's <strong>Metaknob targets</strong> block or on the Edit-row strip) to use a macro knob there instead. A Metaknob aimed at <strong>Dry/Wet</strong> owns the slot's Dry/Wet the same way: the focus header's <code>Wet</code> slider then moves the Metaknob. MIDI and OSC mappings on it are suspended as well.</li>
 <li><strong>Direct edits, MIDI and OSC mappings</strong> on an unlocked value: the last one to move wins.</li>
 <li><strong>Modulators (LFO, sequencer, audio)</strong> never compete. They are always added on top of whatever value results from 1-3.</li>
@@ -2179,14 +2201,14 @@ Opening a deck in Edit shows the row for the Edit tab you are on (SRC or FX).</p
     - <strong>Double-Click Direct Numeric Entry</strong>: Double-click any macro knob face to open an inline text entry box. Type exact numerical values (e.g. <code>0.25</code>, <code>-1.5</code>, <code>42</code>) and press <code>Enter</code> to commit, or <code>Escape</code> to cancel. The typed value is what the parameter receives, so the knob's curve, invert and zone are taken into account (the readout shows the same value). For stepped or half-range bindings the knob snaps to the nearest position that gets closest.
     - <strong>In-Face Readouts</strong>: Hovering or dragging over a targetless or group-mode knob displays a subtle real-time value readout in the center of the knob face.
   - <strong>Right Wing</strong>:
-    - <strong>Randomize Die Button (<code>🎲</code>)</strong>: Randomizes the source's modulators and base values, its Gain, Deck Zoom / Deck Rotate and the FX chain's Dry/Wet (parameters with randomization turned on), with undo (when randomization is enabled). Positioned on Row 1 directly above the FX ON button.
+    - <strong>Randomize Die Button (<code>🎲</code>)</strong>: Randomizes the source's modulators and base values, its Gain, Deck Zoom / Deck Rotate, the FX chain's Dry/Wet and the inputs of the effects in its chain (parameters with randomization turned on), with undo of both the values and the knob positions (when randomization is enabled). Every stock source and most stock effects ship with random ranges on their look parameters (see Modulation, "Built-in random ranges"; an effect's Metaknob is never rolled), and the source knobs move with the roll. Positioned on Row 1 directly above the FX ON button.
     - <strong><code>[ FX ON ]</code></strong>: Turns the deck's FX chain on or off; lit while on. Positioned on Row 2 aligned with the FX row.
   - <strong>Drag-and-Drop</strong>: Dropping a deck preset (<code>.patch</code>, <code>.lsd</code>, <code>.json</code>) loads the visual preset; dropping a <code>.lsdfxchain</code> loads that FX chain onto the deck.
-- <strong>Whole-Rig Randomize (<code>[ ALL 🎲 ]</code>)</strong>: Positioned at the top right of the performance matrix tab strip, pushing undo state and invoking <code>mixer.randomizeAll()</code> across all decks simultaneously.
+- <strong>Whole-Rig Randomize (<code>[ ALL 🎲 ]</code>)</strong>: Positioned at the top right of the performance matrix tab strip, pushing undo state and invoking <code>mixer.randomizeAll()</code> across all decks (their effects included), the Master parameters and FX, and the transition simultaneously.
 - <strong>Master FX row</strong>: Left wing: the <code>FX</code>-captioned <code>M</code> badge, the chain name box and the chain controls line, as on a deck FX row; right wing: Master FX <code>[ FX ON ]</code>. Dropping a <code>.lsdfxchain</code> onto the <code>MASTER</code> badge loads it into Master FX.
 - <strong>Level faders on the deck tiles</strong> (the thin strip beside each preview badge) share their value with the Master MST knobs: move the fader and the knob follows, turn the knob and the fader follows, last mover wins. A fader drag also mutes non-MIDI modulation on it and makes a Soft Takeover MIDI/OSC mapping on it pick up again instead of jumping. The handle line marks the fader's own value; the filled bar is the live level after modulation.
 - <strong>Master MST row</strong>: The <code>M</code> badge carries an <code>MST</code> caption. Line 1 is the <code>Deck Levels &amp; Master</code> box (click to edit the levels, right-click for level resets) and a <code>100%</code> reset button; its gear opens Edit on the MST side tab's LEVELS section (the master level, then each deck's level), which shows this row together with the Clock row; the knobs are the Deck A / B / BG and Master levels. The crossfader is not here: it lives on the Transitions row (knob 1) and the Mixer panel.
-- <strong>Transitions (Row 2 in MASTER)</strong>: Left wing features a Transition Picker button displaying the active transition with modified indicator (<code>*</code>) — click it to pick from the transition list in the Library below — and Transition Queue stepping controls (<code>&lt;</code>, <code>N/Total</code>, <code>&gt;</code>); right wing hosts the transition randomize die button (<code>🎲</code>) on Row 1 (matching the deck rows). Transition presets (<code>.lsdtrans</code>) and shaders (<code>.fs</code>/<code>.isf</code>) can be dropped directly onto the picker button.
+- <strong>Transitions (Row 2 in MASTER)</strong>: Left wing features a Transition Picker button displaying the active transition with modified indicator (<code>*</code>) — click it to pick from the transition list in the Library below — and Transition Queue stepping controls (<code>&lt;</code>, <code>N/Total</code>, <code>&gt;</code>); right wing hosts the transition randomize die button (<code>🎲</code>) on Row 1 (matching the deck rows): it rolls the transition's inputs that have a random range, inside that range, and moves the TRANS knobs with them; Ctrl+Z undoes it. Transition presets (<code>.lsdtrans</code>) and shaders (<code>.fs</code>/<code>.isf</code>) can be dropped directly onto the picker button.
 - <strong>Clock &amp; Global (Row 4 in MASTER)</strong>: The two lines beside the <code>CLOCK</code> badge have the tempo controls from Preferences &gt; Tempo &amp; Sync, placed here for use mid-set:
   - <strong><code>[ MAN ]</code> / <code>[ AUDIO ]</code></strong>: clock source (manual tempo or the audio beat tracker).
   - <strong><code>[ LINK n ]</code></strong>: the third button of the top line, with the peer count while Ableton Link is on and dim while it is off. Click it to open Tempo &amp; Sync preferences.
@@ -2440,6 +2462,8 @@ with the parameter selected.</p>
   - <code>Save as Default for &lt;Filter&gt;</code> saves this slot's Metaknob targets, knob order, parameter values and modulators (not MIDI mappings) into <code>library/isf_overrides/&lt;contentHash&gt;.json</code>. New copies of the effect start from it; slots already in chains keep their own.
   - When a saved default exists, <code>Remove Saved Default for &lt;Filter&gt;</code> deletes it, so new copies go back to the stock (or auto-mapped) default, and resets this slot to it too.
 - Targets themselves are edited in the slot's <strong>Metaknob targets</strong> block or on the Edit-row strip.</p>
+<h3 id="transition-defaults">Transition Defaults</h3>
+<p>The transition's <strong>⋮</strong> menu (on the Transitions row, and the kebab beside the transition picker in the Mixer TRANS tab) has <code>Save as Default for &lt;Transition&gt;</code>: it saves the running transition's parameter values and modulators (not MIDI mappings) the same way, keyed by shader content. Picking that transition from then on starts from it; saved <code>.lsdtrans</code> presets keep their own values. <code>Remove Saved Default for &lt;Transition&gt;</code> deletes it and resets the running transition to the built-in values and audio response.</p>
 <hr />
 <h2 id="shortcuts">Shortcuts</h2>
 <table>

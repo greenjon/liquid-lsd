@@ -59,12 +59,20 @@ class StockDefaultsTest {
 
     private val filterFiles get() = files("filters")
 
-    /** (min, default, max) of each float input of a bundled filter. */
-    private fun filterRanges(id: String): Map<String, Triple<Float, Float, Float>> =
-        isfInputs(File(root, "src/main/resources/default_filters/$id.fs")).associate {
-            it["NAME"]!!.jsonPrimitive.content to Triple(
-                it["MIN"]!!.jsonPrimitive.content.toFloat(), it["DEFAULT"]!!.jsonPrimitive.content.toFloat(), it["MAX"]!!.jsonPrimitive.content.toFloat())
-        }
+    /** (min, default, max) of each float input of a bundled filter, and each long (menu) input. */
+    private fun filterRanges(id: String) = menuAwareRanges(File(root, "src/main/resources/default_filters/$id.fs"))
+
+    /** (min, default, max) of each float or long (menu) input of an ISF file; a menu without MIN/MAX spans its VALUES. */
+    private fun menuAwareRanges(file: File): Map<String, Triple<Float, Float, Float>> {
+        return json.parseToJsonElement(file.readText().substringAfter("/*").substringBefore("*/")).jsonObject["INPUTS"]!!.jsonArray
+            .map { it.jsonObject }.filter { it["TYPE"]?.jsonPrimitive?.content?.lowercase() in setOf("float", "long") }
+            .associate {
+                val values = (it["VALUES"] as? JsonArray)?.map { v -> v.jsonPrimitive.content.toFloat() }.orEmpty()
+                fun bound(key: String, fallback: () -> Float?) = it[key]?.jsonPrimitive?.content?.toFloat() ?: fallback()!!
+                it["NAME"]!!.jsonPrimitive.content to Triple(
+                    bound("MIN") { values.minOrNull() }, it["DEFAULT"]!!.jsonPrimitive.content.toFloat(), bound("MAX") { values.maxOrNull() })
+            }
+    }
 
     private fun shippedFilterParams(file: File) = StockDefaults.overlayParameters(
         parse(file), "params",
@@ -131,24 +139,30 @@ class StockDefaultsTest {
         for (file in sourceFiles) {
             val id = file.nameWithoutExtension
             if (id == "fractal_flame") continue // the genome picks its own morph targets
-            val ranges = ranges(id)
-            for ((name, p) in shippedParams(file)) {
-                if (!p.randomizeBase) continue
-                randomized++
-                val (min, _, max) = ranges.getValue(name)
-                val eps = 1e-4f * (max - min)
-                assertTrue(p.baseMin < p.baseMax, "$id.$name: empty random range")
-                assertTrue(p.baseMin >= min - eps && p.baseMax <= max + eps, "$id.$name: random range ${p.baseMin}..${p.baseMax} outside $min..$max")
-                val scalar = if (min < 0f) (max - min) / 2f else max - min
-                for (m in p.modulators.filter { !it.bypassed && it.operator == "ADD" }) {
-                    val (down, up) = if (m.sourceId == "lfo") (m.dcOffset - kotlin.math.abs(m.depth)) to (m.dcOffset + kotlin.math.abs(m.depth))
-                        else minOf(m.depth, 0f) to maxOf(m.depth, 0f)
-                    assertTrue(p.baseMin + down * scalar >= min - eps && p.baseMax + up * scalar <= max + eps,
-                        "$id.$name: '${m.sourceId}' pushes the random range ${p.baseMin}..${p.baseMax} outside $min..$max")
-                }
-            }
+            randomized += assertRandomRangesFit(id, shippedParams(file), ranges(id))
         }
         assertTrue(randomized > 0)
+    }
+
+    /** Checks every randomized input of [parsed] (see [shippedRandomRangesFitTheirParameters]); returns how many there are. */
+    private fun assertRandomRangesFit(id: String, parsed: Map<String, ParameterDto>, ranges: Map<String, Triple<Float, Float, Float>>): Int {
+        var randomized = 0
+        for ((name, p) in parsed) {
+            if (!p.randomizeBase) continue
+            randomized++
+            val (min, _, max) = ranges.getValue(name)
+            val eps = 1e-4f * (max - min)
+            assertTrue(p.baseMin < p.baseMax, "$id.$name: empty random range")
+            assertTrue(p.baseMin >= min - eps && p.baseMax <= max + eps, "$id.$name: random range ${p.baseMin}..${p.baseMax} outside $min..$max")
+            val scalar = if (min < 0f) (max - min) / 2f else max - min
+            for (m in p.modulators.filter { !it.bypassed && it.operator == "ADD" }) {
+                val (down, up) = if (m.sourceId == "lfo") (m.dcOffset - kotlin.math.abs(m.depth)) to (m.dcOffset + kotlin.math.abs(m.depth))
+                    else minOf(m.depth, 0f) to maxOf(m.depth, 0f)
+                assertTrue(p.baseMin + down * scalar >= min - eps && p.baseMax + up * scalar <= max + eps,
+                    "$id.$name: '${m.sourceId}' pushes the random range ${p.baseMin}..${p.baseMax} outside $min..$max")
+            }
+        }
+        return randomized
     }
 
     @Test
@@ -158,7 +172,7 @@ class StockDefaultsTest {
             val id = file.nameWithoutExtension
             val shader = File(root, "src/main/resources/default_filters/$id.fs")
             assertTrue(shader.exists(), "$id: no bundled filter with this id")
-            val inputs = isfInputs(shader).map { it["NAME"]!!.jsonPrimitive.content }.toSet()
+            val inputs = filterRanges(id).keys
             val obj = parse(file)
             for (b in obj["metaBindings"]!!.jsonArray) {
                 val target = b.jsonObject["targetParamName"]?.jsonPrimitive?.content ?: continue
@@ -179,14 +193,35 @@ class StockDefaultsTest {
         }
     }
 
+    /** Effect ranges fit like source ranges; every stock effect ships at least one, except where only the amount is left. */
+    @Test
+    fun shippedFilterRandomRangesFitTheirParameters() {
+        val amountOnly = setOf("invert", "luma_key") // the Metaknob owns the look (Luma Key: softness alone barely shows)
+        for (file in filterFiles) {
+            val id = file.nameWithoutExtension
+            val count = assertRandomRangesFit(id, shippedFilterParams(file), filterRanges(id))
+            if (id !in amountOnly) assertTrue(count > 0, "$id: no random range")
+        }
+    }
+
+    /**
+     * The Metaknob writes its target's base every frame, so a range there would be overwritten; it also means "how much",
+     * which stays the performer's (DECISIONS.md "Effects keep the Metaknob meaning 'how much'").
+     */
+    @Test
+    fun noRandomRangeOnAMetaknobTarget() {
+        for (file in filterFiles) {
+            val id = file.nameWithoutExtension
+            val targets = parse(file)["metaBindings"]!!.jsonArray.mapNotNull { it.jsonObject["targetParamName"]?.jsonPrimitive?.content }
+            val ranged = shippedFilterParams(file).filterValues { it.randomizeBase }.keys
+            assertTrue((targets intersect ranged).isEmpty(), "$id: random range on Metaknob target(s) ${targets intersect ranged}")
+        }
+    }
+
     private val transitionFiles get() = files("transitions")
 
-    /** (min, default, max) of each float input of a bundled transition. */
-    private fun transitionRanges(id: String): Map<String, Triple<Float, Float, Float>> =
-        isfInputs(File(root, "src/main/resources/default_transitions/$id.fs")).associate {
-            it["NAME"]!!.jsonPrimitive.content to Triple(
-                it["MIN"]!!.jsonPrimitive.content.toFloat(), it["DEFAULT"]!!.jsonPrimitive.content.toFloat(), it["MAX"]!!.jsonPrimitive.content.toFloat())
-        }
+    /** (min, default, max) of each float input of a bundled transition, and each long (menu) input. */
+    private fun transitionRanges(id: String) = menuAwareRanges(File(root, "src/main/resources/default_transitions/$id.fs"))
 
     private fun shippedTransitionParams(id: String) = StockDefaults.overlayParameters(
         parse(File(root, "src/main/resources/stock_defaults/transitions/$id.json")), "params",
@@ -205,12 +240,17 @@ class StockDefaultsTest {
      */
     private val atRestLimits = mapOf("luminous_flash" to mapOf("spread" to 0.45f), "film_burn" to mapOf("burnSpread" to 0.45f))
 
-    /** The highest value [p]'s modulators can push it to: unipolar followers add `depth`, bipolar LFOs `dcOffset + |depth|`. */
+    /**
+     * The highest value [p] can reach: its base (the top of its random range, if it has one) plus what its modulators add;
+     * unipolar followers add `depth`, bipolar LFOs `dcOffset + |depth|`.
+     */
     private fun reach(p: ParameterDto, min: Float, max: Float): Float {
         val scalar = if (min < 0f) (max - min) / 2f else max - min
-        return p.modulators.fold(p.baseValue) { top, m ->
+        // A die can put the base anywhere in its random range, so the top of that range is the worst case.
+        val base = if (p.randomizeBase) maxOf(p.baseValue, p.baseMax) else p.baseValue
+        return p.modulators.fold(base) { top, m ->
             val swing = if (m.sourceId == "lfo") m.dcOffset + kotlin.math.abs(m.depth) else maxOf(m.depth, 0f)
-            maxOf(top, if (m.operator == "MUL") p.baseValue * (1f + swing) else p.baseValue + swing * scalar)
+            maxOf(top, if (m.operator == "MUL") base * (1f + swing) else base + swing * scalar)
         }
     }
 
@@ -225,6 +265,7 @@ class StockDefaultsTest {
             val parsed = shippedTransitionParams(id)
             assertModulatorsValid(id, raw, parsed)
             assertLfoSwingsFit(id, parsed, transitionRanges(id))
+            assertTrue(assertRandomRangesFit(id, parsed, transitionRanges(id)) > 0, "$id: no random range")
         }
     }
 
@@ -250,7 +291,7 @@ class StockDefaultsTest {
         }
     }
 
-    /** A preset stores full parameters, so it must carry the shipped response itself or AutoVJ and playlists never show it. */
+    /** A preset stores full parameters, so it must carry the shipped response and random range itself or AutoVJ and playlists never show them. */
     @Test
     fun shippedTransitionPresetsCarryTheShippedResponse() {
         assertTrue(transitionPresets.isNotEmpty())
@@ -264,6 +305,10 @@ class StockDefaultsTest {
             if (!File(root, "src/main/resources/stock_defaults/transitions/$id.json").exists()) continue
             for ((name, shipped) in shippedTransitionParams(id)) {
                 assertEquals(shipped.modulators, preset.slot.parameters[name]?.modulators, "$file: $name does not carry the shipped response")
+                val stored = preset.slot.parameters[name] ?: continue
+                if (!shipped.randomizeBase && !stored.randomizeBase) continue
+                assertEquals(Triple(shipped.randomizeBase, shipped.baseMin, shipped.baseMax), Triple(stored.randomizeBase, stored.baseMin, stored.baseMax),
+                    "$file: $name does not carry the shipped random range")
             }
         }
     }

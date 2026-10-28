@@ -15,9 +15,9 @@
     "parameters": {
       "rotations": {
         "baseValue": 0.44444,
-        "baseMin": 0.0,
-        "baseMax": 1.0,
-        "randomizeBase": false,
+        "baseMin": 0.15,
+        "baseMax": 0.7,
+        "randomizeBase": true,
         "modulators": [
           {
             "sourceId": "audio_bass",
@@ -31,9 +31,9 @@
       },
       "radius": {
         "baseValue": 0.45833,
-        "baseMin": 0.0,
-        "baseMax": 1.0,
-        "randomizeBase": false,
+        "baseMin": 0.25,
+        "baseMax": 0.7,
+        "randomizeBase": true,
         "modulators": [
           {
             "sourceId": "audio_amp",
@@ -48,9 +48,9 @@
       },
       "chromatic": {
         "baseValue": 0.5,
-        "baseMin": 0.0,
-        "baseMax": 1.0,
-        "randomizeBase": false,
+        "baseMin": 0.1,
+        "baseMax": 0.5,
+        "randomizeBase": true,
         "modulators": [
           {
             "sourceId": "audio_flux_bass",

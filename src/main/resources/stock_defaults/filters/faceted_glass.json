@@ -24,6 +24,9 @@
     },
     "facetTilt": {
       "note": "Slow facet tilt; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.15,
+      "baseMax": 0.85,
       "modulators": [
         {
           "name": "sine 16-beat",
@@ -39,6 +42,9 @@
     },
     "dispersion": {
       "note": "Highs spread the spectrum; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.1,
+      "baseMax": 0.7,
       "modulators": [
         {
           "name": "high shimmer",
@@ -51,6 +57,17 @@
           "bypassed": true
         }
       ]
+    },
+    "facetScale": {
+      "note": "Rolls: small gems to big facets. Rolls: small gems to big facets.",
+      "randomizeBase": true,
+      "baseMin": 0.08,
+      "baseMax": 0.6
+    },
+    "bevelStrength": {
+      "randomizeBase": true,
+      "baseMin": 0.25,
+      "baseMax": 0.85
     }
   }
 }

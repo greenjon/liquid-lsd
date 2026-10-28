@@ -34,6 +34,9 @@
     },
     "flowSpeed": {
       "note": "Flow quickens when loud (integrated by FlowPhase); off by default.",
+      "randomizeBase": true,
+      "baseMin": -0.5,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "loudness swell",
@@ -49,6 +52,9 @@
     },
     "chromaDispersion": {
       "note": "Highs widen the prism fringe; off by default.",
+      "randomizeBase": true,
+      "baseMin": 0.0,
+      "baseMax": 0.6,
       "modulators": [
         {
           "name": "high shimmer",
@@ -61,6 +67,12 @@
           "bypassed": true
         }
       ]
+    },
+    "smoothness": {
+      "note": "Rolls: sharp ripples to soft melt.",
+      "randomizeBase": true,
+      "baseMin": 0.1,
+      "baseMax": 0.6
     }
   }
 }

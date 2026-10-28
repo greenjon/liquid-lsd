@@ -33,7 +33,10 @@
       ]
     },
     "streakLength": {
-      "note": "Streaks stretch when loud; off by default.",
+      "note": "Streaks stretch when loud; off by default. Rolls: short glints to full-width streaks.",
+      "randomizeBase": true,
+      "baseMin": 0.4,
+      "baseMax": 1.0,
       "modulators": [
         {
           "name": "loudness swell",
@@ -46,6 +49,29 @@
           "bypassed": true
         }
       ]
+    },
+    "colorMode": {
+      "note": "Rolls: every streak colour.",
+      "randomizeBase": true,
+      "baseMin": 0.0,
+      "baseMax": 2.0
+    },
+    "crossFlare": {
+      "note": "Rolls: none to a strong vertical cross. Rolls: none to a strong vertical cross.",
+      "randomizeBase": true,
+      "baseMin": 0.0,
+      "baseMax": 0.9
+    },
+    "knee": {
+      "randomizeBase": true,
+      "baseMin": 0.2,
+      "baseMax": 0.6
+    },
+    "threshold": {
+      "note": "Rolls: not lower, or the streaks white out the picture. Rolls: not lower, or the streaks white out the picture.",
+      "randomizeBase": true,
+      "baseMin": 0.35,
+      "baseMax": 0.7
     }
   }
 }

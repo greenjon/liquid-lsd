@@ -15,9 +15,9 @@
     "parameters": {
       "zoomFactor": {
         "baseValue": 0.6,
-        "baseMin": 0.0,
-        "baseMax": 1.0,
-        "randomizeBase": false,
+        "baseMin": 0.2,
+        "baseMax": 0.6,
+        "randomizeBase": true,
         "modulators": [
           {
             "sourceId": "audio_flux_bass",
@@ -31,9 +31,9 @@
       },
       "motionBlur": {
         "baseValue": 0.75,
-        "baseMin": 0.0,
-        "baseMax": 1.0,
-        "randomizeBase": false,
+        "baseMin": 0.3,
+        "baseMax": 0.65,
+        "randomizeBase": true,
         "modulators": [
           {
             "sourceId": "audio_amp",
@@ -47,9 +47,9 @@
       },
       "chromatic": {
         "baseValue": 0.6,
-        "baseMin": 0.0,
-        "baseMax": 1.0,
-        "randomizeBase": false,
+        "baseMin": 0.1,
+        "baseMax": 0.6,
+        "randomizeBase": true,
         "modulators": [
           {
             "sourceId": "audio_high",

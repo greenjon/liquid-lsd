@@ -24,6 +24,9 @@
     },
     "screenAngle": {
       "note": "Slow beat-locked screen turn; off by default.",
+      "randomizeBase": true,
+      "baseMin": -3.14159,
+      "baseMax": 3.14159,
       "modulators": [
         {
           "name": "sine 32-beat",
@@ -36,6 +39,22 @@
           "bypassed": true
         }
       ]
+    },
+    "mode": {
+      "note": "Rolls: every screen mode.",
+      "randomizeBase": true,
+      "baseMin": 0.0,
+      "baseMax": 2.0
+    },
+    "smoothness": {
+      "randomizeBase": true,
+      "baseMin": 0.05,
+      "baseMax": 0.4
+    },
+    "paperTint": {
+      "randomizeBase": true,
+      "baseMin": 0.0,
+      "baseMax": 0.45
     }
   }
 }

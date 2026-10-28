@@ -2,7 +2,10 @@
   "version": 3,
   "params": {
     "packetLoss": {
-      "note": "Hats tear more scan lines and blocks loose.",
+      "note": "Hats tear more scan lines and blocks loose. Rolls: leaves room for the hats.",
+      "randomizeBase": true,
+      "baseMin": 0.25,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "hat tears",
@@ -16,7 +19,10 @@
       ]
     },
     "rgbSplit": {
-      "note": "The kick shears red and blue apart.",
+      "note": "The kick shears red and blue apart. Rolls: leaves room for the kick.",
+      "randomizeBase": true,
+      "baseMin": 0.1,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "kick shear",
@@ -30,7 +36,10 @@
       ]
     },
     "blockiness": {
-      "note": "The macroblock grid flips size on every beat; off by default.",
+      "note": "The macroblock grid flips size on every beat; off by default. Rolls: fine glitch to big blocks.",
+      "randomizeBase": true,
+      "baseMin": 0.15,
+      "baseMax": 0.7,
       "modulators": [
         {
           "name": "square 2-beat (flips on the beat)",

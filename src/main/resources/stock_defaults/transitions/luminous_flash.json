@@ -26,7 +26,10 @@
       ]
     },
     "colorTemp": {
-      "note": "Highs cool the flash toward icy blue; off by default.",
+      "note": "Highs cool the flash toward icy blue; off by default. Rolls: cool to warm flash.",
+      "randomizeBase": true,
+      "baseMin": -0.9,
+      "baseMax": 0.9,
       "modulators": [
         {
           "name": "high chill",
@@ -39,6 +42,12 @@
           "bypassed": true
         }
       ]
+    },
+    "spread": {
+      "note": "Rolls: never above 0.45, or the flash shows at the start of a fade.",
+      "randomizeBase": true,
+      "baseMin": 0.2,
+      "baseMax": 0.42
     }
   }
 }

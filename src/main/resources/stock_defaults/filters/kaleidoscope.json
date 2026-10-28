@@ -9,7 +9,10 @@
   ],
   "params": {
     "zoom": {
-      "note": "Kick punches the zoom in.",
+      "note": "Kick punches the zoom in. Rolls: leaves room for the kick.",
+      "randomizeBase": true,
+      "baseMin": 0.35,
+      "baseMax": 0.65,
       "modulators": [
         {
           "name": "kick zoom",
@@ -36,6 +39,27 @@
           "bypassed": true
         }
       ]
+    },
+    "segments": {
+      "note": "Rolls: three to twelve mirrors.",
+      "randomizeBase": true,
+      "baseMin": 3.0,
+      "baseMax": 12.0
+    },
+    "centerX": {
+      "randomizeBase": true,
+      "baseMin": 0.35,
+      "baseMax": 0.65
+    },
+    "centerY": {
+      "randomizeBase": true,
+      "baseMin": 0.35,
+      "baseMax": 0.65
+    },
+    "originOffset": {
+      "randomizeBase": true,
+      "baseMin": -0.5,
+      "baseMax": 0.5
     }
   }
 }

@@ -9,7 +9,10 @@
   ],
   "params": {
     "cycleSpeed": {
-      "note": "The palette cycles when loud (integrated by CyclePhase).",
+      "note": "The palette cycles when loud (integrated by CyclePhase). Rolls: still to slow cycling either way.",
+      "randomizeBase": true,
+      "baseMin": -0.25,
+      "baseMax": 0.25,
       "modulators": [
         {
           "name": "loudness swell",
@@ -37,6 +40,18 @@
           "bypassed": true
         }
       ]
+    },
+    "palette": {
+      "note": "Rolls: every palette.",
+      "randomizeBase": true,
+      "baseMin": 0.0,
+      "baseMax": 6.0
+    },
+    "cycleOffset": {
+      "note": "Rolls: where on the palette the picture lands.",
+      "randomizeBase": true,
+      "baseMin": 0.0,
+      "baseMax": 1.0
     }
   }
 }
