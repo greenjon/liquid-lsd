@@ -98,6 +98,7 @@ class LibraryNavigationTest {
         io.mockk.mockkObject(queue)
         io.mockk.every { session.playQueueManager } returns queue
         io.mockk.every { queue.playIndex(any(), any()) } returns Unit
+        listOf("p1", "p2", "p3").forEach { queue.queue.add(java.io.File("/x/$it.lsd")) }
         LibraryPanel.activeSelectionSource = SelectionSource.QUEUE_AB
         llm.slop.liquidlsd.ui.browser.QueueActionsPanel.selectedIndex = 2
         try {
@@ -105,6 +106,7 @@ class LibraryNavigationTest {
             io.mockk.verify(exactly = 1) { queue.playIndex(2, mixer) }
         } finally {
             io.mockk.unmockkObject(queue)
+            queue.clearQueue()
             llm.slop.liquidlsd.ui.browser.QueueActionsPanel.clearSelection()
         }
     }

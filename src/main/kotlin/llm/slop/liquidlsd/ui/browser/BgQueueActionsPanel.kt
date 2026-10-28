@@ -248,16 +248,8 @@ object BgQueueActionsPanel {
             dl.addLine(x0 + 5f, insertLineY, x1, insertLineY, insertLineColor, 2f)
         }
 
-        if (moveFrom != -1 && moveTo != -1) {
-            BgQueueManager.move(moveFrom, moveTo)
-            if (selectedIndex == moveFrom) selectedIndex = moveTo
-        }
-        if (removeIndices.isNotEmpty()) {
-            removeIndices.sortedDescending().forEach { idx ->
-                BgQueueManager.removeAt(idx)
-            }
-            selection.clear()
-        }
+        if (moveFrom != -1 && moveTo != -1) QueueOps.move(QueueDrop.Queue.BG, moveFrom, moveTo, session.parametersState)
+        if (removeIndices.isNotEmpty()) QueueOps.remove(QueueDrop.Queue.BG, removeIndices, session.parametersState)
 
         // Drop target for the empty space below all queue items (append to end)
         val remainingH = ImGui.getContentRegionAvailY()

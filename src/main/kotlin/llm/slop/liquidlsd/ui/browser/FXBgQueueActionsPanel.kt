@@ -183,17 +183,8 @@ object FXBgQueueActionsPanel {
                 dl.addLine(x0 + 5f, insertLineY, x1, insertLineY, insertLineColor, 2f)
             }
 
-            if (moveFrom != -1 && moveTo != -1) {
-                FXBgQueueManager.moveItem(moveFrom, moveTo)
-                if (selectedIndex == moveFrom) selectedIndex = moveTo
-            }
-            if (removeFromQueueIndex != -1) {
-                FXBgQueueManager.removeFromQueue(removeFromQueueIndex)
-                val newSize = FXBgQueueManager.queue.size
-                if (selectedIndex >= newSize) {
-                    selectedIndex = newSize - 1
-                }
-            }
+            if (moveFrom != -1 && moveTo != -1) QueueOps.move(QueueDrop.Queue.FX_BG, moveFrom, moveTo, session.parametersState)
+            if (removeFromQueueIndex != -1) QueueOps.remove(QueueDrop.Queue.FX_BG, listOf(removeFromQueueIndex), session.parametersState)
 
             // Drop target for empty space below queue items
             val remainingH = ImGui.getContentRegionAvailY()

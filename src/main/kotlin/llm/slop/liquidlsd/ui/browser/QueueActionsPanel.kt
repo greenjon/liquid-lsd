@@ -259,16 +259,8 @@ object QueueActionsPanel {
             dl.addLine(x0 + 5f, insertLineY, x1, insertLineY, insertLineColor, 2f)
         }
 
-        if (moveFrom != -1 && moveTo != -1) {
-            session.playQueueManager.moveQueueItem(moveFrom, moveTo)
-            if (selectedIndex == moveFrom) selectedIndex = moveTo
-        }
-        if (removeIndices.isNotEmpty()) {
-            removeIndices.sortedDescending().forEach { idx ->
-                session.playQueueManager.removeFromQueue(idx)
-            }
-            selection.clear()
-        }
+        if (moveFrom != -1 && moveTo != -1) QueueOps.move(QueueDrop.Queue.AB, moveFrom, moveTo, session.parametersState)
+        if (removeIndices.isNotEmpty()) QueueOps.remove(QueueDrop.Queue.AB, removeIndices, session.parametersState)
 
         // Drop target for the empty space below all queue items (append to end)
         val remainingH = ImGui.getContentRegionAvailY()

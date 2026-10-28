@@ -224,6 +224,17 @@ object BgQueueManager {
         }
     }
 
+    /** Puts back a copy taken before an edit (the undo of a queue edit): the items, the playing index and the shuffle history. */
+    fun restoreSnapshot(files: List<File>, active: Int, played: Set<Int>, history: List<Int>) {
+        queue.clear()
+        queue.addAll(files)
+        activeIndex = active.coerceIn(-1, queue.size - 1)
+        playedIndices.clear()
+        playedIndices.addAll(played)
+        playbackHistory.clear()
+        playbackHistory.addAll(history)
+    }
+
     fun clearQueue() {
         queue.clear()
         activeIndex = -1

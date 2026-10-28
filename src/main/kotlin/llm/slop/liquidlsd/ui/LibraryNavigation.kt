@@ -21,7 +21,6 @@ import llm.slop.liquidlsd.rendering.VisualSourceRegistry
 import llm.slop.liquidlsd.ui.LibraryPanel.LibraryViewMode
 import llm.slop.liquidlsd.ui.LibraryPanel.SelectionSource
 import llm.slop.liquidlsd.ui.browser.BrowseKind
-import llm.slop.liquidlsd.ui.browser.BrowserDeckButtons
 import llm.slop.liquidlsd.ui.browser.BrowserPane
 import llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel
 import llm.slop.liquidlsd.ui.browser.FXBgQueueActionsPanel
@@ -29,6 +28,7 @@ import llm.slop.liquidlsd.ui.browser.FXBrowserPanel
 import llm.slop.liquidlsd.ui.browser.FXQueueActionsPanel
 import llm.slop.liquidlsd.ui.browser.QueueActionsPanel
 import llm.slop.liquidlsd.ui.browser.QueueDrop
+import llm.slop.liquidlsd.ui.browser.QueueOps
 import llm.slop.liquidlsd.ui.browser.QueueSplit
 import llm.slop.liquidlsd.ui.browser.TransitionQueuePanel
 import llm.slop.liquidlsd.ui.browser.DockActions
@@ -215,7 +215,6 @@ internal object LibraryNavigation {
      * Deck BG), a transition applies to the mixer, an FX browser item goes to the FX A/B queue, an FX queue item is applied to its deck.
      */
     fun accept(session: SessionContext, mixer: Mixer, parametersState: ParametersState) {
-        val file = LibraryPanel.getActiveSelectedFile(session)
         when (LibraryPanel.activeSelectionSource) {
             SelectionSource.TREE -> unifiedKind()?.let {
                 BrowserPane.acceptTree(it)
@@ -223,12 +222,12 @@ internal object LibraryNavigation {
                 if (BrowserPane.hosted() != null) LibraryPanel.activeSelectionSource = SelectionSource.PRESETS
             }
             SelectionSource.PRESETS -> DockActions.acceptCursorRow(session, mixer, parametersState)
-            // Same as a double-click: moves the queue position, fades to the loaded deck and advances the transition queue.
-            SelectionSource.QUEUE_AB -> session.playQueueManager.playIndex(QueueActionsPanel.selectedIndex, mixer)
-            SelectionSource.QUEUE_BG -> file?.let { BrowserDeckButtons.loadPresetToDeck(session, mixer, it, 3) }
-            SelectionSource.TRANSITION_QUEUE -> file?.let { TransitionQueueManager.applyTransitionItem(it, mixer) }
-            SelectionSource.FX_QUEUE_AB -> FXQueueManager.jumpToIndex(FXQueueActionsPanel.selectedIndex, session, mixer)
-            SelectionSource.FX_QUEUE_BG -> FXBgQueueManager.jumpToIndex(FXBgQueueActionsPanel.selectedIndex, session, mixer)
+            // Same as a double-click on the row.
+            SelectionSource.QUEUE_AB -> QueueOps.play(QueueDrop.Queue.AB, QueueActionsPanel.selectedIndex, session, mixer)
+            SelectionSource.QUEUE_BG -> QueueOps.play(QueueDrop.Queue.BG, BgQueueActionsPanel.selectedIndex, session, mixer)
+            SelectionSource.TRANSITION_QUEUE -> QueueOps.play(QueueDrop.Queue.TRANS, TransitionQueuePanel.selectedIndex, session, mixer)
+            SelectionSource.FX_QUEUE_AB -> QueueOps.play(QueueDrop.Queue.FX_AB, FXQueueActionsPanel.selectedIndex, session, mixer)
+            SelectionSource.FX_QUEUE_BG -> QueueOps.play(QueueDrop.Queue.FX_BG, FXBgQueueActionsPanel.selectedIndex, session, mixer)
             null -> Unit
         }
     }
