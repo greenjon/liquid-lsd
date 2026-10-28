@@ -62,7 +62,9 @@ The standalone browser client (`web/index.html`) presents the visualizer in a re
 
 **Volume dial:** Drag the rotary dial up or down to adjust volume. The curve is tuned to feel perceptually linear — small moves at the bottom, bigger moves at the top.
 
-**Fullscreen:** Double-click the TV screen, press `S`, or choose MENU › **Fullscreen** to expand to full-screen (the on-screen display comes along). Do any of them again, or press `Esc`, to go back to the TV shell.
+**Fullscreen:** Double-click the TV screen, press `S`, or choose MENU › **Fullscreen** to expand to full-screen (the on-screen display comes along). Do any of them again, or press `Esc`, to go back to the TV shell. Choosing it from the MENU closes the menu. In Chrome and Edge, `Esc` closes the menu first if it is open (hold `Esc` to leave full screen right away); other browsers always leave full screen on `Esc`.
+
+**Version:** the MENU title shows the TV's version (v1, v2, …) on the right. If it is older than the one just announced, reload the page to get the latest.
 
 **Microphone:** press `A` or choose MENU › **Input** to make the picture follow your microphone instead of the radio, for a room playing its own music. Your browser asks permission the first time; the sound is only analysed, never played through the speakers. Press `A` again for the radio. Turning the TV off also puts the radio back. Locked during a live broadcast.
 

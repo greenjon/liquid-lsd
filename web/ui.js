@@ -8,6 +8,10 @@ import { createMenu } from './menu.js';
 import { heardBeats, tapOffset } from './sync.js';
 
 // Power state — imported by renderer.js each frame
+// Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
+// every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
+export const TV_VERSION = 'v1';
+
 export const powerState = {
   on: false,              // is the TV powered on?
   warmupProgress: 0,      // 0..1, advanced by renderer.js when turning on
@@ -376,10 +380,18 @@ export function initUI() {
   });
   function toggleFullscreen() {
     if (!screen.requestFullscreen) { message('FULLSCREEN NOT AVAILABLE HERE', 3000); return; }
-    if (!document.fullscreenElement) screen.requestFullscreen().catch(console.error);
-    else document.exitFullscreen().catch(console.error);
+    if (!document.fullscreenElement) {
+      // Going full screen from the menu closes it, so the Esc that would close it can't also leave full screen.
+      menu.hide();
+      // Where the browser allows it (Chromium), keep Esc for the page: a tap closes the menu or leaves full
+      // screen through the keyboard handler below, and holding it still leaves full screen.
+      screen.requestFullscreen().then(() => navigator.keyboard?.lock?.(['Escape'])).catch(console.error);
+    } else document.exitFullscreen().catch(console.error);
   }
-  document.addEventListener('fullscreenchange', () => menu.refresh());
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement) navigator.keyboard?.unlock?.();
+    menu.refresh();
+  });
   window.addEventListener('lsd-mic', () => menu.refresh());
 
   // TAP SYNC: tap Space (or the picture) on 8 beats you hear; the median lateness against the locked beat
@@ -414,6 +426,7 @@ export function initUI() {
   viewerState.tapSync = () => tapping && tapSync(); // for the headless check
 
   const menu = createMenu(screen, rows, {
+    version: TV_VERSION,
     onOpen: () => screen.classList.add('menu-open'),   // the OSD steps aside while the menu is up
     onClose: () => screen.classList.remove('menu-open'),
   });
@@ -434,6 +447,7 @@ export function initUI() {
       f: fx, F: fx, h: hold, H: hold, ' ': hold,
       '[': () => stepTime(-1), ']': () => stepTime(1),
       '-': () => stepReact(-1), '=': () => stepReact(1), '+': () => stepReact(1),
+      Escape: () => document.fullscreenElement && document.exitFullscreen().catch(console.error),
       s: toggleFullscreen, S: toggleFullscreen, a: toggleMic, A: toggleMic,
       i: () => showLook(undefined, 4000, true), I: () => showLook(undefined, 4000, true),
     };

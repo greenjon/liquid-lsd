@@ -1264,6 +1264,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#web-tv-version-in-the-menu-esc-in-full-screen-webuijs-webmenujs-webtvcss-scriptspublish_web_tvsh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web TV: Version in the Menu, Esc in Full Screen (web/ui.js, web/menu.js, web/tv.css, scripts/publish_web_tv.sh)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#web-tv-menu-clicks-no-longer-turn-the-tv-off-webmenujs-webuijs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7067,6 +7078,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#web-tv-version-in-the-menu-esc-in-full-screen-webuijs-webmenujs-webtvcss-scriptspublish_web_tvsh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web TV: Version in the Menu, Esc in Full Screen (web/ui.js, web/menu.js, web/tv.css, scripts/publish_web_tv.sh)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#web-tv-menu-clicks-no-longer-turn-the-tv-off-webmenujs-webuijs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -12845,6 +12867,11 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="web-tv-version-in-the-menu-esc-in-full-screen-webuijs-webmenujs-webtvcss-scriptspublish_web_tvsh">Web TV: Version in the Menu, Esc in Full Screen (<code>web/ui.js</code>, <code>web/menu.js</code>, <code>web/tv.css</code>, <code>scripts/publish_web_tv.sh</code>)</h3>
+<ul>
+<li><strong>The MENU title shows the TV's version</strong> (starting at v1), so you can tell at a glance whether your browser has picked up the latest update. <code>scripts/publish_web_tv.sh</code> warns when spaz.org already has the version you are about to publish.</li>
+<li><strong>Fixed: closing the menu with Esc after choosing FULLSCREEN also left full screen.</strong> Choosing FULLSCREEN now closes the menu. In Chrome and Edge, Esc in full screen now closes the menu if it is open and otherwise leaves full screen, and holding Esc always leaves full screen. Other browsers always leave full screen on Esc; the page can't change that.</li>
+</ul>
 <h3 id="web-tv-menu-clicks-no-longer-turn-the-tv-off-webmenujs-webuijs">Web TV: Menu Clicks No Longer Turn the TV Off (<code>web/menu.js</code>, <code>web/ui.js</code>)</h3>
 <ul>
 <li><strong>Fixed: clicking a menu row's name could switch the TV off.</strong> The click redrew the menu, and by the time it reached the cabinet it no longer looked like it came from the menu, so it counted as a click on the cabinet. Menu clicks now stay in the menu, and a click on the cabinet while the menu is open just closes the menu.</li>

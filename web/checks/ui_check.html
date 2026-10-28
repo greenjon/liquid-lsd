@@ -93,6 +93,7 @@ try {
   key('m');
   const menuEl = d.getElementById('tv-menu');
   check('M opens the menu', menuEl && !menuEl.hidden);
+  check('Menu: the title shows the TV version', /^v\d+$/.test(menuEl.querySelector('.menu-version')?.textContent ?? ''), menuEl.querySelector('.menu-title').textContent);
   key('ArrowRight'); key('ArrowRight'); key('ArrowRight');
   check('Menu: right arrow raises SYNC by 10 ms steps', w.LSD.viewerState.syncMs === 30, w.LSD.viewerState.syncMs);
   await sleep(3000);

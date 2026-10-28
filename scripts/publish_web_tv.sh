@@ -22,6 +22,12 @@ for arg in "$@"; do
 done
 DRY=0; for a in "${EXTRA[@]}"; do [ "$a" = --dry-run ] && DRY=1; done
 node --test "$ROOT/web/tools/content.test.mjs" >/dev/null || { echo "content validation failed (node --test web/tools/content.test.mjs); not publishing" >&2; exit 1; }
+# The MENU shows TV_VERSION (web/ui.js) so viewers can tell a stale copy: warn when the server already has it.
+LOCAL_VER="$(grep -oP "TV_VERSION = '\K[^']+" "$ROOT/web/ui.js")"
+SERVER_VER="$(curl -fsS https://spaz.org/tv/ui.js 2>/dev/null | grep -oP "TV_VERSION = '\K[^']+" || true)"
+if [ "$LOCAL_VER" = "$SERVER_VER" ]; then
+  echo "note: spaz.org already has TV_VERSION $LOCAL_VER; bump it in web/ui.js if this publish changes code" >&2
+fi
 export RSYNC_RSH="ssh -o ServerAliveInterval=15 -o ServerAliveCountMax=4 -o BatchMode=yes"
 rsync -rlc --partial --timeout=120 --chmod=D2755,F644 --exclude=/checks/ --exclude=/tools/ --exclude=/update/ --stats "${EXTRA[@]}" \
   "$ROOT/web/" "$DEST" | grep -E "^\*deleting|^[<>ch.][fdL]|Number of regular files transferred|Total transferred"

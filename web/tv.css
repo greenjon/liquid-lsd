@@ -400,7 +400,8 @@ body.kiosk.idle, body.kiosk.idle canvas { cursor: none; }
 }
 #tv-menu[hidden] { display: none; }
 .menu-open #osd, .card-up #osd, .card-up #bumper { visibility: hidden; }
-#tv-menu .menu-title { font-size: 1.3em; margin-bottom: 0.2em; }
+#tv-menu .menu-title { font-size: 1.3em; margin-bottom: 0.2em; display: flex; justify-content: space-between; align-items: baseline; }
+#tv-menu .menu-version { font-size: 0.55em; opacity: 0.6; }
 #tv-menu .menu-row { display: flex; justify-content: space-between; align-items: center; padding: 0.1em 0.5em; cursor: pointer; }
 #tv-menu .menu-row.sel { background: #8cff8c; color: #021; text-shadow: none; }
 #tv-menu .menu-row.locked { opacity: 0.4; }
