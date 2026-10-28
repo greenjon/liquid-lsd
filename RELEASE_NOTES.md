@@ -1,5 +1,13 @@
 ## [Unreleased]
 
+### Twister: Queue Knobs, Queueing at a Place, Auto-Preview (`ui/browser/QueueKnobs.kt`, `ui/browser/QueueOps.kt`, `ui/NavigationSurface.kt`, `ui/PerformSurface.kt`, `control/KnobCommands.kt`)
+- **New: knobs 14 and 15 are queue knobs in the Library view** while the queues are under the browser. Knob 14 is the tab's main queue (A/B, A/B FX or Transitions), knob 15 its BG queue. Turn to move the highlight, hold down and turn to carry the item up or down, tap to use it now, Shift + tap to remove it. Their columns are outlined on screen, and the rings show where the highlight is.
+- **New: Shift + tap on knob 16 queues the item at a place**: after the highlight of the queue knob you touched last. Put that highlight on the playing item and the new item plays next. With no queue knob touched, it goes to the end as before.
+- **New: knobs 1-8 play a deck in the Library view**: the one you last sent to with knobs 9-13, Deck PV until then. A label on the Library's tab line names it.
+- **New: auto-preview.** Shift + tap on knob 12 (the PV send) makes PV load whatever the cursor rests on; knob 12 blinks while it's on. It turns off when you leave the Library and pauses while PV has unsaved changes.
+- **Queue edits can be undone.** Moving or removing queue items, by mouse, keyboard or Twister, is undone with Ctrl+Z (items, playing position and shuffle order). Removing shows a message saying what went.
+- Fixed: dragging a BG queue item down placed it one row too far.
+
 ### Queues Under the Browser in the Library View (`ui/browser/QueueSplit.kt`, `ui/browser/QueueDrop.kt`, `ui/browser/BrowserDock.kt`, `ui/browser/QueuesPane.kt`, the five queue panels)
 - **New: with the Library maximized, the Sources, FX and Transitions tabs show the five queues under the browser.** Audition a source, effect or chain, then drag it straight to the place in a queue it should go. Before, it went to the bottom of the queue and you reordered it on the Queues tab. Drag the line between the halves to share the height (double-click: half and half); the rows-icon button left of Restore hides or shows the queues. On by default; the Perform view's Library and the Queues tab are unchanged.
 - **Queues only take their own kind.** While you drag, a queue that can't take what you hold dims and won't accept the drop; a drop mixing kinds keeps the right ones and a toast says how many were skipped. Fixed: the FX and Transition queues accepted any dropped file, so a source could end up in an FX queue.

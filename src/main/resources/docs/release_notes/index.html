@@ -1264,6 +1264,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#twister-queue-knobs-queueing-at-a-place-auto-preview-uibrowserqueueknobskt-uibrowserqueueopskt-uinavigationsurfacekt-uiperformsurfacekt-controlknobcommandskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Twister: Queue Knobs, Queueing at a Place, Auto-Preview (ui/browser/QueueKnobs.kt, ui/browser/QueueOps.kt, ui/NavigationSurface.kt, ui/PerformSurface.kt, control/KnobCommands.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#queues-under-the-browser-in-the-library-view-uibrowserqueuesplitkt-uibrowserqueuedropkt-uibrowserbrowserdockkt-uibrowserqueuespanekt-the-five-queue-panels" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7023,6 +7034,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#twister-queue-knobs-queueing-at-a-place-auto-preview-uibrowserqueueknobskt-uibrowserqueueopskt-uinavigationsurfacekt-uiperformsurfacekt-controlknobcommandskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Twister: Queue Knobs, Queueing at a Place, Auto-Preview (ui/browser/QueueKnobs.kt, ui/browser/QueueOps.kt, ui/NavigationSurface.kt, ui/PerformSurface.kt, control/KnobCommands.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#queues-under-the-browser-in-the-library-view-uibrowserqueuesplitkt-uibrowserqueuedropkt-uibrowserbrowserdockkt-uibrowserqueuespanekt-the-five-queue-panels" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -12757,6 +12779,15 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="twister-queue-knobs-queueing-at-a-place-auto-preview-uibrowserqueueknobskt-uibrowserqueueopskt-uinavigationsurfacekt-uiperformsurfacekt-controlknobcommandskt">Twister: Queue Knobs, Queueing at a Place, Auto-Preview (<code>ui/browser/QueueKnobs.kt</code>, <code>ui/browser/QueueOps.kt</code>, <code>ui/NavigationSurface.kt</code>, <code>ui/PerformSurface.kt</code>, <code>control/KnobCommands.kt</code>)</h3>
+<ul>
+<li><strong>New: knobs 14 and 15 are queue knobs in the Library view</strong> while the queues are under the browser. Knob 14 is the tab's main queue (A/B, A/B FX or Transitions), knob 15 its BG queue. Turn to move the highlight, hold down and turn to carry the item up or down, tap to use it now, Shift + tap to remove it. Their columns are outlined on screen, and the rings show where the highlight is.</li>
+<li><strong>New: Shift + tap on knob 16 queues the item at a place</strong>: after the highlight of the queue knob you touched last. Put that highlight on the playing item and the new item plays next. With no queue knob touched, it goes to the end as before.</li>
+<li><strong>New: knobs 1-8 play a deck in the Library view</strong>: the one you last sent to with knobs 9-13, Deck PV until then. A label on the Library's tab line names it.</li>
+<li><strong>New: auto-preview.</strong> Shift + tap on knob 12 (the PV send) makes PV load whatever the cursor rests on; knob 12 blinks while it's on. It turns off when you leave the Library and pauses while PV has unsaved changes.</li>
+<li><strong>Queue edits can be undone.</strong> Moving or removing queue items, by mouse, keyboard or Twister, is undone with Ctrl+Z (items, playing position and shuffle order). Removing shows a message saying what went.</li>
+<li>Fixed: dragging a BG queue item down placed it one row too far.</li>
+</ul>
 <h3 id="queues-under-the-browser-in-the-library-view-uibrowserqueuesplitkt-uibrowserqueuedropkt-uibrowserbrowserdockkt-uibrowserqueuespanekt-the-five-queue-panels">Queues Under the Browser in the Library View (<code>ui/browser/QueueSplit.kt</code>, <code>ui/browser/QueueDrop.kt</code>, <code>ui/browser/BrowserDock.kt</code>, <code>ui/browser/QueuesPane.kt</code>, the five queue panels)</h3>
 <ul>
 <li><strong>New: with the Library maximized, the Sources, FX and Transitions tabs show the five queues under the browser.</strong> Audition a source, effect or chain, then drag it straight to the place in a queue it should go. Before, it went to the bottom of the queue and you reordered it on the Queues tab. Drag the line between the halves to share the height (double-click: half and half); the rows-icon button left of Restore hides or shows the queues. On by default; the Perform view's Library and the Queues tab are unchanged.</li>

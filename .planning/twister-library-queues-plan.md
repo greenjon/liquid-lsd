@@ -1,6 +1,6 @@
 # Twister in the split Library view (plan)
 
-Status: PLANNED 2026-10-27, not started. Decisions from `.planning/twister-library-queues-brainstorm.md`, all six open questions
+Status: IMPLEMENTED 2026-10-27 (steps 1-7, commits a80f77d..), unseen on hardware. Decisions from `.planning/twister-library-queues-brainstorm.md`, all six open questions
 answered with the recommendations (user, 2026-10-27). Builds on the queue split (d39c5b2).
 
 ## Decisions

@@ -37,6 +37,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [ ] Drag a source between two A/B queue items: lands at the line, the playing marker stays on its row. Drag it over the FX queues: dimmed, no drop. Drag a mixed selection: right ones go in, toast counts the skipped. Drag a playlist from the tree into a queue: its items go in at the line.
 - [ ] Drag to the bottom edge of a long queue (and of the browser list/tree): it scrolls. `Q` / `Shift+Q` and drops flash the receiving queue's border (dark and light theme).
 - [ ] Arrow keys / controller cursor on the split: tree, list, then the five queues; `Q` with the cursor in a queue does nothing.
+- [ ] Queue edits undo: drag-reorder, row-menu Remove and Delete in each of the five queues, then Ctrl+Z: items, playing marker and shuffle order come back; Remove toasts what went. Drag a BG queue item down: it lands where the line was.
 - [ ] Macros tab: macro banks and Perform pages are listed; loading one works.
 - [ ] Transitions view: the Q key queues.
 - [ ] Double-click a preset in the queue: auto-fades and advances. Accept from MIDI/keyboard: same.
@@ -255,6 +256,10 @@ Light wave 2: - [ ] cyclic_ca - [ ] metaballs - [ ] wave_ripples - [ ] aurora_ri
 - [ ] Bank press in the pair view walks A, B, BG, PV, Master. Knob 13 send / quick switch is the Master pair.
 - [ ] Bound slot or pair view: knob 16 is the cursor (tap applies, Shift + tap queues), knobs 1-8 live; touching one moves the binding; Shift + tap on a send knob moves it to that deck. Right-middle steps the tab, right-bottom the panes (Shift + right-bottom clears the slot).
 - [ ] Library send-to-deck knobs: in Library FULL a send only loads. Shift + tap on a send knob (9-13) switches pair without sending, not intermittent.
+- [ ] Library view (queues under the browser), Sources tab: knob 14 moves the A/B queue highlight (first turn lands on the playing item), knob 15 the BG queue's; both columns outlined mint/rose; rings show the place. Hold + turn carries an item, releasing doesn't play it. Tap plays it now; Shift + tap removes (toast, Ctrl+Z). FX tab: the FX queues; Transitions: knob 15 dark. Hide the queues: both dark.
+- [ ] Shift + tap knob 16 after turning knob 14 to the playing item: the item plays next; a second one goes after it. Without touching a queue knob: end of the A/B queue. A playlist under the tree cursor goes in whole.
+- [ ] Knobs 1-8 in the Library view play Deck PV (label on the tab line); send to Deck A with knob 9: they move to A and light in A's colours; knob 13 send: Master's rows.
+- [ ] Auto-preview: Shift + tap knob 12, knob 12 blinks; scroll Sources and stop: PV loads after ~0.4 s, not while scrolling. Watch the output while scrolling past heavy (gauge) sources and Flames on the laptop iGPU: stutter? Tweak PV with knobs 1-8, scroll on: it pauses with a message instead of a prompt. Leave the Library: it's off.
 - [ ] Controller FX tap with nothing bound applies to the live deck (first vacant slot, last when full; Shift + tap queues).
 - [ ] Link All on the Twister; Chain Link: bank change via `B3 0n 7F`.
 - [ ] MIDI input now applies before the frame renders (2026-10-23): knob turns feel at least as tight as before; bank switch, browse cursor (no skipped or lost steps on entering/leaving browse), the unsaved-deck prompt answered from the Twister. Minimise the window and turn knobs: LEDs follow, and on restore nothing replays in a burst.
