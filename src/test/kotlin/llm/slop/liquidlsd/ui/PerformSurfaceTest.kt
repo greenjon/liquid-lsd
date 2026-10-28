@@ -293,6 +293,46 @@ class PerformSurfaceTest {
         }
     }
 
+    @Test
+    fun theLibraryViewsQueueKnobsShowTheirCursorAndThePvKnobBlinksForAutoPreview() {
+        val savedMode = UITheme.libraryMode
+        val savedSplit = UITheme.libraryQueueSplit
+        val nav = object : llm.slop.liquidlsd.control.NavSurface {
+            override val browsing = true
+            override val browseSession = 0
+            override val browseLiveKnobs = 8
+            override fun button(index: Int, shifted: Boolean) {}
+            override fun browseStep(steps: Int) {}
+            override fun browseAccept(shifted: Boolean) {}
+        }
+        val q = llm.slop.liquidlsd.ui.browser.QueueDrop.Queue.AB
+        try {
+            UITheme.libraryMode = UITheme.LibraryMode.FULL
+            UITheme.libraryQueueSplit = true
+            LibraryPanel.viewMode = LibraryPanel.LibraryViewMode.PRESETS
+            llm.slop.liquidlsd.ui.browser.QueueDrop.insertFiles(q, 0, listOf("a", "b", "c").map { java.io.File("/x/$it.lsd") })
+            llm.slop.liquidlsd.ui.browser.QueueOps.setCursor(q, 1)
+            val lights = PerformSurface(UITheme, ctx, state, mixer, nav).knobLights()
+            val ab = lights[llm.slop.liquidlsd.ui.browser.QueueKnobs.A_SIDE_KNOB]!!
+            assertEquals(0.5f, ab.value, "the cursor halfway down")
+            assertEquals(TangoPalette.QUEUE_AB_TEXT.dark.take(3), listOf(ab.r, ab.g, ab.b))
+            assertFalse(lights[llm.slop.liquidlsd.ui.browser.QueueKnobs.BG_SIDE_KNOB]!!.lit, "the BG queue is empty")
+            assertNull(lights[llm.slop.liquidlsd.control.SendTarget.PV.knob], "no cursor item to send")
+
+            LibraryNavigation.toggleAutoPreview()
+            assertNotNull(PerformSurface(UITheme, ctx, state, mixer, nav).knobLights()[llm.slop.liquidlsd.control.SendTarget.PV.knob])
+
+            UITheme.libraryQueueSplit = false
+            assertNull(PerformSurface(UITheme, ctx, state, mixer, nav).knobLights()[llm.slop.liquidlsd.ui.browser.QueueKnobs.A_SIDE_KNOB], "dark without the split")
+        } finally {
+            if (LibraryNavigation.autoPreview) LibraryNavigation.toggleAutoPreview()
+            UITheme.libraryMode = savedMode
+            UITheme.libraryQueueSplit = savedSplit
+            llm.slop.liquidlsd.presets.PlayQueueManager.clearQueue()
+            llm.slop.liquidlsd.ui.browser.QueueOps.setCursor(q, -1)
+        }
+    }
+
     // --- Lights (ring + LED feedback) ---
 
     @Test

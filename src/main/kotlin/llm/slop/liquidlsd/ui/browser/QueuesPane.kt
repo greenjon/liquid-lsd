@@ -6,6 +6,7 @@ import imgui.flag.ImGuiStyleVar
 import imgui.flag.ImGuiWindowFlags
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.rendering.Mixer
+import llm.slop.liquidlsd.ui.PerformanceColors
 import llm.slop.liquidlsd.ui.TangoPalette
 
 /**
@@ -55,6 +56,9 @@ object QueuesPane {
         val bg = TangoPalette.PANEL_BG.u32()
         val bgAlt = contrasted(bg, ALT_SHADE)
         ImGui.pushStyleColor(ImGuiCol.Border, TangoPalette.PANEL_BORDER.u32())
+        val knobQueues = if (QueueKnobs.live() && llm.slop.liquidlsd.midi.MidiMappingManager.controllers.anyConnected) {
+            QueueKnobs.queuesFor(llm.slop.liquidlsd.ui.LibraryPanel.viewMode)
+        } else null
         for ((i, column) in columns.withIndex()) {
             if (i > 0) ImGui.sameLine(0f, GAP)
             // Alternate the column fill so five similar button strips read as five separate queues.
@@ -66,6 +70,17 @@ object QueuesPane {
             ImGui.endChild()
             if (blocked) ImGui.popStyleVar()
             ImGui.popStyleColor()
+            // The two columns the controller's queue knobs drive (14, 15), outlined in their LED colours so the screen and the hardware agree.
+            val knobDriven = knobQueues?.let { column.queue == it.first || column.queue == it.second } == true
+            if (knobDriven) {
+                val col = if (column.queue.kind == BrowseKind.TRANS) TangoPalette.u32(PerformanceColors.COLOR_TRANS)
+                    else if (column.queue == QueueDrop.Queue.BG || column.queue == QueueDrop.Queue.FX_BG) TangoPalette.QUEUE_BG_TEXT.u32()
+                    else TangoPalette.QUEUE_AB_TEXT.u32()
+                ImGui.getWindowDrawList().addRect(
+                    ImGui.getItemRectMinX() + 1f, ImGui.getItemRectMinY() + 1f, ImGui.getItemRectMaxX() - 1f, ImGui.getItemRectMaxY() - 1f,
+                    col, 6f, 0, 1f
+                )
+            }
             val flash = QueueDrop.flashAmount(column.queue)
             if (flash > 0f) {
                 ImGui.getWindowDrawList().addRect(

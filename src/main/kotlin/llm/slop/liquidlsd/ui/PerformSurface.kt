@@ -10,6 +10,9 @@ import llm.slop.liquidlsd.macro.FxMacroSync
 import llm.slop.liquidlsd.macro.MacroControl
 import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.parameters.MeterType
+import llm.slop.liquidlsd.ui.browser.QueueDrop
+import llm.slop.liquidlsd.ui.browser.QueueKnobs
+import llm.slop.liquidlsd.ui.browser.QueueOps
 import llm.slop.liquidlsd.presets.FxOps
 import llm.slop.liquidlsd.rendering.Mixer
 
@@ -279,22 +282,52 @@ internal class PerformSurface(
     }
 
     /**
-     * While browsing only the cursor knob (white), the live knobs of the browsed rows on screen (their colour), the live send knobs
-     * and Chain view's load knobs stay lit.
+     * While browsing only the cursor knob (white), the live knobs of the browsed rows on screen (their colour), the live send knobs,
+     * Chain view's load knobs and the Library view's queue knobs stay lit. The PV send knob blinks while auto-preview is on.
      */
     private fun dimForBrowse(nav: NavSurface) {
         val sendTargets = nav.sendTargets
         val chainRows = if (parametersState.chainView == ParametersState.ChainViewState.BROWSE)
             parametersState.focusedPair?.let { PerfRows.chainRowsFor(it, ParametersState.ChainViewState.BROWSE) } else null
+        val queueTab = if (QueueKnobs.live()) LibraryPanel.viewMode else null
         for (i in lightBuffer.indices) {
             if (i == nav.browseKnob) lightBuffer[i] = KnobLight(nav.browsePosition, meterType = MeterType.ENDLESS)
             else if (!nav.isBrowseLive(i)) {
                 // Chain view's load knobs glow in the colour of the slot row they load into; dark while the cursor item can't go in a slot.
                 val slotRow = chainRows?.getOrNull(i + 1)?.takeIf { i < chainRows.size - 1 }
-                lightBuffer[i] = if (slotRow != null) loadLight(slotRow)
-                else SendTarget.forKnob(i)?.takeIf { it in sendTargets }?.let(::sendLight)
+                val queue = queueTab?.let { QueueKnobs.queueFor(i, it) }
+                lightBuffer[i] = when {
+                    slotRow != null -> loadLight(slotRow)
+                    queue != null -> queueLight(queue)
+                    i == SendTarget.PV.knob && LibraryNavigation.autoPreview -> autoPreviewLight()
+                    else -> SendTarget.forKnob(i)?.takeIf { it in sendTargets }?.let(::sendLight)
+                }
             }
         }
+    }
+
+    /**
+     * A queue knob: its queue's colour (dark while the queue is empty), the ring at the cursor's place in the queue (full with no cursor
+     * or one row), full for a moment when items arrive ([QueueDrop.flashAmount]).
+     */
+    private fun queueLight(queue: QueueDrop.Queue): KnobLight {
+        val c = when (queue) {
+            QueueDrop.Queue.AB, QueueDrop.Queue.FX_AB -> TangoPalette.QUEUE_AB_TEXT.dark
+            QueueDrop.Queue.BG, QueueDrop.Queue.FX_BG -> TangoPalette.QUEUE_BG_TEXT.dark
+            QueueDrop.Queue.TRANS -> PerformanceColors.COLOR_TRANS
+        }
+        val size = QueueOps.items(queue).size
+        val cursor = QueueOps.cursor(queue)
+        val position = if (size <= 1 || cursor < 0) 1f else cursor.toFloat() / (size - 1)
+        val arriving = QueueDrop.flashAmount(queue) > 0f
+        return KnobLight(if (arriving) 1f else position, c[0], c[1], c[2], lit = size > 0, meterType = MeterType.ENDLESS)
+    }
+
+    /** The PV send knob while auto-preview is on: blinks in PV's colour, whatever the cursor item. */
+    private fun autoPreviewLight(): KnobLight {
+        val c = PerformanceColors.COLOR_DECK_PV
+        val on = (nowNanos() / PICKUP_BLINK_HALF_PERIOD_NANOS) % 2L == 0L
+        return KnobLight(1f, c[0], c[1], c[2], lit = on, meterType = MeterType.ENDLESS, ringBrightness = SEND_RING_BRIGHTNESS, marker = true)
     }
 
     private fun loadLight(slotRow: RowDescriptor): KnobLight {
