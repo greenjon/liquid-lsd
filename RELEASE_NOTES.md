@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Web TV: Menu Clicks No Longer Turn the TV Off (`web/menu.js`, `web/ui.js`)
+- **Fixed: clicking a menu row's name could switch the TV off.** The click redrew the menu, and by the time it reached the cabinet it no longer looked like it came from the menu, so it counted as a click on the cabinet. Menu clicks now stay in the menu, and a click on the cabinet while the menu is open just closes the menu.
+
 ### The Slot You're Browsing Breathes (`ui/TangoPalette.kt`, `ui/DockOutline.kt`, `ui/BayHeader.kt`)
 - **The outline around the slot the Library is applying to now breathes slowly** (a source badge, chain name, FX slot or transition name), and it is a little thicker, so it's easier to spot on a busy screen. It never fades out completely.
 - **The name on the Library's tab line and the Edit view's header sits in a pill of the row's colour that breathes in step with that outline**, so you can see at a glance which title goes with which slot. The label itself stays in the normal text colour so it stays readable.

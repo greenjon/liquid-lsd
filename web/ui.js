@@ -228,10 +228,12 @@ export function initUI() {
   });
 
   // The whole TV is a power target: when it is off, a click anywhere on it turns it on; when it is on, a
-  // click on the cabinet (not the picture, which shows the info, and not the other controls) turns it off.
+  // click on the cabinet (not the picture, which shows the info, and not the other controls) turns it off,
+  // unless the menu is open: then it only closes the menu.
   tvBody.addEventListener('click', (e) => {
     if (e.target.closest('button, .rotary-dial, .rocker, #tv-menu, #about, a')) return; // they handle their own clicks
     if (powerState.on && e.target.closest('#tv-screen-area')) return;
+    if (viewerState.menu?.open) { viewerState.menu.hide(); return; } // a near-miss on the menu closes it, not the TV
     powerSwitch.click();
   });
 

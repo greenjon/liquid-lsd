@@ -12,6 +12,9 @@ export function createMenu(screen, rows, { onOpen = () => {}, onClose = () => {}
   el.setAttribute('role', 'menu');
   el.hidden = true;
   screen.appendChild(el);
+  // A row click re-renders the menu, detaching the clicked element before the click bubbles on, so the
+  // cabinet's power handler could no longer see it came from the menu: menu clicks stop here.
+  el.addEventListener('click', (e) => e.stopPropagation());
   let sel = 0;
 
   function render() {

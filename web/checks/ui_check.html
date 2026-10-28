@@ -109,6 +109,9 @@ try {
   check('Menu: ANNOUNCE LOOKS turns off', w.LSD.viewerState.announce === false);
   const labels = [...menuEl.querySelectorAll('.menu-label')].map((e) => e.textContent);
   check('Menu: has INPUT and FULLSCREEN rows', labels.includes('INPUT') && labels.includes('FULLSCREEN'), labels.join(','));
+  menuEl.querySelectorAll('.menu-label')[0].click(); // re-renders the menu under the click
+  check('Menu: clicking a row label leaves the TV on', w.LSD.powerState.on);
+  check('Menu: clicking a row label keeps the menu open', !menuEl.hidden);
   key('Escape');
   check('Esc closes the menu', menuEl.hidden);
 
