@@ -378,7 +378,7 @@ jobs:
         with:
           keep_latest: 3
           delete_tags: true
-          # only version tags (vX.Y.Z); never the `syphon-natives` asset release
-          delete_tag_pattern: v
+          # substring match: "v" alone also matched `syphon-natives` and deleted it
+          delete_tag_pattern: v0.9.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
