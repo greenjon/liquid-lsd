@@ -1,0 +1,282 @@
+{
+ "version": 1,
+ "name": "stock-hyper_slice",
+ "visualSourceType": "hyper_slice",
+ "parameters": {
+  "SliceOffset": {
+   "baseValue": 0.0,
+   "baseMin": -0.5,
+   "baseMax": 0.5,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "waveform": "SINE",
+     "genUnit": "BEAT",
+     "subdivision": 32,
+     "depth": 0.3,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "audio_bass",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.2,
+     "followerMode": "PUNCHY",
+     "attackMs": 5,
+     "decayMs": 150,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "RotateXW": {
+   "baseValue": 0.0,
+   "baseMin": -1.5,
+   "baseMax": 1.5,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "waveform": "SINE",
+     "genUnit": "BEAT",
+     "subdivision": 64,
+     "depth": 0.1,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Morph": {
+   "baseValue": 0.0,
+   "baseMin": 0.0,
+   "baseMax": 0.7,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_amp",
+     "operator": "ADD",
+     "depth": 0.3,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "audio_bass",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.25,
+     "followerMode": "PUNCHY",
+     "attackMs": 5,
+     "decayMs": 150,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Glow": {
+   "baseValue": 0.33333,
+   "baseMin": 0.0,
+   "baseMax": 1.0,
+   "randomizeBase": false,
+   "modulators": [
+    {
+     "sourceId": "audio_flux_bass",
+     "operator": "ADD",
+     "depth": 0.3,
+     "followerMode": "SNAP",
+     "attackMs": 0,
+     "decayMs": 35,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "audio_high",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.25,
+     "followerMode": "PUNCHY",
+     "attackMs": 5,
+     "decayMs": 110,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "EdgeBrightness": {
+   "baseValue": 0.5,
+   "baseMin": 0.0,
+   "baseMax": 1.0,
+   "randomizeBase": false,
+   "modulators": [
+    {
+     "sourceId": "audio_flux_bass",
+     "operator": "ADD",
+     "depth": 0.3,
+     "followerMode": "SNAP",
+     "attackMs": 0,
+     "decayMs": 35,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Brightness": {
+   "baseValue": 0.55,
+   "baseMin": 0.0,
+   "baseMax": 1.0,
+   "randomizeBase": false,
+   "modulators": [
+    {
+     "sourceId": "audio_amp",
+     "operator": "ADD",
+     "depth": 0.12,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "RotateYW": {
+   "baseValue": 0.0,
+   "baseMin": -1.5,
+   "baseMax": 1.5,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "bypassed": true,
+     "waveform": "SINE",
+     "genUnit": "BEAT",
+     "subdivision": 48,
+     "depth": 0.08,
+     "phaseOffset": 0.25,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "RotateZW": {
+   "baseValue": 0.0,
+   "baseMin": -1.5,
+   "baseMax": 1.5,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_mid",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.06,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Zoom": {
+   "baseValue": 0.5,
+   "baseMin": 0.0,
+   "baseMax": 1.0,
+   "randomizeBase": false,
+   "modulators": [
+    {
+     "sourceId": "audio_bass",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.05,
+     "followerMode": "PUNCHY",
+     "attackMs": 5,
+     "decayMs": 150,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "HueOffset": {
+   "baseValue": 0.0,
+   "baseMin": 0.0,
+   "baseMax": 0.65,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "waveform": "TRIANGLE",
+     "genUnit": "BEAT",
+     "subdivision": 64,
+     "depth": 0.175,
+     "dcOffset": 0.175
+    }
+   ]
+  },
+  "RotateX": {
+   "baseValue": 0.0,
+   "baseMin": -0.6,
+   "baseMax": 0.6,
+   "randomizeBase": true,
+   "modulators": []
+  },
+  "RotateY": {
+   "baseValue": 0.0,
+   "baseMin": -0.6,
+   "baseMax": 0.6,
+   "randomizeBase": true,
+   "modulators": []
+  },
+  "RotateZ": {
+   "baseValue": 0.0,
+   "baseMin": -0.6,
+   "baseMax": 0.6,
+   "randomizeBase": true,
+   "modulators": []
+  },
+  "SupportH": {
+   "baseValue": 0.36667,
+   "baseMin": 0.2,
+   "baseMax": 0.6,
+   "randomizeBase": true,
+   "modulators": []
+  },
+  "ColorMethod": {
+   "baseValue": 0.0,
+   "baseMin": 0.0,
+   "baseMax": 2.0,
+   "randomizeBase": true,
+   "modulators": []
+  },
+  "Saturation": {
+   "baseValue": 0.85,
+   "baseMin": 0.65,
+   "baseMax": 0.95,
+   "randomizeBase": true,
+   "modulators": []
+  },
+  "Opacity": {
+   "baseValue": 0.77778,
+   "baseMin": 0.55,
+   "baseMax": 0.9,
+   "randomizeBase": true,
+   "modulators": []
+  },
+  "EdgeThickness": {
+   "baseValue": 0.16667,
+   "baseMin": 0.1,
+   "baseMax": 0.3,
+   "randomizeBase": true,
+   "modulators": []
+  }
+ },
+ "tags": [
+  "stock",
+  "amp",
+  "bar",
+  "kick",
+  "fullframe"
+ ],
+ "presetNotes": "The desktop's shipped default for hyper_slice: random ranges and audio responses.",
+ "globalAlpha": {
+  "baseValue": 1.0,
+  "baseMin": 0.0,
+  "baseMax": 1.0,
+  "randomizeBase": false,
+  "modulators": []
+ }
+}

@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Web TV: The Desktop's Stock Looks (`scripts/gen_stock_web_presets.py`, `web/presets/stock-*.lsd`, `web/playlists/default.lsdplay`)
+- **The web TV now plays the desktop's built-in source looks.** 32 new presets (`stock-<source>`) are generated from the same shipped defaults the desktop uses, so each source moves with the music the way it does in the app and starts from a fresh random roll inside its ranges every time it comes on air: two airings of the same source differ. They join the foreground playlist next to the hand-made `web-*` looks, which stay. Fluid Ink (its default carries no audio response) and Fractal Flame (not a web source) are left out. The 16 stock FX chains and 8 transitions on the web TV already carry the new responses and ranges.
+- **Run `scripts/gen_stock_web_presets.py` after changing a stock source default**, then the content and reactivity tests and `render_check`. Sources that run bright (Domain Warp Fluid, Hyper Slice, Hyperbolic Tiling, Mandelbox, Metaballs, Reaction Diffusion, plus the earlier full-frame ones) are tagged so the autopilot keeps feedback and bloom chains off them.
+
 ### Fractal Flame Picked From Browse Showed Nothing (`rendering/FlameEngine.kt`)
 - **Fixed: picking Fractal Flame as a source (not a Garden preset) gave a black deck.** With Smooth at 0, the starting flame's setting, the density buffer kept a mipmapped filter without a mip chain, which makes the texture sample as black. Garden presets all have Smooth above 0, so they looked fine. The filter now follows Smooth.
 

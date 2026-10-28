@@ -1,0 +1,289 @@
+{
+ "version": 1,
+ "name": "stock-kifs",
+ "visualSourceType": "kifs",
+ "parameters": {
+  "Offset": {
+   "baseValue": 0.5,
+   "baseMin": 0.35,
+   "baseMax": 0.65,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_bass",
+     "operator": "ADD",
+     "depth": 0.1,
+     "followerMode": "PUNCHY",
+     "attackMs": 5,
+     "decayMs": 150,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "bypassed": true,
+     "waveform": "SINE",
+     "genUnit": "BEAT",
+     "subdivision": 8,
+     "depth": 0.05,
+     "dcOffset": 0.05
+    }
+   ]
+  },
+  "Scale": {
+   "baseValue": 0.5,
+   "baseMin": 0.35,
+   "baseMax": 0.65,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "waveform": "SINE",
+     "genUnit": "BEAT",
+     "subdivision": 32,
+     "depth": 0.04,
+     "dcOffset": 0.04
+    },
+    {
+     "sourceId": "audio_mid",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.1,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "TwistY": {
+   "baseValue": 0.15,
+   "baseMin": -0.4,
+   "baseMax": 0.4,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "waveform": "SINE",
+     "genUnit": "BEAT",
+     "subdivision": 32,
+     "depth": 0.2,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "audio_mid",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.25,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "TwistX": {
+   "baseValue": 0.1,
+   "baseMin": -0.3,
+   "baseMax": 0.3,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "bypassed": true,
+     "waveform": "SINE",
+     "genUnit": "BEAT",
+     "subdivision": 64,
+     "depth": 0.12,
+     "phaseOffset": 0.25,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "TwistZ": {
+   "baseValue": 0.0,
+   "baseMin": -0.3,
+   "baseMax": 0.3,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_mid",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.2,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "MorphSpeed": {
+   "baseValue": 0.0,
+   "baseMin": 0.0,
+   "baseMax": 0.3,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_amp",
+     "operator": "ADD",
+     "depth": 0.2,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "FlightSpeed": {
+   "baseValue": 0.0,
+   "baseMin": -1.0,
+   "baseMax": 1.0,
+   "randomizeBase": false,
+   "modulators": [
+    {
+     "sourceId": "audio_amp",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.2,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Glow": {
+   "baseValue": 0.4,
+   "baseMin": 0.25,
+   "baseMax": 0.55,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_flux_bass",
+     "operator": "ADD",
+     "depth": 0.3,
+     "followerMode": "SNAP",
+     "attackMs": 0,
+     "decayMs": 35,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "audio_high",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.25,
+     "followerMode": "PUNCHY",
+     "attackMs": 5,
+     "decayMs": 110,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Zoom": {
+   "baseValue": 0.5,
+   "baseMin": 0.0,
+   "baseMax": 1.0,
+   "randomizeBase": false,
+   "modulators": [
+    {
+     "sourceId": "audio_bass",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.05,
+     "followerMode": "PUNCHY",
+     "attackMs": 5,
+     "decayMs": 150,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "RotateY": {
+   "baseValue": 0.0,
+   "baseMin": -3.14159,
+   "baseMax": 3.14159,
+   "randomizeBase": false,
+   "modulators": [
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "waveform": "SINE",
+     "genUnit": "BEAT",
+     "subdivision": 64,
+     "depth": 0.08,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "HueOffset": {
+   "baseValue": 0.58,
+   "baseMin": 0.0,
+   "baseMax": 0.65,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "waveform": "TRIANGLE",
+     "genUnit": "BEAT",
+     "subdivision": 64,
+     "depth": 0.175,
+     "dcOffset": 0.175
+    }
+   ]
+  },
+  "SurfaceType": {
+   "baseValue": 0.0,
+   "baseMin": 0.0,
+   "baseMax": 3.0,
+   "randomizeBase": true,
+   "modulators": []
+  },
+  "ColorMode": {
+   "baseValue": 0.0,
+   "baseMin": 0.0,
+   "baseMax": 4.0,
+   "randomizeBase": true,
+   "modulators": []
+  },
+  "ColorSpread": {
+   "baseValue": 1.0,
+   "baseMin": 0.5,
+   "baseMax": 1.0,
+   "randomizeBase": true,
+   "modulators": []
+  },
+  "RotateX": {
+   "baseValue": 0.0,
+   "baseMin": -0.4,
+   "baseMax": 0.4,
+   "randomizeBase": true,
+   "modulators": []
+  },
+  "RotateZ": {
+   "baseValue": 0.0,
+   "baseMin": -0.4,
+   "baseMax": 0.4,
+   "randomizeBase": true,
+   "modulators": []
+  }
+ },
+ "tags": [
+  "stock",
+  "amp",
+  "bar",
+  "bass",
+  "kick"
+ ],
+ "presetNotes": "The desktop's shipped default for kifs: random ranges and audio responses.",
+ "globalAlpha": {
+  "baseValue": 1.0,
+  "baseMin": 0.0,
+  "baseMax": 1.0,
+  "randomizeBase": false,
+  "modulators": []
+ }
+}

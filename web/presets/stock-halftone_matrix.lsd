@@ -1,0 +1,209 @@
+{
+ "version": 1,
+ "name": "stock-halftone_matrix",
+ "visualSourceType": "halftone_matrix",
+ "parameters": {
+  "PatternSpeed": {
+   "baseValue": 0.3,
+   "baseMin": 0.15,
+   "baseMax": 0.45,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_amp",
+     "operator": "ADD",
+     "depth": 0.3,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "PatternScale": {
+   "baseValue": 0.4,
+   "baseMin": 0.25,
+   "baseMax": 0.6,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_bass",
+     "operator": "ADD",
+     "depth": 0.15,
+     "followerMode": "PUNCHY",
+     "attackMs": 5,
+     "decayMs": 150,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "bypassed": true,
+     "waveform": "SINE",
+     "genUnit": "BEAT",
+     "subdivision": 8,
+     "depth": 0.06,
+     "dcOffset": 0.06
+    }
+   ]
+  },
+  "GridRotation": {
+   "baseValue": 0.1,
+   "baseMin": 0.0,
+   "baseMax": 0.6,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "waveform": "TRIANGLE",
+     "genUnit": "BEAT",
+     "subdivision": 64,
+     "depth": 0.15,
+     "dcOffset": 0.15
+    }
+   ]
+  },
+  "Contrast": {
+   "baseValue": 0.5,
+   "baseMin": 0.35,
+   "baseMax": 0.65,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_flux_bass",
+     "operator": "ADD",
+     "depth": 0.3,
+     "followerMode": "SNAP",
+     "attackMs": 0,
+     "decayMs": 35,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Brightness": {
+   "baseValue": 0.5,
+   "baseMin": 0.0,
+   "baseMax": 1.0,
+   "randomizeBase": false,
+   "modulators": [
+    {
+     "sourceId": "audio_amp",
+     "operator": "ADD",
+     "depth": 0.15,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "audio_flux_bass",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.2,
+     "followerMode": "SNAP",
+     "attackMs": 0,
+     "decayMs": 35,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Sharpness": {
+   "baseValue": 0.6,
+   "baseMin": 0.4,
+   "baseMax": 0.85,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_high",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.2,
+     "followerMode": "PUNCHY",
+     "attackMs": 5,
+     "decayMs": 110,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Density": {
+   "baseValue": 0.4,
+   "baseMin": 0.25,
+   "baseMax": 0.6,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_flux_bass",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.2,
+     "followerMode": "SNAP",
+     "attackMs": 0,
+     "decayMs": 35,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "HueShift": {
+   "baseValue": 0.0,
+   "baseMin": 0.0,
+   "baseMax": 0.65,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "waveform": "TRIANGLE",
+     "genUnit": "BEAT",
+     "subdivision": 64,
+     "depth": 0.175,
+     "dcOffset": 0.175
+    }
+   ]
+  },
+  "SurfaceType": {
+   "baseValue": 0.0,
+   "baseMin": 0.0,
+   "baseMax": 3.0,
+   "randomizeBase": true,
+   "modulators": []
+  },
+  "ColorMethod": {
+   "baseValue": 0.0,
+   "baseMin": 0.0,
+   "baseMax": 3.0,
+   "randomizeBase": true,
+   "modulators": []
+  },
+  "PaletteMode": {
+   "baseValue": 1.0,
+   "baseMin": 0.0,
+   "baseMax": 3.0,
+   "randomizeBase": true,
+   "modulators": []
+  },
+  "Saturation": {
+   "baseValue": 0.7,
+   "baseMin": 0.5,
+   "baseMax": 0.9,
+   "randomizeBase": true,
+   "modulators": []
+  }
+ },
+ "tags": [
+  "stock",
+  "amp",
+  "bar",
+  "bass",
+  "kick",
+  "fullframe"
+ ],
+ "presetNotes": "The desktop's shipped default for halftone_matrix: random ranges and audio responses.",
+ "globalAlpha": {
+  "baseValue": 1.0,
+  "baseMin": 0.0,
+  "baseMax": 1.0,
+  "randomizeBase": false,
+  "modulators": []
+ }
+}

@@ -1,0 +1,210 @@
+{
+ "version": 1,
+ "name": "stock-wave_ripples",
+ "visualSourceType": "wave_ripples",
+ "parameters": {
+  "Wavelength": {
+   "baseValue": 0.4,
+   "baseMin": 0.25,
+   "baseMax": 0.6,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_bass",
+     "operator": "ADD",
+     "depth": 0.1,
+     "followerMode": "PUNCHY",
+     "attackMs": 5,
+     "decayMs": 150,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "bypassed": true,
+     "waveform": "SINE",
+     "genUnit": "BEAT",
+     "subdivision": 8,
+     "depth": 0.04,
+     "dcOffset": 0.04
+    }
+   ]
+  },
+  "WaveSpeed": {
+   "baseValue": 0.3,
+   "baseMin": 0.15,
+   "baseMax": 0.5,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_amp",
+     "operator": "ADD",
+     "depth": 0.25,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "OrbitSpeed": {
+   "baseValue": 0.25,
+   "baseMin": 0.1,
+   "baseMax": 0.45,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_mid",
+     "operator": "ADD",
+     "depth": 0.2,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "bypassed": true,
+     "waveform": "TRIANGLE",
+     "genUnit": "BEAT",
+     "subdivision": 16,
+     "depth": 0.2,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Contrast": {
+   "baseValue": 0.5,
+   "baseMin": 0.35,
+   "baseMax": 0.65,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_flux_bass",
+     "operator": "ADD",
+     "depth": 0.25,
+     "followerMode": "SNAP",
+     "attackMs": 0,
+     "decayMs": 35,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "audio_high",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.2,
+     "followerMode": "PUNCHY",
+     "attackMs": 5,
+     "decayMs": 110,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Falloff": {
+   "baseValue": 0.35,
+   "baseMin": 0.2,
+   "baseMax": 0.55,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_amp",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.2,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Brightness": {
+   "baseValue": 0.5,
+   "baseMin": 0.0,
+   "baseMax": 1.0,
+   "randomizeBase": false,
+   "modulators": [
+    {
+     "sourceId": "audio_amp",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.1,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "HueShift": {
+   "baseValue": 0.0,
+   "baseMin": 0.0,
+   "baseMax": 0.65,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "waveform": "TRIANGLE",
+     "genUnit": "BEAT",
+     "subdivision": 64,
+     "depth": 0.175,
+     "dcOffset": 0.175
+    }
+   ]
+  },
+  "Symmetries": {
+   "baseValue": 4.0,
+   "baseMin": 3.0,
+   "baseMax": 7.0,
+   "randomizeBase": true,
+   "modulators": []
+  },
+  "SurfaceType": {
+   "baseValue": 0.0,
+   "baseMin": 0.0,
+   "baseMax": 2.0,
+   "randomizeBase": true,
+   "modulators": []
+  },
+  "ColorMethod": {
+   "baseValue": 0.0,
+   "baseMin": 0.0,
+   "baseMax": 3.0,
+   "randomizeBase": true,
+   "modulators": []
+  },
+  "PaletteMode": {
+   "baseValue": 0.0,
+   "baseMin": 0.0,
+   "baseMax": 3.0,
+   "randomizeBase": true,
+   "modulators": []
+  },
+  "Saturation": {
+   "baseValue": 0.75,
+   "baseMin": 0.55,
+   "baseMax": 0.9,
+   "randomizeBase": true,
+   "modulators": []
+  }
+ },
+ "tags": [
+  "stock",
+  "amp",
+  "bar",
+  "bass",
+  "kick",
+  "mid",
+  "fullframe"
+ ],
+ "presetNotes": "The desktop's shipped default for wave_ripples: random ranges and audio responses.",
+ "globalAlpha": {
+  "baseValue": 1.0,
+  "baseMin": 0.0,
+  "baseMax": 1.0,
+  "randomizeBase": false,
+  "modulators": []
+ }
+}

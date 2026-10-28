@@ -1,0 +1,207 @@
+{
+ "version": 1,
+ "name": "stock-thin_film",
+ "visualSourceType": "thin_film",
+ "parameters": {
+  "FilmThickness": {
+   "baseValue": 0.35,
+   "baseMin": 0.2,
+   "baseMax": 0.7,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_bass",
+     "operator": "ADD",
+     "depth": 0.12,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "bypassed": true,
+     "waveform": "SINE",
+     "genUnit": "BEAT",
+     "subdivision": 16,
+     "depth": 0.05,
+     "dcOffset": 0.05
+    }
+   ]
+  },
+  "FlowSpeed": {
+   "baseValue": 0.3,
+   "baseMin": 0.15,
+   "baseMax": 0.45,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_amp",
+     "operator": "ADD",
+     "depth": 0.25,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Contrast": {
+   "baseValue": 0.4,
+   "baseMin": 0.3,
+   "baseMax": 0.6,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_flux_bass",
+     "operator": "ADD",
+     "depth": 0.25,
+     "followerMode": "SNAP",
+     "attackMs": 0,
+     "decayMs": 35,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Turbulence": {
+   "baseValue": 0.4,
+   "baseMin": 0.25,
+   "baseMax": 0.65,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_mid",
+     "operator": "ADD",
+     "depth": 0.2,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Sheen": {
+   "baseValue": 0.5,
+   "baseMin": 0.3,
+   "baseMax": 0.65,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_high",
+     "operator": "ADD",
+     "depth": 0.3,
+     "followerMode": "PUNCHY",
+     "attackMs": 5,
+     "decayMs": 110,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "audio_flux_high",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.3,
+     "followerMode": "SNAP",
+     "attackMs": 0,
+     "decayMs": 35,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Brightness": {
+   "baseValue": 0.5,
+   "baseMin": 0.0,
+   "baseMax": 1.0,
+   "randomizeBase": false,
+   "modulators": [
+    {
+     "sourceId": "audio_amp",
+     "operator": "ADD",
+     "depth": 0.12,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "ThicknessRange": {
+   "baseValue": 0.5,
+   "baseMin": 0.3,
+   "baseMax": 0.75,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_mid",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.15,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Scale": {
+   "baseValue": 0.3,
+   "baseMin": 0.2,
+   "baseMax": 0.55,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "bypassed": true,
+     "waveform": "TRIANGLE",
+     "genUnit": "BEAT",
+     "subdivision": 32,
+     "depth": 0.04,
+     "dcOffset": 0.04
+    }
+   ]
+  },
+  "HueShift": {
+   "baseValue": 0.0,
+   "baseMin": 0.0,
+   "baseMax": 0.65,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "waveform": "TRIANGLE",
+     "genUnit": "BEAT",
+     "subdivision": 64,
+     "depth": 0.175,
+     "dcOffset": 0.175
+    }
+   ]
+  },
+  "Saturation": {
+   "baseValue": 0.75,
+   "baseMin": 0.55,
+   "baseMax": 0.9,
+   "randomizeBase": true,
+   "modulators": []
+  }
+ },
+ "tags": [
+  "stock",
+  "amp",
+  "bar",
+  "bass",
+  "high",
+  "kick",
+  "mid",
+  "fullframe"
+ ],
+ "presetNotes": "The desktop's shipped default for thin_film: random ranges and audio responses.",
+ "globalAlpha": {
+  "baseValue": 1.0,
+  "baseMin": 0.0,
+  "baseMax": 1.0,
+  "randomizeBase": false,
+  "modulators": []
+ }
+}

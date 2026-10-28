@@ -1,0 +1,248 @@
+{
+ "version": 1,
+ "name": "stock-mandala",
+ "visualSourceType": "mandala",
+ "parameters": {
+  "L1": {
+   "baseValue": 0.5,
+   "baseMin": 0.0,
+   "baseMax": 1.0,
+   "randomizeBase": false,
+   "modulators": [
+    {
+     "sourceId": "audio_amp",
+     "operator": "ADD",
+     "depth": 0.15,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "bypassed": true,
+     "waveform": "SINE",
+     "genUnit": "BEAT",
+     "subdivision": 4,
+     "depth": 0.1,
+     "dcOffset": 0.1
+    },
+    {
+     "sourceId": "audio_bass",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.15,
+     "followerMode": "PUNCHY",
+     "attackMs": 5,
+     "decayMs": 150,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "L2": {
+   "baseValue": 0.5,
+   "baseMin": 0.0,
+   "baseMax": 1.0,
+   "randomizeBase": false,
+   "modulators": [
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "waveform": "SINE",
+     "genUnit": "BEAT",
+     "subdivision": 8,
+     "depth": 0.175,
+     "dcOffset": 0.175
+    },
+    {
+     "sourceId": "audio_mid",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.25,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "L3": {
+   "baseValue": 0.5,
+   "baseMin": 0.0,
+   "baseMax": 1.0,
+   "randomizeBase": false,
+   "modulators": [
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "waveform": "RANDOM",
+     "genUnit": "BEAT",
+     "subdivision": 16,
+     "depth": 0.2,
+     "hold": 0.5,
+     "dcOffset": 0.2
+    },
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "bypassed": true,
+     "waveform": "TRIANGLE",
+     "genUnit": "BEAT",
+     "subdivision": 16,
+     "depth": 0.15,
+     "dcOffset": 0.15
+    }
+   ]
+  },
+  "L4": {
+   "baseValue": 0.5,
+   "baseMin": 0.0,
+   "baseMax": 1.0,
+   "randomizeBase": false,
+   "modulators": [
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "waveform": "TRIANGLE",
+     "genUnit": "BEAT",
+     "subdivision": 6,
+     "depth": 0.15,
+     "slope": 0.85,
+     "dcOffset": 0.15
+    },
+    {
+     "sourceId": "audio_bass",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.25,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Hue Offset": {
+   "baseValue": 0.0,
+   "baseMin": 0.0,
+   "baseMax": 0.0,
+   "randomizeBase": false,
+   "modulators": [
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "waveform": "TRIANGLE",
+     "genUnit": "BEAT",
+     "subdivision": 1,
+     "depth": 0.5,
+     "slope": 0.995,
+     "dcOffset": 0.5
+    },
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "bypassed": true,
+     "waveform": "SINE",
+     "genUnit": "BEAT",
+     "subdivision": 1,
+     "depth": 0.1,
+     "dcOffset": 0.1
+    }
+   ]
+  },
+  "Recipe Select": {
+   "baseValue": 0.5,
+   "baseMin": 0.25,
+   "baseMax": 0.75,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "waveform": "RANDOM",
+     "genUnit": "BEAT",
+     "subdivision": 32,
+     "depth": 0.25,
+     "hold": 1.0,
+     "dcOffset": 0
+    },
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "bypassed": true,
+     "waveform": "RANDOM",
+     "genUnit": "BEAT",
+     "subdivision": 64,
+     "depth": 0.25,
+     "hold": 1.0,
+     "dcOffset": 0
+    }
+   ]
+  },
+  "Lobes": {
+   "baseValue": 5.5,
+   "baseMin": 3.0,
+   "baseMax": 8.0,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "waveform": "RANDOM",
+     "genUnit": "BEAT",
+     "subdivision": 256,
+     "depth": 0.25,
+     "hold": 1.0,
+     "dcOffset": 0.25
+    }
+   ]
+  },
+  "Thickness": {
+   "baseValue": 0.5,
+   "baseMin": 0.0,
+   "baseMax": 1.0,
+   "randomizeBase": false,
+   "modulators": [
+    {
+     "sourceId": "audio_bass",
+     "operator": "ADD",
+     "depth": 0.12,
+     "followerMode": "PUNCHY",
+     "attackMs": 5,
+     "decayMs": 150,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Depth": {
+   "baseValue": 0.5,
+   "baseMin": 0.0,
+   "baseMax": 1.0,
+   "randomizeBase": false,
+   "modulators": [
+    {
+     "sourceId": "audio_amp",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.15,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  }
+ },
+ "tags": [
+  "stock",
+  "amp",
+  "bar",
+  "bass"
+ ],
+ "presetNotes": "The desktop's shipped default for mandala: random ranges and audio responses.",
+ "globalAlpha": {
+  "baseValue": 1.0,
+  "baseMin": 0.0,
+  "baseMax": 1.0,
+  "randomizeBase": false,
+  "modulators": []
+ }
+}

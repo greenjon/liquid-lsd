@@ -1,0 +1,189 @@
+{
+ "version": 1,
+ "name": "stock-domain_warp_fluid",
+ "visualSourceType": "domain_warp_fluid",
+ "parameters": {
+  "WarpStrength": {
+   "baseValue": 0.375,
+   "baseMin": 0.25,
+   "baseMax": 0.6,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_bass",
+     "operator": "ADD",
+     "depth": 0.25,
+     "followerMode": "PUNCHY",
+     "attackMs": 5,
+     "decayMs": 150,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "audio_amp",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.25,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Swirl": {
+   "baseValue": 0.33333,
+   "baseMin": -0.5,
+   "baseMax": 0.5,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "waveform": "SINE",
+     "genUnit": "BEAT",
+     "subdivision": 16,
+     "depth": 0.4,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "audio_mid",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.4,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Speed": {
+   "baseValue": 0.175,
+   "baseMin": 0.1,
+   "baseMax": 0.35,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_amp",
+     "operator": "ADD",
+     "depth": 0.25,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Gloss": {
+   "baseValue": 0.46667,
+   "baseMin": 0.3,
+   "baseMax": 0.65,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_high",
+     "operator": "ADD",
+     "depth": 0.3,
+     "followerMode": "PUNCHY",
+     "attackMs": 5,
+     "decayMs": 110,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "audio_flux_high",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.3,
+     "followerMode": "SNAP",
+     "attackMs": 0,
+     "decayMs": 35,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Viscosity": {
+   "baseValue": 0.21053,
+   "baseMin": 0.1,
+   "baseMax": 0.45,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_bass",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": -0.15,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "HueCycleSpeed": {
+   "baseValue": 0.1,
+   "baseMin": -1.0,
+   "baseMax": 1.0,
+   "randomizeBase": false,
+   "modulators": [
+    {
+     "sourceId": "audio_amp",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.3,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Zoom": {
+   "baseValue": 0.5,
+   "baseMin": 0.35,
+   "baseMax": 0.65,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "bypassed": true,
+     "waveform": "SINE",
+     "genUnit": "BEAT",
+     "subdivision": 32,
+     "depth": 0.075,
+     "dcOffset": 0.075
+    }
+   ]
+  },
+  "PaletteMode": {
+   "baseValue": 0.0,
+   "baseMin": 0.0,
+   "baseMax": 4.0,
+   "randomizeBase": true,
+   "modulators": []
+  },
+  "HueOffset": {
+   "baseValue": 0.0,
+   "baseMin": 0.0,
+   "baseMax": 1.0,
+   "randomizeBase": true,
+   "modulators": []
+  }
+ },
+ "tags": [
+  "stock",
+  "amp",
+  "bar",
+  "bass",
+  "high",
+  "fullframe"
+ ],
+ "presetNotes": "The desktop's shipped default for domain_warp_fluid: random ranges and audio responses.",
+ "globalAlpha": {
+  "baseValue": 1.0,
+  "baseMin": 0.0,
+  "baseMax": 1.0,
+  "randomizeBase": false,
+  "modulators": []
+ }
+}

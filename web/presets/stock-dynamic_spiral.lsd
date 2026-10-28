@@ -1,0 +1,225 @@
+{
+ "version": 1,
+ "name": "stock-dynamic_spiral",
+ "visualSourceType": "dynamic_spiral",
+ "parameters": {
+  "Scale": {
+   "baseValue": 0.47368,
+   "baseMin": 0.35,
+   "baseMax": 0.65,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_bass",
+     "operator": "ADD",
+     "depth": 0.1,
+     "followerMode": "PUNCHY",
+     "attackMs": 5,
+     "decayMs": 150,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "bypassed": true,
+     "waveform": "SINE",
+     "genUnit": "BEAT",
+     "subdivision": 4,
+     "depth": 0.04,
+     "dcOffset": 0.04
+    }
+   ]
+  },
+  "DotSize": {
+   "baseValue": 0.18367,
+   "baseMin": 0.12,
+   "baseMax": 0.35,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_flux_bass",
+     "operator": "ADD",
+     "depth": 0.15,
+     "followerMode": "SNAP",
+     "attackMs": 0,
+     "decayMs": 35,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "audio_amp",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.12,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Glow": {
+   "baseValue": 0.3,
+   "baseMin": 0.2,
+   "baseMax": 0.5,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_high",
+     "operator": "ADD",
+     "depth": 0.25,
+     "followerMode": "PUNCHY",
+     "attackMs": 5,
+     "decayMs": 110,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "audio_amp",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.25,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "WaveAmp": {
+   "baseValue": 0.0,
+   "baseMin": 0.0,
+   "baseMax": 0.4,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_mid",
+     "operator": "ADD",
+     "depth": 0.35,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "bypassed": true,
+     "waveform": "SINE",
+     "genUnit": "BEAT",
+     "subdivision": 8,
+     "depth": 0.15,
+     "dcOffset": 0.15
+    }
+   ]
+  },
+  "Shear": {
+   "baseValue": 0.2,
+   "baseMin": -0.4,
+   "baseMax": 0.5,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "waveform": "SINE",
+     "genUnit": "BEAT",
+     "subdivision": 32,
+     "depth": 0.3,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "audio_mid",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.25,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Speed": {
+   "baseValue": 0.5,
+   "baseMin": 0.3,
+   "baseMax": 0.7,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_amp",
+     "operator": "ADD",
+     "depth": 0.2,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "bypassed": true,
+     "waveform": "TRIANGLE",
+     "genUnit": "BEAT",
+     "subdivision": 16,
+     "depth": 0.2,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "HueOffset": {
+   "baseValue": 0.0,
+   "baseMin": 0.0,
+   "baseMax": 0.6,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "waveform": "TRIANGLE",
+     "genUnit": "BEAT",
+     "subdivision": 64,
+     "depth": 0.2,
+     "dcOffset": 0.2
+    }
+   ]
+  },
+  "Damping": {
+   "baseValue": 0.1984,
+   "baseMin": 0.1,
+   "baseMax": 0.4,
+   "randomizeBase": true,
+   "modulators": []
+  },
+  "WaveFreq": {
+   "baseValue": 0.19192,
+   "baseMin": 0.1,
+   "baseMax": 0.5,
+   "randomizeBase": true,
+   "modulators": []
+  },
+  "HueSweep": {
+   "baseValue": 0.09091,
+   "baseMin": 0.05,
+   "baseMax": 0.5,
+   "randomizeBase": true,
+   "modulators": []
+  }
+ },
+ "tags": [
+  "stock",
+  "amp",
+  "bar",
+  "bass",
+  "high",
+  "kick",
+  "mid",
+  "sparse"
+ ],
+ "presetNotes": "The desktop's shipped default for dynamic_spiral: random ranges and audio responses.",
+ "globalAlpha": {
+  "baseValue": 1.0,
+  "baseMin": 0.0,
+  "baseMax": 1.0,
+  "randomizeBase": false,
+  "modulators": []
+ }
+}

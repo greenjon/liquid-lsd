@@ -1,0 +1,236 @@
+{
+ "version": 1,
+ "name": "stock-hyperbolic_tiling",
+ "visualSourceType": "hyperbolic_tiling",
+ "parameters": {
+  "Speed": {
+   "baseValue": 0.3,
+   "baseMin": 0.15,
+   "baseMax": 0.45,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_amp",
+     "operator": "ADD",
+     "depth": 0.25,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Drift": {
+   "baseValue": 0.5,
+   "baseMin": 0.3,
+   "baseMax": 0.75,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_mid",
+     "operator": "ADD",
+     "depth": 0.2,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "bypassed": true,
+     "waveform": "TRIANGLE",
+     "genUnit": "BEAT",
+     "subdivision": 16,
+     "depth": 0.1,
+     "dcOffset": 0.1
+    }
+   ]
+  },
+  "Spin": {
+   "baseValue": 0.25,
+   "baseMin": 0.05,
+   "baseMax": 0.45,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "waveform": "SINE",
+     "genUnit": "BEAT",
+     "subdivision": 32,
+     "depth": 0.15,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "audio_amp",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.15,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "EdgeWidth": {
+   "baseValue": 0.35,
+   "baseMin": 0.2,
+   "baseMax": 0.55,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_bass",
+     "operator": "ADD",
+     "depth": 0.15,
+     "followerMode": "PUNCHY",
+     "attackMs": 5,
+     "decayMs": 150,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Glow": {
+   "baseValue": 0.5,
+   "baseMin": 0.3,
+   "baseMax": 0.65,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_flux_bass",
+     "operator": "ADD",
+     "depth": 0.3,
+     "followerMode": "SNAP",
+     "attackMs": 0,
+     "decayMs": 35,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "audio_high",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.25,
+     "followerMode": "PUNCHY",
+     "attackMs": 5,
+     "decayMs": 110,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Subdivision": {
+   "baseValue": 0.25,
+   "baseMin": 0.0,
+   "baseMax": 0.6,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_high",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.2,
+     "followerMode": "PUNCHY",
+     "attackMs": 5,
+     "decayMs": 110,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Brightness": {
+   "baseValue": 0.5,
+   "baseMin": 0.0,
+   "baseMax": 1.0,
+   "randomizeBase": false,
+   "modulators": [
+    {
+     "sourceId": "audio_amp",
+     "operator": "ADD",
+     "depth": 0.12,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "audio_flux_bass",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.2,
+     "followerMode": "SNAP",
+     "attackMs": 0,
+     "decayMs": 35,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "HueOffset": {
+   "baseValue": 0.58,
+   "baseMin": 0.0,
+   "baseMax": 0.65,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "waveform": "TRIANGLE",
+     "genUnit": "BEAT",
+     "subdivision": 64,
+     "depth": 0.175,
+     "dcOffset": 0.175
+    }
+   ]
+  },
+  "P": {
+   "baseValue": 5.0,
+   "baseMin": 4.0,
+   "baseMax": 8.0,
+   "randomizeBase": true,
+   "modulators": []
+  },
+  "Q": {
+   "baseValue": 4.0,
+   "baseMin": 4.0,
+   "baseMax": 6.0,
+   "randomizeBase": true,
+   "modulators": []
+  },
+  "ColorMode": {
+   "baseValue": 0.0,
+   "baseMin": 0.0,
+   "baseMax": 3.0,
+   "randomizeBase": true,
+   "modulators": []
+  },
+  "Outside": {
+   "baseValue": 0.0,
+   "baseMin": 0.0,
+   "baseMax": 2.0,
+   "randomizeBase": true,
+   "modulators": []
+  },
+  "Saturation": {
+   "baseValue": 0.75,
+   "baseMin": 0.55,
+   "baseMax": 0.9,
+   "randomizeBase": true,
+   "modulators": []
+  }
+ },
+ "tags": [
+  "stock",
+  "amp",
+  "bar",
+  "bass",
+  "kick",
+  "mid",
+  "fullframe"
+ ],
+ "presetNotes": "The desktop's shipped default for hyperbolic_tiling: random ranges and audio responses.",
+ "globalAlpha": {
+  "baseValue": 1.0,
+  "baseMin": 0.0,
+  "baseMax": 1.0,
+  "randomizeBase": false,
+  "modulators": []
+ }
+}

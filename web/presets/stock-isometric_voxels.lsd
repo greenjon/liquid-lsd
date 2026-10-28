@@ -1,0 +1,193 @@
+{
+ "version": 1,
+ "name": "stock-isometric_voxels",
+ "visualSourceType": "isometric_voxels",
+ "parameters": {
+  "MaxHeight": {
+   "baseValue": 0.6,
+   "baseMin": 0.4,
+   "baseMax": 0.75,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_bass",
+     "operator": "ADD",
+     "depth": 0.25,
+     "followerMode": "PUNCHY",
+     "attackMs": 5,
+     "decayMs": 150,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "audio_flux_bass",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.3,
+     "followerMode": "SNAP",
+     "attackMs": 0,
+     "decayMs": 35,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Speed": {
+   "baseValue": 0.3,
+   "baseMin": 0.15,
+   "baseMax": 0.45,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_amp",
+     "operator": "ADD",
+     "depth": 0.25,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Contrast": {
+   "baseValue": 0.6,
+   "baseMin": 0.45,
+   "baseMax": 0.75,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_flux_bass",
+     "operator": "ADD",
+     "depth": 0.25,
+     "followerMode": "SNAP",
+     "attackMs": 0,
+     "decayMs": 35,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Brightness": {
+   "baseValue": 0.5,
+   "baseMin": 0.0,
+   "baseMax": 1.0,
+   "randomizeBase": false,
+   "modulators": [
+    {
+     "sourceId": "audio_amp",
+     "operator": "ADD",
+     "depth": 0.12,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Frequency": {
+   "baseValue": 0.5,
+   "baseMin": 0.3,
+   "baseMax": 0.7,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_mid",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.15,
+     "followerMode": "SMOOTH",
+     "attackMs": 40,
+     "decayMs": 400,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "Gap": {
+   "baseValue": 0.25,
+   "baseMin": 0.1,
+   "baseMax": 0.4,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "audio_bass",
+     "operator": "ADD",
+     "bypassed": true,
+     "depth": 0.1,
+     "followerMode": "PUNCHY",
+     "attackMs": 5,
+     "decayMs": 150,
+     "dcOffset": 0.0
+    }
+   ]
+  },
+  "CellSize": {
+   "baseValue": 0.45,
+   "baseMin": 0.3,
+   "baseMax": 0.6,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "bypassed": true,
+     "waveform": "TRIANGLE",
+     "genUnit": "BEAT",
+     "subdivision": 32,
+     "depth": 0.04,
+     "dcOffset": 0.04
+    }
+   ]
+  },
+  "HueOffset": {
+   "baseValue": 0.0,
+   "baseMin": 0.0,
+   "baseMax": 0.65,
+   "randomizeBase": true,
+   "modulators": [
+    {
+     "sourceId": "lfo",
+     "operator": "ADD",
+     "waveform": "TRIANGLE",
+     "genUnit": "BEAT",
+     "subdivision": 64,
+     "depth": 0.175,
+     "dcOffset": 0.175
+    }
+   ]
+  },
+  "SurfaceType": {
+   "baseValue": 0.0,
+   "baseMin": 0.0,
+   "baseMax": 2.0,
+   "randomizeBase": true,
+   "modulators": []
+  },
+  "PaletteMode": {
+   "baseValue": 0.0,
+   "baseMin": 0.0,
+   "baseMax": 3.0,
+   "randomizeBase": true,
+   "modulators": []
+  },
+  "Saturation": {
+   "baseValue": 0.85,
+   "baseMin": 0.65,
+   "baseMax": 0.95,
+   "randomizeBase": true,
+   "modulators": []
+  }
+ },
+ "tags": [
+  "stock",
+  "amp",
+  "bar",
+  "bass",
+  "kick",
+  "fullframe"
+ ],
+ "presetNotes": "The desktop's shipped default for isometric_voxels: random ranges and audio responses.",
+ "globalAlpha": {
+  "baseValue": 1.0,
+  "baseMin": 0.0,
+  "baseMax": 1.0,
+  "randomizeBase": false,
+  "modulators": []
+ }
+}
