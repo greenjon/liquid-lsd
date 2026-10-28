@@ -6,6 +6,7 @@ import imgui.flag.ImGuiTableFlags
 import imgui.type.ImBoolean
 import imgui.type.ImInt
 import llm.slop.liquidlsd.audio.AudioAgc
+import llm.slop.liquidlsd.audio.SectionWatch
 import llm.slop.liquidlsd.audio.AudioEngine
 import llm.slop.liquidlsd.audio.AudioChannelRouting
 import llm.slop.liquidlsd.audio.BeatDetectionSettings
@@ -336,7 +337,14 @@ object AudioEnginePanel {
             val agc = audioEngine.agc
             theme.caption("Auto gain  amp %.1fx  bass %.1fx  mid %.1fx  high %.1fx".format(
                 agc.boost(AudioAgc.AMP), agc.boost(AudioAgc.BASS), agc.boost(AudioAgc.MID), agc.boost(AudioAgc.HIGH)))
-            itemTooltip("How much auto gain is lifting each band to level it (1.0x = the input is already at the reference level). Each band follows its own recent peak, so quiet and loud feeds move the picture the same.")
+            itemTooltip("How much auto gain is lifting each band to level it (1.0x = the input is already at the reference level). Each band is compared with its own level over the last ~20 s, so quiet and loud feeds move the picture the same.")
+            val watch = agc.watch
+            val sectionText = if (!watch.listening) "Sections  listening..." else
+                "Sections  %s  now %.0f%% of usual  under 45%%: %.1f / %.0f s  drops %d".format(
+                    if (watch.section == SectionWatch.Section.BREAKDOWN) "BREAKDOWN" else "normal",
+                    100f * watch.short / watch.long, watch.belowSec, SectionWatch.BREAK_HOLD, watch.drops)
+            theme.caption(sectionText)
+            itemTooltip("The song-section detector behind the Energy and Drop modulators. It listens to the low end (70% bass, 30% full mix) at its real level, before auto gain. A breakdown is the level under 45% of usual for 3 s; a drop is it back over 85% after a breakdown of at least 4 s. Waits for ~20 s of music first.")
 
             ImGui.spacing()
             ImGui.separator()

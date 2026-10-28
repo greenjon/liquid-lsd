@@ -898,6 +898,23 @@
   
 </li>
         
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#section-signals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section Signals
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Section Signals">
+      <ul class="md-nav__list">
+        
           <li class="md-nav__item">
   <a href="#silence-gate" class="md-nav__link">
     <span class="md-ellipsis">
@@ -1636,6 +1653,23 @@
   
 </li>
         
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#section-signals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section Signals
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Section Signals">
+      <ul class="md-nav__list">
+        
           <li class="md-nav__item">
   <a href="#silence-gate" class="md-nav__link">
     <span class="md-ellipsis">
@@ -1826,7 +1860,7 @@ $$y[n] = b_0 x[n] + b_1 x[n-1] + b_2 x[n-2] - a_1 y[n-1] - a_2 y[n-2]$$</p>
 - <code>audio_amp</code>: Full-band input RMS.
 - <code>audio_bass</code>, <code>audio_mid</code>, <code>audio_high</code>: Per-band filter RMS values.</p>
 <p>The divisor is per band and comes from <code>AudioAgc</code>, which is always on: <code>max(longTermLevel * SCALE[band], 0.02)</code>. The long-term level is a 20 s mean of the band's raw RMS (a running mean while the first 20 s fill, so a new feed levels in at once), the way MilkDrop compares a band to its average rather than its recent peak. <code>SCALE</code> (1.5 / 2.0 / 2.0 / 2.7 for amp / bass / mid / high) was calibrated on four 10-minute DJ mixes so steady music lands where the earlier peak follower (8 s release, 0.85 headroom) put it, which the built-in responses are tuned for. The long-term levels stop following while <code>SectionWatch</code> holds: during a breakdown, and from the moment the level dips under the breakdown ratio while one is being confirmed. So a breakdown reads quiet for as long as it lasts (on a real mix: bass 0.04 instead of the peak follower's 0.25), a bass dropout is not boosted into kicks, and the drop lands where the music before it did. When the watch adopts a new normal (a "breakdown" over 60 s, or the level over 1.6x the reference for 4 s: a quieter or a louder song) every band's reference jumps to its 1.5 s level. After 2 s under 0.003 RMS (about -50 dBFS) everything waits and starts afresh. <code>resetForOfflineFeed</code> resets it.</p>
-<p><strong>Section watch (<code>SectionWatch.kt</code>)</strong> is a port of the web TV's <code>web/energy.js</code> (<code>EnergyWatch</code>): a 1.5 s level of <code>0.7 bass + 0.3 amp</code> (fixed scale) against a 20 s reference; a <em>breakdown</em> is the level under 45% of the reference for 3 s (not in the first 20 s or in silence), a <em>drop</em> is it back above 85% after at least 4 s. The desktop uses it only for auto gain (exposing breakdown / drop as modulation sources is v1.1). <code>WebAudioAgcVectorsTest</code> writes <code>web/tools/agc_vectors.json</code> and fails when it is stale; <code>node --test web/tools/beatclock.test.mjs</code> replays it through the web port, so keep the two identical (regenerate with <code>UPDATE_WEB_VECTORS=1</code>).</p>
+<p><strong>Section watch (<code>SectionWatch.kt</code>)</strong> is a port of the web TV's <code>web/energy.js</code> (<code>EnergyWatch</code>): a 1.5 s level of <code>0.7 bass + 0.3 amp</code> (fixed scale) against a 20 s reference; a <em>breakdown</em> is the level under 45% of the reference for 3 s (not in the first 20 s or in silence), a <em>drop</em> is it back above 85% after at least 4 s. Besides auto gain it feeds two modulation sources (see <em>Section signals</em> below). <code>WebAudioAgcVectorsTest</code> writes <code>web/tools/agc_vectors.json</code> and fails when it is stale; <code>node --test web/tools/beatclock.test.mjs</code> replays it through the web port, so keep the two identical (regenerate with <code>UPDATE_WEB_VECTORS=1</code>).</p>
 <p>The rest of the stage: Flux uses its fixed scale (0.05 / 0.1) times the same per-band ratio. Every normalized signal (levels and flux) is then multiplied by <code>AudioEngine.response</code> (Audio Response, 0..2, default 1, preference <code>audioResponse</code>) and clamped to 0..1, so one setting scales every audio modulator. That is the only reactivity control: the AGC toggle and AGC Headroom slider were removed (a headroom only rescaled every signal, exactly as Response does; <code>AppPreferencesStore.LEGACY_DEFAULT_HEADROOM</code> is the 0.85 the scale was calibrated against); <code>AppPreferencesStore.responseForLegacyHeadroom</code> folds a saved <code>audioAgcHeadroom</code> into <code>audioResponse</code> once and drops both legacy keys. <code>inputGain</code> (<strong>Input Trim</strong> in the panel) is applied to the raw samples instead, so it is a setup control: auto gain undoes it for the CV signals, and it only changes what the detectors hear. The panel warns when the silence gate says SILENT while the post-trim input peak is over 0.01 (about -40 dBFS). The beat detector, downbeat detector and silence gate take the raw RMS, before this stage; the audio texture (FFT / waveform) is not scaled either.</p>
 <hr />
 <h2 id="transient-spectral-flux-detection">Transient &amp; Spectral Flux Detection</h2>
@@ -1841,6 +1875,13 @@ $$y[n] = b_0 x[n] + b_1 x[n-1] + b_2 x[n-2] - a_1 y[n-1] - a_2 y[n-2]$$</p>
 <li><code>audio_flux_high</code>: High-frequency energy growth (hi-hat and cymbal strikes).</li>
 </ul>
 <p>Both RMS and Flux signals are tracked in pre-cached ring buffer histories and modulated with customizable envelope follower dynamics (Attack and Decay) per audio slot.</p>
+<h2 id="section-signals">Section Signals</h2>
+<p>Two CV sources come from the section watch rather than from one block's spectrum. Both sit in the Audio tab (<code>isAudioSource</code>), but <code>isSectionSource</code> keeps them out of the envelope follower, and Audio Response does not scale them: they already have their shape, and they say where the song is, not how hard it hits.</p>
+<ul>
+<li><code>audio_energy</code> (bipolar, -1..1): <code>log2(short / long)</code> from <code>SectionWatch.energy</code>, clamped. 0 is the usual level (also during the 20 s warm-up and in silence), -1 half of it or less, +1 twice it. While a breakdown holds, <code>long</code> is frozen, so energy stays low for the whole breakdown. The audio thread pushes it with its history. <code>CvModulator</code> treats it as bipolar (range dc ± depth); <code>isCvSourceBipolar</code> stays false because the scope reads that as "deterministic, can draw ahead".</li>
+<li><code>audio_drop</code> (0..1): <code>cv/SectionDrop.kt</code>, a <code>CVSource</code> the render loop updates from the beat clock. When the watch's drop count goes up, the hit is dated back by <code>SectionWatch.dropLag</code> and snapped to the nearest beat (never later than now). Then it falls as (1 - t)² over <code>SectionDrop.BARS</code> (4) bars. A 0.1 s <code>fast</code> level records when the low end actually came back (<code>backAt</code>). It counts as back until it has been under the drop ratio for more than 0.7 s (<code>FAST_GAP</code>), so the gaps between kicks don't reset it. The drop is called when the fast level has been back for 0.5 s (<code>DROP_CONFIRM</code>) and is above the ratio at that moment, which takes two loud hits in a row, not one hit and its tail. It is also called, as before, when <code>short</code> (1.5 s) gets back over the ratio, which on its own takes 1-2.5 s. <code>dropLag</code> is the time since <code>backAt</code>, capped at 4 s. On synthetic kick tracks at 90-174 bpm the drop is called 0.5-0.7 s after the bass returns and dated to within 0.07 s of it. A kick less than 0.7 s before the drop can date it one beat early. The earlier call also ends auto gain's freeze sooner, and the web TV's autopilot cuts sooner on a drop.</li>
+</ul>
+<p>The web port is <code>EnergyWatch.energy</code> / <code>dropLag</code> and <code>DropEnvelope</code> in <code>web/energy.js</code>. <code>web/renderer.js</code> reports drops at the analysis-time beat and reads the envelope at the heard beat, so SYNC delays the hit along with everything else. <code>audio_energy</code> goes through the same delay line as the other audio signals. REACT doesn't scale them; reduced motion caps the drop at 60%.</p>
 <h3 id="silence-gate">Silence Gate</h3>
 <p>When full-band RMS drops below <code>silenceThresholdDb</code> (-40 dBFS) for more than 500 ms, <code>SignalState</code> switches to <code>SILENT</code>, suppressing accidental transient firing during quiet sections.</p>
 <hr />

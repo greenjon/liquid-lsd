@@ -82,4 +82,23 @@ class SectionWatchTest {
         assertEquals(-1f, run(Triple(40, 0.6f, 0.5f), Triple(10, 0.1f, 0.25f)).first.energy, 0.05f)
         assert(run(Triple(40, 0.4f, 0.4f), Triple(3, 0.7f, 0.6f)).first.energy > 0.4f)
     }
+
+    @Test
+    fun aDropIsCalledWithinASecondOfTheLowEndComingBack() {
+        val drop = run(Triple(40, 0.6f, 0.5f), Triple(16, 0.1f, 0.25f), Triple(10, 0.65f, 0.55f)).second.single { it.event == "drop" }
+        assert(drop.t in 56.0..57.0) { "drop at ${drop.t}" }
+    }
+
+    @Test
+    fun oneLoudHitInABreakdownDoesNotEndIt() {
+        val w = SectionWatch()
+        val dt = 1f / 60
+        repeat(40 * 60) { w.update(0.6f, 0.5f, dt) }
+        repeat(10 * 60) { w.update(0.1f, 0.25f, dt) }
+        assertEquals(SectionWatch.Section.BREAKDOWN, w.section)
+        repeat(9) { w.update(0.9f, 0.6f, dt) } // a 0.15 s hit, then the breakdown goes on
+        repeat(3 * 60) { w.update(0.1f, 0.25f, dt) }
+        assertEquals(SectionWatch.Section.BREAKDOWN, w.section)
+        assertEquals(0, w.drops)
+    }
 }

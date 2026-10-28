@@ -77,3 +77,20 @@ test('the drop envelope: dated to the nearest beat, never the future, 1 down to 
   d.report(1, 0, 101, 120);
   assert.equal(d.value(101), 1);
 });
+
+test('a drop is called within a second of the low end coming back', () => {
+  const drop = run([[40, 0.6, 0.5], [16, 0.1, 0.25], [10, 0.65, 0.55]]).events.find((e) => e.event === 'drop');
+  assert.ok(drop.at > 56 && drop.at < 57, `drop at ${drop.at}`);
+});
+
+test('one loud hit in a breakdown does not end it', () => {
+  const w = new EnergyWatch();
+  const step = (n, bass, amp) => { for (let i = 0; i < n; i++) w.update(bass, amp, 1 / 60); };
+  step(40 * 60, 0.6, 0.5);
+  step(10 * 60, 0.1, 0.25);
+  assert.equal(w.section, 'breakdown');
+  step(9, 0.9, 0.6); // a 0.15 s hit
+  step(3 * 60, 0.1, 0.25);
+  assert.equal(w.section, 'breakdown');
+  assert.equal(w.drops, 0);
+});

@@ -36,13 +36,19 @@ class SectionWatch {
      * usual level, -1 half of it or less (a breakdown), +1 twice it. 0 during the warm-up and in silence.
      */
     val energy: Float
-        get() = if (time < WARMUP || long < SILENCE) 0f else log2(max(short, 1e-4f) / long).coerceIn(-1f, 1f)
+        get() = if (!listening) 0f else log2(max(short, 1e-4f) / long).coerceIn(-1f, 1f)
 
     /** [long] is not following the music: a breakdown, or the level has just fallen under the breakdown ratio. */
     val holding: Boolean get() = section == Section.BREAKDOWN || below > 0f
 
+    /** Past the warm-up and not in silence: sections are being reported. */
+    val listening: Boolean get() = time >= WARMUP && long >= SILENCE
+
     private var time = 0f
     private var below = 0f
+
+    /** Seconds the level has been under the breakdown ratio without a break (a breakdown at [BREAK_HOLD]). For the readout. */
+    val belowSec: Float get() = below
     private var louder = 0f
     private var sectionTime = 0f
     private var fast = 0f
@@ -78,7 +84,9 @@ class SectionWatch {
             fastBelow += dt
             if (fastBelow > FAST_GAP) backAt = -1f
         }
-        if (short > DROP_RATIO * long) {
+        // Back for DROP_CONFIRM and above right now: two loud hits in a row, not one hit and its tail.
+        val backFor = if (backAt >= 0f && fastBelow == 0f) time - backAt else 0f
+        if (short > DROP_RATIO * long || backFor >= DROP_CONFIRM) {
             if (sectionTime >= DROP_MIN) { // otherwise only a short dip
                 dropLag = if (backAt >= 0f) min(time - backAt, MAX_DROP_LAG) else 0f
                 drops++
@@ -124,7 +132,8 @@ class SectionWatch {
         const val LOUDER_RATIO = 1.6f // now above this multiple of the reference...
         const val LOUDER_HOLD = 4f    // ...for this long (s) is a louder song: adopt it at once
         const val FAST_TAU = 0.1f     // s, the level that says when a drop really came back...
-        const val FAST_GAP = 0.5f     // ...unless it falls under the drop ratio for longer than this (s)
+        const val FAST_GAP = 0.7f     // ...unless it falls under the drop ratio for longer than this (s)
+        const val DROP_CONFIRM = 0.5f // s the fast level must stay back to call a drop (or the "now" level gets there)
         const val MAX_DROP_LAG = 4f   // s, the most a drop is dated back
     }
 }

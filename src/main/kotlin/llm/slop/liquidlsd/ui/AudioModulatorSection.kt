@@ -250,7 +250,7 @@ object AudioModulatorSection {
         itemTooltip("Section Signal:\nEnergy: how loud the music is now against the last ~20 s. Rests mid-range;\n" +
             "falls in a breakdown, rises when the song gets louder. Needs ~20 s of music first.\n" +
             "Drop: jumps to full when a breakdown ends with the bass back, then falls away over 4 bars.\n" +
-            "Dated back to the beat the drop landed on.")
+            "Called about half a second after the bass returns, dated back to that beat.")
         ImGui.popItemWidth()
     }
 

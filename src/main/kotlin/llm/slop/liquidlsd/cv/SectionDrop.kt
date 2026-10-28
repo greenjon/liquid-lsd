@@ -3,7 +3,7 @@ package llm.slop.liquidlsd.cv
 import kotlin.math.round
 
 /**
- * `audio_drop`: 1 on a drop, falling to 0 over [BARS] bars. The section watch calls a drop a second or two
+ * `audio_drop`: 1 on a drop, falling to 0 over [BARS] bars. The section watch calls a drop about half a second
  * after the low end came back, so the hit is dated back by its lag ([report]) and snapped to the nearest
  * beat: it lands on the beat the drop was on, already a little decayed, rather than late at full height.
  * The audio thread reports; the envelope runs on the render thread from the beat clock. A port of

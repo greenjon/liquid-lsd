@@ -19,7 +19,8 @@ const BREAK_MAX = 60;      // a "breakdown" this long is just a quieter song: ad
 const LOUDER_RATIO = 1.6;  // now above this multiple of the reference...
 const LOUDER_HOLD = 4;     // ...for this long (s) is a louder song: adopt it at once
 const FAST_TAU = 0.1;      // s, the level that says when a drop really came back...
-const FAST_GAP = 0.5;      // ...unless it falls under the drop ratio for longer than this (s)
+const FAST_GAP = 0.7;      // ...unless it falls under the drop ratio for longer than this (s)
+const DROP_CONFIRM = 0.5;  // s the fast level must stay back to call a drop (or the "now" level gets there)
 const MAX_DROP_LAG = 4;    // s, the most a drop is dated back
 
 export class EnergyWatch {
@@ -89,7 +90,9 @@ export class EnergyWatch {
       this.fastBelow += dt;
       if (this.fastBelow > FAST_GAP) this.backAt = -1;
     }
-    if (this.short > DROP_RATIO * this.long) {
+    // Back for DROP_CONFIRM and above right now: two loud hits in a row, not one hit and its tail.
+    const backFor = this.backAt >= 0 && this.fastBelow === 0 ? this.time - this.backAt : 0;
+    if (this.short > DROP_RATIO * this.long || backFor >= DROP_CONFIRM) {
       if (this.sectionTime >= DROP_MIN) {
         this.dropLag = this.backAt >= 0 ? Math.min(this.time - this.backAt, MAX_DROP_LAG) : 0;
         this.drops++;

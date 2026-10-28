@@ -1933,7 +1933,11 @@
 <ul>
 <li><strong>Continuous</strong> — Tracks the ongoing energy level of the band. Good for sustained movement, breathing dynamics, amplitude-following effects.</li>
 <li><strong>Transient</strong> — Fires on attacks and hits. Detects the moment energy <em>increases</em> in the band, making it sharp and percussive. Great for triggering flashes, jumps, or snaps on drum hits.</li>
+<li><strong>Section</strong> — Follows the shape of the song instead of its beats. Pick one of two signals:</li>
+<li><strong>Energy</strong> compares how loud the music is now with the last 20 seconds or so. It rests in the middle of the range during normal playing, sinks toward Min in a breakdown and stays there until the drop, and rises toward Max when the song gets louder. Use it to calm things down in a breakdown (smaller, slower, darker) and open them up when the music builds.</li>
+<li><strong>Drop</strong> jumps to Max when a breakdown ends with the bass coming back, then falls back to Min over 4 bars. Use it for one big hit on the drop: a flash, a zoom punch, an effect swept in. The drop is detected about half a second after the bass comes back (two loud kicks in a row), and the hit is dated back to that beat, so it starts slightly decayed but in time with the music.</li>
 </ul>
+<p>Section signals need about 20 seconds of music before they react. They are not scaled by Audio Response and have no response profile (they're already smooth), so only the range applies. A breakdown has to last at least 4 seconds before its end counts as a drop.</p>
 <h3 id="response-profiles">Response profiles</h3>
 <p>These control how quickly the signal rises and falls:</p>
 <table>
@@ -1979,7 +1983,7 @@
 <p>The oscilloscope shows two traces: the raw audio energy (faint ghost trace) and the smoothed follower output (solid line). This makes it easy to see how the profile is shaping the signal before it reaches your parameter.</p>
 <h3 id="range-min-max">Range (Min / Max)</h3>
 <p>The dual-handled range slider at the bottom sets the floor and ceiling of the modulation output. For example, if you want bass energy to push Lobes between 3 and 8, set Min to 3 and Max to 8.</p>
-<p>Min and Max are measured from the parameter's set value, and moving one never moves the other. Audio sources only push upward from silence, so Min is the resting offset and Max is the loudest peak.</p>
+<p>Min and Max are measured from the parameter's set value, and moving one never moves the other. Audio sources only push upward from silence, so Min is the resting offset and Max is the loudest peak. Section <strong>Energy</strong> is the exception: it swings both ways, so it rests halfway between Min and Max, with Min the depth of a breakdown and Max a much louder passage.</p>
 <p>Enabling randomization adds independent drift sliders for the Min and Max bounds, so the range itself wanders gently over time.</p>
 <hr />
 <h2 id="lfo-modulation">LFO Modulation</h2>

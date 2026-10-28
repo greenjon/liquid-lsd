@@ -1264,6 +1264,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#song-sections-as-modulation-sources-audiosectionwatchkt-cvsectiondropkt-cvcvregistrykt-cvevaluatorskt-audioaudioenginekt-uiaudiomodulatorsectionkt-uiaudioenginepanelkt-webenergyjs-webdspjs-webrendererjs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Song Sections as Modulation Sources (audio/SectionWatch.kt, cv/SectionDrop.kt, cv/CVRegistry.kt, cv/Evaluators.kt, audio/AudioEngine.kt, ui/AudioModulatorSection.kt, ui/AudioEnginePanel.kt, web/energy.js, web/dsp.js, web/renderer.js)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#twister-queue-knobs-queueing-at-a-place-auto-preview-uibrowserqueueknobskt-uibrowserqueueopskt-uinavigationsurfacekt-uiperformsurfacekt-controlknobcommandskt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7034,6 +7045,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#song-sections-as-modulation-sources-audiosectionwatchkt-cvsectiondropkt-cvcvregistrykt-cvevaluatorskt-audioaudioenginekt-uiaudiomodulatorsectionkt-uiaudioenginepanelkt-webenergyjs-webdspjs-webrendererjs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Song Sections as Modulation Sources (audio/SectionWatch.kt, cv/SectionDrop.kt, cv/CVRegistry.kt, cv/Evaluators.kt, audio/AudioEngine.kt, ui/AudioModulatorSection.kt, ui/AudioEnginePanel.kt, web/energy.js, web/dsp.js, web/renderer.js)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#twister-queue-knobs-queueing-at-a-place-auto-preview-uibrowserqueueknobskt-uibrowserqueueopskt-uinavigationsurfacekt-uiperformsurfacekt-controlknobcommandskt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -12779,6 +12801,15 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="song-sections-as-modulation-sources-audiosectionwatchkt-cvsectiondropkt-cvcvregistrykt-cvevaluatorskt-audioaudioenginekt-uiaudiomodulatorsectionkt-uiaudioenginepanelkt-webenergyjs-webdspjs-webrendererjs">Song Sections as Modulation Sources (<code>audio/SectionWatch.kt</code>, <code>cv/SectionDrop.kt</code>, <code>cv/CVRegistry.kt</code>, <code>cv/Evaluators.kt</code>, <code>audio/AudioEngine.kt</code>, <code>ui/AudioModulatorSection.kt</code>, <code>ui/AudioEnginePanel.kt</code>, <code>web/energy.js</code>, <code>web/dsp.js</code>, <code>web/renderer.js</code>)</h3>
+<ul>
+<li><strong>New: breakdowns and drops can drive parameters.</strong> The Audio tab's detection mode has a third choice, <strong>Section</strong>, next to Continuous and Transient. Pick <strong>Energy</strong> or <strong>Drop</strong> under it.</li>
+<li><strong>Energy</strong> compares how loud the music is now with the last 20 seconds or so. It sits in the middle of the range during normal playing, sinks in a breakdown (and stays down until the drop) and rises when the song gets louder.</li>
+<li><strong>Drop</strong> jumps to full when a breakdown ends with the bass back, then falls away over 4 bars. The detector calls a drop about half a second after the bass comes back and dates the hit back to that beat, so it lands at most a beat late.</li>
+<li>Both need about 20 seconds of music first. Audio Response doesn't scale them, and there is no response profile to choose (they're already smooth). Preferences &gt; Audio Hardware has a scope for each under the band scopes, and a <strong>Sections</strong> line under the auto gain readout shows what the detector hears: normal or BREAKDOWN, the level against usual, how long it has been under the 45% breakdown line (3 s confirms one) and the drop count. A breakdown that stays around half the usual level is too mild to count.</li>
+<li><strong>Drops are called sooner everywhere</strong> (about half a second after the bass returns instead of 1-2.5 s), so auto gain's breakdown hold ends sooner and the web TV's autopilot cuts sooner on a drop.</li>
+<li>The web TV computes both the same way, so presets that use them behave alike there (SYNC delays the drop like everything else, and reduced motion softens it).</li>
+</ul>
 <h3 id="twister-queue-knobs-queueing-at-a-place-auto-preview-uibrowserqueueknobskt-uibrowserqueueopskt-uinavigationsurfacekt-uiperformsurfacekt-controlknobcommandskt">Twister: Queue Knobs, Queueing at a Place, Auto-Preview (<code>ui/browser/QueueKnobs.kt</code>, <code>ui/browser/QueueOps.kt</code>, <code>ui/NavigationSurface.kt</code>, <code>ui/PerformSurface.kt</code>, <code>control/KnobCommands.kt</code>)</h3>
 <ul>
 <li><strong>New: knobs 14 and 15 are queue knobs in the Library view</strong> while the queues are under the browser. Knob 14 is the tab's main queue (A/B, A/B FX or Transitions), knob 15 its BG queue. Turn to move the highlight, hold down and turn to carry the item up or down, tap to use it now, Shift + tap to remove it. Their columns are outlined on screen, and the rings show where the highlight is.</li>
