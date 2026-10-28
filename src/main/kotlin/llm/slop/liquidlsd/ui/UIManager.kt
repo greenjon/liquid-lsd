@@ -231,7 +231,10 @@ class UIManager(
 
     private var devEditBrowseOpened = false
 
-    /** Dev aid for screenshots: `-Dlsd.editBrowse=gen|chain|fx1|fx2|fx3|trans` opens Deck A's (or Master's) pair view on that Browse target once. */
+    /**
+     * Dev aid for screenshots: `-Dlsd.editBrowse=gen|chain|fx1|fx2|fx3|trans` opens Deck A's (or Master's) pair view on that Browse target
+     * once; `chainview` / `chainload` open Deck A's Chain view, playing or loading.
+     */
     private fun openDevEditBrowse() {
         if (devEditBrowseOpened) return
         devEditBrowseOpened = true
@@ -240,6 +243,8 @@ class UIManager(
             "gen" -> parametersState.openGenBrowse(llm.slop.liquidlsd.macro.MacroEngine.DECK_A, "Deck A")
             "trans" -> parametersState.openTransitionBrowse()
             "chain" -> parametersState.openFxChainBrowse(llm.slop.liquidlsd.macro.MacroEngine.DECK_A, "Deck A", null)
+            "chainview" -> parametersState.enterChainView("A")
+            "chainload" -> { parametersState.enterChainView("A"); parametersState.toggleChainBrowse() }
             else -> parametersState.openFxChainBrowse(llm.slop.liquidlsd.macro.MacroEngine.DECK_A, "Deck A", tab.removePrefix("fx").toInt() - 1)
         }
     }

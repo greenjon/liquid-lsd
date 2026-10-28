@@ -59,16 +59,16 @@ internal object BayHeader {
                 val chainOn = parametersState.chainView != null
                 segment("Chain##bay_chain", lit = chainOn, enabled = true, lineH) { parametersState.toggleChainView(chainTag) }
                 itemTooltip(
-                    if (chainOn) "Chain view: the source row and one row per FX slot. Click to go back to Perform."
-                    else "Chain view: the source row and one row per FX slot, all three slots playable at once."
+                    if (chainOn) "Chain view: one row per FX slot, the source row under them. Click to go back to Perform."
+                    else "Chain view: one row per FX slot with the source row under them, all three slots playable at once."
                 )
                 if (chainOn) {
                     ImGui.sameLine(0f, 2f)
                     val loading = parametersState.chainView == ParametersState.ChainViewState.BROWSE
                     segment("Load##bay_chain_load", lit = loading, enabled = true, lineH) { parametersState.toggleChainBrowse() }
                     itemTooltip(
-                        if (loading) "Row 1 loads the highlighted effect into a slot. Click to get the source row back."
-                        else "Swap row 1 for a load row: three targets that put the highlighted effect into slot 1, 2 or 3."
+                        if (loading) "Row 4 loads the highlighted effect into a slot. Click to get the source row back."
+                        else "Swap the source row (row 4) for a load row: three targets that put the highlighted effect into slot 1, 2 or 3."
                     )
                 }
             }

@@ -68,11 +68,11 @@ class PerformanceMatrixPanel {
 
         private val loadTargetIds = Array(3) { "→ FX${it + 1}##chain_load_$it" }
         private val LOAD_TARGET_TIPS = Array(3) {
-            "Load the highlighted effect into slot ${it + 1} (Ctrl+Z undoes it). On a controller: push knob ${it + 1}."
+            "Load the highlighted effect into slot ${it + 1} (Ctrl+Z undoes it). On a controller: push knob ${it + 13}."
         }
-        private const val LOAD_ROW_TIP = "Chain view, browsing: this row loads effects into the slots below.\n" +
+        private const val LOAD_ROW_TIP = "Chain view, browsing: this row loads effects into the slots above.\n" +
             "The Load button on the Browse header (or the controller's picker button) goes back to the source row."
-        private const val LIST_COLUMN_TIP = "On a controller, knob 4 scrolls the list below (turn) and applies the highlighted row to the targeted slot (push)."
+        private const val LIST_COLUMN_TIP = "On a controller, knob 16 scrolls the list below (turn) and applies the highlighted row to the targeted slot (push)."
     }
 
     internal val ctx = PerformanceUiContext()
@@ -797,9 +797,9 @@ class PerformanceMatrixPanel {
     }
 
     /**
-     * Chain view's load row (browse state, [RowDescriptor.loadRow]) in row 1's place, same box and geometry as the rows it stands in for:
-     * the badge (caption LOAD), the list's cursor item on the left, then in the knob columns a target per FX slot (a click loads the
-     * cursor item there, like the controller's knobs 1-3) and the cursor column (the controller's knob 4).
+     * Chain view's load row (browse state, [RowDescriptor.loadRow]) in the control row's place (row 4), same box and geometry as the rows it
+     * stands in for: the badge (caption LOAD), the list's cursor item on the left, then in the knob columns a target per FX slot (a click
+     * loads the cursor item there, like the controller's knobs 13-15) and the cursor column (the controller's knob 16).
      */
     private fun drawLoadRow(
         session: llm.slop.liquidlsd.SessionContext,

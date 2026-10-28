@@ -293,8 +293,9 @@ internal class PerformSurface(
         for (i in lightBuffer.indices) {
             if (i == nav.browseKnob) lightBuffer[i] = KnobLight(nav.browsePosition, meterType = MeterType.ENDLESS)
             else if (!nav.isBrowseLive(i)) {
-                // Chain view's load knobs glow in the colour of the slot row they load into; dark while the cursor item can't go in a slot.
-                val slotRow = chainRows?.getOrNull(i + 1)?.takeIf { i < chainRows.size - 1 }
+                // Chain view's load knobs (13-15) glow in the colour of the slot row they load into; dark while the cursor item can't go in a slot.
+                val loadCol = i - PerfRows.CHAIN_CONTROL_ROW * 4
+                val slotRow = chainRows?.takeIf { loadCol in 0 until chainRows.size - 1 }?.getOrNull(loadCol)
                 val queue = queueTab?.let { QueueKnobs.queueFor(i, it) }
                 lightBuffer[i] = when {
                     slotRow != null -> loadLight(slotRow)

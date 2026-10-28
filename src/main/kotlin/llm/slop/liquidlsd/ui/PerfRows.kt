@@ -24,7 +24,7 @@ internal data class RowDescriptor(
     val slotIndex: Int? = null,
     /**
      * Chain view's load row (browse state): no macro bank; on screen the three "load into slot" targets and the list cursor, on a
-     * controller knobs 1-3 load the cursor item into slots 1-3 and knob 4 is the cursor. [bankId] is the chain's FX bank.
+     * controller knobs 13-15 load the cursor item into slots 1-3 and knob 16 is the cursor. [bankId] is the chain's FX bank.
      */
     val loadRow: Boolean = false
 )
@@ -100,18 +100,22 @@ internal object PerfRows {
         if (tag == PAIR_MASTER) MacroEngine.MASTER_FX else DECK_ROW_BANKS.firstOrNull { it.tag == tag }?.fxBankId
 
     /**
-     * Chain view's four rows for pair [tag]: row 1 the deck's SRC row (Master: Transitions) to play, or the load row while
-     * [state] is BROWSE; rows 2-4 the chain's FX slots, which never move between the two states.
+     * Chain view's four rows for pair [tag]: rows 1-3 the chain's FX slots, which never move between the two states; row 4 the control
+     * row, the deck's SRC row (Master: Transitions) to play, or the load row while [state] is BROWSE. The control row is at the bottom
+     * so the cursor is knob 16 in every browse mode, and the rows above it play, as in the Library and pair views.
      */
     fun chainRowsFor(tag: String, state: ParametersState.ChainViewState): List<RowDescriptor> {
         val chainBank = chainBankFor(tag) ?: return emptyList()
         val base = if (tag == PAIR_MASTER) "master" else "deck.$tag"
-        val top = when (state) {
+        val control = when (state) {
             ParametersState.ChainViewState.PLAY -> CATALOG[if (tag == PAIR_MASTER) "trans" else "$base.src"]
             ParametersState.ChainViewState.BROWSE -> loadRows.getValue(chainBank)
         }
-        return listOfNotNull(top) + (1..FxChain.SLOT_COUNT).mapNotNull { CATALOG["$base.fx$it"] }
+        return (1..FxChain.SLOT_COUNT).mapNotNull { CATALOG["$base.fx$it"] } + listOfNotNull(control)
     }
+
+    /** Chain view's control row (the SRC or load row) is the last of [chainRowsFor]'s four: knobs 13-16. */
+    const val CHAIN_CONTROL_ROW = 3
 
     private val loadRows: Map<String, RowDescriptor> by lazy {
         (DECK_ROW_BANKS.map { it.fxBankId to it.accent } + (MacroEngine.MASTER_FX to PerformanceColors.COLOR_MASTER))

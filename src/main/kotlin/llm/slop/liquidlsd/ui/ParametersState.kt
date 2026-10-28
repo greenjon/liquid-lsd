@@ -205,11 +205,11 @@ class ParametersState : MidiLearnSink {
             if (value == null) chainView = null
         }
 
-    /** Chain view's row 1: the source (or Transitions) row to play, or the load row while browsing from the controller. */
+    /** Chain view's control row (row 4): the source (or Transitions) row to play, or the load row while browsing from the controller. */
     enum class ChainViewState { PLAY, BROWSE }
 
     /**
-     * Non-null while the focused pair is shown as Chain view ([PerfRows.chainRowsFor]): row 1 per [ChainViewState], rows 2-4 the
+     * Non-null while the focused pair is shown as Chain view ([PerfRows.chainRowsFor]): row 4 per [ChainViewState], rows 1-3 the
      * pair's FX slots. Kept across [focusPair] (stepping decks stays in Chain view); cleared with the pair.
      */
     var chainView: ChainViewState? = null
@@ -229,7 +229,7 @@ class ParametersState : MidiLearnSink {
     }
 
     /**
-     * Chain view's play / browse toggle (row 1 only; the slot rows never move). Browsing keeps the dock on an FX slot, since the
+     * Chain view's play / browse toggle (the control row only; the slot rows never move). Browsing keeps the dock on an FX slot, since the
      * load row loads into slots.
      */
     fun toggleChainBrowse() {

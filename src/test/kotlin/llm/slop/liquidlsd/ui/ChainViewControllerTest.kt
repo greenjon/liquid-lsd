@@ -71,7 +71,9 @@ class ChainViewControllerTest {
         surface().secondary(1)   // Deck A SRC row, knob 2, on the A/B page
         assertEquals("A", state.focusedPair)
         assertEquals(ParametersState.ChainViewState.PLAY, state.chainView)
-        surface().secondary(2)   // row 1 is still Deck A's SRC row
+        surface().secondary(2)   // in Chain view row 1 is FX slot 1: not the gesture
+        assertEquals("A", state.focusedPair)
+        surface().secondary(13)  // Deck A's SRC row is now row 4
         assertNull(state.focusedPair)
         assertNull(state.chainView)
         surface().secondary(5)   // an FX row's slot knob is not the gesture
@@ -83,24 +85,24 @@ class ChainViewControllerTest {
         state.enterChainView("A")
         assertFalse(nav().browsing)
         val k = knobs()
-        assertEquals(MacroEngine.DECK_A, k[0]?.bankId)
-        assertEquals(listOf("deckA_fx_s1", "deckA_fx_s2", "deckA_fx_s3"), listOf(4, 8, 12).map { k[it]?.bankId })
+        assertEquals(listOf("deckA_fx_s1", "deckA_fx_s2", "deckA_fx_s3"), listOf(0, 4, 8).map { k[it]?.bankId })
+        assertEquals(MacroEngine.DECK_A, k[12]?.bankId)
         assertTrue(k.all { it != null })
     }
 
     @Test
-    fun loadingPutsTheCursorOnKnobFourWithNoSendsAndTheSlotRowsLive() {
+    fun loadingKeepsTheCursorOnKnobSixteenWithNoSendsAndTheSlotRowsLive() {
         state.enterChainView("A")
         nav().button(2, false)   // picker button: Load
         assertEquals(ParametersState.ChainViewState.BROWSE, state.chainView)
         val n = nav()
         assertTrue(n.browsing)
-        assertEquals(3, n.browseKnob)
-        assertFalse(n.isBrowseLive(2))
-        assertTrue((4..15).all(n::isBrowseLive))
+        assertEquals(15, n.browseKnob)
+        assertFalse(n.isBrowseLive(13))
+        assertTrue((0..11).all(n::isBrowseLive))
         assertTrue(n.sendTargets.isEmpty())
         assertTrue(n.switchTargets.isEmpty())
-        assertTrue((0..3).all { knobs()[it] == null }, "the load row has no macro knobs")
+        assertTrue((12..15).all { knobs()[it] == null }, "the load row has no macro knobs")
         nav().button(2, false)
         assertEquals(ParametersState.ChainViewState.PLAY, state.chainView)
     }
@@ -110,12 +112,13 @@ class ChainViewControllerTest {
         state.enterChainView("A")
         state.toggleChainBrowse()
         FXBrowserPanel.selectedAsset = null
-        assertTrue(nav().browseKnobTap(1, shifted = false), "the tap is the load knob's even with nothing to load")
+        assertTrue(nav().browseKnobTap(13, shifted = false), "the tap is the load knob's even with nothing to load")
         assertEquals(ParametersState.BrowseTarget.FxChain(0), state.dockSelection?.target, "nothing highlighted: nothing loaded, target unchanged")
         FXBrowserPanel.selectedAsset = AssetItem(BrowseCatalogs.STOCK_FX_PREFIX + "glow", "Glow", AssetType.FX_STOCK)
-        assertTrue(nav().browseKnobTap(1, shifted = false))
+        assertTrue(nav().browseKnobTap(13, shifted = false))
         assertEquals(ParametersState.BrowseTarget.FxChain(1), state.dockSelection?.target)
-        assertFalse(nav().browseKnobTap(3, shifted = false), "knob 4 is the cursor, not a load knob")
+        assertFalse(nav().browseKnobTap(15, shifted = false), "knob 16 is the cursor, not a load knob")
+        assertFalse(nav().browseKnobTap(1, shifted = false), "knob 2 plays FX slot 1")
     }
 
     @Test
@@ -131,20 +134,20 @@ class ChainViewControllerTest {
     }
 
     @Test
-    fun loadKnobsGlowInTheirSlotRowsColourAndKnobFourIsTheCursor() {
+    fun loadKnobsGlowInTheirSlotRowsColourAndKnobSixteenIsTheCursor() {
         state.enterChainView("A")
         state.toggleChainBrowse()
         FXBrowserPanel.selectedAsset = AssetItem(BrowseCatalogs.STOCK_FX_PREFIX + "glow", "Glow", AssetType.FX_STOCK)
         val lights = surface().knobLights()
         for (slot in 0 until 3) {
-            val light = assertNotNull(lights[slot])
+            val light = assertNotNull(lights[12 + slot])
             val c = PerformPages.ledColor(PerfRows.CATALOG.getValue("deck.A.fx${slot + 1}"))
             assertEquals(c.toList(), listOf(light.r, light.g, light.b))
             assertTrue(light.lit)
         }
-        assertEquals(llm.slop.liquidlsd.parameters.MeterType.ENDLESS, lights[3]?.meterType)
-        assertNotNull(lights[12], "knob 13 is FX3's Metaknob, not a send")
+        assertEquals(llm.slop.liquidlsd.parameters.MeterType.ENDLESS, lights[15]?.meterType)
+        assertNotNull(lights[8], "knob 9 is FX3's Metaknob, not a send")
         FXBrowserPanel.selectedAsset = null
-        assertFalse(surface().knobLights()[0]!!.lit, "dark while there's nothing to load")
+        assertFalse(surface().knobLights()[12]!!.lit, "dark while there's nothing to load")
     }
 }

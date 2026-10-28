@@ -21,8 +21,9 @@ row, so SRC stays on top like every other page and signal flow reads top to bott
 - **On screen:** always 4 rows above the Browse dock, so no geometry changes. In browse state row 1 is drawn as the load row: badge
   LOAD, the list's cursor item, three `→ FX1/2/3` targets (a click loads the cursor item there) and a LIST column for knob 4.
 - **Twister:** 16 knobs, row-major. In browse state, K1-3 turn = nothing (they're load buttons), K4 = cursor.
-- **Known inconsistency:** in the plain pair view and the Library the cursor is knob 16; in Chain view it's knob 4. Rule of thumb:
-  the cursor is the right-hand knob of the non-playing row. Accepted; judge on hardware.
+- **Superseded 2026-10-28: the control row moved to the bottom** (rows 1-3 FX1-3, row 4 SRC / load), so the cursor is knob 16 here
+  too and knobs 13-15 load. Reasons and rejected alternatives in DECISIONS.md, Chain view entry. (Was: cursor knob 4, accepted as an
+  inconsistency.)
 - **Master:** gets the same view. Row 1 (play) is `trans`, as in the Master pair; rows 2-4 are the Master FX slots.
 
 **Why a mode and not pages:** this is a closer look at one deck, so it uses one gesture and follows the deck. It doesn't use up

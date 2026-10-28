@@ -12,7 +12,7 @@ import java.io.File
 
 /**
  * Chain view's load row ([RowDescriptor.loadRow]): puts the FX list's cursor item into one slot of the focused pair's chain. Shared by
- * the row's on-screen targets and (step 5) the controller's knobs 1-3, so both load the same way the Browse dock does for a slot.
+ * the row's on-screen targets and (step 5) the controller's knobs 13-15, so both load the same way the Browse dock does for a slot.
  */
 internal object ChainLoad {
     /** The cursor item if a slot can take it (a stock effect or a saved single effect, not a whole chain), else null. */
