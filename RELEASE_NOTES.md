@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Renaming or Deleting a Saved Item Keeps the Library Consistent (`ui/browser/LibraryRefs.kt`, `ui/browser/BrowserPopupHandler.kt`, `presets/PresetManager.kt`, `ui/PlaylistManager.kt`)
+- **Fixed: renaming a saved FX single, FX chain or transition broke every playlist entry that pointed at it.** Only deck presets had their playlists updated. Now all saved kinds do.
+- **A rename now also follows the item into the live queues** (A/B, BG, both FX queues, Transitions), **Favorites and Recent**, the deck or FX chain it is loaded on (so Save still writes back to the renamed file instead of recreating the old name) and, for presets, its thumbnail.
+- **Deleting a saved item now also drops it from Favorites and Recent**, and a deck or chain loaded from it becomes unsaved (Save asks for a name) instead of silently writing the deleted file back.
+- This is the groundwork for managing folders inside the Library, which is next.
+
 ### Multi-Select in the FX and Transitions Lists (`ui/browser/FXBrowserPanel.kt`, `ui/browser/TransitionBrowserPanel.kt`, `ui/browser/BrowserPane.kt`, `ui/LibraryNavigation.kt`, FX and transition queue panels)
 - **The FX and Transitions lists now multi-select like the Sources list.** Ctrl/Cmd+click toggles a row, Shift+click selects a range, Ctrl+Shift+click adds a range. Right-click inside the selection for **Add N to A/B (FX) Queue**, **Add N to BG FX Queue**, **Add N to '<playlist>'** and **Delete N...**; `Q`/`Shift+Q` enqueue the whole selection, `Delete` deletes it (or removes it from the open playlist), and dragging carries every selected row into a playlist or queue. Stock FX filters are skipped by queue, playlist and delete (they load one at a time); stock transitions queue and go into playlists, only saved ones delete.
 - **Ctrl+A (Cmd+A) selects every row the list is showing**, in all three lists, while the list has the keyboard.

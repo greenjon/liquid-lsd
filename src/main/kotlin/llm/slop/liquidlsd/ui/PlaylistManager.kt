@@ -296,20 +296,30 @@ object PlaylistManager {
      * forms of the old path are matched. Only playlist files that actually contained the old path
      * are rewritten.
      */
-    fun updatePresetPathInAllPlaylists(oldAbsPath: String, newAbsPath: String) {
-        val presetsRoot = FileSystemManager.getPresetsRoot().canonicalFile
-        val playlistsRoot = FileSystemManager.getPlaylistsRoot()
+    fun updatePresetPathInAllPlaylists(oldAbsPath: String, newAbsPath: String) =
+        updatePresetPathsInAllPlaylists(mapOf(oldAbsPath to newAbsPath))
+
+    /** [updatePresetPathInAllPlaylists] for many files at once ([moves]: old absolute path to new), reading each playlist once. */
+    internal fun updatePresetPathsInAllPlaylists(
+        moves: Map<String, String>,
+        presetsRoot: File = FileSystemManager.getPresetsRoot(),
+        playlistsRoot: File = FileSystemManager.getPlaylistsRoot()
+    ) {
+        if (moves.isEmpty()) return
+        val root = presetsRoot.canonicalFile
 
         fun toRelative(abs: String): String? = try {
             val f = File(abs).canonicalFile
-            if (f.path.startsWith(presetsRoot.path)) f.relativeTo(presetsRoot).path else null
+            if (f.path.startsWith(root.path)) f.relativeTo(root).path else null
         } catch (e: Exception) { null }
 
-        val oldRel = toRelative(oldAbsPath)
-        val newRel = toRelative(newAbsPath) ?: newAbsPath
-
-        // All forms the old path might appear as inside a playlist file
-        val oldCandidates = listOfNotNull(oldAbsPath, oldRel).toSet()
+        // Every form an old path might appear as inside a playlist file, mapped to what replaces it
+        val replacements = HashMap<String, String>()
+        for ((oldAbs, newAbs) in moves) {
+            val newRel = toRelative(newAbs) ?: newAbs
+            replacements[oldAbs] = newRel
+            toRelative(oldAbs)?.let { replacements[it] = newRel }
+        }
 
         playlistsRoot.walkTopDown()
             .filter { it.isFile && it.extension == "lsdplay" }
@@ -317,16 +327,11 @@ object PlaylistManager {
                 val lines = playlistFile.readLines()
                 var changed = false
                 val updated = lines.map { line ->
-                    if (line.trim() in oldCandidates) {
-                        changed = true
-                        newRel
-                    } else {
-                        line
-                    }
+                    replacements[line.trim()]?.also { changed = true } ?: line
                 }
                 if (changed) {
                     playlistFile.writeText(updated.joinToString("\n") + "\n")
-                    logger.info { "Updated preset path in playlist ${playlistFile.name}: $oldAbsPath -> $newAbsPath" }
+                    logger.info { "Updated ${moves.size} preset path(s) in playlist ${playlistFile.name}" }
                 }
             }
     }

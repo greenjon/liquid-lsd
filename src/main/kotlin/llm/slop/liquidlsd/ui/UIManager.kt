@@ -363,7 +363,7 @@ class UIManager(
 
             NoteEditorModal.draw()
             SavePresetModal.draw(session)
-            BrowserPopupHandler.drawDeleteAssetConfirmationPopup()
+            BrowserPopupHandler.drawDeleteAssetConfirmationPopup(mixer)
             UpdatePromptModal.draw(session)
             AboutModal.draw(session)
 

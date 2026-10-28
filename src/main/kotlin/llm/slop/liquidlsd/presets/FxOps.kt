@@ -275,6 +275,16 @@ object FxOps {
     /** The saved FX preset [chain]'s [slotIndex] was loaded from, or null for a stock effect, an empty slot or a slot changed since. */
     fun slotSourceFile(chain: FxChain, slotIndex: Int): File? = chain.slots.getOrNull(slotIndex)?.let { slotSources[it] }
 
+    /** Follows renamed or moved `.lsdfx` files ([moves]: old absolute path to new) in every slot's recorded origin. */
+    fun relocateSlotSources(moves: Map<String, String>) = synchronized(slotSources) {
+        for (entry in slotSources.entries) moves[entry.value.absolutePath]?.let { entry.setValue(File(it)) }
+    }
+
+    /** Drops deleted `.lsdfx` files ([paths], absolute) from the slots' recorded origins. */
+    fun forgetSlotSources(paths: Set<String>) = synchronized(slotSources) {
+        slotSources.entries.removeIf { it.value.absolutePath in paths }
+    }
+
     /** Applies an already-loaded slot DTO (e.g. from the clipboard) to [slotIndex]. */
     fun applySlot(chain: FxChain, slotIndex: Int, dto: llm.slop.liquidlsd.models.FXSlotDto, undoable: Boolean = false) =
         postSlotChange(chain, slotIndex, undoable) { it.applyFxSlot(slotIndex, dto) }

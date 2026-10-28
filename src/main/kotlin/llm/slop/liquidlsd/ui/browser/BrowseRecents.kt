@@ -69,6 +69,26 @@ object BrowseRecents {
         save(store)
     }
 
+    /** Follows renamed or moved files ([moves]: old key to new), keeping their place in the list. */
+    fun relocate(kind: BrowseKind, moves: Map<String, String>) {
+        val store = loaded(kind)
+        if (store.keys.none { it in moves }) return
+        val updated = store.keys.map { moves[it] ?: it }.distinct()
+        store.keys.clear()
+        store.keys.addAll(updated)
+        store.version++
+        save(store)
+    }
+
+    /** Drops deleted files ([keys]). */
+    fun forget(kind: BrowseKind, keys: Set<String>) {
+        val store = loaded(kind)
+        if (store.keys.removeAll(keys)) {
+            store.version++
+            save(store)
+        }
+    }
+
     /** Test hook: point a kind at [file] and drop in-memory state. */
     internal fun resetForTest(kind: BrowseKind, file: File) {
         val store = stores.getValue(kind)

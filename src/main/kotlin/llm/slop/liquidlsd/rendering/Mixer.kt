@@ -40,6 +40,10 @@ class Mixer(
     val masterFxSlots: Array<ISFFilter?>
         get() = masterFxChain.slots
 
+    /** Every FX chain the mixer owns: Master, then Deck A, B, BG and PV. */
+    val fxChains: List<FxChain>
+        get() = listOf(masterFxChain, deckA.fxChain, deckB.fxChain, deckBG.fxChain, deckPV.fxChain)
+
     // Ping-pong pair for the Master FX chain's slots, plus its dry/wet-blended output:
     var masterFxPingFBO = FBO(width, height)
     var masterFxPongFBO = FBO(width, height)

@@ -207,7 +207,7 @@ object BrowserDock {
      * Rename / new playlist / export-queue popups. Delete's trigger+draw is global (see
      * [BrowserPopupHandler.drawDeleteAssetConfirmationPopup]).
      */
-    fun drawPopups(session: SessionContext) {
+    fun drawPopups(session: SessionContext, mixer: Mixer) {
         if (BrowserPopupHandler.pendingOpenRenamePopup) {
             ImGui.openPopup("Rename##RenameAssetPopup")
             BrowserPopupHandler.pendingOpenRenamePopup = false
@@ -229,7 +229,7 @@ object BrowserDock {
             BrowserPopupHandler.pendingOpenExportFxBgQueuePopup = false
         }
 
-        BrowserPopupHandler.drawRenameAssetPopup()
+        BrowserPopupHandler.drawRenameAssetPopup(mixer)
         BrowserPopupHandler.drawNewPlaylistPopup()
         BrowserPopupHandler.drawExportQueuePopup(session)
         BrowserPopupHandler.drawExportBgQueuePopup()

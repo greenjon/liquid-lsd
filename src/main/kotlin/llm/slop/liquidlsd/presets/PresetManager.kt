@@ -122,6 +122,34 @@ object PresetManager {
 
     fun clearActive(slot: DeckSlot) = setActive(slot, null, null)
 
+    /**
+     * Points every deck loaded from [old] at [new] after a rename or move, so saving writes back to the file where it now is.
+     * A rename also renames the deck's preset and its baseline; whether the deck has unsaved changes is kept as it was.
+     */
+    fun relocateActive(old: File, new: File) {
+        for (slot in DeckSlot.entries) {
+            if (activeFiles[slot.index]?.absolutePath != old.absolutePath) continue
+            activeFiles[slot.index] = new
+            val name = activePreset(slot)
+            val newName = new.nameWithoutExtension
+            if (name != old.nameWithoutExtension || name == newName) continue
+            val signature = bankBaseline(slot)
+            val dto = cachedDto(slot)?.copy(name = newName)
+            when (slot) {
+                DeckSlot.A -> { activePresetA = newName; cachedDtoA = dto }
+                DeckSlot.B -> { activePresetB = newName; cachedDtoB = dto }
+                DeckSlot.BG -> { activePresetBG = newName; cachedDtoBG = dto }
+                DeckSlot.PV -> { activePresetPV = newName; cachedDtoPV = dto }
+            }
+            bankBaselines[slot.index] = if (dto != null && signature != null) BankBaseline(dto, signature) else null
+        }
+    }
+
+    /** Forgets [file] as any deck's save-back file after it was deleted; the deck keeps playing as an unsaved preset. */
+    fun forgetActive(file: File) {
+        for (slot in DeckSlot.entries) if (activeFiles[slot.index]?.absolutePath == file.absolutePath) activeFiles[slot.index] = null
+    }
+
     fun mtime(slot: DeckSlot): Long? = when (slot) {
         DeckSlot.A -> activePresetMtimeA
         DeckSlot.B -> activePresetMtimeB

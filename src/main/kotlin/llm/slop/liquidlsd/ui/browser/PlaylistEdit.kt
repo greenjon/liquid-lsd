@@ -40,6 +40,14 @@ object PlaylistItems {
         return p == norm || p.endsWith("/$norm") || file == norm || file.substringBeforeLast('.') == norm
     }
 
+    /**
+     * [items] with every token that named a file now moved ([moves]: old absolute path to new) pointing at its new path. A token that
+     * still names the moved file (a bare name, when only the folder changed) is left as it is.
+     */
+    fun relocate(items: List<String>, moves: Map<String, String>): List<String> = items.map { token ->
+        moves.entries.firstOrNull { (old, new) -> tokenNamesFile(token, old) && !tokenNamesFile(token, new) }?.value ?: token
+    }
+
     /** The playlist token for a dragged file path: a stock transition's bundled `.fs` becomes its shader id, anything else is kept. */
     fun tokenForPayload(kind: BrowseKind, path: String): String =
         if (kind == BrowseKind.TRANS && path.endsWith(".fs", ignoreCase = true)) File(path).nameWithoutExtension else path
@@ -85,6 +93,14 @@ class TokenPlaylistEdit(private val kind: BrowseKind, private val file: File, pr
         val drop = items.indices.filter { PlaylistItems.tokenNamesFile(items[it], path) }
         if (drop.isEmpty()) return false
         remove(drop)
+        return true
+    }
+
+    /** Points items naming moved files at their new paths ([moves]: old absolute path to new); true when something changed. */
+    fun relocateFiles(moves: Map<String, String>): Boolean {
+        val updated = PlaylistItems.relocate(items, moves)
+        if (updated == items) return false
+        save(updated)
         return true
     }
 

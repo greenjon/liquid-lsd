@@ -257,7 +257,7 @@ object LibraryPanel {
         if (binding == null) BrowserDock.libraryShown()
         BrowserDock.drawBody(session, mixer, parametersState, binding)
         BrowserDock.drawShortcuts(session, mixer)
-        BrowserDock.drawPopups(session)
+        BrowserDock.drawPopups(session, mixer)
     }
 
     /**

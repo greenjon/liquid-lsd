@@ -1264,6 +1264,50 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#renaming-or-deleting-a-saved-item-keeps-the-library-consistent-uibrowserlibraryrefskt-uibrowserbrowserpopuphandlerkt-presetspresetmanagerkt-uiplaylistmanagerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Renaming or Deleting a Saved Item Keeps the Library Consistent (ui/browser/LibraryRefs.kt, ui/browser/BrowserPopupHandler.kt, presets/PresetManager.kt, ui/PlaylistManager.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multi-select-in-the-fx-and-transitions-lists-uibrowserfxbrowserpanelkt-uibrowsertransitionbrowserpanelkt-uibrowserbrowserpanekt-uilibrarynavigationkt-fx-and-transition-queue-panels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-Select in the FX and Transitions Lists (ui/browser/FXBrowserPanel.kt, ui/browser/TransitionBrowserPanel.kt, ui/browser/BrowserPane.kt, ui/LibraryNavigation.kt, FX and transition queue panels)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chain-view-all-three-fx-slots-at-once-macrofxmacrosynckt-renderingfxchainkt-uiperfrowskt-uifxchainheaderkt-uiperformancematrixpanelkt-uiparametersstatekt-uichainloadkt-uibayheaderkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chain View: All Three FX Slots at Once (macro/FxMacroSync.kt, rendering/FxChain.kt, ui/PerfRows.kt, ui/FxChainHeader.kt, ui/PerformanceMatrixPanel.kt, ui/ParametersState.kt, ui/ChainLoad.kt, ui/BayHeader.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#web-tv-the-desktops-stock-looks-scriptsgen_stock_web_presetspy-webpresetsstock-lsd-webplaylistsdefaultlsdplay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web TV: The Desktop's Stock Looks (scripts/gen_stock_web_presets.py, web/presets/stock-*.lsd, web/playlists/default.lsdplay)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#fractal-flame-picked-from-browse-showed-nothing-renderingflameenginekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6935,6 +6979,50 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#renaming-or-deleting-a-saved-item-keeps-the-library-consistent-uibrowserlibraryrefskt-uibrowserbrowserpopuphandlerkt-presetspresetmanagerkt-uiplaylistmanagerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Renaming or Deleting a Saved Item Keeps the Library Consistent (ui/browser/LibraryRefs.kt, ui/browser/BrowserPopupHandler.kt, presets/PresetManager.kt, ui/PlaylistManager.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multi-select-in-the-fx-and-transitions-lists-uibrowserfxbrowserpanelkt-uibrowsertransitionbrowserpanelkt-uibrowserbrowserpanekt-uilibrarynavigationkt-fx-and-transition-queue-panels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-Select in the FX and Transitions Lists (ui/browser/FXBrowserPanel.kt, ui/browser/TransitionBrowserPanel.kt, ui/browser/BrowserPane.kt, ui/LibraryNavigation.kt, FX and transition queue panels)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chain-view-all-three-fx-slots-at-once-macrofxmacrosynckt-renderingfxchainkt-uiperfrowskt-uifxchainheaderkt-uiperformancematrixpanelkt-uiparametersstatekt-uichainloadkt-uibayheaderkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chain View: All Three FX Slots at Once (macro/FxMacroSync.kt, rendering/FxChain.kt, ui/PerfRows.kt, ui/FxChainHeader.kt, ui/PerformanceMatrixPanel.kt, ui/ParametersState.kt, ui/ChainLoad.kt, ui/BayHeader.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#web-tv-the-desktops-stock-looks-scriptsgen_stock_web_presetspy-webpresetsstock-lsd-webplaylistsdefaultlsdplay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web TV: The Desktop's Stock Looks (scripts/gen_stock_web_presets.py, web/presets/stock-*.lsd, web/playlists/default.lsdplay)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#fractal-flame-picked-from-browse-showed-nothing-renderingflameenginekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -12581,6 +12669,32 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="renaming-or-deleting-a-saved-item-keeps-the-library-consistent-uibrowserlibraryrefskt-uibrowserbrowserpopuphandlerkt-presetspresetmanagerkt-uiplaylistmanagerkt">Renaming or Deleting a Saved Item Keeps the Library Consistent (<code>ui/browser/LibraryRefs.kt</code>, <code>ui/browser/BrowserPopupHandler.kt</code>, <code>presets/PresetManager.kt</code>, <code>ui/PlaylistManager.kt</code>)</h3>
+<ul>
+<li><strong>Fixed: renaming a saved FX single, FX chain or transition broke every playlist entry that pointed at it.</strong> Only deck presets had their playlists updated. Now all saved kinds do.</li>
+<li><strong>A rename now also follows the item into the live queues</strong> (A/B, BG, both FX queues, Transitions), <strong>Favorites and Recent</strong>, the deck or FX chain it is loaded on (so Save still writes back to the renamed file instead of recreating the old name) and, for presets, its thumbnail.</li>
+<li><strong>Deleting a saved item now also drops it from Favorites and Recent</strong>, and a deck or chain loaded from it becomes unsaved (Save asks for a name) instead of silently writing the deleted file back.</li>
+<li>This is the groundwork for managing folders inside the Library, which is next.</li>
+</ul>
+<h3 id="multi-select-in-the-fx-and-transitions-lists-uibrowserfxbrowserpanelkt-uibrowsertransitionbrowserpanelkt-uibrowserbrowserpanekt-uilibrarynavigationkt-fx-and-transition-queue-panels">Multi-Select in the FX and Transitions Lists (<code>ui/browser/FXBrowserPanel.kt</code>, <code>ui/browser/TransitionBrowserPanel.kt</code>, <code>ui/browser/BrowserPane.kt</code>, <code>ui/LibraryNavigation.kt</code>, FX and transition queue panels)</h3>
+<ul>
+<li><strong>The FX and Transitions lists now multi-select like the Sources list.</strong> Ctrl/Cmd+click toggles a row, Shift+click selects a range, Ctrl+Shift+click adds a range. Right-click inside the selection for <strong>Add N to A/B (FX) Queue</strong>, <strong>Add N to BG FX Queue</strong>, <strong>Add N to '<playlist>'</strong> and <strong>Delete N...</strong>; <code>Q</code>/<code>Shift+Q</code> enqueue the whole selection, <code>Delete</code> deletes it (or removes it from the open playlist), and dragging carries every selected row into a playlist or queue. Stock FX filters are skipped by queue, playlist and delete (they load one at a time); stock transitions queue and go into playlists, only saved ones delete.</li>
+<li><strong>Ctrl+A (Cmd+A) selects every row the list is showing</strong>, in all three lists, while the list has the keyboard.</li>
+<li><strong>The FX and transition queues take a multi-row drop</strong>, in order, like the source queues already did.</li>
+<li>A list opened to pick for a deck, slot or transition still selects one row at a time, since a click there applies the row.</li>
+</ul>
+<h3 id="chain-view-all-three-fx-slots-at-once-macrofxmacrosynckt-renderingfxchainkt-uiperfrowskt-uifxchainheaderkt-uiperformancematrixpanelkt-uiparametersstatekt-uichainloadkt-uibayheaderkt">Chain View: All Three FX Slots at Once (<code>macro/FxMacroSync.kt</code>, <code>rendering/FxChain.kt</code>, <code>ui/PerfRows.kt</code>, <code>ui/FxChainHeader.kt</code>, <code>ui/PerformanceMatrixPanel.kt</code>, <code>ui/ParametersState.kt</code>, <code>ui/ChainLoad.kt</code>, <code>ui/BayHeader.kt</code>)</h3>
+<ul>
+<li><strong>New: Chain view.</strong> One deck's source row on top and one row per FX slot below it, over the Browse list, so all three effects are playable at once. Open it from <strong>Chain View</strong> in any FX chain's ⋮ menu or with the <strong>Chain</strong> button on the pair view's Browse header (Master has one too, with Transitions on top). <strong>Load</strong> next to it swaps the source row for a load row: the effect highlighted in the list and three targets, → FX1, → FX2, → FX3, that put it into that slot; the slot rows stay where they are, so you can load, play and compare without leaving. Esc leaves in one press. <strong>On a Twister:</strong> shift + tap any of a deck's SRC knobs to open (or leave) its Chain view; all 16 knobs play the four rows. Right-bottom turns Load on: knob 4 becomes the list cursor and knobs 1-3 load the highlighted effect into slots 1-3, glowing in their slot's colour, while knobs 5-16 keep playing the slots. The bank buttons step decks without leaving. Chain view has no send knobs.</li>
+<li><strong>Every FX slot can now have a Perform row of its own.</strong> A page can place <code>deck.A.fx1</code>, <code>deck.A.fx2</code>, <code>deck.A.fx3</code> (likewise <code>B</code>, <code>BG</code>, <code>PV</code>, and <code>master.fx1</code>..<code>fx3</code>). Knob 1 is the slot's Metaknob (tap to bypass), knobs 2-4 are its parameters, and the row's title badge says <strong>FX1</strong>, <strong>FX2</strong> or <strong>FX3</strong>. Beside the knobs: the effect's name (click to browse that slot), the chain's ⋮ menu, the slot's Dry/Wet and, for effects with more than three parameters, the page arrows. Drop an effect on the badge to load it into that slot. The deck's die and FX ON sit on the FX1 row only. On a Twister the three slot rows light in three slightly different shades of the FX colour. They make up Chain view, and you can also pick them for your own pages in <strong>Preferences &gt; MIDI Controls &gt; Perform Pages</strong>.</li>
+<li><strong>A slot row always shows its own slot</strong>, whatever the chain's FX row is doing (group or focus mode), so three slot rows show the whole chain at once. Its knobs are also MIDI/OSC targets that always mean the same parameter (<code>/macro/deckA_fx_s2/knob/3</code> is slot 2's third parameter on its page), unlike the FX row's knobs, which change with focus.</li>
+<li><strong>Each slot remembers its own parameter page.</strong> Focusing a slot now opens on the page that slot was last on (it used to start on page 1), so the FX row in focus mode and the slot's own row always agree. The page goes back to 1 when the slot gets a new effect and moves with the effect when you swap slots.</li>
+</ul>
+<h3 id="web-tv-the-desktops-stock-looks-scriptsgen_stock_web_presetspy-webpresetsstock-lsd-webplaylistsdefaultlsdplay">Web TV: The Desktop's Stock Looks (<code>scripts/gen_stock_web_presets.py</code>, <code>web/presets/stock-*.lsd</code>, <code>web/playlists/default.lsdplay</code>)</h3>
+<ul>
+<li><strong>The web TV now plays the desktop's built-in source looks.</strong> 32 new presets (<code>stock-&lt;source&gt;</code>) are generated from the same shipped defaults the desktop uses, so each source moves with the music the way it does in the app and starts from a fresh random roll inside its ranges every time it comes on air: two airings of the same source differ. They join the foreground playlist next to the hand-made <code>web-*</code> looks, which stay. Fluid Ink (its default carries no audio response) and Fractal Flame (not a web source) are left out. The 16 stock FX chains and 8 transitions on the web TV already carry the new responses and ranges.</li>
+<li><strong>Run <code>scripts/gen_stock_web_presets.py</code> after changing a stock source default</strong>, then the content and reactivity tests and <code>render_check</code>. Sources that run bright (Domain Warp Fluid, Hyper Slice, Hyperbolic Tiling, Mandelbox, Metaballs, Reaction Diffusion, plus the earlier full-frame ones) are tagged so the autopilot keeps feedback and bloom chains off them.</li>
+</ul>
 <h3 id="fractal-flame-picked-from-browse-showed-nothing-renderingflameenginekt">Fractal Flame Picked From Browse Showed Nothing (<code>rendering/FlameEngine.kt</code>)</h3>
 <ul>
 <li><strong>Fixed: picking Fractal Flame as a source (not a Garden preset) gave a black deck.</strong> With Smooth at 0, the starting flame's setting, the density buffer kept a mipmapped filter without a mip chain, which makes the texture sample as black. Garden presets all have Smooth above 0, so they looked fine. The filter now follows Smooth.</li>

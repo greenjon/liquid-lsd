@@ -10,6 +10,7 @@ import llm.slop.liquidlsd.models.TransitionPlaylistDto
 import llm.slop.liquidlsd.presets.FXBgQueueManager
 import llm.slop.liquidlsd.presets.FXQueueManager
 import llm.slop.liquidlsd.presets.TransitionQueueManager
+import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.ModalKeys
 import llm.slop.liquidlsd.ui.AssetItem
@@ -42,12 +43,6 @@ object BrowserPopupHandler {
         renameTarget = asset
         renameBuffer.set(asset.name)
         pendingOpenRenamePopup = true
-    }
-
-    /** Drops a deleted FX or transition file from every playlist of [kind], as deleting a source preset already does for its playlists. */
-    private fun removeFromTokenPlaylists(kind: BrowseKind, path: String) {
-        val playlists = if (kind == BrowseKind.FX) FileSystemManager.scanAllFxPlaylists() else FileSystemManager.scanAllTransitionPlaylists()
-        for (pl in playlists) TokenPlaylistEdit.open(kind, File(pl.path))?.removeFile(path)
     }
 
     /** Opens the folder holding [file] in the system file manager. */
@@ -95,8 +90,7 @@ object BrowserPopupHandler {
                     return@request
                 }
                 val newPath = result.getOrThrow()
-                PlaylistManager.updatePresetPathInAllPlaylists(oldPath, newPath)
-                LibraryPanel.activePlaylistData = null
+                LibraryRefs.relocate(mapOf(File(oldPath) to File(newPath)), fxChains = emptyList())
                 newPath
             } else {
                 oldPath
@@ -163,7 +157,8 @@ object BrowserPopupHandler {
         }
     }
 
-    fun drawRenameAssetPopup() {
+    /** [mixer] is there so a renamed FX chain follows into the chains that were loaded from it. */
+    fun drawRenameAssetPopup(mixer: Mixer) {
         if (ImGui.beginPopupModal("Rename##RenameAssetPopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
             val target = renameTarget
             if (target == null) {
@@ -196,10 +191,8 @@ object BrowserPopupHandler {
                 val newName = renameBuffer.get().trim()
                 if (newName.isNotBlank()) {
                     FileSystemManager.renameFile(target.path, newName).onSuccess { newPath ->
-                        if (target.type == AssetType.PRESET) {
-                            PlaylistManager.updatePresetPathInAllPlaylists(target.path, newPath)
-                            LibraryPanel.activePlaylistData = null
-                            LibraryPanel.refreshAssets()
+                        if (LibraryRefs.kindOf(File(target.path)) != null) {
+                            LibraryRefs.relocate(mapOf(File(target.path) to File(newPath)), mixer.fxChains)
                         } else if (target.type == AssetType.PLAYLIST) {
                             val currentPlaylistPath = LibraryPanel.selectedPlaylistFile?.absolutePath
                             if (target.path == currentPlaylistPath) {
@@ -239,7 +232,7 @@ object BrowserPopupHandler {
      * pair view's Browse (the unified [BrowserPane] hosted there),
      * which stays on screen while the whole Library panel is skipped.
      */
-    fun drawDeleteAssetConfirmationPopup() {
+    fun drawDeleteAssetConfirmationPopup(mixer: Mixer) {
         if (pendingOpenDeletePopup) {
             ImGui.openPopup("Delete##ConfirmDeleteAssetPopup")
             pendingOpenDeletePopup = false
@@ -284,19 +277,11 @@ object BrowserPopupHandler {
             ImGui.separator()
             val keyAnswer = ModalKeys.answer()
             if (ButtonChrome.button("Delete", 120f, 0f) || keyAnswer == true) {
+                val deleted = mutableListOf<File>()
                 for (target in targets) {
                     FileSystemManager.deleteFile(target.path).onSuccess {
-                        if (target.type == AssetType.PRESET) {
-                            PlaylistManager.removePresetFromAllPlaylists(target.path)
-                            llm.slop.liquidlsd.presets.PlayQueueManager.removeFileFromQueue(File(target.path))
-                            llm.slop.liquidlsd.presets.BgQueueManager.removeFileFromQueue(File(target.path))
-                        } else if (target.type == AssetType.FX_PRESET || target.type == AssetType.FX_CHAIN) {
-                            FXQueueManager.removeFileFromQueue(File(target.path))
-                            FXBgQueueManager.removeFileFromQueue(File(target.path))
-                            removeFromTokenPlaylists(BrowseKind.FX, target.path)
-                        } else if (target.type == AssetType.TRANSITION_PRESET) {
-                            TransitionQueueManager.removeFileFromQueue(File(target.path))
-                            removeFromTokenPlaylists(BrowseKind.TRANS, target.path)
+                        if (LibraryRefs.kindOf(File(target.path)) != null) {
+                            deleted += File(target.path)
                         } else if (target.type == AssetType.PLAYLIST) {
                             val currentPlaylistPath = LibraryPanel.selectedPlaylistFile?.absolutePath
                             if (target.path == currentPlaylistPath) {
@@ -315,8 +300,7 @@ object BrowserPopupHandler {
                         }
                     }
                 }
-                LibraryPanel.activePlaylistData = null
-                LibraryPanel.refreshAssets()
+                LibraryRefs.forget(deleted, mixer.fxChains)
                 deleteTarget = null
                 deleteTargets = emptyList()
                 ImGui.closeCurrentPopup()

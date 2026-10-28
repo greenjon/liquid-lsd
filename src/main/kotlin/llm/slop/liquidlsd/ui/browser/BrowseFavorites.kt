@@ -50,6 +50,28 @@ object BrowseFavorites {
         save(store)
     }
 
+    /** Follows renamed or moved files ([moves]: old key to new). FX favorites are stock filter ids, so they never move. */
+    fun relocate(kind: BrowseKind, moves: Map<String, String>) {
+        if (kind == BrowseKind.FX) return
+        val store = loaded(kind)
+        if (store.keys.none { it in moves }) return
+        val updated = store.keys.map { moves[it] ?: it }
+        store.keys.clear()
+        store.keys.addAll(updated)
+        store.version++
+        save(store)
+    }
+
+    /** Drops deleted files ([keys]). */
+    fun forget(kind: BrowseKind, keys: Set<String>) {
+        if (kind == BrowseKind.FX) return
+        val store = loaded(kind)
+        if (store.keys.removeAll(keys)) {
+            store.version++
+            save(store)
+        }
+    }
+
     /** Test hook: point a kind at [file] and drop in-memory state (SRC / TRANS only). */
     internal fun resetForTest(kind: BrowseKind, file: File) {
         val store = stores.getValue(kind)

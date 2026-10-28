@@ -119,7 +119,7 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
         ImGui.spacing()
         BrowserDock.drawBody(session, mixer, parametersState, binding)
         BrowserDock.drawShortcuts(session, mixer)
-        BrowserDock.drawPopups(session)
+        BrowserDock.drawPopups(session, mixer)
     }
 
     /** Floppy-disk Save/Save As -- same [DeckPresetController.handleSaveDeck] flow the Mixer's
