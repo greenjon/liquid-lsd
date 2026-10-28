@@ -109,18 +109,54 @@ class LibraryNavigationTest {
         }
     }
 
+    private val fiveQueues = listOf(
+        SelectionSource.QUEUE_AB, SelectionSource.FX_QUEUE_AB, SelectionSource.QUEUE_BG, SelectionSource.FX_QUEUE_BG, SelectionSource.TRANSITION_QUEUE
+    )
+
+    private fun withLibrary(mode: UITheme.LibraryMode, split: Boolean, block: () -> Unit) {
+        val savedMode = UITheme.libraryMode
+        val savedSplit = UITheme.libraryQueueSplit
+        try {
+            UITheme.libraryMode = mode
+            UITheme.libraryQueueSplit = split
+            block()
+        } finally {
+            UITheme.libraryMode = savedMode
+            UITheme.libraryQueueSplit = savedSplit
+        }
+    }
+
     @Test
-    fun panesAreTreeAndListOnKindTabsAndTheFiveQueuesOnTheQueuesTab() {
+    fun withTheQueuesUnderTheBrowserTheCursorStepsOnIntoThemInScreenOrder() = withLibrary(UITheme.LibraryMode.FULL, split = true) {
+        for (mode in listOf(LibraryViewMode.PRESETS, LibraryViewMode.FX, LibraryViewMode.TRANS)) {
+            LibraryPanel.viewMode = mode
+            assertEquals(listOf(SelectionSource.TREE, SelectionSource.PRESETS) + fiveQueues, LibraryNavigation.panes(), "$mode")
+        }
+        LibraryPanel.viewMode = LibraryViewMode.MAPS
+        assertTrue(LibraryNavigation.panes().isEmpty())
+    }
+
+    @Test
+    fun aQueueCursorUnderTheBrowserHasNothingToEnqueue() = withLibrary(UITheme.LibraryMode.FULL, split = true) {
+        LibraryPanel.viewMode = LibraryViewMode.PRESETS
+        LibraryPanel.activeSelectionSource = SelectionSource.QUEUE_BG
+        assertTrue(LibraryNavigation.enqueueTargets(mockk<SessionContext>(relaxed = true)).isEmpty())
+    }
+
+    @Test
+    fun panesAreTreeAndListOnKindTabsAndTheFiveQueuesOnTheQueuesTab() = withLibrary(UITheme.LibraryMode.HALF, split = true) {
         val treeAndList = listOf(SelectionSource.TREE, SelectionSource.PRESETS)
         for (mode in listOf(LibraryViewMode.PRESETS, LibraryViewMode.FX, LibraryViewMode.TRANS)) {
             LibraryPanel.viewMode = mode
             assertEquals(treeAndList, LibraryNavigation.panes(), "$mode")
         }
+        // The split is off: the Library view's browser tabs are tree and list too.
+        withLibrary(UITheme.LibraryMode.FULL, split = false) {
+            LibraryPanel.viewMode = LibraryViewMode.FX
+            assertEquals(treeAndList, LibraryNavigation.panes())
+        }
         LibraryPanel.viewMode = LibraryViewMode.QUEUES
-        assertEquals(
-            listOf(SelectionSource.QUEUE_AB, SelectionSource.FX_QUEUE_AB, SelectionSource.QUEUE_BG, SelectionSource.FX_QUEUE_BG, SelectionSource.TRANSITION_QUEUE),
-            LibraryNavigation.panes()
-        )
+        assertEquals(fiveQueues, LibraryNavigation.panes())
         LibraryPanel.viewMode = LibraryViewMode.MAPS
         assertTrue(LibraryNavigation.panes().isEmpty())
     }

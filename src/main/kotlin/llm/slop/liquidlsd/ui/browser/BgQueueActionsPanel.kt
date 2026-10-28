@@ -21,7 +21,6 @@ import llm.slop.liquidlsd.ui.pushOpenDropdownFont
 import llm.slop.liquidlsd.ui.popOpenDropdownFont
 import llm.slop.liquidlsd.ui.selectableRow
 import mu.KotlinLogging
-import java.io.File
 
 object BgQueueActionsPanel {
     private val logger = KotlinLogging.logger {}
@@ -151,7 +150,7 @@ object BgQueueActionsPanel {
             val itemMaxY = ImGui.getItemRectMaxY()
 
             ImGui.pushStyleColor(ImGuiCol.DragDropTarget, 0f, 0f, 0f, 0f)
-            if (ImGui.beginDragDropTarget()) {
+            if (QueueDrop.beginTarget(QueueDrop.Queue.BG)) {
                 val mouseY = ImGui.getMousePosY()
                 val insertBefore = mouseY < (itemMinY + itemMaxY) * 0.5f
                 val effectiveSlot = if (insertBefore) index else index + 1
@@ -165,24 +164,7 @@ object BgQueueActionsPanel {
                     moveTo = rawTo.coerceIn(0, BgQueueManager.queue.size - 1)
                 }
 
-                val assetPayload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
-                if (assetPayload != null) {
-                    val paths = assetPayload.lines().map { it.trim() }.filter { it.isNotBlank() }
-                    var insertAt = effectiveSlot.coerceIn(0, BgQueueManager.queue.size)
-                    for (path in paths) {
-                        val droppedFile = File(path)
-                        if (droppedFile.extension.lowercase() in listOf("patch", "lsd", "json")) {
-                            BgQueueManager.insertAt(insertAt, droppedFile)
-                            insertAt++
-                        } else if (droppedFile.extension.lowercase() in listOf("playlist", "lsdplay")) {
-                            val files = session.playQueueManager.parsePlaylist(droppedFile)
-                            files.forEach { f ->
-                                BgQueueManager.insertAt(insertAt, f)
-                                insertAt++
-                            }
-                        }
-                    }
-                }
+                QueueDrop.acceptBrowserDrop(QueueDrop.Queue.BG, effectiveSlot)
                 ImGui.endDragDropTarget()
             }
             ImGui.popStyleColor()
@@ -282,24 +264,13 @@ object BgQueueActionsPanel {
         if (remainingH > 5f) {
             ImGui.dummy(ImGui.getWindowWidth(), remainingH)
             ImGui.pushStyleColor(ImGuiCol.DragDropTarget, 0f, 0f, 0f, 0f)
-            if (ImGui.beginDragDropTarget()) {
-                val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
-                if (payload != null) {
-                    val paths = payload.lines().map { it.trim() }.filter { it.isNotBlank() }
-                    for (path in paths) {
-                        val file = File(path)
-                        if (file.extension.lowercase() in listOf("patch", "lsd", "json")) {
-                            BgQueueManager.appendToQueue(file)
-                        } else if (file.extension.lowercase() in listOf("playlist", "lsdplay")) {
-                            val files = session.playQueueManager.parsePlaylist(file)
-                            BgQueueManager.appendAllToQueue(files)
-                        }
-                    }
-                }
+            if (QueueDrop.beginTarget(QueueDrop.Queue.BG)) {
+                QueueDrop.acceptBrowserDrop(QueueDrop.Queue.BG, null)
                 ImGui.endDragDropTarget()
             }
             ImGui.popStyleColor()
         }
+        QueueDrop.edgeScroll()
         }
         ImGui.endChild()
     }

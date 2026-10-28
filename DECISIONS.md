@@ -408,6 +408,8 @@ Deck loads, FX changes and transition changes each have exactly one mutation pat
 - The SRC and FX rows share one control order so they scan the same, and both end at the same x. Slot pills `1 2 3` focus a slot (and switch an SRC-mode row to FX); clicking the focused pill again leaves Focus.
 - The whole-deck randomize die sits in the right wing because it randomizes SRC *and* FX parameters; putting it on the SRC row misreported its scope.
 - Minimum supported screen is 1280x720; Perform, Edit and Library are three views of the one window.
+- The Library view (FULL) splits browser over queues (`QueueSplit`, a remembered toggle, on by default) so a row drags to a queue position in one move; the Perform view's Library (HALF) never splits, since the fixed Perform rows leave it too short. The panes are stacked, not side by side: both keep their widths at 1280. The Queues tab stays as the full-height view and the only one from Perform.
+- Every queue drop goes through `QueueDrop`: a queue takes only its own kind (`LibraryRefs.kindOf`), dims during a drag it can't take, and flashes when items arrive.
 
 ## Colour: `TangoPalette` is the only source
 - Roles (`Role(dark, light?, lightSlot)`) plus plain swatches; the theme is held in `TangoPalette.isLightTheme`, set by `UIThemeStyler.setupThemeColors`. Call sites never test the theme and never use a colour literal; a literal or an `if (isLight)` fork in Perform UI is a bug. Dark values equal the old literals. `CvTheme` and slider literals are still outside it.

@@ -33,6 +33,10 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [ ] Enter runs the row's default action on every tab; Delete follows Preferences > Shortcuts (Backspace works too); Alt+click a Sources row previews it on PV.
 - [ ] Rename, Delete, New Playlist and Export dialogs: field focused, Enter confirms, Esc cancels without leaving the Library. Esc that closes a menu doesn't also go back.
 - [ ] Queues tab: an empty queue says how to fill it, five matching button strips (FX queues' Auto greyed), Export / Clear under each column's ⋮, no dead play button on the FX queues. The controller steps the columns left to right.
+- [ ] Queues under the browser (Library maximized, Sources/FX/Transitions tabs): both halves usable at 1280x720; the divider drags, clamps, double-click resets, the ratio and the rows-icon toggle survive a restart; toggle off looks like before; Perform view's Library unchanged.
+- [ ] Drag a source between two A/B queue items: lands at the line, the playing marker stays on its row. Drag it over the FX queues: dimmed, no drop. Drag a mixed selection: right ones go in, toast counts the skipped. Drag a playlist from the tree into a queue: its items go in at the line.
+- [ ] Drag to the bottom edge of a long queue (and of the browser list/tree): it scrolls. `Q` / `Shift+Q` and drops flash the receiving queue's border (dark and light theme).
+- [ ] Arrow keys / controller cursor on the split: tree, list, then the five queues; `Q` with the cursor in a queue does nothing.
 - [ ] Macros tab: macro banks and Perform pages are listed; loading one works.
 - [ ] Transitions view: the Q key queues.
 - [ ] Double-click a preset in the queue: auto-fades and advances. Accept from MIDI/keyboard: same.

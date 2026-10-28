@@ -83,7 +83,8 @@ Toggle between sources, FX, transitions and banks (macro banks and Perform pages
 - **Tags** — Tags work like crates: an item can have any number, and the **Tags** group in the tree (folded at first) lists every tag of the tab with a count. Pick a tag to list everything that has it. Right-click any saved row (or a multi-selection) for **Add Tag...** (type new tags or click existing ones) and **Remove Tag**, or drag rows onto a tag in the tree. Right-click a tag for **Rename Tag...** and **Delete Tag...** (which removes it from every item; the items stay). Tags are stored in each file, so they travel with it; stock items have categories instead and don't appear under Tags.
 - **Folders** — The saved sections (Saved presets, Saved single FX, Saved chains, Saved transitions) can hold folders, nested as deep as you like; stock sections can't. The folder-plus button above the tree makes a new folder in the selected saved section or folder. Right-click a saved section or folder for **New Folder...**, **Rename Folder...**, **Delete Folder...** and **Reveal in File Manager**. To move items, drag rows (or a multi-selection) onto a folder, or use **Move to** in the row menu; drag a folder onto another folder (or its section) to move it. Moving an item somewhere that already has one by that name asks whether to **Keep both** (the moved one gets `_2`) or **Skip** it. Moving and renaming keep every playlist, queue, Favorite and Recent entry pointing at the item, and a deck or chain loaded from it still saves back to it.
 - **List** (middle) — The rows of the selected tree entry, with a search box on top (`Ctrl+F` or `/` focuses it, or just start typing a letter while the list has the keyboard) and a button for the kind's "new" action: **New preset** for Sources, a save icon for FX and Transitions (save what is playing). On Sources, the **⋮** beside it has Restore Factory Presets and Import Flame.
-- **Queues tab** — All five queues side by side: A/B, A/B FX, BG, BG FX and Transition, in that order (which the crossfader advances through automatically). Items get in from the other tabs (`Q`, `Shift+Q`, the row menu or drag-and-drop); this tab is where you watch, reorder and play them. An empty queue says how to fill it, and every column has the same button strip.
+- **Queues tab** — All five queues side by side: A/B, A/B FX, BG, BG FX and Transition, in that order (which the crossfader advances through automatically). Items get in from the other tabs (`Q`, `Shift+Q`, the row menu or drag-and-drop); this tab is where you watch, reorder and play them. An empty queue says how to fill it, and every column has the same button strip. While you drag something a queue can't take (a source over an FX queue, a stock source, another queue's row), that column dims and won't accept it; a drop that mixes kinds keeps only the right ones and says how many it skipped. When items arrive in a queue, by drag or by `Q` / `Shift+Q`, its border flashes briefly. Dragging near the top or bottom edge of a long queue scrolls it.
+- **Queues under the browser** — In the Library view (the Library maximized), the Sources, FX and Transitions tabs show the five queues under the browser, so you can audition a source, effect or chain and drag it straight to the place in a queue it should go, instead of adding it at the bottom and reordering on the Queues tab. Drag the line between the two halves to give either more height (double-click it for half and half); the rows-icon button left of Restore hides or shows the queues. The arrow keys and the controller's cursor step from the browser on into the queues. The Perform view's Library is too short to split, so it stays as it is.
 
 **Loaded markers.** Rows in the Sources, FX and Transitions lists carry one coloured chip per deck holding the item, to the left of the name: `A` / `B` / `BG` / `PV` for a source, preset or external stream, and `M` for Master FX or the current transition. When they don't fit they shrink to colour bars, and a count shows only for many slots; hover them for the full list (stock effects list deck and slot, such as `A2`). Saved single effects and saved transitions are not marked.
 
@@ -308,19 +309,19 @@ The **`[ Macros ]`** tab has two lists, switched with the **Banks** / **Pages** 
 | Sources list (saved preset) | Playlist (between items)       | Inserts at that position |
 | Sources list (saved preset) | Empty space at playlist bottom | Appends to the end       |
 | Playlist item              | Up / down in the same playlist | Reorders                 |
-| Sources list (saved preset) or Playlist | Queue                          | Adds to the live queue   |
+| Sources list (saved preset) or Playlist | A/B or BG Queue (between items, or below the last) | Inserts at that position, or appends |
 | Sources list row (stock, saved or external video) | Deck monitor (Mixer) or deck row (Performance Matrix) | Loads source (stock, external) or full preset (saved) to that deck |
 | FX Preset (`.lsdfx`)       | FX Slot 1–3 in Edit's FX tab   | Loads into target slot   |
 | Stock FX filter            | FX Slot in Edit or on a Perform row | Loads into that slot |
 | FX Preset (`.lsdfx`)       | Deck badge in the Performance Matrix | Loads into the first vacant slot (a toast says so if all 3 are full; drop on a slot instead) |
 | FX Chain (`.lsdfxchain`)   | FX Slot / Chain in Edit, or the deck badge | Overwrites 3-slot chain  |
 | FX list row                 | FX playlist in the tree        | Inserts/appends to playlist |
-| FX list row                 | A/B FX Queue (A/B or BG)      | Appends/inserts into that queue |
+| FX list row                 | A/B FX Queue (A/B or BG)      | Inserts at that position, or appends |
 | A/B FX Queue item          | Up / down in the same queue    | Reorders                 |
 | Transition list row         | Transition playlist in the tree | Inserts/appends to playlist |
-| Transition list row         | Transition Queue          | Appends/inserts into the queue |
+| Transition list row         | Transition Queue          | Inserts at that position, or appends |
 
-A deck's monitor takes presets and sources only, not FX.
+A deck's monitor takes presets and sources only, not FX. Each queue takes only its own kind: while you drag, a queue that can't take the item dims. With the Library maximized, the queues sit under the browser, so every row in this table can go from the list to a queue position in one drag.
 
 ---
 

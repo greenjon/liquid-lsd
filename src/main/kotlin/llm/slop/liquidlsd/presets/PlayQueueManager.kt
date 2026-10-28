@@ -244,6 +244,16 @@ object PlayQueueManager {
         logger.info { "Appended to queue: ${file.name}" }
     }
 
+    /** Inserts [files] before [index] (clamped), keeping the playing item and the shuffle history on the same files. */
+    fun insertAt(index: Int, files: List<File>) {
+        if (files.isEmpty()) return
+        val at = index.coerceIn(0, queue.size)
+        queue.addAll(at, files)
+        if (activeIndex >= at) activeIndex += files.size
+        shiftIndicesAfter(at - 1, files.size)
+        logger.info { "Inserted ${files.size} item(s) at index $at into queue" }
+    }
+
     fun removeFromQueue(index: Int) {
         if (index in queue.indices) {
             val removed = queue.removeAt(index)

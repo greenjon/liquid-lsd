@@ -1,5 +1,14 @@
 ## [Unreleased]
 
+### Queues Under the Browser in the Library View (`ui/browser/QueueSplit.kt`, `ui/browser/QueueDrop.kt`, `ui/browser/BrowserDock.kt`, `ui/browser/QueuesPane.kt`, the five queue panels)
+- **New: with the Library maximized, the Sources, FX and Transitions tabs show the five queues under the browser.** Audition a source, effect or chain, then drag it straight to the place in a queue it should go. Before, it went to the bottom of the queue and you reordered it on the Queues tab. Drag the line between the halves to share the height (double-click: half and half); the rows-icon button left of Restore hides or shows the queues. On by default; the Perform view's Library and the Queues tab are unchanged.
+- **Queues only take their own kind.** While you drag, a queue that can't take what you hold dims and won't accept the drop; a drop mixing kinds keeps the right ones and a toast says how many were skipped. Fixed: the FX and Transition queues accepted any dropped file, so a source could end up in an FX queue.
+- **A queue's border flashes when items arrive**, by drag or by `Q` / `Shift+Q`, so you see where they went.
+- **Dragging near the top or bottom of a long queue scrolls it** (the browser's tree and list too), so you can drop past the rows on screen.
+- A playlist dragged from the tree drops into a queue as its items, at the drop line.
+- The arrow keys and the controller's cursor step from the browser on into the queues under it.
+- Fixed: dropping into the A/B queue above the item that is playing moved the "playing" marker onto the wrong row.
+
 ### Missing Playlist Items Can Be Found Again; Playlist Folders (`ui/browser/BrowserPane.kt`, `ui/browser/BrowseModel.kt`, `ui/browser/LibraryRefs.kt`)
 - **New: a playlist item whose file is missing is listed under the playlist** with a ⚠, instead of only being counted. **Find** offers files of the same name elsewhere in the library, **Locate...** lets you pick the file, **Remove** drops the item, and **Find all** fixes every item with exactly one match. A found file is fixed in every playlist and queue that used the old path.
 - **New: folders for playlists.** Right-click **Playlists** in the tree for **New Folder...**, drag playlists onto a folder to move them, and rename, delete or nest playlist folders like the saved sections' folders. A moved playlist stays selected.

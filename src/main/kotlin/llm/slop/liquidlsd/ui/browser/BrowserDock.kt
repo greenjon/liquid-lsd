@@ -109,8 +109,11 @@ object BrowserDock {
         LibraryViewMode.MAPS, LibraryViewMode.QUEUES -> null
     }
 
-    /** The pane (or the Macros list) of the selected tab, filling the remaining space. */
-    fun drawBody(session: SessionContext, mixer: Mixer, parametersState: ParametersState, binding: DockBinding? = null) {
+    /**
+     * The pane (or the Macros list) of the selected tab, filling the remaining space. In the Library window ([queueSplit]) the
+     * browser tabs can have the five queues under them ([QueueSplit]).
+     */
+    fun drawBody(session: SessionContext, mixer: Mixer, parametersState: ParametersState, binding: DockBinding? = null, queueSplit: Boolean = false) {
         if (binding != null) syncTab(binding, parametersState.dockSelectionEpoch)
         val kind = when (LibraryPanel.viewMode) {
             LibraryViewMode.PRESETS -> BrowseKind.SRC
@@ -147,9 +150,20 @@ object BrowserDock {
             MapsBrowserPanel.draw(session, mixer)
             ImGui.endChild()
         } else if (unifiedKind != null) {
-            ImGui.beginChild("LibraryUnified", availW, contentH, false, outerFlags)
+            val gap = ImGui.getStyle().itemSpacingY
+            val split = if (queueSplit && QueueSplit.shows(LibraryPanel.viewMode)) {
+                QueueSplit.heights(contentH - QueueSplit.DIVIDER_H - 2f * gap, QueueSplit.ratio())
+            } else null
+            val paneTop = ImGui.getCursorScreenPosY()
+            ImGui.beginChild("LibraryUnified", availW, split?.top ?: contentH, false, outerFlags)
             BrowserPane.draw(session, mixer, parametersState, unifiedKind, bound?.target, bound?.label)
             ImGui.endChild()
+            if (split != null) {
+                QueueSplit.drawDivider(availW, split.top + split.bottom, paneTop)
+                ImGui.beginChild("LibraryQueuesBelow", availW, split.bottom, false, outerFlags)
+                QueuesPane.draw(session, mixer)
+                ImGui.endChild()
+            }
         }
 
         ImGui.popStyleColor(2)

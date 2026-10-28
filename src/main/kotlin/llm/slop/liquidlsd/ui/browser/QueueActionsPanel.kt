@@ -21,7 +21,6 @@ import llm.slop.liquidlsd.ui.pushOpenDropdownFont
 import llm.slop.liquidlsd.ui.popOpenDropdownFont
 import llm.slop.liquidlsd.ui.selectableRow
 import mu.KotlinLogging
-import java.io.File
 
 object QueueActionsPanel {
     private val logger = KotlinLogging.logger {}
@@ -159,7 +158,7 @@ object QueueActionsPanel {
             val itemMaxY = ImGui.getItemRectMaxY()
 
             ImGui.pushStyleColor(ImGuiCol.DragDropTarget, 0f, 0f, 0f, 0f)
-            if (ImGui.beginDragDropTarget()) {
+            if (QueueDrop.beginTarget(QueueDrop.Queue.AB)) {
                 // Compute insertion slot from mouse Y relative to item midpoint.
                 // This must happen inside beginDragDropTarget, which guarantees the mouse
                 // is actually over this item's rect — no dependency on isItemHovered() or isMouseDragging().
@@ -178,23 +177,8 @@ object QueueActionsPanel {
                     moveTo = rawTo.coerceIn(0, session.playQueueManager.queue.size - 1)
                 }
 
-                // 2. Insert asset from center panel
-                val assetPayload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
-                if (assetPayload != null) {
-                    val paths = assetPayload.lines().map { it.trim() }.filter { it.isNotBlank() }
-                    var insertAt = effectiveSlot.coerceIn(0, session.playQueueManager.queue.size)
-                    for (path in paths) {
-                        val droppedFile = File(path)
-                        if (droppedFile.extension.lowercase() in listOf("patch", "lsd", "json")) {
-                            session.playQueueManager.queue.add(insertAt, droppedFile)
-                            insertAt++
-                        } else if (droppedFile.extension.lowercase() in listOf("playlist", "lsdplay")) {
-                            val files = session.playQueueManager.parsePlaylist(droppedFile)
-                            session.playQueueManager.queue.addAll(insertAt, files)
-                            insertAt += files.size
-                        }
-                    }
-                }
+                // 2. Insert rows dragged from the browser
+                QueueDrop.acceptBrowserDrop(QueueDrop.Queue.AB, effectiveSlot)
                 ImGui.endDragDropTarget()
             }
             ImGui.popStyleColor()
@@ -291,23 +275,13 @@ object QueueActionsPanel {
         if (remainingH > 5f) {
             ImGui.dummy(ImGui.getWindowWidth(), remainingH)
             ImGui.pushStyleColor(ImGuiCol.DragDropTarget, 0f, 0f, 0f, 0f)
-            if (ImGui.beginDragDropTarget()) {
-                val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
-                if (payload != null) {
-                    val paths = payload.lines().map { it.trim() }.filter { it.isNotBlank() }
-                    for (path in paths) {
-                        val file = File(path)
-                        if (file.extension.lowercase() in listOf("patch", "lsd", "json")) {
-                            session.playQueueManager.appendToQueue(file)
-                        } else if (file.extension.lowercase() in listOf("playlist", "lsdplay")) {
-                            session.playQueueManager.appendPlaylistToQueue(file)
-                        }
-                    }
-                }
+            if (QueueDrop.beginTarget(QueueDrop.Queue.AB)) {
+                QueueDrop.acceptBrowserDrop(QueueDrop.Queue.AB, null)
                 ImGui.endDragDropTarget()
             }
             ImGui.popStyleColor()
         }
+        QueueDrop.edgeScroll()
         }
         ImGui.endChild()
     }

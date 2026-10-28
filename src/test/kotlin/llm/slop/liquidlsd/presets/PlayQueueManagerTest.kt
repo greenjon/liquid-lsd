@@ -41,6 +41,24 @@ class PlayQueueManagerTest {
     }
 
     @Test
+    fun insertAboveThePlayingItemKeepsItPlaying() {
+        PlayQueueManager.appendToQueue(File("library/presets/p1.lsd"))
+        PlayQueueManager.appendToQueue(File("library/presets/p2.lsd"))
+        every { mixer.crossfade.value } returns -1.0f
+        PlayQueueManager.playIndex(1, mixer)
+        assertEquals(1, PlayQueueManager.activeIndex)
+
+        PlayQueueManager.insertAt(0, listOf(File("library/presets/n1.lsd"), File("library/presets/n2.lsd")))
+        assertEquals(listOf("n1", "n2", "p1", "p2"), PlayQueueManager.queue.map { it.nameWithoutExtension })
+        assertEquals(3, PlayQueueManager.activeIndex, "still on p2")
+
+        // Below the playing item: it stays put; past the end clamps to an append.
+        PlayQueueManager.insertAt(99, listOf(File("library/presets/n3.lsd")))
+        assertEquals("n3", PlayQueueManager.queue.last().nameWithoutExtension)
+        assertEquals(3, PlayQueueManager.activeIndex)
+    }
+
+    @Test
     fun testManualLoadOnActiveDeckKeepsQueuePointer() {
         PlayQueueManager.appendToQueue(File("library/presets/p1.lsd"))
         PlayQueueManager.appendToQueue(File("library/presets/p2.lsd"))

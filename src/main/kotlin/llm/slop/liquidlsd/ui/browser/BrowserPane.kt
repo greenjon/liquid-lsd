@@ -360,13 +360,14 @@ object BrowserPane {
             if (indent > 0f) ImGui.unindent(indent)
             ImGui.popID()
         }
+        QueueDrop.edgeScroll() // a row dragged toward a folder out of view
         ImGui.endChild()
     }
 
     private const val PAYLOAD_FOLDER = "BROWSE_FOLDER"
 
     /** A playlist dragged by its tree row, to move it into a playlist folder. */
-    private const val PAYLOAD_PLAYLIST = "BROWSE_PLAYLIST"
+    const val PAYLOAD_PLAYLIST = "BROWSE_PLAYLIST"
 
     /** The saved folder a tree scope stands for, or null for stock and live sections. */
     private fun placeOf(kind: BrowseKind, scope: BrowseScope.Folder): FolderPopups.Place? =
@@ -679,6 +680,7 @@ object BrowserPane {
                 selectionOf(kind).selectAll(assets)
                 LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
             }
+            QueueDrop.edgeScroll() // a playlist row dragged past the visible ones
         }
         ImGui.endChild()
 

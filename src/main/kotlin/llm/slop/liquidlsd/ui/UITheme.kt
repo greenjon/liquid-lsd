@@ -201,6 +201,14 @@ object UITheme {
         get() = settings.libraryMode
         set(value) { settings = settings.copy(libraryMode = value) }
 
+    var libraryQueueSplit: Boolean
+        get() = settings.libraryQueueSplit
+        set(value) { settings = settings.copy(libraryQueueSplit = value) }
+
+    var libraryQueueSplitRatio: Float
+        get() = settings.libraryQueueSplitRatio
+        set(value) { settings = settings.copy(libraryQueueSplitRatio = value.coerceIn(0.1f, 0.9f)) }
+
     /** Id of the active page of the Perform view's 4×4 Matrix (see [PerfPageStore]); an unknown id falls back to the first page. */
     var performancePageId: String
         get() = settings.performancePageId

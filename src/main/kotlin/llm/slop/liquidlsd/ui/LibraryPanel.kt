@@ -235,15 +235,28 @@ object LibraryPanel {
             val windowBtnW = (btnH * 1.15f).coerceIn(20f, 32f)
             if (binding != null) drawBoundChip(session, parametersState, binding, btnH, yOffset, safeW - windowBtnW - 16f)
 
-            // Right-aligned Maximize / Restore button
-            val rightX = (safeW - windowBtnW - 8f).coerceAtLeast(ImGui.getCursorPosX() + 8f)
+            // Right-aligned: the queue-split toggle (Library view, browser tabs only; see QueueSplit), then Maximize / Restore
+            val isFull = session.uiTheme.libraryMode == UITheme.LibraryMode.FULL
+            val showSplit = isFull && LibraryNavigation.unifiedKind() != null
+            val rightW = if (showSplit) 2f * windowBtnW + 4f else windowBtnW
+            val rightX = (safeW - rightW - 8f).coerceAtLeast(ImGui.getCursorPosX() + 8f)
             ImGui.sameLine(0f, 0f)
             ImGui.setCursorPosX(rightX)
             ImGui.setCursorPosY(yOffset)
 
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                if (showSplit) {
+                    val on = session.uiTheme.libraryQueueSplit
+                    if (ButtonChrome.toggleButton("${Icons.LAYOUT_HALF}##lib_queue_split", on, TangoPalette.MODE_ACTIVE.u32(), windowBtnW, btnH)) {
+                        session.uiTheme.libraryQueueSplit = !on
+                        AppPreferencesStore.savePreferences()
+                    }
+                    itemTooltip(if (on) "Queues under the browser: drag a row to the place in a queue it should go. Click to hide them."
+                        else "Show the queues under the browser, to drag rows straight to the place in a queue they should go.")
+                    ImGui.sameLine(0f, 4f)
+                    ImGui.setCursorPosY(yOffset)
+                }
                 // Maximize / Restore [□] / [❐]
-                val isFull = session.uiTheme.libraryMode == UITheme.LibraryMode.FULL
                 val maxIcon = if (isFull) Icons.COPY else Icons.SQUARE
                 if (ButtonChrome.button("$maxIcon##lib_max", windowBtnW, btnH)) {
                     cycleMode(session)
@@ -255,7 +268,7 @@ object LibraryPanel {
         }
 
         if (binding == null) BrowserDock.libraryShown()
-        BrowserDock.drawBody(session, mixer, parametersState, binding)
+        BrowserDock.drawBody(session, mixer, parametersState, binding, queueSplit = true)
         BrowserDock.drawShortcuts(session, mixer)
         BrowserDock.drawPopups(session, mixer)
     }

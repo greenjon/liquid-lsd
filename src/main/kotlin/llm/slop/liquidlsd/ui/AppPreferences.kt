@@ -50,6 +50,10 @@ data class AppPreferences(
     val maxFps: Int = 30,
     val startupBehavior: UITheme.StartupBehavior = UITheme.StartupBehavior.PREVIOUS_SESSION,
     val libraryMode: UITheme.LibraryMode = UITheme.LibraryMode.HALF,
+    /** Library view (FULL) on the SRC/FX/TRANS tabs: the five queues drawn under the browser (see [llm.slop.liquidlsd.ui.browser.QueueSplit]). */
+    val libraryQueueSplit: Boolean = true,
+    /** The browser's share of the Library view's height while the queues are under it. */
+    val libraryQueueSplitRatio: Float = 0.5f,
     /** Id of the active Perform page (see [PerfPageStore]). */
     val performancePageId: String = PerfPageDef.DEFAULT_ID,
     /** Ids of Perform pages the user hid from the tab strip (a controller bank can still show them). */

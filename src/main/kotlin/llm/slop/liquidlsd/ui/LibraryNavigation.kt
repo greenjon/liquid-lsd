@@ -28,6 +28,8 @@ import llm.slop.liquidlsd.ui.browser.FXBgQueueActionsPanel
 import llm.slop.liquidlsd.ui.browser.FXBrowserPanel
 import llm.slop.liquidlsd.ui.browser.FXQueueActionsPanel
 import llm.slop.liquidlsd.ui.browser.QueueActionsPanel
+import llm.slop.liquidlsd.ui.browser.QueueDrop
+import llm.slop.liquidlsd.ui.browser.QueueSplit
 import llm.slop.liquidlsd.ui.browser.TransitionQueuePanel
 import llm.slop.liquidlsd.ui.browser.DockActions
 import llm.slop.liquidlsd.ui.browser.PresetListPanel
@@ -65,13 +67,17 @@ internal object LibraryNavigation {
 
     /** The lists the cursor can sit in for the current tab, left to right. A playlist is a tree scope shown in the list, so it has no pane of its own. */
     internal fun panes(): List<SelectionSource> = when (LibraryPanel.navMode) {
-        LibraryViewMode.PRESETS, LibraryViewMode.FX, LibraryViewMode.TRANS -> listOf(SelectionSource.TREE, SelectionSource.PRESETS)
-        // Screen order of the Queues tab ([llm.slop.liquidlsd.ui.browser.QueuesPane]): A/B, FX A/B, BG, FX BG, transitions.
-        LibraryViewMode.QUEUES -> listOf(
-            SelectionSource.QUEUE_AB, SelectionSource.FX_QUEUE_AB, SelectionSource.QUEUE_BG, SelectionSource.FX_QUEUE_BG, SelectionSource.TRANSITION_QUEUE
-        )
+        // With the queues under the browser ([QueueSplit]), on after the browser's own two lists, in screen order.
+        LibraryViewMode.PRESETS, LibraryViewMode.FX, LibraryViewMode.TRANS ->
+            listOf(SelectionSource.TREE, SelectionSource.PRESETS) + if (QueueSplit.shows(LibraryPanel.navMode)) QUEUE_PANES else emptyList()
+        LibraryViewMode.QUEUES -> QUEUE_PANES
         LibraryViewMode.MAPS -> emptyList()
     }
+
+    /** Screen order of [llm.slop.liquidlsd.ui.browser.QueuesPane]: A/B, FX A/B, BG, FX BG, transitions. */
+    private val QUEUE_PANES = listOf(
+        SelectionSource.QUEUE_AB, SelectionSource.FX_QUEUE_AB, SelectionSource.QUEUE_BG, SelectionSource.FX_QUEUE_BG, SelectionSource.TRANSITION_QUEUE
+    )
 
     private fun paneSize(source: SelectionSource, session: SessionContext): Int = when (source) {
         SelectionSource.TREE -> unifiedKind()?.let { BrowserPane.treeSize(it) } ?: 0
@@ -145,7 +151,8 @@ internal object LibraryNavigation {
 
     /** The files the enqueue shortcuts act on: the list's multi-selection, else the cursor item. */
     fun enqueueTargets(session: SessionContext): List<File> {
-        if (LibraryPanel.navMode == LibraryViewMode.QUEUES) return emptyList() // the queues are the destination, not a source
+        // The queues are the destination, not a source (also with the cursor in one under the browser).
+        if (LibraryPanel.navMode == LibraryViewMode.QUEUES || LibraryPanel.activeSelectionSource in QUEUE_PANES) return emptyList()
         if (LibraryPanel.activeSelectionSource == SelectionSource.PRESETS) {
             when (LibraryPanel.navMode) {
                 LibraryViewMode.PRESETS -> return PresetListPanel.selection.getSelectedInOrder(PresetListPanel.filteredPresets)
@@ -165,16 +172,27 @@ internal object LibraryNavigation {
 
     /** Appends the cursor item(s) (on the unified tree: the cursor playlist) to the background queue ([bg]) or the A/B queue of the current tab. Returns false if nothing was added. */
     fun enqueue(session: SessionContext, bg: Boolean): Boolean {
+        val queue = when (unifiedKind()) {
+            BrowseKind.SRC -> if (bg) QueueDrop.Queue.BG else QueueDrop.Queue.AB
+            BrowseKind.FX -> if (bg) QueueDrop.Queue.FX_BG else QueueDrop.Queue.FX_AB
+            BrowseKind.TRANS -> QueueDrop.Queue.TRANS
+            null -> return false
+        }
         // On the unified pane's tree the cursor row is a folder; a playlist there enqueues as a whole.
-        if (LibraryPanel.activeSelectionSource == SelectionSource.TREE) return unifiedKind()?.let { BrowserPane.enqueueCursorPlaylist(session, it, bg) } ?: false
+        if (LibraryPanel.activeSelectionSource == SelectionSource.TREE) {
+            return unifiedKind()?.let { BrowserPane.enqueueCursorPlaylist(session, it, bg) }?.also { if (it) QueueDrop.flash(queue) } ?: false
+        }
         val files = enqueueTargets(session)
         if (files.isEmpty()) return false
-        when (LibraryPanel.navMode) {
-            LibraryViewMode.FX -> files.forEach { if (bg) FXBgQueueManager.appendToQueue(it) else FXQueueManager.appendToQueue(it) }
-            LibraryViewMode.PRESETS -> files.forEach { if (bg) BgQueueManager.appendToQueue(it) else session.playQueueManager.appendToQueue(it) }
-            LibraryViewMode.TRANS -> files.forEach { TransitionQueueManager.appendToQueue(it) }
-            LibraryViewMode.MAPS, LibraryViewMode.QUEUES -> Unit
+        when (queue) {
+            QueueDrop.Queue.FX_AB -> files.forEach { FXQueueManager.appendToQueue(it) }
+            QueueDrop.Queue.FX_BG -> files.forEach { FXBgQueueManager.appendToQueue(it) }
+            QueueDrop.Queue.AB -> files.forEach { session.playQueueManager.appendToQueue(it) }
+            QueueDrop.Queue.BG -> files.forEach { BgQueueManager.appendToQueue(it) }
+            QueueDrop.Queue.TRANS -> files.forEach { TransitionQueueManager.appendToQueue(it) }
         }
+        // Where they went, for when the queues are on screen (the Queues tab, or under the browser).
+        QueueDrop.flash(queue)
         return true
     }
 

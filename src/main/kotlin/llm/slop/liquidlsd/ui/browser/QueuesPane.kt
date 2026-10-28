@@ -9,8 +9,10 @@ import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.ui.TangoPalette
 
 /**
- * The Queues tab: every play queue on screen at once, one column each. Items get in from the other tabs (Q / Shift+Q, the toolbar buttons, a row's
- * menu, or a drag onto the Perform rows); this tab is where they are watched, reordered and played.
+ * Every play queue on screen at once, one column each: the Queues tab, and the lower pane of the Library view when the queues are
+ * under the browser ([QueueSplit]). Items get in from the browser (Q / Shift+Q, the toolbar buttons, a row's menu, or a drag to the
+ * place in the queue they should go); here they are watched, reordered and played. While a drag holds nothing a column takes, the
+ * column dims ([QueueDrop.blocked]); when items arrive its border flashes.
  */
 object QueuesPane {
     private const val GAP = 6f
@@ -18,15 +20,18 @@ object QueuesPane {
     /** How far every other column's fill moves toward white (black in the light theme). */
     private const val ALT_SHADE = 0.07f
 
-    private class Column(val id: String, val draw: (SessionContext, Mixer) -> Unit)
+    /** Opacity of a column the current drag can't drop into. */
+    private const val BLOCKED_ALPHA = 0.35f
+
+    private class Column(val id: String, val queue: QueueDrop.Queue, val draw: (SessionContext, Mixer) -> Unit)
 
     // A/B side first (presets, then FX), then BG (presets, then FX), then transitions.
     private val columns = listOf(
-        Column("QueuesAb", QueueActionsPanel::draw),
-        Column("QueuesFxAb", FXQueueActionsPanel::draw),
-        Column("QueuesBg", BgQueueActionsPanel::draw),
-        Column("QueuesFxBg", FXBgQueueActionsPanel::draw),
-        Column("QueuesTrans", TransitionQueuePanel::draw)
+        Column("QueuesAb", QueueDrop.Queue.AB, QueueActionsPanel::draw),
+        Column("QueuesFxAb", QueueDrop.Queue.FX_AB, FXQueueActionsPanel::draw),
+        Column("QueuesBg", QueueDrop.Queue.BG, BgQueueActionsPanel::draw),
+        Column("QueuesFxBg", QueueDrop.Queue.FX_BG, FXBgQueueActionsPanel::draw),
+        Column("QueuesTrans", QueueDrop.Queue.TRANS, TransitionQueuePanel::draw)
     )
 
     /** [col] (packed U32) mixed [amt] of the way toward white (dark theme) or black (light theme), alpha kept. */
@@ -54,10 +59,20 @@ object QueuesPane {
             if (i > 0) ImGui.sameLine(0f, GAP)
             // Alternate the column fill so five similar button strips read as five separate queues.
             ImGui.pushStyleColor(ImGuiCol.ChildBg, if (i % 2 == 0) bg else bgAlt)
+            val blocked = QueueDrop.blocked(column.queue)
+            if (blocked) ImGui.pushStyleVar(ImGuiStyleVar.Alpha, BLOCKED_ALPHA)
             ImGui.beginChild(column.id, colW, h, true, flags)
             column.draw(session, mixer)
             ImGui.endChild()
+            if (blocked) ImGui.popStyleVar()
             ImGui.popStyleColor()
+            val flash = QueueDrop.flashAmount(column.queue)
+            if (flash > 0f) {
+                ImGui.getWindowDrawList().addRect(
+                    ImGui.getItemRectMinX(), ImGui.getItemRectMinY(), ImGui.getItemRectMaxX(), ImGui.getItemRectMaxY(),
+                    TangoPalette.u32(TangoPalette.SYNC.normal, flash), 6f, 0, 2f
+                )
+            }
         }
         ImGui.popStyleColor()
         ImGui.popStyleVar(2)

@@ -20,7 +20,6 @@ import llm.slop.liquidlsd.ui.pushOpenDropdownFont
 import llm.slop.liquidlsd.ui.popOpenDropdownFont
 import llm.slop.liquidlsd.ui.selectableRow
 import mu.KotlinLogging
-import java.io.File
 
 object FXQueueActionsPanel {
     private val logger = KotlinLogging.logger {}
@@ -128,7 +127,7 @@ object FXQueueActionsPanel {
                 val itemMaxY = ImGui.getItemRectMaxY()
 
                 ImGui.pushStyleColor(ImGuiCol.DragDropTarget, 0f, 0f, 0f, 0f)
-                if (ImGui.beginDragDropTarget()) {
+                if (QueueDrop.beginTarget(QueueDrop.Queue.FX_AB)) {
                     val mouseY = ImGui.getMousePosY()
                     val insertBefore = mouseY < (itemMinY + itemMaxY) * 0.5f
                     val effectiveSlot = if (insertBefore) index else index + 1
@@ -142,16 +141,7 @@ object FXQueueActionsPanel {
                         moveTo = rawTo.coerceIn(0, FXQueueManager.queue.size - 1)
                     }
 
-                    val assetPayload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
-                    if (assetPayload != null) {
-                        // A multi-row drag carries one path per line.
-                        var insertAt = effectiveSlot.coerceIn(0, FXQueueManager.queue.size)
-                        for (path in assetPayload.lines().filter { it.isNotBlank() }) {
-                            val before = FXQueueManager.queue.size
-                            FXQueueManager.insertAt(insertAt, File(path.trim()))
-                            insertAt += FXQueueManager.queue.size - before
-                        }
-                    }
+                    QueueDrop.acceptBrowserDrop(QueueDrop.Queue.FX_AB, effectiveSlot)
                     ImGui.endDragDropTarget()
                 }
                 ImGui.popStyleColor()
@@ -210,15 +200,13 @@ object FXQueueActionsPanel {
             if (remainingH > 5f) {
                 ImGui.dummy(ImGui.getWindowWidth(), remainingH)
                 ImGui.pushStyleColor(ImGuiCol.DragDropTarget, 0f, 0f, 0f, 0f)
-                if (ImGui.beginDragDropTarget()) {
-                    val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
-                    if (payload != null) {
-                        payload.lines().filter { it.isNotBlank() }.forEach { FXQueueManager.appendToQueue(File(it.trim())) }
-                    }
+                if (QueueDrop.beginTarget(QueueDrop.Queue.FX_AB)) {
+                    QueueDrop.acceptBrowserDrop(QueueDrop.Queue.FX_AB, null)
                     ImGui.endDragDropTarget()
                 }
                 ImGui.popStyleColor()
             }
+            QueueDrop.edgeScroll()
         }
         ImGui.endChild()
     }
