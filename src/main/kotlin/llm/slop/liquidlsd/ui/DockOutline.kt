@@ -29,9 +29,11 @@ internal object DockOutline {
     fun selects(parametersState: ParametersState, bankId: String, target: ParametersState.BrowseTarget): Boolean =
         parametersState.dockSelection == ParametersState.DockSelection(canonical(bankId), target)
 
-    /** Outlines the rectangle ([x0],[y0])-([x1],[y1]) in the colour of [bankId]'s row. */
+    /** Outlines the rectangle ([x0],[y0])-([x1],[y1]) in the colour of [bankId]'s row, breathing in step with the header chip naming it. */
     fun draw(bankId: String, x0: Float, y0: Float, x1: Float, y1: Float) {
-        ImGui.getWindowDrawList().addRect(x0 - 1f, y0 - 1f, x1 + 1f, y1 + 1f, TangoPalette.u32(colorFor(bankId)), 4f, 0, 2f)
+        ImGui.getWindowDrawList().addRect(
+            x0 - 1f, y0 - 1f, x1 + 1f, y1 + 1f, TangoPalette.u32(colorFor(bankId), TangoPalette.browseBreathAlpha()), 4f, 0, 2.5f
+        )
     }
 
     /** Outlines the item just submitted. */

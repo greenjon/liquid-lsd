@@ -63,7 +63,7 @@ The Performance rows have a fixed height, so the Library gets whatever window he
 
 ### Picking for a slot: the Library applies in place
 
-Click a source name, an FX chain name, an FX slot or the transition name on a Perform row, and the Library below starts applying to that slot. Nothing moves. The slot is outlined on its row, the list's border takes the row's colour, and the Library's tab line shows the slot's name (for example "● Deck A · FX 1") with its buttons (**Save**, **Clear Slot** / **Clear Chain**) and a **✕**. A deck monitor, the main output monitor or the Master **M** badge does the same for a deck's source or the Master FX chain.
+Click a source name, an FX chain name, an FX slot or the transition name on a Perform row, and the Library below starts applying to that slot. Nothing moves. The slot is outlined on its row, the list's border takes the row's colour, and the Library's tab line shows the slot's name (for example "● Deck A · FX 1") in a pill of the row's colour. The outline and the pill breathe slowly together, so you can find both on a busy screen and see that they belong together. The name comes with its buttons (**Save**, **Clear Slot** / **Clear Chain**) and a **✕**. A deck monitor, the main output monitor or the Master **M** badge does the same for a deck's source or the Master FX chain.
 
 - **Click** a row to apply it; the list stays, so you can try several in a row. `Ctrl+Z` undoes each pick.
 - **Double-click** applies the row and goes back to the plain Library.

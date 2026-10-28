@@ -50,6 +50,17 @@ object TangoPalette {
         dl.addRect(x1, y1, x2, y2, argb, 0f, 0, 3f)
     }
 
+    /**
+     * 0..1 phase of the slow (~0.28 Hz) breath shared by the slot the dock is bound to ([DockOutline]) and the header chip naming it
+     * ([BayHeader.drawChip]), so the two visibly belong together. Slower than [drawEditingPulseFrame] and far slower than
+     * [drawOscLearnPulseBorder], and callers keep a high floor, so it reads as "selected", never as "armed".
+     */
+    fun browseBreath(): Float =
+        (kotlin.math.sin(llm.slop.liquidlsd.utils.TimeSource.getTimeSec() * 1.75) * 0.5 + 0.5).toFloat()
+
+    /** Outline alpha for [browseBreath]: never under 55%, so the outline doesn't vanish between breaths. */
+    fun browseBreathAlpha(): Float = 0.55f + 0.45f * browseBreath()
+
     // -- The 8 canonical Tango hues -------------------------------------------------------------
     val BUTTER      = Hue(rgb(0xFCE94F), rgb(0xEDD400), rgb(0xC4A000))
     val ORANGE      = Hue(rgb(0xFCAF3E), rgb(0xF57900), rgb(0xCE5C00))

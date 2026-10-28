@@ -55,6 +55,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 ## 2. Slots bound in place, pair view and Edit
 
 - [ ] With the rows on the current page, click a source name, a chain name, an FX slot and the transition name: nothing moves, the slot is outlined, the Library's tab line shows its name, buttons and ✕, the list border takes the row's colour.
+- [ ] Breathing (2026-10-28): the bound slot's outline (source badge, chain name, FX slot, transition name) breathes slowly and never vanishes; the Library tab-line name and the Edit view header sit in a row-coloured pill breathing in step with it. Easy to spot on a busy screen, not mistakable for the amber OSC-learn pulse, not annoying over a long browse. Paused binding: grey, no pill.
 - [ ] In a bound list: a click applies (Ctrl+Z undoes), a double-click applies and returns to the plain Library; Esc, ✕ or clicking the slot again stops without applying; changing page stops.
 - [ ] Deck monitors, the main output monitor and the Master `M` badge bind their default half (a deck's source, the Master FX chain).
 - [ ] Space or maximizing the Library pauses the binding; Esc or Space again resumes.
@@ -273,6 +274,7 @@ Known remaining literals: dropdown selected text, ParametersRenderer fills and g
 
 - [ ] Switch to Light. Walk every view (Perform, Edit, Library, pair views, bound lists).
 - [ ] New since the last pass: the badge's dimmed source text, the amber ⚠ lines in Browse tooltips, Clock row group tints, Library deck chips, the amber pickup link button, the empty-deck card, `Wet 40%` / dimmed chain names, button bevels.
+- [ ] The breathing bound-slot pill behind the Library / Edit header name: label readable, pill visible.
 - [ ] Note unreadable text, invisible borders, hover/press overlays.
 - [ ] Dark theme unchanged after switching back.
 

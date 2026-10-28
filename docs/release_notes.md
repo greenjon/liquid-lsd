@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### The Slot You're Browsing Breathes (`ui/TangoPalette.kt`, `ui/DockOutline.kt`, `ui/BayHeader.kt`)
+- **The outline around the slot the Library is applying to now breathes slowly** (a source badge, chain name, FX slot or transition name), and it is a little thicker, so it's easier to spot on a busy screen. It never fades out completely.
+- **The name on the Library's tab line and the Edit view's header sits in a pill of the row's colour that breathes in step with that outline**, so you can see at a glance which title goes with which slot. The label itself stays in the normal text colour so it stays readable.
+- The breath is much slower than the amber OSC-learn pulse, so the two can't be confused.
+
 ### Song Sections as Modulation Sources (`audio/SectionWatch.kt`, `cv/SectionDrop.kt`, `cv/CVRegistry.kt`, `cv/Evaluators.kt`, `audio/AudioEngine.kt`, `ui/AudioModulatorSection.kt`, `ui/AudioEnginePanel.kt`, `web/energy.js`, `web/dsp.js`, `web/renderer.js`)
 - **New: breakdowns and drops can drive parameters.** The Audio tab's detection mode has a third choice, **Section**, next to Continuous and Transient. Pick **Energy** or **Drop** under it.
 - **Energy** compares how loud the music is now with the last 20 seconds or so. It sits in the middle of the range during normal playing, sinks in a breakdown (and stays down until the drop) and rises when the song gets louder.

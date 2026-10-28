@@ -99,13 +99,24 @@ internal object BayHeader {
      */
     fun drawChip(chip: Chip, lineH: Float, showActions: Boolean = true) {
         ImGui.beginGroup()
-        val dot = if (!chip.paused && chip.accent != null) TangoPalette.u32(chip.accent) else ImGui.getColorU32(ImGuiCol.TextDisabled)
+        val accent = chip.accent?.takeUnless { chip.paused }
+        val dot = if (accent != null) TangoPalette.u32(accent) else ImGui.getColorU32(ImGuiCol.TextDisabled)
         val cx = ImGui.getCursorScreenPosX()
-        val cy = ImGui.getCursorScreenPosY() + lineH * 0.5f
-        ImGui.getWindowDrawList().addCircleFilled(cx + 5f, cy, 4f, dot)
+        val y = ImGui.getCursorScreenPosY()
+        val cy = y + lineH * 0.5f
+        val dl = ImGui.getWindowDrawList()
+        // A pill in the target's colour, breathing with the outline on its row ([DockOutline]), so the eye finds both and pairs them.
+        if (accent != null) {
+            val x1 = cx + 14f + ImGui.calcTextSize(chip.label).x + 6f
+            val t = TangoPalette.browseBreath()
+            dl.addRectFilled(cx - 4f, y + 1f, x1, y + lineH - 1f, TangoPalette.u32(accent, 0.10f + 0.14f * t), 4f)
+            dl.addRect(cx - 4f, y + 1f, x1, y + lineH - 1f, TangoPalette.u32(accent, TangoPalette.browseBreathAlpha()), 4f, 0, 1.5f)
+        }
+        dl.addCircleFilled(cx + 5f, cy, 4f, dot)
         ImGui.dummy(14f, lineH)
         ImGui.sameLine(0f, 0f)
         ImGui.alignTextToFramePadding()
+        // The label keeps the text colour: Deck B's blue and PV's plum are too dark to read as text on the dark theme.
         if (chip.paused) ImGui.textDisabled("${chip.label} (paused)") else ImGui.text(chip.label)
         ImGui.endGroup()
         itemTooltip(chip.tooltip)
