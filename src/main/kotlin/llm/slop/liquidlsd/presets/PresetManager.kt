@@ -145,6 +145,25 @@ object PresetManager {
         }
     }
 
+    /**
+     * Gives every deck loaded from [file] the file's new [tags], so its next save keeps them (a save writes the deck's cached
+     * tags). Tags aren't deck state, so whether the deck has unsaved changes is kept as it was.
+     */
+    fun retagActive(file: File, tags: List<String>) {
+        for (slot in DeckSlot.entries) {
+            if (activeFiles[slot.index]?.absolutePath != file.absolutePath) continue
+            val signature = bankBaseline(slot)
+            val dto = cachedDto(slot)?.copy(tags = tags) ?: continue
+            when (slot) {
+                DeckSlot.A -> cachedDtoA = dto
+                DeckSlot.B -> cachedDtoB = dto
+                DeckSlot.BG -> cachedDtoBG = dto
+                DeckSlot.PV -> cachedDtoPV = dto
+            }
+            bankBaselines[slot.index] = signature?.let { BankBaseline(dto, it) }
+        }
+    }
+
     /** Forgets [file] as any deck's save-back file after it was deleted; the deck keeps playing as an unsaved preset. */
     fun forgetActive(file: File) {
         for (slot in DeckSlot.entries) if (activeFiles[slot.index]?.absolutePath == file.absolutePath) activeFiles[slot.index] = null

@@ -46,11 +46,17 @@ sealed interface BrowseScope {
 
     /** Non-selectable "Playlists" header in the tree. */
     data object PlaylistsHeader : BrowseScope
+
+    /** Every saved entry carrying tag [name] (tags are lowercase): a crate, any number of which an entry can be in. */
+    data class Tag(val name: String) : BrowseScope
+
+    /** Non-selectable "Tags" header in the tree. */
+    data object TagsHeader : BrowseScope
 }
 
 /** One row of the flattened folder tree. [count] is how many entries the scope holds. */
 data class BrowseNode(val scope: BrowseScope, val label: String, val depth: Int, val count: Int) {
-    val selectable: Boolean get() = scope != BrowseScope.PlaylistsHeader
+    val selectable: Boolean get() = scope != BrowseScope.PlaylistsHeader && scope != BrowseScope.TagsHeader
 }
 
 /** The selectable tree rows that are on screen: rows below a collapsed ancestor are hidden, headers are skipped. */
@@ -116,6 +122,13 @@ class BrowseCatalog(
             nodes += BrowseNode(BrowseScope.Folder(section), sectionLabel(kind, section), 0, inSection.size)
             nodes += folderNodes(section, inSection)
         }
+        // Tags: the saved entries' tags, A-Z, each counting the entries that carry it; the header counts the tagged entries.
+        val tagged = shown.filter { isSaved(it) && it.asset.tags.isNotEmpty() }
+        val tagNodes = tagged.flatMap { tagsOf(it) }.distinct().sorted().map { tag ->
+            BrowseNode(BrowseScope.Tag(tag), tag, 1, tagged.count { tag in tagsOf(it) })
+        }
+        nodes += BrowseNode(BrowseScope.TagsHeader, "Tags", 0, tagged.size)
+        nodes += tagNodes
         // Every count means items: each playlist counts its items and the header their total, like a section counts its folders' rows.
         val playlistNodes = playlists.map { pl ->
             val count = if (accepts == null) pl.items.size else pl.items.count { item -> resolve(item)?.let(accepts) == true }
@@ -135,10 +148,18 @@ class BrowseCatalog(
             BrowseScope.Recent -> recentEntries()
             is BrowseScope.Folder -> entries.filter { it.section == scope.section && inFolder(it.folder, scope.folder) }
             is BrowseScope.Playlist -> byPath[scope.path]?.items?.mapNotNull { resolve(it) } ?: emptyList()
-            BrowseScope.PlaylistsHeader -> emptyList()
+            is BrowseScope.Tag -> entries.filter { isSaved(it) && scope.name in tagsOf(it) }
+            BrowseScope.PlaylistsHeader, BrowseScope.TagsHeader -> emptyList()
         }
         return base.filter { matches(tokens, it) }
     }
+
+    /** Every tag on a saved entry of this kind, A-Z. */
+    fun tags(): List<String> = entries.filter(::isSaved).flatMap { tagsOf(it) }.distinct().sorted()
+
+    private fun isSaved(e: BrowseEntry): Boolean = e.section != BrowseSection.STOCK && e.section != BrowseSection.LIVE
+
+    private fun tagsOf(e: BrowseEntry): List<String> = e.asset.tags.map { it.trim().lowercase() }.filter { it.isNotEmpty() }
 
     /** The recent keys that still resolve to an entry, newest first. */
     private fun recentEntries(): List<BrowseEntry> {

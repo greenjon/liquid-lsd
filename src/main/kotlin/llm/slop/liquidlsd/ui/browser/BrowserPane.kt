@@ -57,6 +57,9 @@ object BrowserPane {
     /** Tree rows whose children are hidden, keyed by kind then by the node's scope. */
     private val collapsed = HashMap<BrowseKind, MutableSet<BrowseScope>>()
 
+    /** The folded tree rows of [kind]; the Tags group starts folded. */
+    private fun hiddenOf(kind: BrowseKind): MutableSet<BrowseScope> = collapsed.getOrPut(kind) { hashSetOf(BrowseScope.TagsHeader) }
+
     /** The playlist path last mirrored to/from the Library's selected playlist file of each kind, so outside changes (a new playlist) move the scope. */
     private val syncedPlaylist = HashMap<BrowseKind, String?>()
 
@@ -84,7 +87,7 @@ object BrowserPane {
     private val treeCursors = HashMap<BrowseKind, BrowseScope>()
 
     private fun visibleScopes(kind: BrowseKind): List<BrowseScope> =
-        visibleSelectableScopes(treeOf(BrowseCatalogs.get(kind), kind), collapsed[kind] ?: emptySet())
+        visibleSelectableScopes(treeOf(BrowseCatalogs.get(kind), kind), hiddenOf(kind))
 
     /** Where the tree cursor is now: the stepped-to row while it is still visible, else the selected scope. */
     fun treeCursorOf(kind: BrowseKind): BrowseScope = treeCursors[kind]?.takeIf { it in visibleScopes(kind) } ?: scopeOf(kind)
@@ -276,7 +279,7 @@ object BrowserPane {
         syncPlaylistSelection(kind, tree)
         val current = scopeOf(kind)
         val cursor = if (LibraryPanel.activeSelectionSource == LibraryPanel.SelectionSource.TREE) treeCursorOf(kind) else null
-        val hidden = collapsed.getOrPut(kind) { HashSet() }
+        val hidden = hiddenOf(kind)
         var hideBelow = Int.MAX_VALUE
         for ((i, node) in tree.withIndex()) {
             if (node.depth > hideBelow) continue
@@ -307,15 +310,19 @@ object BrowserPane {
             }
             val label = if (node.scope == BrowseScope.Recent) "${Icons.HISTORY} ${node.label}" else node.label
             if (!node.selectable) {
-                // The Playlists header is a heading, not a scope: plain text, not greyed like a disabled row.
+                // The Playlists and Tags headers are headings, not scopes: plain text, not greyed like a disabled row.
                 ImGui.textUnformatted(label)
-                itemTooltip("Your playlists. Pick one to list its items in order; right-click one for queue and file actions.")
+                itemTooltip(
+                    if (node.scope == BrowseScope.TagsHeader) "Your tags, one row each: pick one to list every saved item with it. An item can have any number.\nTag rows with a row's Add Tag item, or drag rows onto a tag."
+                    else "Your playlists. Pick one to list its items in order; right-click one for queue and file actions."
+                )
             } else if (ImGui.selectable("$label##node", node.scope == current)) {
                 select(kind, node.scope)
             }
             if (node.scope == BrowseScope.Recent) itemTooltip("The last ${BrowseRecents.LIMIT} items you loaded or applied, newest first.")
             val folderPlace = (node.scope as? BrowseScope.Folder)?.let { placeOf(kind, it) }
             if (folderPlace != null && manage) folderNode(mixer, folderPlace)
+            (node.scope as? BrowseScope.Tag)?.let { if (manage) tagNode(mixer, kind, it.name) }
             if (node.scope == cursor) {
                 // The controller's cursor: an outline, so it reads apart from the selected scope's fill.
                 val min = ImGui.getItemRectMin()
@@ -401,7 +408,7 @@ object BrowserPane {
             f.startsWith("$old/") -> new?.let { it + f.removePrefix(old) }
             else -> f
         }
-        val hidden = collapsed.getOrPut(kind) { HashSet() }
+        val hidden = hiddenOf(kind)
         val renamed = hidden.map { s -> if (s is BrowseScope.Folder && s.section == section) moved(s.folder)?.let { s.copy(folder = it) } else s }
         hidden.clear()
         hidden.addAll(renamed.filterNotNull())
@@ -418,12 +425,55 @@ object BrowserPane {
         hidden.remove(BrowseScope.Folder(section))
     }
 
+    /** A tag row: rows dropped on it get the tag; its menu renames the tag or removes it from every item. */
+    private fun tagNode(mixer: Mixer, kind: BrowseKind, tag: String) {
+        if (ImGui.beginDragDropTarget()) {
+            ImGui.acceptDragDropPayload<String>("ASSET_ITEM")?.let { payload ->
+                val files = payload.lines().map { it.trim() }.filter { it.isNotEmpty() }.map(::File).filter { LibraryRefs.kindOf(it) == kind }
+                val n = LibraryTags.add(files, listOf(tag), mixer.fxChains)
+                if (n > 0) ToastOverlay.show("Tagged ${if (n == 1) "1 item" else "$n items"} $tag")
+            }
+            ImGui.endDragDropTarget()
+        }
+        if (!ImGui.beginPopupContextItem("tag_node_menu")) return
+        pushOpenDropdownFont()
+        if (ImGui.menuItem("Rename Tag...")) TagPopups.requestRename(kind, tag)
+        if (ImGui.menuItem("Delete Tag...")) TagPopups.requestDelete(kind, tag)
+        itemTooltip("Removes the tag from every item that has it. The items stay.")
+        popOpenDropdownFont()
+        ImGui.endPopup()
+    }
+
+    /** Keeps the tree on a tag that was just renamed ([new]) or deleted (null, which goes back to All). */
+    internal fun followTag(kind: BrowseKind, old: String, new: String?) {
+        if (scopeOf(kind) != BrowseScope.Tag(old)) return
+        select(kind, new?.let { BrowseScope.Tag(it) } ?: BrowseScope.All)
+    }
+
+    /** The saved rows a row menu covers: the selection when [entry] is in it, else [entry] alone; stock and live rows are left out. */
+    private fun savedRowsFor(kind: BrowseKind, entry: BrowseEntry, assets: List<AssetItem>): List<File> {
+        val selected = selectedAssets(kind, assets)
+        return (if (selected.any { it.path == entry.asset.path }) selected else listOf(entry.asset))
+            .map { File(it.path) }.filter { LibraryRefs.kindOf(it) == kind }
+    }
+
+    /** Add Tag... and Remove Tag for the saved rows a row menu covers. */
+    private fun tagMenu(mixer: Mixer, kind: BrowseKind, entry: BrowseEntry, assets: List<AssetItem>) {
+        val rows = savedRowsFor(kind, entry, assets)
+        if (rows.isEmpty()) return
+        val n = if (rows.size == 1) "" else " (${rows.size})"
+        if (ImGui.menuItem("Add Tag$n...")) TagPopups.requestAdd(kind, rows)
+        val present = rows.flatMap { LibraryTags.read(it) }.map(LibraryTags::normalize).distinct().sorted()
+        if (present.isNotEmpty() && ImGui.beginMenu("Remove Tag$n")) {
+            for (t in present) if (ImGui.menuItem(t)) LibraryTags.remove(rows, t, mixer.fxChains)
+            ImGui.endMenu()
+        }
+    }
+
     /** "Move to" for the saved rows a row menu covers: every folder of their section, top level first. */
     private fun moveToMenu(mixer: Mixer, kind: BrowseKind, entry: BrowseEntry, assets: List<AssetItem>) {
         val root = LibraryFolders.rootOf(kind, entry.section) ?: return
-        val selected = selectedAssets(kind, assets)
-        val rows = (if (selected.any { it.path == entry.asset.path }) selected else listOf(entry.asset))
-            .map { File(it.path) }.filter { LibraryFolders.sectionOf(kind, it) == entry.section }
+        val rows = savedRowsFor(kind, entry, assets).filter { LibraryFolders.sectionOf(kind, it) == entry.section }
         if (rows.isEmpty()) return
         val label = if (rows.size == 1) "Move to" else "Move ${rows.size} to"
         if (!ImGui.beginMenu(label)) return
@@ -564,14 +614,17 @@ object BrowserPane {
                 val extras = { asset: AssetItem ->
                     val entry = entries.firstOrNull { it.asset.path == asset.path }
                     // FX stock rows already carry a Favorites item in their own menu.
-                    if (entry != null && kind != BrowseKind.FX && entry.section != BrowseSection.LIVE) {
+                    if (entry != null && entry.section != BrowseSection.LIVE && !(kind == BrowseKind.FX && entry.section == BrowseSection.STOCK)) {
                         val fav = BrowseFavorites.isFavorite(kind, entry.key)
                         if (ImGui.menuItem(if (fav) "★ Remove from Favorites" else "☆ Add to Favorites")) {
                             BrowseFavorites.toggle(kind, entry.key)
                         }
                     }
                     if (playlistRows != null && ImGui.menuItem("Remove from playlist")) removeFromPlaylist(kind, playlistRows, assets)
-                    if (entry != null && playlistRows == null && DockActions.canManageList(target)) moveToMenu(mixer, kind, entry, assets)
+                    if (entry != null && DockActions.canManageList(target)) {
+                        tagMenu(mixer, kind, entry, assets)
+                        if (playlistRows == null) moveToMenu(mixer, kind, entry, assets)
+                    }
                 }
                 when (kind) {
                     BrowseKind.SRC -> PresetListPanel.drawRows(

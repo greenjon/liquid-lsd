@@ -1264,6 +1264,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#tags-as-crates-favorites-for-saved-fx-uibrowserlibrarytagskt-uibrowsertagpopupskt-uibrowserbrowsemodelkt-uibrowserbrowsefavoriteskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tags as Crates, Favorites for Saved FX (ui/browser/LibraryTags.kt, ui/browser/TagPopups.kt, ui/browser/BrowseModel.kt, ui/browser/BrowseFavorites.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#folders-in-the-library-uibrowserlibraryfolderskt-uibrowserfolderpopupskt-uibrowserbrowserpanekt-uisavepresetmodalkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6990,6 +7001,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#tags-as-crates-favorites-for-saved-fx-uibrowserlibrarytagskt-uibrowsertagpopupskt-uibrowserbrowsemodelkt-uibrowserbrowsefavoriteskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tags as Crates, Favorites for Saved FX (ui/browser/LibraryTags.kt, ui/browser/TagPopups.kt, ui/browser/BrowseModel.kt, ui/browser/BrowseFavorites.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#folders-in-the-library-uibrowserlibraryfolderskt-uibrowserfolderpopupskt-uibrowserbrowserpanekt-uisavepresetmodalkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -12691,6 +12713,13 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="tags-as-crates-favorites-for-saved-fx-uibrowserlibrarytagskt-uibrowsertagpopupskt-uibrowserbrowsemodelkt-uibrowserbrowsefavoriteskt">Tags as Crates, Favorites for Saved FX (<code>ui/browser/LibraryTags.kt</code>, <code>ui/browser/TagPopups.kt</code>, <code>ui/browser/BrowseModel.kt</code>, <code>ui/browser/BrowseFavorites.kt</code>)</h3>
+<ul>
+<li><strong>New: a Tags group in the Library tree.</strong> Every tag used on the tab's saved items gets a row with a count; pick one to list everything tagged with it. An item can have any number of tags, so tags work like crates in a DJ app. The group starts folded.</li>
+<li><strong>Tag items from the Library</strong>: right-click a saved row, or a multi-selection, for <strong>Add Tag...</strong> (type tags or click existing ones) and <strong>Remove Tag</strong>, or drag rows onto a tag. Right-click a tag for <strong>Rename Tag...</strong> or <strong>Delete Tag...</strong>. This now works for saved FX, chains and transitions too, not only presets. Tags are written into each file, so they travel with it.</li>
+<li><strong>Saved single FX and chains can be Favorites</strong> (★ in the list, listed in the FX Favorites folder). The slot ◀ / ▶ shortlist still steps through starred stock filters only.</li>
+<li>Fixed: a deck playing a preset whose tags you just edited wrote the old tags back on its next save.</li>
+</ul>
 <h3 id="folders-in-the-library-uibrowserlibraryfolderskt-uibrowserfolderpopupskt-uibrowserbrowserpanekt-uisavepresetmodalkt">Folders in the Library (<code>ui/browser/LibraryFolders.kt</code>, <code>ui/browser/FolderPopups.kt</code>, <code>ui/browser/BrowserPane.kt</code>, <code>ui/SavePresetModal.kt</code>)</h3>
 <ul>
 <li><strong>New: manage folders from the Library.</strong> The saved sections (Saved presets, Saved single FX, Saved chains, Saved transitions) now take folders made in the app: the folder-plus button above the tree, or <strong>New Folder...</strong> on a section or folder's right-click menu. The same menu has <strong>Rename Folder...</strong>, <strong>Delete Folder...</strong> and <strong>Reveal in File Manager</strong>. Empty folders show in the tree.</li>

@@ -231,6 +231,7 @@ object BrowserDock {
 
         BrowserPopupHandler.drawRenameAssetPopup(mixer)
         FolderPopups.draw(mixer)
+        TagPopups.draw(mixer)
         BrowserPopupHandler.drawNewPlaylistPopup()
         BrowserPopupHandler.drawExportQueuePopup(session)
         BrowserPopupHandler.drawExportBgQueuePopup()

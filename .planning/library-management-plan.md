@@ -16,7 +16,12 @@ crate-style groupings. We take a small subset of Mixxx's library management, not
   `FxChainHeader.openSaveSlotAsModal`), trash via `Desktop`/`gio trash` with `-Dlsd.noTrash` in tests, delete dialogs show impact.
   Tests: `LibraryFoldersTest`. Not done: drag of a folder node onto a section/folder in another kind is just ignored; no keyboard
   delete for folder nodes.
-- Phases 3-4 not started.
+- **Phase 2 committed** 3588b37.
+- **Phase 3 DONE 2026-10-27** (uncommitted, tests pass, unseen in app): `BrowseScope.Tag` / `TagsHeader` (folded by default),
+  `LibraryTags` (JSON `tags` field only; follows loaded decks/chains), `TagPopups` (Add / Rename / Delete), row Add Tag / Remove Tag,
+  drop onto a tag, saved-FX favorites store. Tag editing for every saved kind is via Add/Remove Tag (Rename stays file-name-only for
+  FX/transitions). Tests: `LibraryTagsTest`.
+- Phase 4 not started.
 
 ## Decisions (2026-10-27)
 

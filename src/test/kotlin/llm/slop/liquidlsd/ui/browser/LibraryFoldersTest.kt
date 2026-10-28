@@ -104,7 +104,7 @@ class LibraryFoldersTest {
         val c = BrowseCatalog(BrowseKind.SRC, entries, folders = mapOf(BrowseSection.SAVED to listOf("garden", "empty", "empty/inner")))
         val saved = c.tree().map { "${" ".repeat(it.depth)}${it.label}(${it.count})" }
         assertEquals(
-            listOf("All(1)", "Stock sources(0)", "Saved presets(1)", " empty(0)", "  inner(0)", " garden(1)", "External video(0)", "Playlists(0)"),
+            listOf("All(1)", "Stock sources(0)", "Saved presets(1)", " empty(0)", "  inner(0)", " garden(1)", "External video(0)", "Tags(0)", "Playlists(0)"),
             saved
         )
     }

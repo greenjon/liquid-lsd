@@ -11,8 +11,9 @@ import java.io.File
  * Favorites for the unified browser, one list per [BrowseKind]. A key is a [BrowseEntry.key]: a shader id for stock rows,
  * a file path for saved ones.
  *
- * FX favorites are the existing [FxShortlist] (which the slot cells' step buttons also use), so they stay stock filters only and
- * a single source of truth. SRC and TRANS get their own JSON id lists next to it in `library/`, so favorites travel with the library.
+ * Stock FX favorites are the existing [FxShortlist] (which the slot cells' step buttons also use, and which walks shader ids), so a
+ * saved single or chain is starred in a separate FX store keyed by path; the FX Favorites folder lists both. SRC and TRANS get their
+ * own JSON lists next to it in `library/`, so favorites travel with the library.
  */
 object BrowseFavorites {
     private val logger = KotlinLogging.logger {}
@@ -27,20 +28,25 @@ object BrowseFavorites {
 
     private val stores = mapOf(
         BrowseKind.SRC to Store(File("library/src_favorites.json")),
+        BrowseKind.FX to Store(File("library/fx_saved_favorites.json")),
         BrowseKind.TRANS to Store(File("library/transition_favorites.json"))
     )
 
     /** Bumped on every change, so a catalog built from the favorites knows when to rebuild. */
-    fun version(kind: BrowseKind): Int = if (kind == BrowseKind.FX) FxShortlist.version else stores.getValue(kind).version
+    fun version(kind: BrowseKind): Int = stores.getValue(kind).version + if (kind == BrowseKind.FX) FxShortlist.version else 0
 
     fun keys(kind: BrowseKind): Set<String> =
-        if (kind == BrowseKind.FX) FxShortlist.favorites().toSet() else loaded(kind).keys
+        if (kind == BrowseKind.FX) FxShortlist.favorites().toSet() + loaded(kind).keys else loaded(kind).keys
 
-    fun isFavorite(kind: BrowseKind, key: String): Boolean = key in keys(kind)
+    /** Whether an FX key names a saved single or chain (a path) rather than a stock filter id. */
+    private fun isSavedFx(key: String): Boolean = LibraryRefs.kindOf(File(key)) == BrowseKind.FX
+
+    fun isFavorite(kind: BrowseKind, key: String): Boolean =
+        key in loaded(kind).keys || (kind == BrowseKind.FX && FxShortlist.isFavorite(key))
 
     /** Stars or un-stars [key] and saves immediately. */
     fun toggle(kind: BrowseKind, key: String) {
-        if (kind == BrowseKind.FX) {
+        if (kind == BrowseKind.FX && !isSavedFx(key)) {
             FxShortlist.toggle(key)
             return
         }
@@ -50,9 +56,8 @@ object BrowseFavorites {
         save(store)
     }
 
-    /** Follows renamed or moved files ([moves]: old key to new). FX favorites are stock filter ids, so they never move. */
+    /** Follows renamed or moved files ([moves]: old key to new). Stock FX favorites are shader ids, so they never move. */
     fun relocate(kind: BrowseKind, moves: Map<String, String>) {
-        if (kind == BrowseKind.FX) return
         val store = loaded(kind)
         if (store.keys.none { it in moves }) return
         val updated = store.keys.map { moves[it] ?: it }
@@ -64,7 +69,6 @@ object BrowseFavorites {
 
     /** Drops deleted files ([keys]). */
     fun forget(kind: BrowseKind, keys: Set<String>) {
-        if (kind == BrowseKind.FX) return
         val store = loaded(kind)
         if (store.keys.removeAll(keys)) {
             store.version++
@@ -72,7 +76,7 @@ object BrowseFavorites {
         }
     }
 
-    /** Test hook: point a kind at [file] and drop in-memory state (SRC / TRANS only). */
+    /** Test hook: point a kind at [file] and drop in-memory state (for FX, the saved-FX store only). */
     internal fun resetForTest(kind: BrowseKind, file: File) {
         val store = stores.getValue(kind)
         store.file = file

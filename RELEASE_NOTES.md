@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Tags as Crates, Favorites for Saved FX (`ui/browser/LibraryTags.kt`, `ui/browser/TagPopups.kt`, `ui/browser/BrowseModel.kt`, `ui/browser/BrowseFavorites.kt`)
+- **New: a Tags group in the Library tree.** Every tag used on the tab's saved items gets a row with a count; pick one to list everything tagged with it. An item can have any number of tags, so tags work like crates in a DJ app. The group starts folded.
+- **Tag items from the Library**: right-click a saved row, or a multi-selection, for **Add Tag...** (type tags or click existing ones) and **Remove Tag**, or drag rows onto a tag. Right-click a tag for **Rename Tag...** or **Delete Tag...**. This now works for saved FX, chains and transitions too, not only presets. Tags are written into each file, so they travel with it.
+- **Saved single FX and chains can be Favorites** (★ in the list, listed in the FX Favorites folder). The slot ◀ / ▶ shortlist still steps through starred stock filters only.
+- Fixed: a deck playing a preset whose tags you just edited wrote the old tags back on its next save.
+
 ### Folders in the Library (`ui/browser/LibraryFolders.kt`, `ui/browser/FolderPopups.kt`, `ui/browser/BrowserPane.kt`, `ui/SavePresetModal.kt`)
 - **New: manage folders from the Library.** The saved sections (Saved presets, Saved single FX, Saved chains, Saved transitions) now take folders made in the app: the folder-plus button above the tree, or **New Folder...** on a section or folder's right-click menu. The same menu has **Rename Folder...**, **Delete Folder...** and **Reveal in File Manager**. Empty folders show in the tree.
 - **Move items between folders**: drag rows (or a multi-selection) onto a folder, or use **Move to** in a row's menu. Drag a folder onto another to move it. If the destination already has an item with that name, you choose **Keep both** (the moved one gets `_2`) or **Skip**. Playlists, queues, Favorites, Recent and loaded decks and chains all follow the move.

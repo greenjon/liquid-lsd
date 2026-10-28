@@ -118,8 +118,7 @@ object FXBrowserPanel {
         // Stock filters leave the icon slot blank unless starred; saved singles and chains keep their own marks.
         val icon = when (asset.type) {
             AssetType.FX_STOCK -> if (FxShortlist.isFavorite(asset.path.removePrefix(STOCK_PATH_PREFIX))) "\u2605" else null
-            AssetType.FX_CHAIN -> Icons.ACTIVITY
-            else -> Icons.ZAP
+            else -> if (BrowseFavorites.isFavorite(BrowseKind.FX, asset.path)) "\u2605" else if (asset.type == AssetType.FX_CHAIN) Icons.ACTIVITY else Icons.ZAP
         }
         val isSelected = selection.isSelected(asset)
         val popupId = "fx_browser_context_$index"

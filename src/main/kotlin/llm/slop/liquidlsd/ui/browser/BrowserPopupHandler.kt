@@ -101,6 +101,8 @@ object BrowserPopupHandler {
             }
 
             updatePresetFileMeta(File(targetPath), cleanName, newTags)
+            // A deck playing this preset keeps the new tags, or its next save would write the old ones back.
+            llm.slop.liquidlsd.presets.PresetManager.retagActive(File(targetPath), newTags)
             LibraryPanel.refreshAssets()
         }
     }

@@ -24,17 +24,17 @@ class BrowseCatalogTest {
         val entries = listOf(stock("blur"), saved("/lib/presets/a.lsd"))
         val withFavs = BrowseCatalog(BrowseKind.SRC, entries, favorites = emptySet())
         assertEquals(
-            listOf("All(2)", "Favorites(0)", "Stock sources(1)", "Saved presets(1)", "External video(0)", "Playlists(0)"),
+            listOf("All(2)", "Favorites(0)", "Stock sources(1)", "Saved presets(1)", "External video(0)", "Tags(0)", "Playlists(0)"),
             labels(withFavs)
         )
         val noFavs = BrowseCatalog(BrowseKind.SRC, entries)
-        assertEquals(listOf("All(2)", "Stock sources(1)", "Saved presets(1)", "External video(0)", "Playlists(0)"), labels(noFavs))
+        assertEquals(listOf("All(2)", "Stock sources(1)", "Saved presets(1)", "External video(0)", "Tags(0)", "Playlists(0)"), labels(noFavs))
     }
 
     @Test
     fun `FX tree splits saved into single and chains`() {
         val c = BrowseCatalog(BrowseKind.FX, listOf(stock("blur"), saved("/x/a.lsdfx", BrowseSection.SINGLE), saved("/x/b.lsdfxchain", BrowseSection.CHAIN)))
-        assertEquals(listOf("All(3)", "Stock filters(1)", "Saved single FX(1)", "Saved chains(1)", "Playlists(0)"), labels(c))
+        assertEquals(listOf("All(3)", "Stock filters(1)", "Saved single FX(1)", "Saved chains(1)", "Tags(0)", "Playlists(0)"), labels(c))
     }
 
     @Test
@@ -46,7 +46,7 @@ class BrowseCatalogTest {
         )
         // A chain-only target: stock and single rows vanish from the counts, the playlist counts its chain item only.
         val chainsOnly = c.tree { it.section == BrowseSection.CHAIN }.map { "${it.label}(${it.count})" }
-        assertEquals(listOf("All(1)", "Stock filters(0)", "Saved single FX(0)", "Saved chains(1)", "Playlists(1)", "mix(1)"), chainsOnly)
+        assertEquals(listOf("All(1)", "Stock filters(0)", "Saved single FX(0)", "Saved chains(1)", "Tags(0)", "Playlists(1)", "mix(1)"), chainsOnly)
     }
 
     @Test
@@ -61,7 +61,7 @@ class BrowseCatalogTest {
             )
         )
         assertEquals(
-            listOf("All(4)", "Stock sources(0)", "Saved presets(4)", " chill(1)", " rave(2)", "  deep(1)", "External video(0)", "Playlists(0)"),
+            listOf("All(4)", "Stock sources(0)", "Saved presets(4)", " chill(1)", " rave(2)", "  deep(1)", "External video(0)", "Tags(0)", "Playlists(0)"),
             labels(c)
         )
         val rave = c.rows(BrowseScope.Folder(BrowseSection.SAVED, "rave")).map { it.asset.name }
