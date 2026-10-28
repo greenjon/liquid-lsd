@@ -16,7 +16,7 @@ export const powerState = {
 
 // Viewer settings — renderer.js scales every audio signal by `react`
 export const viewerState = {
-  react: 2.0,
+  react: 1.0,
   announce: false,     // show the look and its FX on every change (off: only when asked, or after a control)
   awake: false,        // a screen wake lock is held
   syncMs: 0,           // SYNC: how late the sound reaches the viewer (speakers, Bluetooth), in ms
@@ -33,7 +33,10 @@ const SYNC_MIN = -100, SYNC_MAX = 400;
 const MODES = ['auto', 'on', 'off'];
 
 const TIME_STEPS = [8, 16, 32, 64];   // bars per look on the TIME dial
-const REACT_MIN = 0.25, REACT_MAX = 4.0, REACT_DEFAULT = 2.0;
+// 100% = the desktop's Audio Response at 100%. Auto gain levels the stream, so no boost is needed by default.
+const REACT_MIN = 0.25, REACT_MAX = 2.0, REACT_DEFAULT = 1.0;
+// Saved under a new key: values saved before auto gain (200% was the default) would run twice as hot.
+const REACT_KEY = 'lsd.react.agc';
 const STREAM_STATUS_URL = 'https://radio.spaz.org:8060/status-json.xsl';
 const STREAM_MOUNT = '/radio.ogg';
 
@@ -281,13 +284,13 @@ export function initUI() {
 
   // --- REACT: audio sensitivity ---
   const toDial = (k) => (k - REACT_MIN) / (REACT_MAX - REACT_MIN);
-  viewerState.react = Math.max(REACT_MIN, Math.min(REACT_MAX, Number(load('lsd.react', REACT_DEFAULT)) || REACT_DEFAULT));
+  viewerState.react = Math.max(REACT_MIN, Math.min(REACT_MAX, Number(load(REACT_KEY, REACT_DEFAULT)) || REACT_DEFAULT));
   const reactDial = makeDial(document.getElementById('reactDial'), {
     initial: toDial(viewerState.react),
     locked: () => live(),
     onChange: (v) => {
       viewerState.react = REACT_MIN + v * (REACT_MAX - REACT_MIN);
-      save('lsd.react', viewerState.react);
+      save(REACT_KEY, viewerState.react);
       if (powerState.on) message(`REACT ${Math.round(viewerState.react * 100)}%`);
     },
   });

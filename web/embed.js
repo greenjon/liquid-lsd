@@ -12,7 +12,7 @@ const MODES = ['auto', 'on', 'off'];
  * `hooks` come from the renderer: pause(), resume(), setQuality(floorIndex), frames(), isPaused().
  * Options (setOption(name, value)):
  *   quality        'auto' | 'low' | 'high'   low: no heavy looks, coarser picture; high: heavy looks always on
- *   reactivity     0.25 .. 4                 the REACT knob (2 = default)
+ *   reactivity     0.25 .. 2                 the REACT knob (1 = default; audio is auto-gained, so 1 suits any feed level)
  *   reducedMotion  'auto' | 'on' | 'off'
  *   live           boolean                   follow a desktop live broadcast (needs the network)
  *   sync           -100 .. 400 (ms)          delay the picture to match the speaker
@@ -29,7 +29,7 @@ export function installEmbedApi(hooks) {
       applyHeavy();
       hooks.setQuality(q === 'low' ? 2 : 0);
     },
-    reactivity(v) { viewerState.react = clamp(Number(v) || 2, 0.25, 4); },
+    reactivity(v) { viewerState.react = clamp(Number(v) || 1, 0.25, 2); },
     reducedMotion(v) {
       viewerState.reducedMode = MODES.includes(v) ? v : 'auto';
       viewerState.reducedNow = viewerState.reduced;

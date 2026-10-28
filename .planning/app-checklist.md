@@ -298,6 +298,7 @@ Known remaining literals: dropdown selected text, ParametersRenderer fills and g
 - [ ] While broadcasting from the desktop, the web TV shows LIVE and its controls are locked. The desktop uses the rotated relay token (Preferences > Web Broadcast); a wrong token shows [LIVE ERR].
 - [ ] Pull the network while the TV plays: snow and NO SIGNAL within a few seconds; plug it back: the radio and the picture come back within ~10 s.
 - [ ] On a track with a breakdown and drop, a calm look arrives in the breakdown and a hard look cuts in on the drop (not on every quiet moment).
+- [ ] Auto gain on the web TV (2026-10-28): REACT starts at 100% (range 25-200%). The picture should move about as much on a quiet show as on a loud one, and a lot more than before on quiet shows (a 90 s sample of the stream measured bass about 5x livelier than the old 200% default). Judge whether 100% is right for the radio or too busy, especially the `web-*` looks. Breakdowns still bring calm looks and drops still cut (they use the real level); pulling the network still gives snow. Reduced motion caps REACT at 60%.
 - [ ] Phase 8 CI is not done yet, so nothing to check there.
 
 ## 17. Before release

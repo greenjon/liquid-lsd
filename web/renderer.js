@@ -186,13 +186,15 @@ async function init() {
     evalCtx.frame = frameCount;
     evalCtx.dt = frameDt;
     evalCtx.bpm = bpm;
-    // REACT dial: scales every audio signal (not the beat), so quiet streams still move and loud ones calm down.
-    const k = viewerState.reducedNow ? Math.min(viewerState.react, 1.2) : viewerState.react; // reduced motion caps it
+    // REACT dial: scales every audio signal (not the beat) after auto gain and clamps to 0..1, like the
+    // desktop's Audio Response, so the dial is about taste, not the stream's level.
+    const k = viewerState.reducedNow ? Math.min(viewerState.react, 0.6) : viewerState.react; // reduced motion caps it
+    const r = (v) => Math.min(1, v * k);
     evalCtx.cv = {
-      audio_amp: heard.audio_amp * k, audio_bass: heard.audio_bass * k,
-      audio_mid: heard.audio_mid * k, audio_high: heard.audio_high * k,
-      audio_flux_amp: heard.audio_flux_amp * k, audio_flux_bass: heard.audio_flux_bass * k,
-      audio_flux_mid: heard.audio_flux_mid * k, audio_flux_high: heard.audio_flux_high * k,
+      audio_amp: r(heard.audio_amp), audio_bass: r(heard.audio_bass),
+      audio_mid: r(heard.audio_mid), audio_high: r(heard.audio_high),
+      audio_flux_amp: r(heard.audio_flux_amp), audio_flux_bass: r(heard.audio_flux_bass),
+      audio_flux_mid: r(heard.audio_flux_mid), audio_flux_high: r(heard.audio_flux_high),
       beatSine: Math.sin(beats * 2 * Math.PI), bpm,
     };
   }

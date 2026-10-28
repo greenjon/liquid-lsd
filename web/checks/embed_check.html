@@ -71,8 +71,8 @@ try {
   // Options
   const o = (n, v) => w.LSD.setOption(n, v);
   check('Unknown option is refused', o('nope', 1) === false);
-  o('reactivity', 3); check('reactivity', w.LSD.viewerState.react === 3, w.LSD.viewerState.react);
-  o('reactivity', 99); check('reactivity is clamped', w.LSD.viewerState.react === 4);
+  o('reactivity', 1.5); check('reactivity', w.LSD.viewerState.react === 1.5, w.LSD.viewerState.react);
+  o('reactivity', 99); check('reactivity is clamped', w.LSD.viewerState.react === 2);
   o('sync', 150); check('sync', w.LSD.viewerState.syncMs === 150);
   o('quality', 'low'); check('quality low: heavy looks off, coarser picture', w.LSD.viewerState.heavyMode === 'off' && w.LSD.renderSize()[2] <= 0.7, JSON.stringify(w.LSD.renderSize()));
   o('quality', 'auto'); check('quality auto', w.LSD.viewerState.heavyMode === 'auto');

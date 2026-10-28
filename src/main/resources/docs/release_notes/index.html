@@ -1550,10 +1550,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#audio-response-audioaudioenginekt-uiaudioenginepanelkt-uiapppreferencesstorekt" class="md-nav__link">
+  <a href="#audio-response-audioaudioenginekt-audioaudioagckt-uiaudioenginepanelkt-uiapppreferencesstorekt" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Audio Response (audio/AudioEngine.kt, ui/AudioEnginePanel.kt, ui/AppPreferencesStore.kt)
+        Audio Response (audio/AudioEngine.kt, audio/AudioAgc.kt, ui/AudioEnginePanel.kt, ui/AppPreferencesStore.kt)
       
     </span>
   </a>
@@ -1561,10 +1561,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#audio-auto-gain-audioaudioagckt-audioaudioenginekt-uiaudioenginepanelkt-uiapppreferencesstorekt" class="md-nav__link">
+  <a href="#audio-auto-gain-audioaudioagckt-audioaudioenginekt-uiapppreferencesstorekt-webdspjs-webrendererjs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Audio Auto Gain (audio/AudioAgc.kt, audio/AudioEngine.kt, ui/AudioEnginePanel.kt, ui/AppPreferencesStore.kt)
+        Audio Auto Gain (audio/AudioAgc.kt, audio/AudioEngine.kt, ui/AppPreferencesStore.kt, web/dsp.js, web/renderer.js)
       
     </span>
   </a>
@@ -7320,10 +7320,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#audio-response-audioaudioenginekt-uiaudioenginepanelkt-uiapppreferencesstorekt" class="md-nav__link">
+  <a href="#audio-response-audioaudioenginekt-audioaudioagckt-uiaudioenginepanelkt-uiapppreferencesstorekt" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Audio Response (audio/AudioEngine.kt, ui/AudioEnginePanel.kt, ui/AppPreferencesStore.kt)
+        Audio Response (audio/AudioEngine.kt, audio/AudioAgc.kt, ui/AudioEnginePanel.kt, ui/AppPreferencesStore.kt)
       
     </span>
   </a>
@@ -7331,10 +7331,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#audio-auto-gain-audioaudioagckt-audioaudioenginekt-uiaudioenginepanelkt-uiapppreferencesstorekt" class="md-nav__link">
+  <a href="#audio-auto-gain-audioaudioagckt-audioaudioenginekt-uiapppreferencesstorekt-webdspjs-webrendererjs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Audio Auto Gain (audio/AudioAgc.kt, audio/AudioEngine.kt, ui/AudioEnginePanel.kt, ui/AppPreferencesStore.kt)
+        Audio Auto Gain (audio/AudioAgc.kt, audio/AudioEngine.kt, ui/AppPreferencesStore.kt, web/dsp.js, web/renderer.js)
       
     </span>
   </a>
@@ -12935,15 +12935,16 @@
 <li><strong>Each stock source and effect now ships one default file</strong> (<code>stock_defaults/sources/&lt;id&gt;.json</code>, <code>stock_defaults/filters/&lt;id&gt;.json</code>) in the same shape as the default you save yourself, listing only what differs from the shader: knob targets, Metaknob targets, and the built-in audio responses. It replaces the separate recipe files and the knob tables that lived in code. Nothing changes on screen; a default you save still replaces the stock one, and Reset/Remove Saved Default goes back to it.</li>
 <li>Third-party shaders are unchanged: their knobs are worked out each time they load, and nothing is written until you choose Save as Default.</li>
 </ul>
-<h3 id="audio-response-audioaudioenginekt-uiaudioenginepanelkt-uiapppreferencesstorekt">Audio Response (<code>audio/AudioEngine.kt</code>, <code>ui/AudioEnginePanel.kt</code>, <code>ui/AppPreferencesStore.kt</code>)</h3>
+<h3 id="audio-response-audioaudioenginekt-audioaudioagckt-uiaudioenginepanelkt-uiapppreferencesstorekt">Audio Response (<code>audio/AudioEngine.kt</code>, <code>audio/AudioAgc.kt</code>, <code>ui/AudioEnginePanel.kt</code>, <code>ui/AppPreferencesStore.kt</code>)</h3>
 <ul>
-<li><strong>One Audio Response slider</strong> in Preferences &gt; Audio Hardware (0% to 200%, default 100%, saved) sets how strongly everything that follows the music moves. It scales the Amp, Bass, Mid, High and Flux signals after auto gain, so every audio modulator follows it the same way, whether it came with a source or you added it. 0% means nothing follows the music; above 100% quiet passages move more and loud ones reach the top sooner. Beat detection, LFOs and the beat clock are not affected.</li>
-<li>Use it instead of Input Gain to calm the picture down or wake it up: with Auto Gain on, the audio signals level themselves, so Input Gain mostly changes what beat detection hears. Input Gain now has a tooltip saying so.</li>
+<li><strong>One Audio Response slider</strong> in Preferences &gt; Audio Hardware (0% to 200%, default 100%, saved) sets how strongly everything that follows the music moves, and it is the only reactivity setting. It scales the Amp, Bass, Mid, High and Flux signals after auto gain, so every audio modulator follows it the same way, whether it came with a source or you added it. 0% means nothing follows the music; above 100% quiet passages move more and loud ones reach the top sooner. Beat detection, LFOs and the beat clock are not affected. Under it, a readout shows how much auto gain is lifting each band.</li>
+<li><strong>Input Gain is now Input Trim</strong>, and it sits with the input settings: it is for setting up the input, not for how much the picture moves (auto gain levels the audio signals, so turning it down does not calm the picture). When the input is too quiet for beat detection (the Sync State says SILENT while the meter shows sound), the panel says so and suggests raising Input Trim or the system input volume.</li>
 </ul>
-<h3 id="audio-auto-gain-audioaudioagckt-audioaudioenginekt-uiaudioenginepanelkt-uiapppreferencesstorekt">Audio Auto Gain (<code>audio/AudioAgc.kt</code>, <code>audio/AudioEngine.kt</code>, <code>ui/AudioEnginePanel.kt</code>, <code>ui/AppPreferencesStore.kt</code>)</h3>
+<h3 id="audio-auto-gain-audioaudioagckt-audioaudioenginekt-uiapppreferencesstorekt-webdspjs-webrendererjs">Audio Auto Gain (<code>audio/AudioAgc.kt</code>, <code>audio/AudioEngine.kt</code>, <code>ui/AppPreferencesStore.kt</code>, <code>web/dsp.js</code>, <code>web/renderer.js</code>)</h3>
 <ul>
-<li><strong>Audio-reactive parameters now respond the same at any input level.</strong> Amp, bass, mid and high (and their flux signals) used to be divided by a fixed scale, so a quiet feed barely moved anything and a hot one pinned everything at full. A new <strong>Auto Gain (AGC)</strong> option in Preferences &gt; Audio Hardware, on by default, tracks each band's recent peak (instant attack, about 8 seconds to let go) and normalizes against it, so the peaks of the music reach full scale whatever the level. Silence and room noise are not boosted (at most about 12x). <strong>AGC Headroom</strong> sets how hot it runs, and a readout shows the boost per band. Switch AGC off to get the old fixed scale back.</li>
-<li>Beat detection, downbeat detection and the silence gate still see the raw levels, so tempo tracking is unchanged. Settings are saved (<code>audioAgcEnabled</code>, <code>audioAgcHeadroom</code>). The web TV still uses the fixed scale.</li>
+<li><strong>Audio-reactive parameters now respond the same at any input level.</strong> Amp, bass, mid and high (and their flux signals) used to be divided by a fixed scale, so a quiet feed barely moved anything and a hot one pinned everything at full. Auto gain now tracks each band's recent peak (instant attack, about 8 seconds to let go) and normalizes against it, so the peaks of the music reach full scale whatever the level. Silence and room noise are not boosted (at most about 12x). It is always on and has no settings: the built-in responses are tuned for it.</li>
+<li>Beat detection, downbeat detection and the silence gate still see the raw levels, so tempo tracking is unchanged.</li>
+<li><strong>The web TV levels the music the same way</strong>, so a quiet radio show moves the picture as much as a loud one and looks move as they do in the desktop app. REACT now runs 25-200% and starts at 100% (it was 25-400%, starting at 200%, to make up for quiet shows), and a REACT you set before starts over at 100%. Breakdowns, drops and the no-signal snow still go by the real level. For apps embedding the TV, the <code>reactivity</code> option is now 0.25-2 with 1 as the default.</li>
 </ul>
 <h3 id="macos-log-cleanup-and-syphon-renderingtexturestreamerkt-renderingshaderkt-mainkt">macOS Log Cleanup and Syphon (<code>rendering/TextureStreamer.kt</code>, <code>rendering/Shader.kt</code>, <code>Main.kt</code>)</h3>
 <ul>
@@ -12972,7 +12973,6 @@
 <ul>
 <li><strong>Click the TV to turn it on.</strong> The whole set is the power switch: any click on a TV that is off turns it on, and a click on the cabinet (not the picture or the other controls) turns it off.</li>
 <li><strong>Quieter by default:</strong> the TV no longer names every new look on screen; MENU › Announce looks turns that back on. Looks you pick with CH or FX are still named, and I shows the info any time.</li>
-<li><strong>Livelier by default:</strong> REACT starts at 200% (the range is now 25-400%), since most radio shows move the picture too little at 100%.</li>
 <li><strong>CH ▲ / ▼ work like a TV's channel buttons.</strong> ▲ goes to the next channel number and ▼ to the one before it, so ▼ then ▲ always brings you back where you were (a channel you've already seen keeps its FX chain). Before, ▼ went back to whatever look had been on before, and ▲ to a random one.</li>
 <li><strong>Fullscreen and microphone from the keyboard or MENU.</strong> <code>S</code> (or MENU › Fullscreen, or a double-click on the picture) toggles fullscreen. <code>A</code> (or MENU › Input) switches the picture from the radio to your microphone, so it follows the music in the room; the browser asks permission first, the mic is only analysed (never played back, so no feedback), and turning the TV off puts the radio back.</li>
 <li><strong>Clearer labels</strong> under the TV's buttons and knobs, and turning a knob no longer switches the TV off when you let go over it.</li>
@@ -13027,7 +13027,7 @@
 <ul>
 <li><strong>Change channel.</strong> CH ▲ ▼ on the TV (or the arrow keys, or a swipe on the picture) skips to the next look or back to the previous one, with the FX chain it had.</li>
 <li><strong>FX</strong> swaps the FX chain on the look on air; <strong>HOLD</strong> keeps the look until you release it.</li>
-<li><strong>TIME</strong> sets how long each look holds (8, 16, 32 or 64 bars); <strong>REACT</strong> sets how strongly the picture reacts to the music (25-400%, 200% by default), for quiet or very loud streams. Both are remembered.</li>
+<li><strong>TIME</strong> sets how long each look holds (8, 16, 32 or 64 bars); <strong>REACT</strong> sets how strongly the picture reacts to the music (25-200%, 100% by default), to taste. Both are remembered.</li>
 <li><strong>On-screen display:</strong> on every change the screen shows the channel, the look and its FX chain in phosphor green, plus the track playing on the radio. Click the picture or press <code>I</code> to see it again.</li>
 <li><strong>The heaviest looks only play on computers that can run them.</strong> At power-on the TV times one frame of its heaviest fractal (about a tenth of a second). Pseudo-Kleinian, Nebula, Apollonian, Hyper Slice, Mandelbulb, Icosa, Mandelbox, Lenia and Reaction-Diffusion only join the rotation if that frame is quick (discrete graphics, Apple Silicon, fast integrated chips); laptops with basic integrated graphics and phones keep the lighter looks. Measured on an Intel UHD (Tiger Lake GT1): 52 ms, so those stay off there.</li>
 <li><strong>Smoother on slower computers and phones.</strong> The web TV renders at a lower resolution when the graphics card can't keep up (and back up when it can), and never above 1080p internally, so 4K screens and laptops stay fluid. The next look's shaders load during the current one, so changes no longer stutter or show a look without its effects for a moment.</li>

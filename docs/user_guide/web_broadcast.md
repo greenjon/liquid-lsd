@@ -74,7 +74,7 @@ The standalone browser client (`web/index.html`) presents the visualizer in a re
 | **FX** | Puts the next FX chain on the look on air | `F` |
 | **HOLD** | Keeps the current look until you press it again (the background keeps changing) | `H` or `Space`; long-press the picture |
 | **TIME** | How long each look holds: 8, 16, 32 or 64 bars (drag, scroll or click) | `[` `]` |
-| **REACT** | How strongly the picture reacts to the music, 25-400%, 200% to start (double-click for 200%) | `-` `=` |
+| **REACT** | How strongly the picture reacts to the music, 25-200%, 100% to start (double-click for 100%). The TV levels quiet and loud shows itself, so this is about taste, not volume | `-` `=` |
 
 Click or tap the picture (or press `I`) to show the channel, the look, its FX chain and the track playing on the radio. TIME and REACT are remembered in the browser.
 

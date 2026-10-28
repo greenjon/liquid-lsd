@@ -6,16 +6,19 @@ import { EnergyWatch } from './energy.js';
 import { embed } from './embedmode.js';
 
 export const cvState = {
-  // The audio_* signals are scaled exactly as the desktop's AudioEngine publishes them, so a
-  // preset's depths mean the same thing in both places.
-  audio_amp:      0.0,   // broadband RMS / 0.25, range 0..1
-  audio_bass:     0.0,   // low-frequency RMS (<= 150 Hz) / 0.25, range 0..1
-  audio_mid:      0.0,   // mid-frequency RMS (~1 kHz) / 0.25, range 0..1
-  audio_high:     0.0,   // high-frequency RMS (>= 5 kHz) / 0.25, range 0..1
-  audio_flux_amp:  0.0,  // weighted onset strength (2 bass + 0.8 mid + 0.3 high flux) / 0.1
-  audio_flux_bass: 0.0,  // half-wave rectified RMS growth since the last frame / 0.05
+  // The audio_* signals are normalised exactly as the desktop's AudioEngine publishes them (auto gain,
+  // see AudioAgc below), so a preset's depths mean the same thing in both places.
+  audio_amp:      0.0,   // broadband RMS / its auto-gain divisor, range 0..1
+  audio_bass:     0.0,   // low-frequency RMS (<= 150 Hz), same
+  audio_mid:      0.0,   // mid-frequency RMS (~1 kHz), same
+  audio_high:     0.0,   // high-frequency RMS (>= 5 kHz), same
+  audio_flux_amp:  0.0,  // weighted onset strength (2 bass + 0.8 mid + 0.3 high flux) / 0.1, stretched like amp
+  audio_flux_bass: 0.0,  // half-wave rectified RMS growth since the last frame / 0.05, stretched like bass
   audio_flux_mid:  0.0,
   audio_flux_high: 0.0,
+  // The same signals at the fixed scales, for the detectors (breakdowns, the fallback beat envelope, no
+  // signal): like the desktop's, they must hear the real level, which auto gain would hide.
+  raw: { audio_amp: 0, audio_bass: 0, audio_flux_amp: 0 },
   totalBeats:     0.0,   // standalone beat clock (beattrack.js): locked to the music's beats when it can be
   bpm:            120.0, // tracked tempo (120 until there is one)
   beatLocked:     false, // true while the clock follows a confidently tracked beat
@@ -58,38 +61,72 @@ const AMP_SCALE = 0.25;
 const FLUX_BAND_SCALE = 0.05;
 const FLUX_AMP_SCALE = 0.1;
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
+const FIXED = { amp: AMP_SCALE, bass: AMP_SCALE, mid: AMP_SCALE, high: AMP_SCALE };
 
 /**
- * Turns this frame's band RMS values (and last frame's) into the desktop's CV signals
- * (AudioEngine: fixed scales, half-wave rectified flux). Pure, so it is unit-tested in node.
+ * Per-band auto gain, a port of the desktop's AudioAgc: each band follows a peak envelope of its RMS
+ * (instant attack, 8 s release) and is divided by `max(envelope * 0.85, 0.02)`, so the recent peaks of
+ * the music land just over 1.0 whatever the stream's level. Pure, so it is unit-tested in node.
  */
-export function bandSignals(rms, prev) {
+export class AudioAgc {
+  static HEADROOM = 0.85;
+  static FLOOR = 0.02;
+  static RELEASE_SEC = 8.0;
+
+  constructor() { this.envelope = { amp: 0, bass: 0, mid: 0, high: 0 }; }
+
+  /** Feeds this frame's band RMS values (`dt` seconds since the last) and returns the divisors to use. */
+  update(rms, dt) {
+    const decay = Math.exp(-dt / AudioAgc.RELEASE_SEC);
+    const out = {};
+    for (const band of ['amp', 'bass', 'mid', 'high']) {
+      this.envelope[band] = Math.max(rms[band], this.envelope[band] * decay);
+      out[band] = Math.max(this.envelope[band] * AudioAgc.HEADROOM, AudioAgc.FLOOR);
+    }
+    return out;
+  }
+
+  reset() { for (const band in this.envelope) this.envelope[band] = 0; }
+}
+
+/**
+ * Turns this frame's band RMS values (and last frame's) into the desktop's CV signals (AudioEngine:
+ * level / divisor, half-wave rectified flux over its fixed scale stretched by the same ratio as the
+ * band's level). `div` defaults to the fixed scales. Pure, so it is unit-tested in node.
+ */
+export function bandSignals(rms, prev, div = FIXED) {
   const bassFlux = Math.max(0, rms.bass - prev.bass);
   const midFlux  = Math.max(0, rms.mid  - prev.mid);
   const highFlux = Math.max(0, rms.high - prev.high);
   const onsetStrength = bassFlux * 2.0 + midFlux * 0.8 + highFlux * 0.3;
+  const stretch = (band) => div[band] / AMP_SCALE;
   return {
-    audio_amp:  clamp01(rms.amp  / AMP_SCALE),
-    audio_bass: clamp01(rms.bass / AMP_SCALE),
-    audio_mid:  clamp01(rms.mid  / AMP_SCALE),
-    audio_high: clamp01(rms.high / AMP_SCALE),
-    audio_flux_amp:  clamp01(onsetStrength / FLUX_AMP_SCALE),
-    audio_flux_bass: clamp01(bassFlux / FLUX_BAND_SCALE),
-    audio_flux_mid:  clamp01(midFlux  / FLUX_BAND_SCALE),
-    audio_flux_high: clamp01(highFlux / FLUX_BAND_SCALE),
+    audio_amp:  clamp01(rms.amp  / div.amp),
+    audio_bass: clamp01(rms.bass / div.bass),
+    audio_mid:  clamp01(rms.mid  / div.mid),
+    audio_high: clamp01(rms.high / div.high),
+    audio_flux_amp:  clamp01(onsetStrength / (FLUX_AMP_SCALE * stretch('amp'))),
+    audio_flux_bass: clamp01(bassFlux / (FLUX_BAND_SCALE * stretch('bass'))),
+    audio_flux_mid:  clamp01(midFlux  / (FLUX_BAND_SCALE * stretch('mid'))),
+    audio_flux_high: clamp01(highFlux / (FLUX_BAND_SCALE * stretch('high'))),
   };
 }
 
+const agc = new AudioAgc();
 const prevRms = { bass: 0, mid: 0, high: 0 };
 
-function updateAmplitudes() {
+function updateAmplitudes(dt) {
   const rms = {
     amp:  calcRms(broadbandAnalyser, broadBuf),
     bass: calcRms(bassAnalyser,      bassBuf),
     mid:  calcRms(midAnalyser,       midBuf),
     high: calcRms(highAnalyser,      highBuf),
   };
-  Object.assign(cvState, bandSignals(rms, prevRms));
+  const raw = bandSignals(rms, prevRms);
+  cvState.raw.audio_amp = raw.audio_amp;
+  cvState.raw.audio_bass = raw.audio_bass;
+  cvState.raw.audio_flux_amp = raw.audio_flux_amp;
+  Object.assign(cvState, bandSignals(rms, prevRms, agc.update(rms, dt)));
   prevRms.bass = rms.bass; prevRms.mid = rms.mid; prevRms.high = rms.high;
 }
 
@@ -135,7 +172,7 @@ const noStatic = typeof location !== 'undefined' && new URLSearchParams(location
 
 function updateSignal(dt) {
   if (embed) { cvState.noSignal = false; return; } // the host plays the radio; silence is just a quiet picture
-  quietFor = analysisReady && cvState.audio_amp > SILENT_AMP ? 0 : quietFor + dt;
+  quietFor = analysisReady && cvState.raw.audio_amp > SILENT_AMP ? 0 : quietFor + dt;
   cvState.noSignal = wantAudio && !noStatic && quietFor > 4;
   const now = performance.now();
   if (cvState.noSignal && !micOn && now - lastRetryMs > 10000) {
@@ -155,13 +192,13 @@ function reconnect() {
 export function tick(dt) {
   updateSignal(dt);
   if (analysisReady) {
-    updateAmplitudes();
-    energy.update(cvState.audio_bass, cvState.audio_amp, dt);
+    updateAmplitudes(dt);
+    energy.update(cvState.raw.audio_bass, cvState.raw.audio_amp, dt);
     cvState.section = energy.section;
     cvState.drops = energy.drops;
     cvState.energy = energy; // short / long levels, for tuning (window.LSD.cvState.energy)
     // Without the worklet, the per-frame onset strength is the envelope (coarser timing, same tracker).
-    if (!onsetFromWorklet) tracker.push(cvState.audio_flux_amp, performance.now() / 1000);
+    if (!onsetFromWorklet) tracker.push(cvState.raw.audio_flux_amp, performance.now() / 1000);
   }
   updateBeat();
 }
@@ -367,7 +404,9 @@ export async function stopAudio() {
   cvState.audio_flux_bass = 0.0;
   cvState.audio_flux_mid = 0.0;
   cvState.audio_flux_high = 0.0;
+  cvState.raw.audio_amp = cvState.raw.audio_bass = cvState.raw.audio_flux_amp = 0.0;
   prevRms.bass = prevRms.mid = prevRms.high = 0;
+  agc.reset(); // the next stream levels itself afresh
 }
 
 // volume: 0.0 (muted) to 1.0 (full) — uses squared curve for perceptual linearity

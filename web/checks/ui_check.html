@@ -27,7 +27,7 @@ try {
   check('First power-on plays the Liquid LSD ident', d.getElementById('ident').classList.contains('show'));
   await sleep(3800);
   check('ANNOUNCE LOOKS is off by default: no look name after power on', !osd('osd-name').shown, JSON.stringify(osd('osd-name')));
-  check('REACT starts at 200%', w.LSD.viewerState.react === 2, w.LSD.viewerState.react);
+  check('REACT starts at 100%', w.LSD.viewerState.react === 1, w.LSD.viewerState.react);
   key('i');
   check('I shows the channel', osd('osd-ch').shown && /^CH \d+/.test(osd('osd-ch').text), JSON.stringify(osd('osd-ch')));
   check('I names the look', osd('osd-name').text.length > 0, osd('osd-name').text);
@@ -39,8 +39,8 @@ try {
   w.dispatchEvent(new w.MouseEvent('mouseup', { bubbles: true, clientY: 290 }));
   d.getElementById('tv-body').dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
   check('A knob drag released over the TV leaves it on', w.LSD.powerState.on);
-  dial.dispatchEvent(new w.MouseEvent('dblclick', { bubbles: true })); // double-click: back to 200%
-  check('Double-click puts REACT back to 200%', w.LSD.viewerState.react === 2, w.LSD.viewerState.react);
+  dial.dispatchEvent(new w.MouseEvent('dblclick', { bubbles: true })); // double-click: back to 100%
+  check('Double-click puts REACT back to 100%', w.LSD.viewerState.react === 1, w.LSD.viewerState.react);
   check('Screen kept awake while on (where the browser has wake lock)', !('wakeLock' in w.navigator) || w.LSD.viewerState.awake);
   const meta = w.navigator.mediaSession?.metadata;
   check('Lock screen shows the station and the look', !w.navigator.mediaSession || (meta?.artist === 'Spaz Radio' && /Liquid LSD/.test(meta.album)), meta ? `${meta.title} / ${meta.album}` : 'none');
