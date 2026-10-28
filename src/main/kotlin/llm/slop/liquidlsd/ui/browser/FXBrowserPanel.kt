@@ -24,7 +24,6 @@ import llm.slop.liquidlsd.ui.ToastOverlay
 import llm.slop.liquidlsd.ui.FileSystemManager
 import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.LibraryPanel
-import llm.slop.liquidlsd.ui.SavePresetModal
 import llm.slop.liquidlsd.ui.UITheme
 import llm.slop.liquidlsd.ui.itemTooltip
 import llm.slop.liquidlsd.ui.pushOpenDropdownPadding
@@ -76,18 +75,7 @@ object FXBrowserPanel {
                         val hasFx = fx != null && fx.id.isNotEmpty()
                         val label = if (fx != null && fx.id.isNotEmpty()) "Slot $slotNum: ${fx.displayName}" else "Slot $slotNum: Empty"
                         if (ImGui.menuItem(label, "", false, hasFx) && fx != null) {
-                            chain.toFxSlotDto(i)?.let { slotDto ->
-                                SavePresetModal.request(
-                                    title = "Save FX Slot Preset As",
-                                    confirmLabel = "Save",
-                                    defaultName = fx.displayName.lowercase().replace(" ", "_").ifBlank { "fx_preset" },
-                                    targetDir = FileSystemManager.getFxPresetsRoot(),
-                                    extension = "lsdfx"
-                                ) { name, tags ->
-                                    val file = File(FileSystemManager.getFxPresetsRoot(), "$name.lsdfx")
-                                    session.presetRepository.saveFxPresetAsync(file, name, slotDto, tags)
-                                }
-                            }
+                            llm.slop.liquidlsd.ui.FxChainHeader.openSaveSlotAsModal(session, chain, i)
                         }
                     }
                     ImGui.endMenu()

@@ -38,7 +38,7 @@ object BrowseCatalogs {
             BrowseKind.SRC -> listOf(VisualSourceRegistry.availableSources.toList(), VisualSourceRegistry.compileErrors.keys.toSet(), FileSystemManager.scanAllPresets(), playlistAssets, ExternalVideoDiscovery.availableServers.value)
             BrowseKind.FX -> listOf(ISFFilterRegistry.availableFilters, FileSystemManager.scanAllFxPresets(), FileSystemManager.scanAllFxChains(), playlistAssets)
             BrowseKind.TRANS -> listOf(ISFTransitionRegistry.availableTransitions, FileSystemManager.scanAllTransitionPresets(), playlistAssets)
-        } + BrowseFavorites.version(kind) + BrowseRecents.version(kind) + playlistAssets.map { File(it.path).lastModified() }
+        } + BrowseFavorites.version(kind) + BrowseRecents.version(kind) + playlistAssets.map { File(it.path).lastModified() } + savedFolders(kind)
         val cached = caches[kind]
         if (cached != null && cached.inputs == inputs) return cached.catalog
         return build(kind, playlistAssets).also { caches[kind] = Cache(inputs, it) }
@@ -60,8 +60,12 @@ object BrowseCatalogs {
             val items = try { PlaylistParser.parseFile(File(a.path)) } catch (e: Exception) { emptyList() }
             BrowsePlaylist(a.name, a.path, items)
         }
-        return BrowseCatalog(kind, entries, playlists, BrowseFavorites.keys(kind), BrowseRecents.keys(kind).toList())
+        return BrowseCatalog(kind, entries, playlists, BrowseFavorites.keys(kind), BrowseRecents.keys(kind).toList(), savedFolders(kind))
     }
+
+    /** The folders on disk of each saved section of [kind], empty ones included. */
+    private fun savedFolders(kind: BrowseKind): Map<BrowseSection, List<String>> =
+        BrowseCatalog.sectionsFor(kind).mapNotNull { section -> LibraryFolders.rootOf(kind, section)?.let { section to LibraryFolders.dirsUnder(it) } }.toMap()
 
     private fun srcEntries(): List<BrowseEntry> {
         val root = FileSystemManager.getPresetsRoot()

@@ -9,7 +9,14 @@ crate-style groupings. We take a small subset of Mixxx's library management, not
   and recents stores it updates), not `presets/`. Rename and delete popups use it; `drawRenameAssetPopup`,
   `drawDeleteAssetConfirmationPopup` and `BrowserDock.drawPopups` now take the `Mixer` for its `fxChains`. Also follows
   `FxOps` slot sources (saved singles in slots), which the plan below didn't list. Tests: `LibraryRefsTest`.
-- Phases 2-4 not started.
+- **Phase 1 committed** f2672e3.
+- **Phase 2 DONE 2026-10-27** (uncommitted, tests pass, unseen in app): `LibraryFolders` (disk ops, `saveDirFor`), `FolderPopups`
+  (New/Rename/Delete folder, move conflict dialog), tree folder-plus button, folder-node drag/drop/context menu, row **Move to**,
+  `BrowseCatalog.folders` for empty folders, Save As Folder dropdown everywhere (FX single saves deduplicated into
+  `FxChainHeader.openSaveSlotAsModal`), trash via `Desktop`/`gio trash` with `-Dlsd.noTrash` in tests, delete dialogs show impact.
+  Tests: `LibraryFoldersTest`. Not done: drag of a folder node onto a section/folder in another kind is just ignored; no keyboard
+  delete for folder nodes.
+- Phases 3-4 not started.
 
 ## Decisions (2026-10-27)
 

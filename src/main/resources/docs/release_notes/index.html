@@ -1264,6 +1264,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#folders-in-the-library-uibrowserlibraryfolderskt-uibrowserfolderpopupskt-uibrowserbrowserpanekt-uisavepresetmodalkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Folders in the Library (ui/browser/LibraryFolders.kt, ui/browser/FolderPopups.kt, ui/browser/BrowserPane.kt, ui/SavePresetModal.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#renaming-or-deleting-a-saved-item-keeps-the-library-consistent-uibrowserlibraryrefskt-uibrowserbrowserpopuphandlerkt-presetspresetmanagerkt-uiplaylistmanagerkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6979,6 +6990,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#folders-in-the-library-uibrowserlibraryfolderskt-uibrowserfolderpopupskt-uibrowserbrowserpanekt-uisavepresetmodalkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Folders in the Library (ui/browser/LibraryFolders.kt, ui/browser/FolderPopups.kt, ui/browser/BrowserPane.kt, ui/SavePresetModal.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#renaming-or-deleting-a-saved-item-keeps-the-library-consistent-uibrowserlibraryrefskt-uibrowserbrowserpopuphandlerkt-presetspresetmanagerkt-uiplaylistmanagerkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -12669,6 +12691,13 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="folders-in-the-library-uibrowserlibraryfolderskt-uibrowserfolderpopupskt-uibrowserbrowserpanekt-uisavepresetmodalkt">Folders in the Library (<code>ui/browser/LibraryFolders.kt</code>, <code>ui/browser/FolderPopups.kt</code>, <code>ui/browser/BrowserPane.kt</code>, <code>ui/SavePresetModal.kt</code>)</h3>
+<ul>
+<li><strong>New: manage folders from the Library.</strong> The saved sections (Saved presets, Saved single FX, Saved chains, Saved transitions) now take folders made in the app: the folder-plus button above the tree, or <strong>New Folder...</strong> on a section or folder's right-click menu. The same menu has <strong>Rename Folder...</strong>, <strong>Delete Folder...</strong> and <strong>Reveal in File Manager</strong>. Empty folders show in the tree.</li>
+<li><strong>Move items between folders</strong>: drag rows (or a multi-selection) onto a folder, or use <strong>Move to</strong> in a row's menu. Drag a folder onto another to move it. If the destination already has an item with that name, you choose <strong>Keep both</strong> (the moved one gets <code>_2</code>) or <strong>Skip</strong>. Playlists, queues, Favorites, Recent and loaded decks and chains all follow the move.</li>
+<li><strong>Save As picks the folder.</strong> The save dialog for presets, FX, chains and transitions has a <strong>Folder</strong> dropdown. It starts in the folder of what you loaded, so a variation lands next to the original, else in the folder selected in the Library, else at the top level. Saving used to always go to the top level.</li>
+<li><strong>Deleting goes to the system trash</strong> where there is one (macOS, Windows, and Linux through <code>gio</code>), for single items and whole folders. The delete confirmation now names the playlists and queues the items are in, and deleting a folder says how many items it holds.</li>
+</ul>
 <h3 id="renaming-or-deleting-a-saved-item-keeps-the-library-consistent-uibrowserlibraryrefskt-uibrowserbrowserpopuphandlerkt-presetspresetmanagerkt-uiplaylistmanagerkt">Renaming or Deleting a Saved Item Keeps the Library Consistent (<code>ui/browser/LibraryRefs.kt</code>, <code>ui/browser/BrowserPopupHandler.kt</code>, <code>presets/PresetManager.kt</code>, <code>ui/PlaylistManager.kt</code>)</h3>
 <ul>
 <li><strong>Fixed: renaming a saved FX single, FX chain or transition broke every playlist entry that pointed at it.</strong> Only deck presets had their playlists updated. Now all saved kinds do.</li>

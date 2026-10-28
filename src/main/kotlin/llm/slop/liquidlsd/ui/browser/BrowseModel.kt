@@ -84,14 +84,16 @@ fun stepTreeCursor(visible: List<BrowseScope>, current: BrowseScope?, delta: Int
  * the panel builds a new catalog when its upstream lists change.
  *
  * [favorites] is null when the kind has no favorites store, in which case the tree has no Favorites folder. [recent] (entry keys,
- * newest first) is null when the kind keeps no history, in which case the tree has no Recent folder.
+ * newest first) is null when the kind keeps no history, in which case the tree has no Recent folder. [folders] lists each saved
+ * section's folders on disk, so an empty folder still has a tree row.
  */
 class BrowseCatalog(
     val kind: BrowseKind,
     private val entries: List<BrowseEntry>,
     private val playlists: List<BrowsePlaylist> = emptyList(),
     private val favorites: Set<String>? = null,
-    private val recent: List<String>? = null
+    private val recent: List<String>? = null,
+    private val folders: Map<BrowseSection, List<String>> = emptyMap()
 ) {
     private val byPath: Map<String, BrowsePlaylist> = playlists.associateBy { it.path }
 
@@ -184,7 +186,7 @@ class BrowseCatalog(
     }
 
     private fun folderNodes(section: BrowseSection, inSection: List<BrowseEntry>): List<BrowseNode> {
-        val folders = inSection.map { it.folder }.filter { it.isNotEmpty() }
+        val folders = (inSection.map { it.folder } + folders[section].orEmpty()).filter { it.isNotEmpty() }
             .flatMap { path -> path.split('/').runningReduce { acc, seg -> "$acc/$seg" } }
             .distinct()
             .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it })

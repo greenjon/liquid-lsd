@@ -7,6 +7,9 @@ import llm.slop.liquidlsd.models.toDto
 import llm.slop.liquidlsd.presets.TransitionOps
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.isf.ISFAutoBindEngine
+import llm.slop.liquidlsd.ui.browser.BrowseKind
+import llm.slop.liquidlsd.ui.browser.BrowseSection
+import llm.slop.liquidlsd.ui.browser.LibraryFolders
 import java.io.File
 
 /** Saving the mixer's current transition as a `.lsdtrans` preset, shared by the Library "+", the Mixer TRANS tab and the unified browser pane. */
@@ -27,10 +30,11 @@ object TransitionSave {
             title = "Save Transition Preset As",
             confirmLabel = "Save",
             defaultName = current.displayName.lowercase().replace(" ", "_"),
-            targetDir = FileSystemManager.getTransitionsRoot(),
-            extension = "lsdtrans"
+            targetDir = LibraryFolders.saveDirFor(BrowseKind.TRANS, BrowseSection.SAVED, TransitionOps.presetSourceFile(mixer)),
+            extension = "lsdtrans",
+            folderRoot = FileSystemManager.getTransitionsRoot()
         ) { name, tags ->
-            val file = File(FileSystemManager.getTransitionsRoot(), "$name.lsdtrans")
+            val file = File(SavePresetModal.directory, "$name.lsdtrans")
             session.presetRepository.saveTransitionPresetAsync(file, name, slotDto, tags)
             LibraryPanel.refreshAssets()
         }

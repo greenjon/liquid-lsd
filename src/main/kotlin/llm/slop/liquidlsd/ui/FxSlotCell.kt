@@ -381,20 +381,7 @@ object FxSlotCell {
         if (ImGui.menuItem("Replace…")) {
             onOpenBrowse(slotIndex)
         }
-        if (ImGui.menuItem("Save as FX Preset…", "", false, fx != null)) {
-            chain.toFxSlotDto(slotIndex)?.let { slotDto ->
-                SavePresetModal.request(
-                    title = "Save FX Slot Preset As",
-                    confirmLabel = "Save",
-                    defaultName = fx?.displayName?.lowercase()?.replace(" ", "_")?.ifBlank { null } ?: "fx_preset",
-                    targetDir = FileSystemManager.getFxPresetsRoot(),
-                    extension = "lsdfx"
-                ) { name, tags ->
-                    val file = File(FileSystemManager.getFxPresetsRoot(), "$name.lsdfx")
-                    session.presetRepository.saveFxPresetAsync(file, name, slotDto, tags)
-                }
-            }
-        }
+        if (ImGui.menuItem("Save as FX Preset…", "", false, fx != null)) FxChainHeader.openSaveSlotAsModal(session, chain, slotIndex)
         ImGui.separator()
         if (ImGui.menuItem("Copy Slot", "", false, fx != null)) {
             chain.toFxSlotDto(slotIndex)?.let { ClipboardManager.copyFxSlot(it) }

@@ -9,6 +9,9 @@ import llm.slop.liquidlsd.presets.DeckScope
 import llm.slop.liquidlsd.presets.DeckSlot
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
+import llm.slop.liquidlsd.ui.browser.BrowseKind
+import llm.slop.liquidlsd.ui.browser.BrowseSection
+import llm.slop.liquidlsd.ui.browser.LibraryFolders
 
 /**
  * Manages deck preset workflows: saving, loading, ejecting, copying/moving/swapping,
@@ -18,7 +21,8 @@ class DeckPresetController(
     private val session: SessionContext,
     private val popupManager: PopupManager
 ) {
-    fun saveDeckPreset(mixer: Mixer, name: String, deck: Deck, isDeckA: Boolean, tags: List<String>? = null) {
+    /** Saves [deck] as [name]: into [dir] when given (Save As picked a folder), else back to its own file or the presets root. */
+    fun saveDeckPreset(mixer: Mixer, name: String, deck: Deck, isDeckA: Boolean, tags: List<String>? = null, dir: File? = null) {
         if (deck.source is llm.slop.liquidlsd.rendering.ExternalVideoSource) return
         val cleanName = name.removeSuffix(".lsd").trim()
         if (cleanName.isBlank()) return
@@ -27,7 +31,8 @@ class DeckPresetController(
         val resolvedTags = tags ?: slot?.let { session.presetManager.cachedDto(it)?.tags } ?: emptyList()
 
         val dto = deck.toDto(cleanName, resolvedTags)
-        val file = slot?.let { session.presetManager.saveFileFor(it, cleanName) } ?: File("library/presets/$cleanName.lsd")
+        val file = dir?.let { File(it, "$cleanName.lsd") }
+            ?: slot?.let { session.presetManager.saveFileFor(it, cleanName) } ?: File("library/presets/$cleanName.lsd")
         slot?.let { session.presetManager.setActive(it, cleanName, dto, file) }
         val deckIndex = slot?.index ?: -1
         session.presetRepository.saveDeckPresetAsync(file, deck, cleanName, resolvedTags, deckIndex)
@@ -62,9 +67,11 @@ class DeckPresetController(
                 confirmLabel = "Save",
                 defaultName = defaultName,
                 defaultTags = defaultTags,
-                originalPath = activeName?.let { name -> slot?.let { session.presetManager.saveFileFor(it, name).path } }
+                originalPath = activeName?.let { name -> slot?.let { session.presetManager.saveFileFor(it, name).path } },
+                targetDir = LibraryFolders.saveDirFor(BrowseKind.SRC, BrowseSection.SAVED, slot?.let { session.presetManager.activeFile(it) }),
+                folderRoot = FileSystemManager.getPresetsRoot()
             ) { name, tags ->
-                saveDeckPreset(mixer, name, deck, isDeckA, tags)
+                saveDeckPreset(mixer, name, deck, isDeckA, tags, SavePresetModal.directory)
             }
         }
     }

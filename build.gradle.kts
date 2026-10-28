@@ -78,6 +78,11 @@ application {
     mainClass.set("llm.slop.liquidlsd.MainKt")
 }
 
+// Every test task: deletes never go to the developer's real system trash.
+tasks.withType<Test> {
+    systemProperty("lsd.noTrash", "true")
+}
+
 tasks.test {
     useJUnitPlatform {
         if (!project.hasProperty("testISF")) {

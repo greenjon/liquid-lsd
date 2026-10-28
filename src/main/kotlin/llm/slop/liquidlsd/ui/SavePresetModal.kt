@@ -20,6 +20,10 @@ object SavePresetModal {
     private var confirmButtonLabel = "Save"
     private var originalPath: String? = null
     private var targetDirectory: File? = null
+    private var folderRoot: File? = null
+
+    /** The folder the preset is saved in: read it in the save callback, since a Folder dropdown ([request]'s `folderRoot`) can change it. */
+    val directory: File get() = targetDirectory ?: FileSystemManager.getPresetsRoot()
     private var fileExtension: String = "lsd"
 
     private val nameBuffer = ImString(BUFFER_SIZE)
@@ -41,6 +45,7 @@ object SavePresetModal {
      * @param originalPath Optional path of the current preset file being edited/renamed.
      * @param targetDir Directory where the preset will be saved (defaults to presets root).
      * @param extension Extension for the preset file (defaults to "lsd").
+     * @param folderRoot When set, the modal shows a Folder dropdown of this section root and its folders, starting at [targetDir].
      * @param onSave Callback executed when the user confirms saving.
      */
     fun request(
@@ -51,6 +56,7 @@ object SavePresetModal {
         originalPath: String? = null,
         targetDir: File? = null,
         extension: String = "lsd",
+        folderRoot: File? = null,
         onSave: (name: String, tags: List<String>) -> Unit
     ) {
         titleText = title
@@ -58,6 +64,7 @@ object SavePresetModal {
         this.originalPath = originalPath
         this.targetDirectory = targetDir
         this.fileExtension = extension
+        this.folderRoot = folderRoot
 
         nameBuffer.set(defaultName)
         tagsBuffer.set(defaultTags.joinToString(", "))
@@ -66,6 +73,27 @@ object SavePresetModal {
         showOverwriteWarning = false
         lastCheckedName = defaultName.removeSuffix(".$extension").removeSuffix(".lsd").trim()
         pendingOpen = true
+    }
+
+    /** "Folder:" and a dropdown of [root] and its folders; picking one changes [directory] (and the overwrite check). */
+    private fun drawFolderCombo(root: File) {
+        val current = directory
+        fun labelOf(dir: File): String =
+            if (dir.absoluteFile == root.absoluteFile) "(top level)" else dir.relativeTo(root).path.replace('\\', '/')
+        ImGui.text("Folder:")
+        ImGui.pushItemWidth(ImGui.getContentRegionAvailX())
+        if (ImGui.beginCombo("##savePresetFolder", labelOf(current))) {
+            for (folder in listOf("") + llm.slop.liquidlsd.ui.browser.LibraryFolders.dirsUnder(root)) {
+                val dir = llm.slop.liquidlsd.ui.browser.LibraryFolders.dirOf(root, folder)
+                if (ImGui.selectable(labelOf(dir), dir.absoluteFile == current.absoluteFile)) {
+                    targetDirectory = dir
+                    showOverwriteWarning = false
+                }
+            }
+            ImGui.endCombo()
+        }
+        ImGui.popItemWidth()
+        itemTooltip("Where the file is saved. Starts in the folder of what you loaded, else the folder selected in the Library.")
     }
 
     /** Call every frame from the main render loop. */
@@ -100,6 +128,11 @@ object SavePresetModal {
         if (nameChanged && currentName != lastCheckedName) {
             showOverwriteWarning = false
             lastCheckedName = currentName
+        }
+
+        folderRoot?.let { root ->
+            ImGui.spacing()
+            drawFolderCombo(root)
         }
 
         ImGui.spacing()

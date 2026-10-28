@@ -31,8 +31,12 @@ object BrowserPopupHandler {
     var pendingOpenRenamePopup = false
     var pendingOpenDeletePopup = false
 
+    /** "They are used in ..." for the files about to be deleted, worked out once when the dialog opens. */
+    private var deleteImpact = ""
+
     fun openDeleteConfirmation(targets: List<AssetItem>) {
         if (targets.isEmpty()) return
+        deleteImpact = LibraryRefs.impact(targets.map { File(it.path) }).describe()
         deleteTargets = targets
         deleteTarget = targets.firstOrNull()
         pendingOpenDeletePopup = true
@@ -232,6 +236,12 @@ object BrowserPopupHandler {
      * pair view's Browse (the unified [BrowserPane] hosted there),
      * which stays on screen while the whole Library panel is skipped.
      */
+    /** Whether a delete can be taken back: from the system trash when there is one, never otherwise. */
+    private fun drawDeleteUndoNote() {
+        if (FileSystemManager.trashSupported()) ImGui.textDisabled("Deleted files go to the system trash.")
+        else ImGui.text("This can't be undone.")
+    }
+
     fun drawDeleteAssetConfirmationPopup(mixer: Mixer) {
         if (pendingOpenDeletePopup) {
             ImGui.openPopup("Delete##ConfirmDeleteAssetPopup")
@@ -263,12 +273,12 @@ object BrowserPopupHandler {
                 }
 
                 ImGui.text("Delete $typeStr '${target.name}'?")
-                ImGui.text("Warning: This will permanently delete this $typeStr from your library.")
-                ImGui.text("This action cannot be undone.")
+                if (deleteImpact.isNotEmpty()) ImGui.text("It is $deleteImpact; it will be removed from them.")
+                drawDeleteUndoNote()
             } else {
                 ImGui.text("Delete ${targets.size} items from library?")
-                ImGui.text("Warning: This will permanently delete these ${targets.size} files from your library.")
-                ImGui.text("This action cannot be undone.")
+                if (deleteImpact.isNotEmpty()) ImGui.text("They are $deleteImpact; they will be removed from them.")
+                drawDeleteUndoNote()
                 ImGui.spacing()
                 val previewNames = targets.take(4).joinToString(", ") { it.name }
                 val suffix = if (targets.size > 4) " ... and ${targets.size - 4} more" else ""

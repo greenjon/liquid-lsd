@@ -746,8 +746,45 @@ object FileSystemManager {
         }
     }
     
+    /** False keeps deletes out of the user's real trash; the Gradle test tasks set `-Dlsd.noTrash=true`. */
+    internal var useTrash = System.getProperty("lsd.noTrash") != "true"
+
+    private val gio: String? by lazy {
+        System.getenv("PATH").orEmpty().split(File.pathSeparatorChar).map { File(it, "gio") }.firstOrNull { it.canExecute() }?.path
+    }
+
+    private fun desktopTrash(): Boolean = try {
+        java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop().isSupported(java.awt.Desktop.Action.MOVE_TO_TRASH)
+    } catch (e: Throwable) {
+        false
+    }
+
     /**
-     * Deletes a file from disk.
+     * Whether deleting moves things to the system trash (so it can be undone there) rather than removing them for good: Java's own
+     * trash on macOS and Windows, `gio trash` on Linux desktops (Java has no trash there).
+     */
+    fun trashSupported(): Boolean = useTrash && (desktopTrash() || gio != null)
+
+    /** Moves [file] (or a whole folder) to the system trash; false when there is no trash or it failed, so the caller deletes instead. */
+    fun moveToTrash(file: File): Boolean {
+        if (!useTrash) return false
+        return try {
+            when {
+                desktopTrash() -> java.awt.Desktop.getDesktop().moveToTrash(file)
+                gio != null -> ProcessBuilder(gio, "trash", "--", file.absolutePath).redirectErrorStream(true).start().let { p ->
+                    p.inputStream.readAllBytes()
+                    p.waitFor() == 0 && !file.exists()
+                }
+                else -> false
+            }
+        } catch (e: Exception) {
+            logger.warn(e) { "Could not move ${file.name} to the trash; deleting it instead" }
+            false
+        }
+    }
+
+    /**
+     * Deletes a file from disk: to the system trash when there is one ([trashSupported]), for good otherwise.
      */
     fun deleteFile(path: String): Result<Unit> {
         return try {
@@ -757,7 +794,7 @@ object FileSystemManager {
             }
             managedPathViolation(file)?.let { return Result.failure(it) }
             
-            if (file.delete()) {
+            if (moveToTrash(file) || file.delete()) {
                 clearScanCache()
                 logger.info { "Deleted ${file.name}" }
                 Result.success(Unit)

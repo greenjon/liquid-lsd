@@ -12,6 +12,9 @@ import llm.slop.liquidlsd.presets.FxOps
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.rendering.Mixer
+import llm.slop.liquidlsd.ui.browser.BrowseKind
+import llm.slop.liquidlsd.ui.browser.BrowseSection
+import llm.slop.liquidlsd.ui.browser.LibraryFolders
 import java.io.File
 import kotlin.math.roundToInt
 
@@ -552,19 +555,41 @@ object FxChainHeader {
         popOpenDropdownPadding()
     }
 
-    /** Opens Save As for [chain], starting in the folder its file is in (the FX chains folder for an unsaved chain). */
+    /**
+     * Opens Save As for [chain], starting in the folder its file is in (for an unsaved chain, the folder selected under Saved chains,
+     * else the FX chains folder); the dialog's Folder dropdown can change it.
+     */
     fun openSaveAsModal(session: SessionContext, chain: FxChain) {
-        val folder = chain.sourceFile?.parentFile ?: FileSystemManager.getFxChainsRoot()
         SavePresetModal.request(
             title = "Save FX Chain As",
             confirmLabel = "Save",
             defaultName = chain.name.ifBlank { "fx_chain" },
             defaultTags = chain.tags,
-            targetDir = folder,
-            extension = "lsdfxchain"
+            targetDir = LibraryFolders.saveDirFor(BrowseKind.FX, BrowseSection.CHAIN, chain.sourceFile),
+            extension = "lsdfxchain",
+            folderRoot = FileSystemManager.getFxChainsRoot()
         ) { name, tags ->
             // Captured at confirm time (the chain may change while the dialog is open).
-            FxOps.saveChain(session, chain, File(folder, "$name.lsdfxchain"), name, tags)
+            FxOps.saveChain(session, chain, File(SavePresetModal.directory, "$name.lsdfxchain"), name, tags)
+        }
+    }
+
+    /**
+     * Opens Save As for slot [slotIndex] of [chain] as a single FX (`.lsdfx`), starting in the folder of the saved FX the slot was loaded
+     * from, else the folder selected under Saved single FX, else the FX folder. Nothing happens for an empty slot.
+     */
+    fun openSaveSlotAsModal(session: SessionContext, chain: FxChain, slotIndex: Int) {
+        val fx = chain.slots.getOrNull(slotIndex) ?: return
+        val slotDto = chain.toFxSlotDto(slotIndex) ?: return
+        SavePresetModal.request(
+            title = "Save FX Slot Preset As",
+            confirmLabel = "Save",
+            defaultName = fx.displayName.lowercase().replace(" ", "_").ifBlank { "fx_preset" },
+            targetDir = LibraryFolders.saveDirFor(BrowseKind.FX, BrowseSection.SINGLE, FxOps.slotSourceFile(chain, slotIndex)),
+            extension = "lsdfx",
+            folderRoot = FileSystemManager.getFxPresetsRoot()
+        ) { name, tags ->
+            session.presetRepository.saveFxPresetAsync(File(SavePresetModal.directory, "$name.lsdfx"), name, slotDto, tags)
         }
     }
 

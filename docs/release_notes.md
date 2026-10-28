@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Folders in the Library (`ui/browser/LibraryFolders.kt`, `ui/browser/FolderPopups.kt`, `ui/browser/BrowserPane.kt`, `ui/SavePresetModal.kt`)
+- **New: manage folders from the Library.** The saved sections (Saved presets, Saved single FX, Saved chains, Saved transitions) now take folders made in the app: the folder-plus button above the tree, or **New Folder...** on a section or folder's right-click menu. The same menu has **Rename Folder...**, **Delete Folder...** and **Reveal in File Manager**. Empty folders show in the tree.
+- **Move items between folders**: drag rows (or a multi-selection) onto a folder, or use **Move to** in a row's menu. Drag a folder onto another to move it. If the destination already has an item with that name, you choose **Keep both** (the moved one gets `_2`) or **Skip**. Playlists, queues, Favorites, Recent and loaded decks and chains all follow the move.
+- **Save As picks the folder.** The save dialog for presets, FX, chains and transitions has a **Folder** dropdown. It starts in the folder of what you loaded, so a variation lands next to the original, else in the folder selected in the Library, else at the top level. Saving used to always go to the top level.
+- **Deleting goes to the system trash** where there is one (macOS, Windows, and Linux through `gio`), for single items and whole folders. The delete confirmation now names the playlists and queues the items are in, and deleting a folder says how many items it holds.
+
 ### Renaming or Deleting a Saved Item Keeps the Library Consistent (`ui/browser/LibraryRefs.kt`, `ui/browser/BrowserPopupHandler.kt`, `presets/PresetManager.kt`, `ui/PlaylistManager.kt`)
 - **Fixed: renaming a saved FX single, FX chain or transition broke every playlist entry that pointed at it.** Only deck presets had their playlists updated. Now all saved kinds do.
 - **A rename now also follows the item into the live queues** (A/B, BG, both FX queues, Transitions), **Favorites and Recent**, the deck or FX chain it is loaded on (so Save still writes back to the renamed file instead of recreating the old name) and, for presets, its thumbnail.

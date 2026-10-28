@@ -105,6 +105,51 @@ object LibraryRefs {
         LibraryPanel.refreshAssets()
     }
 
+    /** What deleting some files would touch beyond the files themselves: the playlists that list them and the live queues holding them. */
+    data class Impact(val playlists: List<String>, val queues: List<String>) {
+        /** "used in 2 playlists and the A/B Queue", or "" when nothing refers to them. */
+        fun describe(): String {
+            val parts = mutableListOf<String>()
+            if (playlists.isNotEmpty()) parts += if (playlists.size == 1) "the playlist '${playlists.first()}'" else "${playlists.size} playlists"
+            parts += queues.map { "the $it" }
+            if (parts.isEmpty()) return ""
+            return "used in " + if (parts.size == 1) parts.first() else parts.dropLast(1).joinToString(", ") + " and " + parts.last()
+        }
+    }
+
+    /** The playlists and queues that refer to any of [files]. */
+    fun impact(files: List<File>): Impact {
+        val playlists = sortedSetOf<String>(String.CASE_INSENSITIVE_ORDER)
+        val queues = mutableListOf<String>()
+        for ((kind, group) in files.groupBy { kindOf(it) }) {
+            if (kind == null) continue
+            val paths = group.mapTo(HashSet()) { it.absolutePath }
+            when (kind) {
+                BrowseKind.SRC -> {
+                    val root = FileSystemManager.getPresetsRoot().canonicalFile
+                    val forms = paths + group.mapNotNull { f -> runCatching { f.canonicalFile.relativeTo(root).path }.getOrNull()?.takeIf { !it.startsWith("..") } }
+                    FileSystemManager.getPlaylistsRoot().walkTopDown().filter { it.isFile && it.extension == "lsdplay" }.forEach { pl ->
+                        if (runCatching { pl.readLines() }.getOrDefault(emptyList()).any { it.trim() in forms }) playlists += pl.nameWithoutExtension
+                    }
+                    if (PlayQueueManager.queue.any { it.absolutePath in paths }) queues += "A/B Queue"
+                    if (BgQueueManager.queue.any { it.absolutePath in paths }) queues += "BG Queue"
+                }
+                BrowseKind.FX, BrowseKind.TRANS -> {
+                    val all = if (kind == BrowseKind.FX) FileSystemManager.scanAllFxPlaylists() else FileSystemManager.scanAllTransitionPlaylists()
+                    for (pl in all) {
+                        val items = runCatching { llm.slop.liquidlsd.presets.PlaylistParser.parseFile(File(pl.path)) }.getOrDefault(emptyList())
+                        if (items.any { t -> paths.any { PlaylistItems.tokenNamesFile(t, it) } }) playlists += File(pl.path).nameWithoutExtension
+                    }
+                    if (kind == BrowseKind.FX) {
+                        if (FXQueueManager.queue.any { it.absolutePath in paths }) queues += "A/B FX Queue"
+                        if (FXBgQueueManager.queue.any { it.absolutePath in paths }) queues += "BG FX Queue"
+                    } else if (TransitionQueueManager.queue.any { it.absolutePath in paths }) queues += "Transition Queue"
+                }
+            }
+        }
+        return Impact(playlists.toList(), queues)
+    }
+
     /** Swaps moved files in place, so the queue's order, active index and shuffle order are untouched. */
     internal fun relocateQueue(queue: CopyOnWriteArrayList<File>, moves: Map<String, String>) {
         queue.replaceAll { f -> moves[f.absolutePath]?.let(::File) ?: f }

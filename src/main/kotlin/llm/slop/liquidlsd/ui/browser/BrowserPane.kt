@@ -234,10 +234,27 @@ object BrowserPane {
 
     private fun drawTree(session: SessionContext, mixer: Mixer, catalog: BrowseCatalog, kind: BrowseKind) {
         val btnSize = ImGui.getFrameHeight()
+        val manage = DockActions.canManageList(hosted())
         ImGui.alignTextToFramePadding()
         session.uiTheme.withFont(UITheme.FontLevel.H3) { ImGui.text("Folders") }
         ImGui.sameLine()
-        ImGui.setCursorPosX((ImGui.getWindowContentRegionMaxX() - btnSize).coerceAtLeast(ImGui.getCursorPosX()))
+        val buttons = if (manage) 2 else 1
+        val rightX = ImGui.getWindowContentRegionMaxX() - (btnSize * buttons + ImGui.getStyle().itemSpacingX * (buttons - 1))
+        ImGui.setCursorPosX(rightX.coerceAtLeast(ImGui.getCursorPosX()))
+        if (manage) {
+            val newIn = newFolderPlace(kind)
+            ImGui.beginDisabled(newIn == null)
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                if (ButtonChrome.button("${Icons.FOLDER_PLUS}##browserNewFolder", btnSize, btnSize) && newIn != null) FolderPopups.requestNewFolder(newIn)
+            }
+            ImGui.endDisabled()
+            itemTooltip(
+                if (newIn != null) "New folder: an empty folder in ${newIn.label}. Drag rows onto a folder to move them there."
+                else "New folder: select Saved single FX or Saved chains (or one of their folders) first.",
+                allowWhenDisabled = true
+            )
+            ImGui.sameLine()
+        }
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             if (ButtonChrome.button("${Icons.LIST_PLUS}##browserNewPlaylist", btnSize, btnSize)) {
                 BrowserPopupHandler.pendingOpenNewPlaylistPopup = true
@@ -297,6 +314,8 @@ object BrowserPane {
                 select(kind, node.scope)
             }
             if (node.scope == BrowseScope.Recent) itemTooltip("The last ${BrowseRecents.LIMIT} items you loaded or applied, newest first.")
+            val folderPlace = (node.scope as? BrowseScope.Folder)?.let { placeOf(kind, it) }
+            if (folderPlace != null && manage) folderNode(mixer, folderPlace)
             if (node.scope == cursor) {
                 // The controller's cursor: an outline, so it reads apart from the selected scope's fill.
                 val min = ImGui.getItemRectMin()
@@ -322,6 +341,101 @@ object BrowserPane {
             ImGui.popID()
         }
         ImGui.endChild()
+    }
+
+    private const val PAYLOAD_FOLDER = "BROWSE_FOLDER"
+
+    /** The saved folder a tree scope stands for, or null for stock and live sections. */
+    private fun placeOf(kind: BrowseKind, scope: BrowseScope.Folder): FolderPopups.Place? =
+        if (LibraryFolders.rootOf(kind, scope.section) == null) null else FolderPopups.Place(kind, scope.section, scope.folder)
+
+    /** Where the New folder button puts a folder: the selected saved folder, else the kind's one saved section (FX has two, so none). */
+    private fun newFolderPlace(kind: BrowseKind): FolderPopups.Place? {
+        (scopeOf(kind) as? BrowseScope.Folder)?.let { placeOf(kind, it) }?.let { return it }
+        return if (kind == BrowseKind.FX) null else FolderPopups.Place(kind, BrowseSection.SAVED, "")
+    }
+
+    /** A saved section or folder row: rows and folders dropped on it move into it, a folder can be dragged, and it has a folder menu. */
+    private fun folderNode(mixer: Mixer, place: FolderPopups.Place) {
+        if (place.folder.isNotEmpty() && ImGui.beginDragDropSource()) {
+            ImGui.setDragDropPayload(PAYLOAD_FOLDER, "${place.kind.name}|${place.section.name}|${place.folder}" as Any)
+            ImGui.text("${Icons.FOLDER} ${place.label}")
+            ImGui.endDragDropSource()
+        }
+        if (ImGui.beginDragDropTarget()) {
+            ImGui.acceptDragDropPayload<String>("ASSET_ITEM")?.let { payload ->
+                val files = payload.lines().map { it.trim() }.filter { it.isNotEmpty() }.map(::File)
+                FolderPopups.moveFiles(files, place, mixer)
+            }
+            ImGui.acceptDragDropPayload<String>(PAYLOAD_FOLDER)?.let { payload ->
+                val (k, sec, folder) = payload.split('|', limit = 3)
+                FolderPopups.moveFolder(FolderPopups.Place(BrowseKind.valueOf(k), BrowseSection.valueOf(sec), folder), place, mixer)
+            }
+            ImGui.endDragDropTarget()
+        }
+        if (!ImGui.beginPopupContextItem("folder_node_menu")) return
+        pushOpenDropdownFont()
+        if (ImGui.menuItem("New Folder...")) FolderPopups.requestNewFolder(place)
+        if (place.folder.isNotEmpty()) {
+            if (ImGui.menuItem("Rename Folder...")) FolderPopups.requestRenameFolder(place)
+            if (ImGui.menuItem("Delete Folder...")) FolderPopups.requestDeleteFolder(place)
+        }
+        place.root?.let { root ->
+            if (ImGui.menuItem("Reveal in File Manager")) {
+                val dir = LibraryFolders.dirOf(root, place.folder)
+                try { java.awt.Desktop.getDesktop().open(dir) } catch (e: Exception) { ToastOverlay.show("Could not open ${dir.name}") }
+            }
+        }
+        popOpenDropdownFont()
+        ImGui.endPopup()
+    }
+
+    /**
+     * Keeps the tree on a folder that was just created, renamed, moved or deleted: [old] is the folder before (null for a new one) and
+     * [new] after (null when it was deleted, which selects its parent). A selection inside a renamed folder follows it.
+     */
+    internal fun followFolder(kind: BrowseKind, section: BrowseSection, old: String?, new: String?) {
+        fun moved(f: String): String? = when {
+            old == null -> f
+            f == old -> new
+            f.startsWith("$old/") -> new?.let { it + f.removePrefix(old) }
+            else -> f
+        }
+        val hidden = collapsed.getOrPut(kind) { HashSet() }
+        val renamed = hidden.map { s -> if (s is BrowseScope.Folder && s.section == section) moved(s.folder)?.let { s.copy(folder = it) } else s }
+        hidden.clear()
+        hidden.addAll(renamed.filterNotNull())
+        val current = scopeOf(kind)
+        when {
+            old == null && new != null -> select(kind, BrowseScope.Folder(section, new))
+            current is BrowseScope.Folder && current.section == section -> {
+                val f = moved(current.folder) ?: old!!.substringBeforeLast('/', "")
+                if (f != current.folder) select(kind, BrowseScope.Folder(section, f))
+            }
+        }
+        // A new or moved folder's parents open, so it is on screen.
+        new?.split('/')?.runningReduce { acc, seg -> "$acc/$seg" }?.dropLast(1)?.forEach { hidden.remove(BrowseScope.Folder(section, it)) }
+        hidden.remove(BrowseScope.Folder(section))
+    }
+
+    /** "Move to" for the saved rows a row menu covers: every folder of their section, top level first. */
+    private fun moveToMenu(mixer: Mixer, kind: BrowseKind, entry: BrowseEntry, assets: List<AssetItem>) {
+        val root = LibraryFolders.rootOf(kind, entry.section) ?: return
+        val selected = selectedAssets(kind, assets)
+        val rows = (if (selected.any { it.path == entry.asset.path }) selected else listOf(entry.asset))
+            .map { File(it.path) }.filter { LibraryFolders.sectionOf(kind, it) == entry.section }
+        if (rows.isEmpty()) return
+        val label = if (rows.size == 1) "Move to" else "Move ${rows.size} to"
+        if (!ImGui.beginMenu(label)) return
+        val folders = listOf("") + LibraryFolders.dirsUnder(root)
+        for (f in folders) {
+            val here = rows.all { it.absoluteFile.parentFile == LibraryFolders.dirOf(root, f).absoluteFile }
+            val name = if (f.isEmpty()) "${BrowseCatalog.sectionLabel(kind, entry.section)} (top level)" else "    ".repeat(f.count { it == '/' }) + f.substringAfterLast('/')
+            if (ImGui.menuItem("$name##move_$f", "", false, !here)) FolderPopups.moveFiles(rows, FolderPopups.Place(kind, entry.section, f), mixer)
+        }
+        ImGui.separator()
+        if (ImGui.menuItem("New Folder...")) FolderPopups.requestNewFolder(FolderPopups.Place(kind, entry.section, entry.folder))
+        ImGui.endMenu()
     }
 
     /** Right-click menu of a playlist node: queue transport, rename, clone, delete. */
@@ -457,6 +571,7 @@ object BrowserPane {
                         }
                     }
                     if (playlistRows != null && ImGui.menuItem("Remove from playlist")) removeFromPlaylist(kind, playlistRows, assets)
+                    if (entry != null && playlistRows == null && DockActions.canManageList(target)) moveToMenu(mixer, kind, entry, assets)
                 }
                 when (kind) {
                     BrowseKind.SRC -> PresetListPanel.drawRows(

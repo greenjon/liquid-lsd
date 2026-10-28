@@ -729,20 +729,7 @@ object ParametersTabs {
             if (ImGui.beginPopup("FXSlotKebabPopup_${slotNum}_$chainPrefix")) {
                 pushOpenDropdownFont()
                 val hasFx = chain.slots[i] != null
-                if (ImGui.menuItem("Save Slot Preset As...", "", false, hasFx)) {
-                    chain.toFxSlotDto(i)?.let { slotDto ->
-                        SavePresetModal.request(
-                            title = "Save FX Slot Preset As",
-                            confirmLabel = "Save",
-                            defaultName = fx?.displayName?.lowercase()?.replace(" ", "_") ?: "fx_preset",
-                            targetDir = FileSystemManager.getFxPresetsRoot(),
-                            extension = "lsdfx"
-                        ) { name, tags ->
-                            val file = java.io.File(FileSystemManager.getFxPresetsRoot(), "$name.lsdfx")
-                            session.presetRepository.saveFxPresetAsync(file, name, slotDto, tags)
-                        }
-                    }
-                }
+                if (ImGui.menuItem("Save Slot Preset As...", "", false, hasFx)) FxChainHeader.openSaveSlotAsModal(session, chain, i)
                 if (ImGui.menuItem("Copy Slot", "", false, hasFx)) {
                     chain.toFxSlotDto(i)?.let { llm.slop.liquidlsd.models.ClipboardManager.copyFxSlot(it) }
                 }
