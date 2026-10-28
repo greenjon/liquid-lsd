@@ -56,7 +56,7 @@ class WebEvaluatorVectorsTest {
 
     private val cvIds = listOf(
         "audio_amp", "audio_bass", "audio_mid", "audio_high",
-        "audio_flux_amp", "audio_flux_bass", "audio_flux_mid", "audio_flux_high"
+        "audio_flux_amp", "audio_flux_bass", "audio_flux_mid", "audio_flux_high", "audio_energy"
     )
 
     private val timeOffsets = listOf(0.0, 0.13, 0.37, 0.5, 0.77, 1.9, 3.21, 12.5)
@@ -242,6 +242,9 @@ class WebEvaluatorVectorsTest {
         sequence("follower SMOOTH", uni, param(0f, uni, audio(mode = AudioFollowerMode.SMOOTH, attack = 40f, decay = 400f)), ramp, "audio_bass")
         sequence("follower SNAP", uni, param(0f, uni, audio(mode = AudioFollowerMode.SNAP, attack = 0f, decay = 35f)), ramp, "audio_bass")
         sequence("follower RAW ignores times", uni, param(0f, uni, audio(mode = AudioFollowerMode.RAW, attack = 100f, decay = 100f)), ramp, "audio_bass")
+        // Section energy is bipolar and already shaped: no follower, whatever the modulator says.
+        val swing = List(30) { if (it in 5..19) -0.8f else 0.5f }
+        sequence("section energy ignores the follower", bi, param(0f, bi, audio("audio_energy", mode = AudioFollowerMode.SMOOTH, attack = 40f, decay = 400f, depth = 0.5f, dc = 0.1f)), swing, "audio_energy")
         sequence("follower mode set but zero times", uni, param(0f, uni, audio(mode = AudioFollowerMode.CUSTOM, attack = 0f, decay = 0f)), ramp, "audio_bass")
     }
 

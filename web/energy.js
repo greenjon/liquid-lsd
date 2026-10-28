@@ -3,7 +3,8 @@
 // where it has been for the last ~20 s; a *drop* is it coming back after a breakdown of at least 4 s.
 // The long-term level freezes during a breakdown (and while one is being confirmed), so the drop is measured against the music before it.
 // The same long-term level is what auto gain (AudioAgc in dsp.js) normalises against, so a breakdown also
-// reads quiet. A port of the desktop's audio/SectionWatch.kt: keep the two identical.
+// reads quiet. `energy` and `dropLag` feed the section modulators (audio_energy, and audio_drop through
+// DropEnvelope below). A port of the desktop's audio/SectionWatch.kt and cv/SectionDrop.kt: keep them identical.
 // Pure, so it is unit-tested in node (web/tools/energy.test.mjs).
 
 const SHORT_TAU = 1.5;     // s, the "now" level
@@ -17,6 +18,9 @@ const DROP_MIN = 4;        // ...if the breakdown lasted at least this long (s; 
 const BREAK_MAX = 60;      // a "breakdown" this long is just a quieter song: adopt it as the new normal
 const LOUDER_RATIO = 1.6;  // now above this multiple of the reference...
 const LOUDER_HOLD = 4;     // ...for this long (s) is a louder song: adopt it at once
+const FAST_TAU = 0.1;      // s, the level that says when a drop really came back...
+const FAST_GAP = 0.5;      // ...unless it falls under the drop ratio for longer than this (s)
+const MAX_DROP_LAG = 4;    // s, the most a drop is dated back
 
 export class EnergyWatch {
   constructor() {
@@ -29,6 +33,19 @@ export class EnergyWatch {
     this.drops = 0;        // count of drops so far
     this.louder = 0;       // s the level has been over the louder ratio
     this.rebased = false;  // true on the frame the reference jumped to the current level (a new normal)
+    this.fast = 0;
+    this.backAt = -1;      // when the fast level climbed back over the drop ratio; -1 while it is under
+    this.fastBelow = 0;
+    this.dropLag = 0;      // s between the low end coming back and the latest drop being called
+  }
+
+  /**
+   * How loud the music is now against the reference, as log2(short / long) clamped to -1..1: 0 is the usual
+   * level, -1 half of it or less (a breakdown), +1 twice it. 0 during the warm-up and in silence.
+   */
+  get energy() {
+    if (this.time < WARMUP || this.long < SILENCE) return 0;
+    return Math.max(-1, Math.min(1, Math.log2(Math.max(this.short, 1e-4) / this.long)));
   }
 
   /** `long` is not following the music: a breakdown, or the level has just fallen under the breakdown ratio. */
@@ -38,6 +55,9 @@ export class EnergyWatch {
     this.short = this.long = this.time = this.below = this.louder = this.sectionTime = 0;
     this.section = 'normal';
     this.rebased = false;
+    this.fast = 0;
+    this.backAt = -1;
+    this.fastBelow = 0;
   }
 
   /** One frame of band levels (0..1) over `dt` seconds. Returns 'breakdown', 'drop' or null. */
@@ -47,6 +67,7 @@ export class EnergyWatch {
     this.sectionTime += dt;
     this.rebased = false;
     this.short += (level - this.short) * Math.min(1, dt / SHORT_TAU);
+    this.fast += (level - this.fast) * Math.min(1, dt / FAST_TAU);
     // A running mean until LONG_TAU has passed, so the reference is right from the first seconds. It
     // stops as soon as the level dips under the breakdown ratio, so a breakdown does not drag it down
     // while it is being confirmed.
@@ -60,9 +81,20 @@ export class EnergyWatch {
       if (this.louder >= LOUDER_HOLD) this.#rebase();
       return null;
     }
-    // breakdown
+    // breakdown. The fast level dips between kicks, so it counts as back until it has been under for FAST_GAP.
+    if (this.fast > DROP_RATIO * this.long) {
+      this.fastBelow = 0;
+      if (this.backAt < 0) this.backAt = this.time;
+    } else {
+      this.fastBelow += dt;
+      if (this.fastBelow > FAST_GAP) this.backAt = -1;
+    }
     if (this.short > DROP_RATIO * this.long) {
-      if (this.sectionTime >= DROP_MIN) { this.drops++; return this.#enter('normal', 'drop'); }
+      if (this.sectionTime >= DROP_MIN) {
+        this.dropLag = this.backAt >= 0 ? Math.min(this.time - this.backAt, MAX_DROP_LAG) : 0;
+        this.drops++;
+        return this.#enter('normal', 'drop');
+      }
       this.#enter('normal'); // only a short dip
       return null;
     }
@@ -80,6 +112,40 @@ export class EnergyWatch {
     this.section = section;
     this.sectionTime = 0;
     this.below = 0;
+    this.backAt = -1;
+    this.fastBelow = 0;
     return event;
+  }
+}
+
+export const DROP_BARS = 4;
+
+/** The beat a drop called at `beats`, `lagSec` after it happened, is dated to (never in the future). */
+export function dropBeat(beats, lagSec, bpm) {
+  return Math.min(Math.round(beats - lagSec * bpm / 60), beats);
+}
+
+/** 1 at the drop, (1 - t)^2 down to 0 after `lengthBeats`. */
+export function dropEnvelope(beatsSince, lengthBeats) {
+  if (beatsSince < 0 || beatsSince >= lengthBeats) return 0;
+  const left = 1 - beatsSince / lengthBeats;
+  return left * left;
+}
+
+/**
+ * audio_drop: 1 on a drop, falling to 0 over DROP_BARS bars, dated back to the beat the drop was on.
+ * `report` takes the watch's drop count with the analysis-time beat; `value` reads at the heard beat, so
+ * SYNC delays the hit with the rest of the picture.
+ */
+export class DropEnvelope {
+  constructor() { this.seen = 0; this.anchor = NaN; }
+
+  report(drops, lagSec, beats, bpm) {
+    if (drops > this.seen) this.anchor = dropBeat(beats, lagSec, Math.max(bpm, 1));
+    this.seen = drops; // a new watch counts from 0 again: follow it down without a hit
+  }
+
+  value(beats, beatsPerBar = 4) {
+    return Number.isNaN(this.anchor) ? 0 : dropEnvelope(beats - this.anchor, DROP_BARS * beatsPerBar);
   }
 }

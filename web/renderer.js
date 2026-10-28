@@ -6,6 +6,7 @@ import { lookupParam } from './isf.js';
 import { Library, DeckPipeline, MixerPipeline } from './graph.js';
 import { MandalaRecipes } from './mandala.js';
 import { heardBeats, DelayLine } from './sync.js';
+import { DropEnvelope } from './energy.js';
 import { installEmbedApi } from './embed.js';
 import { embed } from './embedmode.js';
 
@@ -170,7 +171,8 @@ async function init() {
 
   const evalCtx = makeEvalContext();
   const audioDelay = new DelayLine();
-  const AUDIO_KEYS = ['audio_amp', 'audio_bass', 'audio_mid', 'audio_high', 'audio_flux_amp', 'audio_flux_bass', 'audio_flux_mid', 'audio_flux_high'];
+  const AUDIO_KEYS = ['audio_amp', 'audio_bass', 'audio_mid', 'audio_high', 'audio_flux_amp', 'audio_flux_bass', 'audio_flux_mid', 'audio_flux_high', 'audio_energy'];
+  const drop = new DropEnvelope();
   function updateEvalContext() {
     // Live broadcast: the desktop's beat clock (phase-locked flywheel). Standalone: the web's own
     // beat detector (dsp.js) integrates tempo into total beats, so a tempo change never jumps the phase.
@@ -181,6 +183,7 @@ async function init() {
     const beats = heardBeats(now, viewerState.syncMs);
     audioDelay.push(now, Object.fromEntries(AUDIO_KEYS.map((key) => [key, cvState[key]])));
     const heard = { ...audioDelay.read(now, viewerState.syncMs) };
+    drop.report(cvState.drops, cvState.dropLag, heardBeats(now, 0), bpm); // dated in analysis time, read at the heard beat
     evalCtx.time = elapsedTime;
     evalCtx.beats = beats;
     evalCtx.frame = frameCount;
@@ -195,6 +198,8 @@ async function init() {
       audio_mid: r(heard.audio_mid), audio_high: r(heard.audio_high),
       audio_flux_amp: r(heard.audio_flux_amp), audio_flux_bass: r(heard.audio_flux_bass),
       audio_flux_mid: r(heard.audio_flux_mid), audio_flux_high: r(heard.audio_flux_high),
+      // Song sections are not scaled by REACT (like Audio Response on the desktop); reduced motion softens the hit.
+      audio_energy: heard.audio_energy ?? 0, audio_drop: drop.value(beats) * (viewerState.reducedNow ? 0.6 : 1),
       beatSine: Math.sin(beats * 2 * Math.PI), bpm,
     };
   }

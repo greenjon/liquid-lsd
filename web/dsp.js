@@ -24,6 +24,8 @@ export const cvState = {
   beatLocked:     false, // true while the clock follows a confidently tracked beat
   section:        'normal', // 'normal' | 'breakdown' (energy.js), for the autopilot
   drops:          0,     // drops detected so far (a breakdown ending with the low end back)
+  dropLag:        0,     // s between the latest drop and its detection (audio_drop dates the hit back by it)
+  audio_energy:   0.0,   // log2(now / usual level), -1..1, 0 in warm-up and silence (energy.js); no auto gain
   noSignal:       false, // the TV is on but the stream is down or silent (renderer shows snow)
   isLive:         false, // true once AudioContext is running and stream is connected
 };
@@ -234,6 +236,8 @@ export function tick(dt) {
     // Sections come from auto gain's own watch (updated in updateAmplitudes), fed the fixed-scale levels.
     cvState.section = agc.watch.section;
     cvState.drops = agc.watch.drops;
+    cvState.dropLag = agc.watch.dropLag;
+    cvState.audio_energy = agc.watch.energy;
     cvState.energy = agc.watch; // short / long levels, for tuning (window.LSD.cvState.energy)
     // Without the worklet, the per-frame onset strength is the envelope (coarser timing, same tracker).
     if (!onsetFromWorklet) tracker.push(cvState.raw.audio_flux_amp, performance.now() / 1000);
@@ -442,6 +446,7 @@ export async function stopAudio() {
   cvState.audio_flux_bass = 0.0;
   cvState.audio_flux_mid = 0.0;
   cvState.audio_flux_high = 0.0;
+  cvState.audio_energy = 0.0;
   cvState.raw.audio_amp = cvState.raw.audio_bass = cvState.raw.audio_flux_amp = 0.0;
   prevRms.bass = prevRms.mid = prevRms.high = 0;
   agc.reset(); // the next stream levels itself afresh
