@@ -14,6 +14,7 @@ import llm.slop.liquidlsd.models.applyDto
 import llm.slop.liquidlsd.models.toDto
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.rendering.Deck
+import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.VisualSource
 import llm.slop.liquidlsd.ui.ToastOverlay
@@ -48,6 +49,8 @@ class DeckOpsTest {
             every { deck.source = any() } answers { current = firstArg() }
             every { deck.isEmpty } answers { empty }
             every { deck.isEmpty = any() } answers { empty = firstArg() }
+            // A relaxed mock's IntArray is empty; FxMacroSync.syncChain indexes it per slot when an FX clear re-syncs.
+            every { deck.fxChain.slotParamPage } returns IntArray(FxChain.SLOT_COUNT)
             every { deck.toDto(any(), any()) } answers {
                 dto(secondArg(), current.id, tweak, empty).copy(tags = thirdArg()) // firstArg() is the extension receiver
             }
