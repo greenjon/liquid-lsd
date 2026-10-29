@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Web TV: No Flash of the TV's Controls in Kiosk or Embedded Mode (`web/index.html`)
+- **Fixed: inside the Spaz Radio app (and with `?kiosk`), the TV's buttons and labels (PWR, VOL, CH, FX ...) flashed up for a moment before the picture.** The page now hides them before it first draws. The web TV is now **v3**.
+
 ### Web TV: "Looks" Are Now "Scenes" (`web/ui.js`, `web/index.html`, `web/autopilot.js`)
 - **The web TV calls what's on air a scene**: the picture plus the effects on it. The menu rows are now **ANNOUNCE SCENES** and **BIG GPU SCENES**, TIME reads "BARS PER SCENE", and the button tooltips, help lines and the web player guide say "scene" too. Your saved settings carry over. The web TV is now **v2**.
 

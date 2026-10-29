@@ -20,6 +20,9 @@ try {
   const vis = (id) => { const el = d.getElementById(id); return el && getComputedStyle(el).display !== 'none'; };
 
   check('Embed class on the body', d.body.classList.contains('embed'));
+  const html = await (await fetch('../index.html')).text();
+  const early = html.split('<body>')[1]?.split('<div')[0] ?? '';
+  check('Embed class set before the first paint (inline, ahead of the deferred modules)', /<script>[\s\S]*'embed'[\s\S]*<\/script>/.test(early));
   for (let i = 0; i < 100 && !w.LSD.feedReady(); i++) await sleep(100);
   check('The TV powers itself on and the feed node is ready', w.LSD.powerState.on && w.LSD.feedReady());
   check('No TV controls, OSD, menu or nameplate', !vis('tv-controls') && !vis('osd') && !vis('tv-menu') && !vis('nameplate'));

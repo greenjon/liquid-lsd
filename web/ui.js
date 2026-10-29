@@ -10,7 +10,7 @@ import { heardBeats, tapOffset } from './sync.js';
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v2';
+export const TV_VERSION = 'v3';
 
 export const powerState = {
   on: false,              // is the TV powered on?

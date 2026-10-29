@@ -30,6 +30,15 @@
   <link rel="stylesheet" href="tv.css">
 </head>
 <body>
+  <!-- Kiosk / embed classes before the first paint: ui.js (a module, so deferred) would add them only after
+       the TV's controls had flashed up (PWR VOL CH FX ...) inside a host app. -->
+  <script>
+    (function () {
+      var q = new URLSearchParams(location.search);
+      if (q.has('kiosk') || q.has('embed')) document.body.classList.add('kiosk');
+      if (q.has('embed')) document.body.classList.add('embed');
+    })();
+  </script>
   <audio id="lsdAudio" crossorigin="anonymous" preload="none"></audio>
 
   <div id="tv-wrapper">
