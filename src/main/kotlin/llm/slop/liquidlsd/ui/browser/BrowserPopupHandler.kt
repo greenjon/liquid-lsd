@@ -4,6 +4,10 @@ import llm.slop.liquidlsd.ui.ButtonChrome
 import imgui.ImGui
 import imgui.type.ImString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
 import llm.slop.liquidlsd.models.DeckPresetDto
 import llm.slop.liquidlsd.models.FXPlaylistDto
 import llm.slop.liquidlsd.models.TransitionPlaylistDto
@@ -152,12 +156,19 @@ object BrowserPopupHandler {
         }
     }
 
-    private fun updatePresetFileMeta(file: File, newName: String, newTags: List<String>) {
+    /**
+     * Sets the `name` and `tags` of preset [file] and keeps every other field exactly as it was (like [LibraryTags]), so fields this
+     * build doesn't know survive. Written atomically, so a crash mid-write can't truncate the preset.
+     */
+    internal fun updatePresetFileMeta(file: File, newName: String, newTags: List<String>) {
         try {
             if (!file.exists()) return
-            val dto = json.decodeFromString<DeckPresetDto>(file.readText())
-            val updated = dto.copy(name = newName, tags = newTags)
-            file.writeText(json.encodeToString(DeckPresetDto.serializer(), updated))
+            val obj = json.parseToJsonElement(file.readText()).jsonObject
+            val updated = JsonObject(LinkedHashMap(obj).apply {
+                put("name", JsonPrimitive(newName))
+                put("tags", JsonArray(newTags.map(::JsonPrimitive)))
+            })
+            llm.slop.liquidlsd.control.UserJsonFiles.writeAtomic(file, json.encodeToString(JsonObject.serializer(), updated))
         } catch (e: Exception) {
             logger.error(e) { "Failed to update preset file metadata for ${file.name}" }
         }
