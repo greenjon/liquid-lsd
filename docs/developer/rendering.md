@@ -56,7 +56,7 @@ Liquid LSD supports arbitrary user-defined render resolutions and aspect ratios 
 
 - **Dynamic Pipeline Resizing**: `Mixer.resize(width, height)` and `Deck.resize(width, height)` reallocate `cleanFBO` and `masterFBO` on the main OpenGL thread without interrupting playback or dropping preset states; each `DynamicVisualSource`'s own persistent-history `fb1`/`fb2` pair (see above) is disposed and lazily recreated on next render rather than eagerly resized.
 - **Shader Aspect Awareness**: Generative fragment shaders evaluate `float aspect = uResolution.x / uResolution.y;` from `targetFBO` dimensions, rendering undistorted geometry across any aspect ratio.
-- **Display Scaling with `ViewportHelper`**: [`ViewportHelper.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/rendering/ViewportHelper.kt) computes letterbox, pillarbox, and fill coordinates for secondary monitor outputs and background video blits:
+- **Display Scaling with `ViewportHelper`**: [`ViewportHelper.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/rendering/ViewportHelper.kt) computes letterbox, pillarbox, and fill coordinates for secondary monitor outputs and background video blits:
   - `FIT`: Preserves exact content aspect ratio with letterboxing or pillarboxing.
   - `FILL`: Centers and crops edges to completely fill the target screen.
   - `STRETCH`: Stretches content to fill the target viewport.
@@ -74,7 +74,7 @@ Liquid LSD supports arbitrary user-defined render resolutions and aspect ratios 
 
 ## Source Documentation Registry (`SourceDocRegistry.kt`)
 
-[`SourceDocRegistry.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/rendering/SourceDocRegistry.kt) is an immutable singleton repository storing documentation for visual sources and parameters:
+[`SourceDocRegistry.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/rendering/SourceDocRegistry.kt) is an immutable singleton repository storing documentation for visual sources and parameters:
 
 - **Source Descriptions**: `sourceDescriptions: Map<String, String>` keyed by `sourceId`. Covers the currently-bundled built-in engines (`mandala`, `dynamic_spiral`, `icosa_h3`) plus stale dead-code entries (`colors`, `gyroid`, `chladni`, `attractor_feedback`, `hyper_mesh`, `hyper_slice`) left over from the legacy-source removal (see below) that no `VisualSourceRegistry` entry resolves to anymore — harmless (map lookups simply never hit them) but worth pruning next time this file is touched.
 - **Parameter Descriptions**: `paramDescriptions: Map<String, String>` keyed by `"<sourceId>/<paramName>"`, `"feedback/<paramName>"`, or `"mixer/<paramName>"`.
@@ -98,7 +98,7 @@ Beyond hardcoded generators, the engine loads dynamic shaders from `library/sour
 
 ## $H_3$ Coxeter Icosahedral Raymarcher (`icosa_h3`)
 
-The `icosa_h3` visual source is a single ISF shader ([`icosa_h3.fs`](file:///home/gj/projects/liquid-lsd/library/sources/icosa_h3/icosa_h3.fs)) that combines what were previously three separate visual sources (`icosa_dodeca`, `icosahedron`, `icosa-v3`) into one **$H_3$ Coxeter Reflection Group Iterated Function System (IFS)** raymarcher. It evaluates two independent stellation families sharing the same folded-chamber substrate and crossfades between them with the `Spike Mode` parameter, so the whole design space of the three predecessors is reachable from one shader:
+The `icosa_h3` visual source is a single ISF shader ([`icosa_h3.fs`](https://github.com/greenjon/liquid-lsd/blob/main/library/sources/icosa_h3/icosa_h3.fs)) that combines what were previously three separate visual sources (`icosa_dodeca`, `icosahedron`, `icosa-v3`) into one **$H_3$ Coxeter Reflection Group Iterated Function System (IFS)** raymarcher. It evaluates two independent stellation families sharing the same folded-chamber substrate and crossfades between them with the `Spike Mode` parameter, so the whole design space of the three predecessors is reachable from one shader:
 
 - **Smooth duality-morph family** (from `icosa_dodeca`): a continuous 4-phase Icosahedron ↔ Dodecahedron ↔ Great Stellated Dodecahedron ↔ Great Icosahedron cycle, with truncation/cantellation duals.
 - **Spike + blocker stellation CSG** (from `icosa-v3`): an independently-phased pole sweep that extrudes pyramid spikes and blunts their tips with a chopping plane.
@@ -163,7 +163,7 @@ This is the same domain-folded CSG technique as the old `icosa-v3` source (evalu
 
 ## Heavy Fractal Raymarchers (`mandelbox`, `kifs`, `mandelbulb`, `pseudo_kleinian`, `apollonian`)
 
-Five stock ISF generators ([`library/sources/<id>/<id>.fs`](file:///home/gj/projects/liquid-lsd/library/sources), identical copy in `src/main/resources/default_sources/`) share one structure with `icosa_h3` and `gyroid_hyperspace`: a distance-estimated raymarch, `LSD_COST` 3, `is3D` with their own `Zoom`/`RotateX/Y/Z`, orbit-trap palettes selected by `ColorMode`, a tetrahedral-difference normal, a small AO tap set and a signed `FlightSpeed`. There is no include mechanism, so each file inlines its helpers. They target an NVIDIA RTX A2000 as the floor and are desktop only: GLSL 3.30 core, no `web/sync_manifest.json` entry. Per-source derivations and known issues are in `.planning/heavy-sources-notes/<id>.md`.
+Five stock ISF generators ([`library/sources/<id>/<id>.fs`](https://github.com/greenjon/liquid-lsd/tree/main/library/sources), identical copy in `src/main/resources/default_sources/`) share one structure with `icosa_h3` and `gyroid_hyperspace`: a distance-estimated raymarch, `LSD_COST` 3, `is3D` with their own `Zoom`/`RotateX/Y/Z`, orbit-trap palettes selected by `ColorMode`, a tetrahedral-difference normal, a small AO tap set and a signed `FlightSpeed`. There is no include mechanism, so each file inlines its helpers. They target an NVIDIA RTX A2000 as the floor and are desktop only: GLSL 3.30 core, no `web/sync_manifest.json` entry. Per-source derivations and known issues are in `.planning/heavy-sources-notes/<id>.md`.
 
 Every one exposes a normalised `Quality` input that remaps to live loop counts under constant caps (`for (i = 0; i < MAX; i++) { if (i >= n) break; }`), so Quality trades fidelity for speed during a set.
 

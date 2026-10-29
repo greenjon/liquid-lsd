@@ -11,6 +11,12 @@
 - It works on Section signals too: inverted Energy rises in a breakdown, inverted Drop dips on the drop and recovers over 4 bars.
 - With no audio at all, an inverted modulator sits at Max. Presets saved before this load uninverted, and the web TV plays inverted modulators the same way.
 
+### Preferences and Session Autosave Every Minute (`Main.kt`)
+- **The app now saves your preferences and the current session once a minute** while it runs, not only on a clean quit. If it is killed (Ctrl+C in the terminal, a crash, a power cut), you lose at most the last minute of changes. Autosave is off while a walkthrough tour is recording.
+
+### Web TV Content Updates for the Spaz Radio App (`scripts/publish_web_tv.sh`, `scripts/make_content_manifest.py`, `scripts/content_signing_pub.pem`)
+- **Publishing the web TV now also publishes a signed content manifest** (`spaz.org/tv/update/`), so the Spaz Radio app can pick up new presets, playlists, FX chains and transitions without an app release. Only data files are listed (never JS/HTML/CSS) and the app checks the signature before using them. Details in `docs/developer/web_subsystem.md`.
+
 ### Effects Answer Drops Too, Sparingly (`resources/stock_defaults/filters/*.json`, `defaults/fx_chains/*.lsdfxchain`, `web/content/fxchains/*`)
 - **New: six stock effects hit on the drop**: Bloom and Anamorphic Streak flare, Radial Blur throws out light shafts, Kaleidoscope punches in, Pinch/Bulge punches, and Vortex Swirl twists hard, each fading over 4 bars. Only a few run because the source underneath already makes its own move.
 - **In a breakdown**, Bloom's glow spreads wider and softer and Fluid Smear melts further.
@@ -211,15 +217,13 @@
 - **Smooth before sharp when embedded:** the picture renders at a 720p-class budget and steps down faster (to a quarter of that) when frames run slow; heavy looks stay off unless the host asks for quality High, since the GPU test can't be trusted on phones. `?embed&debug` adds an on-screen fps / resolution readout.
 - New headless check `web/checks/embed_check.mjs` and unit test `web/tools/feedring.test.mjs`.
 
-### Web TV: At Home (`web/ui.js`, `web/index.html`, `web/tv.css`, `web/autopilot.js`)
+### Web TV: At Home (`web/ui.js`, `web/index.html`, `web/tv.css`, `web/autopilot.js`, `web/menu.js`, `web/sync.js`, `web/pairing.js`, `broadcast/BroadcastPreferences.kt`, `broadcast/WebPresetSerializer.kt`, `broadcast/BroadcastEngine.kt`, `ui/BroadcastPreferencesPanel.kt`)
 - **Click the TV to turn it on.** The whole set is the power switch: any click on a TV that is off turns it on, and a click on the cabinet (not the picture or the other controls) turns it off.
 - **Quieter by default:** the TV no longer names every new look on screen; MENU › Announce looks turns that back on. Looks you pick with CH or FX are still named, and I shows the info any time.
 - **CH ▲ / ▼ work like a TV's channel buttons.** ▲ goes to the next channel number and ▼ to the one before it, so ▼ then ▲ always brings you back where you were (a channel you've already seen keeps its FX chain). Before, ▼ went back to whatever look had been on before, and ▲ to a random one.
 - **Fullscreen and microphone from the keyboard or MENU.** `S` (or MENU › Fullscreen, or a double-click on the picture) toggles fullscreen. `A` (or MENU › Input) switches the picture from the radio to your microphone, so it follows the music in the room; the browser asks permission first, the mic is only analysed (never played back, so no feedback), and turning the TV off puts the radio back.
 - **Clearer labels** under the TV's buttons and knobs, and turning a knob no longer switches the TV off when you let go over it.
 - **The TV says who made it.** A Liquid LSD nameplate under the screen links to liquid-lsd.greenjon.com; the first power-on of a visit plays a short ident with the eye-and-drop logo; MENU › ABOUT describes the desktop app with a QR code to the site; pressing I (or clicking the picture) adds a Liquid LSD line; about every 30 minutes a one-line bumper invites viewers to make their own; the LIVE card says "from Liquid LSD". Shared links now show a preview picture and description.
-
-### Web TV: At Home (`web/ui.js`, `web/index.html`, `web/tv.css`, `web/autopilot.js`, `web/menu.js`, `web/sync.js`, `web/pairing.js`, `broadcast/BroadcastPreferences.kt`, `broadcast/WebPresetSerializer.kt`, `broadcast/BroadcastEngine.kt`, `ui/BroadcastPreferencesPanel.kt`)
 - **The screen stays on while the TV is on.** Laptops and phones no longer dim and lock in the middle of a show (where the browser supports it).
 - **Phone lock screen and media keys.** The lock screen (and your keyboard's media keys) show the show playing on Spaz Radio and the look on air; play/pause turns the TV on and off, next and previous change the look.
 - **Install it like an app.** Your browser can install the web TV ("Install" / "Add to Home Screen"); it opens fullscreen with its own icon, and starts even without a network (showing no signal until the radio is reachable).
@@ -994,6 +998,22 @@
 - **Export / Import Macro Bank** are now in a new kebab menu (⋮) on the macro strip, alongside Rename (the old inspector never exposed them). Import skips bindings to missing parameters and reports the count.
 - **Clock row has no macro knobs**: the 4 Global knobs on the MASTER page's Clock row did nothing without a way to bind them, so they are removed (the Twister's knobs 13-16 on bank 4 are unassigned). The Clock controls are unchanged. A configurable row of free "global" knobs is planned for v1.1. Old sessions load fine; bindings on those knobs are dropped.
 - Internal: `PerformanceUiContext.navigateMacroPanelTo` is now `focusDeepEditTab`; `ParametersState` no longer has the GLB-tab pin (`showGlobalMacros` and friends); `FxMacroSummary.draw` removed.
+
+### Perform View Macro Binding Strips & Edit Row Integration (`ui/PerformanceMacroStrip.kt`, `ui/MacroBindingNav.kt`, `ui/PerformanceMatrixPanel.kt`)
+- **Macro Binding Strips in Edit Rows**: When a macro knob is selected in an Edit view row, the row now displays a dedicated inline binding strip allowing direct inspection, curve/range adjustment, and binding management without needing the old Column 3 Macro Inspector.
+- **Shared Navigation (`MacroBindingNav`)**: Centralized parameter navigation so clicking bound parameter chips or inspector targets reliably jumps to the correct deck/mixer sub-tab and highlights the target parameter.
+
+### Macro Binding Ranges, Brackets & Overhang Button Enhancements (`ui/*`)
+- **MacroBindingEditor & Sliders (`BeatDivisionSlider`, `CustomRangeSlider`)**: Sliders and range inputs now support direct macro binding popups, target range tracking (`noteTargetRange`), log-scaled dragging, and cyan `[ ]` brackets on slider tracks marking macro travel ranges.
+- **PerformanceMatrixPanel Overhang Buttons**: the Add Target (was Learn) / Cancel buttons in matrix rows now use custom rect hit-testing (`overhangButton`) to ensure they remain fully clickable beneath overlay child windows.
+
+### Macro Binding ID Stability & Macro Learn Parameter Navigation Fixes (`ui/MacroBindingEditor.kt`, `ui/PerformanceMatrixPanel.kt`)
+- **MacroBindingEditor**: Replaced `hashCode()` with `System.identityHashCode(binding)` for ImGui ID push and link mode hashing to ensure stable IDs regardless of object content changes.
+- **PerformanceMatrixPanel**: Fixed Macro Learn navigation to directly open Deep Edit *Params* for the target module rather than checking disclosure state against collapsed enum values incorrectly.
+
+### Automated GitHub Release Pruning (`.github/workflows/release.yml`)
+- Added automated release cleanup via `dev-drprasad/delete-older-releases@v0.3.3` in the release workflow (`release.yml`).
+- Keeps the latest 3 `v0.9.*` releases and deletes older ones with their tags. Only `v0.9.*` tags are matched (`delete_tag_pattern: v0.9.`): the first version matched any tag containing "v", which also deleted the `syphon-natives` release the build downloads its Syphon libraries from.
 
 ### Bi-directional Bank Sync & Bipolar MeterType Support for Controller Feedback (`control/*`, `ui/*`)
 - **Bi-directional Bank Switching**: When switching Perform view tabs or pages in the software UI (via mouse, menu, or keyboard shortcuts), connected controllers with hardware bank support (like the DJ TechTools Midi Fighter Twister) now automatically switch their active hardware bank to stay synchronized with the active screen page.

@@ -6,7 +6,7 @@ This document details the real-time audio capture backends, zero-allocation cons
 
 ## Dual Audio Client Architecture
 
-Liquid LSD supports two complementary audio client implementations managed by [`AudioEngine.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/audio/AudioEngine.kt):
+Liquid LSD supports two complementary audio client implementations managed by [`AudioEngine.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/audio/AudioEngine.kt):
 
 ```
                        ┌───────────────────────────────┐
@@ -126,7 +126,7 @@ When full-band RMS drops below `silenceThresholdDb` (-40 dBFS) for more than 500
 
 ## Beat Tracker Engine (`BeatTrackerEngine.kt`)
 
-Beat detection and continuous modulation signal generation are handled by [`BeatTrackerEngine.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/audio/BeatTrackerEngine.kt) (inspired by BTrack and the Dan Ellis causal dynamic programming model):
+Beat detection and continuous modulation signal generation are handled by [`BeatTrackerEngine.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/audio/BeatTrackerEngine.kt) (inspired by BTrack and the Dan Ellis causal dynamic programming model):
 - **Complex Spectral Difference ODF**: 512-point zero-allocation FFT detecting percussive and tonal onsets.
 - **Two-State Multi-Band Autocorrelation**: Unconstrained acquisition (40–200 BPM) vs. locked tracking with harmonic comb unwrapping and $\pm 2.0$ BPM/beat human tracking inertia.
 - **Decoupled Periodic Tempo Estimation**: Autocorrelation search across multi-second history is decoupled from the per-block rate via `tempoEstimationIntervalBlocks` (default 4 blocks / ~46 ms, ~21.5 Hz), reducing CPU iterations by 75% to prevent real-time XRUNs while preserving instantaneous onset reactivity.
@@ -137,7 +137,7 @@ Beat detection and continuous modulation signal generation are handled by [`Beat
 
 ## Shader Audio Texture Spectrum (`SpectrumAnalyzer.kt`)
 
-Row 0 of the 512x2 `audioFFT` / `iChannel0` texture (`AudioTexture.kt`) comes from [`SpectrumAnalyzer.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/audio/SpectrumAnalyzer.kt), not from the beat tracker (which keeps no display spectrum). `AudioEngine.processAudio` pushes each block's mixed mono samples into it after the waveform tap.
+Row 0 of the 512x2 `audioFFT` / `iChannel0` texture (`AudioTexture.kt`) comes from [`SpectrumAnalyzer.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/audio/SpectrumAnalyzer.kt), not from the beat tracker (which keeps no display spectrum). `AudioEngine.processAudio` pushes each block's mixed mono samples into it after the waveform tap.
 - **Transform:** newest 1024 samples, Hann window, radix-2 FFT, 512 linear bins (0 Hz to Nyquist; bin spacing sampleRate/1024).
 - **Scaling:** magnitude normalised so a full-scale sine is 1.0, then dB mapped -80..0 dB onto 0..1.
 - **Smoothing:** instant attack, one-pole release with a 0.08 s time constant computed from the block length, so it does not depend on the buffer size.
@@ -151,8 +151,8 @@ Row 0 of the 512x2 `audioFFT` / `iChannel0` texture (`AudioTexture.kt`) comes fr
 Querying audio devices via `AudioSystem.getMixerInfo()` and `AudioSystem.getMixer()` in Java Sound invokes native ALSA/OS audio layer introspection. Probing mixers inside the real-time ImGui render loop creates native memory allocations and file descriptor pressure that can lead to memory exhaustion (OOM).
 
 To prevent this:
-- [`AudioEngine.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/audio/AudioEngine.kt) maintains a cached list of input devices (`cachedInputDevices`) and pre-allocated name strings (`cachedDeviceNames`).
-- The UI layer ([`AudioEnginePanel.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/ui/AudioEnginePanel.kt)) reads from this cache with 0 allocations on the render loop.
+- [`AudioEngine.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/audio/AudioEngine.kt) maintains a cached list of input devices (`cachedInputDevices`) and pre-allocated name strings (`cachedDeviceNames`).
+- The UI layer ([`AudioEnginePanel.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/ui/AudioEnginePanel.kt)) reads from this cache with 0 allocations on the render loop.
 - Dynamic rescan is triggered explicitly via `AudioEngine.refreshInputDevices()` or the UI refresh button (`Icons.REFRESH`).
 
 ---
@@ -173,7 +173,7 @@ The operational signal $s[i]$ fed into the biquad filter bank and beat detector 
 - **`RIGHT_ONLY` ("Right Only")**: Routes Right channel directly ($s[i] = R[i]$, or silence if no right channel is connected).
 
 ### 2. Real-Time 2-Channel Input Peak Metering
-[`AudioEnginePanel.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/ui/AudioEnginePanel.kt) renders a 2-channel stereo peak/RMS meter with:
+[`AudioEnginePanel.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/ui/AudioEnginePanel.kt) renders a 2-channel stereo peak/RMS meter with:
 - **Independent Channel Visualization**: Left and Right levels are measured on raw incoming audio *before* routing. If a user feeds a dead Left channel and an active Right channel, the meter immediately reveals the hardware state.
 - **Visual Routing Feedback**: Inactive channels are drawn with dimmed opacity and a `[Bypassed]` badge when `Left Only` or `Right Only` routing is selected.
 - **Ballistics**: Fast attack with smooth exponential release (~20 dB/s) and a 1.2-second peak-hold indicator tick.
@@ -183,7 +183,7 @@ The operational signal $s[i]$ fed into the biquad filter bank and beat detector 
 
 ## Audio Engine Settings Persistence
 
-All Audio Engine configuration parameters are serialized to and restored from `lsd-settings.properties` via [`UITheme.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/ui/UITheme.kt):
+All Audio Engine configuration parameters are serialized to and restored from `lsd-settings.properties` via [`UITheme.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/ui/UITheme.kt):
 - `audioEngineEnabled`: Master toggle for audio processing.
 - `audioBackend`: Selected audio backend mode (`AUTO`, `JACK_ONLY`, `JAVASOUND_ONLY`).
 - `audioChannelRouting`: Stereo routing selector (`MIX`, `LEFT_ONLY`, `RIGHT_ONLY`).
