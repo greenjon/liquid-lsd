@@ -3,7 +3,7 @@
   "sourceId": "glitch_blocks",
   "parameters": {
     "Intensity": {
-      "note": "Glitches land on the kick.",
+      "note": "Glitches land on the kick. The picture comes clean in a breakdown; the corruption returns with the build.",
       "randomizeBase": true,
       "baseMin": 0.25,
       "baseMax": 0.5,
@@ -26,6 +26,12 @@
           "followerMode": "SMOOTH",
           "attackMs": 40,
           "decayMs": 400
+        },
+        {
+          "name": "breakdown cleans up",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": 0.2
         }
       ]
     },
@@ -112,7 +118,7 @@
       ]
     },
     "Crush": {
-      "note": "Posterise drops on the kick; off by default.",
+      "note": "Posterise drops on the kick; off by default. Crushed to a few colour levels on the drop.",
       "randomizeBase": true,
       "baseMin": 0,
       "baseMax": 0.5,
@@ -126,6 +132,12 @@
           "followerMode": "SNAP",
           "attackMs": 0,
           "decayMs": 35
+        },
+        {
+          "name": "drop crush",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.5
         }
       ]
     },

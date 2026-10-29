@@ -3,7 +3,7 @@
   "sourceId": "domain_warp_fluid",
   "parameters": {
     "WarpStrength": {
-      "note": "Fluid kneads on the kick.",
+      "note": "Fluid kneads on the kick. Tears open on the drop.",
       "randomizeBase": true,
       "baseMin": 0.25,
       "baseMax": 0.6,
@@ -26,6 +26,12 @@
           "followerMode": "SMOOTH",
           "attackMs": 40,
           "decayMs": 400
+        },
+        {
+          "name": "drop tear",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.15
         }
       ]
     },
@@ -101,7 +107,7 @@
       ]
     },
     "Viscosity": {
-      "note": "Thins out on bass.",
+      "note": "Thins out on bass. Thickens to syrup in a breakdown and thins out as the music builds.",
       "randomizeBase": true,
       "baseMin": 0.1,
       "baseMax": 0.45,
@@ -115,6 +121,12 @@
           "followerMode": "SMOOTH",
           "attackMs": 40,
           "decayMs": 400
+        },
+        {
+          "name": "breakdown thickens",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": -0.2
         }
       ]
     },

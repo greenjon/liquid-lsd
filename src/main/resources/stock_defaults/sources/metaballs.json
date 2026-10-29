@@ -30,7 +30,7 @@
       ]
     },
     "OrbitSpread": {
-      "note": "Orbits widen with loudness.",
+      "note": "Orbits widen with loudness. The balls huddle in a breakdown and spread out with the build.",
       "randomizeBase": true,
       "baseMin": 0.4,
       "baseMax": 0.75,
@@ -54,6 +54,12 @@
           "subdivision": 16,
           "depth": 0.1,
           "dcOffset": 0.1
+        },
+        {
+          "name": "breakdown huddles",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": 0.2
         }
       ]
     },
@@ -121,7 +127,7 @@
       ]
     },
     "Brightness": {
-      "note": "Kick flash; off by default.",
+      "note": "Kick flash; off by default. Flashes on the drop and fades over 4 bars.",
       "modulators": [
         {
           "name": "kick hit",
@@ -132,6 +138,12 @@
           "followerMode": "SNAP",
           "attackMs": 0,
           "decayMs": 35
+        },
+        {
+          "name": "drop flash",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.3
         }
       ]
     },

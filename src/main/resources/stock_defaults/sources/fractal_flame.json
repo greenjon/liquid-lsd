@@ -101,7 +101,7 @@
       ]
     },
     "Magnify": {
-      "note": "The camera pushes in on the kick.",
+      "note": "The camera pushes in on the kick. Punches in on the drop and eases back over 4 bars.",
       "modulators": [
         {
           "name": "bass pulse",
@@ -111,6 +111,12 @@
           "followerMode": "PUNCHY",
           "attackMs": 5,
           "decayMs": 150
+        },
+        {
+          "name": "drop punch-in",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.1
         }
       ]
     },
@@ -168,7 +174,7 @@
       ]
     },
     "Vibrancy": {
-      "note": "Highs bring out the colour; off by default.",
+      "note": "Highs bring out the colour; off by default. Colour washes out in a breakdown and returns with the build.",
       "modulators": [
         {
           "name": "high shimmer",
@@ -179,6 +185,12 @@
           "followerMode": "PUNCHY",
           "attackMs": 5,
           "decayMs": 110
+        },
+        {
+          "name": "breakdown washes out",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": 0.4
         }
       ]
     },

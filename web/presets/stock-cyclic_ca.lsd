@@ -61,6 +61,12 @@
      "attackMs": 40,
      "decayMs": 400,
      "dcOffset": 0.0
+    },
+    {
+     "sourceId": "audio_energy",
+     "operator": "ADD",
+     "depth": 0.35,
+     "dcOffset": 0.0
     }
    ]
   },
@@ -88,6 +94,12 @@
    "baseMax": 1.0,
    "randomizeBase": false,
    "modulators": [
+    {
+     "sourceId": "audio_drop",
+     "operator": "ADD",
+     "depth": 1.0,
+     "dcOffset": 0.0
+    },
     {
      "sourceId": "audio_flux_bass",
      "operator": "ADD",

@@ -6,6 +6,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import llm.slop.liquidlsd.cv.isSectionSource
 import llm.slop.liquidlsd.models.ModulatorDto
 import llm.slop.liquidlsd.models.ParameterDto
 import java.io.File
@@ -79,13 +80,19 @@ class StockDefaultsTest {
         filterRanges(file.nameWithoutExtension).mapValues { (_, r) -> ParameterDto(r.second, r.first, r.third, false, emptyList()) },
         file.name)
 
-    /** Every modulator entry under [raw] survived validation, at most one runs per parameter, and no depth exceeds 1. */
+    /**
+     * Every modulator entry under [raw] survived validation, at most one runs per parameter, and no depth exceeds 1. The
+     * section signals (`audio_energy`, `audio_drop`) are the exception: each may run once on top, because they follow
+     * the song's sections rather than the beat or the level, so they are layers rather than alternatives.
+     */
     private fun assertModulatorsValid(id: String, raw: JsonObject, parsed: Map<String, ParameterDto>) {
         assertEquals(raw.keys, parsed.keys, "$id: a parameter is not a float input")
         for ((name, p) in parsed) {
             val rawCount = (raw[name]!!.jsonObject["modulators"] as? JsonArray)?.size ?: 0
             assertEquals(rawCount, p.modulators.size, "$id.$name: a modulator failed validation")
-            assertTrue(p.modulators.count { !it.bypassed } <= 1, "$id.$name: more than one active modulator")
+            val running = p.modulators.filter { !it.bypassed }
+            assertTrue(running.count { !isSectionSource(it.sourceId) } <= 1, "$id.$name: more than one active modulator")
+            for (s in listOf("audio_energy", "audio_drop")) assertTrue(running.count { it.sourceId == s } <= 1, "$id.$name: $s runs twice")
             p.modulators.forEach { assertTrue(kotlin.math.abs(it.depth) <= 1f, "$id.$name: depth ${it.depth} out of range") }
         }
     }
@@ -130,8 +137,10 @@ class StockDefaultsTest {
     }
 
     /**
-     * A randomized base range lies inside the parameter and leaves room for the parameter's running ADD responses: an
-     * LFO's whole swing, a follower's full depth. Otherwise the clamp flattens the response at one end of the range.
+     * A randomized base range lies inside the parameter and leaves room for the parameter's running ADD responses, summed:
+     * an LFO's whole swing, a follower's or the drop's full depth, Energy's breakdown (-1). Otherwise the clamp flattens
+     * the response at one end of the range. Energy's louder side is left out: it is rare and brief (a louder song is
+     * adopted within seconds), so the top of a breakdown response may clamp there.
      */
     @Test
     fun shippedRandomRangesFitTheirParameters() {
@@ -155,12 +164,19 @@ class StockDefaultsTest {
             assertTrue(p.baseMin < p.baseMax, "$id.$name: empty random range")
             assertTrue(p.baseMin >= min - eps && p.baseMax <= max + eps, "$id.$name: random range ${p.baseMin}..${p.baseMax} outside $min..$max")
             val scalar = if (min < 0f) (max - min) / 2f else max - min
+            var down = 0f
+            var up = 0f
             for (m in p.modulators.filter { !it.bypassed && it.operator == "ADD" }) {
-                val (down, up) = if (m.sourceId == "lfo") (m.dcOffset - kotlin.math.abs(m.depth)) to (m.dcOffset + kotlin.math.abs(m.depth))
-                    else minOf(m.depth, 0f) to maxOf(m.depth, 0f)
-                assertTrue(p.baseMin + down * scalar >= min - eps && p.baseMax + up * scalar <= max + eps,
-                    "$id.$name: '${m.sourceId}' pushes the random range ${p.baseMin}..${p.baseMax} outside $min..$max")
+                val (lo, hi) = when (m.sourceId) {
+                    "lfo" -> (m.dcOffset - kotlin.math.abs(m.depth)) to (m.dcOffset + kotlin.math.abs(m.depth))
+                    "audio_energy" -> minOf(-m.depth, 0f) to maxOf(-m.depth, 0f)
+                    else -> minOf(m.depth, 0f) to maxOf(m.depth, 0f)
+                }
+                down += lo
+                up += hi
             }
+            assertTrue(p.baseMin + down * scalar >= min - eps && p.baseMax + up * scalar <= max + eps,
+                "$id.$name: the running responses push the random range ${p.baseMin}..${p.baseMax} outside $min..$max")
         }
         return randomized
     }

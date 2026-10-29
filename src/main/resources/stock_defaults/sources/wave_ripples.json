@@ -31,7 +31,7 @@
       ]
     },
     "WaveSpeed": {
-      "note": "Waves race when loud.",
+      "note": "Waves race when loud. The waves rush outward on the drop.",
       "randomizeBase": true,
       "baseMin": 0.15,
       "baseMax": 0.5,
@@ -44,6 +44,12 @@
           "followerMode": "SMOOTH",
           "attackMs": 40,
           "decayMs": 400
+        },
+        {
+          "name": "drop rush",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.25
         }
       ]
     },
@@ -102,7 +108,7 @@
       ]
     },
     "Falloff": {
-      "note": "Reach grows with loudness; off by default.",
+      "note": "Reach grows with loudness; off by default. The waves die out near their sources in a breakdown and reach further with the build.",
       "randomizeBase": true,
       "baseMin": 0.2,
       "baseMax": 0.55,
@@ -116,6 +122,12 @@
           "followerMode": "SMOOTH",
           "attackMs": 40,
           "decayMs": 400
+        },
+        {
+          "name": "breakdown shortens the waves",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": -0.2
         }
       ]
     },

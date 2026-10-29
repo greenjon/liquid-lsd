@@ -3,7 +3,7 @@
   "sourceId": "tunnel_scenes",
   "parameters": {
     "Speed": {
-      "note": "Flight surges with loudness.",
+      "note": "Flight surges with loudness. Surges forward on the drop, easing off over 4 bars.",
       "randomizeBase": true,
       "baseMin": 0.2,
       "baseMax": 0.5,
@@ -26,6 +26,12 @@
           "genUnit": "BEAT",
           "subdivision": 16,
           "depth": 0.25
+        },
+        {
+          "name": "drop surge",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.2
         }
       ]
     },
@@ -140,7 +146,7 @@
       ]
     },
     "Fog": {
-      "note": "Fog clears when loud.",
+      "note": "Fog clears when loud. Fogs in during a breakdown.",
       "randomizeBase": true,
       "baseMin": 0.3,
       "baseMax": 0.7,
@@ -153,6 +159,12 @@
           "followerMode": "SMOOTH",
           "attackMs": 40,
           "decayMs": 400
+        },
+        {
+          "name": "breakdown fogs in",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": -0.2
         }
       ]
     },

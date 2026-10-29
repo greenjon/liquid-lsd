@@ -33,6 +33,9 @@ SPARSE_SOURCES = {"dynamic_spiral"}
 SIGNAL_TAGS = {"audio_bass": "bass", "audio_flux_bass": "kick", "audio_mid": "mid", "audio_amp": "amp",
                "audio_high": "high", "audio_flux_high": "high"}
 
+# Song-section signals: they move only in breakdowns and on drops, so they don't count as moving with the music.
+SECTION_SIGNALS = {"audio_energy", "audio_drop"}
+
 
 def header(path):
     m = re.search(r"/\*\s*(\{.*?\})\s*\*/", Path(path).read_text(), re.S)
@@ -89,7 +92,8 @@ def main():
         skip = None
         if dto["visualSourceType"] not in catalog:
             skip = "not a web source"
-        elif not any(not m.get("bypassed") for p in dto["parameters"].values() for m in p["modulators"]):
+        elif not any(not m.get("bypassed") and m["sourceId"] not in SECTION_SIGNALS
+                     for p in dto["parameters"].values() for m in p["modulators"]):
             skip = "no active audio response (the web rotation gate wants every look to move with the music)"
         if skip:
             print(f"skipped {f.stem}: {skip}")

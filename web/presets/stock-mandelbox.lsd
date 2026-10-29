@@ -225,6 +225,26 @@
    "baseMax": 0.5,
    "randomizeBase": true,
    "modulators": []
+  },
+  "Zoom": {
+   "baseValue": 0.5,
+   "baseMin": 0.0,
+   "baseMax": 1.0,
+   "randomizeBase": false,
+   "modulators": [
+    {
+     "sourceId": "audio_energy",
+     "operator": "ADD",
+     "depth": 0.1,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "audio_drop",
+     "operator": "ADD",
+     "depth": 0.15,
+     "dcOffset": 0.0
+    }
+   ]
   }
  },
  "tags": [

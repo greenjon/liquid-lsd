@@ -10,7 +10,7 @@ import { validateModulator } from '../evaluator.js';
 
 const web = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const MANDALA_PARAMS = ['Lobes', 'Recipe Select', 'L1', 'L2', 'L3', 'L4', 'Thickness', 'Hue Offset', 'Hue Sweep', 'Depth'];
-const KNOWN_SOURCES = /^(lfo|seq|beatSine|bpm|audio_(amp|bass|mid|high)|audio_flux_(amp|bass|mid|high)|midi_(cc|note)_\d+_\d+)$/;
+const KNOWN_SOURCES = /^(lfo|seq|beatSine|bpm|audio_(amp|bass|mid|high|energy|drop)|audio_flux_(amp|bass|mid|high)|midi_(cc|note)_\d+_\d+)$/;
 const PARAM_FIELDS = ['baseValue', 'baseMin', 'baseMax', 'randomizeBase', 'modulators'];
 
 const readJson = (p) => JSON.parse(fs.readFileSync(p, 'utf8'));

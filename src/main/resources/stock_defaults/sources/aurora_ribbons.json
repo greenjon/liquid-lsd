@@ -85,7 +85,7 @@
       ]
     },
     "Brightness": {
-      "note": "Gentle loudness lift.",
+      "note": "Gentle loudness lift. The curtains flare on the drop and fade over 4 bars.",
       "modulators": [
         {
           "name": "loudness swell",
@@ -105,6 +105,12 @@
           "followerMode": "SNAP",
           "attackMs": 0,
           "decayMs": 35
+        },
+        {
+          "name": "drop flare",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.3
         }
       ]
     },
@@ -127,7 +133,7 @@
       ]
     },
     "SkyDarkness": {
-      "note": "Sky lightens when loud.",
+      "note": "Sky lightens when loud. The sky goes black in a breakdown, so the curtains hang alone.",
       "randomizeBase": true,
       "baseMin": 0.45,
       "baseMax": 0.8,
@@ -141,6 +147,12 @@
           "followerMode": "SMOOTH",
           "attackMs": 40,
           "decayMs": 400
+        },
+        {
+          "name": "breakdown darkens the sky",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": -0.2
         }
       ]
     },
@@ -177,9 +189,19 @@
       "baseMax": 2
     },
     "Saturation": {
+      "note": "Colour drains in a breakdown; off by default.",
       "randomizeBase": true,
       "baseMin": 0.5,
-      "baseMax": 0.85
+      "baseMax": 0.85,
+      "modulators": [
+        {
+          "name": "breakdown drains colour",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.4
+        }
+      ]
     }
   },
   "macroBank": {

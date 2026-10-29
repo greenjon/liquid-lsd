@@ -31,7 +31,7 @@
       ]
     },
     "FlowSpeed": {
-      "note": "The oil flows faster when loud.",
+      "note": "The oil flows faster when loud. The film rushes on the drop.",
       "randomizeBase": true,
       "baseMin": 0.15,
       "baseMax": 0.45,
@@ -44,6 +44,12 @@
           "followerMode": "SMOOTH",
           "attackMs": 40,
           "decayMs": 400
+        },
+        {
+          "name": "drop rush",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.3
         }
       ]
     },
@@ -123,7 +129,7 @@
       ]
     },
     "ThicknessRange": {
-      "note": "Mids widen the colour range; off by default.",
+      "note": "Mids widen the colour range; off by default. The film calms to a few colour bands in a breakdown; the bands return with the build.",
       "randomizeBase": true,
       "baseMin": 0.3,
       "baseMax": 0.75,
@@ -137,6 +143,12 @@
           "followerMode": "SMOOTH",
           "attackMs": 40,
           "decayMs": 400
+        },
+        {
+          "name": "breakdown calms the bands",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": 0.25
         }
       ]
     },

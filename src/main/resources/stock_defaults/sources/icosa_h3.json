@@ -58,7 +58,7 @@
       ]
     },
     "RimGlow": {
-      "note": "Rim lights with loudness.",
+      "note": "Rim lights with loudness. The rim flares on the drop.",
       "modulators": [
         {
           "name": "loudness swell",
@@ -68,6 +68,12 @@
           "followerMode": "SMOOTH",
           "attackMs": 40,
           "decayMs": 400
+        },
+        {
+          "name": "drop rim flare",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.3
         }
       ]
     },
@@ -235,9 +241,18 @@
       "baseMax": 0.95
     },
     "Opacity": {
+      "note": "The faces turn glassy in a breakdown and solid again with the build.",
       "randomizeBase": true,
       "baseMin": 0.55,
-      "baseMax": 0.9
+      "baseMax": 0.9,
+      "modulators": [
+        {
+          "name": "breakdown turns glassy",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": 0.3
+        }
+      ]
     },
     "RotateX": {
       "randomizeBase": true,

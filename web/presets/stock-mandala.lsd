@@ -209,6 +209,18 @@
      "attackMs": 5,
      "decayMs": 150,
      "dcOffset": 0.0
+    },
+    {
+     "sourceId": "audio_energy",
+     "operator": "ADD",
+     "depth": 0.2,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "audio_drop",
+     "operator": "ADD",
+     "depth": 0.3,
+     "dcOffset": 0.0
     }
    ]
   },

@@ -44,7 +44,7 @@
       ]
     },
     "Saturation": {
-      "note": "Mids colour it in.",
+      "note": "Mids colour it in. Colour drains in a breakdown and floods back with the build.",
       "modulators": [
         {
           "name": "mid body",
@@ -54,6 +54,12 @@
           "followerMode": "SMOOTH",
           "attackMs": 40,
           "decayMs": 400
+        },
+        {
+          "name": "breakdown drains colour",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": 0.35
         }
       ]
     },
@@ -77,10 +83,16 @@
       ]
     },
     "Reseed": {
-      "note": "Drop trigger; off by default.",
+      "note": "Restarts from fresh noise on the drop; a hard-kick reseed as the alternative (off).",
       "modulators": [
         {
-          "name": "drop reseed (hard kick wipes and reseeds)",
+          "name": "drop reseed",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 1.0
+        },
+        {
+          "name": "kick reseed",
           "sourceId": "audio_flux_bass",
           "operator": "ADD",
           "bypassed": true,

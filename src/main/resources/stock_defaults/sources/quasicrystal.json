@@ -3,7 +3,7 @@
   "sourceId": "quasicrystal",
   "parameters": {
     "Frequency": {
-      "note": "The grating tightens on the bass.",
+      "note": "The grating tightens on the bass. The lattice coarsens in a breakdown and refines with the build.",
       "randomizeBase": true,
       "baseMin": 0.25,
       "baseMax": 0.55,
@@ -27,6 +27,12 @@
           "subdivision": 8,
           "depth": 0.03,
           "dcOffset": 0.03
+        },
+        {
+          "name": "breakdown coarsens",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": 0.1
         }
       ]
     },
@@ -82,7 +88,7 @@
       ]
     },
     "DriftSpeed": {
-      "note": "Mids push the drift.",
+      "note": "Mids push the drift. The gratings race on the drop.",
       "randomizeBase": true,
       "baseMin": 0.1,
       "baseMax": 0.4,
@@ -95,6 +101,12 @@
           "followerMode": "SMOOTH",
           "attackMs": 40,
           "decayMs": 400
+        },
+        {
+          "name": "drop shimmer",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.3
         }
       ]
     },

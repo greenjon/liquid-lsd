@@ -27,6 +27,12 @@
      "attackMs": 40,
      "decayMs": 400,
      "dcOffset": 0.0
+    },
+    {
+     "sourceId": "audio_energy",
+     "operator": "ADD",
+     "depth": 0.2,
+     "dcOffset": 0.0
     }
    ]
   },
@@ -125,6 +131,12 @@
      "followerMode": "SNAP",
      "attackMs": 0,
      "decayMs": 35,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "audio_drop",
+     "operator": "ADD",
+     "depth": 0.5,
      "dcOffset": 0.0
     }
    ]

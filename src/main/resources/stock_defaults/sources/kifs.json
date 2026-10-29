@@ -140,7 +140,7 @@
       ]
     },
     "FlightSpeed": {
-      "note": "The endless zoom starts with loudness; off by default.",
+      "note": "Still until the drop, which flies the camera forward for 4 bars; loudness as the alternative (off).",
       "modulators": [
         {
           "name": "loudness swell",
@@ -151,6 +151,12 @@
           "followerMode": "SMOOTH",
           "attackMs": 40,
           "decayMs": 400
+        },
+        {
+          "name": "drop flight",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.3
         }
       ]
     },
@@ -251,6 +257,17 @@
       "randomizeBase": true,
       "baseMin": -0.4,
       "baseMax": 0.4
+    },
+    "Saturation": {
+      "note": "Colour drains in a breakdown and floods back with the build.",
+      "modulators": [
+        {
+          "name": "breakdown drains colour",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": 0.5
+        }
+      ]
     }
   },
   "macroBank": {

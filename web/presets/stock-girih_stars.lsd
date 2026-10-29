@@ -27,6 +27,12 @@
      "attackMs": 5,
      "decayMs": 150,
      "dcOffset": 0.0
+    },
+    {
+     "sourceId": "audio_drop",
+     "operator": "ADD",
+     "depth": 0.15,
+     "dcOffset": 0.0
     }
    ]
   },
@@ -214,7 +220,14 @@
    "baseMin": 0.35,
    "baseMax": 0.75,
    "randomizeBase": true,
-   "modulators": []
+   "modulators": [
+    {
+     "sourceId": "audio_energy",
+     "operator": "ADD",
+     "depth": 0.3,
+     "dcOffset": 0.0
+    }
+   ]
   }
  },
  "tags": [

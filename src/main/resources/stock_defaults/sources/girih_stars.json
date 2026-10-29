@@ -3,7 +3,7 @@
   "sourceId": "girih_stars",
   "parameters": {
     "Angle": {
-      "note": "The strapwork angle breathes over 32 beats; bass as the alternative.",
+      "note": "The strapwork angle breathes over 32 beats; bass as the alternative. The stars snap sharp on the drop and relax over 4 bars.",
       "randomizeBase": true,
       "baseMin": 0.35,
       "baseMax": 0.75,
@@ -27,6 +27,12 @@
           "followerMode": "PUNCHY",
           "attackMs": 5,
           "decayMs": 150
+        },
+        {
+          "name": "drop sharpens the stars",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.15
         }
       ]
     },
@@ -202,9 +208,18 @@
       "baseMax": 3
     },
     "Saturation": {
+      "note": "Colour drains in a breakdown and floods back with the build.",
       "randomizeBase": true,
       "baseMin": 0.35,
-      "baseMax": 0.75
+      "baseMax": 0.75,
+      "modulators": [
+        {
+          "name": "breakdown drains colour",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": 0.3
+        }
+      ]
     }
   },
   "macroBank": {

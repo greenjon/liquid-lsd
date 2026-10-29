@@ -3,7 +3,7 @@
   "sourceId": "video_feedback",
   "parameters": {
     "Zoom": {
-      "note": "Kick pushes the feedback zoom.",
+      "note": "Kick pushes the feedback zoom. The tunnel rushes in on the drop.",
       "randomizeBase": true,
       "baseMin": 0.25,
       "baseMax": 0.6,
@@ -26,6 +26,12 @@
           "genUnit": "BEAT",
           "subdivision": 16,
           "depth": 0.1
+        },
+        {
+          "name": "drop tunnel rush",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.25
         }
       ]
     },
@@ -117,7 +123,7 @@
       ]
     },
     "Decay": {
-      "note": "Trails lengthen when loud; off by default.",
+      "note": "Trails lengthen when loud; off by default. Trails linger in a breakdown and shorten with the build.",
       "randomizeBase": true,
       "baseMin": 0.1,
       "baseMax": 0.3,
@@ -131,6 +137,12 @@
           "followerMode": "SMOOTH",
           "attackMs": 40,
           "decayMs": 400
+        },
+        {
+          "name": "breakdown lengthens trails",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": 0.1
         }
       ]
     },

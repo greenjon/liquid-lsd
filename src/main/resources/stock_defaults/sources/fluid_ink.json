@@ -44,9 +44,18 @@
       "baseMax": 1
     },
     "Force": {
+      "note": "A hard stir on the drop.",
       "randomizeBase": true,
       "baseMin": 0.35,
-      "baseMax": 0.75
+      "baseMax": 0.75,
+      "modulators": [
+        {
+          "name": "drop stir",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.25
+        }
+      ]
     },
     "Swirl": {
       "randomizeBase": true,
@@ -64,9 +73,18 @@
       "baseMax": 0.45
     },
     "DyeFade": {
+      "note": "The ink clears in a breakdown and builds up again with the music.",
       "randomizeBase": true,
       "baseMin": 0.15,
-      "baseMax": 0.5
+      "baseMax": 0.5,
+      "modulators": [
+        {
+          "name": "breakdown clears the ink",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": -0.3
+        }
+      ]
     },
     "ColorMode": {
       "randomizeBase": true,

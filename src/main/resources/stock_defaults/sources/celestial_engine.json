@@ -3,7 +3,7 @@
   "sourceId": "celestial_engine",
   "parameters": {
     "PulseWave": {
-      "note": "The pulse wave fires on the kick.",
+      "note": "The pulse wave fires on the kick. One big shockwave on the drop.",
       "modulators": [
         {
           "name": "kick hit",
@@ -23,6 +23,12 @@
           "followerMode": "PUNCHY",
           "attackMs": 5,
           "decayMs": 150
+        },
+        {
+          "name": "drop shockwave",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.4
         }
       ]
     },
@@ -143,7 +149,7 @@
       ]
     },
     "MoireStrength": {
-      "note": "Mids deepen the moire; off by default.",
+      "note": "Mids deepen the moire; off by default. The interference fades out in a breakdown and returns with the build.",
       "randomizeBase": true,
       "baseMin": 0.35,
       "baseMax": 0.85,
@@ -157,6 +163,12 @@
           "followerMode": "SMOOTH",
           "attackMs": 40,
           "decayMs": 400
+        },
+        {
+          "name": "breakdown clears the moire",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": 0.3
         }
       ]
     },

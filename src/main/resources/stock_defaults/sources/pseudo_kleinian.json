@@ -102,7 +102,7 @@
       ]
     },
     "FlightSpeed": {
-      "note": "Flies faster when loud.",
+      "note": "Flies faster when loud. Surges forward on the drop, easing off over 4 bars.",
       "randomizeBase": true,
       "baseMin": 0.15,
       "baseMax": 0.4,
@@ -115,6 +115,12 @@
           "followerMode": "SMOOTH",
           "attackMs": 40,
           "decayMs": 400
+        },
+        {
+          "name": "drop surge",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.3
         }
       ]
     },
@@ -184,9 +190,18 @@
       "baseMax": 3
     },
     "Saturation": {
+      "note": "Colour drains in a breakdown and floods back with the build.",
       "randomizeBase": true,
       "baseMin": 0.55,
-      "baseMax": 0.85
+      "baseMax": 0.85,
+      "modulators": [
+        {
+          "name": "breakdown drains colour",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": 0.4
+        }
+      ]
     },
     "RotateX": {
       "randomizeBase": true,

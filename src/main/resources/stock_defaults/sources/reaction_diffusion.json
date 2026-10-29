@@ -112,7 +112,7 @@
       ]
     },
     "Regime": {
-      "note": "Very slow regime morph; off by default.",
+      "note": "Very slow regime morph; off by default. A breakdown moves the pattern along the regime path, so it re-forms as something else; it moves back with the build.",
       "randomizeBase": true,
       "baseMin": 0.1,
       "baseMax": 0.85,
@@ -127,14 +127,26 @@
           "subdivision": 128,
           "depth": 0.05,
           "dcOffset": 0.05
+        },
+        {
+          "name": "breakdown changes species",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": 0.1
         }
       ]
     },
     "Reseed": {
-      "note": "Drop trigger; off by default.",
+      "note": "Re-seeds on the drop; a hard-kick reseed as the alternative (off).",
       "modulators": [
         {
-          "name": "drop reseed (hard kick wipes and reseeds)",
+          "name": "drop reseed",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 1.0
+        },
+        {
+          "name": "kick reseed",
           "sourceId": "audio_flux_bass",
           "operator": "ADD",
           "bypassed": true,

@@ -3,7 +3,7 @@
   "sourceId": "hyper_slice",
   "parameters": {
     "SliceOffset": {
-      "note": "The 4D slice sweeps slowly through the object; bass as the alternative.",
+      "note": "The 4D slice sweeps slowly through the object; bass as the alternative. The drop shoves the slice through the fourth dimension.",
       "randomizeBase": true,
       "baseMin": -0.5,
       "baseMax": 0.5,
@@ -26,6 +26,12 @@
           "followerMode": "PUNCHY",
           "attackMs": 5,
           "decayMs": 150
+        },
+        {
+          "name": "drop shove",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.2
         }
       ]
     },
@@ -225,9 +231,18 @@
       "baseMax": 0.95
     },
     "Opacity": {
+      "note": "The faces turn glassy in a breakdown and solid again with the build.",
       "randomizeBase": true,
       "baseMin": 0.55,
-      "baseMax": 0.9
+      "baseMax": 0.9,
+      "modulators": [
+        {
+          "name": "breakdown turns glassy",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": 0.3
+        }
+      ]
     },
     "EdgeThickness": {
       "randomizeBase": true,

@@ -75,7 +75,7 @@
       ]
     },
     "Speed": {
-      "note": "Cells orbit faster when loud.",
+      "note": "Cells orbit faster when loud. The cells churn on the drop.",
       "randomizeBase": true,
       "baseMin": 0.15,
       "baseMax": 0.5,
@@ -88,11 +88,17 @@
           "followerMode": "SMOOTH",
           "attackMs": 40,
           "decayMs": 400
+        },
+        {
+          "name": "drop churn",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.25
         }
       ]
     },
     "CellScale": {
-      "note": "Slow zoom; off by default.",
+      "note": "Slow zoom; off by default. Fewer, larger cells in a breakdown; they split again with the build.",
       "randomizeBase": true,
       "baseMin": 0.2,
       "baseMax": 0.6,
@@ -107,6 +113,12 @@
           "subdivision": 32,
           "depth": 0.075,
           "dcOffset": 0.075
+        },
+        {
+          "name": "breakdown grows the cells",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": 0.15
         }
       ]
     },

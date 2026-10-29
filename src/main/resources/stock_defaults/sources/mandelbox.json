@@ -212,6 +212,23 @@
       "randomizeBase": true,
       "baseMin": -0.5,
       "baseMax": 0.5
+    },
+    "Zoom": {
+      "note": "The camera pulls back in a breakdown and punches in on the drop.",
+      "modulators": [
+        {
+          "name": "breakdown pulls back",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": 0.1
+        },
+        {
+          "name": "drop punch-in",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.15
+        }
+      ]
     }
   },
   "macroBank": {

@@ -129,7 +129,7 @@
       ]
     },
     "Brightness": {
-      "note": "Gentle loudness lift.",
+      "note": "Gentle loudness lift. Ignites on the drop and fades over 4 bars.",
       "modulators": [
         {
           "name": "loudness swell",
@@ -149,11 +149,17 @@
           "followerMode": "SNAP",
           "attackMs": 0,
           "decayMs": 35
+        },
+        {
+          "name": "drop ignition",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.25
         }
       ]
     },
     "Coverage": {
-      "note": "Mids spread the gas; off by default.",
+      "note": "Mids spread the gas; off by default. The gas thins to filaments in a breakdown and fills back in with the build.",
       "randomizeBase": true,
       "baseMin": 0.35,
       "baseMax": 0.65,
@@ -167,6 +173,12 @@
           "followerMode": "SMOOTH",
           "attackMs": 40,
           "decayMs": 400
+        },
+        {
+          "name": "breakdown thins to filaments",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": -0.15
         }
       ]
     },

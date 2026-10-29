@@ -58,7 +58,7 @@
       ]
     },
     "Zoom": {
-      "note": "Breathes with loudness.",
+      "note": "Breathes with loudness. Punches in on the drop and eases back over 4 bars.",
       "randomizeBase": true,
       "baseMin": 0.3,
       "baseMax": 0.55,
@@ -81,6 +81,12 @@
           "followerMode": "PUNCHY",
           "attackMs": 5,
           "decayMs": 150
+        },
+        {
+          "name": "drop punch-in",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.2
         }
       ]
     },
@@ -190,9 +196,18 @@
       ]
     },
     "Iterations": {
+      "note": "Simplifies in a breakdown; the fine detail returns with the build.",
       "randomizeBase": true,
       "baseMin": 0.45,
-      "baseMax": 0.8
+      "baseMax": 0.8,
+      "modulators": [
+        {
+          "name": "breakdown simplifies",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": 0.25
+        }
+      ]
     },
     "SurfaceType": {
       "randomizeBase": true,

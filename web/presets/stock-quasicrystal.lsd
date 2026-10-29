@@ -27,6 +27,12 @@
      "subdivision": 8,
      "depth": 0.03,
      "dcOffset": 0.03
+    },
+    {
+     "sourceId": "audio_energy",
+     "operator": "ADD",
+     "depth": 0.1,
+     "dcOffset": 0.0
     }
    ]
   },
@@ -94,6 +100,12 @@
      "followerMode": "SMOOTH",
      "attackMs": 40,
      "decayMs": 400,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "audio_drop",
+     "operator": "ADD",
+     "depth": 0.3,
      "dcOffset": 0.0
     }
    ]

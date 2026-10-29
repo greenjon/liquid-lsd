@@ -3,7 +3,7 @@
   "sourceId": "isometric_voxels",
   "parameters": {
     "MaxHeight": {
-      "note": "Columns jump on the kick.",
+      "note": "Columns jump on the kick. The city flattens in a breakdown and rises with the build.",
       "randomizeBase": true,
       "baseMin": 0.4,
       "baseMax": 0.75,
@@ -26,11 +26,17 @@
           "followerMode": "SNAP",
           "attackMs": 0,
           "decayMs": 35
+        },
+        {
+          "name": "breakdown flattens",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": 0.2
         }
       ]
     },
     "Speed": {
-      "note": "The wave quickens when loud.",
+      "note": "The wave quickens when loud. The wave rushes on the drop.",
       "randomizeBase": true,
       "baseMin": 0.15,
       "baseMax": 0.45,
@@ -43,6 +49,12 @@
           "followerMode": "SMOOTH",
           "attackMs": 40,
           "decayMs": 400
+        },
+        {
+          "name": "drop rush",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.3
         }
       ]
     },

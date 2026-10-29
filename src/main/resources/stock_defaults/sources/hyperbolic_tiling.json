@@ -3,7 +3,7 @@
   "sourceId": "hyperbolic_tiling",
   "parameters": {
     "Speed": {
-      "note": "The view drifts faster when loud.",
+      "note": "The view drifts faster when loud. The tiles rush past on the drop.",
       "randomizeBase": true,
       "baseMin": 0.15,
       "baseMax": 0.45,
@@ -16,6 +16,12 @@
           "followerMode": "SMOOTH",
           "attackMs": 40,
           "decayMs": 400
+        },
+        {
+          "name": "drop rush",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.3
         }
       ]
     },
@@ -198,9 +204,18 @@
       "baseMax": 2
     },
     "Saturation": {
+      "note": "Colour drains in a breakdown and floods back with the build.",
       "randomizeBase": true,
       "baseMin": 0.55,
-      "baseMax": 0.9
+      "baseMax": 0.9,
+      "modulators": [
+        {
+          "name": "breakdown drains colour",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": 0.4
+        }
+      ]
     }
   },
   "macroBank": {

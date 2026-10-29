@@ -46,6 +46,12 @@
      "depth": 0.025,
      "phaseOffset": 0.25,
      "dcOffset": 0.025
+    },
+    {
+     "sourceId": "audio_energy",
+     "operator": "ADD",
+     "depth": 0.12,
+     "dcOffset": 0.0
     }
    ]
   },
@@ -160,6 +166,12 @@
      "followerMode": "PUNCHY",
      "attackMs": 5,
      "decayMs": 150,
+     "dcOffset": 0.0
+    },
+    {
+     "sourceId": "audio_drop",
+     "operator": "ADD",
+     "depth": 0.15,
      "dcOffset": 0.0
     }
    ]

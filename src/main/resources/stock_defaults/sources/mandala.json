@@ -194,7 +194,7 @@
       ]
     },
     "Thickness": {
-      "note": "Lines thicken on the bass.",
+      "note": "Lines thicken on the bass. The line thins in a breakdown and goes bold on the drop.",
       "modulators": [
         {
           "name": "bass pulse",
@@ -204,6 +204,18 @@
           "followerMode": "PUNCHY",
           "attackMs": 5,
           "decayMs": 150
+        },
+        {
+          "name": "breakdown thins the line",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": 0.2
+        },
+        {
+          "name": "drop bold",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.3
         }
       ]
     },

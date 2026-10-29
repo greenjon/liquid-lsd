@@ -88,6 +88,12 @@
      "attackMs": 40,
      "decayMs": 400,
      "dcOffset": 0.0
+    },
+    {
+     "sourceId": "audio_drop",
+     "operator": "ADD",
+     "depth": 0.25,
+     "dcOffset": 0.0
     }
    ]
   },
@@ -106,6 +112,12 @@
      "subdivision": 32,
      "depth": 0.075,
      "dcOffset": 0.075
+    },
+    {
+     "sourceId": "audio_energy",
+     "operator": "ADD",
+     "depth": 0.15,
+     "dcOffset": 0.0
     }
    ]
   },

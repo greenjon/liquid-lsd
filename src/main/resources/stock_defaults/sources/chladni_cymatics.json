@@ -31,7 +31,7 @@
       ]
     },
     "FrequencyN": {
-      "note": "Second axis of the mode slide; off by default.",
+      "note": "Second axis of the mode slide; off by default. A breakdown settles the plate into a simpler mode; louder passages excite higher ones.",
       "randomizeBase": true,
       "baseMin": 3,
       "baseMax": 9,
@@ -47,6 +47,12 @@
           "depth": 0.025,
           "phaseOffset": 0.25,
           "dcOffset": 0.025
+        },
+        {
+          "name": "breakdown settles the mode",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": 0.12
         }
       ]
     },
@@ -148,7 +154,7 @@
       ]
     },
     "Scale": {
-      "note": "Kick push; off by default.",
+      "note": "Kick push; off by default. The plate punches in on the drop and eases back over 4 bars.",
       "randomizeBase": true,
       "baseMin": 0.35,
       "baseMax": 0.65,
@@ -162,6 +168,12 @@
           "followerMode": "PUNCHY",
           "attackMs": 5,
           "decayMs": 150
+        },
+        {
+          "name": "drop punch-in",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.15
         }
       ]
     },

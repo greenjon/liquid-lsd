@@ -81,6 +81,12 @@
      "attackMs": 5,
      "decayMs": 150,
      "dcOffset": 0.0
+    },
+    {
+     "sourceId": "audio_drop",
+     "operator": "ADD",
+     "depth": 0.2,
+     "dcOffset": 0.0
     }
    ]
   },
@@ -195,7 +201,14 @@
    "baseMin": 0.45,
    "baseMax": 0.8,
    "randomizeBase": true,
-   "modulators": []
+   "modulators": [
+    {
+     "sourceId": "audio_energy",
+     "operator": "ADD",
+     "depth": 0.25,
+     "dcOffset": 0.0
+    }
+   ]
   },
   "SurfaceType": {
    "baseValue": 3.0,

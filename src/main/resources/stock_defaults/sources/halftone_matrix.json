@@ -20,7 +20,7 @@
       ]
     },
     "PatternScale": {
-      "note": "Pattern pulses on the kick.",
+      "note": "Pattern pulses on the kick. The pattern blows up on the drop.",
       "randomizeBase": true,
       "baseMin": 0.25,
       "baseMax": 0.6,
@@ -44,6 +44,12 @@
           "subdivision": 8,
           "depth": 0.06,
           "dcOffset": 0.06
+        },
+        {
+          "name": "drop bloom",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.25
         }
       ]
     },
@@ -125,7 +131,7 @@
       ]
     },
     "Density": {
-      "note": "Grid density kick; off by default.",
+      "note": "Grid density kick; off by default. The dot grid coarsens in a breakdown and fills back in with the build.",
       "randomizeBase": true,
       "baseMin": 0.25,
       "baseMax": 0.6,
@@ -139,6 +145,12 @@
           "followerMode": "SNAP",
           "attackMs": 0,
           "decayMs": 35
+        },
+        {
+          "name": "breakdown coarsens",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": 0.2
         }
       ]
     },

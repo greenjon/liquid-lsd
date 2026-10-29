@@ -31,7 +31,7 @@
       ]
     },
     "PowerSwing": {
-      "note": "The swing opens up with loudness, so a quiet passage holds still.",
+      "note": "The swing opens up with loudness, so a quiet passage holds still. The bulb heaves on the drop.",
       "randomizeBase": true,
       "baseMin": 0,
       "baseMax": 0.4,
@@ -44,6 +44,12 @@
           "followerMode": "SMOOTH",
           "attackMs": 40,
           "decayMs": 400
+        },
+        {
+          "name": "drop heave",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.2
         }
       ]
     },
@@ -186,9 +192,18 @@
       "baseMax": 4
     },
     "Saturation": {
+      "note": "Colour drains in a breakdown and floods back with the build.",
       "randomizeBase": true,
       "baseMin": 0.6,
-      "baseMax": 0.9
+      "baseMax": 0.9,
+      "modulators": [
+        {
+          "name": "breakdown drains colour",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": 0.4
+        }
+      ]
     },
     "RotateX": {
       "randomizeBase": true,
