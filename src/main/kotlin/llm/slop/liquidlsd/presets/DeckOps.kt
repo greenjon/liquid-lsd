@@ -338,19 +338,26 @@ object DeckOps {
         MacroEngine.getBank(slot.bankId) ?: MacroEngine.newBankFor(slot.bankId).also { MacroEngine.registerBank(slot.bankId, it) }
 
     /** What a copy, move or swap carries from one deck to another. */
-    private class Snapshot(val dto: DeckPresetDto, val name: String?, val file: File?, val bank: MacroBank?, val empty: Boolean, val mtime: Long?, val fx: FXChainDto)
+    private class Snapshot(val dto: DeckPresetDto, val name: String?, val file: File?, val bank: MacroBank?, val empty: Boolean, val mtime: Long?, val fx: FxSnapshot)
+
+    /** A deck's FX chain as it travels: its contents plus the file and dirty baseline, so a saved chain stays saved (Save, not Save As). */
+    private class FxSnapshot(val dto: FXChainDto, val file: File?, val baseline: FXChainDto?)
 
     private fun snapshot(slot: DeckSlot, mixer: Mixer): Snapshot {
         val deck = slot.deck(mixer)
         val name = PresetManager.activePreset(slot)
         val dto = if (deck.isEmpty) PresetManager.emptyDeckDto(deck, mixer) else deck.toDto(name ?: deck.source.displayName)
         val bank = MacroEngine.getBank(slot.bankId)?.let { MacroBankSerializer.snapshotForPreset(it) }
-        return Snapshot(dto, name, PresetManager.activeFile(slot), bank, deck.isEmpty, PresetManager.mtime(slot), deck.toFxChainDto())
+        val chain = deck.fxChain
+        val fx = FxSnapshot(chain.toFxChainDto(), chain.sourceFile, chain.baselineDto)
+        return Snapshot(dto, name, PresetManager.activeFile(slot), bank, deck.isEmpty, PresetManager.mtime(slot), fx)
     }
 
     private fun put(slot: DeckSlot, snap: Snapshot, scope: DeckScope, mixer: Mixer) {
         val deck = slot.deck(mixer)
-        if (scope.fx) deck.applyFxChain(snap.fx)
+        // Through FxOps, like every chain change: it dips the chain and re-syncs its FX row knobs and link split.
+        // Both snapshots of a swap are taken before either chain changes, so the later dips can't read a half-swapped pair.
+        if (scope.fx) FxOps.applyChain(deck.fxChain, snap.fx.dto, snap.fx.file, baseline = snap.fx.baseline)
         if (!scope.source) return
         deck.applyDto(snap.dto)
         // The bank's bindings are remapped from the source deck's path to this one (fixes Copy/Move/Swap leaving stale knobs).
@@ -375,12 +382,8 @@ object DeckOps {
 
     private fun clear(slot: DeckSlot, scope: DeckScope, mixer: Mixer) {
         val deck = slot.deck(mixer)
-        if (scope.fx) {
-            for (i in deck.fxSlots.indices) deck.clearFxSlot(i)
-            deck.fxChain.reset()
-            // reset() puts the Super Knob links back to the default, so the FX row's knob bindings must follow.
-            llm.slop.liquidlsd.macro.FxMacroSync.bankIdFor(deck.fxChain, mixer)?.let { llm.slop.liquidlsd.macro.FxMacroSync.syncFor(it, mixer) }
-        }
+        // A moved-out chain leaves an unsaved "Untitled" one, so a later Save can't overwrite the file it came from.
+        if (scope.fx) FxOps.clearChain(deck.fxChain)
         if (!scope.source) return
         deck.applyDto(PresetManager.emptyDeckDto(deck, mixer))
         MacroBankSerializer.installBankForDeck(null, bankFor(slot), slot.label)
