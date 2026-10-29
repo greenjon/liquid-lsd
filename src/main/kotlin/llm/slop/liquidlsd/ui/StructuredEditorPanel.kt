@@ -53,10 +53,9 @@ object StructuredEditorPanel {
                 val ink = TangoPalette.inkFor(ParametersTabs.getDeckColorRGB(state.activeTopTab))
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ink[0], ink[1], ink[2], 1f)
             } else {
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f))
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, ImGui.colorConvertFloat4ToU32(0.35f, 0.35f, 0.35f, 1f))
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 1f)
+                // idle tab: the same theme-aware surface and ink as the browser's mode tabs
+                ButtonChrome.pushColor(TangoPalette.MODE_INACTIVE.u32())
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.getColorU32(imgui.flag.ImGuiCol.Text))
             }
             if (ButtonChrome.button(t.label, (ImGui.calcTextSize(t.label).x + 12f).coerceAtLeast(26f), h)) selected[deckLabel] = t.id
             ImGui.popStyleColor(4)
@@ -77,15 +76,19 @@ object StructuredEditorPanel {
                 val p = source.parameters[name] ?: continue
                 val labels = p.labels ?: continue
                 val cur = p.baseValue.toInt().coerceIn(0, labels.size - 1)
+                // a macro or Metaknob owns the base value and would overwrite the pick: locked like the other choice widgets
+                val locked = isBaseLocked("$deckLabel/${source.displayName}/$name", p)
+                if (locked) ImGui.beginDisabled()
                 ImGui.setNextItemWidth(labelColW)
                 // popup 4x the default 8-item height; entries alphabetical while the stored value stays the id
                 ImGui.setNextWindowSizeConstraints(0f, 0f, Float.MAX_VALUE, ImGui.getTextLineHeightWithSpacing() * POPUP_ITEMS)
                 if (ImGui.beginCombo("##choice_$name", labels[cur])) {
                     for (i in labels.indices.sortedBy { labels[it].lowercase() }) {
-                        if (ImGui.selectable(labels[i], i == cur) && i != cur) { onPushUndo(); p.baseValue = i.toFloat() }
+                        if (ImGui.selectable(labels[i], i == cur) && i != cur && !locked) { onPushUndo(); p.baseValue = i.toFloat() }
                     }
                     ImGui.endCombo()
                 }
+                if (locked) ImGui.endDisabled()
             }
             for (name in section.params) {
                 val param = source.parameters[name] ?: continue
@@ -97,6 +100,10 @@ object StructuredEditorPanel {
         }
         ImGui.popID()
     }
+
+    /** True when a macro binding or a Metaknob drives [param]'s base value (the same test as the Value cell and [ValueParamSection]). */
+    internal fun isBaseLocked(paramKey: String, param: llm.slop.liquidlsd.parameters.ModulatableParameter): Boolean =
+        llm.slop.liquidlsd.macro.MacroEngine.findBaseBindingInfo(paramKey) != null || param.metaDrivenBy != null
 
     /** The star at the end of the tab strip: keeps what the deck is playing as a new Garden offspring. */
     private fun drawKeepStar(deckLabel: String, mixer: Mixer, h: Float, source: DynamicVisualSource) {
@@ -111,7 +118,7 @@ object StructuredEditorPanel {
         itemTooltip("Keep: save what is playing as a new offspring in the Garden (library/presets/garden/); mid-morph, the nearer end.\nThe Pool and Breed strategies draw from the Garden.")
         ImGui.sameLine()
         if (ButtonChrome.button("Skip##veto", (ImGui.calcTextSize("Skip").x + 12f), h)) deck.morphController.vetoTarget()
-        itemTooltip("Veto: skip the genome this deck is morphing towards and pick another with the current strategy.\nThe view jumps to the new target at the current morph position.")
+        itemTooltip("Skip: drop the genome this deck is morphing towards and pick another with the current strategy.\nThe view jumps to the new target at the current morph position.")
         kept[deckLabel]?.let { (name, until) ->
             if (llm.slop.liquidlsd.utils.TimeSource.getEpochMillis() > until) kept.remove(deckLabel)
             else { ImGui.sameLine(); ImGui.alignTextToFramePadding(); ImGui.textDisabled("kept $name") }

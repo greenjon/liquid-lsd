@@ -67,8 +67,18 @@ object FlameUnits {
     private val xfField = Regex("^(?:X\\d|XF) (.+)$")
     private val slotWeight = Regex("^V\\d Weight$")
 
+    /** Stands for "no map" in [resolved] (a ConcurrentHashMap holds no nulls). */
+    private val NONE: Mapping = Linear(0f, 1f, 0f, 1f)
+    /** [of] per name, so a per-frame caller pays one hash lookup instead of the regex. Names are the genome's, so it stays small. */
+    private val resolved = java.util.concurrent.ConcurrentHashMap<String, Mapping>()
+
     /** The map for parameter [name], or null when it is stored in its own units (angles, 0..1 values, ids, A..D). */
     fun of(name: String): Mapping? {
+        val m = resolved[name] ?: (resolve(name) ?: NONE).also { resolved.putIfAbsent(name, it) }
+        return if (m === NONE) null else m
+    }
+
+    private fun resolve(name: String): Mapping? {
         globals[name]?.let { return it }
         val field = xfField.find(name)?.groupValues?.get(1) ?: return null
         return when {
@@ -81,7 +91,8 @@ object FlameUnits {
     }
     private val MOVES = setOf("PreX", "PreY", "PostX", "PostY")
 
-    fun real(name: String, stored: Float): Float = of(name)?.real(stored) ?: stored
+    // spelled out rather than `of(name)?.real(stored) ?: stored`, which boxes the Float (FlameSource / FlameEngine call it per frame)
+    fun real(name: String, stored: Float): Float { val m = of(name); return if (m != null) m.real(stored) else stored }
     fun stored(name: String, real: Float): Float = of(name)?.let { it.stored(it.clampReal(real)) } ?: real
 
     /** Real-unit range of [name], or [fallbackMin]..[fallbackMax] (the stored clamp) when it has no map. */

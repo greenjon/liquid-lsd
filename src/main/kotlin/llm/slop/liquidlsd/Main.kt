@@ -280,6 +280,8 @@ fun main(args: Array<String>) {
     llm.slop.liquidlsd.rendering.VisualSourceRegistry.loadAll(async = false)
     llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.loadAll()
     llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.loadAll()
+    // first scan of the Garden on the preset IO thread, so a Pool / Breed deck in the restored session has offspring to draw
+    llm.slop.liquidlsd.presets.Garden.refreshPool()
     if (tour == null) llm.slop.liquidlsd.rendering.ExternalVideoDiscovery.startPolling()
 
     logger.info { "OpenGL Version: ${glGetString(GL_VERSION)}" }

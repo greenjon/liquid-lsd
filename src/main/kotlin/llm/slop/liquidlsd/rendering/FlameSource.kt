@@ -36,7 +36,10 @@ class FlameSource(
 
     /** Only the tone-map pass reads uniforms here; the ~170 genome parameters go to the engine as a packed array. */
     override fun setupUniforms(shader: Shader) {
-        for (name in TONE_UNIFORMS) shader.setUniform("u$name", parameters[name]?.let { FlameUnits.real(name, it.value) } ?: 0f)
+        for (i in TONE_UNIFORMS.indices) {
+            val name = TONE_UNIFORMS[i]
+            shader.setUniform(TONE_UNIFORM_NAMES[i], parameters[name]?.let { FlameUnits.real(name, it.value) } ?: 0f)
+        }
     }
 
     override fun editorTabs(keep: String?) = FlameGenome.editorTabs(parameters, keep)
@@ -246,5 +249,7 @@ class FlameSource(
         /** Candidates tried per request before falling back; each costs well under a millisecond on the GPU. */
         private const val MAX_TRIES = 8
         private val TONE_UNIFORMS = listOf("Exposure", "Brightness", "Gamma", "Vibrancy", "Toe", "Decay", "Smooth")
+        /** The GLSL names, built once so setupUniforms does not concatenate strings every frame. */
+        private val TONE_UNIFORM_NAMES = TONE_UNIFORMS.map { "u$it" }
     }
 }
