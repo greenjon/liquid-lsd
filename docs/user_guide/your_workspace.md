@@ -104,7 +104,7 @@ A few keyboard shortcuts work anywhere in the app:
 
 | Key | What it does |
 |-----|-------------|
-| `Space` | Switch the Library between Half (Perform) and Full; from Edit, close it and bring the Library back (when cursor isn't in a text field) |
+| `Space` | Switch between the Perform and Library views; from Edit or the pair view, close it and bring the Library back (when cursor isn't in a text field) |
 | `F` | Output View â€” hides the UI, pure video output |
 | `Esc` | Exit Output View; otherwise go back one step (stop browsing a slot, leave the pair view or Edit, or return from the Library to where you opened it). An Esc that closes a menu or popup only closes it |
 | `F11` | Toggle fullscreen for the main window (UI stays visible) |
@@ -140,6 +140,6 @@ Every shortcut except `Caps Lock` and `Space` can be rebound in **Preferences â†
 | **Level** | A deck's or the Master's output opacity. |
 | **MST** | The Master row's pill: deck levels and the master level. (It was called MIX before.) |
 | **OUT** | Edit's output-stage tab: Transitions and Master FX. |
-| **W/D** | Per-deck FX chain wet/dry. |
+| **Dry/Wet** | How much of an FX chain (or one effect) is mixed in. **Chain Dry/Wet** is on the chain's Edit tab; a chain below 100% shows "Wet NN%" on its Perform row. |
 | **Mapping** | A hardware (MIDI/OSC) control tied to a parameter. A macro knob's **targets** are the parameters it drives (no hardware involved). |
 | **Bypass / Mute** | Bypass turns off an FX chain or shader; Mute turns off a modulator. |

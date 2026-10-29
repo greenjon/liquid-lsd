@@ -57,12 +57,12 @@ Liquid LSD needs to hear your music. How you connect it depends on your platform
 
 ## 3. Your First 60 Seconds
 
-When the app opens, you'll see the Perform view on the left with the Mixer on the right, and the Library docked below:
+When the app opens, you'll see the Perform view: the Performance rows on the left with the Library below them, and the Mixer on the right:
 
 ```
 +---------------------------------------------+---------------------+
 |              PERFORMANCE                    |        MIXER        |
-| (4×4 macro knobs)                       | (Decks & Output)    |
+| (deck rows & macro knobs)                   | (Decks & Output)    |
 +---------------------------------------------+                     |
 |              LIBRARY                        |                     |
 +---------------------------------------------+---------------------+
@@ -74,6 +74,6 @@ Here's what to try first:
 
 2. **Click anything.** Click the gear on a deck's row to open that deck's **Edit**, then click any cell in its parameter grid — the **Modulation** column on the right shows the controls for that parameter. Hover over any label to see a tooltip explaining what it does.
 
-3. **Open the Library.** Press **`Space`** (when not in a text field) to raise the Library panel into view. This is where you browse presets, build playlists, and manage your play queues. Cycle through Full Height, Half Height, and Docked to find the layout that suits what you're doing.
+3. **Open the Library.** The Library under the Performance rows is where you browse sources, presets, FX and transitions. Press **`Space`** (when not in a text field), or the button at the right of the Library's title bar, to switch to the **Library** view: it fills the whole column, with the five auto-VJ queues under the browser so you can drag items straight into them. Playlists live in the browser tree, and the **Queues** tab shows every queue side by side. Press `Space` again to go back to Perform.
 
 That's it — you're in. Dig into [Your Workspace](user_guide/your_workspace.md) next to understand what you're looking at, or jump straight to [Modulation](user_guide/modulation.md) if you want to start wiring audio to visuals.
