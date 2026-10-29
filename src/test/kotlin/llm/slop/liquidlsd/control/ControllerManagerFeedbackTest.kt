@@ -178,4 +178,81 @@ class ControllerManagerFeedbackTest {
         assertEquals(listOf("F0 00 01 79 05 00 00 F7", "close"), sinks.single().log.takeLast(2), "leave is sent, then the port closes")
         assertTrue(sinks.single().closed)
     }
+
+    private val nativeProfileJson = """{"id":"native-test","match":["Native Test"],
+        "inputs":[{"id":"knob","kind":"ENCODER","channel":0,"cc":0,"count":2}],
+        "output":{"knobs":{},"native":{}}}"""
+
+    private class AwaitingSink : MidiSink {
+        val log: MutableList<String> = java.util.Collections.synchronizedList(ArrayList<String>())
+        @Volatile var awaited = false
+        override fun sendCc(channel: Int, cc: Int, value: Int) { log += "cc" }
+        override fun sendSysex(bytes: ByteArray) { log += bytes.joinToString(" ") { "%02X".format(it) } }
+        override fun close() { log += "close" }
+        override fun awaitClosed(timeoutMs: Long): Boolean { awaited = true; return true }
+    }
+
+    private fun nativeManagerWith(sinks: MutableList<AwaitingSink>): ControllerManager {
+        val dir = createTempDirectory("controllers").toFile()
+        java.io.File(dir, "native-test.json").writeText(nativeProfileJson)
+        connected = listOf("Native Test")
+        return ControllerManager(
+            registry, ControllerProfileStore(dir),
+            connectedDevices = { connected },
+            openSink = { _, _ -> AwaitingSink().also { sinks += it } },
+            installShutdownHooks = false
+        )
+    }
+
+    @Test
+    fun shutdownLeavesWaitsForTheFlushAndStopsAllFeedback() {
+        val sinks = ArrayList<AwaitingSink>()
+        val m = nativeManagerWith(sinks)
+        m.updateFeedback(source, nowMs = 0)
+        m.shutdown()
+        val sink = sinks.single()
+        assertEquals(listOf("F0 00 01 79 05 00 00 F7", "close"), sink.log.takeLast(2))
+        assertTrue(sink.awaited, "exit waits for the leave SysEx to reach the device")
+        assertFalse(m.anyConnected)
+
+        val logged = sink.log.size
+        source.lights = listOf(KnobLight(1f, 0f, 0f, 1f))
+        m.updateFeedback(source, nowMs = 2 * ControllerManager.SCAN_INTERVAL_MS)
+        assertEquals(logged, sink.log.size, "nothing is queued after the leave")
+        assertEquals(1, sinks.size, "the device is not reopened")
+        m.shutdown()   // the shutdown hook running after Main's explicit call
+        assertEquals(logged, sink.log.size)
+    }
+
+    @Test
+    fun shutdownFromAnotherThreadNeverRacesTheRenderThread() {
+        repeat(20) {
+            val sinks: MutableList<AwaitingSink> = java.util.Collections.synchronizedList(ArrayList<AwaitingSink>())
+            val m = nativeManagerWith(sinks)
+            m.updateFeedback(source, nowMs = 0)
+            val failure = java.util.concurrent.atomic.AtomicReference<Throwable?>(null)
+            val stop = java.util.concurrent.atomic.AtomicBoolean(false)
+            val render = Thread {
+                var t = 1L
+                try {
+                    while (!stop.get()) {
+                        source.lights = listOf(KnobLight((t % 100) / 100f, 0f, 0f, 1f))
+                        m.updateFeedback(source, nowMs = t * 400)
+                        t++
+                    }
+                } catch (e: Throwable) { failure.set(e) }
+            }
+            render.start()
+            Thread.sleep(2)
+            m.shutdown()
+            stop.set(true)
+            render.join()
+            assertNull(failure.get())
+            for (sink in sinks.toList()) {
+                val log = sink.log.toList()
+                assertEquals("close", log.last(), "nothing after close: ${log.takeLast(4)}")
+                assertEquals("F0 00 01 79 05 00 00 F7", log[log.size - 2])
+            }
+        }
+    }
 }

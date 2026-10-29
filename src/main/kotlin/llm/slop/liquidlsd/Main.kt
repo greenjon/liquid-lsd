@@ -726,6 +726,9 @@ fun main(args: Array<String>) {
     llm.slop.liquidlsd.export.RealtimeRecorder.stopRecording()
     llm.slop.liquidlsd.rendering.TextureStreamerManager.shutdown()
     if (tour == null) SessionSerializer.saveSession(mixer)
+    // Leave controller native mode while the MIDI ports are still up (waits for the SysEx to go out);
+    // the controller-native-leave shutdown hook then does nothing.
+    llm.slop.liquidlsd.midi.MidiMappingManager.controllers.shutdown()
     llm.slop.liquidlsd.audio.MidiJackWatchdog.stop()
     AudioEngine.stop()
     llm.slop.liquidlsd.midi.MidiEngine.close()

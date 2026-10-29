@@ -104,7 +104,14 @@ internal object PerfRows {
      * row, the deck's SRC row (Master: Transitions) to play, or the load row while [state] is BROWSE. The control row is at the bottom
      * so the cursor is knob 16 in every browse mode, and the rows above it play, as in the Library and pair views.
      */
-    fun chainRowsFor(tag: String, state: ParametersState.ChainViewState): List<RowDescriptor> {
+    fun chainRowsFor(tag: String, state: ParametersState.ChainViewState): List<RowDescriptor> =
+        chainRowsCache.getOrPut(tag) { arrayOfNulls(ParametersState.ChainViewState.entries.size) }
+            .let { byState -> byState[state.ordinal] ?: buildChainRows(tag, state).also { byState[state.ordinal] = it } }
+
+    /** [chainRowsFor] by tag, then [ParametersState.ChainViewState] ordinal: the rows only depend on those, and the light poll asks every frame. */
+    private val chainRowsCache = java.util.concurrent.ConcurrentHashMap<String, Array<List<RowDescriptor>?>>()
+
+    private fun buildChainRows(tag: String, state: ParametersState.ChainViewState): List<RowDescriptor> {
         val chainBank = chainBankFor(tag) ?: return emptyList()
         val base = if (tag == PAIR_MASTER) "master" else "deck.$tag"
         val control = when (state) {

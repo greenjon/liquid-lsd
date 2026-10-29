@@ -335,7 +335,7 @@ class TouchConsoleController(
                 isElevatingPermissions = false
                 onComplete(success)
             }
-        }, "LiquidLSD-TouchpadPermissionElevation").start()
+        }, "LiquidLSD-TouchpadPermissionElevation").apply { isDaemon = true }.start()
     }
 
     fun shutdown() {
