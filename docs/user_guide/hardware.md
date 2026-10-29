@@ -26,7 +26,7 @@ Setup, every gesture, a worked example and troubleshooting are in [Controller Pr
 ## Other MIDI controllers
 
 1. Connect the controller and enable **Preferences → MIDI Controls → Enable MIDI Subsystem**. New devices are picked up without restarting.
-2. **Right-click** the on-screen knob, slider or button you want to control. Choose **Learn MIDI**. It pulses while it waits.
+2. **Right-click** the on-screen knob, slider or button you want to control. Choose **MIDI Learn**. It pulses while it waits.
 3. Move a knob or fader, or press a pad, on the controller. The two are now linked.
 4. Right-click again to cancel, or choose **Clear MIDI Mapping** to remove a link.
 
@@ -38,6 +38,6 @@ Buttons learn the same way: right-click A, B, AUTO or TAP, then press a pad. In 
 
 1. Enable **Preferences → OSC Controls → Enable OSC Server**. It listens on UDP port `8000` and sends feedback on `9000`; both can be changed.
 2. In your app, set the target to this computer's IP address and the same ports.
-3. Right-click a control in Liquid LSD, choose **Learn OSC**, then move a control in the app.
+3. Right-click a control in Liquid LSD, choose **OSC Learn**, then move a control in the app.
 
 Macro knobs also answer `/macro/<bank>/knob/1` to `/8` with no mapping, and report their values back so a tablet layout stays in sync. OSC mappings are saved in profiles, one per app or layout. Details: [OSC / TouchOSC Control Surfaces](performance_controls.md#osc-touchosc-control-surfaces).

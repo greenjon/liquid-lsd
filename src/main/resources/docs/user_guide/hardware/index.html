@@ -1443,7 +1443,7 @@
 <h2 id="other-midi-controllers">Other MIDI controllers</h2>
 <ol>
 <li>Connect the controller and enable <strong>Preferences → MIDI Controls → Enable MIDI Subsystem</strong>. New devices are picked up without restarting.</li>
-<li><strong>Right-click</strong> the on-screen knob, slider or button you want to control. Choose <strong>Learn MIDI</strong>. It pulses while it waits.</li>
+<li><strong>Right-click</strong> the on-screen knob, slider or button you want to control. Choose <strong>MIDI Learn</strong>. It pulses while it waits.</li>
 <li>Move a knob or fader, or press a pad, on the controller. The two are now linked.</li>
 <li>Right-click again to cancel, or choose <strong>Clear MIDI Mapping</strong> to remove a link.</li>
 </ol>
@@ -1453,7 +1453,7 @@
 <ol>
 <li>Enable <strong>Preferences → OSC Controls → Enable OSC Server</strong>. It listens on UDP port <code>8000</code> and sends feedback on <code>9000</code>; both can be changed.</li>
 <li>In your app, set the target to this computer's IP address and the same ports.</li>
-<li>Right-click a control in Liquid LSD, choose <strong>Learn OSC</strong>, then move a control in the app.</li>
+<li>Right-click a control in Liquid LSD, choose <strong>OSC Learn</strong>, then move a control in the app.</li>
 </ol>
 <p>Macro knobs also answer <code>/macro/&lt;bank&gt;/knob/1</code> to <code>/8</code> with no mapping, and report their values back so a tablet layout stays in sync. OSC mappings are saved in profiles, one per app or layout. Details: <a href="../performance_controls/#osc-touchosc-control-surfaces">OSC / TouchOSC Control Surfaces</a>.</p>
 

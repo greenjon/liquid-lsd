@@ -242,12 +242,12 @@ Playlists are where you build your setlist; they appear under **Playlists** in t
 
 ## The A/B Queue (Auto-VJ)
 
-The play queue drives the main crossfader automatically, sequencing through presets with transitions between Deck A and Deck B.
+The A/B Queue drives the main crossfader automatically, sequencing through presets with transitions between Deck A and Deck B.
 
 - **Transport controls** — `<` (previous), `▶/⏸` (play/pause), `>` (next).
 - **Loop / Shuffle** — `🔁` for continuous looping, `🔀` for random order.
 - **Add to queue** — Select a preset in the browser and press `Q`, or right-click and choose **Add to A/B Queue**.
-- **Export / Clear** — The **⋮** menu at the right of the queue's caption has **Export as playlist...** (saves an improvised live queue as a permanent playlist file) and **Clear queue**. Every queue column has the same header: a caption naming the queue with the menu, then one row of icon buttons (hover for a tooltip).
+- **Export / Clear** — The **⋮** menu at the right of the queue's caption has **Export as playlist...** (saves an improvised live queue as a permanent playlist file) and **Clear queue**. Ctrl+Z undoes a Clear, a drop onto the queue, and a playlist's Play Now / Insert / Append, like any other queue edit. Every queue column has the same header: a caption naming the queue with the menu, then one row of icon buttons (hover for a tooltip).
 
 When the queue is playing, the crossfader moves automatically between decks as presets transition. Grabbing the crossfader manually immediately pauses Auto-VJ so you have direct control.
 
@@ -291,7 +291,7 @@ Pick a section in the folder tree to show only stock shaders or only saved prese
 
 The **`[ Macros ]`** tab has two lists, switched with the **Banks** / **Pages** radio buttons. It has no playlists or queues, so it uses the whole Library width.
 
-- **Banks** lists the saved macro banks (`.knobpreset.json` files in `library/knobpresets`). **Save bank from...** saves the knobs of a deck, Master or Transition row under a name you choose. Right-click a bank to **Apply to** one of those rows (deck banks retarget to the deck they land on; targets that row can't take are dropped, and a toast says if parameters were missing) or **Delete** it. FX banks are rewritten from the FX chain, so they can't be saved or applied here. This is the same as the bank kebab menu in the Edit row, without the file browser.
+- **Banks** lists the saved macro banks (`.knobpreset.json` files in `library/knobpresets`). **Save bank from...** saves the knobs of Deck A, B, BG, PV or Master under a name you choose. Right-click a bank to **Apply to** one of those rows (deck banks retarget to the deck they land on; targets that row can't take are dropped, and a toast says if parameters were missing) or **Delete** it. FX banks and the Transitions row follow what is loaded (the FX chain, the transition), so they can't be saved or applied here. This is the same as the bank kebab menu in the Edit row, without the file browser.
 - **Pages** lists the Perform pages with where each comes from (built-in, user, or user override). Click a page to show it in Perform. Right-click for **Hide from / Show in tab strip**, **Copy to user file** (built-ins) or **Delete user file**. Editing a page's rows stays in **Preferences → MIDI Controls**.
 
 ### Transition Presets (`.lsdtrans`) & Playlists (`.lsdtransplay`)

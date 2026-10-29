@@ -1,5 +1,50 @@
 ## [Unreleased]
 
+### Copy, Move and Swap With FX Keep the FX Row in Step (`presets/DeckOps.kt`, `presets/FxOps.kt`)
+- **Fixed: after Copy, Move or Swap with FX, the receiving deck's FX row, Chain view and Twister kept showing the old chain's knobs**, some of them dead or driving the wrong effect. The chain now changes the same way as any other chain load: the knobs follow the new effects, the Super Knob links are worked out again, and the swap dip plays.
+- **Fixed: a copied or swapped chain lost its file**, so Save turned into Save As and the chain looked unsaved. It keeps its file and its saved state.
+- **A Move leaves an empty "Untitled" chain on the deck it came from**, so saving that deck's chain later can't overwrite the file the chain came from.
+
+### Macros Tab: Saved Banks Can't Be Applied to the Transitions Knobs (`ui/browser/MapsBrowserPanel.kt`, `macro/MacroBankSerializer.kt`)
+- **Fixed: Apply to: Transition wiped the Transitions row.** K1 lost the crossfader and K2-K4 their transition parameters until the next transition change. The Transitions knobs always follow the loaded transition, so Transition is no longer offered: Apply to and Save from list Deck A, B, BG, PV and Master.
+
+### Queue Clear, Drops and Playlist Enqueues Can Be Undone (`ui/browser/QueueOps.kt`, the five queue panels, `ui/browser/QueueDrop.kt`, `ui/browser/BrowserPane.kt`, `ui/browser/QueueKnobs.kt`)
+- **Fixed: Clear in any of the five queues, dropping items onto a queue, a playlist's Play Now / Insert / Append, and inserting from the controller could not be undone.** Each is now one Ctrl+Z step that puts the queue's items, playing position and shuffle history back.
+- The A/B Queue's Clear tooltip says "A/B Queue" instead of "play queue".
+
+### Rename and Edit Preset Tags Keep the Rest of the File (`ui/browser/BrowserPopupHandler.kt`)
+- **Fixed: renaming a preset or editing its tags rewrote the whole file**, dropping anything this version doesn't know about, and wrote it in place, so a crash mid-write could damage it. Only the name and tags change now, and the file is replaced in one step.
+
+### A Metaknob Always Wins Over a Leftover Macro Target (`macro/KnobDrive.kt`)
+- **Fixed: editing the value of an effect parameter that a Metaknob drives could move a macro knob that also targeted it** (and has no effect there). The Metaknob owns the value, as it already did everywhere else, so the edit now moves the Metaknob.
+
+### Fractal Flame: No Hitches From the Garden or Imports; Variation Picker Respects Macros (`rendering/FlameGenome.kt`, `rendering/FlameUnits.kt`, `presets/Garden.kt`, `presets/GardenThumbnails.kt`, `presets/FlameImportOps.kt`, `ui/StructuredEditorPanel.kt`, `default_sources/fractal_flame/meta.json`)
+- **Fixed: stutters with the Pool or Breed strategy.** Each new morph target read the Garden folder from disk in the middle of the frame; the Garden is now read in the background, and files you add or remove outside the app are picked up on the next draw.
+- **Fixed: a short freeze on Keep and on Import Flame.** The thumbnail is saved, and `.flame` files are read and converted, in the background; Import Flame shows its "Imported N flame(s)" (or error) message when it is actually done, not before.
+- **Less work per frame for every flame deck** (no text matching or throwaway objects while sending the genome to the GPU; the picture is bit-for-bit the same).
+- **Fixed: the variation picker in the flame editor could be changed while a macro or Metaknob drives it**, and the change was undone the next frame. It is now locked like the other pickers.
+- The editor's inactive tabs follow the theme (they were fixed grey with white text), and the Skip button's tooltip no longer calls it "Veto".
+- The flame source's `meta.json` no longer lists parameters with ranges the source ignores (such as Exposure 0.01..100); the flame builds all of its parameters itself.
+
+### Controllers: Clean Exit and No Freeze on Unplug (`Main.kt`, `control/ControllerManager.kt`, `control/MidiSink.kt`, `midi/MidiOutputPorts.kt`)
+- **Fixed: quitting with Ctrl+C could leave a native-mode Twister lit or half in native mode**, or log an error. The app now hands the controller back to its own firmware explicitly on quit, before the MIDI ports close, and waits up to a second for that to reach the device; the emergency hook for Ctrl+C/kill only runs if that didn't happen.
+- **Fixed: unplugging a Twister (or any controller with LED feedback) froze the picture for about a third of a second.** The MIDI port now closes in the background.
+
+### Tooltips and Wording (`ui/TooltipHelper.kt`, `ui/TangoPalette.kt`, `control/GlobalCommands.kt`, `ui/MidiPreferencesPanel.kt`, `ui/ModulatorHeaderRow.kt`, `ui/PerformanceDeckControls.kt`, `ui/PerformanceTransitionsControls.kt`, `ui/ParametersTabs.kt`, `ui/PreferencesPanel.kt`, `ui/AudioEnginePanel.kt`, `ui/TempoSyncPanel.kt`, `ui/BroadcastPreferencesPanel.kt`, `ui/browser/BrowserDock.kt`, and others)
+- **New tooltips** on System Volume, Show / Reset order, the Library tabs, Master BPM and its presets, every control of a MIDI mapping (Takeover, Slew and the rest) and the Broadcast buttons. Knob, slider and button tooltips share one layout (what it is, then the gestures, then OSC/MIDI), and are only built while you hover.
+- **Renamed, in case you look for the old name:**
+  - Right-click menus: "Learn MIDI", "Learn MIDI Mapping (...)" and "Learn MIDI (...)" are now **MIDI Learn (...)**; "Learn OSC (...)" is **OSC Learn (...)**.
+  - Preferences > MIDI: the mapping table's **Target** column is now **Control** ("target" means a macro knob's target).
+  - Global actions: "Queue Advance A/B Next" / "Queue Step Back A/B Prev" are **A/B Queue Next / Prev**; "BG Shader Advance Next" / "BG Shader Step Back Prev" are **BG Queue Next / Prev**.
+  - Deck A/B queue buttons: "PlayQueue Prev / Next" (also the OSC name) are **A/B Queue Prev / Next**.
+  - With no transition loaded the Transitions row shows **Linear Crossfade**, not "Default Blend".
+  - A modulator's power button says **Bypass this modulator** / **Turn this modulator on** (was "Mute ... (Bypass)").
+  - Leftover "Alpha" (now Level), "Library of Presets" (now Library), "properties" (now Modulation), "play queue" (now A/B Queue) and "background shader queue" (now BG Queue) are gone.
+  - Prose says "dry/wet", matching the **Dry/Wet** slider labels.
+- **Fixed: the transition checkbox's tooltip said "Bypass Transition Shader" on a box that turns the shader on.**
+- Chain view is described the same way on the chain's More menu and the Chain button, and menus use one style of ellipsis.
+- More colours come from the theme palette (menu bar, About, Clock row triggers, flame editor), so they follow the light theme.
+
 ### Audio Tab: Two Slots, Each With Its Own Power Button (`ui/PropertiesPanel.kt`, `ui/ModulatorHeaderRow.kt`)
 - **The Audio tab always shows both slots open**, Audio 1 above Audio 2, each with its own power button and reset. The "Enable Audio Slot 2" button and the collapsing slot headers are gone.
 - **Fixed: with Audio 1 off, "Enable Audio Slot 2" switched Audio 1 on instead.** Turning on Audio 2 now leaves Audio 1 as it was.

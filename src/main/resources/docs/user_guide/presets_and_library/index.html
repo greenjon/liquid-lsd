@@ -2163,12 +2163,12 @@
 <p><strong>Playlist folders.</strong> Right-click <strong>Playlists</strong> in the tree for <strong>New Folder...</strong>; right-click a playlist folder to rename or delete it. Drag a playlist onto a folder (or onto <strong>Playlists</strong> for the top level) to move it, and drag folders onto each other to nest them. Playlist folders work the same on the Sources, FX and Transitions tabs.</p>
 <hr />
 <h2 id="the-ab-queue-auto-vj">The A/B Queue (Auto-VJ)</h2>
-<p>The play queue drives the main crossfader automatically, sequencing through presets with transitions between Deck A and Deck B.</p>
+<p>The A/B Queue drives the main crossfader automatically, sequencing through presets with transitions between Deck A and Deck B.</p>
 <ul>
 <li><strong>Transport controls</strong> — <code>&lt;</code> (previous), <code>▶/⏸</code> (play/pause), <code>&gt;</code> (next).</li>
 <li><strong>Loop / Shuffle</strong> — <code>🔁</code> for continuous looping, <code>🔀</code> for random order.</li>
 <li><strong>Add to queue</strong> — Select a preset in the browser and press <code>Q</code>, or right-click and choose <strong>Add to A/B Queue</strong>.</li>
-<li><strong>Export / Clear</strong> — The <strong>⋮</strong> menu at the right of the queue's caption has <strong>Export as playlist...</strong> (saves an improvised live queue as a permanent playlist file) and <strong>Clear queue</strong>. Every queue column has the same header: a caption naming the queue with the menu, then one row of icon buttons (hover for a tooltip).</li>
+<li><strong>Export / Clear</strong> — The <strong>⋮</strong> menu at the right of the queue's caption has <strong>Export as playlist...</strong> (saves an improvised live queue as a permanent playlist file) and <strong>Clear queue</strong>. Ctrl+Z undoes a Clear, a drop onto the queue, and a playlist's Play Now / Insert / Append, like any other queue edit. Every queue column has the same header: a caption naming the queue with the menu, then one row of icon buttons (hover for a tooltip).</li>
 </ul>
 <p>When the queue is playing, the crossfader moves automatically between decks as presets transition. Grabbing the crossfader manually immediately pauses Auto-VJ so you have direct control.</p>
 <hr />
@@ -2204,7 +2204,7 @@
 <h3 id="the-macros-tab-macro-banks-and-perform-pages">The Macros Tab (Macro Banks and Perform Pages)</h3>
 <p>The <strong><code>[ Macros ]</code></strong> tab has two lists, switched with the <strong>Banks</strong> / <strong>Pages</strong> radio buttons. It has no playlists or queues, so it uses the whole Library width.</p>
 <ul>
-<li><strong>Banks</strong> lists the saved macro banks (<code>.knobpreset.json</code> files in <code>library/knobpresets</code>). <strong>Save bank from...</strong> saves the knobs of a deck, Master or Transition row under a name you choose. Right-click a bank to <strong>Apply to</strong> one of those rows (deck banks retarget to the deck they land on; targets that row can't take are dropped, and a toast says if parameters were missing) or <strong>Delete</strong> it. FX banks are rewritten from the FX chain, so they can't be saved or applied here. This is the same as the bank kebab menu in the Edit row, without the file browser.</li>
+<li><strong>Banks</strong> lists the saved macro banks (<code>.knobpreset.json</code> files in <code>library/knobpresets</code>). <strong>Save bank from...</strong> saves the knobs of Deck A, B, BG, PV or Master under a name you choose. Right-click a bank to <strong>Apply to</strong> one of those rows (deck banks retarget to the deck they land on; targets that row can't take are dropped, and a toast says if parameters were missing) or <strong>Delete</strong> it. FX banks and the Transitions row follow what is loaded (the FX chain, the transition), so they can't be saved or applied here. This is the same as the bank kebab menu in the Edit row, without the file browser.</li>
 <li><strong>Pages</strong> lists the Perform pages with where each comes from (built-in, user, or user override). Click a page to show it in Perform. Right-click for <strong>Hide from / Show in tab strip</strong>, <strong>Copy to user file</strong> (built-ins) or <strong>Delete user file</strong>. Editing a page's rows stays in <strong>Preferences → MIDI Controls</strong>.</li>
 </ul>
 <h3 id="transition-presets-lsdtrans-playlists-lsdtransplay">Transition Presets (<code>.lsdtrans</code>) &amp; Playlists (<code>.lsdtransplay</code>)</h3>

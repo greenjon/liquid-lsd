@@ -309,10 +309,10 @@ identical to the Learn ring on Parameter rows. Send a CC message from any connec
 it immediately. Right-click again while armed to cancel.
 
 Interactive header controls in the Performance Matrix also support right-click MIDI & OSC Learn:
-- **Deck A and Deck B Badges**: Right-click to Learn MIDI (`Global/snapDeckA`, `Global/snapDeckB`) or Learn OSC (`Mixer/snapDeckA`, `Mixer/snapDeckB`) to instantly snap the crossfader left or right.
-- **Auto-Fade Button `[ AUTO ]` & Fade Speed Badge**: Right-click to Learn MIDI (`Global/autoFade`, `Mixer/xfadeSpeed`) or Learn OSC (`Mixer/xfadeSpeed`).
-- **PlayQueue & BG Queue `<` and `>`**: Right-click to Learn MIDI (`Global/queuePrev`, `Global/queueNext`, `Global/bgQueuePrev`, `Global/bgQueueNext`).
-- **Transition Queue `<` and `>`**: Right-click to Learn MIDI (`Global/transQueuePrev`, `Global/transQueueNext`) or Learn OSC (`Mixer/transQueuePrev`, `Mixer/transQueueNext`).
+- **Deck A and Deck B Badges**: Right-click for MIDI Learn (`Global/snapDeckA`, `Global/snapDeckB`) or OSC Learn (`Mixer/snapDeckA`, `Mixer/snapDeckB`) to instantly snap the crossfader left or right.
+- **Auto-Fade Button `[ AUTO ]` & Fade Speed Badge**: Right-click for MIDI Learn (`Global/autoFade`, `Mixer/xfadeSpeed`) or OSC Learn (`Mixer/xfadeSpeed`).
+- **A/B Queue & BG Queue `<` and `>`** (A/B Queue Prev / Next, BG Queue Prev / Next): Right-click for MIDI Learn (`Global/queuePrev`, `Global/queueNext`, `Global/bgQueuePrev`, `Global/bgQueueNext`).
+- **Transition Queue `<` and `>`**: Right-click for MIDI Learn (`Global/transQueuePrev`, `Global/transQueueNext`) or OSC Learn (`Mixer/transQueuePrev`, `Mixer/transQueueNext`).
 Controls actively armed for MIDI learn display a pulsing cyan highlight border. Active MIDI assignments are shown in tooltips.
 
 ### Interacting with knobs

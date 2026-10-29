@@ -209,16 +209,16 @@ You can map any parameter, internal modulator variable, matrix CV modulator, or 
 
 1. **In-Situ Right-Click Learn (Fastest)**:
    - Right-click any slider or variable label in the UI — including an LFO's **Speed / Subdivision**, **Depth**, **Min/Max bounds**, **Asymmetry (Slope)**, **Morph**, **Hold**, or a parameter's **Initial Range (Base Value)**.
-   - Select **Learn MIDI Mapping (...)** from the context menu. This is a controller mapping: it sets the value itself and is saved in your controller profile, not in the preset. The slider will pulse in cyan/blue while awaiting hardware input.
+   - Select **MIDI Learn (...)** from the context menu. This is a controller mapping: it sets the value itself and is saved in your controller profile, not in the preset. The slider will pulse in cyan/blue while awaiting hardware input.
    - Move a knob, fader, or press a pad on your MIDI controller. Liquid LSD immediately maps the control, preserves your configured min/max limits, and saves the mapping to the active profile.
-   - If a macro knob currently drives that value (its slider shows the cyan lock and a `[K#]` badge), **Learn MIDI** is greyed out as "locked by K#": the knob rewrites the value every frame, so a mapping would do nothing. Release the target first (uncheck it in the macro editor), or map a different value.
+   - If a macro knob currently drives that value (its slider shows the cyan lock and a `[K#]` badge), **MIDI Learn** is greyed out as "locked by K#": the knob rewrites the value every frame, so a mapping would do nothing. Release the target first (uncheck it in the macro editor), or map a different value.
    - Right-click again and select **Cancel MIDI Learn** if needed.
 
 2. **Modulation Matrix Cells**:
    - Click any cell in the MIDI column of the Parameters matrix, then click **Learn MIDI Modulator** (or **Re-Learn MIDI Modulator**) in Modulation. This adds a MIDI modulator that is saved in the preset and adds on top of the parameter's value; **Clear MIDI Modulator** removes it.
 
 3. **Global Performance Actions**:
-   - In **Preferences → MIDI Controls**, click **Learn** next to *Queue Advance A/B Next*, *Queue Step Back A/B Prev*, *BG Shader Advance*, *BG Step Back*, or *Tap Tempo*.
+   - In **Preferences → MIDI Controls**, click **Learn** next to *A/B Queue Next*, *A/B Queue Prev*, *BG Queue Next*, *BG Queue Prev*, *Transition Queue Next / Prev*, or *Tap Tempo Trigger*.
 
 4. **Modulator Variable Paths**:
    - Modulator variables use unified path syntax: `<parameterPath>:mod/<modulatorId>/<propertyName>`. Learn writes the modulator's stable id, so the mapping keeps following that modulator when others are added, removed or reordered. Older numeric paths such as `Deck A/geometry/zoom:mod/0/subdivision` (LFO 1 Speed), `:mod/0/depth` or `:mod/1/morph` still work and resolve by list position. Modulator mappings resolve dynamically each frame and display user-friendly labels (e.g. `Deck A/geometry/zoom [LFO 1 Speed]`) in the MIDI Preferences mapping table.
@@ -442,14 +442,14 @@ You can map OSC controls either in-situ from the UI or manually from Preferences
 
 1. **In-Situ Right-Click Learn (Fastest)**:
    - Right-click any slider or variable label in the UI — including an LFO's **Speed / Subdivision**, **Depth**, **Min/Max bounds**, **Asymmetry**, a parameter's **Initial Range (Base Value)**, the crossfader, fade speed, or a deck/transition queue's `<`/`>` buttons.
-   - Select **Learn OSC (...)** from the context menu. The control will pulse in amber while awaiting input.
+   - Select **OSC Learn (...)** from the context menu. The control will pulse in amber while awaiting input.
    - Move a fader, knob, or XY pad on your TouchOSC surface. Liquid LSD ignores the first packet from a new address (guarding against a controller's connect-time sync burst) and maps once a later packet actually moves the value, preserving your configured min/max limits and saving the mapping to the active profile.
-   - As with MIDI, **Learn OSC** is greyed out as "locked by K#" while an enabled macro knob target drives that value.
+   - As with MIDI, **OSC Learn** is greyed out as "locked by K#" while an enabled macro knob target drives that value.
    - Right-click again and select **Cancel OSC Learn** (or cancel from Preferences) if needed. Once mapped, the same context menu offers **Clear OSC Mapping** to remove it without leaving the performance view.
 
 2. **Manual Learn from Preferences**:
    - Open **Preferences → OSC Controls**.
-   - Type or paste the target parameter or modulator path into the **Learn OSC** field:
+   - Type or paste the target parameter or modulator path into the **OSC Learn** field:
      - Base parameters: `Mixer/crossfade`, `Deck A/geometry/zoom`, `Master/FX1/speed`.
      - Modulator variables: `Deck A/geometry/zoom:mod/<modulatorId>/subdivision` (a numeric `:mod/0/...` is a legacy list position and still works).
    - Click **Start Learn**, then move the control on your OSC surface.
