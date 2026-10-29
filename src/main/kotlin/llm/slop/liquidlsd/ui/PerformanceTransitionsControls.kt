@@ -89,13 +89,13 @@ internal object PerformanceTransitionsControls {
             ImGui.openPopup("##perf_trans_more_menu")
         }
         llm.slop.liquidlsd.tour.WidgetRegistry.note { "perf_trans_more" }
-        itemTooltip("Transition operations (Save As, Browse, Save as Default).")
+        itemTooltip("Transition options: Save As, Browse Transitions, Save as Default.")
         pushOpenDropdownPadding()
         if (ImGui.beginPopup("##perf_trans_more_menu")) {
             pushOpenDropdownFont()
             ImGui.textDisabled("Transition")
             ImGui.separator()
-            if (ImGui.menuItem("Save As…")) TransitionSave.requestSaveCurrent(session, mixer)
+            if (ImGui.menuItem("Save As...")) TransitionSave.requestSaveCurrent(session, mixer)
             if (ImGui.menuItem("Browse Transitions")) parametersState.selectTransition()
             TransitionSave.drawDefaultMenuItems(mixer)
             popOpenDropdownFont()
@@ -118,7 +118,7 @@ internal object PerformanceTransitionsControls {
         }
         llm.slop.liquidlsd.tour.WidgetRegistry.note { "perf_trans_save" }
         ImGui.popStyleColor(4)
-        itemTooltip("Save this transition (shader, dry/wet and parameters) as a new .lsdtrans preset.")
+        itemTooltip("Save this transition (shader, wet/dry and parameters) as a new .lsdtrans preset.")
     }
 
     /**
@@ -168,7 +168,7 @@ internal object PerformanceTransitionsControls {
         val transBtnW = width.coerceAtLeast(60f)
 
         // 1. Transition Picker Button [ Settings Icon + Name * ]
-        val transName = mixer.transitionFilter?.displayName ?: "Default Blend"
+        val transName = mixer.transitionFilter?.displayName ?: "Linear Crossfade"
         val isTransModified = llm.slop.liquidlsd.presets.TransitionOps.isModified(mixer.transitionFilter)
         val modBadge = if (isTransModified) " *" else ""
 
@@ -177,7 +177,7 @@ internal object PerformanceTransitionsControls {
         }
         llm.slop.liquidlsd.tour.WidgetRegistry.note { "perf_trans_picker" }
         if (DockOutline.selects(parametersState, MacroEngine.TRANS, ParametersState.BrowseTarget.Transition)) DockOutline.drawAroundLastItem(MacroEngine.TRANS)
-        itemTooltip(tipPicker.get(transName, modBadge) { "Select ISF transition shader or blend mode in the list below (click again to stop).\nActive: $transName$modBadge" })
+        itemTooltip(tipPicker.get(transName, modBadge) { "Select the transition shader in the list below (click again to stop).\nActive: $transName$modBadge" })
 
         if (ImGui.beginDragDropTarget()) {
             val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
@@ -231,7 +231,7 @@ internal object PerformanceTransitionsControls {
                     session.parametersState.midiLearnTarget = null
                 }
             } else {
-                if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI (Transition Queue Prev)")) {
+                if (ImGui.menuItem("${Icons.SETTINGS} MIDI Learn (Transition Queue Prev)")) {
                     session.parametersState.startMidiLearn(MidiLearnTarget.GlobalAction(transQPrevKey))
                 }
             }
@@ -246,7 +246,7 @@ internal object PerformanceTransitionsControls {
                     OscLearnState.cancelLearn()
                 }
             } else {
-                if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC (Transition Queue Prev)")) {
+                if (ImGui.menuItem("${Icons.ACTIVITY} OSC Learn (Transition Queue Prev)")) {
                     OscLearnState.startLearn(transQPrevOscKey, 0f, 1f, "Transition Queue Prev")
                 }
             }
@@ -259,7 +259,14 @@ internal object PerformanceTransitionsControls {
             ImGui.endPopup()
         }
         popOpenDropdownPadding()
-        itemTooltip(tipQPrev.get(transQPrevMidiText, transCountStr) { "Previous transition in the Transition Queue ($transCountStr).$transQPrevMidiText\nRight-click for MIDI/OSC Learn." })
+        itemTooltip(tipQPrev.get(transQPrevMidiText, transCountStr) {
+            buildControlTooltip {
+                header = "Previous transition in the Transition Queue ($transCountStr)"
+                leftClick = "load it"
+                rightClick = "MIDI/OSC Learn"
+                midi = midiMappingText(transQPrevMidiMapping)
+            }
+        })
 
         ImGui.sameLine()
 
@@ -294,7 +301,7 @@ internal object PerformanceTransitionsControls {
                     session.parametersState.midiLearnTarget = null
                 }
             } else {
-                if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI (Transition Queue Next)")) {
+                if (ImGui.menuItem("${Icons.SETTINGS} MIDI Learn (Transition Queue Next)")) {
                     session.parametersState.startMidiLearn(MidiLearnTarget.GlobalAction(transQNextKey))
                 }
             }
@@ -309,7 +316,7 @@ internal object PerformanceTransitionsControls {
                     OscLearnState.cancelLearn()
                 }
             } else {
-                if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC (Transition Queue Next)")) {
+                if (ImGui.menuItem("${Icons.ACTIVITY} OSC Learn (Transition Queue Next)")) {
                     OscLearnState.startLearn(transQNextOscKey, 0f, 1f, "Transition Queue Next")
                 }
             }
@@ -322,7 +329,14 @@ internal object PerformanceTransitionsControls {
             ImGui.endPopup()
         }
         popOpenDropdownPadding()
-        itemTooltip(tipQNext.get(transQNextMidiText, transCountStr) { "Next transition in the Transition Queue ($transCountStr).$transQNextMidiText\nRight-click for MIDI/OSC Learn." })
+        itemTooltip(tipQNext.get(transQNextMidiText, transCountStr) {
+            buildControlTooltip {
+                header = "Next transition in the Transition Queue ($transCountStr)"
+                leftClick = "load it"
+                rightClick = "MIDI/OSC Learn"
+                midi = midiMappingText(transQNextMidiMapping)
+            }
+        })
 
     }
 
@@ -389,7 +403,7 @@ internal object PerformanceTransitionsControls {
                     session.parametersState.midiLearnTarget = null
                 }
             } else {
-                if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI (Snap Deck A)")) {
+                if (ImGui.menuItem("${Icons.SETTINGS} MIDI Learn (Snap Deck A)")) {
                     session.parametersState.startMidiLearn(MidiLearnTarget.GlobalAction(snapAKey))
                 }
             }
@@ -403,7 +417,14 @@ internal object PerformanceTransitionsControls {
             ImGui.endPopup()
         }
         popOpenDropdownPadding()
-        itemTooltip(tipSnapA.get(snapAMidiText) { "Deck A (Click to snap crossfader to Deck A)$snapAMidiText\nRight-click for MIDI Learn." })
+        itemTooltip(tipSnapA.get(snapAMidiText) {
+            buildControlTooltip {
+                header = "Snap to Deck A"
+                leftClick = "move the crossfader fully to Deck A"
+                rightClick = "MIDI Learn"
+                midi = midiMappingText(snapAMapping)
+            }
+        })
 
         ImGui.sameLine(0f, gap)
 
@@ -452,7 +473,7 @@ internal object PerformanceTransitionsControls {
                     session.parametersState.midiLearnTarget = null
                 }
             } else {
-                if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI (Snap Deck B)")) {
+                if (ImGui.menuItem("${Icons.SETTINGS} MIDI Learn (Snap Deck B)")) {
                     session.parametersState.startMidiLearn(MidiLearnTarget.GlobalAction(snapBKey))
                 }
             }
@@ -466,7 +487,14 @@ internal object PerformanceTransitionsControls {
             ImGui.endPopup()
         }
         popOpenDropdownPadding()
-        itemTooltip(tipSnapB.get(snapBMidiText) { "Deck B (Click to snap crossfader to Deck B)$snapBMidiText\nRight-click for MIDI Learn." })
+        itemTooltip(tipSnapB.get(snapBMidiText) {
+            buildControlTooltip {
+                header = "Snap to Deck B"
+                leftClick = "move the crossfader fully to Deck B"
+                rightClick = "MIDI Learn"
+                midi = midiMappingText(snapBMapping)
+            }
+        })
 
         ImGui.sameLine(0f, gap)
 
@@ -525,7 +553,7 @@ internal object PerformanceTransitionsControls {
                     session.parametersState.midiLearnTarget = null
                 }
             } else {
-                if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI (Auto-Fade)")) {
+                if (ImGui.menuItem("${Icons.SETTINGS} MIDI Learn (Auto-Fade)")) {
                     session.parametersState.startMidiLearn(MidiLearnTarget.GlobalAction(autoFadeKey))
                 }
             }
@@ -539,7 +567,14 @@ internal object PerformanceTransitionsControls {
             ImGui.endPopup()
         }
         popOpenDropdownPadding()
-        itemTooltip(tipAutoFade.get(Math.round(mixer.xfadeSpeed.value * 10f), autoFadeMidiText) { "Auto-fade between Deck A and Deck B over ${String.format(java.util.Locale.US, "%.1f", mixer.xfadeSpeed.value)}s.$autoFadeMidiText\nClick while fading to stop. Right-click for MIDI Learn." })
+        itemTooltip(tipAutoFade.get(Math.round(mixer.xfadeSpeed.value * 10f), autoFadeMidiText) {
+            buildControlTooltip {
+                header = "Auto-fade between Deck A and Deck B over ${String.format(java.util.Locale.US, "%.1f", mixer.xfadeSpeed.value)}s"
+                leftClick = "start the fade, or stop it while fading"
+                rightClick = "MIDI Learn"
+                midi = midiMappingText(autoFadeMapping)
+            }
+        })
 
         ImGui.sameLine(0f, gap)
 
@@ -607,7 +642,7 @@ internal object PerformanceTransitionsControls {
                     session.parametersState.midiLearnTarget = null
                 }
             } else {
-                if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI (Fade Speed)")) {
+                if (ImGui.menuItem("${Icons.SETTINGS} MIDI Learn (Fade Speed)")) {
                     session.parametersState.startMidiLearn(
                         MidiLearnTarget.BaseValueSlider(
                             paramKey = xfadeSpeedParamKey,
@@ -630,7 +665,7 @@ internal object PerformanceTransitionsControls {
                     OscLearnState.cancelLearn()
                 }
             } else {
-                if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC (Fade Speed)")) {
+                if (ImGui.menuItem("${Icons.ACTIVITY} OSC Learn (Fade Speed)")) {
                     OscLearnState.startLearn(xfadeSpeedParamKey, 0.1f, 15.0f, "Fade Speed")
                 }
             }
@@ -645,7 +680,16 @@ internal object PerformanceTransitionsControls {
             ImGui.endPopup()
         }
         popOpenDropdownPadding()
-        itemTooltip(tipSpeed.get(speedStr, speedMidiText) { "Auto-fade duration: $speedStr$speedMidiText\nDrag or scroll to adjust speed.\nRight-click for quick presets & MIDI/OSC Learn." })
+        itemTooltip(tipSpeed.get(speedStr, speedMidiText) {
+            buildControlTooltip {
+                header = "Auto-fade duration: $speedStr"
+                drag = "adjust"
+                shiftDrag = "fine-tune"
+                scroll = "adjust (Shift for finer steps)"
+                rightClick = "for presets and MIDI/OSC Learn"
+                midi = midiMappingText(speedMidiMapping)
+            }
+        })
 
         ImGui.endGroup()
     }

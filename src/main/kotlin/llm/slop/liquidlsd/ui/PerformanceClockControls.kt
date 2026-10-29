@@ -17,6 +17,9 @@ import llm.slop.liquidlsd.link.AbletonLinkEngine
  * pressed mid-set. The BPM itself is deliberately not a knob (one bump drifts the whole show); the Twister's clock knob ([ClockKnobFeed]) only shows it and taps.
  */
 internal object PerformanceClockControls {
+    /** Shared with the Tempo and Sync panel's TAP, so both tap buttons explain themselves the same way. */
+    const val TAP_TEMPO_HEADER = "Tap Tempo (hotkey: T)"
+    const val TAP_TEMPO_DESCRIPTION = "In Audio Tracker mode, nudges the detected tempo and phase. The first tap of a run also marks beat 1 of the bar."
 
     // Per-frame strings/colors are precomputed or cached by value (the render path must not allocate).
     private val SOURCES = arrayOf(ClockSource.MANUAL, ClockSource.AUDIO_TRACKER)
@@ -194,8 +197,13 @@ internal object PerformanceClockControls {
         val tapMapping = session.midiMappingManager.getMappingForParameter(tapKey)
         if (tapMapping != this.tapMapping || tapTip.isEmpty()) {
             this.tapMapping = tapMapping
-            val tapMidiText = tapMapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
-            tapTip = "Tap tempo (hotkey: T).$tapMidiText In Audio Tracker mode, nudges the detected tempo and phase.\nThe first tap of a run also marks beat 1 of the bar.\nRight-click for MIDI Learn."
+            tapTip = buildControlTooltip {
+                header = TAP_TEMPO_HEADER
+                description = TAP_TEMPO_DESCRIPTION
+                leftClick = "tap in time"
+                rightClick = "MIDI Learn"
+                midi = midiMappingText(tapMapping)
+            }
         }
         if (tapCount != tapCountShown) {
             tapCountShown = tapCount
@@ -235,7 +243,7 @@ internal object PerformanceClockControls {
                     session.parametersState.midiLearnTarget = null
                 }
             } else {
-                if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI (Tap Tempo)")) {
+                if (ImGui.menuItem("${Icons.SETTINGS} MIDI Learn (Tap Tempo)")) {
                     session.parametersState.startMidiLearn(MidiLearnTarget.GlobalAction(tapKey))
                 }
             }

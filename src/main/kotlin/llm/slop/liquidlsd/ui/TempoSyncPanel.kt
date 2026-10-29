@@ -18,6 +18,11 @@ import llm.slop.liquidlsd.link.LinkSyncManager
  * audio beat tracking calibration, and Ableton Link network session synchronization.
  */
 object TempoSyncPanel {
+    private val TAP_TIP = buildControlTooltip {
+        header = PerformanceClockControls.TAP_TEMPO_HEADER
+        description = PerformanceClockControls.TAP_TEMPO_DESCRIPTION
+        leftClick = "tap in time"
+    }
 
     private val audioTargets = AudioTarget.values()
 
@@ -143,7 +148,7 @@ object TempoSyncPanel {
             tapController.tap()
         }
         ImGui.popStyleColor(4)
-        itemTooltip("Tap to rhythmically calculate BPM (Hotkey: T). In Audio Tracker mode, nudges detected tempo and phase.")
+        itemTooltip(TAP_TIP)
 
         ImGui.sameLine(0f, 10f)
 
@@ -216,6 +221,7 @@ object TempoSyncPanel {
                 AppPreferencesStore.savePreferences()
             }
         )
+        itemTooltip("Tempo of the beat clock (40 to 240 BPM). In Audio Tracker mode it shows the detected tempo. With Ableton Link on, setting it sets the Link session tempo too.")
 
         ImGui.spacing()
 
@@ -229,6 +235,7 @@ object TempoSyncPanel {
                 audioEngine.setBpmDirectly(p)
                 AppPreferencesStore.savePreferences()
             }
+            itemTooltip("Set the beat clock to this tempo.")
         }
 
         ImGui.spacing()

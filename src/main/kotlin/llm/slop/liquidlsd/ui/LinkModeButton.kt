@@ -1,6 +1,5 @@
 package llm.slop.liquidlsd.ui
 
-import imgui.ImColor
 import imgui.ImDrawList
 import imgui.ImGui
 import imgui.flag.ImGuiCol
@@ -16,6 +15,14 @@ import llm.slop.liquidlsd.rendering.isf.MetaLinkMode
  * direction inversion, which immediately flips the glyph geometry to reflect the inverted curve.
  */
 object LinkModeButton {
+    private val INVERT_ON_TIP = buildControlTooltip {
+        header = "Invert: on (the knob moves this target the other way)"
+        leftClick = "restore the normal direction"
+    }
+    private val INVERT_OFF_TIP = buildControlTooltip {
+        header = "Invert: off"
+        leftClick = "make the knob move this target the other way"
+    }
 
     /** Short display name of a Metaknob target's knob zone. */
     fun zoneName(mode: MetaLinkMode): String = when (mode) {
@@ -195,9 +202,9 @@ object LinkModeButton {
         else if (isLinked) TangoPalette.BADGE_BG.u32()
         else TangoPalette.BUTTON_SOFT_BG.u32()
 
-        val frameCol = if (isHovered) ImColor.rgba(0.2f, 0.85f, 1.0f, 0.8f)
-        else if (isLinked) ImColor.rgba(0.2f, 0.75f, 0.95f, 0.45f)
-        else ImColor.rgba(0.25f, 0.28f, 0.32f, 0.4f)
+        val frameCol = if (isHovered) TangoPalette.ZONE_FRAME_HOVER.u32()
+        else if (isLinked) TangoPalette.ZONE_FRAME_ON.u32()
+        else TangoPalette.ZONE_FRAME_OFF.u32()
 
         drawList.addRectFilled(pMinX, pMinY, pMaxX, pMaxY, bgCol, 3f)
         drawList.addRect(pMinX, pMinY, pMaxX, pMaxY, frameCol, 3f)
@@ -218,11 +225,11 @@ object LinkModeButton {
 
         // Curve stroke color
         val lineColor = if (!isLinked) {
-            ImColor.rgba(0.5f, 0.55f, 0.6f, 0.35f)
+            TangoPalette.ZONE_CURVE_OFF.u32()
         } else if (isHovered) {
-            ImColor.rgba(0.4f, 0.95f, 1.0f, 1.0f)
+            TangoPalette.ZONE_CURVE_HOVER.u32()
         } else {
-            ImColor.rgba(0.2f, 0.85f, 1.0f, 0.95f) // Electric Cyan
+            TangoPalette.ZONE_CURVE_ON.u32()
         }
         val thickness = if (isLinked) 2.0f else 1.5f
 
@@ -297,17 +304,21 @@ object LinkModeButton {
 
         // Mixxx-style rich tooltip
         val invText = if (inverted && isLinked) " [Inverted]" else ""
-        itemTooltip("Zone: $modeName$invText\nLeft-click to cycle zones. Right-click to choose.")
+        controlTooltip {
+            header = "Knob Zone: $modeName$invText"
+            leftClick = "cycle zones"
+            rightClick = "choose a zone"
+        }
 
         // Adjacent Invert button [±]
         if (showInvertButton) {
             ImGui.sameLine(0f, 4f)
             val invBtnW = 20f
             if (inverted) {
-                ButtonChrome.pushColor(ImColor.rgba(0.12f, 0.35f, 0.45f, 0.9f))
-                ImGui.pushStyleColor(ImGuiCol.Text, ImColor.rgba(0.2f, 0.95f, 1.0f, 1.0f))
+                ButtonChrome.pushColor(TangoPalette.ZONE_INVERT_BG.u32())
+                ImGui.pushStyleColor(ImGuiCol.Text, TangoPalette.ZONE_INVERT_TEXT.u32())
             } else {
-                ImGui.pushStyleColor(ImGuiCol.Text, ImColor.rgba(0.6f, 0.65f, 0.7f, 0.8f))
+                ImGui.pushStyleColor(ImGuiCol.Text, TangoPalette.ZONE_INVERT_IDLE.u32())
             }
 
             if (ImGui.button("±##inv_$id", invBtnW, height)) {
@@ -320,7 +331,7 @@ object LinkModeButton {
                 ImGui.popStyleColor(1)
             }
 
-            itemTooltip(if (inverted) "Inversion Active: Direction is inverted.\nClick to restore normal direction." else "Inversion Inactive: Click to invert parameter travel direction.")
+            itemTooltip(if (inverted) INVERT_ON_TIP else INVERT_OFF_TIP)
         }
     }
 }

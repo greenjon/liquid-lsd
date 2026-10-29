@@ -148,7 +148,10 @@ internal object LoadedMarks {
                 dl.addText(x + CHIP_PAD, top + 1f, inkOn(rgb), text)
             }
         }
-        if (ImGui.isWindowHovered() && ImGui.isMouseHoveringRect(x0, y0, x0 + GUTTER_W, y0 + rowH)) ImGui.setTooltip(tooltip(marks))
+        if (ImGui.isWindowHovered() && ImGui.isMouseHoveringRect(x0, y0, x0 + GUTTER_W, y0 + rowH)) {
+            val tip = tooltip(marks)
+            llm.slop.liquidlsd.ui.showTooltip(tip, (x0.toInt() shl 16) xor (y0.toInt() and 0xFFFF) xor tip.hashCode())
+        }
     }
 
     /** The tint behind a row that is loaded on the bound target; drawn before the selectable so the row's own states sit on top. */

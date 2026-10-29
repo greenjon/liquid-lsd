@@ -304,8 +304,12 @@ class DeckControlPanel(
             if (ImGui.isMouseClicked(2) || ImGui.isItemClicked(2)) { // Middle-click reset to 100%
                 mixer.setLevelByUser(levelPath, 1.0f)
             }
-            val desc = if (label == "Deck PV") "Preview Dimmer" else "Channel Level"
-            showTooltip("$label $desc\nDrag or scroll to adjust. Middle-click to reset (100%).")
+            showTooltip(buildControlTooltip {
+                header = if (label == "Deck PV") "$label Level (preview only)" else "$label Level"
+                drag = "adjust"
+                scroll = "adjust (Shift for finer steps)"
+                middleClick = "reset to 100%"
+            })
         }
 
         // Draw Level Fader Track
