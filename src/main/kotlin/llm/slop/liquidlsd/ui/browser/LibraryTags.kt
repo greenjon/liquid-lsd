@@ -8,6 +8,7 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import llm.slop.liquidlsd.control.UserJsonFiles
 import llm.slop.liquidlsd.presets.PresetManager
 import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.ui.FileSystemManager
@@ -40,7 +41,7 @@ object LibraryTags {
     internal fun write(file: File, tags: List<String>): Boolean = try {
         val obj = json.parseToJsonElement(file.readText()).jsonObject
         val updated = JsonObject(LinkedHashMap(obj).apply { put("tags", JsonArray(tags.map(::JsonPrimitive))) })
-        file.writeText(json.encodeToString(JsonObject.serializer(), updated))
+        UserJsonFiles.writeAtomic(file, json.encodeToString(JsonObject.serializer(), updated))
         true
     } catch (e: Exception) {
         logger.error(e) { "Could not update the tags of ${file.name}" }
