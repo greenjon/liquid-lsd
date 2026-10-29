@@ -39,7 +39,7 @@ class MenuBar(
                 if (ImGui.beginMainMenuBar()) {
                     // ── App Brand / Logo ─────────────────────────────────────────────────
                     session.uiTheme.withFont(UITheme.FontLevel.H3) {
-                        ImGui.textColored(0.2f, 0.8f, 1.0f, 1.0f, "${Icons.ACTIVITY} Liquid LSD")
+                        ImGui.textColored(TangoPalette.BRAND_TEXT.u32(), "${Icons.ACTIVITY} Liquid LSD")
                     }
                     ImGui.sameLine(0f, 10f)
 
@@ -360,17 +360,15 @@ class MenuBar(
         val gap = PerfTabStrip.GAP
         val tabH = ImGui.getFrameHeight()
         val tabW = PerfTabStrip.tabWidth(pages.size)
-        val isLight = theme.theme == UITheme.Theme.ORANGE_SUNSHINE
-
         for ((i, page) in pages.withIndex()) {
             if (i > 0) ImGui.sameLine(0f, gap)
             val isActive = theme.performancePageId == page.id
-            val activeBg = if (isLight) TangoPalette.u32(TangoPalette.SYNC.normal) else ImGui.colorConvertFloat4ToU32(0.10f, 0.52f, 0.72f, 1f)
-            val activeHover = if (isLight) TangoPalette.u32(TangoPalette.SYNC.bright) else ImGui.colorConvertFloat4ToU32(0.15f, 0.62f, 0.82f, 1f)
-            val activeText = if (isLight) ImGui.colorConvertFloat4ToU32(0.05f, 0.05f, 0.05f, 1f) else ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f)
+            val activeBg = TangoPalette.PAGE_TAB_ACTIVE_BG.u32()
+            val activeHover = TangoPalette.PAGE_TAB_ACTIVE_HOVER.u32()
+            val activeText = TangoPalette.MODE_ACTIVE_TEXT.u32()
 
-            val inactiveBg = if (isLight) ImGui.getColorU32(ImGuiCol.Button) else ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f)
-            val inactiveHover = if (isLight) ImGui.getColorU32(ImGuiCol.ButtonHovered) else ImGui.colorConvertFloat4ToU32(0.22f, 0.25f, 0.30f, 1f)
+            val inactiveBg = TangoPalette.BUTTON_BG.u32()
+            val inactiveHover = TangoPalette.PAGE_TAB_HOVER.u32()
             val inactiveText = ImGui.getColorU32(ImGuiCol.Text)
 
             if (isActive) {
@@ -400,9 +398,9 @@ class MenuBar(
 
         if (theme.randomizationEnabled) {
             ImGui.sameLine(0f, 10f)
-            ImGui.pushStyleColor(ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.25f, 0.18f, 0.32f, 0.90f))
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.38f, 0.25f, 0.48f, 1f))
-            ImGui.pushStyleColor(ImGuiCol.Text,          ImGui.colorConvertFloat4ToU32(0.95f, 0.85f, 1.0f, 1f))
+            ImGui.pushStyleColor(ImGuiCol.Button,        TangoPalette.RANDOM_ALL_BG.u32())
+            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, TangoPalette.RANDOM_ALL_HOVER.u32())
+            ImGui.pushStyleColor(ImGuiCol.Text,          TangoPalette.RANDOM_ALL_TEXT.u32())
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
                 if (ButtonChrome.button("${Icons.DICES} ALL##perf_rand_all", 76f, tabH)) {
                     ParametersUndo.pushRandomizeUndo(parametersState, mixer)
@@ -466,20 +464,19 @@ class MenuBar(
                 ImGui.setCursorPosX(statsStartX)
             }
 
-            val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
-            val statGreen = if (isLight) TangoPalette.ACTIVE.dark else floatArrayOf(0.55f, 1.0f, 0.55f)
-            val statYellow = if (isLight) TangoPalette.ALERT.dark else floatArrayOf(1.0f, 0.75f, 0.0f)
-            val statRed = if (isLight) TangoPalette.DANGER.normal else floatArrayOf(1.0f, 0.25f, 0.25f)
-            val statDim = if (isLight) TangoPalette.NEUTRAL_DARK.normal else floatArrayOf(0.50f, 0.55f, 0.60f)
-            val fboCol = if (isLight) TangoPalette.NEUTRAL_DARK.dark else floatArrayOf(0.70f, 0.75f, 0.80f)
+            val statGreen = TangoPalette.STAT_OK.u32()
+            val statYellow = TangoPalette.STAT_WARN.u32()
+            val statRed = TangoPalette.STAT_BAD.u32()
+            val statDim = TangoPalette.STAT_DIM.u32()
+            val fboCol = TangoPalette.STAT_FBO.u32()
 
             // ── CPU % ──────────────────────────────────────────────────────────────
             if (cpuFrac >= 0.0) {
                 val cpuPct = cpuFrac * 100.0
                 when {
-                    cpuPct >= 80.0 -> ImGui.pushStyleColor(ImGuiCol.Text, statRed[0], statRed[1], statRed[2], 1.0f)
-                    cpuPct >= 50.0 -> ImGui.pushStyleColor(ImGuiCol.Text, statYellow[0], statYellow[1], statYellow[2], 1.0f)
-                    else           -> ImGui.pushStyleColor(ImGuiCol.Text, statGreen[0], statGreen[1], statGreen[2], 1.0f)
+                    cpuPct >= 80.0 -> ImGui.pushStyleColor(ImGuiCol.Text, statRed)
+                    cpuPct >= 50.0 -> ImGui.pushStyleColor(ImGuiCol.Text, statYellow)
+                    else           -> ImGui.pushStyleColor(ImGuiCol.Text, statGreen)
                 }
                 ImGui.textUnformatted(cpuText)
                 ImGui.popStyleColor()
@@ -498,11 +495,11 @@ class MenuBar(
             ImGui.setCursorPos(dspPosX, dspPosY)
 
             if (!showAudio) {
-                ImGui.pushStyleColor(ImGuiCol.Text, statDim[0], statDim[1], statDim[2], 1.0f)
+                ImGui.pushStyleColor(ImGuiCol.Text, statDim)
             } else when {
-                audioLatency >= 5.0f -> ImGui.pushStyleColor(ImGuiCol.Text, statRed[0], statRed[1], statRed[2], 1.0f)
-                audioLatency >= 2.0f -> ImGui.pushStyleColor(ImGuiCol.Text, statYellow[0], statYellow[1], statYellow[2], 1.0f)
-                else                 -> ImGui.pushStyleColor(ImGuiCol.Text, statGreen[0], statGreen[1], statGreen[2], 1.0f)
+                audioLatency >= 5.0f -> ImGui.pushStyleColor(ImGuiCol.Text, statRed)
+                audioLatency >= 2.0f -> ImGui.pushStyleColor(ImGuiCol.Text, statYellow)
+                else                 -> ImGui.pushStyleColor(ImGuiCol.Text, statGreen)
             }
             ImGui.textUnformatted(dspText)
             ImGui.popStyleColor()
@@ -530,9 +527,9 @@ class MenuBar(
                 30f to 50f
             }
             when {
-                fps < fpsRed    -> ImGui.pushStyleColor(ImGuiCol.Text, statRed[0], statRed[1], statRed[2], 1.0f)
-                fps < fpsYellow -> ImGui.pushStyleColor(ImGuiCol.Text, statYellow[0], statYellow[1], statYellow[2], 1.0f)
-                else            -> ImGui.pushStyleColor(ImGuiCol.Text, statGreen[0], statGreen[1], statGreen[2], 1.0f)
+                fps < fpsRed    -> ImGui.pushStyleColor(ImGuiCol.Text, statRed)
+                fps < fpsYellow -> ImGui.pushStyleColor(ImGuiCol.Text, statYellow)
+                else            -> ImGui.pushStyleColor(ImGuiCol.Text, statGreen)
             }
             ImGui.textUnformatted(fpsText)
             ImGui.popStyleColor()
@@ -545,16 +542,16 @@ class MenuBar(
                 33.3f to 20.0f
             }
             when {
-                ftMs > ftRed    -> ImGui.pushStyleColor(ImGuiCol.Text, statRed[0], statRed[1], statRed[2], 1.0f)
-                ftMs > ftYellow -> ImGui.pushStyleColor(ImGuiCol.Text, statYellow[0], statYellow[1], statYellow[2], 1.0f)
-                else            -> ImGui.pushStyleColor(ImGuiCol.Text, statGreen[0], statGreen[1], statGreen[2], 1.0f)
+                ftMs > ftRed    -> ImGui.pushStyleColor(ImGuiCol.Text, statRed)
+                ftMs > ftYellow -> ImGui.pushStyleColor(ImGuiCol.Text, statYellow)
+                else            -> ImGui.pushStyleColor(ImGuiCol.Text, statGreen)
             }
             ImGui.textUnformatted(ftText)
             ImGui.popStyleColor()
             ImGui.sameLine(0f, 0f)
 
             // ── FBO & GPU Memory ──────────────────────────────────────────────────
-            ImGui.pushStyleColor(ImGuiCol.Text, fboCol[0], fboCol[1], fboCol[2], 1.0f)
+            ImGui.pushStyleColor(ImGuiCol.Text, fboCol)
             ImGui.textUnformatted(fboText)
             ImGui.popStyleColor()
             if (ImGui.isItemHovered()) {
@@ -586,8 +583,8 @@ class MenuBar(
                     ImGui.sameLine(0f, btnGap)
 
                     // Close
-                    ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.85f, 0.15f, 0.15f, 1.0f)
-                    ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.70f, 0.10f, 0.10f, 1.0f)
+                    ImGui.pushStyleColor(ImGuiCol.ButtonHovered, TangoPalette.CLOSE_HOVER.u32())
+                    ImGui.pushStyleColor(ImGuiCol.ButtonActive, TangoPalette.CLOSE_ACTIVE.u32())
                     if (ButtonChrome.button("${Icons.X}##win_close", btnW, btnH)) {
                         onTriggerExitFlow()
                     }
