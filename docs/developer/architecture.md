@@ -15,11 +15,20 @@ graph TD
         Biquad --> RMS[RMS & Onset Detection]
         RMS --> Tracker[BeatTrackerEngine]
         Tracker --> Anchor["@Volatile Beat Anchor (anchorBeats, anchorBpm, anchorTimeNs)"]
+        RMS --> Section["SectionWatch: breakdown / drop"]
+        Section --> AGC["AudioAgc: per-band auto gain vs long-term level"]
+        RMS --> AGC
+        AGC --> AudioCV["audio_* CV x Audio Response"]
+        Section --> SectionCV["audio_energy, audio_drop"]
+        Tracker --> Downbeat[DownbeatDetector]
+        AudioIn --> Spectrum["SpectrumAnalyzer: display FFT -> AudioTexture"]
     end
 
     subgraph Thread_0 [Thread 0: OS Main / Render Loop]
         Input[MIDI / controller input: UIManager.processInput] --> CVReg
         Anchor --> CVReg[CVRegistry.updateAll]
+        AudioCV --> CVReg
+        SectionCV --> CVReg
         CVReg --> Macro[MacroEngine.tick]
         Macro --> ModEval[ModulatableParameter Evaluation]
 
@@ -56,7 +65,7 @@ Thread 0 (the OS main thread) owns GLFW, every OpenGL call, ImGui and the whole 
 - **Strict Constraint**: All LWJGL 3 GLFW window and OpenGL context manipulations must execute strictly on Thread 0.
 
 ### 2. Audio Thread (JACK Callback / Java Sound Capture Thread)
-- **Responsibilities**: Receives incoming audio sample buffers, executes parallel biquad IIR bandpass filtering (Bass, Mid, High), computes RMS amplitude, calculates spectral flux onset triggers, and updates beat clock state.
+- **Responsibilities**: Receives incoming audio sample buffers, executes parallel biquad IIR bandpass filtering (Bass, Mid, High), computes RMS amplitude, calculates spectral flux onset triggers, and updates beat clock state. It also runs the always-on auto gain (`AudioAgc`), the song-section watch (`SectionWatch`, which freezes the AGC's long-term level in breakdowns and feeds `audio_energy` / `audio_drop`), `DownbeatDetector` and the display spectrum (`SpectrumAnalyzer`), all allocation-free. Details: [audio_dsp.md](audio_dsp.md).
 - **Strict Real-Time Constraints**:
   - **Zero-Allocation Rule**: No heap allocations (`new`, capturing closures, collection instantiations) inside the audio callback loop.
   - **Non-Blocking Rule**: No mutex locks, file I/O, database access, logging, or thread sleeping.

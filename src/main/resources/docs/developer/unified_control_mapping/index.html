@@ -1484,6 +1484,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#612-chain-view-library-queue-knobs-clock-knob" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.12 Chain view, Library queue knobs, Clock knob
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2017,6 +2028,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#612-chain-view-library-queue-knobs-clock-knob" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.12 Chain view, Library queue knobs, Clock knob
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2044,7 +2066,7 @@
 
 <h1 id="unified-control-mapping-architecture-midi-keyboard-mouse-cv">Unified Control Mapping Architecture (MIDI / Keyboard / Mouse / CV)</h1>
 <blockquote>
-<p><strong>Status</strong>: Design specification. Phases 1-2 and 4 (command registry, device tagging, controller profiles, Perform-grid knob control, ring/LED feedback for the Twister) are implemented for MIDI; see section 6. The rest is roadmap.<br />
+<p><strong>Status</strong>: Design specification. Phases 1-4 (command registry, device tagging, controller profiles, Perform-grid knob control, navigation/browse, ring/LED feedback for the Twister) and native mode (Twister XT firmware) are implemented for MIDI, plus Chain view, the Library queue knobs and the Clock knob; see section 6. Phase 5 (profile UI) is partly done (6.8-6.10). The rest is roadmap.<br />
 <strong>Inspiration</strong>: <a href="https://mixxx.org/">Mixxx DJ Software</a> Controller &amp; Keyboard Mapping Architecture</p>
 </blockquote>
 <hr />
@@ -2808,7 +2830,7 @@
 <li><code>ControllerManager</code> creates one <code>ControllerRuntime</code> per device the first time it sends a message and its name matches a profile. <code>MidiMappingManager.processGlobalMidiEvents</code> offers each event to it before the legacy <code>Global/*</code> and parameter bindings; a runtime consumes an event only if the profile binds that input, and a learned mapping on the exact channel/CC takes precedence over the profile, except while <code>NavSurface.browsing</code> is true (the profile then gets the event first).</li>
 <li>The runtime tracks the active bank (from the bank buttons, or any bank-aware input), held modifiers, and per-encoder state. Encoder messages become signed ticks (relative modes decode directly; <code>ABSOLUTE</code> is the change since the last value, so the first message only locates the knob), scaled by <code>step</code> and a speed-based boost (<code>accel</code>, full at &lt;= 8 ms between ticks, none at &gt;= 60 ms), then sent as <code>CommandInput.Delta</code>. A button's release goes to the command that received its press.</li>
 <li><code>KnobCommands</code> registers <code>knob.1..16</code> (RELATIVE), <code>knob.&lt;n&gt;.press</code> and <code>knob.&lt;n&gt;.press_alt</code> (MOMENTARY). It tracks which switches are held (the Twister sends the same turn messages either way): turning while held is fine (x0.1) and cancels the tap; a tap runs <code>KnobSurface.primary</code> (<code>press</code>) or <code>secondary</code> (<code>press_alt</code>).</li>
-<li><code>KnobSurface</code> (render thread) is implemented by <code>ui/PerformSurface</code>. Its page is <code>PerformPages.resolve</code>: <code>PerfRows.visibleRowsForTab</code> (the same rows <code>PerformanceMatrixPanel</code> draws, now in a shared object) through <code>PerfKnobResolver</code>, flattened row-major into 16 slots. Actions: turn adds to <code>MacroControl.value</code>; primary on an FX slot cell = <code>FxOps.setSlotEnabled</code>, on a parameter = reset to default, on a label knob = reset to 0.5; secondary on a slot cell = <code>FxMacroSync.focusSlot</code> (or leave focus when it is knob 1 of a focused row), on a parameter = <code>FxMacroSync.stepParamPage</code>; <code>showPage</code> sets the matrix tab.</li>
+<li><code>KnobSurface</code> (render thread) is implemented by <code>ui/PerformSurface</code>. Its page is <code>PerformPages.resolve</code> / <code>resolveInto</code>: <code>PerfRows.visibleRowsForPage</code> (the same rows <code>PerformanceMatrixPanel</code> draws: the page's rows, or the focused pair's, or Chain view's <code>PerfRows.chainRowsFor</code>) through <code>PerfKnobResolver</code>, flattened row-major into 16 slots. Actions: turn adds to <code>MacroControl.value</code>; primary on an FX slot cell = <code>FxOps.setSlotEnabled</code>, on a parameter = reset to default, on a label knob = reset to 0.5; secondary on a slot cell = <code>FxMacroSync.focusSlot</code> (or leave focus when it is knob 1 of a focused row), on a parameter = <code>FxMacroSync.stepParamPage</code>; <code>showPage</code> sets the matrix tab.</li>
 </ul>
 <h3 id="66-ring-and-led-feedback-phase-4">6.6 Ring and LED feedback (phase 4)</h3>
 <ul>
@@ -2828,13 +2850,19 @@
 <p><code>MidiLearnTarget.ProfileCommand(profileId, commandId, modifiers)</code> is handled by <code>MidiMappingManager.learnIntoProfile</code>, which calls <code>ProfileBindingEdit.learn(compiled, event, commandId, modifiers)</code>: a resolved input gets a key (modifiers sorted + input id), an unresolved one gets a new <code>InputDef</code> (<code>&lt;type&gt;-&lt;channel&gt;-&lt;index&gt;</code>, kind guessed from the message). Result text goes to <code>profileLearnMessage</code>. Open: per-bank bindings.</p>
 <h3 id="611-native-mode-host-driven-devices-twister-xt-firmware">6.11 Native mode (host-driven devices, Twister XT firmware)</h3>
 <ul>
-<li>A profile with <code>output.native</code> is driven by the host: <code>ControllerManager</code> calls <code>ControllerFeedback.enterNativeMode()</code> when the output port opens and <code>leaveNativeMode()</code> (switch LEDs black, then the leave message) on disconnect, <code>reset()</code> and <code>shutdown()</code>; a JVM shutdown hook, installed once, calls <code>shutdown()</code> so quitting releases the device. A crash leaves the device in native mode until it is replugged.</li>
+<li>A profile with <code>output.native</code> is driven by the host: <code>ControllerManager</code> calls <code>ControllerFeedback.enterNativeMode()</code> when the output port opens and <code>leaveNativeMode()</code> (switch LEDs black, then the leave message) on disconnect, <code>reset()</code> and <code>shutdown()</code>. <code>Main</code> calls <code>ControllerManager.shutdown()</code> after saving the session and before the MIDI ports close (it waits up to <code>EXIT_FLUSH_MS</code> = 1 s for every device's leave SysEx via <code>MidiSink.awaitClosed</code>); the <code>controller-native-leave</code> JVM shutdown hook, installed once, calls the same method as a fallback for Ctrl-C/SIGTERM, and an <code>AtomicBoolean</code> makes the second call a no-op. The feedbacks map is guarded by <code>feedbackLock</code>, and nothing is queued once shutdown starts. A crash leaves the device in native mode until it is replugged.</li>
 <li><code>NativeSysex</code> builds <code>F0 &lt;header&gt; ...</code> messages: enter/leave (<code>00 01</code>/<code>00 00</code>), indicator config (<code>01 00 knob type detent detentColor</code>, type 0 dot / 1 bar) and switch colour (<code>01 01 knob r g b</code>, 7 bits each). <strong>One setting per message</strong>: hardware showed that concatenated configs are misparsed. Blended types look identical to plain ones and are not offered. The header and the ring style per <code>MeterType</code> live in the profile (<code>output.native</code>), so a tweak is a JSON edit.</li>
 <li>Messages: knob turn ch0 CC = knob (64 + delta), knob press ch1, side buttons ch2 CC 0-5 (left top/middle/bottom, right top/middle/bottom), ring position ch0 CC = knob. Hardware banks, ring brightness and animations do not exist.</li>
-<li><code>MidiSink.sendSysex</code> has a no-op default. <code>CcQueue</code> keeps SysEx in a separate FIFO that is never coalesced and is drained before control changes, so the mode switch always precedes the writes that depend on it; <code>DeviceSink.close</code> waits (up to 300 ms) for it to empty.</li>
+<li><code>MidiSink.sendSysex</code> has a no-op default. <code>CcQueue</code> keeps SysEx in a separate FIFO that is never coalesced and is drained before control changes, so the mode switch always precedes the writes that depend on it; <code>DeviceSink.close</code> returns at once: it marks the sink closing and the <code>midi-feedback-writer</code> thread flushes the pending SysEx (up to a deadline), then releases the port itself, so a device that goes away never stalls Thread 0. Only exit waits, through <code>awaitClosed</code>.</li>
 <li><code>ControllerFeedback</code> in native mode has one target per knob and sends the style when <code>KnobLight.meterType</code> changes and the colour when the RGB changes, both ahead of the ring CC; <code>resync()</code> forgets both. <code>banks.virtual</code> means the profile's <code>banks.pages</code> are the app's own pages: inputs need <code>bankStride</code> 0, there is no <code>banks.switch</code>, and <code>ControllerRuntime.stepBank</code> finds its position from <code>KnobSurface.currentPageId</code> because <code>activeBank</code> stays null.</li>
 <li>Two profiles can fit one device name (stock and XT). <code>ControllerProfileStore.matchFor(deviceName, preferredId)</code> takes the user's per-device choice (<code>controllerProfileChoices</code> preference, keyed by the device name without its <code>[hw:...]</code> port suffix) and falls back to the first match; the choice is made in the Controller Profiles section of the MIDI preferences, never automatically.</li>
 <li>The firmware licence (DJTT) forbids redistributing modified builds: the app never bundles the firmware, and the guide only describes the mode.</li>
+</ul>
+<h3 id="612-chain-view-library-queue-knobs-clock-knob">6.12 Chain view, Library queue knobs, Clock knob</h3>
+<ul>
+<li><strong>Chain view</strong> (<code>ParametersState.chainView</code>, <code>ChainViewState</code> PLAY / BROWSE): the focused pair shown as four rows, FX1-FX3 of its chain (<code>deck.&lt;tag&gt;.fx1-3</code>, <code>master.fx1-3</code>, each a per-slot bank <code>FxMacroSync.slotBankId</code>, e.g. <code>deckA_fx_s2</code>) over a control row: the SRC row (Master: Transitions) in PLAY, the LOAD row in BROWSE (<code>PerfRows.loadRows</code>, <code>RowDescriptor.loadRow</code>). <code>PerfRows.chainRowsFor(tag, state)</code> builds them once per tag and state (cached, since the browse light poll asks every frame). The control row is always knobs 13-16, so knob 16 is the cursor in every browse mode; in BROWSE knobs 13-15 load the cursor item into slot 1-3 (<code>ui/ChainLoad</code>, shared with the row's on-screen targets).</li>
+<li><strong>Library queue knobs</strong> (<code>ui/browser/QueueKnobs</code>): with the queues under the browser (<code>QueueSplit</code>), knob 14 is the tab's A-side queue and knob 15 its BG-side queue (Sources: A/B and BG; FX: A/B FX and BG FX; Transitions: Transition Queue only). Turn = that queue's cursor, hold + turn = carry the row, tap = play now, Shift + tap = remove; knob 16's Shift + tap inserts after the last-touched queue knob's cursor. Every edit goes through <code>QueueOps</code> and is undoable.</li>
+<li><strong>Clock knob</strong> (<code>ui/ClockKnob</code>): the Clock row's one hardware knob. Ring = tempo over the beat tracker's BPM search range, LED pulses on the beat (brighter on the bar's first beat; stock firmware pulses ring brightness), push = tap tempo, turn ignored. Computed in the per-frame light fill from the beat phase; no timer, no beat event.</li>
 </ul>
 
 

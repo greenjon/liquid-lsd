@@ -42,11 +42,14 @@ Following the 100% ISF Pipeline Migration (see `ARCHITECTURE.md` §3), each Deck
 ### Execution Steps
 1. **Source Render & View Stage** (`Renderer.render()` / `Renderer.renderDeck()`):
    - **2D Sources (`!source.is3D`)**: The active 2D source renders directly into `cleanFBO` via `blit.vert` (or the source's own multi-pass topology), passing `uZoom` (`deck.viewZoom`), `uRotateZ` (`deck.viewRotateZ`), and `uAspectRatio` directly into the vertex shader.
-   - **Native 3D Sources (`source.is3D == true`)**: e.g. `icosa_h3`, `hyper_mesh`. These handle their own rotation (`Rotate X/Y/Z`) and camera zoom internally and render straight into `cleanFBO`; `renderDeck()` forces the Deck's `viewZoom`/`viewRotateZ` to identity (`1.0`/`0.0`) for these sources rather than routing through a separate projection FBO.
+   - **Native 3D Sources (`source.is3D == true`)**: e.g. `icosa_h3`. These handle their own rotation (`Rotate X/Y/Z`) and camera zoom internally and render straight into `cleanFBO`; `renderDeck()` forces the Deck's `viewZoom`/`viewRotateZ` to identity (`1.0`/`0.0`) for these sources rather than routing through a separate projection FBO.
    - **External Video Ingest Sources (`ExternalVideoSource`)**: Ingest live video streams from external applications via Spout2 (Windows), Syphon (macOS), or PipeWire 0.3 (Linux) (`PipeWireReceiverImpl` in `TextureReceiver.kt` and `fetchPipeWireStreams()` in `ExternalVideoDiscovery.kt`). `Renderer.renderExternalVideoSource()` blits the active incoming texture (`currentTextureId`) via `view2DShader` straight into `cleanFBO`, applying the same `uZoom`/`uRotateZ`/`uAspectRatio` uniforms as 2D sources.
    - **Persistent-history generators**: sources with `hasFeedback == true` (e.g. trail-based generators like Dynamic Spiral) maintain their own `fb1`/`fb2` ping-pong pair directly on the `DynamicVisualSource` instance (not on `Deck`), lazily (re)allocated by `Renderer.render()` to match `cleanFBO`'s dimensions.
 2. **FX Slot Chain (Serial Processing Stage)**: `Renderer.renderDeck()` loops over `deck.fxSlots` (`FxChain.SLOT_COUNT` = 3). For each enabled slot with `dryWet > 0.0`, it renders the running texture (starting from `cleanFBO.texture`) through that slot's `ISFFilter` into the chain's per-slot buffer, then blends dry (previous stage's output) against wet (this stage's output) via `glBlendColor(..., 1.0 - dryWet)` when `dryWet < 1.0`. The final enabled slot's texture becomes the deck's effective output (`Deck.getOutputTexture()`); if no slots are enabled, `cleanFBO` passes through unchanged.
 3. **Mixer Transition & Compositing** (`Renderer.renderMixer()`): Deck A and Deck B's effective output textures feed the active ISF transition filter (`mixer.transitionFilter` — `Renderer.kt` caches a `linear_crossfade` instance so an unassigned transition never allocates/disposes filters mid-frame) into `mixer.blendFBO`, then a composite pass blends that over Deck BG with channel levels, bloom, and master alpha into `mixer.masterFBO`. With the crossfader fully on one side (progress exactly 0 or 1, `Renderer.restingTexture`) the transition pass is skipped and that deck's texture is copied into `blendFBO` instead, so the resting picture is exact and costs one copy. Transition parameters and their modulators keep updating, so a fade starts from their current values.
+
+### Render budget (`DeckRenderBudget`)
+Decks the output can't show cost less. `Main` calls `DeckRenderBudget.nextFrame()` each frame, resizes PV to `pvSize` (half the output size unless PV is streamed), updates every deck, and renders a deck only when `shouldRender(slot, mixer)`: with `UITheme.offAirHalfRate` on, an off-air deck (one the master can't show now; `isOffAir` uses the same crossfader ends at which `renderMixer` copies the visible deck instead of running the transition) renders every other frame, so its monitor runs at half rate and frame-stepped simulations and feedback trails advance at half speed until it comes on air. A deck sent out over Spout / Syphon / PipeWire always renders in full.
 
 ---
 
@@ -88,10 +91,10 @@ Beyond hardcoded generators, the engine loads dynamic shaders from `library/sour
 
 - **`VisualSourceRegistry`**: Scans subfolders on startup, parses `meta.json`, compiles `shader.frag` against standard vertex shaders (`blit.vert`), and builds `DynamicVisualSource` templates.
 - **Shader Ownership**: The master template in `VisualSourceRegistry` owns the OpenGL shader program (`ownsShader = true`). Deck clones share shader program handles safely (`ownsShader = false`) to eliminate duplicate compilation overhead.
-- **Polymorphic Draw Topology**: Visual source rendering in `Renderer.render()` is fully polymorphic with zero source-type checks (`is Mandala`, `is HyperMesh`). Each visual generator overrides `DynamicVisualSource.drawTopology()`:
+- **Polymorphic Draw Topology**: Visual source rendering in `Renderer.render()` is fully polymorphic with zero source-type checks (`is Mandala`, `is FlameSource`). Each visual generator overrides `DynamicVisualSource.drawTopology()`:
   - Default: Renders a fullscreen quad via `Geometry.drawFullscreenQuad()`.
   - `Mandala`: Binds ribbon VAO and draws triangle strips via `glDrawArrays(GL_TRIANGLE_STRIP, 0, (POINTS + 1) * 2)`.
-  - `HyperMesh`: Binds 4D polychoron strut and node VAOs and renders indexed triangles via `glDrawElements(GL_TRIANGLES, ...)`.
+  - `FlameSource` (`fractal_flame`): runs `FlameEngine`'s inline iterate and splat passes (GPU point renderer, `GL_POINTS` into an fp16 density buffer) before the folder's `shader.frag` tone-maps; see [flame_source.md](flame_source.md).
 - **Error Fallbacks**: If custom GLSL fails compilation, a fallback checkerboard shader is bound so the application avoids crashing.
 
 ---
@@ -217,7 +220,7 @@ Liquid LSD includes both a zero-lag live capture pipeline and a sample-accurate 
 - **Live REC Tally Badge**: Pulsing red record badge overlaid directly on the master preview monitor with elapsed timer (`REC MM:SS`).
 
 ### 3. Deterministic Time Virtualization (`TimeSource`)
-- **Central Time Authority**: All shaders (`uTime`), `CVRegistry` evaluators, `DynamicSpiral`, and `Mixer` query `TimeSource.getTimeSec()` and `TimeSource.getTimeNanos()`.
+- **Central Time Authority**: All shaders (`uTime`), `CVRegistry` evaluators, `PhaseIntegrators`, `FlameEngine` and `Mixer` query `TimeSource.getTimeSec()` and `TimeSource.getTimeNanos()`.
 - **Offline Simulation Clock**: During `OfflineRenderStudio` passes, `TimeSource.setSimulatedTime(subFrameTimeSec, subFrameDt)` is set before stepping DSP analysis and deck rendering, guaranteeing sample-accurate synchronization between audio frequencies and visual animations regardless of rendering speed.
 
 ### 4. Offline Render Studio (`OfflineRenderStudio`)
@@ -272,7 +275,7 @@ A parameter can declare a step set (`ModulatableParameter.steps` / `labels`); `e
 - Integer uniforms are rounded, not truncated, before they reach the shader.
 
 ### 5. GPU cost tag (`LSD_COST`)
-`ISFHeader.LSD_COST` (optional Liquid LSD key, 1-3) is the author's declaration of how heavy a shader is; `ISFHeader.gpuCost` clamps it to 0-3 (0 = undeclared). The stock browser catalogs (`BrowseCatalogs`) copy it into `AssetItem.gpuCost` for stock generators and filters, and `PresetListPanel.drawCostBadge` draws a warning triangle for cost 3 (`GPU_COST_HEAVY`), with `GPU_COST_TIP` in the tooltip. It is static metadata, not a measurement. Bundled sources live in `library/sources/` (the build copies them over `default_sources`), so tag both copies. `StockGpuCostAuditTest` checks range and the heavy set.
+`ISFHeader.LSD_COST` (optional Liquid LSD key, 1-3) is the author's declaration of how heavy a shader is; `ISFHeader.gpuCost` clamps it to 0-3 (0 = undeclared). The stock browser catalogs (`BrowseCatalogs`) copy it into `AssetItem.gpuCost` for stock generators and filters, and `PresetListPanel.rowSelectable(..., gpuCost, ...)` draws the heavy-GPU badge for cost 3 (`GPU_COST_HEAVY`), with `GPU_COST_TIP` in the tooltip. It is static metadata, not a measurement. Bundled sources live in `library/sources/` (the build copies them over `default_sources`), so tag both copies. `StockGpuCostAuditTest` checks range and the heavy set.
 
 ### 6. Integrated phases (`LSD_PHASES`)
 A shader must never compute motion as `TIME * Speed`: when Speed changes, that product moves by `TIME` times the change, and `TIME` is the seconds since the app started, so an hour into a set even a small wobble of Speed (an LFO, audio, a knob, a morph) jumps the picture, and a modulated speed jumps it every frame. Instead the ISF header declares phases the host integrates, `"LSD_PHASES": { "FlightPhase": ["FlightSpeed"], "ShearPhase": ["Speed", "Shear"] }`: each key becomes a `uniform float` (declared by `ISFParser`) whose value is the running sum of the product of the listed inputs times the frame time. The shader uses `FlightPhase * 1.5` where it had `TIME * FlightSpeed_` (the input's scale factor moves across unchanged; an affine rate such as `0.5 + Rate * 23.5` becomes `0.5 * TIME + 23.5 * RatePhase`). A rate change then changes the slope, never the position.

@@ -1579,11 +1579,20 @@
         Biquad --&gt; RMS[RMS &amp; Onset Detection]
         RMS --&gt; Tracker[BeatTrackerEngine]
         Tracker --&gt; Anchor[&quot;@Volatile Beat Anchor (anchorBeats, anchorBpm, anchorTimeNs)&quot;]
+        RMS --&gt; Section[&quot;SectionWatch: breakdown / drop&quot;]
+        Section --&gt; AGC[&quot;AudioAgc: per-band auto gain vs long-term level&quot;]
+        RMS --&gt; AGC
+        AGC --&gt; AudioCV[&quot;audio_* CV x Audio Response&quot;]
+        Section --&gt; SectionCV[&quot;audio_energy, audio_drop&quot;]
+        Tracker --&gt; Downbeat[DownbeatDetector]
+        AudioIn --&gt; Spectrum[&quot;SpectrumAnalyzer: display FFT -&gt; AudioTexture&quot;]
     end
 
     subgraph Thread_0 [Thread 0: OS Main / Render Loop]
         Input[MIDI / controller input: UIManager.processInput] --&gt; CVReg
         Anchor --&gt; CVReg[CVRegistry.updateAll]
+        AudioCV --&gt; CVReg
+        SectionCV --&gt; CVReg
         CVReg --&gt; Macro[MacroEngine.tick]
         Macro --&gt; ModEval[ModulatableParameter Evaluation]
 
@@ -1618,7 +1627,7 @@
 </ul>
 <h3 id="2-audio-thread-jack-callback-java-sound-capture-thread">2. Audio Thread (JACK Callback / Java Sound Capture Thread)</h3>
 <ul>
-<li><strong>Responsibilities</strong>: Receives incoming audio sample buffers, executes parallel biquad IIR bandpass filtering (Bass, Mid, High), computes RMS amplitude, calculates spectral flux onset triggers, and updates beat clock state.</li>
+<li><strong>Responsibilities</strong>: Receives incoming audio sample buffers, executes parallel biquad IIR bandpass filtering (Bass, Mid, High), computes RMS amplitude, calculates spectral flux onset triggers, and updates beat clock state. It also runs the always-on auto gain (<code>AudioAgc</code>), the song-section watch (<code>SectionWatch</code>, which freezes the AGC's long-term level in breakdowns and feeds <code>audio_energy</code> / <code>audio_drop</code>), <code>DownbeatDetector</code> and the display spectrum (<code>SpectrumAnalyzer</code>), all allocation-free. Details: <a href="../audio_dsp/">audio_dsp.md</a>.</li>
 <li><strong>Strict Real-Time Constraints</strong>:</li>
 <li><strong>Zero-Allocation Rule</strong>: No heap allocations (<code>new</code>, capturing closures, collection instantiations) inside the audio callback loop.</li>
 <li><strong>Non-Blocking Rule</strong>: No mutex locks, file I/O, database access, logging, or thread sleeping.</li>

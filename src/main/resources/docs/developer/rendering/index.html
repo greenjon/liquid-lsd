@@ -906,6 +906,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#render-budget-deckrenderbudget" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Render budget (DeckRenderBudget)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1697,6 +1708,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#render-budget-deckrenderbudget" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Render budget (DeckRenderBudget)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2091,12 +2113,14 @@
 <ol>
 <li><strong>Source Render &amp; View Stage</strong> (<code>Renderer.render()</code> / <code>Renderer.renderDeck()</code>):</li>
 <li><strong>2D Sources (<code>!source.is3D</code>)</strong>: The active 2D source renders directly into <code>cleanFBO</code> via <code>blit.vert</code> (or the source's own multi-pass topology), passing <code>uZoom</code> (<code>deck.viewZoom</code>), <code>uRotateZ</code> (<code>deck.viewRotateZ</code>), and <code>uAspectRatio</code> directly into the vertex shader.</li>
-<li><strong>Native 3D Sources (<code>source.is3D == true</code>)</strong>: e.g. <code>icosa_h3</code>, <code>hyper_mesh</code>. These handle their own rotation (<code>Rotate X/Y/Z</code>) and camera zoom internally and render straight into <code>cleanFBO</code>; <code>renderDeck()</code> forces the Deck's <code>viewZoom</code>/<code>viewRotateZ</code> to identity (<code>1.0</code>/<code>0.0</code>) for these sources rather than routing through a separate projection FBO.</li>
+<li><strong>Native 3D Sources (<code>source.is3D == true</code>)</strong>: e.g. <code>icosa_h3</code>. These handle their own rotation (<code>Rotate X/Y/Z</code>) and camera zoom internally and render straight into <code>cleanFBO</code>; <code>renderDeck()</code> forces the Deck's <code>viewZoom</code>/<code>viewRotateZ</code> to identity (<code>1.0</code>/<code>0.0</code>) for these sources rather than routing through a separate projection FBO.</li>
 <li><strong>External Video Ingest Sources (<code>ExternalVideoSource</code>)</strong>: Ingest live video streams from external applications via Spout2 (Windows), Syphon (macOS), or PipeWire 0.3 (Linux) (<code>PipeWireReceiverImpl</code> in <code>TextureReceiver.kt</code> and <code>fetchPipeWireStreams()</code> in <code>ExternalVideoDiscovery.kt</code>). <code>Renderer.renderExternalVideoSource()</code> blits the active incoming texture (<code>currentTextureId</code>) via <code>view2DShader</code> straight into <code>cleanFBO</code>, applying the same <code>uZoom</code>/<code>uRotateZ</code>/<code>uAspectRatio</code> uniforms as 2D sources.</li>
 <li><strong>Persistent-history generators</strong>: sources with <code>hasFeedback == true</code> (e.g. trail-based generators like Dynamic Spiral) maintain their own <code>fb1</code>/<code>fb2</code> ping-pong pair directly on the <code>DynamicVisualSource</code> instance (not on <code>Deck</code>), lazily (re)allocated by <code>Renderer.render()</code> to match <code>cleanFBO</code>'s dimensions.</li>
 <li><strong>FX Slot Chain (Serial Processing Stage)</strong>: <code>Renderer.renderDeck()</code> loops over <code>deck.fxSlots</code> (<code>FxChain.SLOT_COUNT</code> = 3). For each enabled slot with <code>dryWet &gt; 0.0</code>, it renders the running texture (starting from <code>cleanFBO.texture</code>) through that slot's <code>ISFFilter</code> into the chain's per-slot buffer, then blends dry (previous stage's output) against wet (this stage's output) via <code>glBlendColor(..., 1.0 - dryWet)</code> when <code>dryWet &lt; 1.0</code>. The final enabled slot's texture becomes the deck's effective output (<code>Deck.getOutputTexture()</code>); if no slots are enabled, <code>cleanFBO</code> passes through unchanged.</li>
 <li><strong>Mixer Transition &amp; Compositing</strong> (<code>Renderer.renderMixer()</code>): Deck A and Deck B's effective output textures feed the active ISF transition filter (<code>mixer.transitionFilter</code> — <code>Renderer.kt</code> caches a <code>linear_crossfade</code> instance so an unassigned transition never allocates/disposes filters mid-frame) into <code>mixer.blendFBO</code>, then a composite pass blends that over Deck BG with channel levels, bloom, and master alpha into <code>mixer.masterFBO</code>. With the crossfader fully on one side (progress exactly 0 or 1, <code>Renderer.restingTexture</code>) the transition pass is skipped and that deck's texture is copied into <code>blendFBO</code> instead, so the resting picture is exact and costs one copy. Transition parameters and their modulators keep updating, so a fade starts from their current values.</li>
 </ol>
+<h3 id="render-budget-deckrenderbudget">Render budget (<code>DeckRenderBudget</code>)</h3>
+<p>Decks the output can't show cost less. <code>Main</code> calls <code>DeckRenderBudget.nextFrame()</code> each frame, resizes PV to <code>pvSize</code> (half the output size unless PV is streamed), updates every deck, and renders a deck only when <code>shouldRender(slot, mixer)</code>: with <code>UITheme.offAirHalfRate</code> on, an off-air deck (one the master can't show now; <code>isOffAir</code> uses the same crossfader ends at which <code>renderMixer</code> copies the visible deck instead of running the transition) renders every other frame, so its monitor runs at half rate and frame-stepped simulations and feedback trails advance at half speed until it comes on air. A deck sent out over Spout / Syphon / PipeWire always renders in full.</p>
 <hr />
 <h2 id="dynamic-render-resolution-viewport-scaling">Dynamic Render Resolution &amp; Viewport Scaling</h2>
 <p>Liquid LSD supports arbitrary user-defined render resolutions and aspect ratios (e.g. 1080p, 720p, 540p, 4K, 4:3 UXGA 1600x1200, 1:1 Square 800x800, or Custom) configured via <code>UITheme</code>:</p>
@@ -2129,10 +2153,10 @@
 <ul>
 <li><strong><code>VisualSourceRegistry</code></strong>: Scans subfolders on startup, parses <code>meta.json</code>, compiles <code>shader.frag</code> against standard vertex shaders (<code>blit.vert</code>), and builds <code>DynamicVisualSource</code> templates.</li>
 <li><strong>Shader Ownership</strong>: The master template in <code>VisualSourceRegistry</code> owns the OpenGL shader program (<code>ownsShader = true</code>). Deck clones share shader program handles safely (<code>ownsShader = false</code>) to eliminate duplicate compilation overhead.</li>
-<li><strong>Polymorphic Draw Topology</strong>: Visual source rendering in <code>Renderer.render()</code> is fully polymorphic with zero source-type checks (<code>is Mandala</code>, <code>is HyperMesh</code>). Each visual generator overrides <code>DynamicVisualSource.drawTopology()</code>:</li>
+<li><strong>Polymorphic Draw Topology</strong>: Visual source rendering in <code>Renderer.render()</code> is fully polymorphic with zero source-type checks (<code>is Mandala</code>, <code>is FlameSource</code>). Each visual generator overrides <code>DynamicVisualSource.drawTopology()</code>:</li>
 <li>Default: Renders a fullscreen quad via <code>Geometry.drawFullscreenQuad()</code>.</li>
 <li><code>Mandala</code>: Binds ribbon VAO and draws triangle strips via <code>glDrawArrays(GL_TRIANGLE_STRIP, 0, (POINTS + 1) * 2)</code>.</li>
-<li><code>HyperMesh</code>: Binds 4D polychoron strut and node VAOs and renders indexed triangles via <code>glDrawElements(GL_TRIANGLES, ...)</code>.</li>
+<li><code>FlameSource</code> (<code>fractal_flame</code>): runs <code>FlameEngine</code>'s inline iterate and splat passes (GPU point renderer, <code>GL_POINTS</code> into an fp16 density buffer) before the folder's <code>shader.frag</code> tone-maps; see <a href="../flame_source/">flame_source.md</a>.</li>
 <li><strong>Error Fallbacks</strong>: If custom GLSL fails compilation, a fallback checkerboard shader is bound so the application avoids crashing.</li>
 </ul>
 <hr />
@@ -2310,7 +2334,7 @@ This is the same domain-folded CSG technique as the old <code>icosa-v3</code> so
 </ul>
 <h3 id="3-deterministic-time-virtualization-timesource">3. Deterministic Time Virtualization (<code>TimeSource</code>)</h3>
 <ul>
-<li><strong>Central Time Authority</strong>: All shaders (<code>uTime</code>), <code>CVRegistry</code> evaluators, <code>DynamicSpiral</code>, and <code>Mixer</code> query <code>TimeSource.getTimeSec()</code> and <code>TimeSource.getTimeNanos()</code>.</li>
+<li><strong>Central Time Authority</strong>: All shaders (<code>uTime</code>), <code>CVRegistry</code> evaluators, <code>PhaseIntegrators</code>, <code>FlameEngine</code> and <code>Mixer</code> query <code>TimeSource.getTimeSec()</code> and <code>TimeSource.getTimeNanos()</code>.</li>
 <li><strong>Offline Simulation Clock</strong>: During <code>OfflineRenderStudio</code> passes, <code>TimeSource.setSimulatedTime(subFrameTimeSec, subFrameDt)</code> is set before stepping DSP analysis and deck rendering, guaranteeing sample-accurate synchronization between audio frequencies and visual animations regardless of rendering speed.</li>
 </ul>
 <h3 id="4-offline-render-studio-offlinerenderstudio">4. Offline Render Studio (<code>OfflineRenderStudio</code>)</h3>
@@ -2360,7 +2384,7 @@ This is the same domain-folded CSG technique as the old <code>icosa-v3</code> so
 - <code>float</code> inputs that are really discrete take the optional Liquid LSD key <code>"STEP"</code> (for example <code>"MIN": 2, "MAX": 24, "STEP": 1</code>). The shader still receives a float uniform; other ISF hosts ignore the key. <code>(MAX-MIN)/STEP</code> must be a whole number, otherwise <code>STEP</code> is ignored and a warning is logged.
 - Integer uniforms are rounded, not truncated, before they reach the shader.</p>
 <h3 id="5-gpu-cost-tag-lsd_cost">5. GPU cost tag (<code>LSD_COST</code>)</h3>
-<p><code>ISFHeader.LSD_COST</code> (optional Liquid LSD key, 1-3) is the author's declaration of how heavy a shader is; <code>ISFHeader.gpuCost</code> clamps it to 0-3 (0 = undeclared). The stock browser catalogs (<code>BrowseCatalogs</code>) copy it into <code>AssetItem.gpuCost</code> for stock generators and filters, and <code>PresetListPanel.drawCostBadge</code> draws a warning triangle for cost 3 (<code>GPU_COST_HEAVY</code>), with <code>GPU_COST_TIP</code> in the tooltip. It is static metadata, not a measurement. Bundled sources live in <code>library/sources/</code> (the build copies them over <code>default_sources</code>), so tag both copies. <code>StockGpuCostAuditTest</code> checks range and the heavy set.</p>
+<p><code>ISFHeader.LSD_COST</code> (optional Liquid LSD key, 1-3) is the author's declaration of how heavy a shader is; <code>ISFHeader.gpuCost</code> clamps it to 0-3 (0 = undeclared). The stock browser catalogs (<code>BrowseCatalogs</code>) copy it into <code>AssetItem.gpuCost</code> for stock generators and filters, and <code>PresetListPanel.rowSelectable(..., gpuCost, ...)</code> draws the heavy-GPU badge for cost 3 (<code>GPU_COST_HEAVY</code>), with <code>GPU_COST_TIP</code> in the tooltip. It is static metadata, not a measurement. Bundled sources live in <code>library/sources/</code> (the build copies them over <code>default_sources</code>), so tag both copies. <code>StockGpuCostAuditTest</code> checks range and the heavy set.</p>
 <h3 id="6-integrated-phases-lsd_phases">6. Integrated phases (<code>LSD_PHASES</code>)</h3>
 <p>A shader must never compute motion as <code>TIME * Speed</code>: when Speed changes, that product moves by <code>TIME</code> times the change, and <code>TIME</code> is the seconds since the app started, so an hour into a set even a small wobble of Speed (an LFO, audio, a knob, a morph) jumps the picture, and a modulated speed jumps it every frame. Instead the ISF header declares phases the host integrates, <code>"LSD_PHASES": { "FlightPhase": ["FlightSpeed"], "ShearPhase": ["Speed", "Shear"] }</code>: each key becomes a <code>uniform float</code> (declared by <code>ISFParser</code>) whose value is the running sum of the product of the listed inputs times the frame time. The shader uses <code>FlightPhase * 1.5</code> where it had <code>TIME * FlightSpeed_</code> (the input's scale factor moves across unchanged; an affine rate such as <code>0.5 + Rate * 23.5</code> becomes <code>0.5 * TIME + 23.5 * RatePhase</code>). A rate change then changes the slope, never the position.
 - <code>PhaseIntegrators</code> (one per <code>ISFVisualSource</code> instance and per <code>ISFFilter</code>, so per deck and per FX slot) advances in <code>setupUniforms</code> / <code>render</code> from <code>TimeSource</code>, so offline export is deterministic. The first frame starts each phase at <code>rate * TIME</code>, where <code>TIME * rate</code> would have put it, so a freshly loaded source looks as it always did. A step longer than <code>MAX_STEP_SEC</code> (0.25 s), such as a deck that was not rendered for a while, counts as 0.25 s.

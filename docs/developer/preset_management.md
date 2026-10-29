@@ -15,6 +15,7 @@ private val presetIoExecutor: ExecutorService = Executors.newSingleThreadExecuto
     Thread(runnable, "PresetManager-IO").apply { isDaemon = true }
 }
 ```
+Besides preset, chain and playlist files, it runs the Garden pool rescans, Garden thumbnail PNG encode/write and flame imports (section 12). Results are applied on Thread 0 (an `Ops` drain or `VisualSourceRegistry.runOnGlThread`); a failure toasts through `ToastOverlay`, whose text and expiry are one `AtomicReference` because this thread writes it.
 
 ### Auto-Healing Preset Loader (`sanitizePresetDto`)
 To eliminate schema drift and prevent dirty-flag trip bugs when shaders or feedback parameters evolve:
@@ -91,11 +92,12 @@ When `triggerNext()` is called:
 - **Auto-VJ Mid-Session Arming**: Turning Auto-VJ ON while presets are playing manually arms the system for the next advance trigger without causing immediate jump cuts.
 
 ### Deck Changes: `DeckOps` (`presets/DeckOps.kt`)
-Every change to what a deck holds goes through `DeckOps.request(slot, change, origin)`; see the `DeckOps` entry in `DECISIONS.md` for the rationale. `DeckChange` is `Source`, `Preset`, `Eject`, `CopyFrom`, `MoveFrom` or `SwapWith` (each takes a `DeckScope`: `SOURCE`, `FX` or `BOTH`, default `BOTH`; the deck FX chain is not in `DeckPresetDto`, so it travels as an `FXChainDto` snapshot); `LoadOrigin` is `MANUAL` or `QUEUE`.
+Every change to what a deck holds goes through `DeckOps.request(slot, change, origin)`; see the `DeckOps` entry in `DECISIONS.md` for the rationale. `DeckChange` is `Source`, `Preset`, `Eject`, `CopyFrom`, `MoveFrom` or `SwapWith` (each takes a `DeckScope`: `SOURCE`, `FX` or `BOTH`, default `BOTH`; the deck FX chain is not in `DeckPresetDto`, so it travels as an `FxSnapshot`: the chain's `FXChainDto`, its `sourceFile` and its dirty `baselineDto`); `LoadOrigin` is `MANUAL` or `QUEUE`.
 - **Request time (calling thread)**: drop a no-op `Source` change, run the dirty guard, then either queue the change or read the preset on `presetIoExecutor` and queue the result.
 - **Dirty guard**: a clean deck proceeds. `MANUAL` uses `UITheme.manualLoadDirtyBehavior` (`PROMPT` calls `DeckOps.prompt`, wired to `PopupManager.requestDeckConfirm`; `DISCARD`; `AUTO_SAVE`). `QUEUE` uses `UITheme.autoVjDirtyBehavior` (`SKIP` drops the load, `AUTO_SAVE`, `AUTO_DISCARD`).
 - **Ordering**: each accepted request is stamped with a per-slot sequence number (after the dirty prompt, before the async preset read). The drain skips an op older than the last one applied to that slot and reports it to `onResult(false)`, so a slow preset read never overwrites a newer generator pick.
 - **Drain (`DeckOps.drainOnGlThread`, once per frame in `Main`)**: for each queued change, push undo (MANUAL `Source`/`Preset` only, via `DeckOps.undoSink`), apply it, install the macro bank, update `PresetManager` bookkeeping, toast if bound knobs were replaced, then call `DeckOps.postApply` (the UI clears the selection and shows the SRC sub-tab after a source change). Once per drain: `MidiMappingManager.invalidateBindings`, `ParameterResolver.clearCache`, `BroadcastEngine.notifyStateChanged`.
+- **With FX** (`DeckScope.FX` / `BOTH`): the target's chain changes through `FxOps.applyChain(chain, dto, file, baseline = ...)`, like any chain change (swap dip, `FxMacroSync` re-sync, link split; a saved chain stays saved, so Save is not Save As). A Move empties the source with `FxOps.clearChain`, which makes it a new unsaved "Untitled" chain so a later Save there can't overwrite the file. Both snapshots of a swap are taken before either chain changes. Copy/Move/Swap push no undo.
 - **Dirty check**: `DeckOps.isDirty` (`PresetManager.isDeckDirty` delegates) compares `deck.toDto` with the cached DTO, plus the macro bank's labels and bindings with the signature `PresetManager.setActive` captured.
 - All UI and queue call sites go through `DeckOps.request`; the old `PresetRepository.loadDeckPresetAsync` shim and the queue managers' own `handleDirtyDeck` are gone. `request` returns `false` when the change was dropped (no-op, prompt cancelled, or QUEUE `SKIP`); queue managers then leave their position unchanged. `DeckOps.wouldSkipQueueLoad` lets BG skip before its dip-to-black. Callers that must act once the deck holds the change pass `onResult` to `request`: it fires once, true after the drain applied it, false if dropped, prompt-cancelled, unreadable or failed (`VideoExportModal` starts its export from it).
 
@@ -201,9 +203,33 @@ Unifies the formerly separate `FXPresetListPanel` (single `.lsdfx` presets) and 
 `FXSlotDto` (in `PresetModels.kt`) carries `metaKnob: ParameterDto?`, `metaBinding: FxMetaBindingDto?` (legacy singular), `metaBindings: List<FxMetaBindingDto>?` (each with target, range, `curve`, `stepCount`, `linkMode`, `invert`, `enabled`) and `knobLayout: List<String>?` (focus-knob parameter order; null = authored order; names the shader lacks are dropped on load). `FxDefaultDto` (Save as Default, `library/isf_overrides/<hash>.json`) carries the same `metaBindings` and `knobLayout` (see `rendering/isf/FxMetaBinding.kt`); `FXChainDto` carries `superKnob: ParameterDto?` and `slotSuperKnobLink: List<Boolean>?`. Both are **baked at save time** — a saved slot/chain preset always restores the exact Metaknob binding/position it had when saved, even if `ISFAutoBindEngine`'s resolution for that shader (curated table, or a since-changed user override under `library/isf_overrides/`) has since changed. There is no live re-resolution path from a saved preset; re-save (or an explicit future "re-resolve" UI action) is required to pick up a changed binding.
 
 ### FX Chain Dirty Tracking Criteria
-`FxChain.isDirty()` / `computeIsDirty()` tracks unsaved structural edits to an FX chain without falsely triggering during live performance knob sweeps.
-- **Criteria**: An FX chain is marked dirty (`•` indicator on the chain name button and Alert-colored Save button) **only** if:
-  1. An effect is added, removed, or replaced in any slot (filter ID mismatch against the loaded baseline).
-  2. The ordering of effects across slots is altered (e.g. slots swapped or moved).
-- **Performance Parameter Immunity**: Continuous movements of the Superknob, linked slot Metaknobs, Dry/Wet blends, and individual effect parameters do not mark an FX chain as dirty.
+`FxChain.isDirty()` (cached for 250 ms) / `computeIsDirty()` compares the chain with its `baselineDto` (the file it was loaded from, or the session's copy) in everything a chain file stores: slots and their order, enabled flags, Dry/Wets, parameters with their modulators, Metaknob links and targets, Super Knob links, knob layout. The `•` indicator on the chain name and the alert-coloured Save follow it.
+- **Performance positions are ignored**: the Super Knob's value, each Metaknob's value and the values Metaknob targets drive. Their modulators, links and targets still count.
+- Floats compare with a 1e-4 relative tolerance; parameters present on only one side (the shader gained or lost an input) are skipped. A chain with no baseline is dirty when any slot holds an effect.
 
+---
+
+## 10. Library Management (`ui/browser/LibraryFolders.kt`, `LibraryTags.kt`, `LibraryRefs.kt`, `MultiSelectionModel.kt`)
+
+- **Folders** exist only inside the Saved sections (Saved presets, Saved single FX, Saved chains, Saved transitions); stock sections have no folder on disk. `LibraryFolders` lists, creates, renames, moves and deletes folders and moves saved files between them; it only touches the disk and returns what moved, and the caller hands that to `LibraryRefs`. Save As starts in the folder the deck's preset was loaded from.
+- **References** (`LibraryRefs`): the one place that follows a renamed, moved or deleted file everywhere the app names it: playlists, live queues, favorites, recents, the decks' save-back files, FX chains' and slots' source files, a preset's thumbnail.
+- **Trash**: deletes go to the desktop trash (`FileSystemManager.moveToTrash`: `java.awt.Desktop`, else `gio trash`); hidden `.trash` folders are skipped by listings. Tests set `-Dlsd.noTrash=true`.
+- **Tags** (`LibraryTags`, `TagPopups`, `BrowseScope.Tag`): tags are crates stored in the file's own `tags` list, so they travel with it. Only that list is rewritten (the JSON object is patched, every other field kept) and written with `UserJsonFiles.writeAtomic`; decks and chains loaded from a retagged file take the new tags so their next save doesn't restore the old ones. Rename / Edit Preset Tags (`BrowserPopupHandler`) patches `name` and `tags` the same way.
+- **Multi-select** (`MultiSelectionModel`): click, Ctrl/Cmd+click, Shift+click ranges over the visible order; allocation-free `isSelected`; the browser's multi-row actions act on the selection.
+
+## 11. Queue Edits (`ui/browser/QueueOps.kt`, `QueueDrop.kt`, `QueueSplit.kt`)
+
+- `QueueOps` edits any of the five queues by index (cursor, play now, move, remove, `insert`, `clear`, `edit`) and pushes one restore-only undo step per edit (items, playing position, shuffle history). Callers: each queue panel's Clear, drops from the browser onto a queue (`QueueDrop`, which also refuses items of the wrong kind), the playlist menu's play now / insert / append, the controller's queue knobs (`QueueKnobs`).
+- Not through `QueueOps`: plain appends (`LibraryNavigation.enqueue`, the Q key, toolbar enqueue) still call the queue managers and push no undo.
+- `QueueSplit` shows the five queues (`QueuesPane`) under the browser in Library FULL; a browser row dragged onto a queue lands at the drop position.
+
+## 12. Fractal Flame Garden and Imports (`presets/Garden.kt`, `GardenThumbnails.kt`, `FlameImportOps.kt`)
+
+- Kept offspring are ordinary `.lsd` presets in `library/presets/garden/` (tags `garden`, `gen:N`, `parent:<name>`), with a `<name>.png` thumbnail. `Garden.pool(sourceId)` returns a `@Volatile` immutable snapshot (never touches the disk on Thread 0) and queues one coalesced rescan per call on `presetIoExecutor` to pick up outside changes; `Garden.refreshPool` rebuilds it at startup and after a Keep.
+- `GardenThumbnails.capture` reads the deck's texture back on Thread 0; the PNG encode and write run on `presetIoExecutor`.
+- `FlameImportOps.importFile` parses a `.flame` file and writes one preset per flame into `library/presets/imported-flames/` on `presetIoExecutor`, returns a completion future, and shows its result toast on Thread 0 (`runOnGlThread`). Details: `flame_source.md`.
+
+## 13. Shipped Defaults (`presets/StockDefaults.kt`, `GeneratorDefaults.kt`)
+
+- Stock sources, effects and transitions ship sparse default files, `resources/stock_defaults/{sources,filters,transitions}/<id>.json` (shape of `GeneratorDefaultDto` / `FxDefaultDto`, naming only what differs from the shader: base values, `randomizeBase` + `baseMin`/`baseMax` random ranges, modulators incl. audio and section responses, knobs).
+- `GeneratorDefaults.resolve`: user file `library/generator_defaults/<sourceId>.json`, else the shipped file, else a heuristic for third-party shaders. Effects and transitions resolve in `ISFAutoBindEngine` (content-hash override in `library/isf_overrides/`, shipped file, heuristic). A user default replaces the shipped one wholesale. Format and tests: `modulation.md`, "Reactivity Recipes".
