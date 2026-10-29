@@ -12,13 +12,15 @@ import llm.slop.liquidlsd.rendering.Mixer
  * The pair view's tab strip and list, or the Edit view's editor, follow under it. Its height never depends on what it shows.
  */
 internal object BayHeader {
+    private const val CHAIN_ON_TIP = FxChainHeader.CHAIN_VIEW_DESC + " Click to go back to Perform."
+    private const val CHAIN_OFF_TIP = FxChainHeader.CHAIN_VIEW_DESC + " Click to open it."
     /** What the header is about: [label] with its [accent] dot, a hover [tooltip], and row buttons ([actions], e.g. Save, Clear Slot). [paused] greys it. */
     class Chip(val label: String, val accent: FloatArray?, val tooltip: String, val actions: (() -> Unit)? = null, val paused: Boolean = false)
 
     /**
      * Draws the line and the separator under it. [browsing] says which half of the Browse|Params toggle is lit; [onToggle] switches to the
      * other view, null when it has none (the toggle's other half is then disabled, with [toggleUnavailable] as its tooltip). [queueDeck]
-     * is the deck label whose queue line to show ("Deck BG": the BG queue; "Deck PV": none; anything else, or null: the A/B play queue).
+     * is the deck label whose queue line to show ("Deck BG": the BG queue; "Deck PV": none; anything else, or null: the A/B Queue).
      */
     fun draw(
         session: SessionContext,
@@ -58,10 +60,7 @@ internal object BayHeader {
                 ImGui.sameLine(0f, 10f)
                 val chainOn = parametersState.chainView != null
                 segment("Chain##bay_chain", lit = chainOn, enabled = true, lineH) { parametersState.toggleChainView(chainTag) }
-                itemTooltip(
-                    if (chainOn) "Chain view: one row per FX slot, the source row under them. Click to go back to Perform."
-                    else "Chain view: one row per FX slot with the source row under them, all three slots playable at once."
-                )
+                itemTooltip(if (chainOn) CHAIN_ON_TIP else CHAIN_OFF_TIP)
                 if (chainOn) {
                     ImGui.sameLine(0f, 2f)
                     val loading = parametersState.chainView == ParametersState.ChainViewState.BROWSE

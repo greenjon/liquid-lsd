@@ -295,7 +295,7 @@ object ParametersRenderer {
                     OscLearnState.cancelLearn()
                 }
             } else {
-                if (ImGui.menuItem(if (macroInfo != null) "${Icons.ACTIVITY} Learn OSC (locked by ${macroInfo.badgeLabel})" else "${Icons.ACTIVITY} Learn OSC", "", false, macroInfo == null)) {
+                if (ImGui.menuItem(if (macroInfo != null) "${Icons.ACTIVITY} OSC Learn (locked by ${macroInfo.badgeLabel})" else "${Icons.ACTIVITY} OSC Learn", "", false, macroInfo == null)) {
                     OscLearnState.startLearn(paramKey, param.minClamp, param.maxClamp, label)
                 }
             }
@@ -308,7 +308,7 @@ object ParametersRenderer {
             // Note editing: derive deckLabel from paramKey
             val deckLabelForNote = paramKey.split("/").firstOrNull() ?: ""
             val existingNote = NotesManager.getParamNote(deckLabelForNote, paramKey)
-            val noteLabel = if (existingNote.isNotEmpty()) "${Icons.NOTE} Edit Parameter Note\u2026" else "${Icons.NOTE} Add Parameter Note\u2026"
+            val noteLabel = if (existingNote.isNotEmpty()) "${Icons.NOTE} Edit Parameter Note..." else "${Icons.NOTE} Add Parameter Note..."
             if (ImGui.menuItem(noteLabel)) {
                 NoteEditorModal.request(NoteContext.Param(deckLabelForNote, paramKey, label))
             }
@@ -691,19 +691,28 @@ object ParametersRenderer {
 
         if (isCellHovered && session.uiTheme.tooltipsEnabled) {
             val isFiltered = param.modulatorFilter != null && activeMods.any { param.modulatorFilter?.invoke(it) == false }
-            val statusText = when {
-                isFiltered   -> "Bypassed: Bypassed because AUTO-VJ is OFF."
-                hasModulator -> "Active: Modulation routed to parameter."
-                isBypassed   -> "Muted: Modulation muted from parameter (O-scope live). Middle-click to unmute."
-                else         -> "Unmapped: Middle-click or click to add & configure modulation."
-            }
             val modSource = when (cvId) {
-                "lfo"     -> "LFO / Oscillator"
+                "lfo"     -> "LFO"
                 "seq"     -> "Step Sequencer"
-                "audio"   -> "Audio-Reactive Modulator"
+                "audio"   -> "Audio"
                 else      -> cvId
             }
-            showTooltip("Source: $modSource\nStatus: $statusText\nClick to select. Middle-click active/muted cell to toggle mute, inactive to populate properties.", (x.toInt() shl 16) xor (y.toInt() and 0xFFFF))
+            showTooltip(buildControlTooltip {
+                header = "$modSource modulation"
+                status = when {
+                    isFiltered   -> "Bypassed while Auto-VJ is off."
+                    hasModulator -> "On: modulating this parameter."
+                    isBypassed   -> "Muted (the scope stays live)."
+                    else         -> "None yet."
+                }
+                leftClick = "select it and edit it in the Modulation column"
+                middleClick = when {
+                    activeMods.isEmpty() -> "add one"
+                    activeMods.all { it.bypassed } -> "unmute"
+                    else -> "mute"
+                }
+                rightClick = "for copy, paste, clear and mute"
+            }, (x.toInt() shl 16) xor (y.toInt() and 0xFFFF))
         }
         if (ImGui.isItemClicked(0)) {
             state.select(cellId, param)

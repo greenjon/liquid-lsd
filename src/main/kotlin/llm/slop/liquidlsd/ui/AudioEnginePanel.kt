@@ -145,7 +145,7 @@ object AudioEnginePanel {
 
         if (!theme.audioEngineEnabled) {
             ImGui.spacing()
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 0.95f, 0.75f, 0.35f, 1.0f)
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, TangoPalette.TEXT_WARN.u32())
             ImGui.textWrapped("${Icons.ALERT} Audio engine is disabled. Live audio input and audio-reactive CV signals (Amp, Bass, Mid, High, Flux) are inactive.")
             ImGui.popStyleColor()
             ImGui.spacing()
@@ -267,6 +267,7 @@ object AudioEnginePanel {
                         SystemAudioVolume.updateSystemVolume(newVal)
                     }
                 )
+                itemTooltip("Your computer's input volume for the default recording device, the same setting as the system sound settings (it changes it for every app). Raise it, or Input Trim, if the Sync State stays SILENT. MUTED means the device is muted in the system.")
             }
 
             ImGui.spacing()
@@ -285,7 +286,7 @@ object AudioEnginePanel {
 
             if (!isAudioActive) {
                 ImGui.spacing()
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1.0f, 0.35f, 0.35f, 1.0f)
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, TangoPalette.TEXT_ERROR.u32())
                 ImGui.textWrapped("${Icons.ALERT} Warning: Audio Engine is inactive. No audio signal received.")
                 ImGui.popStyleColor()
                 ImGui.spacing()
@@ -294,7 +295,7 @@ object AudioEnginePanel {
                 }
                 itemTooltip("Attempts to reconnect to the JACK or PipeWire audio backend.")
             } else if (state == SignalState.SILENT && maxOf(audioEngine.meterPeakL, audioEngine.meterPeakR) > AUDIBLE_PEAK) {
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 0.95f, 0.75f, 0.35f, 1.0f)
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, TangoPalette.TEXT_WARN.u32())
                 ImGui.textWrapped("${Icons.ALERT} Input too quiet for beat detection. Raise Input Trim or the system input volume.")
                 ImGui.popStyleColor()
             } else if (backend == "Java Sound") {

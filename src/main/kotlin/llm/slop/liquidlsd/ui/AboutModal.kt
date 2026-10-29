@@ -45,7 +45,7 @@ object AboutModal {
 
         if (ImGui.beginPopupModal(MODAL_ID, flags)) {
             session.uiTheme.withFont(UITheme.FontLevel.H2) {
-                ImGui.textColored(0.2f, 0.8f, 1.0f, 1.0f, "${Icons.ACTIVITY} Liquid LSD")
+                ImGui.textColored(TangoPalette.BRAND_TEXT.u32(), "${Icons.ACTIVITY} Liquid LSD")
             }
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
                 ImGui.text("Libre Shader Decks")
@@ -60,7 +60,7 @@ object AboutModal {
                 ImGui.text("Version:")
                 ImGui.sameLine()
                 session.uiTheme.withFont(UITheme.FontLevel.CODE) {
-                    ImGui.textColored(0.35f, 0.85f, 1.0f, 1.0f, AppVersion.CURRENT)
+                    ImGui.textColored(TangoPalette.VERSION_TEXT.u32(), AppVersion.CURRENT)
                 }
             }
 
@@ -72,18 +72,18 @@ object AboutModal {
 
             if (checking) {
                 session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                    ImGui.textColored(0.9f, 0.7f, 0.2f, 1.0f, "${Icons.REFRESH} Checking for updates...")
+                    ImGui.textColored(TangoPalette.TEXT_WARN.u32(), "${Icons.REFRESH} Checking for updates...")
                 }
             } else {
                 when (lastRes) {
                     is UpdateCheckResult.UpdateAvailable -> {
                         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                            ImGui.textColored(0.3f, 0.9f, 0.4f, 1.0f, "${Icons.DOWNLOAD} Update available: ${lastRes.latestRelease.tagName}")
+                            ImGui.textColored(TangoPalette.TEXT_OK.u32(), "${Icons.DOWNLOAD} Update available: ${lastRes.latestRelease.tagName}")
                         }
                         ImGui.spacing()
-                        ImGui.pushStyleColor(ImGuiCol.Button, 0.15f, 0.60f, 0.30f, 1.0f)
-                        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.22f, 0.75f, 0.38f, 1.0f)
-                        ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.10f, 0.50f, 0.25f, 1.0f)
+                        ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.GO_BTN_BG.u32())
+                        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, TangoPalette.GO_BTN_HOVER.u32())
+                        ImGui.pushStyleColor(ImGuiCol.ButtonActive, TangoPalette.GO_BTN_ACTIVE.u32())
                         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
                             if (ButtonChrome.button("${Icons.DOWNLOAD} View Update", 160f, 28f)) {
                                 UpdatePromptModal.request(lastRes.latestRelease, lastRes.currentVersion)
@@ -94,7 +94,7 @@ object AboutModal {
                     }
                     is UpdateCheckResult.UpToDate -> {
                         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                            ImGui.textColored(0.5f, 0.9f, 0.5f, 1.0f, "Liquid LSD is up to date.")
+                            ImGui.textColored(TangoPalette.TEXT_OK.u32(), "Liquid LSD is up to date.")
                         }
                         ImGui.spacing()
                         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
@@ -105,7 +105,7 @@ object AboutModal {
                     }
                     is UpdateCheckResult.Error -> {
                         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                            ImGui.textColored(1.0f, 0.4f, 0.4f, 1.0f, "Update check failed: ${lastRes.message}")
+                            ImGui.textColored(TangoPalette.TEXT_ERROR.u32(), "Update check failed: ${lastRes.message}")
                         }
                         ImGui.spacing()
                         session.uiTheme.withFont(UITheme.FontLevel.BODY) {

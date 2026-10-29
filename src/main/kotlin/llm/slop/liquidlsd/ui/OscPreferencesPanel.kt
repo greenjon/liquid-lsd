@@ -181,9 +181,9 @@ object OscPreferencesPanel {
         ImGui.separator()
         ImGui.spacing()
 
-        // 4. Learn OSC
+        // 4. OSC Learn
         theme.withFont(UITheme.FontLevel.H3) {
-            ImGui.text("Learn OSC")
+            ImGui.text("OSC Learn")
         }
         val activeStatus = OscLearnState.getActiveStatus()
         if (activeStatus != null) {
@@ -193,8 +193,8 @@ object OscPreferencesPanel {
         ImGui.inputTextWithHint("##osc_learn_target", "Target path (e.g. Deck A/geometry/zoom:mod/<modulator id>/subdivision)", learnParamInput)
         ImGui.sameLine()
         if (OscLearnState.isLearning()) {
-            val ink = TangoPalette.inkFor(floatArrayOf(0.72f, 0.45f, 1.00f))
-            ButtonChrome.pushColor(0.72f, 0.45f, 1.00f, 0.6f)
+            val ink = TangoPalette.inkFor(TangoPalette.LEARN_ARMED_BG.dark)
+            ButtonChrome.pushColor(TangoPalette.LEARN_ARMED_BG.u32())
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
             if (ButtonChrome.button("Cancel##osc_learn_cancel")) {
                 OscLearnState.cancelLearn()
@@ -208,7 +208,7 @@ object OscPreferencesPanel {
             }
             if (target.isEmpty()) ImGui.endDisabled()
         }
-        itemTooltip("Type a target parameter path or modulator variable (e.g. 'Deck A/geometry/zoom:mod/<modulator id>/subdivision'; a numeric position from older files still works), click Start Learn, then move a control on your OSC surface to map it. You can also right-click any slider in the UI to Learn OSC directly.")
+        itemTooltip("Type a target parameter path or modulator variable (e.g. 'Deck A/geometry/zoom:mod/<modulator id>/subdivision'; a numeric position from older files still works), click Start Learn, then move a control on your OSC surface to map it. You can also right-click any slider in the UI and choose OSC Learn.")
 
         ImGui.spacing()
         ImGui.separator()
@@ -233,7 +233,7 @@ object OscPreferencesPanel {
 
         if (mappings.isEmpty()) {
             ImGui.spacing()
-            theme.caption("No address mappings in this profile. Use 'Learn OSC' above or right-click any slider in the UI to map controls.")
+            theme.caption("No address mappings in this profile. Use OSC Learn above, or right-click any slider in the UI and choose OSC Learn.")
         } else {
             val paramTableFlags = ImGuiTableFlags.BordersInnerH or ImGuiTableFlags.RowBg or ImGuiTableFlags.SizingStretchProp or ImGuiTableFlags.ScrollY
             if (ImGui.beginTable("##osc_mappings_table", 8, paramTableFlags, 0f, 320f)) {

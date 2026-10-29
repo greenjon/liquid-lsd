@@ -146,10 +146,10 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
     private val deckStrings = Array(PerfRows.DECK_TAGS.size) { DeckStrings(PerfRows.DECK_TAGS[it]) }
 
     // The A/B queue is shared: its arrows (on both the A and B rows) load into whichever deck is off-air, then fade to it.
-    private val QUEUE_NEXT_TIP_A = "A/B queue: load the next item into Deck A (off-air now) and fade to it. Same button on both rows."
-    private val QUEUE_NEXT_TIP_B = "A/B queue: load the next item into Deck B (off-air now) and fade to it. Same button on both rows."
-    private val QUEUE_PREV_TIP_A = "A/B queue: load the previous item into Deck A (off-air now) and fade to it. Same button on both rows."
-    private val QUEUE_PREV_TIP_B = "A/B queue: load the previous item into Deck B (off-air now) and fade to it. Same button on both rows."
+    private val QUEUE_NEXT_TIP_A = "A/B Queue: load the next item into Deck A (off-air now) and fade to it. Same button on both rows."
+    private val QUEUE_NEXT_TIP_B = "A/B Queue: load the next item into Deck B (off-air now) and fade to it. Same button on both rows."
+    private val QUEUE_PREV_TIP_A = "A/B Queue: load the previous item into Deck A (off-air now) and fade to it. Same button on both rows."
+    private val QUEUE_PREV_TIP_B = "A/B Queue: load the previous item into Deck B (off-air now) and fade to it. Same button on both rows."
 
     private fun stringsFor(tag: String): DeckStrings = deckStrings[PerfRows.DECK_TAGS.indexOf(tag).coerceAtLeast(0)]
 
@@ -162,14 +162,17 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             tip.built = true
             tip.mapping = mapping
             tip.base = base
-            val midiText = mapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
-            tip.text = "$base$midiText\nRight-click for MIDI/OSC Learn."
+            tip.text = buildControlTooltip {
+                header = base
+                rightClick = "MIDI/OSC Learn"
+                midi = midiMappingText(mapping)
+            }
         }
         return tip.text
     }
 
     /**
-     * Prev/next queue button shared by Decks A/B (PlayQueue) and BG (BG queue): click triggers
+     * Prev/next queue button shared by Decks A/B (A/B Queue) and BG (BG Queue): click triggers
      * [trigger] (or starts/cancels OSC learn in OSC map mode), draws the MIDI/OSC learn border, and
      * offers the right-click MIDI/OSC Learn/Clear menu. [btnId]/[ctxId] are the complete ImGui IDs.
      * Inline so [trigger] doesn't allocate a lambda per frame.
@@ -223,7 +226,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
                     session.parametersState.midiLearnTarget = null
                 }
             } else {
-                if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI ($menuName)")) {
+                if (ImGui.menuItem("${Icons.SETTINGS} MIDI Learn ($menuName)")) {
                     session.parametersState.startMidiLearn(MidiLearnTarget.GlobalAction(key))
                 }
             }
@@ -238,7 +241,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
                     OscLearnState.cancelLearn()
                 }
             } else {
-                if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC ($menuName)")) {
+                if (ImGui.menuItem("${Icons.ACTIVITY} OSC Learn ($menuName)")) {
                     OscLearnState.startLearn(oscKey, 0f, 1f, oscName)
                 }
             }
@@ -414,18 +417,18 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
 
             ImGui.sameLine(0f, lineGap)
 
-            // PlayQueue / BG Queue navigation (none on PV)
+            // A/B Queue / BG Queue navigation (none on PV)
             val navBtnW = flexW
             if (!isDeckPV) ImGui.sameLine(0f, lineGap + FxChainHeader.ARROW_PAD)
             if (isDeckA || isDeckB) {
                 learnableNavButton(session, mixer, dl, "Global/queuePrev", "Mixer/queuePrev", "◀", str.qPrevId, str.qPrevCtxId,
-                    navBtnW, ctrlH, "PlayQueue Prev", "Queue Prev", "Trigger Previous",
+                    navBtnW, ctrlH, "A/B Queue Prev", "A/B Queue Prev", "Trigger Previous",
                     if (mixer.crossfade.value > 0f) QUEUE_PREV_TIP_A else QUEUE_PREV_TIP_B) { session.playQueueManager.triggerPrevious(mixer) }
 
                 ImGui.sameLine(0f, lineGap)
 
                 learnableNavButton(session, mixer, dl, "Global/queueNext", "Mixer/queueNext", "▶", str.qNextId, str.qNextCtxId,
-                    navBtnW, ctrlH, "PlayQueue Next", "Queue Next", "Trigger Next",
+                    navBtnW, ctrlH, "A/B Queue Next", "A/B Queue Next", "Trigger Next",
                     if (mixer.crossfade.value > 0f) QUEUE_NEXT_TIP_A else QUEUE_NEXT_TIP_B) { session.playQueueManager.triggerNext(mixer) }
             } else if (isDeckBG) {
                 learnableNavButton(session, mixer, dl, "Global/bgQueuePrev", "Mixer/bgQueuePrev", "◀", "◀##perf_bg_prev", "perf_bg_prev_ctx",

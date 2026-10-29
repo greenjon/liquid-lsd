@@ -223,7 +223,7 @@ object BeatDivisionSlider {
                         llm.slop.liquidlsd.osc.OscLearnState.cancelLearn()
                     }
                 } else {
-                    if (ImGui.menuItem(if (macroInfo != null) "${Icons.ACTIVITY} Learn OSC (locked by ${macroInfo.badgeLabel})" else "${Icons.ACTIVITY} Learn OSC ($propLabel)", "", false, macroInfo == null)) {
+                    if (ImGui.menuItem(if (macroInfo != null) "${Icons.ACTIVITY} OSC Learn (locked by ${macroInfo.badgeLabel})" else "${Icons.ACTIVITY} OSC Learn ($propLabel)", "", false, macroInfo == null)) {
                         llm.slop.liquidlsd.osc.OscLearnState.startLearn(
                             parameterPath = targetPath,
                             minVal = bindMinVal,
@@ -243,7 +243,7 @@ object BeatDivisionSlider {
                         session.parametersState.midiLearnTarget = null
                     }
                 } else {
-                    if (ImGui.menuItem(if (macroInfo != null) "${Icons.SETTINGS} Learn MIDI Mapping (locked by ${macroInfo.badgeLabel})" else "${Icons.SETTINGS} Learn MIDI Mapping ($propLabel)", "", false, macroInfo == null)) {
+                    if (ImGui.menuItem(if (macroInfo != null) "${Icons.SETTINGS} MIDI Learn (locked by ${macroInfo.badgeLabel})" else "${Icons.SETTINGS} MIDI Learn ($propLabel)", "", false, macroInfo == null)) {
                         session.parametersState.startMidiLearn(
                             MidiLearnTarget.ModulatorProperty(
                                 fullPath = targetPath,
@@ -269,16 +269,8 @@ object BeatDivisionSlider {
         }
 
         if (isLabelHovered) {
-            if (isMacroBound) {
-                val info = macroInfo!!
-                showTooltip("Variable: $label [${info.badgeLabel}]\nControlled by ${info.controlName}.\nClick to edit the target.")
-            } else {
-                val learnHint = if (isMacroLearning) "\nClick to add as a target of the armed macro knob." else ""
-                val oscHint = if (isOscLearningThis) "\n[OSC LEARN ARMED] Move a control on your OSC surface to map it." else ""
-                val midiHint = if (isMidiLearningThis) "\n[MIDI LEARN ARMED] Move a knob/fader on your MIDI controller to map it." else ""
-                val menuHint = if (!isOscLearningThis && !isMidiLearningThis && targetPath != null) "\nRight-click for OSC/MIDI Learn." else ""
-                showTooltip("Variable: $label\nMiddle-click to reset to default.$learnHint$oscHint$midiHint$menuHint")
-            }
+            CustomRangeSlider.labelTooltip(label, null, if (isMacroBound) macroInfo else null, isMacroLearning,
+                isOscLearningThis, isMidiLearningThis, learnable = targetPath != null, resettable = true)
         }
         if (isMacroLearning) {
             val pulseAlpha = (kotlin.math.sin(llm.slop.liquidlsd.utils.TimeSource.getEpochMillis() * 0.008) * 0.35 + 0.65).toFloat()
@@ -339,7 +331,7 @@ object BeatDivisionSlider {
                     }
                     onRandomizeNow()
                 }
-                itemTooltip("Left-click to toggle random range.\nRight-click to randomize now.")
+                itemTooltip(if (effectiveIsRandomizable) CustomRangeSlider.RANDOM_RANGE_ON_TIP else CustomRangeSlider.RANDOM_RANGE_OFF_TIP)
             }
         }
 
@@ -536,38 +528,19 @@ object BeatDivisionSlider {
                 }
             }
 
-            if (isMacroBound) {
-                val info = macroInfo!!
-                showTooltip("Locked: Driven by ${info.controlName} [${info.badgeLabel}].\nAdjust the target in the Edit row or Modulation column.")
-            } else if (effectiveIsRandomizable) {
-                val minPct = if (rangeSpan > 0f) (currentMin - minLimit) / rangeSpan else 0f
-                val maxPct = if (rangeSpan > 0f) (currentMax - minLimit) / rangeSpan else 0f
-                val minHandleX = lineStartX + minPct * lineWidth
-                val maxHandleX = lineStartX + maxPct * lineWidth
-                val curPct = if (rangeSpan > 0f) (currentValue - minLimit) / rangeSpan else 0f
-                val curX = lineStartX + curPct * lineWidth
-
-                val distToMin = kotlin.math.abs(mouseX - minHandleX)
-                val distToMax = kotlin.math.abs(mouseX - maxHandleX)
-                val distToCur = kotlin.math.abs(mouseX - curX)
-
+            val spot = if (!isMacroBound && effectiveIsRandomizable) {
+                fun pct(v: Float) = if (rangeSpan > 0f) (v - minLimit) / rangeSpan else 0f
+                val distToMin = kotlin.math.abs(mouseX - (lineStartX + pct(currentMin) * lineWidth))
+                val distToMax = kotlin.math.abs(mouseX - (lineStartX + pct(currentMax) * lineWidth))
+                val distToCur = kotlin.math.abs(mouseX - (lineStartX + pct(currentValue) * lineWidth))
                 when {
-                    distToMin < 8f -> showTooltip("Minimum boundary speed for $label\nScroll to adjust. Middle-click to reset.")
-                    distToMax < 8f -> showTooltip("Maximum boundary speed for $label\nScroll to adjust. Middle-click to reset.")
-                    distToCur < 6f -> showTooltip("Current modulated speed for $label")
-                    else -> showTooltip("Drag handles or Scroll to set bounds for $label. Middle-click to reset.")
+                    distToMin < 8f -> CustomRangeSlider.TrackSpot.MIN
+                    distToMax < 8f -> CustomRangeSlider.TrackSpot.MAX
+                    distToCur < 6f -> CustomRangeSlider.TrackSpot.CURRENT
+                    else -> CustomRangeSlider.TrackSpot.NONE
                 }
-            } else {
-                val valPct = if (rangeSpan > 0f) (currentValue - minLimit) / rangeSpan else 0f
-                val valHandleX = lineStartX + valPct * lineWidth
-                val distToVal = kotlin.math.abs(mouseX - valHandleX)
-
-                if (distToVal < 8f) {
-                    showTooltip("Base speed for $label\nScroll to adjust. Middle-click to reset.")
-                } else {
-                    showTooltip("Drag or Scroll to adjust base speed for $label. Middle-click to reset.")
-                }
-            }
+            } else CustomRangeSlider.TrackSpot.NONE
+            CustomRangeSlider.trackTooltip(label, "speed", if (isMacroBound) macroInfo else null, effectiveIsRandomizable, spot, "step the minimum")
         }
 
         ImGui.popID()

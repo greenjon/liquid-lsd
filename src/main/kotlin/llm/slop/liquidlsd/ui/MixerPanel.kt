@@ -19,6 +19,14 @@ class MixerPanel(
     private val parametersState: ParametersState,
     private val drawDeckControls: (Mixer, String, Deck, Float, Float, Boolean) -> Unit
 ) {
+    private companion object {
+        val MASTER_LEVEL_TIP = buildControlTooltip {
+            header = "Master Level"
+            drag = "adjust"
+            scroll = "adjust (Shift for finer steps)"
+            middleClick = "reset to 100%"
+        }
+    }
 
     fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
         val style = ImGui.getStyle()
@@ -180,7 +188,7 @@ class MixerPanel(
             if (ImGui.isMouseClicked(2) || ImGui.isItemClicked(2)) { // Middle-click reset to 100%
                 mixer.masterLevel.baseValue = 1.0f
             }
-            itemTooltip("Master Output Level\nDrag or scroll to adjust. Middle-click to reset (100%).")
+            itemTooltip(MASTER_LEVEL_TIP)
         }
 
         // Draw Fader Track
@@ -372,8 +380,14 @@ class MixerPanel(
 
         if (isTrackHovered && session.uiTheme.tooltipsEnabled) {
             val mapping = session.midiMappingManager.getMappingForParameter(paramKey)
-            val midiText = mapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
-            itemTooltip("Crossfader$midiText\nDrag or scroll to blend. Middle-click to center.")
+            controlTooltip {
+                header = "Crossfader"
+                drag = "blend between Deck A and Deck B"
+                scroll = "blend (Shift for finer steps)"
+                middleClick = "center"
+                action("Drop a transition here to load it")
+                midi = midiMappingText(mapping)
+            }
         }
 
         // --- Render Slider Visuals ---

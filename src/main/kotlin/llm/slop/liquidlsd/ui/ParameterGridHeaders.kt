@@ -12,6 +12,11 @@ import llm.slop.liquidlsd.presets.analyzeDependencies
  * and the VAL/MIDI/LFO/SEQ/AUD headers with the section tabs.
  */
 object ParameterGridHeaders {
+    private val VAL_HEADER_TIP = buildControlTooltip {
+        header = "VAL: the parameter's base value and modulation range"
+        action("Left-click a VAL cell to edit its range and default")
+        action("Middle-click or right-click a VAL cell to mute or unmute all its modulators")
+    }
 
     private const val SECTION_TABS_INSET_X = ParametersTabs.PARAM_INDENT
 
@@ -122,7 +127,7 @@ object ParameterGridHeaders {
         session.uiTheme.body(labelValue)
         ImGui.popStyleColor()
         if (isValueHeaderHovered && session.uiTheme.tooltipsEnabled) {
-            showTooltip("VAL: Base parameter value and modulation bounds/limits. Right-click or middle-click cell to toggle mute for all modulators.", (valueColX.toInt() shl 16) xor startY.toInt())
+            showTooltip(VAL_HEADER_TIP, (valueColX.toInt() shl 16) xor startY.toInt())
         }
 
         // Draw MIDI header

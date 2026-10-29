@@ -31,6 +31,9 @@ import llm.slop.liquidlsd.midi.sanitiseProfileName
  * Rendered within the "MIDI Controls" category of [PreferencesPanel].
  */
 object MidiPreferencesPanel {
+    private const val INPUT_TYPE_TIP = "How the control sends its value: CONTINUOUS_CC for a knob or fader, BUTTON_NOTE or BUTTON_CC for a pad or button, ROTARY_* for an endless encoder (pick the one your controller uses), PITCH_BEND for a pitch wheel."
+    private const val TRIGGER_MODE_TIP = "What a button press does: TOGGLE switches on and off, MOMENTARY is on only while held, STEP_INCREMENT and STEP_DECREMENT step the value up or down."
+    private const val TAKEOVER_TIP = "Takeover: IMMEDIATE jumps the parameter to the control's position. SOFT_TAKEOVER waits until the control passes the current value, so nothing jumps when the two disagree."
 
     private var profileMessage: String? = null
     private val utilityBrowser = ImGuiFileBrowser("##utilitySettingsBrowser")
@@ -81,10 +84,13 @@ object MidiPreferencesPanel {
             if (!fits || !known) {
                 ImGui.popStyleColor()
                 itemTooltip(if (!known) "Not a registered command." else "This command's kind does not fit this input, so it will do nothing.")
+            } else {
+                itemTooltip("Command this input runs. Click to pick another.")
             }
             drawCommandPicker(key, registry, compiled, key) { chosen -> applyEdit(store, ProfileBindingEdit.set(profile, key, chosen)) }
             ImGui.sameLine()
             if (ButtonChrome.button("${Icons.TRASH}##del")) applyEdit(store, ProfileBindingEdit.remove(profile, key))
+            itemTooltip("Remove this mapping from the profile.")
             ImGui.popID()
         }
 
@@ -446,10 +452,10 @@ object MidiPreferencesPanel {
         // 4. Global Action Triggers
         if (ImGui.collapsingHeader("Global Performance Action Triggers##midi_globals", imgui.flag.ImGuiTreeNodeFlags.DefaultOpen)) {
             val globalActions = listOf(
-                "Global/queueNext" to "Queue Advance A/B Next",
-                "Global/queuePrev" to "Queue Step Back A/B Prev",
-                "Global/bgQueueNext" to "BG Shader Advance Next",
-                "Global/bgQueuePrev" to "BG Shader Step Back Prev",
+                "Global/queueNext" to "A/B Queue Next",
+                "Global/queuePrev" to "A/B Queue Prev",
+                "Global/bgQueueNext" to "BG Queue Next",
+                "Global/bgQueuePrev" to "BG Queue Prev",
                 "Global/transQueueNext" to "Transition Queue Next",
                 "Global/transQueuePrev" to "Transition Queue Prev",
                 "Global/tapTempo" to "Tap Tempo Trigger",
@@ -493,6 +499,7 @@ object MidiPreferencesPanel {
                             parametersState.midiLearnTarget = null
                         }
                         ImGui.popStyleColor(4)
+                        itemTooltip("Cancel MIDI Learn: stop waiting for the device.")
                     } else {
                         if (ButtonChrome.button("Learn##learn_$actionKey")) {
                             parametersState?.let { ps ->
@@ -500,12 +507,14 @@ object MidiPreferencesPanel {
                                 ps.midiLearnStartTimeMs = llm.slop.liquidlsd.utils.TimeSource.getEpochMillis()
                             }
                         }
+                        itemTooltip("MIDI Learn: click, then move or press the control on your device to map it to this action.")
                     }
                     ImGui.sameLine()
                     if (ButtonChrome.button("Clear##clear_$actionKey")) {
                         session.midiMappingManager.removeMapping(actionKey)
                         session.midiMappingManager.saveActiveProfile()
                     }
+                    itemTooltip("Remove this action's MIDI mapping.")
                 }
                 ImGui.endTable()
             }
@@ -527,6 +536,7 @@ object MidiPreferencesPanel {
             session.midiMappingManager.clearAllMappings()
             session.midiMappingManager.saveActiveProfile()
         }
+        itemTooltip("Remove every MIDI mapping in this profile.")
 
         val mappings = session.midiMappingManager.getMappings()
             .filter { !it.key.startsWith("Global/") }
@@ -534,12 +544,12 @@ object MidiPreferencesPanel {
 
         if (mappings.isEmpty()) {
             ImGui.spacing()
-            session.uiTheme.caption("No parameter mappings in this profile. Click 'Learn MIDI' on any knob or grid cell in the main UI to map hardware controls.")
+            session.uiTheme.caption("No parameter mappings in this profile. Right-click a slider, knob or button in the main UI and choose MIDI Learn to map a hardware control.")
         } else {
             val paramTableFlags = ImGuiTableFlags.BordersInnerH or ImGuiTableFlags.RowBg or ImGuiTableFlags.SizingStretchProp or ImGuiTableFlags.ScrollY
             if (ImGui.beginTable("##param_mappings_table", 8, paramTableFlags, 0f, 320f)) {
                 ImGui.tableSetupColumn("Parameter", ImGuiTableColumnFlags.WidthStretch, 1.2f)
-                ImGui.tableSetupColumn("Target", ImGuiTableColumnFlags.WidthFixed, 90f)
+                ImGui.tableSetupColumn("Control", ImGuiTableColumnFlags.WidthFixed, 90f)
                 ImGui.tableSetupColumn("Input Type", ImGuiTableColumnFlags.WidthFixed, 140f)
                 ImGui.tableSetupColumn("Mode", ImGuiTableColumnFlags.WidthFixed, 120f)
                 ImGui.tableSetupColumn("Min / Max", ImGuiTableColumnFlags.WidthFixed, 130f)
@@ -592,6 +602,7 @@ object MidiPreferencesPanel {
                         session.midiMappingManager.updateMapping(paramPath, map.copy(inputType = newType))
                         session.midiMappingManager.saveActiveProfile()
                     }
+                    itemTooltip(INPUT_TYPE_TIP)
 
                     // Col 3: Trigger Mode / Takeover Mode Combo
                     ImGui.tableNextColumn()
@@ -603,6 +614,7 @@ object MidiPreferencesPanel {
                             session.midiMappingManager.updateMapping(paramPath, map.copy(triggerMode = newTrg))
                             session.midiMappingManager.saveActiveProfile()
                         }
+                        itemTooltip(TRIGGER_MODE_TIP)
                     } else if (map.inputType == MidiInputType.CONTINUOUS_CC || map.inputType == MidiInputType.PITCH_BEND) {
                         val toIdx = ImInt(takeoverModeValues.indexOf(map.takeoverMode).coerceAtLeast(0))
                         if (ImGui.combo("##to_$paramPath", toIdx, takeoverModeNames)) {
@@ -610,6 +622,7 @@ object MidiPreferencesPanel {
                             session.midiMappingManager.updateMapping(paramPath, map.copy(takeoverMode = newTo))
                             session.midiMappingManager.saveActiveProfile()
                         }
+                        itemTooltip(TAKEOVER_TIP)
                     } else {
                         // Rotary step size
                         val stepArr = floatArrayOf(map.stepSize)
@@ -617,6 +630,7 @@ object MidiPreferencesPanel {
                             session.midiMappingManager.updateMapping(paramPath, map.copy(stepSize = stepArr[0]))
                             session.midiMappingManager.saveActiveProfile()
                         }
+                        itemTooltip("How far each encoder click moves the value. Drag to adjust.")
                     }
 
                     // Col 4: Min / Max Range
@@ -625,9 +639,11 @@ object MidiPreferencesPanel {
                     val maxArr = floatArrayOf(map.maxVal)
                     ImGui.setNextItemWidth(55f)
                     val changedMin = ImGui.dragFloat("##min_$paramPath", minArr, 0.01f, -100f, 100f, "%.2f")
+                    itemTooltip("Value the parameter takes with the control at its lowest. Drag to adjust.")
                     ImGui.sameLine()
                     ImGui.setNextItemWidth(55f)
                     val changedMax = ImGui.dragFloat("##max_$paramPath", maxArr, 0.01f, -100f, 100f, "%.2f")
+                    itemTooltip("Value the parameter takes with the control at its highest. Drag to adjust.")
                     if (changedMin || changedMax) {
                         session.midiMappingManager.updateMapping(paramPath, map.copy(minVal = minArr[0], maxVal = maxArr[0]))
                         session.midiMappingManager.saveActiveProfile()
@@ -640,6 +656,7 @@ object MidiPreferencesPanel {
                         session.midiMappingManager.updateMapping(paramPath, map.copy(inverted = inv.get()))
                         session.midiMappingManager.saveActiveProfile()
                     }
+                    itemTooltip("Reverse the control's direction.")
 
                     // Col 6: Slew (ms)
                     ImGui.tableNextColumn()
@@ -649,6 +666,7 @@ object MidiPreferencesPanel {
                         session.midiMappingManager.updateMapping(paramPath, map.copy(slewMs = slewArr[0]))
                         session.midiMappingManager.saveActiveProfile()
                     }
+                    itemTooltip("Slew: glide to each new control value over this many milliseconds, smoothing steppy knobs (0 = jump at once). Drag to adjust.")
 
                     // Col 7: Actions (Delete)
                     ImGui.tableNextColumn()
@@ -656,6 +674,7 @@ object MidiPreferencesPanel {
                         session.midiMappingManager.removeMapping(paramPath)
                         session.midiMappingManager.saveActiveProfile()
                     }
+                    itemTooltip("Remove this mapping.")
                 }
                 ImGui.endTable()
             }

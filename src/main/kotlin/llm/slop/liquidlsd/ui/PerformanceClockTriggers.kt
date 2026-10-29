@@ -19,7 +19,7 @@ import llm.slop.liquidlsd.rendering.Mixer
  * Captions and button text are BODY in the normal text color, like the captions under the knobs on the other rows.
  *
  * Each button stands for the same [ModulatableParameter] the MST > CTRL rows list (`Mixer/queueNext`, `Mixer/randAll`, ...), under the
- * same param key: right-click Learn MIDI / Learn OSC / Clear and the tooltip's mapping all go through that key, so a mapping made here
+ * same param key: right-click MIDI Learn / OSC Learn / Clear and the tooltip's mapping all go through that key, so a mapping made here
  * is the one the CTRL row shows, and the other way round. A click advances the queue (or randomizes the deck) directly, as the
  * keyboard shortcuts and the deck dice do, so it works whether or not Auto-VJ is on (the CTRL rows' edge detection only counts
  * while it is). Tap tempo is the TAP button beside the BPM, not repeated here.
@@ -47,8 +47,7 @@ internal object PerformanceClockTriggers {
     private const val GROUP_GAP = 8.6f
     private const val BLOCK_GAP = 4f
     private const val TINT_PAD_Y = 2f
-    private const val TINT_DARK_THEME = 0x14FFFFFF
-    private const val TINT_LIGHT_THEME = 0x14000000
+
     // Caption slots: the BODY text (QUEUE is 48 px wide, RAND 39) plus 3 px before the first button, so both blocks read alike.
     private const val QUEUE_CAPTION_W = 49.4f
     private const val RAND_CAPTION_W = 40.3f
@@ -87,30 +86,30 @@ internal object PerformanceClockTriggers {
 
     private val QUEUE_GROUPS: Array<QueueGroup> = arrayOf(
         QueueGroup("A/B", arrayOf(
-            nav("Mixer/queuePrev", "◀", "A/B Queue Prev", "Previous item in the A/B play queue.", { it.queuePrev }) { s, m -> s.playQueueManager.advanceBy(-1, m) },
-            nav("Mixer/queueNext", "▶", "A/B Queue Next", "Next item in the A/B play queue.", { it.queueNext }) { s, m -> s.playQueueManager.advanceBy(1, m) }
-        ), AutoToggle("perf_clock_auto_ab", "Auto-VJ is running: click to pause the A/B queue.", "Auto-VJ is paused: click to cycle through the A/B queue at set intervals.",
+            nav("Mixer/queuePrev", "◀", "A/B Queue Prev", "Previous item in the A/B Queue.", { it.queuePrev }) { s, m -> s.playQueueManager.advanceBy(-1, m) },
+            nav("Mixer/queueNext", "▶", "A/B Queue Next", "Next item in the A/B Queue.", { it.queueNext }) { s, m -> s.playQueueManager.advanceBy(1, m) }
+        ), AutoToggle("perf_clock_auto_ab", "Auto-VJ is running: click to pause the A/B Queue.", "Auto-VJ is paused: click to cycle through the A/B Queue at set intervals.",
             { it.playQueueManager.isAutoVJEnabled }) { s, m ->
             val on = !s.playQueueManager.isAutoVJEnabled
             s.playQueueManager.isAutoVJEnabled = on
             if (on) m.muteCrossfadeNonMidiCv()
         }),
         QueueGroup("A/B FX", arrayOf(
-            nav("Mixer/fxQueuePrev", "◀", "A/B FX Queue Prev", "Previous item in the A/B FX queue, applied to whichever of Deck A/B the crossfader favours.", { it.fxQueuePrev }) { s, m -> FXQueueManager.advancePrevious(s, m) },
-            nav("Mixer/fxQueueNext", "▶", "A/B FX Queue Next", "Next item in the A/B FX queue, applied to whichever of Deck A/B the crossfader favours.", { it.fxQueueNext }) { s, m -> FXQueueManager.advanceNext(s, m) }
+            nav("Mixer/fxQueuePrev", "◀", "A/B FX Queue Prev", "Previous item in the A/B FX Queue, applied to whichever of Deck A/B the crossfader favours.", { it.fxQueuePrev }) { s, m -> FXQueueManager.advancePrevious(s, m) },
+            nav("Mixer/fxQueueNext", "▶", "A/B FX Queue Next", "Next item in the A/B FX Queue, applied to whichever of Deck A/B the crossfader favours.", { it.fxQueueNext }) { s, m -> FXQueueManager.advanceNext(s, m) }
         )),
         QueueGroup("BG", arrayOf(
-            nav("Mixer/bgQueuePrev", "◀", "BG Queue Prev", "Previous item in the BG queue.", { it.bgQueuePrev }) { s, m -> s.bgQueueManager.advanceBy(-1, m) },
-            nav("Mixer/bgQueueNext", "▶", "BG Queue Next", "Next item in the BG queue.", { it.bgQueueNext }) { s, m -> s.bgQueueManager.advanceBy(1, m) }
-        ), AutoToggle("perf_clock_auto_bg", "Auto-BG is running: click to pause the BG queue.", "Auto-BG is paused: click to cycle through the BG queue with dip-to-black transitions.",
+            nav("Mixer/bgQueuePrev", "◀", "BG Queue Prev", "Previous item in the BG Queue.", { it.bgQueuePrev }) { s, m -> s.bgQueueManager.advanceBy(-1, m) },
+            nav("Mixer/bgQueueNext", "▶", "BG Queue Next", "Next item in the BG Queue.", { it.bgQueueNext }) { s, m -> s.bgQueueManager.advanceBy(1, m) }
+        ), AutoToggle("perf_clock_auto_bg", "Auto-BG is running: click to pause the BG Queue.", "Auto-BG is paused: click to cycle through the BG Queue with dip-to-black transitions.",
             { it.bgQueueManager.isAutoBGEnabled }) { s, _ -> s.bgQueueManager.isAutoBGEnabled = !s.bgQueueManager.isAutoBGEnabled }),
         QueueGroup("BG FX", arrayOf(
-            nav("Mixer/fxBgQueuePrev", "◀", "BG FX Queue Prev", "Previous item in the BG FX queue, applied to Deck BG.", { it.fxBgQueuePrev }) { s, m -> FXBgQueueManager.advancePrevious(s, m) },
-            nav("Mixer/fxBgQueueNext", "▶", "BG FX Queue Next", "Next item in the BG FX queue, applied to Deck BG.", { it.fxBgQueueNext }) { s, m -> FXBgQueueManager.advanceNext(s, m) }
+            nav("Mixer/fxBgQueuePrev", "◀", "BG FX Queue Prev", "Previous item in the BG FX Queue, applied to Deck BG.", { it.fxBgQueuePrev }) { s, m -> FXBgQueueManager.advancePrevious(s, m) },
+            nav("Mixer/fxBgQueueNext", "▶", "BG FX Queue Next", "Next item in the BG FX Queue, applied to Deck BG.", { it.fxBgQueueNext }) { s, m -> FXBgQueueManager.advanceNext(s, m) }
         )),
         QueueGroup("TRN", arrayOf(
-            nav("Mixer/transQueuePrev", "◀", "Transition Queue Prev", "Previous transition in the Transition queue.", { it.transQueuePrev }) { _, m -> TransitionQueueManager.advancePrevious(m) },
-            nav("Mixer/transQueueNext", "▶", "Transition Queue Next", "Next transition in the Transition queue.", { it.transQueueNext }) { _, m -> TransitionQueueManager.advanceNext(m) }
+            nav("Mixer/transQueuePrev", "◀", "Transition Queue Prev", "Previous transition in the Transition Queue.", { it.transQueuePrev }) { _, m -> TransitionQueueManager.advancePrevious(m) },
+            nav("Mixer/transQueueNext", "▶", "Transition Queue Next", "Next transition in the Transition Queue.", { it.transQueueNext }) { _, m -> TransitionQueueManager.advanceNext(m) }
         ), AutoToggle("perf_clock_auto_trn", "Auto-advance is on: click to hold the current transition.", "Auto-advance is off: click to step to the next transition whenever a crossfade triggers.",
             { TransitionQueueManager.isAutoAdvanceEnabled }) { _, _ -> TransitionQueueManager.isAutoAdvanceEnabled = !TransitionQueueManager.isAutoAdvanceEnabled })
     )
@@ -147,11 +146,6 @@ internal object PerformanceClockTriggers {
         randomize()
     }
 
-    private val suffixCache =HashMap<MidiControlMapping, String>()
-    private fun midiSuffix(m: MidiControlMapping?): String {
-        if (m == null) return ""
-        return suffixCache.getOrPut(m) { if (m.channel == 0) " [CC ${m.cc}]" else " [Ch ${m.channel + 1} CC ${m.cc}]" }
-    }
 
     /**
      * Draws the blocks that fit between [x] and [rightX], on the two lines starting at [row1Y] and [row2Y]. QUEUE sits left: captions on
@@ -214,8 +208,7 @@ internal object PerformanceClockTriggers {
      * it is clear at a glance which captions and buttons belong together. Drawn first, under the group's own items.
      */
     private fun tint(dl: imgui.ImDrawList, x: Float, y: Float, w: Float, h: Float) {
-        val col = if (TangoPalette.isLightTheme) TINT_LIGHT_THEME else TINT_DARK_THEME
-        dl.addRectFilled(x, y - TINT_PAD_Y, x + w, y + h + TINT_PAD_Y, col, 4f)
+        dl.addRectFilled(x, y - TINT_PAD_Y, x + w, y + h + TINT_PAD_Y, TangoPalette.GROUP_TINT.u32(), 4f)
     }
 
     private fun place(x: Float, y: Float) = ImGui.setCursorScreenPos(x, y)
@@ -239,7 +232,12 @@ internal object PerformanceClockTriggers {
         val mapping = session.midiMappingManager.getMappingForParameter(key)
         if (mapping != t.mapping || t.tip.isEmpty()) {
             t.mapping = mapping
-            t.tip = "${t.action}${midiSuffix(mapping)}\nRight-click for MIDI/OSC Learn. The same trigger is on the MST > CTRL tab in Edit."
+            t.tip = buildControlTooltip {
+                header = t.action
+                description = "The same trigger is on the MST > CTRL tab in Edit."
+                rightClick = "MIDI/OSC Learn"
+                midi = midiMappingText(mapping)
+            }
         }
 
         val bx = ImGui.getCursorScreenPosX()
@@ -262,7 +260,7 @@ internal object PerformanceClockTriggers {
             ImGui.separator()
             if (isMidiLearn) {
                 if (ImGui.menuItem("${Icons.ALERT} Cancel MIDI Learn")) state.midiLearnTarget = null
-            } else if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI (${t.title})")) {
+            } else if (ImGui.menuItem("${Icons.SETTINGS} MIDI Learn (${t.title})")) {
                 state.startMidiLearn(MidiLearnTarget.BaseValueSlider(paramKey = key, label = t.title, param = t.param(mixer), min = 0f, max = 1f))
             }
             if (mapping != null && ImGui.menuItem("${Icons.TRASH} Clear MIDI Mapping")) {
@@ -271,7 +269,7 @@ internal object PerformanceClockTriggers {
             }
             if (isOscLearn) {
                 if (ImGui.menuItem("${Icons.ALERT} Cancel OSC Learn")) OscLearnState.cancelLearn()
-            } else if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC (${t.title})")) {
+            } else if (ImGui.menuItem("${Icons.ACTIVITY} OSC Learn (${t.title})")) {
                 OscLearnState.startLearn(key, 0f, 1f, t.title)
             }
             val oscAddress = OscMappingManager.getAddressForParameter(key)

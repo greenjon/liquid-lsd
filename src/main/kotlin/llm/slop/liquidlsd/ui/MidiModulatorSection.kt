@@ -45,9 +45,9 @@ object MidiModulatorSection {
             val isThisCellLearning = currentTarget is MidiLearnTarget.GridCell && currentTarget.cellId == cell
 
             if (isThisCellLearning) {
-                val ink = TangoPalette.inkFor(floatArrayOf(0.72f, 0.45f, 1.00f), floatArrayOf(0.80f, 0.55f, 1.00f))
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, 0.72f, 0.45f, 1.00f, 0.6f)
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, 0.80f, 0.55f, 1.00f, 0.8f)
+                val ink = TangoPalette.inkFor(TangoPalette.LEARN_ARMED_BG.dark, TangoPalette.LEARN_ARMED_HOVER.dark)
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, TangoPalette.LEARN_ARMED_BG.u32())
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, TangoPalette.LEARN_ARMED_HOVER.u32())
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
                 if (ButtonChrome.button("${Icons.REFRESH} Waiting for MIDI Note/CC... (Click to Cancel)##midi_relearn")) {
                     state.midiLearnTarget = null
@@ -61,7 +61,7 @@ object MidiModulatorSection {
                         PopupManager.globalPendingMidiWarning = true
                     }
                 }
-                itemTooltip("Adds a MIDI modulator to this parameter, saved in the preset; it adds on top of the value.\nFor a controller mapping that sets the value itself (saved in your controller profile), right-click the slider and choose Learn MIDI Mapping.")
+                itemTooltip("Adds a MIDI modulator to this parameter, saved in the preset; it adds on top of the value.\nFor a controller mapping that sets the value itself (saved in your controller profile), right-click the slider and choose MIDI Learn.")
                 ImGui.sameLine()
                 if (ButtonChrome.button("Clear MIDI Modulator##midi_unbind")) {
                     onUnbind()

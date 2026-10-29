@@ -248,6 +248,56 @@ object TangoPalette {
     val QUEUE_AB_TEXT      = Role(c(0.4f, 1f, 0.8f, 1f), light = a(ACTIVE.dark))
     val QUEUE_BG_TEXT      = Role(c(0.9f, 0.35f, 0.65f, 1f), light = a(PLUM.normal))
 
+    /** Faint wash behind every other button group (the Clock row's QUEUE columns), lighter on dark, darker on light. */
+    val GROUP_TINT         = Role(c(1f, 1f, 1f, 0.08f), light = c(0f, 0f, 0f, 0.08f))
+
+    // App brand (menu bar, About) and version readout.
+    val BRAND_TEXT         = Role(c(0.2f, 0.8f, 1f, 1f))
+    val VERSION_TEXT       = Role(c(0.35f, 0.85f, 1f, 1f))
+
+    // Perform page tabs in the menu bar; the inactive tab is [BUTTON_BG].
+    val PAGE_TAB_ACTIVE_BG    = Role(c(0.10f, 0.52f, 0.72f, 1f), light = a(SYNC.normal))
+    val PAGE_TAB_ACTIVE_HOVER = Role(c(0.15f, 0.62f, 0.82f, 1f), light = a(SYNC.bright))
+    val PAGE_TAB_HOVER        = Role(c(0.22f, 0.25f, 0.30f, 1f), lightSlot = ImGuiCol.ButtonHovered)
+
+    // The menu bar's Randomize ALL button.
+    val RANDOM_ALL_BG      = Role(c(0.25f, 0.18f, 0.32f, 0.90f))
+    val RANDOM_ALL_HOVER   = Role(c(0.38f, 0.25f, 0.48f, 1f))
+    val RANDOM_ALL_TEXT    = Role(c(0.95f, 0.85f, 1f, 1f))
+
+    // Menu-bar performance stats (CPU, frame time, FBOs).
+    val STAT_OK            = Role(c(0.55f, 1f, 0.55f, 1f), light = a(ACTIVE.dark))
+    val STAT_WARN          = Role(c(1f, 0.75f, 0f, 1f), light = a(ALERT.dark))
+    val STAT_BAD           = Role(c(1f, 0.25f, 0.25f, 1f), light = a(DANGER.normal))
+    val STAT_DIM           = Role(c(0.50f, 0.55f, 0.60f, 1f), light = a(NEUTRAL_DARK.normal))
+    val STAT_FBO           = Role(c(0.70f, 0.75f, 0.80f, 1f), light = a(NEUTRAL_DARK.dark))
+
+    /** Window close button (client-side frame). */
+    val CLOSE_HOVER        = Role(c(0.85f, 0.15f, 0.15f, 1f))
+    val CLOSE_ACTIVE       = Role(c(0.70f, 0.10f, 0.10f, 1f))
+
+    /** A Learn button while it is armed and waiting for input (MIDI modulator, OSC Learn in Preferences). */
+    val LEARN_ARMED_BG     = Role(c(0.72f, 0.45f, 1f, 0.6f))
+    val LEARN_ARMED_HOVER  = Role(c(0.80f, 0.55f, 1f, 0.8f))
+
+    // Go / stop buttons (Go Live, View Update / Disconnect).
+    val GO_BTN_BG          = Role(c(0.15f, 0.60f, 0.25f, 1f))
+    val GO_BTN_HOVER       = Role(c(0.25f, 0.75f, 0.35f, 1f))
+    val GO_BTN_ACTIVE      = Role(c(0.10f, 0.50f, 0.25f, 1f))
+    val STOP_BTN_BG        = Role(c(0.80f, 0.20f, 0.20f, 1f))
+    val STOP_BTN_HOVER     = Role(c(0.90f, 0.30f, 0.30f, 1f))
+
+    // Knob-zone (link mode) chip and its invert button.
+    val ZONE_FRAME_HOVER   = Role(c(0.2f, 0.85f, 1f, 0.8f))
+    val ZONE_FRAME_ON      = Role(c(0.2f, 0.75f, 0.95f, 0.45f))
+    val ZONE_FRAME_OFF     = Role(c(0.25f, 0.28f, 0.32f, 0.4f))
+    val ZONE_CURVE_OFF     = Role(c(0.5f, 0.55f, 0.6f, 0.35f))
+    val ZONE_CURVE_HOVER   = Role(c(0.4f, 0.95f, 1f, 1f))
+    val ZONE_CURVE_ON      = Role(c(0.2f, 0.85f, 1f, 0.95f))
+    val ZONE_INVERT_BG     = Role(c(0.12f, 0.35f, 0.45f, 0.9f))
+    val ZONE_INVERT_TEXT   = Role(c(0.2f, 0.95f, 1f, 1f))
+    val ZONE_INVERT_IDLE   = Role(c(0.6f, 0.65f, 0.7f, 0.8f))
+
     /** [rgb] scaled by [k] (dimmed accent) with [alpha], packed to U32. */
     fun u32Scaled(rgb: FloatArray, k: Float, alpha: Float): Int =
         ImGui.colorConvertFloat4ToU32(rgb[0] * k, rgb[1] * k, rgb[2] * k, alpha)
@@ -268,7 +318,11 @@ object TangoPalette {
             FX_SLOT_NAME_OFF, FX_ARROW_IDLE, FX_BTN_IDLE_BG, FX_BTN_IDLE_HOVER, FX_BTN_IDLE_TEXT,
             FX_BTN_EMPTY_TEXT, FX_RESET_BG, FX_RESET_HOVER, FX_RESET_TEXT, FX_LINK_IDLE_BG, FX_LINK_IDLE_HOVER,
             FX_LINK_IDLE_TEXT, HOVER_OVERLAY, PRESS_OVERLAY, HEADER_TINT, CELL_WASH, HOVER_BORDER, TEXT_FAINT, TEXT_DIM, TEXT_OK, TEXT_WARN, TEXT_ERROR,
-            QUEUE_AB_TEXT, QUEUE_BG_TEXT)
+            QUEUE_AB_TEXT, QUEUE_BG_TEXT, GROUP_TINT, BRAND_TEXT, VERSION_TEXT, PAGE_TAB_ACTIVE_BG, PAGE_TAB_ACTIVE_HOVER,
+            PAGE_TAB_HOVER, RANDOM_ALL_BG, RANDOM_ALL_HOVER, RANDOM_ALL_TEXT, STAT_OK, STAT_WARN, STAT_BAD, STAT_DIM, STAT_FBO,
+            CLOSE_HOVER, CLOSE_ACTIVE, LEARN_ARMED_BG, LEARN_ARMED_HOVER, GO_BTN_BG, GO_BTN_HOVER, GO_BTN_ACTIVE, STOP_BTN_BG,
+            STOP_BTN_HOVER, ZONE_FRAME_HOVER, ZONE_FRAME_ON, ZONE_FRAME_OFF, ZONE_CURVE_OFF, ZONE_CURVE_HOVER, ZONE_CURVE_ON,
+            ZONE_INVERT_BG, ZONE_INVERT_TEXT, ZONE_INVERT_IDLE)
     }
 
     // -- Ink pairing -----------------------------------------------------------------------------

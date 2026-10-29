@@ -501,8 +501,9 @@ class ControlTooltipBuilder {
                 "Right-click $trimmed"
             trimmed.equals("Learn", ignoreCase = true) ||
             trimmed.startsWith("Learn ", ignoreCase = true) ||
-            trimmed.equals("MIDI Learn", ignoreCase = true) ||
-            trimmed.equals("OSC Learn", ignoreCase = true) ||
+            trimmed.startsWith("MIDI Learn", ignoreCase = true) ||
+            trimmed.startsWith("MIDI/OSC Learn", ignoreCase = true) ||
+            trimmed.startsWith("OSC Learn", ignoreCase = true) ||
             trimmed.startsWith("options", ignoreCase = true) ->
                 "Right-click for $trimmed"
             else ->
@@ -582,13 +583,21 @@ inline fun buildControlTooltip(block: ControlTooltipBuilder.() -> Unit): String 
 
 /**
  * Displays a Mixxx-style tooltip for the currently hovered item formatted according to
- * standardized control tooltip hierarchy and spacing conventions.
+ * standardized control tooltip hierarchy and spacing conventions. The text is only built
+ * while the item is hovered, so an idle control allocates nothing.
  */
 inline fun controlTooltip(
     delayMs: Long = TooltipHelper.DEFAULT_HOVER_DELAY_MS,
     allowWhenDisabled: Boolean = false,
     block: ControlTooltipBuilder.() -> Unit
 ) {
+    if (!UITheme.tooltipsEnabled) return
+    val hovered = if (allowWhenDisabled) ImGui.isItemHovered(ImGuiHoveredFlags.AllowWhenDisabled) else ImGui.isItemHovered()
+    if (!hovered) return
     itemTooltip(buildControlTooltip(block), delayMs, allowWhenDisabled)
 }
+
+/** "CC 12" or "Ch 2 CC 12" for a control tooltip's `MIDI:` line; null when [mapping] is null. */
+fun midiMappingText(mapping: llm.slop.liquidlsd.midi.MidiControlMapping?): String? =
+    mapping?.let { if (it.channel == 0) "CC ${it.cc}" else "Ch ${it.channel + 1} CC ${it.cc}" }
 

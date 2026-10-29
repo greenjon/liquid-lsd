@@ -270,5 +270,27 @@ class TooltipHelperTest {
 
         assertEquals(expected, tooltip)
     }
-}
 
+    @Test
+    fun `learn right-click lines read for, and the MIDI line follows the gestures`() {
+        val tooltip = buildControlTooltip {
+            midi = "Ch 2 CC 12"
+            rightClick = "MIDI/OSC Learn"
+            leftClick = "load it"
+            header = "Next item in the BG Queue."
+        }
+
+        val expected = """
+            Next item in the BG Queue.
+
+            • Left-click to load it
+            • Right-click for MIDI/OSC Learn
+
+            MIDI: Ch 2 CC 12
+        """.trimIndent()
+
+        assertEquals(expected, tooltip)
+        assertEquals("• Right-click for MIDI Learn", buildControlTooltip { rightClick = "MIDI Learn" })
+        assertEquals("• Right-click to randomize now", buildControlTooltip { rightClick = "randomize now" })
+    }
+}

@@ -230,7 +230,7 @@ object ParametersTabs {
                     "FX" -> if (state.activeTopTab == "Mixer") "Master FX: a chain of 3 serial ISF effect slots on the master output." else "FX: this deck's chain of 3 serial ISF effect slots."
                     "LEVELS" -> "Levels: the master level and each deck's level fader. A deck's Gain is on its SRC tab."
                     "CTRL" -> "Control: queue and randomize triggers. The same triggers are on the Clock row in Perform."
-                    "TRANS" -> "Transition: crossfade and fade speed, transition shader selection, bypass, dry/wet, and dynamic parameters."
+                    "TRANS" -> "Transition: crossfade and fade speed, transition shader selection, bypass, wet/dry, and dynamic parameters."
                     else -> "$tab parameters"
                 }
                 itemTooltip(tooltip)
@@ -411,7 +411,7 @@ object ParametersTabs {
                 trans.enabled = enabledBuf.get()
                 onPushUndo()
             }
-            itemTooltip("Bypass Transition Shader.")
+            itemTooltip(if (trans.enabled) "Transition shader on. Uncheck to bypass it (a Linear Crossfade is used instead)." else "Transition shader bypassed (a Linear Crossfade is used instead). Check to turn it on.")
 
             ImGui.sameLine()
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
@@ -419,7 +419,7 @@ object ParametersTabs {
                     ImGui.openPopup("MixerTransKebabPopup")
                 }
             }
-            itemTooltip("Transition Options (Save, Reset, Save as Default)")
+            itemTooltip("Transition options: Save Transition As, Reset Transition, Save as Default.")
 
             pushOpenDropdownPadding()
             if (ImGui.beginPopup("MixerTransKebabPopup")) {
@@ -447,7 +447,7 @@ object ParametersTabs {
         } else {
             crossfadeRow()
             ImGui.spacing()
-            ImGui.textDisabled("No transition filter active. Defaulting to linear crossfade.")
+            ImGui.textDisabled("No transition loaded. Using Linear Crossfade.")
         }
     }
 
@@ -608,9 +608,13 @@ object ParametersTabs {
                 ImGui.text(label(name))
                 ImGui.sameLine(0f, 12f)
                 if (ImGui.smallButton("Show##kshow_${id}_$name")) edit.run(null) { FxMetaEdit.showKnob(it, name) }
+                itemTooltip("Put this parameter back on the knobs, at the end of the order")
             }
         }
-        if (fx.knobLayout != null && ImGui.smallButton("Reset order##kreset_$id")) edit.run(null) { FxMetaEdit.resetKnobs(it) }
+        if (fx.knobLayout != null) {
+            if (ImGui.smallButton("Reset order##kreset_$id")) edit.run(null) { FxMetaEdit.resetKnobs(it) }
+            itemTooltip("Back to the shader's own knob order, with hidden parameters shown again")
+        }
         ImGui.treePop()
     }
 

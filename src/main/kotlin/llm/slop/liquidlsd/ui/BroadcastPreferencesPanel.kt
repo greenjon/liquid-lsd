@@ -55,6 +55,7 @@ object BroadcastPreferencesPanel {
         if (ButtonChrome.button(eyeLabel)) {
             showToken = !showToken
         }
+        itemTooltip(if (showToken) "Hide the token again." else "Show the token as plain text.")
 
         ImGui.spacing()
 
@@ -101,6 +102,7 @@ object BroadcastPreferencesPanel {
             llm.slop.liquidlsd.broadcast.BroadcastPreferences.autoConnect = autoConn.get()
             llm.slop.liquidlsd.broadcast.BroadcastPreferences.savePreferences()
         }
+        itemTooltip("Go live as soon as Liquid LSD starts, once a relay and token are set.")
 
         ImGui.spacing()
         ImGui.separator()
@@ -138,20 +140,21 @@ object BroadcastPreferencesPanel {
 
         // Control Buttons
         if (isLive) {
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, 0.8f, 0.2f, 0.2f, 1f)
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, 0.9f, 0.3f, 0.3f, 1f)
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, TangoPalette.STOP_BTN_BG.u32())
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, TangoPalette.STOP_BTN_HOVER.u32())
             if (ButtonChrome.button("${Icons.POWER} Disconnect Broadcast", 200f, 32f)) {
                 llm.slop.liquidlsd.broadcast.BroadcastEngine.stopBroadcast()
             }
             ImGui.popStyleColor(2)
+            itemTooltip("Stop broadcasting and close the connection to the relay.")
         } else {
             val canConnect = llm.slop.liquidlsd.broadcast.BroadcastPreferences.isConfigured
             if (!canConnect) {
                 ImGui.beginDisabled()
             }
-            val goLiveInk = TangoPalette.inkFor(floatArrayOf(0.15f, 0.6f, 0.25f), floatArrayOf(0.25f, 0.75f, 0.35f))
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, 0.15f, 0.6f, 0.25f, 1f)
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, 0.25f, 0.75f, 0.35f, 1f)
+            val goLiveInk = TangoPalette.inkFor(TangoPalette.GO_BTN_BG.dark, TangoPalette.GO_BTN_HOVER.dark)
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, TangoPalette.GO_BTN_BG.u32())
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, TangoPalette.GO_BTN_HOVER.u32())
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, goLiveInk[0], goLiveInk[1], goLiveInk[2], 1.0f)
             if (ButtonChrome.button("${Icons.ZAP} Go Live (Connect)", 200f, 32f)) {
                 if (mixer != null) {

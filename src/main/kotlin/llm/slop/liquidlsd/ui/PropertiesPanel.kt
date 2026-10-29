@@ -158,7 +158,7 @@ object PropertiesPanel {
         if (cell == null || param == null) {
             activeHistory = null
             activeCellId = null
-            session.uiTheme.caption("Click a parameter or cell to view its properties.")
+            session.uiTheme.caption("Click a parameter or cell to edit its modulation here.")
             return
         }
 
@@ -167,7 +167,7 @@ object PropertiesPanel {
             state.clearSelection()
             activeHistory = null
             activeCellId = null
-            session.uiTheme.caption("Click a parameter or cell to view its properties.")
+            session.uiTheme.caption("Click a parameter or cell to edit its modulation here.")
             return
         }
 
@@ -219,7 +219,7 @@ object PropertiesPanel {
             activeCellId = null
             session.uiTheme.caption("No MIDI controller mapped to this parameter.")
             ImGui.spacing()
-            session.uiTheme.caption("To connect a MIDI controller, click 'Learn MIDI' and move a knob, fader, or button on your device:")
+            session.uiTheme.caption("To connect a MIDI controller, click Learn MIDI Modulator and move a knob, fader, or button on your device:")
             ImGui.spacing()
 
             val currentTarget = state.midiLearnTarget
@@ -242,7 +242,7 @@ object PropertiesPanel {
                         PopupManager.globalPendingMidiWarning = true
                     }
                 }
-                itemTooltip("Adds a MIDI modulator to this parameter, saved in the preset; it adds on top of the value.\nFor a controller mapping that sets the value itself (saved in your controller profile), right-click the slider and choose Learn MIDI Mapping.")
+                itemTooltip("Adds a MIDI modulator to this parameter, saved in the preset; it adds on top of the value.\nFor a controller mapping that sets the value itself (saved in your controller profile), right-click the slider and choose MIDI Learn.")
             }
             return
         }
