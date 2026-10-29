@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Preferences and Session Autosave Every Minute (`Main.kt`)
+- **The app now saves your preferences and the current session once a minute** while it runs, not only on a clean quit. If it is killed (Ctrl+C in the terminal, a crash, a power cut), you lose at most the last minute of changes. Autosave is off while a walkthrough tour is recording.
+
+### Web TV Content Updates for the Spaz Radio App (`scripts/publish_web_tv.sh`, `scripts/make_content_manifest.py`, `scripts/content_signing_pub.pem`)
+- **Publishing the web TV now also publishes a signed content manifest** (`spaz.org/tv/update/`), so the Spaz Radio app can pick up new presets, playlists, FX chains and transitions without an app release. Only data files are listed (never JS/HTML/CSS) and the app checks the signature before using them. Details in `docs/developer/web_subsystem.md`.
+
 ### Effects Answer Drops Too, Sparingly (`resources/stock_defaults/filters/*.json`, `defaults/fx_chains/*.lsdfxchain`, `web/content/fxchains/*`)
 - **New: six stock effects hit on the drop**: Bloom and Anamorphic Streak flare, Radial Blur throws out light shafts, Kaleidoscope punches in, Pinch/Bulge punches, and Vortex Swirl twists hard, each fading over 4 bars. Only a few run because the source underneath already makes its own move.
 - **In a breakdown**, Bloom's glow spreads wider and softer and Fluid Smear melts further.
@@ -200,15 +206,13 @@
 - **Smooth before sharp when embedded:** the picture renders at a 720p-class budget and steps down faster (to a quarter of that) when frames run slow; heavy looks stay off unless the host asks for quality High, since the GPU test can't be trusted on phones. `?embed&debug` adds an on-screen fps / resolution readout.
 - New headless check `web/checks/embed_check.mjs` and unit test `web/tools/feedring.test.mjs`.
 
-### Web TV: At Home (`web/ui.js`, `web/index.html`, `web/tv.css`, `web/autopilot.js`)
+### Web TV: At Home (`web/ui.js`, `web/index.html`, `web/tv.css`, `web/autopilot.js`, `web/menu.js`, `web/sync.js`, `web/pairing.js`, `broadcast/BroadcastPreferences.kt`, `broadcast/WebPresetSerializer.kt`, `broadcast/BroadcastEngine.kt`, `ui/BroadcastPreferencesPanel.kt`)
 - **Click the TV to turn it on.** The whole set is the power switch: any click on a TV that is off turns it on, and a click on the cabinet (not the picture or the other controls) turns it off.
 - **Quieter by default:** the TV no longer names every new look on screen; MENU › Announce looks turns that back on. Looks you pick with CH or FX are still named, and I shows the info any time.
 - **CH ▲ / ▼ work like a TV's channel buttons.** ▲ goes to the next channel number and ▼ to the one before it, so ▼ then ▲ always brings you back where you were (a channel you've already seen keeps its FX chain). Before, ▼ went back to whatever look had been on before, and ▲ to a random one.
 - **Fullscreen and microphone from the keyboard or MENU.** `S` (or MENU › Fullscreen, or a double-click on the picture) toggles fullscreen. `A` (or MENU › Input) switches the picture from the radio to your microphone, so it follows the music in the room; the browser asks permission first, the mic is only analysed (never played back, so no feedback), and turning the TV off puts the radio back.
 - **Clearer labels** under the TV's buttons and knobs, and turning a knob no longer switches the TV off when you let go over it.
 - **The TV says who made it.** A Liquid LSD nameplate under the screen links to liquid-lsd.greenjon.com; the first power-on of a visit plays a short ident with the eye-and-drop logo; MENU › ABOUT describes the desktop app with a QR code to the site; pressing I (or clicking the picture) adds a Liquid LSD line; about every 30 minutes a one-line bumper invites viewers to make their own; the LIVE card says "from Liquid LSD". Shared links now show a preview picture and description.
-
-### Web TV: At Home (`web/ui.js`, `web/index.html`, `web/tv.css`, `web/autopilot.js`, `web/menu.js`, `web/sync.js`, `web/pairing.js`, `broadcast/BroadcastPreferences.kt`, `broadcast/WebPresetSerializer.kt`, `broadcast/BroadcastEngine.kt`, `ui/BroadcastPreferencesPanel.kt`)
 - **The screen stays on while the TV is on.** Laptops and phones no longer dim and lock in the middle of a show (where the browser supports it).
 - **Phone lock screen and media keys.** The lock screen (and your keyboard's media keys) show the show playing on Spaz Radio and the look on air; play/pause turns the TV on and off, next and previous change the look.
 - **Install it like an app.** Your browser can install the web TV ("Install" / "Add to Home Screen"); it opens fullscreen with its own icon, and starts even without a network (showing no signal until the radio is reachable).
@@ -445,6 +449,11 @@
 ### Step Sequencer On by Default; Pattern Edits Undoable (`ui/AppPreferences.kt`, `ui/AppPreferencesStore.kt`, `ui/SeqSection.kt`)
 - **The step sequencer is now enabled by default**, so its column and SEQ tab are there from the start. Turn it off in Preferences -> General if you don't want it. Settings saved before this change held the old default, so the first launch after updating turns it on once (`sequencerDefaultedOn` in the settings file); after that your choice sticks.
 - **Ctrl+Z now undoes sequencer edits.** A paint drag, a toolbar action (Randomize, Fill, Paste...) or a slider drag on the SEQ panel is one undo step.
+
+### Wider Default Modulation Range (`ui/ParametersRenderer.kt`, `ui/PropertiesPanel.kt`)
+- **New LFO and Audio modulators now start at -100% to 100%** (depth 1.0) instead of -50% to 50%. Existing modulators and presets are unchanged.
+- **New modulators default to Clock Unit = Beat with an interval of 1 beat** (was Time). This applies to the LFO and the Step Sequencer (`CvModulator.genUnit`). Saved presets keep their stored unit; the web evaluator test vectors were regenerated.
+- **The LFO now has the same one-click Beat Presets row as the Step Sequencer** (1/8 to 16 beats) above its Beat Div slider. The pill drawing is shared (`ui/BeatPresetPills.kt`).
 
 ### Tour Staleness Report (`scripts/tour_staleness.py`, `scripts/render_tour.sh`)
 - **New `scripts/tour_staleness.py` lists which walkthrough videos need re-rendering**, from git instead of a hand-kept list. Each render now stamps its commit in `rendered_at.json`; the script maps a tour's widget keys to source files and reports commits since then that touched them, the tour script or the renderer. Developer tooling only; see `docs/developer/tour_renderer.md`.
@@ -700,6 +709,10 @@
 - Live rows are not files: they have no favorites star, cannot go into playlists or queues, and cannot be deleted. The folder is always shown and is empty when no stream is active.
 - Internal: `AssetType.SOURCE_EXTERNAL`, `BrowseSection.LIVE`, `BrowseCatalogs.EXTERNAL_SOURCE_PREFIX` / `externalName`; the SRC catalog cache also watches `ExternalVideoDiscovery.availableServers`.
 
+### Library Toolbar Removed: Q, BGQ and the Audition Lock Are Gone (`ui/browser/BrowserActionToolbar.kt` deleted, `ui/browser/BrowserDock.kt`, `ui/LibraryPanel.kt`)
+- **Removed the toolbar `Q` and `BGQ` buttons.** Queueing is still on `Q` / `Shift+Q` and in each row's `⋮` menu (*Add to A/B Queue*, *Add to BG Queue*).
+- **Removed the audition lock** and its auto-load-to-Deck-PV behaviour. Opening Browse from a row and one-clicking a source or FX chain already loads it at once. The Library header is now just the tabs (plus the binding chip when a row is bound).
+
 ### Deck Rows Use Two Lines and a Two-Tone SRC/FX Badge (`ui/PerformanceMatrixPanel.kt`, `ui/PerformanceDeckControls.kt`, `ui/FxChainHeader.kt`, `ui/TangoPalette.kt`)
 - **The deck badge names its half.** The `A` / `B` / `BG` / `PV` badge is now one rounded box with a caption strip under the letter: slate `SRC` or cyan `FX`. The separate `SRC` / `FX` pills are gone from deck rows, so you can tell a source row from an FX row at a glance.
 - **Line 1 is one long name box** across the whole left block: the generator or preset on a source row, the chain name (or the focused effect in Focus Mode) on an FX row. Click it to Browse, as before. The Edit gear sits at its right end; it used to sit under the badge.
@@ -820,9 +833,10 @@
 - **On the Twister** in the bay: the right-top button steps tree > list > queues (instead of the category), turning knob 16 steps the cursor, a tap applies the list row, and a tap on a folder selects it and jumps to the list. **Shift + right-bottom** clears the slot or chain, left-top goes back.
 - Internal: `ApplyTarget` + `ScopeMemory`; `BrowserPane.hosted()/applyCursorRow()`; `LibraryPanel.navMode`; `-Dlsd.editBrowse=gen|chain|fx1-3|trans` opens Deck A's bay on a tab (screenshots). 
 
-### Controller Navigates the Unified Browser Tree (`ui/browser/BrowserPane.kt`, `ui/LibraryNavigation.kt`, `ui/browser/BrowseModel.kt`)
+### Controller Navigates the Unified Browser Tree (`ui/browser/BrowserPane.kt`, `ui/LibraryNavigation.kt`, `ui/browser/BrowseModel.kt`, `control/KnobCommands.kt`)
 - **The Twister's pane button walks tree, list, BG queue, A/B queue** (FX: FX BG and FX A/B queues; Trans: its one queue). A fresh tab starts in the list. In the tree, turning knob 16 moves a cursor over the visible folders and playlists (shown as an outline) and **a tap selects** the folder or playlist, which fills the list. Turning never changes the list. Changing the folder or playlist, by controller or mouse, clears the list selection so a row of the previous view can't be loaded by accident.
-- Internal: `SelectionSource.TREE`; `BrowserPane.stepTree/acceptTree/treeCursorOf/treeSize`; pure `visibleSelectableScopes` and `stepTreeCursor` in `BrowseModel.kt`; `LibraryNavigation.panes()` has a unified branch (`unifiedKind()`).
+- **Tree cursor outline & knob sensitivity**: The controller cursor is drawn as a full-width, clean rounded cyan box (inset from window clip boundaries so all borders are visible, instead of appearing as an underline). Encoder knob 16 travel is 1 tick per item (was 4 ticks), so every single physical detent click on the Twister steps exactly one item forward or backward immediately.
+- Internal: `SelectionSource.TREE`; `BrowserPane.stepTree/acceptTree/treeCursorOf/treeSize`; pure `visibleSelectableScopes` and `stepTreeCursor` in `BrowseModel.kt`; `LibraryNavigation.panes()` has a unified branch (`unifiedKind()`); `KnobCommands.BROWSE_STEP = 1f / 127f`.
 
 ### Unsaved-Changes Prompt Can Be Answered from the Controller (`ui/PopupManager.kt`, `ui/NavigationSurface.kt`)
 - **The "unsaved changes on this deck" prompt now answers to the Twister.** While it is up, **left-top** (or Esc) is Cancel, **right-top** or a **knob 16 tap** is Save, **right-bottom** or **Shift + tap** is Discard. Nothing else navigates until you answer, so a stray turn can't change the Library behind it. The prompt shows the mapping.
@@ -980,7 +994,7 @@
 
 ### Macro Binding Ranges, Brackets & Overhang Button Enhancements (`ui/*`)
 - **MacroBindingEditor & Sliders (`BeatDivisionSlider`, `CustomRangeSlider`)**: Sliders and range inputs now support direct macro binding popups, target range tracking (`noteTargetRange`), log-scaled dragging, and cyan `[ ]` brackets on slider tracks marking macro travel ranges.
-- **PerformanceMatrixPanel Overhang Buttons**: Learn/Cancel buttons in matrix rows now use custom rect hit-testing (`overhangButton`) to ensure they remain fully clickable beneath overlay child windows.
+- **PerformanceMatrixPanel Overhang Buttons**: the Add Target (was Learn) / Cancel buttons in matrix rows now use custom rect hit-testing (`overhangButton`) to ensure they remain fully clickable beneath overlay child windows.
 
 ### Macro Binding ID Stability & Macro Learn Parameter Navigation Fixes (`ui/MacroBindingEditor.kt`, `ui/PerformanceMatrixPanel.kt`)
 - **MacroBindingEditor**: Replaced `hashCode()` with `System.identityHashCode(binding)` for ImGui ID push and link mode hashing to ensure stable IDs regardless of object content changes.
@@ -988,7 +1002,7 @@
 
 ### Automated GitHub Release Pruning (`.github/workflows/release.yml`)
 - Added automated release cleanup via `dev-drprasad/delete-older-releases@v0.3.3` in the release workflow (`release.yml`).
-- Automatically retains the latest 3 releases and removes older releases and associated tags to prevent release clutter.
+- Keeps the latest 3 `v0.9.*` releases and deletes older ones with their tags. Only `v0.9.*` tags are matched (`delete_tag_pattern: v0.9.`): the first version matched any tag containing "v", which also deleted the `syphon-natives` release the build downloads its Syphon libraries from.
 
 ### Bi-directional Bank Sync & Bipolar MeterType Support for Controller Feedback (`control/*`, `ui/*`)
 - **Bi-directional Bank Switching**: When switching Perform view tabs or pages in the software UI (via mouse, menu, or keyboard shortcuts), connected controllers with hardware bank support (like the DJ TechTools Midi Fighter Twister) now automatically switch their active hardware bank to stay synchronized with the active screen page.
