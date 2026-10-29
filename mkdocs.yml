@@ -1,5 +1,7 @@
 site_name: Liquid LSD
 site_description: Documentation for the Liquid LSD real-time graphics and audio workstation.
+repo_url: https://github.com/greenjon/liquid-lsd
+edit_uri: edit/main/docs/
 theme:
   name: material
   palette:

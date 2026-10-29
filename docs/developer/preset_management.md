@@ -6,7 +6,7 @@ This section documents preset serialization DTOs, async I/O worker pools, `Notes
 
 ## 1. PresetManager (`PresetManager.kt`)
 
-[`PresetManager.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/presets/PresetManager.kt) manages asynchronous preset saving, loading, and session persistence.
+[`PresetManager.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/presets/PresetManager.kt) manages asynchronous preset saving, loading, and session persistence.
 
 ### Asynchronous I/O Executor
 To prevent file system I/O from blocking OpenGL rendering on Thread 0, JSON serialization and file operations run on a dedicated single-threaded daemon executor:
@@ -56,7 +56,7 @@ var activePresetMtimePV: Long? = null
 
 ## 2. Notes System Manager (`NotesManager.kt`)
 
-[`NotesManager.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/notes/NotesManager.kt) manages memory buffers and persistence for the 3-tier Note System:
+[`NotesManager.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/notes/NotesManager.kt) manages memory buffers and persistence for the 3-tier Note System:
 
 - **Global Source Notes**: Stored in `~/.liquid-lsd/source-notes.json`. Loaded eagerly at app startup via `NotesManager.loadSourceNotes()`. Saved synchronously whenever edited.
 - **Deck DTO Synchronization**:
@@ -64,7 +64,7 @@ var activePresetMtimePV: Long? = null
   - `syncToDto(deckLabel, dto)`: Embeds current in-memory preset and parameter notes into `DeckPresetDto` prior to serialization.
 
 ### DTO Schema Notes Fields (`PresetModels.kt`)
-[`DeckPresetDto`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/models/PresetModels.kt) includes:
+[`DeckPresetDto`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/models/PresetModels.kt) includes:
 ```kotlin
 val presetNotes: String = "",
 val paramNotes: Map<String, String> = emptyMap()
@@ -74,7 +74,7 @@ val paramNotes: Map<String, String> = emptyMap()
 
 ## 3. PlayQueueManager (`PlayQueueManager.kt`)
 
-[`PlayQueueManager.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/presets/PlayQueueManager.kt) controls the volatile RAM play queue and AutoVJ set transitions.
+[`PlayQueueManager.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/presets/PlayQueueManager.kt) controls the volatile RAM play queue and AutoVJ set transitions.
 
 ### AutoVJ Crossfading Pipeline
 When `triggerNext()` is called:
@@ -103,7 +103,7 @@ Every change to what a deck holds goes through `DeckOps.request(slot, change, or
 
 ## 4. Background Queue Manager (`BgQueueManager.kt`)
 
-[`BgQueueManager.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/presets/BgQueueManager.kt) controls the background video / generator deck (`Deck BG`) playlist and single-deck dip-to-black transitions.
+[`BgQueueManager.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/presets/BgQueueManager.kt) controls the background video / generator deck (`Deck BG`) playlist and single-deck dip-to-black transitions.
 
 ### Dip-to-Black & Modulation Pipeline
 - **Transition States**: `IDLE` -> `FADING_OUT` -> `FADING_IN` -> `IDLE`.
@@ -113,7 +113,7 @@ Every change to what a deck holds goes through `DeckOps.request(slot, change, or
 
 ## 5. Transition Queue Manager (`TransitionQueueManager.kt`)
 
-[`TransitionQueueManager.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/presets/TransitionQueueManager.kt) manages the volatile Transition Queue engine (Phase 2).
+[`TransitionQueueManager.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/presets/TransitionQueueManager.kt) manages the volatile Transition Queue engine (Phase 2).
 
 ### Unified Queue Item Resolution
 The transition queue supports two types of transition items seamlessly:
@@ -162,7 +162,7 @@ The 19" Modular Video Rack chassis UI (`rack/`, `rack/ui/` — faceplates, rear 
 `MacroEngine` registers 12 canonical, always-resident banks by id (`MacroEngine.CANONICAL_BANK_IDS`): `DECK_A`, `DECK_B`, `DECK_BG`, `DECK_PV`, `DECK_A_FX`, `DECK_B_FX`, `DECK_BG_FX`, `DECK_PV_FX`, `TRANS`, `MASTER`, and `MASTER_FX`. `MacroEngine.canonicalIdForDeckLabel(deckLabel)` maps a deck label ("Deck A", "Deck B", "Deck BG", "Deck PV", "Master") to its generator bank id, falling through to `TRANS` for anything else, while `targetBankIdFor()` maps per-deck insert FX banks. Both the Performance Matrix's tabs and the Edit-row macro strip (`PerformanceMacroStrip`) read and write these same underlying banks — the matrix is a live control *view* onto them (dragging a knob live-updates `MacroControl.value`; editing bindings happens in the Edit-row strip and the Properties editor).
 
 ### `SessionSerializer` Is the Sole Bank Registrar
-[`SessionSerializer.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/presets/SessionSerializer.kt) is the only site that calls `MacroEngine.registerBank()`: both `loadSession()` (restoring `session.deckMacroBanks[canonicalId]` per canonical id) and `startEmpty()` register all 12 canonical banks on startup. There is no per-unit/dynamic bank registration anymore.
+[`SessionSerializer.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/presets/SessionSerializer.kt) is the only site that calls `MacroEngine.registerBank()`: both `loadSession()` (restoring `session.deckMacroBanks[canonicalId]` per canonical id) and `startEmpty()` register all 12 canonical banks on startup. There is no per-unit/dynamic bank registration anymore.
 
 ### Per-Deck Persistence (`MacroBankSerializer`, `PresetRepository`)
 Each deck's own canonical bank snapshot travels with its preset file, not just the session:
@@ -177,7 +177,7 @@ Each deck's own canonical bank snapshot travels with its preset file, not just t
 The `[ FX ]` Library view mode (see `docs/developer/ui.md` §8 and `docs/user_guide/presets_and_library.md`) is backed by its own preset/queue manager family, parallel to but independent from the `.lsd` preset managers documented above.
 
 ### One Mutation Path: `FxOps.kt`
-[`FxOps.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/presets/FxOps.kt) is the single entry point for changing what's loaded in any `FxChain` (the four decks' `fxChain` and `Mixer.masterFxChain`): `loadChain`, `applyChain`, `clearChain`, `setSlotFilter`, `loadSlot`, `applySlot`, `clearSlot`, and `applyItem` (the deterministic playlist/queue path: a `.lsdfxchain` replaces the chain, a `.lsdfx` becomes slot 1 of an otherwise empty chain). It is used by the Perform rows, Edit, the FX browser and toolbar, FX playlists, and both live FX queues.
+[`FxOps.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/presets/FxOps.kt) is the single entry point for changing what's loaded in any `FxChain` (the four decks' `fxChain` and `Mixer.masterFxChain`): `loadChain`, `applyChain`, `clearChain`, `setSlotFilter`, `loadSlot`, `applySlot`, `clearSlot`, and `applyItem` (the deterministic playlist/queue path: a `.lsdfxchain` replaces the chain, a `.lsdfx` becomes slot 1 of an otherwise empty chain). It is used by the Perform rows, Edit, the FX browser and toolbar, FX playlists, and both live FX queues.
 
 Every op is queued and applied in `FxOps.drainOnGlThread(mixer)`, called once per frame from the render loop right after `DeckOps.drainOnGlThread`. That matters because async file loads complete on `PresetManager.presetIoExecutor`: replacing a slot disposes the old `ISFFilter` (deleting its GL framebuffers), which must happen on the GL thread, and swapping `FxChain.slots` mid-frame would race the renderer. After each op, `FxMacroSync.syncFor()` refreshes that chain's FX row knobs. Never mutate `FxChain.slots` directly from a `CompletableFuture` callback.
 
@@ -192,7 +192,7 @@ Mirror `PlayQueueManager.kt` / `BgQueueManager.kt` but operate on FX assets inst
 - **Export Queue to Playlist**: Both managers support instantly exporting the current live queue to a new `.lsdfxplay` playlist file (`BrowserPopupHandler.kt` "Export Live FX Queue (A/B) as Playlist" / "Export Background FX Queue as Playlist" popups).
 
 ### FX Playlists (`.lsdfxplay`)
-[`FXPresetModels.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/models/FXPresetModels.kt) defines `FXPlaylistDto`, an ordered list of FX asset paths persisted by `PresetRepository` and `FileSystemManager` under `library/fx_playlists/`. A playlist is an entry in the FX tab's folder tree (`BrowserPane`): selecting it lists its rows, which support drag-and-drop insertion, reordering, double-click application and context-menu actions; the list edits are `ui/browser/PlaylistEdit.kt` (`PlaylistItems`), shared with transition playlists. The old column editors (`PlaylistEditorPanel`, `FXPlaylistEditorPanel`) are gone.
+[`FXPresetModels.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/models/FXPresetModels.kt) defines `FXPlaylistDto`, an ordered list of FX asset paths persisted by `PresetRepository` and `FileSystemManager` under `library/fx_playlists/`. A playlist is an entry in the FX tab's folder tree (`BrowserPane`): selecting it lists its rows, which support drag-and-drop insertion, reordering, double-click application and context-menu actions; the list edits are `ui/browser/PlaylistEdit.kt` (`PlaylistItems`), shared with transition playlists. The old column editors (`PlaylistEditorPanel`, `FXPlaylistEditorPanel`) are gone.
 
 ### `FXBrowserPanel.kt`
 Unifies the formerly separate `FXPresetListPanel` (single `.lsdfx` presets) and `FXChainListPanel` (`.lsdfxchain` chains) into the Library's FX tab with ISF stock filters, saved singles, and saved chains, tier badges, and an All / Stock / Singles / Chains filter menu. Stock (built-in ISF) filters and presets load into any deck's or Master's 3-slot FX chain via `FxOps`; saved presets and chains can additionally be added to FX playlists and live FX queues. "Load to" submenus for stock/single items let you target any of the 3 slots, while chains load directly. (The `.lsdfxbank` format was removed along with `FxBank`: Master FX is a plain `FxChain` now.)

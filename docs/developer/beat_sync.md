@@ -99,7 +99,7 @@ Provides zero-allocation primitive queries for visual rendering at arbitrary fra
 The default and recommended mode for live performances. `AudioEngine.manualBpm` drives the flywheel directly. Automated phase realignment nudges and phase slew buffers are strictly bypassed, guaranteeing zero tempo jitter and perfectly smooth cosine / sine modulation.
 
 ### 2. Automatic Detection (`isBpmLocked = false`)
-When unlocked, `BeatDetector` (in [`AudioEngine.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/audio/AudioEngine.kt)) delegates to [`BeatTrackerEngine.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/audio/BeatTrackerEngine.kt).
+When unlocked, `BeatDetector` (in [`AudioEngine.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/audio/AudioEngine.kt)) delegates to [`BeatTrackerEngine.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/audio/BeatTrackerEngine.kt).
 - **120 BPM Startup & Source Switch Lock**: On application launch, audio engine start, or audio device switching, the engine initializes and holds a steady 120.0 BPM lock until `BeatDetector` has continuously observed and confirmed a stable candidate tempo (`isTempoLocked = true`). Only upon confirmed lock does the engine smoothly transition from 120 BPM to the track's tempo.
 
 ### 3. Low-Signal Detection & Flywheel Tempo Retention
@@ -113,7 +113,7 @@ When the Audio Engine is disabled (`UITheme.audioEngineEnabled = false`):
 - **Clock Row & Preferences Telemetry**: Both the BPM readout and the bar phase meter remain visible and interactive on the Performance MIXER page's Clock row and within Preferences > Tempo & Sync, reflecting manual fixed clock mode with monotonic phase advance.
 
 ### 5. VJ Tap Tempo & Phase Synchronization
-The application features a real-time Tap Tempo system ([`TapTempoController.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/audio/TapTempoController.kt)) enabling VJs to rhythmically tap in tempos via the Clock row's `[TAP]` button, global keyboard shortcut (`T`), or MIDI CC (`Mixer/tapTempo` or `Global/tapTempo`):
+The application features a real-time Tap Tempo system ([`TapTempoController.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/audio/TapTempoController.kt)) enabling VJs to rhythmically tap in tempos via the Clock row's `[TAP]` button, global keyboard shortcut (`T`), or MIDI CC (`Mixer/tapTempo` or `Global/tapTempo`):
 - **Interval Averaging & Timeout Reset**: Tracks a rolling buffer of up to 8 taps with microsecond resolution. Taps separated by > 2.0 seconds (30 BPM) automatically reset the sequence so a new cadence begins cleanly.
 - **Immediate Visual Feedback**: While tapping, the `[TAP]` button and Clock row BPM readout instantly confirm incoming taps with an active cadence color highlight and counter readout (`TAP [1]`, `TAP [2]`), returning to standard display once the cadence times out.
 - **Manual / Locked Mode Behavior**:
@@ -154,7 +154,7 @@ Tests: `DownbeatDetectorTest` (synthetic accented grooves for 3/4/6/7 beats per 
 
 ## Automated Audio Benchmark Test Suite
 
-The engine performance is validated using [`BeatDetectorBenchmarkTest.kt`](file:///home/gj/projects/liquid-lsd/src/test/kotlin/llm/slop/liquidlsd/audio/BeatDetectorBenchmarkTest.kt).
+The engine performance is validated using [`BeatDetectorBenchmarkTest.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/test/kotlin/llm/slop/liquidlsd/audio/BeatDetectorBenchmarkTest.kt).
 This automated suite simulates multi-band drum audio across diverse genres and tempos:
 1. **120 BPM Four-on-the-Floor**: House/Techno kick-snare patterns (Target: 120.0 BPM, Max Convergence: < 2.5s, Error: < 1.5 BPM).
 2. **128 BPM Mainstage EDM**: Fast house kick, snare, and 8th-note hi-hats.
