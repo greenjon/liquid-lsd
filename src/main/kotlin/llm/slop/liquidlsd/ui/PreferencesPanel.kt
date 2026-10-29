@@ -274,7 +274,7 @@ object PreferencesPanel {
                 AppPreferencesStore.savePreferences()
             }
         }
-        itemTooltip("Enable or disable the step sequencer modulation engine across presets and parameter properties.")
+        itemTooltip("Enable or disable the step sequencer modulation engine across presets and parameters.")
 
         val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
         val infoCol = if (isLight) TangoPalette.SKY_BLUE.dark else floatArrayOf(0.5f, 0.7f, 1.0f)
@@ -308,7 +308,7 @@ object PreferencesPanel {
                 }
             }
         }
-        itemTooltip("Transforms the laptop trackpad into an SCS.3m virtual console when CapsLock is engaged.\nBottom 28%: Crossfader cut/stutter; Top 55%: Deck A/BG/B Alpha faders.\nDisables cursor movement and gestures while active.")
+        itemTooltip("Transforms the laptop trackpad into an SCS.3m virtual console when CapsLock is engaged.\nBottom 28%: Crossfader cut/stutter; Top 55%: Deck A/BG/B Level faders.\nDisables cursor movement and gestures while active.")
 
         ImGui.sameLine(0f, 15f)
         val controller = session.touchConsoleController
@@ -482,7 +482,7 @@ object PreferencesPanel {
         session.uiTheme.h2("Font Size")
         ImGui.sameLine(0f, 15f)
         val captionNoteCol = if (isLight) TangoPalette.NEUTRAL_DARK.normal else floatArrayOf(0.7f, 0.7f, 0.7f)
-        session.uiTheme.captionColored(captionNoteCol[0], captionNoteCol[1], captionNoteCol[2], 0.85f, "only changes the size of the text in the Library of Presets")
+        session.uiTheme.captionColored(captionNoteCol[0], captionNoteCol[1], captionNoteCol[2], 0.85f, "only changes the size of the text in the Library")
         ImGui.separator()
         ImGui.spacing()
 

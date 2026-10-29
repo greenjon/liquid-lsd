@@ -36,6 +36,10 @@ object FxChainHeader {
 
     const val ARROW_W = 16f
     const val MORE_BTN_W = 20f
+
+    /** What Chain view is, for its button (BayHeader) and the chain menu item. */
+    const val CHAIN_VIEW_DESC = "Chain view: one row per FX slot, with the source row (Transitions on Master) under them, so all three slots are playable at once."
+    private const val MORE_TIP = "Chain operations (Focus, Chain View, Save As, Revert, Clear, Copy/Paste)."
     const val PAGE_TEXT_W = 34f
     const val DRYWET_W = 64f
     private const val FOCUS_PILL_W = 26f
@@ -213,7 +217,7 @@ object FxChainHeader {
         val gap = 3f
         ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, gap, 0f)
         if (ButtonChrome.button(st.moreBtn, MORE_BTN_W, ctrlH)) ImGui.openPopup(st.menuId)
-        itemTooltip("Chain operations (Focus, Save As, Revert, Clear, Copy/Paste).")
+        itemTooltip(MORE_TIP)
         drawChainMenu(session, mixer, chain, chainBankId, chainLabel, st.menuId)
         val totalPages = chain.totalParamPages(slotIdx)
         val stepperW = if (totalPages > 1) gap + ARROW_W * 2f + PAGE_TEXT_W + gap * 2f else 0f
@@ -491,7 +495,7 @@ object FxChainHeader {
             ImGui.openPopup(st.menuId)
         }
         llm.slop.liquidlsd.tour.WidgetRegistry.note { "fxchain_more_$bankId" }
-        itemTooltip("Chain operations (Focus, Save As, Revert, Clear, Copy/Paste).")
+        itemTooltip(MORE_TIP)
         drawChainMenu(session, mixer, chain, bankId, chainLabel, st.menuId)
     }
 
@@ -511,7 +515,7 @@ object FxChainHeader {
                     FxMacroSync.focusSlot(bankId, mixer, null)
                 }
             } else {
-                if (ImGui.beginMenu("Focus Slot…")) {
+                if (ImGui.beginMenu("Focus Slot...")) {
                     for (i in 0 until FxChain.SLOT_COUNT) {
                         val slot = chain.slots.getOrNull(i)
                         val label = "Slot ${i + 1}" + (slot?.displayName?.let { " ($it)" } ?: " (empty)")
@@ -526,10 +530,10 @@ object FxChainHeader {
             val chainTag = (FxMacroSync.chainBankIdOf(bankId) ?: bankId).let { id -> PerfRows.DECK_TAGS.firstOrNull { PerfRows.chainBankFor(it) == id } ?: PerfRows.PAIR_MASTER }
             val inChainView = session.parametersState.chainView != null && session.parametersState.focusedPair == chainTag
             if (ImGui.menuItem(if (inChainView) "Leave Chain View" else "Chain View")) session.parametersState.toggleChainView(chainTag)
-            itemTooltip("Shows the source row and one row per FX slot, all three slots playable at once, over the Browse list.")
+            itemTooltip(CHAIN_VIEW_DESC)
             ImGui.separator()
 
-            if (ImGui.menuItem("Save As…")) {
+            if (ImGui.menuItem("Save As...")) {
                 openSaveAsModal(session, chain)
             }
             val canRevert = chain.isDirty() && chain.baselineDto != null

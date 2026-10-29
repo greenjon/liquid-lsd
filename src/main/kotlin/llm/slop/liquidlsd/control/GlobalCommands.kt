@@ -27,18 +27,18 @@ object GlobalCommands {
             registry.registerAlias(alias, id)
         }
 
-        trigger(QUEUE_NEXT, "Global/queueNext", "mixer", "Advance the A/B play queue") { it.queueDelta += 1 }
-        trigger(QUEUE_PREV, "Global/queuePrev", "mixer", "Step the A/B play queue back") { it.queueDelta -= 1 }
-        trigger(BG_QUEUE_NEXT, "Global/bgQueueNext", "mixer", "Advance the background shader queue") { it.bgQueueDelta += 1 }
-        trigger(BG_QUEUE_PREV, "Global/bgQueuePrev", "mixer", "Step the background shader queue back") { it.bgQueueDelta -= 1 }
-        trigger(TRANS_QUEUE_NEXT, "Global/transQueueNext", "mixer", "Advance the transition queue") { it.transQueueDelta += 1 }
-        trigger(TRANS_QUEUE_PREV, "Global/transQueuePrev", "mixer", "Step the transition queue back") { it.transQueueDelta -= 1 }
+        trigger(QUEUE_NEXT, "Global/queueNext", "mixer", "Advance the A/B Queue") { it.queueDelta += 1 }
+        trigger(QUEUE_PREV, "Global/queuePrev", "mixer", "Step the A/B Queue back") { it.queueDelta -= 1 }
+        trigger(BG_QUEUE_NEXT, "Global/bgQueueNext", "mixer", "Advance the BG Queue") { it.bgQueueDelta += 1 }
+        trigger(BG_QUEUE_PREV, "Global/bgQueuePrev", "mixer", "Step the BG Queue back") { it.bgQueueDelta -= 1 }
+        trigger(TRANS_QUEUE_NEXT, "Global/transQueueNext", "mixer", "Advance the Transition Queue") { it.transQueueDelta += 1 }
+        trigger(TRANS_QUEUE_PREV, "Global/transQueuePrev", "mixer", "Step the Transition Queue back") { it.transQueueDelta -= 1 }
         fun fxTrigger(id: String, description: String, run: (CommandContext) -> Unit) =
             registry.register(Command(id, CommandKind.TRIGGER, "fx", description) { _, ctx -> run(ctx) })
-        fxTrigger(FX_QUEUE_NEXT, "Advance the A/B FX queue") { it.fxQueueDelta += 1 }
-        fxTrigger(FX_QUEUE_PREV, "Step the A/B FX queue back") { it.fxQueueDelta -= 1 }
-        fxTrigger(FX_BG_QUEUE_NEXT, "Advance the background FX queue") { it.fxBgQueueDelta += 1 }
-        fxTrigger(FX_BG_QUEUE_PREV, "Step the background FX queue back") { it.fxBgQueueDelta -= 1 }
+        fxTrigger(FX_QUEUE_NEXT, "Advance the A/B FX Queue") { it.fxQueueDelta += 1 }
+        fxTrigger(FX_QUEUE_PREV, "Step the A/B FX Queue back") { it.fxQueueDelta -= 1 }
+        fxTrigger(FX_BG_QUEUE_NEXT, "Advance the BG FX Queue") { it.fxBgQueueDelta += 1 }
+        fxTrigger(FX_BG_QUEUE_PREV, "Step the BG FX Queue back") { it.fxBgQueueDelta -= 1 }
         trigger(TAP_TEMPO, "Global/tapTempo", "clock", "Tap tempo") { it.onTapTempo() }
 
         trigger(AUTO_CROSSFADE, "Global/autoFade", "xf", "Start or cancel an automated crossfade") { ctx ->

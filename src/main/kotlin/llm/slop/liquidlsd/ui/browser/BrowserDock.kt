@@ -95,6 +95,13 @@ object BrowserDock {
                 if (ButtonChrome.button(label, w, btnH)) LibraryNavigation.setViewMode(mode)
                 llm.slop.liquidlsd.tour.WidgetRegistry.note { "browser_tab_" + mode.name.lowercase() }
                 ImGui.popStyleColor(4)
+                itemTooltip(when (mode) {
+                    LibraryViewMode.PRESETS -> "Sources: generators and the presets made from them"
+                    LibraryViewMode.FX -> "FX: effects and saved FX chains"
+                    LibraryViewMode.TRANS -> "Transitions: shaders and saved transitions for the crossfader"
+                    LibraryViewMode.QUEUES -> "Queues: the A/B, BG, FX and Transition queues"
+                    LibraryViewMode.MAPS -> "Macros: macro banks and pages"
+                })
             }
         }
     }

@@ -378,10 +378,10 @@ object FxSlotCell {
         ImGui.separator()
         if (ImGui.menuItem("Previous in Shortlist")) FxOps.stepSlot(chain, slotIndex, -1)
         if (ImGui.menuItem("Next in Shortlist")) FxOps.stepSlot(chain, slotIndex, 1)
-        if (ImGui.menuItem("Replace…")) {
+        if (ImGui.menuItem("Replace...")) {
             onOpenBrowse(slotIndex)
         }
-        if (ImGui.menuItem("Save as FX Preset…", "", false, fx != null)) FxChainHeader.openSaveSlotAsModal(session, chain, slotIndex)
+        if (ImGui.menuItem("Save as FX Preset...", "", false, fx != null)) FxChainHeader.openSaveSlotAsModal(session, chain, slotIndex)
         ImGui.separator()
         if (ImGui.menuItem("Copy Slot", "", false, fx != null)) {
             chain.toFxSlotDto(slotIndex)?.let { ClipboardManager.copyFxSlot(it) }
