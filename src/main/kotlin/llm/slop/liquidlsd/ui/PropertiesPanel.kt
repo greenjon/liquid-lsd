@@ -323,30 +323,13 @@ object PropertiesPanel {
                 val panelStartY = ImGui.getCursorScreenPosY()
                 val dl = ImGui.getWindowDrawList()
                 
-                // For Audio Slot 2 when inactive/virtual: render a clean collapsed enable bar
-                if (cvId == "audio" && idx == 1 && idx >= activeMods.size) {
-                    val fontScale = 0.95f
-                    val btnH = session.uiTheme.withFont(UITheme.FontLevel.H3) { ImGui.getTextLineHeight() + 8f * fontScale }.coerceAtLeast(26f * fontScale)
-                    val enableAudioInk = TangoPalette.inkFor(floatArrayOf(0.18f, 0.18f, 0.18f), floatArrayOf(0.28f, 0.28f, 0.28f), CvTheme.getThemeColorRGB(cvId))
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.18f, 0.18f, 0.18f, 1f))
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.28f, 0.28f, 0.28f, 1f))
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, themeColor)
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, enableAudioInk[0], enableAudioInk[1], enableAudioInk[2], 1.0f)
-                    if (ButtonChrome.button("${Icons.PLUS} Enable Audio Slot 2##enable_audio_2", ImGui.getContentRegionAvailX(), btnH)) {
-                        val newMod = existing.copy(id = llm.slop.liquidlsd.utils.DeterministicRandom.uuid(), bypassed = false, depth = 1.0f)
-                        replaceModulator(state, param, newMod, mixer)
-                    }
-                    itemTooltip("Enable a second concurrent audio-reactive modulator on this parameter.")
-                    ImGui.popStyleColor(4)
-                    ImGui.popID()
-                    continue
-                }
-
-                val isMultiBand = if (cvId == "audio") activeMods.size > 1 else modsToDraw.size > 1
+                // Audio always shows both slots open, each with its own power button, like the LFO tab.
+                val isMultiBand = cvId != "audio" && modsToDraw.size > 1
+                val slotVirtual = if (cvId == "audio") activeMods.none { it.id == existing.id } else isVirtual
                 val isBandActive = !existing.bypassed && existing.depth != 0.0f
                 val bandLabel = AudioModulatorSection.sourceLabel(existing.sourceId) ?: "Modulator ${idx + 1}"
                 val dirtyMarker = if (isBandActive) " [ACTIVE] •" else if (!existing.bypassed) " •" else ""
-                val headerTitle = if (cvId == "audio") "Audio ${idx + 1}: $bandLabel$dirtyMarker###audio_slot_${idx + 1}" else "$bandLabel$dirtyMarker###band_header"
+                val headerTitle = "$bandLabel$dirtyMarker###band_header"
                 val defaultOpen = 0
 
                 val isHeaderOpen = if (isMultiBand) ImGui.collapsingHeader(headerTitle, defaultOpen) else true
@@ -355,7 +338,8 @@ object PropertiesPanel {
                     ModulatorUndo.frame()
                     val undoableReplace = { newMod: CvModulator ->
                         ModulatorUndo.beforeChange { ParametersUndo.pushUndoState(state, mixer) }
-                        replaceModulator(state, param, newMod, mixer)
+                        if (cvId == "audio" && slotVirtual) addAudioSlot(param, modsToDraw, idx, newMod)
+                        else replaceModulator(state, param, newMod, mixer)
                     }
 
                     ModulatorHeaderRow.draw(
@@ -363,7 +347,7 @@ object PropertiesPanel {
                         existing = existing,
                         idx = idx,
                         modsToDraw = modsToDraw,
-                        isVirtual = isVirtual,
+                        isVirtual = slotVirtual,
                         isLfo = isLfo,
                         hasAdvanced = hasAdvanced,
                         isRandomizeDisabled = param.isRandomizeDisabled,
@@ -371,7 +355,11 @@ object PropertiesPanel {
                         onReplace = undoableReplace,
                         onReset = {
                             if (cvId == "audio") {
-                                param.modulators.remove(existing)
+                                // Clearing slot 1 under a live slot 2 leaves an empty slot 1 instead of moving slot 2 up.
+                                val pos = param.modulators.indexOf(existing)
+                                val later = activeMods.indexOf(existing) < activeMods.size - 1
+                                if (pos >= 0 && later) param.modulators[pos] = freshAudioSlot(existing.sourceId)
+                                else param.modulators.remove(existing)
                             } else {
                                 val toRemove = activeMods.toList()
                                 for (mod in toRemove) {
@@ -516,8 +504,27 @@ object PropertiesPanel {
         ImGui.popStyleVar()
     }
 
+    private fun freshAudioSlot(sourceId: String) =
+        CvModulator(sourceId = sourceId, depth = 1.0f, bypassed = true, id = llm.slop.liquidlsd.utils.DeterministicRandom.uuid())
+
+    /**
+     * Turns an audio placeholder slot into a real modulator under a fresh id. Enabling slot 2 while slot 1 is
+     * still a placeholder stores slot 1 as a bypassed modulator first, so slot 2 stays in slot 2.
+     */
+    private fun addAudioSlot(param: llm.slop.liquidlsd.parameters.ModulatableParameter, slots: List<CvModulator>, slot: Int, newMod: CvModulator) {
+        val existingIds = param.modulators.map { it.id }.toSet()
+        for (i in 0 until slot) {
+            val earlier = slots.getOrNull(i) ?: continue
+            if (earlier.id !in existingIds) param.modulators.add(earlier.copy(id = llm.slop.liquidlsd.utils.DeterministicRandom.uuid(), bypassed = true))
+        }
+        // An edit to an off placeholder (picking a band, moving the range) switches it on, as before.
+        param.modulators.add(newMod.copy(id = llm.slop.liquidlsd.utils.DeterministicRandom.uuid(), bypassed = false))
+    }
+
     private fun replaceModulator(state: ParametersState, param: llm.slop.liquidlsd.parameters.ModulatableParameter, newMod: CvModulator, mixer: Mixer? = null) {
-        val idx = param.modulators.indexOfFirst { it.id == newMod.id || (it.sourceId.isNotEmpty() && it.sourceId == newMod.sourceId) }
+        // Audio slots can share a band, so they are matched by id only.
+        val idx = param.modulators.indexOfFirst { it.id == newMod.id }.takeIf { it >= 0 || llm.slop.liquidlsd.cv.isAudioSource(newMod.sourceId) }
+            ?: param.modulators.indexOfFirst { it.sourceId.isNotEmpty() && it.sourceId == newMod.sourceId }
         val wasBypassed = if (idx >= 0) param.modulators[idx].bypassed else true
         if (idx >= 0) {
             param.modulators[idx] = newMod

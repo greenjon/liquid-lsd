@@ -1264,6 +1264,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#audio-tab-two-slots-each-with-its-own-power-button-uipropertiespanelkt-uimodulatorheaderrowkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audio Tab: Two Slots, Each With Its Own Power Button (ui/PropertiesPanel.kt, ui/ModulatorHeaderRow.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#audio-modulators-can-invert-parameterscvmodulatorkt-cvevaluatorskt-uiaudiomodulatorsectionkt-webevaluatorjs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7133,6 +7144,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#audio-tab-two-slots-each-with-its-own-power-button-uipropertiespanelkt-uimodulatorheaderrowkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audio Tab: Two Slots, Each With Its Own Power Button (ui/PropertiesPanel.kt, ui/ModulatorHeaderRow.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#audio-modulators-can-invert-parameterscvmodulatorkt-cvevaluatorskt-uiaudiomodulatorsectionkt-webevaluatorjs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -12977,6 +12999,13 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="audio-tab-two-slots-each-with-its-own-power-button-uipropertiespanelkt-uimodulatorheaderrowkt">Audio Tab: Two Slots, Each With Its Own Power Button (<code>ui/PropertiesPanel.kt</code>, <code>ui/ModulatorHeaderRow.kt</code>)</h3>
+<ul>
+<li><strong>The Audio tab always shows both slots open</strong>, Audio 1 above Audio 2, each with its own power button and reset. The "Enable Audio Slot 2" button and the collapsing slot headers are gone.</li>
+<li><strong>Fixed: with Audio 1 off, "Enable Audio Slot 2" switched Audio 1 on instead.</strong> Turning on Audio 2 now leaves Audio 1 as it was.</li>
+<li><strong>Fixed: turning on Audio 2 collapsed both slots.</strong></li>
+<li><strong>Fixed: with both slots on the same band, editing Audio 2 could change Audio 1.</strong></li>
+</ul>
 <h3 id="audio-modulators-can-invert-parameterscvmodulatorkt-cvevaluatorskt-uiaudiomodulatorsectionkt-webevaluatorjs">Audio Modulators Can Invert (<code>parameters/CvModulator.kt</code>, <code>cv/Evaluators.kt</code>, <code>ui/AudioModulatorSection.kt</code>, <code>web/evaluator.js</code>)</h3>
 <ul>
 <li><strong>New: an Invert toggle on every Audio modulator</strong>, just above Modulation Range. Inverted, silence drives the parameter to Max and loud hits pull it toward Min, so on MUL it ducks on every hit like sidechain pumping. The response profile still applies, so Punchy dips on each kick and eases back.</li>

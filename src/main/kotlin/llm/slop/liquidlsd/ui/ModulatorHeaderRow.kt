@@ -43,11 +43,13 @@ object ModulatorHeaderRow {
 
         // Row 1: Title Text & Reset Button (trash can)
         val btnY2 = ImGui.getCursorScreenPosY()
-        if (modsToDraw.size <= 1) {
+        // Audio slots have no collapsing header, so each one titles itself and has its own reset.
+        val isAudioSlot = bandLabel != null
+        if (modsToDraw.size <= 1 || isAudioSlot) {
             session.uiTheme.h2(titleText)
         }
 
-        if (idx == 0) {
+        if (idx == 0 || isAudioSlot) {
             val resetWidth = 47.5f
             val alignY = btnY2 + (btnHeight - ImGui.getTextLineHeightWithSpacing()) / 2f
             ImGui.sameLine(ImGui.getCursorPosX() + ImGui.getContentRegionAvailX() - resetWidth)

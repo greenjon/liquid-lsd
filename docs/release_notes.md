@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Audio Tab: Two Slots, Each With Its Own Power Button (`ui/PropertiesPanel.kt`, `ui/ModulatorHeaderRow.kt`)
+- **The Audio tab always shows both slots open**, Audio 1 above Audio 2, each with its own power button and reset. The "Enable Audio Slot 2" button and the collapsing slot headers are gone.
+- **Fixed: with Audio 1 off, "Enable Audio Slot 2" switched Audio 1 on instead.** Turning on Audio 2 now leaves Audio 1 as it was.
+- **Fixed: turning on Audio 2 collapsed both slots.**
+- **Fixed: with both slots on the same band, editing Audio 2 could change Audio 1.**
+
 ### Audio Modulators Can Invert (`parameters/CvModulator.kt`, `cv/Evaluators.kt`, `ui/AudioModulatorSection.kt`, `web/evaluator.js`)
 - **New: an Invert toggle on every Audio modulator**, just above Modulation Range. Inverted, silence drives the parameter to Max and loud hits pull it toward Min, so on MUL it ducks on every hit like sidechain pumping. The response profile still applies, so Punchy dips on each kick and eases back.
 - It works on Section signals too: inverted Energy rises in a breakdown, inverted Drop dips on the drop and recovers over 4 bars.

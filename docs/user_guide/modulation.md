@@ -31,7 +31,7 @@ You can hide columns you're not using via the **⋮** kebab menu, positioned jus
 
 ## Audio Modulation
 
-Clicking an **AUD** cell opens the audio modulator config. Each parameter supports two independent audio connections (Audio 1 and Audio 2).
+Clicking an **AUD** cell opens the audio modulator config. Each parameter has two independent audio slots (Audio 1 and Audio 2), shown one above the other, each with its own power button. Turning one on or off leaves the other alone; clearing Audio 1 empties it without moving Audio 2 up.
 
 **Auto Gain:** audio signals are always normalized against each band's own level over the last 20 seconds or so, so a modulator behaves the same whether the feed is quiet or hot; you don't set it up. It keeps the music's shape: during a breakdown it holds on to the level from before, so the breakdown looks calm for as long as it lasts and the drop hits, and when a quieter or louder song settles in it adopts that as the new normal. To make the picture follow the music more or less, use **Audio Response** (below). **Input Trim** (Preferences > Audio Hardware) is only for setting up the input: raise it if the panel says the input is too quiet for beat detection.
 
