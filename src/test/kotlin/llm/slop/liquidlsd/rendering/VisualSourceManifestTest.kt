@@ -37,7 +37,8 @@ class VisualSourceManifestTest {
 
                 assertEquals(folder.name, meta.id, "Source folder name and meta.id should match")
                 assertTrue(meta.name.isNotBlank(), "Source display name must not be blank")
-                assertTrue(meta.parameters.isNotEmpty(), "Source should define parameters")
+                // the Fractal Flame builds all of its parameters in code (FlameGenome), so its meta.json lists none
+                if (meta.id != FlameSource.SOURCE_ID) assertTrue(meta.parameters.isNotEmpty(), "Source should define parameters")
 
                 discoveredIds.add(meta.id)
             } else if (isfFile != null) {
