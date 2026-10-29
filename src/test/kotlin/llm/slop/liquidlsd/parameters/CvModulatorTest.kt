@@ -537,4 +537,15 @@ class CvModulatorTest {
         assertEquals(1.0f, lfoMod.generatorModDepthMin)
         assertEquals(1.0f, lfoMod.generatorModDepthMax)
     }
+
+    @Test
+    fun testInvertFlipsUnipolarAndBipolarSources() {
+        val audio = CvModulator(sourceId = "audio_bass", invert = true)
+        assertEquals(1f, audio.polarize(0f))
+        assertEquals(0.25f, audio.polarize(0.75f))
+        val energy = CvModulator(sourceId = "audio_energy", invert = true)
+        assertEquals(-0.4f, energy.polarize(0.4f))
+        assertEquals(0.6f, CvModulator(sourceId = "audio_bass").polarize(0.6f))
+        assertTrue(audio.toDto().toDomain().invert, "invert survives a preset round trip")
+    }
 }

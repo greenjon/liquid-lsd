@@ -274,7 +274,7 @@ object PropertiesPanel {
             var rawResult = 0f
             var first = true
             for (mod in targetMods) {
-                val rawCv = llm.slop.liquidlsd.cv.CVRegistry.get(mod.sourceId)
+                val rawCv = mod.polarize(llm.slop.liquidlsd.cv.CVRegistry.get(mod.sourceId))
                 val modAmount = rawCv * mod.depth + mod.dcOffset
                 if (first) {
                     rawResult = when (mod.operator) {

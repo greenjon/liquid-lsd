@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Audio Modulators Can Invert (`parameters/CvModulator.kt`, `cv/Evaluators.kt`, `ui/AudioModulatorSection.kt`, `web/evaluator.js`)
+- **New: an Invert toggle on every Audio modulator**, just above Modulation Range. Inverted, silence drives the parameter to Max and loud hits pull it toward Min, so on MUL it ducks on every hit like sidechain pumping. The response profile still applies, so Punchy dips on each kick and eases back.
+- It works on Section signals too: inverted Energy rises in a breakdown, inverted Drop dips on the drop and recovers over 4 bars.
+- With no audio at all, an inverted modulator sits at Max. Presets saved before this load uninverted, and the web TV plays inverted modulators the same way.
+
 ### Effects Answer Drops Too, Sparingly (`resources/stock_defaults/filters/*.json`, `defaults/fx_chains/*.lsdfxchain`, `web/content/fxchains/*`)
 - **New: six stock effects hit on the drop**: Bloom and Anamorphic Streak flare, Radial Blur throws out light shafts, Kaleidoscope punches in, Pinch/Bulge punches, and Vortex Swirl twists hard, each fading over 4 bars. Only a few run because the source underneath already makes its own move.
 - **In a breakdown**, Bloom's glow spreads wider and softer and Fluid Smear melts further.

@@ -245,6 +245,8 @@ class WebEvaluatorVectorsTest {
         // Section energy is bipolar and already shaped: no follower, whatever the modulator says.
         val swing = List(30) { if (it in 5..19) -0.8f else 0.5f }
         sequence("section energy ignores the follower", bi, param(0f, bi, audio("audio_energy", mode = AudioFollowerMode.SMOOTH, attack = 40f, decay = 400f, depth = 0.5f, dc = 0.1f)), swing, "audio_energy")
+        sequence("inverted follower ducks on hits", uni, param(0.8f, uni, audio(op = ModulationOperator.MUL, depth = 0.5f, dc = -0.5f, mode = AudioFollowerMode.PUNCHY, attack = 5f, decay = 150f).copy(invert = true)), ramp, "audio_bass")
+        sequence("inverted section energy flips sign", bi, param(0f, bi, audio("audio_energy", depth = 0.5f, dc = 0.1f).copy(invert = true)), swing, "audio_energy")
         sequence("follower mode set but zero times", uni, param(0f, uni, audio(mode = AudioFollowerMode.CUSTOM, attack = 0f, decay = 0f)), ramp, "audio_bass")
     }
 

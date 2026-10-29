@@ -1264,6 +1264,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#audio-modulators-can-invert-parameterscvmodulatorkt-cvevaluatorskt-uiaudiomodulatorsectionkt-webevaluatorjs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audio Modulators Can Invert (parameters/CvModulator.kt, cv/Evaluators.kt, ui/AudioModulatorSection.kt, web/evaluator.js)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#effects-answer-drops-too-sparingly-resourcesstock_defaultsfiltersjson-defaultsfx_chainslsdfxchain-webcontentfxchains" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7122,6 +7133,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#audio-modulators-can-invert-parameterscvmodulatorkt-cvevaluatorskt-uiaudiomodulatorsectionkt-webevaluatorjs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audio Modulators Can Invert (parameters/CvModulator.kt, cv/Evaluators.kt, ui/AudioModulatorSection.kt, web/evaluator.js)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#effects-answer-drops-too-sparingly-resourcesstock_defaultsfiltersjson-defaultsfx_chainslsdfxchain-webcontentfxchains" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -12955,6 +12977,12 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="audio-modulators-can-invert-parameterscvmodulatorkt-cvevaluatorskt-uiaudiomodulatorsectionkt-webevaluatorjs">Audio Modulators Can Invert (<code>parameters/CvModulator.kt</code>, <code>cv/Evaluators.kt</code>, <code>ui/AudioModulatorSection.kt</code>, <code>web/evaluator.js</code>)</h3>
+<ul>
+<li><strong>New: an Invert toggle on every Audio modulator</strong>, just above Modulation Range. Inverted, silence drives the parameter to Max and loud hits pull it toward Min, so on MUL it ducks on every hit like sidechain pumping. The response profile still applies, so Punchy dips on each kick and eases back.</li>
+<li>It works on Section signals too: inverted Energy rises in a breakdown, inverted Drop dips on the drop and recovers over 4 bars.</li>
+<li>With no audio at all, an inverted modulator sits at Max. Presets saved before this load uninverted, and the web TV plays inverted modulators the same way.</li>
+</ul>
 <h3 id="effects-answer-drops-too-sparingly-resourcesstock_defaultsfiltersjson-defaultsfx_chainslsdfxchain-webcontentfxchains">Effects Answer Drops Too, Sparingly (<code>resources/stock_defaults/filters/*.json</code>, <code>defaults/fx_chains/*.lsdfxchain</code>, <code>web/content/fxchains/*</code>)</h3>
 <ul>
 <li><strong>New: six stock effects hit on the drop</strong>: Bloom and Anamorphic Streak flare, Radial Blur throws out light shafts, Kaleidoscope punches in, Pinch/Bulge punches, and Vortex Swirl twists hard, each fading over 4 bars. Only a few run because the source underneath already makes its own move.</li>

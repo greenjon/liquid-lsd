@@ -95,6 +95,8 @@ data class CvModulator(
     val decayMsMax: Float = decayMs,
     val randomizeAttackMs: Boolean = false,
     val randomizeDecayMs: Boolean = false,
+    /** Flips the source so silence drives the top of the range and loud hits the bottom (ducking). */
+    val invert: Boolean = false,
 
     // Step Sequencer fields
     var seqSteps: List<Float> = List(32) { 0.0f },
@@ -117,6 +119,9 @@ data class CvModulator(
      */
     private val halfRange: Boolean
         get() = sourceId != "seq" && sourceId != "audio_energy" && !llm.slop.liquidlsd.cv.isCvSourceBipolar(sourceId)
+
+    /** Applies [invert] to a source value: 1 - cv for unipolar sources, -cv for bipolar ones. */
+    fun polarize(cv: Float): Float = if (!invert) cv else if (halfRange) 1f - cv else -cv
 
     /** Modulator output before the operator scalar: cv * depth + dcOffset. */
     fun lfoShape(cv: Float): Float = cv * depth + dcOffset

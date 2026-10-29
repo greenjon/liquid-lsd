@@ -269,16 +269,24 @@ function follow(ctx, mod, input) {
   return next;
 }
 
+const BIPOLAR_SOURCES = new Set(['beatSine', 'beatPhase', 'sampleAndHold', 'audio_energy']);
+
+/** CvModulator.polarize: an inverted source reads 1 - cv when unipolar, -cv when bipolar. */
+function polarize(mod, cv) {
+  if (!mod.invert) return cv;
+  return BIPOLAR_SOURCES.has(mod.sourceId) ? -cv : 1 - cv;
+}
+
 /** Raw CV value of a modulator's source, before depth / offset (Evaluators.kt evaluateModulatorAtOffset). */
 export function evaluateModulator(mod, ctx) {
   switch (mod.sourceId) {
     case 'lfo': return evalLfo(ctx, mod);
     case 'seq': return evalSeq(ctx, mod);
-    case 'beatSine': return ctx.cv.beatSine ?? Math.sin(ctx.beats * 2 * Math.PI);
-    case 'bpm': return ctx.cv.bpm ?? ctx.bpm;
+    case 'beatSine': return polarize(mod, ctx.cv.beatSine ?? Math.sin(ctx.beats * 2 * Math.PI));
+    case 'bpm': return polarize(mod, ctx.cv.bpm ?? ctx.bpm);
     default: {
       const raw = ctx.cv[mod.sourceId] ?? 0;
-      return AUDIO_SOURCES.has(mod.sourceId) ? follow(ctx, mod, raw) : raw;
+      return polarize(mod, AUDIO_SOURCES.has(mod.sourceId) ? follow(ctx, mod, raw) : raw);
     }
   }
 }

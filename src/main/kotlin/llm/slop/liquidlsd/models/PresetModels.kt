@@ -58,6 +58,7 @@ data class ModulatorDto(
     val decayMsMax: Float = 0.0f,
     val randomizeAttackMs: Boolean = false,
     val randomizeDecayMs: Boolean = false,
+    val invert: Boolean = false,
 
     // Step Sequencer fields
     val seqSteps: List<Float> = emptyList(),
@@ -384,6 +385,7 @@ fun CvModulator.toDto(): ModulatorDto = ModulatorDto(
     decayMsMax = decayMsMax,
     randomizeAttackMs = randomizeAttackMs,
     randomizeDecayMs = randomizeDecayMs,
+    invert = invert,
     seqSteps = seqSteps,
     seqStepCount = seqStepCount,
     seqHold = seqHold,
@@ -440,6 +442,7 @@ fun ModulatorDto.toDomain(): CvModulator = CvModulator(
     decayMsMax = decayMsMax,
     randomizeAttackMs = randomizeAttackMs,
     randomizeDecayMs = randomizeDecayMs,
+    invert = invert,
     seqSteps = if (seqSteps.isEmpty()) List(32) { 0.0f } else seqSteps,
     seqStepCount = seqStepCount,
     seqHold = seqHold,

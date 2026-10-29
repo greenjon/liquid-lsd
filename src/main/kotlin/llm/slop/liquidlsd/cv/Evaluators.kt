@@ -233,7 +233,8 @@ fun evaluateModulatorAtOffset(modulator: CvModulator, timeOffsetSec: Double, anc
         }
         else -> {
             val rawVal = CVRegistry.get(modulator.sourceId)
-            if (isAudioSource(modulator.sourceId) && !isSectionSource(modulator.sourceId)) {
+            // Invert after the follower so attack/decay still describe how fast it answers a hit.
+            modulator.polarize(if (isAudioSource(modulator.sourceId) && !isSectionSource(modulator.sourceId)) {
                 if (modulator.followerMode == llm.slop.liquidlsd.parameters.AudioFollowerMode.RAW || 
                     (modulator.attackMs <= 0f && modulator.decayMs <= 0f)) {
                     rawVal
@@ -242,7 +243,7 @@ fun evaluateModulatorAtOffset(modulator: CvModulator, timeOffsetSec: Double, anc
                 }
             } else {
                 rawVal
-            }
+            })
         }
     }
 }

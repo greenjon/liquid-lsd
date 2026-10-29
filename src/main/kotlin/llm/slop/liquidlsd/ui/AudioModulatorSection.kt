@@ -263,6 +263,16 @@ object AudioModulatorSection {
         themeColor: Int,
         onReplace: (CvModulator) -> Unit
     ) {
+        // -- Invert ----------------------------------------------
+        if (ButtonChrome.toggleButton("Invert##invert_${existing.id}", existing.invert, themeColor, 125f * 0.95f, ImGui.getFrameHeight())) {
+            onReplace(existing.copy(invert = !existing.invert))
+        }
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "aud_invert" }
+        itemTooltip("Invert: silence drives the top of the Modulation Range and loud hits the bottom.\n" +
+            "On MUL this ducks the parameter on every hit, like sidechain pumping.\n" +
+            "With no audio at all, an inverted modulator sits at its maximum.")
+        ImGui.spacing()
+
         // -- Modulation Range (Min/Max) ---------------------------
         CustomRangeSlider.drawMinMaxRangeSlider(
             session = session,

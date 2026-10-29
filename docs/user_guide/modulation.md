@@ -92,6 +92,12 @@ Min and Max are measured from the parameter's set value, and moving one never mo
 
 Enabling randomization adds independent drift sliders for the Min and Max bounds, so the range itself wanders gently over time.
 
+### Invert
+
+**Invert** (just above the range) flips the signal: silence drives the parameter to Max and loud hits pull it toward Min. Inverted Section **Energy** rises in a breakdown and sinks when the song gets louder; inverted **Drop** dips on the drop and recovers over 4 bars. The response profile still sets how fast it reacts, so with Punchy the parameter drops on each kick and eases back up.
+
+On **MUL**, an inverted modulator ducks the parameter on every hit, like sidechain pumping: for example, Brightness that dims a little on each kick. Two parameters on the same band, one inverted, move in opposite directions. With no audio at all (input muted, stream stopped), an inverted modulator sits at Max, so the parameter can look stuck until the music comes back.
+
 ---
 
 ## LFO Modulation

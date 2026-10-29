@@ -557,6 +557,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#invert" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Invert
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1669,6 +1680,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#invert" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Invert
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1987,6 +2009,9 @@
 <p>The dual-handled range slider at the bottom sets the floor and ceiling of the modulation output. For example, if you want bass energy to push Lobes between 3 and 8, set Min to 3 and Max to 8.</p>
 <p>Min and Max are measured from the parameter's set value, and moving one never moves the other. Audio sources only push upward from silence, so Min is the resting offset and Max is the loudest peak. Section <strong>Energy</strong> is the exception: it swings both ways, so it rests halfway between Min and Max, with Min the depth of a breakdown and Max a much louder passage.</p>
 <p>Enabling randomization adds independent drift sliders for the Min and Max bounds, so the range itself wanders gently over time.</p>
+<h3 id="invert">Invert</h3>
+<p><strong>Invert</strong> (just above the range) flips the signal: silence drives the parameter to Max and loud hits pull it toward Min. Inverted Section <strong>Energy</strong> rises in a breakdown and sinks when the song gets louder; inverted <strong>Drop</strong> dips on the drop and recovers over 4 bars. The response profile still sets how fast it reacts, so with Punchy the parameter drops on each kick and eases back up.</p>
+<p>On <strong>MUL</strong>, an inverted modulator ducks the parameter on every hit, like sidechain pumping: for example, Brightness that dims a little on each kick. Two parameters on the same band, one inverted, move in opposite directions. With no audio at all (input muted, stream stopped), an inverted modulator sits at Max, so the parameter can look stuck until the music comes back.</p>
 <hr />
 <h2 id="lfo-modulation">LFO Modulation</h2>
 <p>Clicking an <strong>LFO</strong> cell opens the LFO config. Each cell has a primary oscillator and an optional secondary modulator.</p>
