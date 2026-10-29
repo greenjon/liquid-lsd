@@ -221,7 +221,7 @@ Other UI:
 - `ToastOverlay`, `TooltipHelper`, `UiLabPanel` (`--ui-lab`), `WindowFrameController` (client-side decorations).
 - Minimum window 1280×720 (`glfwSetWindowSizeLimits`).
 
-Deeper: `docs/developer/ui.md` (partly stale), `docs/developer/ui_interaction_architecture_review.md`, `docs/user_guide/your_workspace.md` (glossary).
+Deeper: `docs/developer/ui.md` (partly stale), `docs/archive/ui_interaction_architecture_review.md` (Oct 2026 review, archived), `docs/user_guide/your_workspace.md` (glossary).
 
 ## 11. Persistence layout
 

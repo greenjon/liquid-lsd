@@ -2,6 +2,8 @@
 
 This document describes the CLI argument parser, automated framebuffer PNG screenshot capture pipeline, and the isolated UI Lab sandbox environment in Liquid LSD.
 
+The design came from PR #22 by Lawrence Norton; the original proposal is archived as [`docs/archive/screen_capture_and_ui_iteration_proposal.md`](https://github.com/greenjon/liquid-lsd/blob/main/docs/archive/screen_capture_and_ui_iteration_proposal.md).
+
 ## 1. Overview & Architecture
 
 To support automated visual regression testing, documentation asset generation, and headless CI execution, Liquid LSD parses startup arguments via `CliArgs` and supports single-frame PNG capture with automatic graceful exit.

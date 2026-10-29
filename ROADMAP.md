@@ -103,7 +103,7 @@ Performers need persistent, glanceable set notes during live shows without relyi
 ---
 
 ### Milestone 3: Mandala Visual Generator v2+
-> **Reference**: [`docs/developer/mandala_future_roadmap.md`](docs/developer/mandala_future_roadmap.md)
+> **Reference**: [`docs/archive/mandala_future_roadmap.md`](docs/archive/mandala_future_roadmap.md)
 > **Status**: Backlog / Future Enhancement
 
 Enhancing the built-in Mandala procedural visual generator for live stage recall:
@@ -115,6 +115,8 @@ Enhancing the built-in Mandala procedural visual generator for live stage recall
   - Descriptive names and style tags (e.g., `#7: Floral Weave`, `Crystalline`, `Starburst`) replacing raw math vectors (`[26, 23, 14, 14]`).
 - [ ] **Global Recipe Sweep Index**:
   - Sweep parameter moving continuously through all 300 recipes across all lobe counts via a single LFO or MIDI slider.
+  - Keep today's local index too: `Recipe Select` (0..1) is relative to the recipes of the current lobe count, so an LFO on `Lobes` keeps the relative position steady. A global index would be a separate parameter or a toggle.
+  - Micro-previews (Recipe Vault) need fixed reference arm (`L1`-`L4`), rotation and colour settings, since a recipe's look depends on them.
 - [ ] **Favorites & Performance Quick-Slots**:
   - Quick-recall bookmark buttons (`[ Fav 1 ] [ Fav 2 ] [ Fav 3 ] [ Fav 4 ]`) on the Deck panel for instant switching.
 
@@ -147,7 +149,7 @@ Click-to-learn already works for number boxes, Seq, LFO and Audio controls. Rema
 ---
 
 ### Milestone 6: Automated Screen Capture & UI Lab
-> **Reference**: [`docs/developer/screen_capture_and_ui_iteration_proposal.md`](docs/developer/screen_capture_and_ui_iteration_proposal.md)
+> **Reference**: [`docs/archive/screen_capture_and_ui_iteration_proposal.md`](docs/archive/screen_capture_and_ui_iteration_proposal.md)
 > **Status**: Bumped from v1.0 (2026-09-25) / Partially complete (Core GPU PBO readback complete; CLI screenshot automation pending)
 
 Automating crisp, deterministic UI screenshot capture for documentation assets and providing an isolated sandbox for UI layout regression testing:

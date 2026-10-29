@@ -1,6 +1,6 @@
 # UI Architecture & ImGui Systems
 
-The `ui/` package manages the immediate-mode desktop interface using ImGui (`imgui-java`), LWJGL 3, and GLFW. This document maps component ownership, memory safety patterns, popup scheduling, and the `NoteEditorModal` architecture. For an evaluation of workflow boundaries, loading interactions, and macro/library coordination, see [UI Interaction Architecture Review](ui_interaction_architecture_review.md).
+The `ui/` package manages the immediate-mode desktop interface using ImGui (`imgui-java`), LWJGL 3, and GLFW. This document maps component ownership, memory safety patterns, popup scheduling, and the `NoteEditorModal` architecture. The October 2026 review of workflow boundaries, loading interactions and macro/library coordination is archived as [`docs/archive/ui_interaction_architecture_review.md`](https://github.com/greenjon/liquid-lsd/blob/main/docs/archive/ui_interaction_architecture_review.md); its fixes and decisions are in `DECISIONS.md`.
 
 ---
 
@@ -160,6 +160,7 @@ val depthCbs = cvModulatorSlider(
 - **Robust Cursor Hiding & Wayland Compositor Safety**: `MacroKnobWidget` sets `ImGui.setMouseCursor(ImGuiMouseCursor.None)` while locked to suppress ImGui-rendered cursors, and `UIManager` assigns a 16x16 transparent GLFW cursor (`blankCursor`) while in `GLFW_CURSOR_DISABLED`. This guarantees that the cursor is completely invisible even on Wayland compositors and X11 window managers that do not automatically clear the cursor surface during pointer lock.
 - **Wayland-Safe Coordinate Restoration**: Upon mouse release, `UIManager` calls `glfwSetCursorPos(windowHandle, originX, originY)` while still in `GLFW_CURSOR_DISABLED`, restores the default OS cursor (`glfwSetCursor(windowHandle, 0L)`), and returns to `GLFW_CURSOR_NORMAL`. Calling position hints prior to releasing pointer confinement satisfies Linux Wayland compositors (`zwp_pointer_constraints_v1`) where global pointer warping in normal mode is prohibited.
 - **Safety Interruption Handling**: If the window loses focus (`glfwSetWindowFocusCallback` in `Main.kt`) or mouse button release is detected outside widget drawing, `MacroKnobWidget.abortDrag()` immediately resets internal lock state, restores the default cursor, and releases the cursor lock.
+- **Why relative mode, not hide-and-warp**: hiding the cursor and warping it back on release fails on Wayland (compositors drop `glfwSetCursorPos` outside `GLFW_CURSOR_DISABLED`), and a hidden but free cursor stops at the screen edge (the knob freezes mid-sweep) or wanders onto the output window. `MacroKnobWidget`'s drag fields are module-level (one knob drags at a time), so `abortDrag()` must clear `activeKnobId` as well as the cursor mode. Stored origins are in window points (`io.mousePos`), not framebuffer pixels, so HiDPI and fractional scaling restore correctly. The design study is archived as [`docs/archive/knob_drag_cursor_locking_rfc.md`](https://github.com/greenjon/liquid-lsd/blob/main/docs/archive/knob_drag_cursor_locking_rfc.md).
 - **Hardware & User Preference Override**: Cursor locking is automatically bypassed when the performance touch console is active (`touchConsoleController.isActive`), or when toggled off via `UITheme.lockCursorOnKnobDrag` in **Preferences > General**.
 
 ### 6c. Performance Row Layout Contract (`PerfRowGeometry.kt`, `PerfKnobSpec.kt`, `DeckRowMetrics`)
@@ -286,11 +287,6 @@ Because ImGui uses JNI wrappers around native C++ pointers, strict memory rules 
 
 ## ImGui Versioning & Future Modernization
 
-Liquid LSD is on `io.github.spair:imgui-java:1.92.7.1` (Dear ImGui 1.92, universal macOS arm64/x64 native support). For the migration history from 1.86.12 and the ARM64 native build story, refer to [ImGui Upgrade & Modernization Guide](imgui_upgrade_guide.md).
+Liquid LSD is on `io.github.spair:imgui-java:1.92.7.1` (Dear ImGui 1.92, universal macOS arm64/x64 native support). For ARM64 native support and the 1.86 → 1.92 API changes, see [ImGui Version & ARM64 Notes](imgui_upgrade_guide.md).
 
----
-
-## Proposals & RFCs
-
-- [Relative Knob Dragging & Cursor Locking / Restoration RFC](knob_drag_cursor_locking_rfc.md): Architectural analysis, platform pitfalls (Wayland pointer constraints vs X11/macOS), and edge cases for cursor locking during knob adjustments.
 

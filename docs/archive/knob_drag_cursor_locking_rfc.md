@@ -3,7 +3,7 @@
 - **Status**: Implemented
 - **Author**: Antigravity Pair Programming
 - **Target Subsystem**: `ui/MacroKnobWidget.kt`, `ui/UIManager.kt`, `Main.kt`, `ui/PreferencesPanel.kt`
-- **Related Docs**: [UI Architecture](ui.md), [ARCHITECTURE.md](../../ARCHITECTURE.md), [DECISIONS.md](../../DECISIONS.md)
+- **Related Docs**: [UI Architecture](../developer/ui.md), [ARCHITECTURE.md](../../ARCHITECTURE.md), [DECISIONS.md](../../DECISIONS.md)
 
 ---
 
