@@ -159,4 +159,21 @@ class MacroBankSerializationTest {
         assertEquals("XF", target.knobs[0].label)
         assertEquals(listOf("Mixer/crossfade"), target.knobs[0].bindings.map { it.parameterId })
     }
+
+    @Test
+    fun testApplyFileRefusesSyncOwnedBanksAndLeavesThemAlone() {
+        val tempFile = File.createTempFile("test_macro_bank_refuse", ".knobpreset.json")
+        tempFile.deleteOnExit()
+        MacroBankSerializer.exportToFile(tempFile, MacroBank(knobs = listOf(MacroControl(label = "SAVED"))))
+        val mixer = mockk<Mixer>(relaxed = true)
+
+        for (bankId in listOf(MacroEngine.TRANS, MacroEngine.DECK_A_FX)) {
+            val synced = MacroBank(knobs = listOf(MacroControl(label = "XFADE", bindings = mutableListOf(
+                MacroBinding(parameterId = "Mixer/crossfade", targetType = MacroTargetType.PARAM_BASE_VALUE)
+            ))))
+            assertFailsWith<IllegalArgumentException> { MacroBankSerializer.applyFileToBank(tempFile, bankId, synced, null, mixer) }
+            assertEquals("XFADE", synced.knobs[0].label, "$bankId keeps its synced label")
+            assertEquals(1, synced.knobs[0].bindings.size, "$bankId keeps its synced binding")
+        }
+    }
 }

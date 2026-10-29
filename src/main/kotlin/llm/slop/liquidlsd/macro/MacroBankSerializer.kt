@@ -93,9 +93,11 @@ object MacroBankSerializer {
     /**
      * Imports [file] into the resident bank [target] (id [bankId]) and returns how many bindings were skipped.
      * Deck banks retarget bindings to their own deck ([deckLabel], like a preset load); others (Master, ...) keep
-     * them as saved but drop targets the bank can't take (as Learn would).
+     * them as saved but drop targets the bank can't take (as Learn would). Refuses (throws) FX and Transitions banks,
+     * which follow what's loaded ([TransitionMacroSync.isSyncOwned]): a file would wipe their synced knobs.
      */
     fun applyFileToBank(file: File, bankId: String, target: MacroBank, deckLabel: String?, mixer: Mixer): Int {
+        require(!TransitionMacroSync.isSyncOwned(bankId)) { "these knobs follow the loaded FX or transition and can't take a saved bank" }
         val (imported, skipped) = importFromFile(file, mixer, deckLabel)
         if (deckLabel != null) {
             installBankForDeck(imported, target, deckLabel)
