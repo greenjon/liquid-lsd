@@ -1,4 +1,4 @@
-# In-app check list (written 2026-10-14, merged 2026-10-22, updated 2026-10-28)
+# In-app check list (written 2026-10-14, merged 2026-10-22, updated 2026-10-29)
 
 Everything here is code that exists and has passing tests but that nobody has looked at in the running app or on hardware. Tick a box when it works. Write what you saw next to anything that doesn't.
 
@@ -311,10 +311,20 @@ Known remaining literals: dropdown selected text, ParametersRenderer fills and g
 - [ ] Web section modulators (2026-10-28): the stock presets (every `stock-*.lsd` now uses `audio_energy` and `audio_drop`) breathe out in a radio breakdown and hit on the drop as on the desktop. With SYNC set, the drop hit is delayed with the sound. With reduced motion, the drop hit is softer.
 - [ ] Phase 8 CI is not done yet, so nothing to check there.
 
+## 16b. Audit fixes (2026-10-29)
+
+- [ ] Copy / Move / Swap a deck "Source + FX" onto another deck: the target's FX row, Chain view and Twister knobs show the new effects and drive them; the chain dips like a chain load; a saved chain still says Save (not Save As). After a Move the source deck's chain is "Untitled".
+- [ ] Macros tab: Apply to / Save from offer only Decks A/B/BG/PV and Master; the Transitions row's K1 still mirrors the crossfader.
+- [ ] Clear each queue (A/B, BG, both FX queues, Transition), drop files onto one, add a playlist from its right-click menu: Ctrl+Z undoes each (the Clear toast says so).
+- [ ] Rename a preset and edit its tags: the file keeps everything else (open it in a text editor).
+- [ ] Fractal Flame with Pool or Breed: no hitch at morph boundaries; Keep and Import Flame don't hitch, and the import toast gives the real count. Put a macro on the variation choice: the combo greys out. Editor tabs look right in both themes; Skip's tooltip says Skip.
+- [ ] Twister: Ctrl-C the app in native mode, the Twister leaves native mode and goes dark; unplug it while playing, the picture doesn't freeze; plug it back in, it comes back.
+- [ ] Tooltips: hover the new ones (System Volume, Master BPM and presets, Library tabs, MIDI mapping columns, Broadcast buttons) and a few converted knob/slider tooltips (what / gestures / MIDI layout). Menus say "MIDI Learn (X)" / "OSC Learn (X)"; MIDI Preferences column says Control; the transition on/off checkbox no longer says Bypass; colours of the menu bar, About, Link button and Clock row group tints look unchanged (dark) and sensible (light).
+
 ## 17. Before release
 
 - [ ] Camera-relative light: Mandelbulb, Mandelbox and KIFS: turn Rotate X/Y/Z (and let Mandelbulb's Flight Speed spin) through a full circle; the lit side stays toward you and no side goes dark. KIFS: try every start face. Icosa H3, Pseudo-Kleinian and Apollonian look as before.
-- [ ] `ARCHITECTURE.md` refreshed (frame loop, queues, control surfaces and UI sections updated 2026-10-23 for the MIDI timing change; the rest dates from 2026-10-07).
+- [x] `ARCHITECTURE.md` refreshed (verified against the code 2026-10-29).
 - [ ] Walkthrough videos re-rendered where `scripts/tour_staleness.py` says (much of the UI they show changed).
 - [ ] Website deployed (last item).
 - [ ] MIDI phase 5 slice 1 (separate agent): Controller Profiles section, copy / delete / reload, validation problems, "Learned mappings" retitle.
