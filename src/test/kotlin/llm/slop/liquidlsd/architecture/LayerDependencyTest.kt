@@ -2,9 +2,13 @@ package llm.slop.liquidlsd.architecture
 
 import java.io.File
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/** Architecture guard: ui depends on midi/ and control/ through interfaces, never the reverse; midi/ may not grow new control/ dependencies. */
+/**
+ * Architecture guard: ui depends on midi/ and control/ through interfaces, never the reverse; midi/ may not grow
+ * new control/ or rendering/ dependencies.
+ */
 class LayerDependencyTest {
     private val root = File("src/main/kotlin/llm/slop/liquidlsd")
 
@@ -55,6 +59,32 @@ class LayerDependencyTest {
             .filter { f -> f.readLines().any { line -> storage.any { it.containsMatchIn(line) } } }
             .map { it.path }.toList()
         assertTrue(v.isEmpty(), "midi/ must reach controller profiles through ProfileLearner, not the store: $v")
+    }
+
+    /**
+     * File name -> reason, for midi/ references to rendering/. `MidiMappingManager` resolves learned-binding
+     * paths through `ParameterResolver.findParameterByPath(Mixer, ...)` and takes the `Mixer` from Main;
+     * cutting it needs a parameter-lookup seam on Mixer. New files may not add to it.
+     */
+    private val midiRenderingAllowed = mapOf(
+        "MidiMappingManager.kt" to "takes rendering.Mixer to resolve learned parameter paths"
+    )
+
+    @Test
+    fun midiDoesNotDependOnRendering() {
+        val v = File(root, "midi").walkTopDown().filter { it.isFile && it.extension == "kt" }
+            .filter { it.name !in midiRenderingAllowed }
+            .filter { f -> f.readLines().any { "llm.slop.liquidlsd.rendering" in it } }
+            .map { it.path }.toList()
+        assertTrue(v.isEmpty(), "midi/ must not reference rendering/ outside $midiRenderingAllowed: $v")
+    }
+
+    @Test
+    fun midiRenderingReferencesAreOnlyTheMixer() {
+        val refs = File(root, "midi/MidiMappingManager.kt").readLines()
+            .flatMap { Regex("""llm\.slop\.liquidlsd\.rendering\.[\w.]+""").findAll(it).map { m -> m.value }.toList() }
+            .toSet()
+        assertEquals(setOf("llm.slop.liquidlsd.rendering.Mixer"), refs, "MidiMappingManager may reference only rendering.Mixer")
     }
 
     @Test
