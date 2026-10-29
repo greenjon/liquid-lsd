@@ -31,7 +31,7 @@ object FlameGenome {
     private fun slotKey(xf: Int, slot: Int, field: String) = "${xfName(xf)} V${slot + 1} $field"
     private fun key(xf: Int, field: String) = "${xfName(xf)} $field"
 
-    /** Pre-built keys so the per-frame pack does not allocate strings. */
+    /** Pre-built keys, and their unit maps (the `...U` fields, see [FlameUnits.of]), so the per-frame pack allocates nothing. */
     internal class XfKeys(i: Int) {
         val weight = key(i, "Weight"); val color = key(i, "Color"); val speed = key(i, "ColorSpeed")
         val preRot = key(i, "PreRot"); val preSx = key(i, "PreScaleX"); val preSy = key(i, "PreScaleY")
@@ -41,6 +41,13 @@ object FlameGenome {
         val slotId = Array(SLOTS) { slotKey(i, it, "Id") }
         val slotWeight = Array(SLOTS) { slotKey(i, it, "Weight") }
         val slotParam = Array(SLOTS) { j -> Array(FlameVariations.PARAMS) { slotKey(i, j, PARAM_LETTERS[it]) } }
+
+        val weightU = FlameUnits.of(weight); val colorU = FlameUnits.of(color); val speedU = FlameUnits.of(speed)
+        val preRotU = FlameUnits.of(preRot); val preSxU = FlameUnits.of(preSx); val preSyU = FlameUnits.of(preSy)
+        val preShearU = FlameUnits.of(preShear); val preXU = FlameUnits.of(preX); val preYU = FlameUnits.of(preY)
+        val postRotU = FlameUnits.of(postRot); val postSxU = FlameUnits.of(postSx); val postSyU = FlameUnits.of(postSy)
+        val postShearU = FlameUnits.of(postShear); val postXU = FlameUnits.of(postX); val postYU = FlameUnits.of(postY)
+        val slotWeightU = Array(SLOTS) { FlameUnits.of(slotWeight[it]) }
     }
     private val keys = Array(MAX_XF + 1) { XfKeys(it) }
 
@@ -233,12 +240,12 @@ object FlameGenome {
      * @return number of active xforms (>= 1; an empty genome becomes one identity xform)
      */
     fun pack(params: Map<String, ModulatableParameter>, out: FloatArray, morph: FlameMorphLookup? = null): Int {
-        fun v(name: String, def: Float) = params[name]?.let { FlameUnits.real(name, it.value) } ?: def
-        val spin = v("Spin", 0f); val breathe = v("Breathe", 1f); val warp = v("Warp", 1f); val drift = v("Drift", 0f)
+        val spin = v(params, "Spin", SPIN_U, 0f); val breathe = v(params, "Breathe", BREATHE_U, 1f)
+        val warp = v(params, "Warp", WARP_U, 1f); val drift = v(params, "Drift", DRIFT_U, 0f)
         var n = 0
         for (i in 0 until MAX_XF) {
             val k = keys[i]
-            val w = v(k.weight, 0f)
+            val w = v(params, k.weight, k.weightU, 0f)
             if (w <= 1e-4f) continue
             packXf(params, k, out, n * VEC4_PER_XF * 4, w, spin * (if (n % 2 == 0) 1f else -1f) * (1f + 0.3f * n), breathe, warp, drift, morph)
             n++
@@ -253,22 +260,53 @@ object FlameGenome {
         return n
     }
 
+    private val SPIN_U = FlameUnits.of("Spin"); private val BREATHE_U = FlameUnits.of("Breathe")
+    private val WARP_U = FlameUnits.of("Warp"); private val DRIFT_U = FlameUnits.of("Drift")
+
+    /**
+     * Evaluated value of [name] in real units ([u] is its precomputed [FlameUnits.of]), or [def] when it is absent.
+     * The pack spells out `if (x != null) ... else ...` instead of `x?.f() ?: d` for Float results: the elvis form
+     * boxes the Float, which escape analysis only removes once the JIT has inlined the call.
+     */
+    private fun v(params: Map<String, ModulatableParameter>, name: String, u: FlameUnits.Mapping?, def: Float): Float {
+        val p = params[name] ?: return def
+        return realOf(u, p.value)
+    }
+
     private fun packXf(
         params: Map<String, ModulatableParameter>, k: XfKeys, out: FloatArray, o: Int,
         weight: Float, spin: Float, breathe: Float, warp: Float, drift: Float, morph: FlameMorphLookup?
     ) {
-        fun v(name: String, def: Float) = params[name]?.let { FlameUnits.real(name, it.value) } ?: def
         out[o] = weight
-        out[o + 1] = v(k.color, 0f)
-        out[o + 2] = (v(k.speed, COLOR_SPEED) + drift).coerceIn(0f, 1f)
+        out[o + 1] = v(params, k.color, k.colorU, 0f)
+        out[o + 2] = (v(params, k.speed, k.speedU, COLOR_SPEED) + drift).coerceIn(0f, 1f)
         out[o + 3] = 0f
-        matrix(v(k.preRot, 0f) + spin, v(k.preSx, 1f) * breathe, v(k.preSy, 1f) * breathe, v(k.preShear, 0f), out, o + 4)
-        out[o + 8] = v(k.preX, 0f); out[o + 9] = v(k.preY, 0f); out[o + 10] = v(k.postX, 0f); out[o + 11] = v(k.postY, 0f)
-        matrix(v(k.postRot, 0f), v(k.postSx, 1f), v(k.postSy, 1f), v(k.postShear, 0f), out, o + 12)
+        matrix(
+            v(params, k.preRot, k.preRotU, 0f) + spin, v(params, k.preSx, k.preSxU, 1f) * breathe,
+            v(params, k.preSy, k.preSyU, 1f) * breathe, v(params, k.preShear, k.preShearU, 0f), out, o + 4
+        )
+        out[o + 8] = v(params, k.preX, k.preXU, 0f); out[o + 9] = v(params, k.preY, k.preYU, 0f)
+        out[o + 10] = v(params, k.postX, k.postXU, 0f); out[o + 11] = v(params, k.postY, k.postYU, 0f)
+        matrix(
+            v(params, k.postRot, k.postRotU, 0f), v(params, k.postSx, k.postSxU, 1f),
+            v(params, k.postSy, k.postSyU, 1f), v(params, k.postShear, k.postShearU, 0f), out, o + 12
+        )
         for (j in 0 until SLOTS) packSlot(params, k, j, out, o + 16 + j * VEC4_PER_SLOT * 4, warp, morph)
     }
 
     private fun warped(id: Int, w: Float, warp: Float) = w * (if (id == 0) 1f else warp)
+
+    /** [stored] in real units through [u], or as it is when the parameter has no unit map (same as [FlameUnits.real]). */
+    private fun realOf(u: FlameUnits.Mapping?, stored: Float): Float = if (u != null) u.real(stored) else stored
+
+    /** Writes variation [id]'s parameters of slot [j] (no morph, or both ends the same variation) to out[o..o+3]. */
+    private fun writeParams(params: Map<String, ModulatableParameter>, k: XfKeys, j: Int, out: FloatArray, o: Int, id: Int) {
+        val names = k.slotParam[j]
+        for (n in 0 until FlameVariations.PARAMS) {
+            val p = params[names[n]]
+            out[o + n] = FlameVariations.real(id, n, if (p != null) p.value else 0.5f)
+        }
+    }
 
     /**
      * Slot vec4s = [idA, wA, idB, wB], [A's params], [B's params]. Without a morph, B is empty (weight 0). While morphing, A's slot is weighted
@@ -281,43 +319,45 @@ object FlameGenome {
     ) {
         val idP = params[k.slotId[j]]
         val wP = params[k.slotWeight[j]]
+        val wU = k.slotWeightU[j]
         val maxId = VARIATIONS.size - 1
-        fun value(n: Int) = params[k.slotParam[j][n]]?.value ?: 0.5f
-        fun writeParams(o: Int, id: Int, norm: (Int) -> Float) {
-            for (n in 0 until FlameVariations.PARAMS) out[o + n] = FlameVariations.real(id, n, norm(n))
-        }
         if (morph == null || idP == null || wP == null) {
-            val id = (idP?.value ?: 0f).toInt().coerceIn(0, maxId)
-            out[so] = id.toFloat(); out[so + 1] = warped(id, wP?.let { FlameUnits.real(k.slotWeight[j], it.value) } ?: 0f, warp)
+            val id = (if (idP != null) idP.value else 0f).toInt().coerceIn(0, maxId)
+            out[so] = id.toFloat(); out[so + 1] = warped(id, if (wP != null) realOf(wU, wP.value) else 0f, warp)
             out[so + 2] = 0f; out[so + 3] = 0f
-            writeParams(so + 4, id, ::value)
+            writeParams(params, k, j, out, so + 4, id)
             java.util.Arrays.fill(out, so + 8, so + 12, 0f)
             return
         }
         val t = morph.t.coerceIn(0f, 1f)
         val idA = (morph.a(idP) + 0.5f).toInt().coerceIn(0, maxId)
         val idB = (morph.b(idP) + 0.5f).toInt().coerceIn(0, maxId)
-        val wk = k.slotWeight[j]
-        val wa = FlameUnits.real(wk, morph.a(wP)); val wb = FlameUnits.real(wk, morph.b(wP))
-        val delta = FlameUnits.real(wk, wP.value) - (wa + (wb - wa) * t)
+        val wa = realOf(wU, morph.a(wP)); val wb = realOf(wU, morph.b(wP))
+        val delta = realOf(wU, wP.value) - (wa + (wb - wa) * t)
         val wA = (wa + delta) * (1f - t)
         val wB = (wb + delta) * t
         if (idA == idB) {
             out[so] = idA.toFloat(); out[so + 1] = warped(idA, wA + wB, warp)
             out[so + 2] = 0f; out[so + 3] = 0f
-            writeParams(so + 4, idA, ::value)
+            writeParams(params, k, j, out, so + 4, idA)
             java.util.Arrays.fill(out, so + 8, so + 12, 0f)
         } else {
             out[so] = idA.toFloat(); out[so + 1] = warped(idA, wA, warp)
             out[so + 2] = idB.toFloat(); out[so + 3] = warped(idB, wB, warp)
             // each end keeps its own parameters; modulation (value minus the plain A->B lerp) rides on both
-            fun end(side: (ModulatableParameter) -> Float, n: Int): Float {
-                val pp = params[k.slotParam[j][n]] ?: return 0.5f
+            val names = k.slotParam[j]
+            for (n in 0 until FlameVariations.PARAMS) {
+                val pp = params[names[n]]
+                if (pp == null) {
+                    out[so + 4 + n] = FlameVariations.real(idA, n, 0.5f)
+                    out[so + 8 + n] = FlameVariations.real(idB, n, 0.5f)
+                    continue
+                }
                 val pa = morph.a(pp); val pb = morph.b(pp)
-                return side(pp) + (pp.value - (pa + (pb - pa) * t))
+                val mod = pp.value - (pa + (pb - pa) * t)
+                out[so + 4 + n] = FlameVariations.real(idA, n, pa + mod)
+                out[so + 8 + n] = FlameVariations.real(idB, n, pb + mod)
             }
-            writeParams(so + 4, idA) { end(morph::a, it) }
-            writeParams(so + 8, idB) { end(morph::b, it) }
         }
     }
 
