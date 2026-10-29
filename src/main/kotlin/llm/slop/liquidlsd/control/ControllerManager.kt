@@ -4,11 +4,14 @@ import llm.slop.liquidlsd.midi.MidiEngine
 import llm.slop.liquidlsd.midi.MidiEvent
 import llm.slop.liquidlsd.midi.MidiOutputPorts
 import mu.KotlinLogging
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Holds one [ControllerRuntime] per connected device, created the first time the device sends a
  * message and its name matches a controller profile, and one [ControllerFeedback] per connected
- * device whose profile has an `output` section. Render thread only.
+ * device whose profile has an `output` section. Render thread only, except [shutdown], which may also run
+ * from the `controller-native-leave` shutdown hook: the feedback map is guarded by [feedbackLock], and once
+ * [shutdown] has run no more lights are queued, so nothing can land after a device's leave-native SysEx.
  *
  * [connectedDevices] and [openSink] are injectable so tests don't need real MIDI ports.
  */
@@ -21,7 +24,11 @@ class ControllerManager(
 ) {
     private val logger = KotlinLogging.logger {}
     private val runtimes = HashMap<String, ControllerRuntime?>()
+    /** Guarded by [feedbackLock]. */
     private val feedbacks = HashMap<String, ControllerFeedback>()
+    private val feedbackLock = Any()
+    /** Set by the first [shutdown]; the manager stays inert after it. */
+    private val isShutDown = AtomicBoolean(false)
     private val lastOpenAttemptMs = HashMap<String, Long>()
     private var lastScanMs = 0L
     private var hasScanned = false
@@ -54,6 +61,11 @@ class ControllerManager(
         nowMs: Long = System.currentTimeMillis(),
         activePageId: String? = null
     ) {
+        synchronized(feedbackLock) { updateFeedbackLocked(source, nowMs, activePageId) }
+    }
+
+    private fun updateFeedbackLocked(source: KnobLightSource, nowMs: Long, activePageId: String?) {
+        if (isShutDown.get()) { anyConnected = false; return }
         if (!hasScanned || nowMs - lastScanMs >= SCAN_INTERVAL_MS) {
             hasScanned = true
             lastScanMs = nowMs
@@ -107,23 +119,37 @@ class ControllerManager(
     fun runtimeFor(deviceId: String): ControllerRuntime? = runtimes[deviceId]
 
     /** The feedback for [deviceId], if it is connected and has an open output. */
-    fun feedbackFor(deviceId: String): ControllerFeedback? = feedbacks[deviceId]
+    fun feedbackFor(deviceId: String): ControllerFeedback? = synchronized(feedbackLock) { feedbacks[deviceId] }
 
     /** Forgets all runtimes and feedback (e.g. after profiles are reloaded), so held state and bank knowledge start fresh. */
     fun reset() {
         runtimes.values.forEach { it?.clearHeldState() }
         runtimes.clear()
         registry.clearHeldState()
-        shutdown()
+        synchronized(feedbackLock) { releaseAll() }
         lastOpenAttemptMs.clear()
         hasScanned = false
     }
 
-    /** Hands every device back to its stock behaviour and closes the feedback ports. */
-    fun shutdown() {
+    /** Hands every device back to its stock behaviour and lets go of the feedback ports; returns at once. Lock held. */
+    private fun releaseAll(): List<ControllerFeedback> {
         val open = feedbacks.values.toList()
         feedbacks.clear()
         open.forEach { it.leaveNativeMode(); it.close() }
+        return open
+    }
+
+    /**
+     * For app exit: hands every device back to its stock behaviour, waits (up to [EXIT_FLUSH_MS]) for that to
+     * reach the hardware, and stops all further feedback. Main calls it before the MIDI ports close; the
+     * shutdown hook calls it too (Ctrl-C/SIGTERM), and whichever comes second does nothing. Any thread.
+     */
+    fun shutdown() {
+        if (!isShutDown.compareAndSet(false, true)) return
+        val open = synchronized(feedbackLock) { releaseAll() }
+        anyConnected = false
+        val deadline = System.currentTimeMillis() + EXIT_FLUSH_MS
+        for (fb in open) fb.awaitClosed((deadline - System.currentTimeMillis()).coerceAtLeast(1))
     }
 
     /** A native-mode device stays in that mode until replugged, so leave it when the app quits. */
@@ -137,5 +163,7 @@ class ControllerManager(
         const val SCAN_INTERVAL_MS = 1000L
         /** How long to wait before trying to open the same device's output port again. */
         const val RETRY_OPEN_MS = 10_000L
+        /** How long [shutdown] waits for every device's last SysEx to be sent. */
+        const val EXIT_FLUSH_MS = 1000L
     }
 }

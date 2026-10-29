@@ -28,6 +28,10 @@ class CcQueue {
     @get:Synchronized
     val sysexPending: Int get() = sysex.size
 
+    /** Wakes a writer blocked in [awaitWork] without queueing anything (e.g. to notice it should close). */
+    @Synchronized
+    fun wake() = (this as Object).notifyAll()
+
     /** Waits up to [timeoutMs] until a SysEx or a control change is pending; the caller then polls. */
     @Synchronized
     fun awaitWork(timeoutMs: Long) {

@@ -222,4 +222,7 @@ class ControllerFeedback(private val compiled: CompiledController, private val s
     }
 
     fun close() = sink.close()
+
+    /** See [MidiSink.awaitClosed]. */
+    fun awaitClosed(timeoutMs: Long): Boolean = sink.awaitClosed(timeoutMs)
 }

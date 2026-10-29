@@ -8,11 +8,15 @@ import javax.sound.midi.MidiSystem
 import javax.sound.midi.Receiver
 import javax.sound.midi.ShortMessage
 import javax.sound.midi.SysexMessage
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Opens a MIDI output port by device name, for controller feedback. [MidiEngine] only ever opens
  * input ports; javax.sound.midi lists a controller's output as a separate device with the same name.
- * Each sink writes from its own daemon thread so a slow or stalled port never blocks the render thread.
+ * Each sink writes, and finally closes its port, from its own daemon thread so a slow or stalled port
+ * never blocks the render thread.
  */
 object MidiOutputPorts {
     private val logger = KotlinLogging.logger {}
@@ -39,49 +43,73 @@ object MidiOutputPorts {
         return null
     }
 
-    private class DeviceSink(
+    /**
+     * Writes queued messages to [receiver] from its own `midi-feedback-writer` daemon thread. [close] returns
+     * at once: the writer sends the SysEx still queued (up to [SYSEX_FLUSH_MS]), then closes the port itself,
+     * so unplugging a device never stalls the render thread. [isDeviceOpen]/[closeDevice] stand in for the
+     * [MidiDevice] so tests can drive it with a fake receiver.
+     */
+    internal class DeviceSink(
         private val name: String,
-        private val device: MidiDevice,
         private val receiver: Receiver,
-        minIntervalMs: Int
+        minIntervalMs: Int,
+        private val isDeviceOpen: () -> Boolean = { true },
+        private val closeDevice: () -> Unit = {}
     ) : MidiSink {
+        constructor(name: String, device: MidiDevice, receiver: Receiver, minIntervalMs: Int) :
+            this(name, receiver, minIntervalMs, { device.isOpen }, { device.close() })
+
         private val queue = CcQueue()
         private val minIntervalNs = minIntervalMs.coerceAtLeast(0) * 1_000_000L
         @Volatile private var failed = false
-        @Volatile private var closed = false
+        /** Set by [close]: no new messages; the writer flushes SysEx and releases the port. */
+        @Volatile private var closing = false
+        @Volatile private var closeDeadlineMs = 0L
+        /** Set when the writer loop has ended, so [close] knows whether anyone is left to release the port. */
+        @Volatile private var writerExited = false
+        private val released = AtomicBoolean(false)
+        private val releasedLatch = CountDownLatch(1)
 
         private val writer = Thread({
+            try { writeLoop() } finally {
+                writerExited = true
+                if (closing) release(flushed = !failed)
+            }
+        }, "midi-feedback-writer").apply { isDaemon = true; start() }
+
+        private fun pace(lastSendNs: Long) {
+            val wait = minIntervalNs - (System.nanoTime() - lastSendNs)
+            if (wait > 0) Thread.sleep(wait / 1_000_000L, (wait % 1_000_000L).toInt())
+        }
+
+        private fun writeLoop() {
             var lastSendNs = 0L
             var windowStartMs = System.currentTimeMillis()
             var sent = 0
             var totalSendNs = 0L
             var maxSendNs = 0L
             var maxBacklog = 0
-            while (!closed) {
-                try { queue.awaitWork(250) } catch (e: InterruptedException) { break }
+            while (true) {
+                if (closing && (queue.sysexPending == 0 || System.currentTimeMillis() >= closeDeadlineMs)) return
+                try { queue.awaitWork(if (closing) 5 else 250) } catch (e: InterruptedException) { return }
                 while (true) {
+                    if (closing && System.currentTimeMillis() >= closeDeadlineMs) break
                     val message = queue.pollSysex() ?: break
-                    val wait = minIntervalNs - (System.nanoTime() - lastSendNs)
-                    if (wait > 0) {
-                        try { Thread.sleep(wait / 1_000_000L, (wait % 1_000_000L).toInt()) } catch (e: InterruptedException) { break }
-                    }
+                    try { pace(lastSendNs) } catch (e: InterruptedException) { return }
                     try {
                         receiver.send(SysexMessage(message, message.size), -1)
                     } catch (e: Throwable) {
                         logger.warn { "MIDI output failed, dropping feedback port: ${e.message}" }
                         failed = true
-                        break
+                        return
                     }
                     lastSendNs = System.nanoTime()
                 }
-                if (failed) break
+                if (closing) continue   // only the SysEx (e.g. leaving native mode) is worth sending now
                 val change = queue.poll()
                 if (change != null) {
                     // Pace: never closer than the minimum interval to the previous message.
-                    val wait = minIntervalNs - (System.nanoTime() - lastSendNs)
-                    if (wait > 0) {
-                        try { Thread.sleep(wait / 1_000_000L, (wait % 1_000_000L).toInt()) } catch (e: InterruptedException) { break }
-                    }
+                    try { pace(lastSendNs) } catch (e: InterruptedException) { return }
                     val backlog = queue.size
                     val start = System.nanoTime()
                     try {
@@ -89,7 +117,7 @@ object MidiOutputPorts {
                     } catch (e: Throwable) {
                         logger.warn { "MIDI output failed, dropping feedback port: ${e.message}" }
                         failed = true
-                        break
+                        return
                     }
                     lastSendNs = System.nanoTime()
                     val took = lastSendNs - start
@@ -108,31 +136,44 @@ object MidiOutputPorts {
                     windowStartMs = now; sent = 0; totalSendNs = 0; maxSendNs = 0; maxBacklog = 0
                 }
             }
-        }, "midi-feedback-writer").apply { isDaemon = true; start() }
+        }
+
+        /** Closes the port once; [flushed] gives the last SysEx a moment to land before the port goes away. */
+        private fun release(flushed: Boolean) {
+            if (!released.compareAndSet(false, true)) return
+            if (flushed) try { Thread.sleep(20) } catch (_: InterruptedException) {}
+            try { receiver.close() } catch (_: Throwable) {}
+            try { closeDevice() } catch (_: Throwable) {}
+            releasedLatch.countDown()
+        }
 
         override fun sendCc(channel: Int, cc: Int, value: Int) {
-            if (failed || closed) return
+            if (failed || closing) return
             queue.offer(channel.coerceIn(0, 15), cc.coerceIn(0, 127), value.coerceIn(0, 127))
         }
 
         override fun sendSysex(bytes: ByteArray) {
-            if (failed || closed) return
+            if (failed || closing) return
             queue.offerSysex(bytes.copyOf())
         }
 
-        override val isHealthy: Boolean get() = !failed && !closed && device.isOpen
+        override val isHealthy: Boolean get() = !failed && !closing && isDeviceOpen()
 
         override fun close() {
-            // Let queued SysEx (e.g. leaving native mode) reach the device before the port goes away.
-            val deadline = System.currentTimeMillis() + SYSEX_FLUSH_MS
-            while (!failed && !closed && queue.sysexPending > 0 && System.currentTimeMillis() < deadline) {
-                try { Thread.sleep(5) } catch (_: InterruptedException) { break }
+            if (closing) return
+            closeDeadlineMs = System.currentTimeMillis() + SYSEX_FLUSH_MS
+            closing = true
+            // Either the writer sees [closing] on its way out, or we see it already gone (e.g. after a failed send).
+            if (writerExited) release(flushed = false) else queue.wake()
+        }
+
+        override fun awaitClosed(timeoutMs: Long): Boolean {
+            val done = try { releasedLatch.await(timeoutMs, TimeUnit.MILLISECONDS) } catch (_: InterruptedException) { false }
+            if (!done) {   // a stalled send: close the port from here so exit isn't held up
+                writer.interrupt()
+                release(flushed = false)
             }
-            if (!failed) try { Thread.sleep(20) } catch (_: InterruptedException) {}
-            closed = true
-            writer.interrupt()
-            try { receiver.close() } catch (_: Throwable) {}
-            try { device.close() } catch (_: Throwable) {}
+            return done
         }
     }
 

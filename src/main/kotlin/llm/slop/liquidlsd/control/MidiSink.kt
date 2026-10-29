@@ -11,5 +11,12 @@ interface MidiSink {
     /** False once the device has gone away; the owner should drop the sink and reopen later. */
     val isHealthy: Boolean get() = true
 
+    /**
+     * Lets go of the port without blocking: anything already queued (e.g. leaving native mode) is still
+     * sent, then the port closes in the background. Sends after this are dropped.
+     */
     fun close() {}
+
+    /** Waits up to [timeoutMs] for a [close]d sink to finish sending and release its port; false on timeout. For app exit. */
+    fun awaitClosed(timeoutMs: Long): Boolean = true
 }
