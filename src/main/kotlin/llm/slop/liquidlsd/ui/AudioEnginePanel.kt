@@ -290,9 +290,7 @@ object AudioEnginePanel {
                 ImGui.popStyleColor()
                 ImGui.spacing()
                 if (ButtonChrome.button("${Icons.REFRESH} Retry Connection", 220f, 28f)) {
-                    Thread {
-                        audioEngine.tryReconnect(force = true)
-                    }.start()
+                    Thread({ audioEngine.tryReconnect(force = true) }, "AudioEngine-ManualReconnect").apply { isDaemon = true }.start()
                 }
                 itemTooltip("Attempts to reconnect to the JACK or PipeWire audio backend.")
             } else if (state == SignalState.SILENT && maxOf(audioEngine.meterPeakL, audioEngine.meterPeakR) > AUDIBLE_PEAK) {

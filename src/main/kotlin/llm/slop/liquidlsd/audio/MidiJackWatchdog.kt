@@ -29,7 +29,7 @@ object MidiJackWatchdog {
         if (running) return
         running = true
         consecutiveReconnectAttempts = 0
-        thread = Thread {
+        thread = Thread({
             logger.info { "Starting MidiJackWatchdog background daemon..." }
             while (running) {
                 try {
@@ -64,9 +64,8 @@ object MidiJackWatchdog {
                 }
             }
             logger.info { "MidiJackWatchdog background daemon stopped." }
-        }.apply {
+        }, "MidiJackWatchdog-Daemon").apply {
             isDaemon = true
-            name = "MidiJackWatchdog-Daemon"
             start()
         }
     }
