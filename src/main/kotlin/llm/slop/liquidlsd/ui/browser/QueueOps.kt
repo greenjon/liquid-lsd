@@ -15,8 +15,8 @@ import llm.slop.liquidlsd.ui.browser.QueueDrop.Queue
 import java.io.File
 
 /**
- * Edits of one queue by index, the same for all five: its cursor (the panel's highlighted row), play now, move, remove and insert.
- * Moves and removes push an undo step (Ctrl+Z puts the items, the playing position and the shuffle history back), so the mouse, the
+ * Edits of one queue by index, the same for all five: its cursor (the panel's highlighted row), play now, move, remove, insert and
+ * clear. Every edit pushes an undo step (Ctrl+Z puts the items, the playing position and the shuffle history back), so the mouse, the
  * keyboard and the controller all edit queues the same way.
  */
 object QueueOps {
@@ -135,15 +135,48 @@ object QueueOps {
     }
 
     /**
+     * Puts [files] (already expanded, of the queue's kind) before row [index] (clamped; past the end: appended) as one undo step and
+     * flashes the queue. Returns how many went in.
+     */
+    fun insert(queue: Queue, index: Int, files: List<File>, state: ParametersState?): Int {
+        if (files.isEmpty()) return 0
+        pushUndo(state, snapshot(queue))
+        QueueDrop.insertFiles(queue, index.coerceIn(0, items(queue).size), files)
+        QueueDrop.flash(queue)
+        return files.size
+    }
+
+    /**
      * Puts [files] (already expanded, of the queue's kind) after row [index] (-1: at the top; past the end: appended), moves the
      * cursor onto the last of them and flashes the queue. With [index] on the playing item they play next. Returns how many went in.
      */
-    fun insertAfter(queue: Queue, index: Int, files: List<File>): Int {
-        if (files.isEmpty()) return 0
+    fun insertAfter(queue: Queue, index: Int, files: List<File>, state: ParametersState?): Int {
         val at = (index + 1).coerceIn(0, items(queue).size)
-        QueueDrop.insertFiles(queue, at, files)
-        setCursor(queue, at + files.size - 1)
-        QueueDrop.flash(queue)
-        return files.size
+        val n = insert(queue, at, files, state)
+        if (n > 0) setCursor(queue, at + n - 1)
+        return n
+    }
+
+    /** Empties [queue] as one undo step and toasts. The playing item keeps playing on its deck. */
+    fun clear(queue: Queue, state: ParametersState?) {
+        if (items(queue).isEmpty()) return
+        pushUndo(state, snapshot(queue))
+        when (queue) {
+            Queue.AB -> PlayQueueManager.clearQueue()
+            Queue.BG -> BgQueueManager.clearQueue()
+            else -> engine(queue).clearQueue()
+        }
+        setCursor(queue, -1)
+        ToastOverlay.show("Cleared the ${queue.label} (Ctrl+Z)")
+    }
+
+    /**
+     * Runs [change], a queue manager edit with no QueueOps counterpart (a playlist's play now, insert or append), and pushes one undo
+     * step if it changed [queue]'s items.
+     */
+    fun edit(queue: Queue, state: ParametersState?, change: () -> Unit) {
+        val before = snapshot(queue)
+        change()
+        if (items(queue) != before.files) pushUndo(state, before)
     }
 }

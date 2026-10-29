@@ -61,10 +61,7 @@ object BgQueueActionsPanel {
             exportTooltip = "Export: save current background queue sequence as a new playlist.",
             onExport = { ImGui.openPopup("Export BG Queue##ExportBgQueuePopup") },
             clearTooltip = "Clear: empty the background queue.",
-            onClear = {
-                BgQueueManager.clearQueue()
-                selectedIndex = -1
-            },
+            onClear = { QueueOps.clear(QueueDrop.Queue.BG, session.parametersState) },
             trailing = { BrowserPopupHandler.drawExportBgQueuePopup() }
         ))
         
@@ -164,7 +161,7 @@ object BgQueueActionsPanel {
                     moveTo = rawTo.coerceIn(0, BgQueueManager.queue.size - 1)
                 }
 
-                QueueDrop.acceptBrowserDrop(QueueDrop.Queue.BG, effectiveSlot)
+                QueueDrop.acceptBrowserDrop(QueueDrop.Queue.BG, effectiveSlot, session.parametersState)
                 ImGui.endDragDropTarget()
             }
             ImGui.popStyleColor()
@@ -257,7 +254,7 @@ object BgQueueActionsPanel {
             ImGui.dummy(ImGui.getWindowWidth(), remainingH)
             ImGui.pushStyleColor(ImGuiCol.DragDropTarget, 0f, 0f, 0f, 0f)
             if (QueueDrop.beginTarget(QueueDrop.Queue.BG)) {
-                QueueDrop.acceptBrowserDrop(QueueDrop.Queue.BG, null)
+                QueueDrop.acceptBrowserDrop(QueueDrop.Queue.BG, null, session.parametersState)
                 ImGui.endDragDropTarget()
             }
             ImGui.popStyleColor()

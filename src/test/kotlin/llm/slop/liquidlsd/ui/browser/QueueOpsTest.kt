@@ -89,13 +89,58 @@ class QueueOpsTest {
     @Test
     fun `insertAfter goes after the row, the cursor lands on the last new item, and the top and the end work`() {
         fill(Queue.TRANS, "a", "b")
-        assertEquals(2, QueueOps.insertAfter(Queue.TRANS, 0, listOf(File("/l/x.lsdtrans"), File("/l/y.lsdtrans"))))
+        assertEquals(2, QueueOps.insertAfter(Queue.TRANS, 0, listOf(File("/l/x.lsdtrans"), File("/l/y.lsdtrans")), state))
         assertEquals(listOf("a", "x", "y", "b"), names(Queue.TRANS))
         assertEquals(2, QueueOps.cursor(Queue.TRANS))
 
-        QueueOps.insertAfter(Queue.TRANS, -1, listOf(File("/l/top.lsdtrans")))
+        QueueOps.insertAfter(Queue.TRANS, -1, listOf(File("/l/top.lsdtrans")), state)
         assertEquals("top", names(Queue.TRANS).first())
-        QueueOps.insertAfter(Queue.TRANS, 99, listOf(File("/l/end.lsdtrans")))
+        QueueOps.insertAfter(Queue.TRANS, 99, listOf(File("/l/end.lsdtrans")), state)
         assertEquals("end", names(Queue.TRANS).last())
+
+        undo()
+        undo()
+        undo()
+        assertEquals(listOf("a", "b"), names(Queue.TRANS), "each insert is one undo step")
+    }
+
+    @Test
+    fun `clear empties every queue as one undo step that puts the items and the playing row back`() {
+        for (q in Queue.entries) {
+            fill(q, "a", "b", "c")
+            QueueOps.setCursor(q, 1)
+            QueueOps.clear(q, state)
+            assertEquals(emptyList<String>(), names(q), "$q")
+            assertEquals(-1, QueueOps.cursor(q))
+            undo()
+            assertEquals(listOf("a", "b", "c"), names(q), "$q")
+            assertEquals(1, QueueOps.cursor(q))
+        }
+        assertEquals("Cleared the ${Queue.TRANS.label} (Ctrl+Z)", ToastOverlay.active())
+
+        QueueOps.clear(Queue.AB, state)
+        QueueOps.clear(Queue.AB, state)
+        val depth = generateSequence { state.popUndoState() }.count()
+        assertEquals(1, depth, "clearing an already empty queue pushes nothing")
+    }
+
+    @Test
+    fun `a dropped payload goes in as one undo step`() {
+        fill(Queue.FX_AB, "a")
+        QueueDrop.insert(Queue.FX_AB, 0, "/l/x.lsdfx\n/l/y.lsdfx", state)
+        assertEquals(listOf("x", "y", "a"), names(Queue.FX_AB))
+        undo()
+        assertEquals(listOf("a"), names(Queue.FX_AB))
+    }
+
+    @Test
+    fun `edit pushes undo only when the manager call changed the items`() {
+        fill(Queue.BG, "a")
+        QueueOps.edit(Queue.BG, state) { }
+        assertEquals(null, state.popUndoState())
+        QueueOps.edit(Queue.BG, state) { BgQueueManager.appendToQueue(File("/l/b.lsd")) }
+        assertEquals(listOf("a", "b"), names(Queue.BG))
+        undo()
+        assertEquals(listOf("a"), names(Queue.BG))
     }
 }

@@ -51,20 +51,20 @@ class QueueDropTest {
     @Test
     fun `a drop lands at the line, skips other kinds with a toast, and appends when dropped below the list`() {
         listOf("p1", "p2").forEach { PlayQueueManager.appendToQueue(File("/l/$it.lsd")) }
-        assertEquals(2, QueueDrop.insert(Queue.AB, 1, "/l/n1.lsd\n/l/fx.lsdfx\n/l/n2.lsd"))
+        assertEquals(2, QueueDrop.insert(Queue.AB, 1, "/l/n1.lsd\n/l/fx.lsdfx\n/l/n2.lsd", null))
         assertEquals(listOf("p1", "n1", "n2", "p2"), PlayQueueManager.queue.map { it.nameWithoutExtension })
         assertEquals("1 skipped: the A/B queue takes sources", ToastOverlay.active())
         assertTrue(QueueDrop.flashAmount(Queue.AB) > 0f)
 
-        assertEquals(1, QueueDrop.insert(Queue.AB, null, "/l/end.lsd"))
+        assertEquals(1, QueueDrop.insert(Queue.AB, null, "/l/end.lsd", null))
         assertEquals("end", PlayQueueManager.queue.last().nameWithoutExtension)
     }
 
     @Test
     fun `every queue inserts in place`() {
         for ((queue, ext) in listOf(Queue.BG to "lsd", Queue.FX_AB to "lsdfx", Queue.FX_BG to "lsdfx", Queue.TRANS to "lsdtrans")) {
-            QueueDrop.insert(queue, null, "/l/a.$ext\n/l/b.$ext")
-            QueueDrop.insert(queue, 1, "/l/x.$ext\n/l/y.$ext")
+            QueueDrop.insert(queue, null, "/l/a.$ext\n/l/b.$ext", null)
+            QueueDrop.insert(queue, 1, "/l/x.$ext\n/l/y.$ext", null)
             val names = when (queue) {
                 Queue.BG -> BgQueueManager.queue
                 Queue.FX_AB -> FXQueueManager.queue
@@ -81,7 +81,7 @@ class QueueDropTest {
         val b = File(dir, "b.lsdfx").apply { writeText("{}") }
         val list = File(dir, "set.lsdfxplay").apply { writeText("${a.absolutePath}\n${b.absolutePath}\n") }
         FXQueueManager.appendToQueue(File(dir, "first.lsdfx"))
-        assertEquals(2, QueueDrop.insert(Queue.FX_AB, 0, list.absolutePath))
+        assertEquals(2, QueueDrop.insert(Queue.FX_AB, 0, list.absolutePath, null))
         assertEquals(listOf("a", "b", "first"), FXQueueManager.queue.map { it.nameWithoutExtension })
     }
 

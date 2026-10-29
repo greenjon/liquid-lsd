@@ -47,10 +47,7 @@ object FXBgQueueActionsPanel {
             exportTooltip = "Export: save background FX queue as a new FX playlist.",
             onExport = { BrowserPopupHandler.pendingOpenExportFxBgQueuePopup = true },
             clearTooltip = "Clear: empty the background FX queue.",
-            onClear = {
-                FXBgQueueManager.clearQueue()
-                selectedIndex = -1
-            }
+            onClear = { QueueOps.clear(QueueDrop.Queue.FX_BG, session.parametersState) }
         ))
 
         if (ImGui.beginChild("##fx_bg_queue_items_scroll", 0f, 0f, false)) {
@@ -141,7 +138,7 @@ object FXBgQueueActionsPanel {
                         moveTo = rawTo.coerceIn(0, FXBgQueueManager.queue.size - 1)
                     }
 
-                    QueueDrop.acceptBrowserDrop(QueueDrop.Queue.FX_BG, effectiveSlot)
+                    QueueDrop.acceptBrowserDrop(QueueDrop.Queue.FX_BG, effectiveSlot, session.parametersState)
                     ImGui.endDragDropTarget()
                 }
                 ImGui.popStyleColor()
@@ -192,7 +189,7 @@ object FXBgQueueActionsPanel {
                 ImGui.dummy(ImGui.getWindowWidth(), remainingH)
                 ImGui.pushStyleColor(ImGuiCol.DragDropTarget, 0f, 0f, 0f, 0f)
                 if (QueueDrop.beginTarget(QueueDrop.Queue.FX_BG)) {
-                    QueueDrop.acceptBrowserDrop(QueueDrop.Queue.FX_BG, null)
+                    QueueDrop.acceptBrowserDrop(QueueDrop.Queue.FX_BG, null, session.parametersState)
                     ImGui.endDragDropTarget()
                 }
                 ImGui.popStyleColor()

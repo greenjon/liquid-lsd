@@ -527,20 +527,26 @@ object BrowserPane {
         if (!ImGui.beginPopupContextItem("playlist_node_menu")) return
         pushOpenDropdownFont()
         when (kind) {
+            // Each through QueueOps.edit, so Ctrl+Z puts the queue back like any other queue edit.
             BrowseKind.SRC -> {
-                if (ImGui.menuItem("Play now in A/B Queue (and replace queue)")) session.playQueueManager.playPlaylistNow(file, mixer)
-                if (ImGui.menuItem("Insert into A/B Queue after current")) session.playQueueManager.insertPlaylistAfterCurrent(file)
-                if (ImGui.menuItem("Add to the bottom of A/B Queue")) session.playQueueManager.appendPlaylistToQueue(file)
+                val ab = QueueDrop.Queue.AB
+                val bg = QueueDrop.Queue.BG
+                val state = session.parametersState
+                if (ImGui.menuItem("Play now in A/B Queue (and replace queue)")) QueueOps.edit(ab, state) { session.playQueueManager.playPlaylistNow(file, mixer) }
+                if (ImGui.menuItem("Insert into A/B Queue after current")) QueueOps.edit(ab, state) { session.playQueueManager.insertPlaylistAfterCurrent(file) }
+                if (ImGui.menuItem("Add to the bottom of A/B Queue")) QueueOps.edit(ab, state) { session.playQueueManager.appendPlaylistToQueue(file) }
                 ImGui.separator()
-                if (ImGui.menuItem("Play now in BG Queue (and replace queue)")) BgQueueManager.playPlaylistNow(file, mixer)
-                if (ImGui.menuItem("Insert into BG Queue after current")) BgQueueManager.insertPlaylistAfterCurrent(file)
-                if (ImGui.menuItem("Add to the bottom of BG Queue")) BgQueueManager.appendPlaylistToQueue(file)
+                if (ImGui.menuItem("Play now in BG Queue (and replace queue)")) QueueOps.edit(bg, state) { BgQueueManager.playPlaylistNow(file, mixer) }
+                if (ImGui.menuItem("Insert into BG Queue after current")) QueueOps.edit(bg, state) { BgQueueManager.insertPlaylistAfterCurrent(file) }
+                if (ImGui.menuItem("Add to the bottom of BG Queue")) QueueOps.edit(bg, state) { BgQueueManager.appendPlaylistToQueue(file) }
             }
             BrowseKind.FX -> {
-                if (ImGui.menuItem("Add All to A/B FX Queue")) FXQueueManager.appendToQueue(file)
-                if (ImGui.menuItem("Add All to BG FX Queue")) FXBgQueueManager.appendToQueue(file)
+                if (ImGui.menuItem("Add All to A/B FX Queue")) QueueOps.edit(QueueDrop.Queue.FX_AB, session.parametersState) { FXQueueManager.appendToQueue(file) }
+                if (ImGui.menuItem("Add All to BG FX Queue")) QueueOps.edit(QueueDrop.Queue.FX_BG, session.parametersState) { FXBgQueueManager.appendToQueue(file) }
             }
-            BrowseKind.TRANS -> if (ImGui.menuItem("Load Playlist to A/B Queue")) TransitionQueueManager.appendToQueue(file)
+            BrowseKind.TRANS -> if (ImGui.menuItem("Load Playlist to A/B Queue")) {
+                QueueOps.edit(QueueDrop.Queue.TRANS, session.parametersState) { TransitionQueueManager.appendToQueue(file) }
+            }
         }
         ImGui.separator()
         val assetType = when (kind) {

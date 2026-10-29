@@ -66,11 +66,8 @@ object QueueActionsPanel {
             },
             exportTooltip = "Export: save current queue sequence as a new playlist.",
             onExport = { ImGui.openPopup("Export A/B Queue##ExportQueuePopup") },
-            clearTooltip = "Clear: empty the play queue.",
-            onClear = {
-                session.playQueueManager.clearQueue()
-                selectedIndex = -1
-            },
+            clearTooltip = "Clear: empty the A/B Queue.",
+            onClear = { QueueOps.clear(QueueDrop.Queue.AB, session.parametersState) },
             trailing = { BrowserPopupHandler.drawExportQueuePopup(session) }
         ))
         
@@ -178,7 +175,7 @@ object QueueActionsPanel {
                 }
 
                 // 2. Insert rows dragged from the browser
-                QueueDrop.acceptBrowserDrop(QueueDrop.Queue.AB, effectiveSlot)
+                QueueDrop.acceptBrowserDrop(QueueDrop.Queue.AB, effectiveSlot, session.parametersState)
                 ImGui.endDragDropTarget()
             }
             ImGui.popStyleColor()
@@ -268,7 +265,7 @@ object QueueActionsPanel {
             ImGui.dummy(ImGui.getWindowWidth(), remainingH)
             ImGui.pushStyleColor(ImGuiCol.DragDropTarget, 0f, 0f, 0f, 0f)
             if (QueueDrop.beginTarget(QueueDrop.Queue.AB)) {
-                QueueDrop.acceptBrowserDrop(QueueDrop.Queue.AB, null)
+                QueueDrop.acceptBrowserDrop(QueueDrop.Queue.AB, null, session.parametersState)
                 ImGui.endDragDropTarget()
             }
             ImGui.popStyleColor()
