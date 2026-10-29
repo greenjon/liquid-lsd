@@ -118,7 +118,7 @@ internal object PerformanceTransitionsControls {
         }
         llm.slop.liquidlsd.tour.WidgetRegistry.note { "perf_trans_save" }
         ImGui.popStyleColor(4)
-        itemTooltip("Save this transition (shader, wet/dry and parameters) as a new .lsdtrans preset.")
+        itemTooltip("Save this transition (shader, dry/wet and parameters) as a new .lsdtrans preset.")
     }
 
     /**

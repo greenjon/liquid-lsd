@@ -230,7 +230,7 @@ object ParametersTabs {
                     "FX" -> if (state.activeTopTab == "Mixer") "Master FX: a chain of 3 serial ISF effect slots on the master output." else "FX: this deck's chain of 3 serial ISF effect slots."
                     "LEVELS" -> "Levels: the master level and each deck's level fader. A deck's Gain is on its SRC tab."
                     "CTRL" -> "Control: queue and randomize triggers. The same triggers are on the Clock row in Perform."
-                    "TRANS" -> "Transition: crossfade and fade speed, transition shader selection, bypass, wet/dry, and dynamic parameters."
+                    "TRANS" -> "Transition: crossfade and fade speed, transition shader selection, bypass, dry/wet, and dynamic parameters."
                     else -> "$tab parameters"
                 }
                 itemTooltip(tooltip)
