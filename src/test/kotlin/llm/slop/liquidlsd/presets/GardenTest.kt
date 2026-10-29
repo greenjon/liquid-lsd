@@ -50,16 +50,34 @@ class GardenTest {
             write(dir, "flame-0001", "fractal_flame", 0.7f, Garden.lineageTags(1, emptyList()))
             write(dir, "other-0001", "mandala", 0.1f, emptyList())
             dir.resolve("broken.lsd").writeText("{ not json")
-            val pool = Garden.pool("fractal_flame", dir)
+            val pool = Garden.scan(dir).getValue("fractal_flame")
             assertEquals(listOf("flame-0001"), pool.map { it.name })
             assertEquals(0.7f, pool[0].values["Zoom"])
             assertEquals(1, Garden.generationOf(pool[0].tags))
             // a changed file is re-read, a deleted one disappears
             write(dir, "flame-0001", "fractal_flame", 0.9f, emptyList()); dir.resolve("flame-0001.lsd").setLastModified(System.currentTimeMillis() + 5000)
-            assertEquals(0.9f, Garden.pool("fractal_flame", dir)[0].values["Zoom"])
+            assertEquals(0.9f, Garden.scan(dir).getValue("fractal_flame")[0].values["Zoom"])
             dir.resolve("flame-0001.lsd").delete()
-            assertTrue(Garden.pool("fractal_flame", dir).isEmpty())
+            assertTrue(Garden.scan(dir)["fractal_flame"].isNullOrEmpty())
         } finally { dir.deleteRecursively() }
+    }
+
+    @Test fun poolReadsTheSnapshotThatARefreshBuildsOffThread() {
+        val dir = Files.createTempDirectory("garden").toFile()
+        try {
+            write(dir, "flame-0001", "fractal_flame", 0.7f, emptyList())
+            Garden.refreshPool(dir)
+            PresetManager.awaitIo()
+            assertEquals(listOf("flame-0001"), Garden.pool("fractal_flame").map { it.name })
+            // a new file is not read by pool() itself: it shows up after the next scan
+            write(dir, "flame-0002", "fractal_flame", 0.5f, emptyList())
+            Garden.refreshPool(dir)
+            PresetManager.awaitIo()
+            assertEquals(listOf("flame-0001", "flame-0002"), Garden.pool("fractal_flame").map { it.name }.sorted())
+        } finally {
+            dir.deleteRecursively()
+            PresetManager.awaitIo(); Garden.refreshPool(); PresetManager.awaitIo()
+        }
     }
 
     @Test fun samplerStrategyFieldIsOptionalAndRoundTrips() {
@@ -89,15 +107,19 @@ class GardenTest {
             val src = dir.resolve("My Flame.flame")
             src.writeText("""<flames><flame name="Alpha One" size="100 100" scale="50"><xform weight="1" coefs="0.5 0 0 0.5 0 0" sinusoidal="1" lazysusan="1"/></flame><flame name="Beta" size="100 100" scale="50"/></flames>""")
             val out = dir.resolve("out")
-            val first = FlameImportOps.importFile(src, out)
+            val first = FlameImportOps.importNow(src, out)
             assertEquals(listOf("alpha-one.lsd", "beta.lsd"), first.files.map { it.name })
             assertTrue(first.notes.any { "lazysusan" in it })
             val dto = PresetManager.json.decodeFromString<DeckPresetDto>(first.files[0].readText())
             assertEquals("fractal_flame", dto.visualSourceType)
             assertEquals("alpha-one", dto.name)
             assertEquals(1f, llm.slop.liquidlsd.rendering.FlameUnits.real("X1 Weight", dto.parameters.getValue("X1 Weight").baseValue))
-            val second = FlameImportOps.importFile(src, out)
+            val second = FlameImportOps.importNow(src, out)
             assertEquals(listOf("alpha-one-2.lsd", "beta-2.lsd"), second.files.map { it.name })
+            // the browser's entry point returns at once and does the work on the preset IO thread
+            val queued = FlameImportOps.importFile(src, out)
+            assertTrue(queued.files.isEmpty())
+            assertEquals(listOf("alpha-one-3.lsd", "beta-3.lsd"), queued.completion!!.get().files.map { it.name })
         } finally { dir.deleteRecursively() }
     }
 }

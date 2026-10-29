@@ -7,6 +7,7 @@ import llm.slop.liquidlsd.rendering.FlameSource
 import llm.slop.liquidlsd.rendering.PoolMember
 import mu.KotlinLogging
 import java.io.File
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * The Garden: kept offspring of an evolving source (plan: .planning/flame-source-plan.md, "Lineage"). An offspring is
@@ -67,6 +68,8 @@ object Garden {
         }
         // the thumbnail is what the deck shows right now (mid-morph that is the blend, not the saved end); skipped silently where there is no GL context
         runCatching { GardenThumbnails.capture(deck.getOutputTexture(), deck.cleanFBO.width, deck.cleanFBO.height, file) }
+        // queued behind the save, so the next Pool / Breed draw can pick the new offspring
+        refreshPool()
         return file
     }
 
@@ -75,34 +78,65 @@ object Garden {
         llm.slop.liquidlsd.ui.browser.BrowseFavorites.keys(llm.slop.liquidlsd.ui.browser.BrowseKind.SRC)
             .mapTo(HashSet()) { File(it).absoluteFile.normalize().path }
 
-    private class Cached(val modified: Long, val member: PoolMember?)
+    private class Cached(val modified: Long, val sourceType: String?, val member: PoolMember?)
+    /** Parsed files by absolute path. Touched only by [scan] (the preset IO thread, or a test). */
     private val cache = HashMap<String, Cached>()
 
+    /** Kept offspring per source id as of the last [scan]. Immutable and replaced whole, so thread 0 reads it lock-free. */
+    @Volatile private var poolSnapshot: Map<String, List<PoolMember>> = emptyMap()
+    private val rescanQueued = AtomicBoolean(false)
+
     /**
-     * Every readable preset in [folder] (recursively) made from source [sourceId], for the Pool and Breed strategies.
-     * Parsed files are cached by modification time, so repeated calls only touch new or changed files; unreadable or
-     * half-written files are skipped.
+     * The Pool and Breed candidates for source [sourceId]: the last scan of the Garden, never the disk (this is called from
+     * `deck.update` on thread 0 when a morph target is drawn). Each call also queues a coalesced rescan, so files added,
+     * changed or deleted outside the app (or by the browser) are in the next draw.
+     */
+    fun pool(sourceId: String): List<PoolMember> {
+        if (rescanQueued.compareAndSet(false, true)) {
+            PresetManager.presetIoExecutor.execute { rescanQueued.set(false); rescan(File(FOLDER)) }
+        }
+        return poolSnapshot[sourceId] ?: emptyList()
+    }
+
+    /**
+     * Rescans [folder] on the preset IO thread and replaces the pool snapshot. Called at startup and after a Keep, where it
+     * queues behind the Keep's own save on the same single-thread executor, so the new offspring is in the next draw.
+     */
+    fun refreshPool(folder: File = File(FOLDER)) {
+        PresetManager.presetIoExecutor.execute { rescan(folder) }
+    }
+
+    private fun rescan(folder: File) {
+        try { poolSnapshot = scan(folder) } catch (e: Exception) { logger.warn(e) { "Could not scan the Garden in ${folder.path}" } }
+    }
+
+    /**
+     * Every readable preset in [folder] (recursively), grouped by source id, for the Pool and Breed strategies. Parsed
+     * files are cached by modification time, so repeated scans only read new or changed files; unreadable or half-written
+     * files are skipped. Blocking file I/O: preset IO thread only (see [refreshPool]), or a test.
      */
     @Synchronized
-    fun pool(sourceId: String, folder: File = File(FOLDER)): List<PoolMember> {
+    internal fun scan(folder: File): Map<String, List<PoolMember>> {
         val files = folder.walkTopDown().filter { it.isFile && it.extension == "lsd" }.toList()
-        val live = files.map { it.absolutePath }.toSet()
-        cache.keys.retainAll { key -> key.substringBefore('|').let { it in live || !it.startsWith(folder.absolutePath) } }
-        return files.mapNotNull { f ->
-            val key = f.absolutePath + "|" + sourceId
+        val live = files.mapTo(HashSet()) { it.absolutePath }
+        val root = folder.absolutePath
+        cache.keys.retainAll { it in live || !it.startsWith(root) }
+        val out = LinkedHashMap<String, MutableList<PoolMember>>()
+        for (f in files) {
+            val key = f.absolutePath
             val modified = f.lastModified()
-            val hit = cache[key]
-            if (hit != null && hit.modified == modified) return@mapNotNull hit.member
-            val member = try {
+            val entry = cache[key]?.takeIf { it.modified == modified } ?: try {
                 val dto = PresetManager.json.decodeFromString<DeckPresetDto>(f.readText())
-                if (dto.visualSourceType != sourceId) null
-                else PoolMember(f.nameWithoutExtension, dto.tags, dto.parameters.mapValues { it.value.baseValue }, f.absolutePath, modified)
+                Cached(modified, dto.visualSourceType, PoolMember(f.nameWithoutExtension, dto.tags, dto.parameters.mapValues { it.value.baseValue }, f.absolutePath, modified))
             } catch (e: Exception) {
                 logger.debug(e) { "Skipping unreadable garden file ${f.name}" }
-                null
-            }
-            cache[key] = Cached(modified, member)
-            member
+                Cached(modified, null, null)
+            }.also { cache[key] = it }
+            val type = entry.sourceType ?: continue
+            val member = entry.member ?: continue
+            out.getOrPut(type) { ArrayList() } += member
         }
+        return out
     }
 }
+

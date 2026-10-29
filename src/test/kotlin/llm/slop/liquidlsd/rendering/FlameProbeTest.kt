@@ -284,6 +284,7 @@ class FlameProbeTest {
             val preset = java.io.File(dir, "flame-0001.lsd").also { it.writeText("{}") }
             assertEquals(0, llm.slop.liquidlsd.presets.GardenThumbnails.textureFor(preset.path))
             assertTrue(llm.slop.liquidlsd.presets.GardenThumbnails.capture(fbo.texture, 320, 180, preset))
+            llm.slop.liquidlsd.presets.PresetManager.awaitIo()   // the PNG is written on the preset IO thread
             val img = javax.imageio.ImageIO.read(java.io.File(dir, "flame-0001.png"))
             assertEquals(256, img.width); assertEquals(144, img.height)
             assertEquals(0xFF0000, img.getRGB(100, 70) and 0xFFFFFF)
