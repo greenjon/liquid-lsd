@@ -12,10 +12,14 @@ Liquid LSD is an open-source, real-time procedural visual synthesizer and VJ per
 - **Modular Transitions & Setlist Queue**: ISF transition engine (Deck A $\leftrightarrow$ Deck B), custom transition presets (`.lsdtrans`), setlists (`.lsdtransplay`), auto-advance transition queue, and VJ crossfader controls.
 - **Low-Latency Audio & Beat Sync**: Real-time audio analysis via JACK / PipeWire-JACK (Linux) or cross-platform Java Sound fallback (macOS/Windows/Linux). Features an Adam Stark-based beat tracking engine with a continuous phase generator and Ableton Link network clock sync.
 - **Hierarchical CV Modulation Matrix**: Route real-time audio amplitude bands (Bass/Mid/High), onset triggers, beat clock phases, LFOs, and sample-and-hold generators to any visual parameter.
-- **Tactile Performance Surface**: Modern frameless CSD windowing with live performance telemetry (FPS, DSP latency, CPU usage, frame time, beat phase), TouchConsole support (evdev/macOS), 2x2 grouped Library panel, drag-and-drop workflow, and clipboard management for presets, slots, and chains.
+- **Tactile Performance Surface**: Modern frameless CSD windowing with live performance telemetry (FPS, DSP latency, CPU usage, frame time, beat phase), TouchConsole support (evdev/macOS), a Library browser with the auto-VJ queues under it, drag-and-drop workflow, and clipboard management for presets, slots, and chains.
 - **Hardware & MIDI Control**: Multi-type MIDI engine (Notes, CC, Pitch Bend, Soft Takeover, Relative Rotary Encoders), centralized `ShortcutManager` for keyboard shortcuts, preset tagging & search, and 3-tier hierarchical set notes (`NotesManager`).
 - **Stage Interoperability & Recording**: Zero-copy GPU video streaming (Spout2 on Windows, Syphon on macOS, PipeWire DMA-BUF on Linux), video device/OBS ingest, high-performance asynchronous GPU PBO video export/recording pipeline (`PboReadbackPipeline`), and WebGL2 live web broadcast relay.
 - **FX Playlists & A/B FX Queues**: Unified FX browser (ISF stock filters, saved `.lsdfx` singles, saved `.lsdfxchain` 3-slot chains) with deterministic apply, curated FX playlists (`.lsdfxplay`), and volatile live FX queues for A/B and BG with shuffle, repeat, and history back-stepping.
+- **Midi Fighter Twister Out of the Box**: A bundled profile maps the Twister's 16 encoders and banks to the Perform pages, with knob-ring and LED feedback; with the optional XT firmware, native mode gives each ring a style that suits its parameter and colours the switch LEDs by row.
+- **Fractal Flame Source**: A GPU fractal-flame generator built around evolving a look: it morphs from flame to flame, breeds offspring you keep in its Garden (about 150 curated flames to start), and imports `.flame` files.
+- **Breakdowns, Drops & Built-in Responses**: Auto gain levels every audio signal, one **Audio Response** control sets how hard the picture follows the music, and Section **Energy** / **Drop** modulators follow the shape of the song. Stock sources, effects and transitions ship with audio and beat responses already wired, and every stock source has a breakdown look and a drop hit.
+- **Web TV**: The same visuals run in the browser as a retro TV at [spaz.org/tv](https://spaz.org/tv/), following Spaz Radio or your microphone, and the desktop app can broadcast a live set to it.
 - **Perform View & Macro Controls**: The main view is a 4×4 macro knob matrix spanning per-deck banks (Deck A/B/BG/PV, their FX, Transitions, Master, and a tap-tempo/resync Clock row) with color-coded rows and three pages (A/B, BG/PV, MIXER), plus Edit for every parameter and modulator. Knob targets and response curves are edited in each row's Edit.
 
 ---
@@ -28,7 +32,7 @@ Liquid LSD is in active beta with a stable, production-ready core video and audi
 |:-------------------------- |:---------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Video Pipeline & FX**    | **Operational** | 4 decks (A, B, BG, PV), 100% ISF 2.0 pipeline, 3-slot deck FX chains, 3-slot Master FX chain, feedback loops, ping-pong FBOs.                                                                          |
 | **Audio & Beat Sync**      | **Operational** | Sub-millisecond JACK/PipeWire audio capture, Adam Stark beat tracking DSP, continuous phase generator, Ableton Link network sync.                                                                      |
-| **Transitions & Setlists** | **Operational** | ISF transition shaders, `.lsdtrans` presets, `.lsdtransplay` setlists, auto-advance transition queue, 2x2 Library panel layout.                                                                        |
+| **Transitions & Setlists** | **Operational** | ISF transition shaders, `.lsdtrans` presets, `.lsdtransplay` setlists, auto-advance transition queue, queues under the Library browser.                                                                        |
 | **Presets & Library**      | **Operational** | Hierarchical preset system, `.lsdfx` slot presets, `.lsdfxchain` 3-slot chains, FX playlists (`.lsdfxplay`), live FX queues (A/B & BG), preset tags, instant tag search, drag-and-drop preset loading. |
 | **MIDI & Shortcuts**       | **Operational** | Multi-type MIDI engine, soft takeover, relative encoders, customizable keyboard shortcuts, real-time packet sniffer.                                                                                   |
 | **Video Export & Sharing** | **Operational** | Asynchronous PBO GPU video export, zero-copy Spout2/Syphon/PipeWire streaming, camera ingest, WebGL2 broadcast engine.                                                                                 |
@@ -38,7 +42,7 @@ Liquid LSD is in active beta with a stable, production-ready core video and audi
 
 ## Roadmap & Path to v1.0
 
-The core v1.0 feature set is in place: the 100% ISF pipeline, the Performance matrix and Macro system, MIDI, TouchOSC/OSC control, and the 5-platform build (Linux x64/ARM64, macOS x64/ARM64, Windows x64). What remains before v1.0 is finishing and hardening:
+The core v1.0 feature set is in place: the 100% ISF pipeline, the Performance matrix and Macro system, FX Metaknob multi-parameter linking, MIDI with a Midi Fighter Twister profile, TouchOSC/OSC control, and the 5-platform build (Linux x64/ARM64, macOS x64/ARM64, Windows x64). What remains before v1.0 is finishing and hardening:
 
 - **UI & UX polish** across the Perform / Edit / Library views, down to the 1280×720 minimum screen size. This means the little details, but also includes deep overhauls if needed. We're going to keep pushing and pulling on the UI and UX until we love it.
 - **Stability testing**: long sessions, loading and swapping under load, session restore, device hot-plug.
@@ -69,7 +73,7 @@ The core v1.0 feature set is in place: the 100% ISF pipeline, the Performance ma
    
    - All user-facing text moved into string tables, with translation support and locale selection.
 
-5. **Also parked for v1.1**: FX Metaknob multi-parameter linking, the remaining macro-learn coverage (randomization bounds, per-step grid, dropdowns), headless screenshot automation and a UI Lab gallery, and a Mixxx-style expanded FX chain view.
+5. **Also parked for v1.1**: the remaining macro-learn coverage (randomization bounds, per-step grid, dropdowns), headless screenshot automation and a UI Lab gallery, and a Mixxx-style expanded FX chain view.
 
 *For complete details and progress tracking — including known limitations of what's already shipped — see [`ROADMAP.md`](ROADMAP.md).*
 
