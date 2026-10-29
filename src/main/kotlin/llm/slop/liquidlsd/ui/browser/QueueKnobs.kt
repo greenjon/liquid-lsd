@@ -26,11 +26,17 @@ object QueueKnobs {
 
     /** The (A-side, BG-side) queues of [tab]; both null on a tab without a browser. */
     fun queuesFor(tab: LibraryViewMode): Pair<Queue?, Queue?> = when (tab) {
-        LibraryViewMode.PRESETS -> Queue.AB to Queue.BG
-        LibraryViewMode.FX -> Queue.FX_AB to Queue.FX_BG
-        LibraryViewMode.TRANS -> Queue.TRANS to null
-        LibraryViewMode.QUEUES, LibraryViewMode.MAPS -> null to null
+        LibraryViewMode.PRESETS -> PRESETS_QUEUES
+        LibraryViewMode.FX -> FX_QUEUES
+        LibraryViewMode.TRANS -> TRANS_QUEUES
+        LibraryViewMode.QUEUES, LibraryViewMode.MAPS -> NO_QUEUES
     }
+
+    // Shared so the per-frame light poll ([queueFor] per knob) doesn't allocate.
+    private val PRESETS_QUEUES: Pair<Queue?, Queue?> = Queue.AB to Queue.BG
+    private val FX_QUEUES: Pair<Queue?, Queue?> = Queue.FX_AB to Queue.FX_BG
+    private val TRANS_QUEUES: Pair<Queue?, Queue?> = Queue.TRANS to null
+    private val NO_QUEUES: Pair<Queue?, Queue?> = null to null
 
     /** The queue [knob] drives on [tab], or null (not a queue knob, or that side has no queue). */
     fun queueFor(knob: Int, tab: LibraryViewMode): Queue? = queuesFor(tab).let {
