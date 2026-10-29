@@ -788,18 +788,11 @@ object BrowserPane {
         flameImportBrowser.draw { file -> importFlame(file) }
     }
 
-    private val importLogger = mu.KotlinLogging.logger {}
     private val flameImportBrowser = ImGuiFileBrowser("##flameImportBrowser")
 
+    /** Runs off thread 0; [llm.slop.liquidlsd.presets.FlameImportOps] posts the result toast when it finishes. */
     private fun importFlame(file: File) {
-        try {
-            val outcome = llm.slop.liquidlsd.presets.FlameImportOps.importFile(file)
-            ToastOverlay.show("Imported ${outcome.files.size} flame(s) to ${llm.slop.liquidlsd.presets.FlameImportOps.FOLDER}")
-            outcome.notes.forEach { importLogger.info { "Flame import: $it" } }
-        } catch (e: Exception) {
-            importLogger.warn(e) { "Flame import failed for ${file.name}" }
-            ToastOverlay.show("Could not import ${file.name}: ${e.message}")
-        }
+        llm.slop.liquidlsd.presets.FlameImportOps.importFile(file)
     }
 
     /** The missing item waiting for the Locate file picker: its kind and playlist token. */
