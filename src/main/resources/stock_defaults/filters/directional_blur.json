@@ -9,7 +9,7 @@
   ],
   "params": {
     "blurAmount": {
-      "note": "Kick smears the picture, scaled by the knob.",
+      "note": "Kick smears the picture, scaled by the knob. Smears hard on the drop; off by default.",
       "modulators": [
         {
           "name": "kick smear",
@@ -19,6 +19,13 @@
           "followerMode": "PUNCHY",
           "attackMs": 5,
           "decayMs": 150
+        },
+        {
+          "name": "drop smear",
+          "sourceId": "audio_drop",
+          "operator": "MUL",
+          "depth": 1.0,
+          "bypassed": true
         }
       ]
     },

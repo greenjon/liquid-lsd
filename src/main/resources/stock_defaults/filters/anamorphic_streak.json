@@ -9,7 +9,7 @@
   ],
   "params": {
     "streakIntensity": {
-      "note": "Streaks flare on the bass, scaled by the knob.",
+      "note": "Streaks flare on the bass, scaled by the knob. The streaks flare on the drop and fade over 4 bars.",
       "modulators": [
         {
           "name": "bass flare",
@@ -29,6 +29,12 @@
           "attackMs": 40,
           "decayMs": 400,
           "bypassed": true
+        },
+        {
+          "name": "drop flare",
+          "sourceId": "audio_drop",
+          "operator": "MUL",
+          "depth": 1.0
         }
       ]
     },

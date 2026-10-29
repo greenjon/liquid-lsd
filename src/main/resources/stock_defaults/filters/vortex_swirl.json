@@ -9,7 +9,7 @@
   ],
   "params": {
     "twist": {
-      "note": "The swirl winds tighter on the bass, scaled by the knob.",
+      "note": "The swirl winds tighter on the bass, scaled by the knob. Twists hard on the drop and unwinds over 4 bars.",
       "modulators": [
         {
           "name": "bass twist",
@@ -19,6 +19,12 @@
           "followerMode": "PUNCHY",
           "attackMs": 5,
           "decayMs": 150
+        },
+        {
+          "name": "drop twist",
+          "sourceId": "audio_drop",
+          "operator": "MUL",
+          "depth": 1.0
         }
       ]
     },

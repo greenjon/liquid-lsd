@@ -28,7 +28,14 @@
                     "baseMin": 0.0,
                     "baseMax": 1.0,
                     "randomizeBase": false,
-                    "modulators": []
+                    "modulators": [
+                        {
+                            "sourceId": "audio_drop",
+                            "operator": "MUL",
+                            "depth": 0.5,
+                            "bypassed": true
+                        }
+                    ]
                 },
                 "saturation": {
                     "baseValue": 0.35,
@@ -126,6 +133,11 @@
                             "attackMs": 40,
                             "decayMs": 400,
                             "bypassed": true
+                        },
+                        {
+                            "sourceId": "audio_drop",
+                            "operator": "MUL",
+                            "depth": 1.0
                         }
                     ]
                 },

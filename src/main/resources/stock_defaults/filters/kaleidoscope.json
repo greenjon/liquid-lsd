@@ -9,7 +9,7 @@
   ],
   "params": {
     "zoom": {
-      "note": "Kick punches the zoom in. Rolls: leaves room for the kick.",
+      "note": "Kick punches the zoom in. Rolls: leaves room for the kick. Punches in on the drop and eases back over 4 bars.",
       "randomizeBase": true,
       "baseMin": 0.35,
       "baseMax": 0.65,
@@ -22,6 +22,12 @@
           "followerMode": "PUNCHY",
           "attackMs": 5,
           "decayMs": 150
+        },
+        {
+          "name": "drop punch-in",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.12
         }
       ]
     },

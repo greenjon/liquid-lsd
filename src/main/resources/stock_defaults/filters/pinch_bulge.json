@@ -9,7 +9,7 @@
   ],
   "params": {
     "amount": {
-      "note": "Bass bulges the lens, scaled by the knob (MUL keeps its sign, pinch or bulge).",
+      "note": "Bass bulges the lens, scaled by the knob (MUL keeps its sign, pinch or bulge). The lens punches on the drop and eases back over 4 bars.",
       "modulators": [
         {
           "name": "bass bulge",
@@ -19,6 +19,12 @@
           "followerMode": "PUNCHY",
           "attackMs": 5,
           "decayMs": 150
+        },
+        {
+          "name": "drop punch",
+          "sourceId": "audio_drop",
+          "operator": "MUL",
+          "depth": 1.0
         }
       ]
     },

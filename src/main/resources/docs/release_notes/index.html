@@ -1264,6 +1264,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#effects-answer-drops-too-sparingly-resourcesstock_defaultsfiltersjson-defaultsfx_chainslsdfxchain-webcontentfxchains" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Effects Answer Drops Too, Sparingly (resources/stock_defaults/filters/*.json, defaults/fx_chains/*.lsdfxchain, web/content/fxchains/*)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#every-stock-source-answers-breakdowns-and-drops-resourcesstock_defaultssourcesjson-webpresetsstock-lsd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Every Stock Source Answers Breakdowns and Drops (resources/stock_defaults/sources/*.json, web/presets/stock-*.lsd)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#web-tv-no-flash-of-the-tvs-controls-in-kiosk-or-embedded-mode-webindexhtml" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7100,6 +7122,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#effects-answer-drops-too-sparingly-resourcesstock_defaultsfiltersjson-defaultsfx_chainslsdfxchain-webcontentfxchains" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Effects Answer Drops Too, Sparingly (resources/stock_defaults/filters/*.json, defaults/fx_chains/*.lsdfxchain, web/content/fxchains/*)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#every-stock-source-answers-breakdowns-and-drops-resourcesstock_defaultssourcesjson-webpresetsstock-lsd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Every Stock Source Answers Breakdowns and Drops (resources/stock_defaults/sources/*.json, web/presets/stock-*.lsd)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#web-tv-no-flash-of-the-tvs-controls-in-kiosk-or-embedded-mode-webindexhtml" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -12911,6 +12955,22 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="effects-answer-drops-too-sparingly-resourcesstock_defaultsfiltersjson-defaultsfx_chainslsdfxchain-webcontentfxchains">Effects Answer Drops Too, Sparingly (<code>resources/stock_defaults/filters/*.json</code>, <code>defaults/fx_chains/*.lsdfxchain</code>, <code>web/content/fxchains/*</code>)</h3>
+<ul>
+<li><strong>New: six stock effects hit on the drop</strong>: Bloom and Anamorphic Streak flare, Radial Blur throws out light shafts, Kaleidoscope punches in, Pinch/Bulge punches, and Vortex Swirl twists hard, each fading over 4 bars. Only a few run because the source underneath already makes its own move.</li>
+<li><strong>In a breakdown</strong>, Bloom's glow spreads wider and softer and Fluid Smear melts further.</li>
+<li><strong>Every other effect except Invert and Luma Key has a drop hit ready but bypassed</strong> (for example "drop split" on RGB Split, "drop tape wreck" on VHS Glitch, "drop strobe" on Video Strobe). Switch it on in the effect's modulator list.</li>
+<li>The hit multiplies the effect's main amount, so an effect turned down to zero stays off on the drop too. The stock FX chains (and the web TV's copies) carry the new responses. Transitions are unchanged: they only show during a fade, which rarely meets a drop.</li>
+</ul>
+<h3 id="every-stock-source-answers-breakdowns-and-drops-resourcesstock_defaultssourcesjson-webpresetsstock-lsd">Every Stock Source Answers Breakdowns and Drops (<code>resources/stock_defaults/sources/*.json</code>, <code>web/presets/stock-*.lsd</code>)</h3>
+<ul>
+<li><strong>New: every stock source now uses the song-section signals out of the box.</strong> Each one changes its look in a breakdown (Section <strong>Energy</strong>) and makes one big move on the drop (Section <strong>Drop</strong>, fading over 4 bars). In normal playing both rest, so nothing changes until the song does.</li>
+<li><strong>In a breakdown</strong>, most fractals and tilings lose their colour and get it back as the music builds (Apollonian, KIFS, Mandelbulb, Escape Time, Gyroid and others). The rest change something of their own: Isometric Voxels flattens, Thin Film calms to a few colour bands, Nebula thins to filaments, Tunnel Scenes fogs in, Aurora's sky goes black, Hyper Slice and Icosa H3 turn glassy, Mandelbox's camera pulls back, Chladni settles into a simpler mode, Video Feedback's trails linger, Voronoi's cells grow.</li>
+<li><strong>On the drop</strong>, the fly-throughs surge forward (Apollonian, Gyroid, Pseudo-Kleinian, Tunnel Scenes; KIFS, still until then, flies for 4 bars), Mandelbox, Kali Set, Chladni and Fractal Flame punch in, Celestial Engine fires one big shockwave, Escape Time lurches into a new shape, Glitch Blocks crushes its colours, and Aurora, Metaballs and Nebula flash.</li>
+<li><strong>Cyclic CA, Lenia and Reaction-Diffusion restart on the drop.</strong> Lenia used to reseed on every hard kick; that is now a bypassed alternative next to the drop.</li>
+<li><strong>Fluid Ink responds for the first time</strong>: the ink clears in a breakdown and gets a hard stir on the drop.</li>
+<li>The section modulators run on top of the existing beat and level responses rather than replacing them. To turn one off, bypass it in the parameter's modulator list (they are named, for example "breakdown drains colour" or "drop surge"), and Save as Default to keep the change. The web TV plays the same responses.</li>
+</ul>
 <h3 id="web-tv-no-flash-of-the-tvs-controls-in-kiosk-or-embedded-mode-webindexhtml">Web TV: No Flash of the TV's Controls in Kiosk or Embedded Mode (<code>web/index.html</code>)</h3>
 <ul>
 <li><strong>Fixed: inside the Spaz Radio app (and with <code>?kiosk</code>), the TV's buttons and labels (PWR, VOL, CH, FX ...) flashed up for a moment before the picture.</strong> The page now hides them before it first draws. The web TV is now <strong>v3</strong>.</li>

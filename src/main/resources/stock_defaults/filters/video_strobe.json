@@ -9,7 +9,7 @@
   ],
   "params": {
     "rate": {
-      "note": "Strobes faster when loud, scaled by the rate (integrated by RatePhase); off by default, a strobe is harsh enough.",
+      "note": "Strobes faster when loud, scaled by the rate (integrated by RatePhase); off by default, a strobe is harsh enough. Strobes twice as fast on the drop; off by default.",
       "modulators": [
         {
           "name": "loudness swell",
@@ -19,6 +19,13 @@
           "followerMode": "SMOOTH",
           "attackMs": 40,
           "decayMs": 400,
+          "bypassed": true
+        },
+        {
+          "name": "drop strobe",
+          "sourceId": "audio_drop",
+          "operator": "MUL",
+          "depth": 1.0,
           "bypassed": true
         }
       ]

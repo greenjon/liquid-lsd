@@ -9,7 +9,7 @@
   ],
   "params": {
     "separation": {
-      "note": "Planes push apart on the bass, scaled by the knob.",
+      "note": "Planes push apart on the bass, scaled by the knob. The planes burst apart on the drop; off by default.",
       "modulators": [
         {
           "name": "bass spread",
@@ -19,6 +19,13 @@
           "followerMode": "PUNCHY",
           "attackMs": 5,
           "decayMs": 150
+        },
+        {
+          "name": "drop burst",
+          "sourceId": "audio_drop",
+          "operator": "MUL",
+          "depth": 0.6,
+          "bypassed": true
         }
       ]
     },

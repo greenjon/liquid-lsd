@@ -10,7 +10,7 @@
   ],
   "params": {
     "fbZoom": {
-      "note": "Kick pushes the trails outward. Per-frame, so small depths go a long way. Rolls: gentle: the trail compounds every frame; leaves room for the kick.",
+      "note": "Kick pushes the trails outward. Per-frame, so small depths go a long way. Rolls: gentle: the trail compounds every frame; leaves room for the kick. The trails blow outward on the drop; off by default (it compounds every frame).",
       "randomizeBase": true,
       "baseMin": -0.03,
       "baseMax": 0.03,
@@ -23,6 +23,13 @@
           "followerMode": "PUNCHY",
           "attackMs": 5,
           "decayMs": 150
+        },
+        {
+          "name": "drop blowout",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.03,
+          "bypassed": true
         }
       ]
     },

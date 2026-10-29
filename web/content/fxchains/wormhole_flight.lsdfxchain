@@ -71,6 +71,12 @@
                             "followerMode": "PUNCHY",
                             "attackMs": 5,
                             "decayMs": 150
+                        },
+                        {
+                            "sourceId": "audio_drop",
+                            "operator": "ADD",
+                            "depth": 0.15,
+                            "bypassed": true
                         }
                     ]
                 },
@@ -113,6 +119,11 @@
                             "followerMode": "PUNCHY",
                             "attackMs": 5,
                             "decayMs": 150
+                        },
+                        {
+                            "sourceId": "audio_drop",
+                            "operator": "MUL",
+                            "depth": 1.0
                         }
                     ]
                 },
@@ -181,6 +192,11 @@
                             "attackMs": 40,
                             "decayMs": 400,
                             "bypassed": true
+                        },
+                        {
+                            "sourceId": "audio_drop",
+                            "operator": "MUL",
+                            "depth": 1.0
                         }
                     ]
                 },
@@ -206,7 +222,13 @@
                     "baseMin": 0.1,
                     "baseMax": 0.85,
                     "randomizeBase": true,
-                    "modulators": []
+                    "modulators": [
+                        {
+                            "sourceId": "audio_energy",
+                            "operator": "ADD",
+                            "depth": -0.15
+                        }
+                    ]
                 }
             }
         }

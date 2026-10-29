@@ -9,7 +9,7 @@
   ],
   "params": {
     "trackingJitter": {
-      "note": "Kick knocks the tracking, scaled by the knob.",
+      "note": "Kick knocks the tracking, scaled by the knob. The tape wrecks on the drop; off by default.",
       "modulators": [
         {
           "name": "kick tracking",
@@ -19,6 +19,13 @@
           "followerMode": "SNAP",
           "attackMs": 0,
           "decayMs": 35
+        },
+        {
+          "name": "drop tape wreck",
+          "sourceId": "audio_drop",
+          "operator": "MUL",
+          "depth": 1.0,
+          "bypassed": true
         }
       ]
     },

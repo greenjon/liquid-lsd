@@ -37,6 +37,12 @@
                             "followerMode": "SNAP",
                             "attackMs": 0,
                             "decayMs": 35
+                        },
+                        {
+                            "sourceId": "audio_drop",
+                            "operator": "MUL",
+                            "depth": 1.0,
+                            "bypassed": true
                         }
                     ]
                 },
@@ -172,7 +178,14 @@
                     "baseMin": 0.0,
                     "baseMax": 1.0,
                     "randomizeBase": false,
-                    "modulators": []
+                    "modulators": [
+                        {
+                            "sourceId": "audio_drop",
+                            "operator": "MUL",
+                            "depth": 0.5,
+                            "bypassed": true
+                        }
+                    ]
                 },
                 "brightness": {
                     "baseValue": -0.05,

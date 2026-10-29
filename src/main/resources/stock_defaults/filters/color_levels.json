@@ -72,6 +72,18 @@
       "randomizeBase": true,
       "baseMin": 0.0,
       "baseMax": 0.7
+    },
+    "contrast": {
+      "note": "Contrast punches up on the drop; off by default.",
+      "modulators": [
+        {
+          "name": "drop punch",
+          "sourceId": "audio_drop",
+          "operator": "MUL",
+          "depth": 0.5,
+          "bypassed": true
+        }
+      ]
     }
   }
 }

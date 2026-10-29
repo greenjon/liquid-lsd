@@ -37,6 +37,11 @@
                             "followerMode": "PUNCHY",
                             "attackMs": 5,
                             "decayMs": 150
+                        },
+                        {
+                            "sourceId": "audio_drop",
+                            "operator": "MUL",
+                            "depth": 1.0
                         }
                     ]
                 },
@@ -114,6 +119,12 @@
                             "followerMode": "SMOOTH",
                             "attackMs": 40,
                             "decayMs": 400,
+                            "bypassed": true
+                        },
+                        {
+                            "sourceId": "audio_drop",
+                            "operator": "MUL",
+                            "depth": 1.0,
                             "bypassed": true
                         }
                     ]

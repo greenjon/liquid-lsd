@@ -9,7 +9,7 @@
   ],
   "params": {
     "blurAmount": {
-      "note": "Kick bursts outward, scaled by the knob.",
+      "note": "Kick bursts outward, scaled by the knob. Light shafts burst out on the drop and fade over 4 bars.",
       "modulators": [
         {
           "name": "kick burst",
@@ -29,6 +29,12 @@
           "attackMs": 40,
           "decayMs": 400,
           "bypassed": true
+        },
+        {
+          "name": "drop light shafts",
+          "sourceId": "audio_drop",
+          "operator": "MUL",
+          "depth": 1.0
         }
       ]
     },

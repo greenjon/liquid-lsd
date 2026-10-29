@@ -9,7 +9,7 @@
   ],
   "params": {
     "amplitude": {
-      "note": "Bass swells the waves, scaled by the knob.",
+      "note": "Bass swells the waves, scaled by the knob. A big wave on the drop; off by default.",
       "modulators": [
         {
           "name": "bass wave",
@@ -28,6 +28,13 @@
           "followerMode": "SMOOTH",
           "attackMs": 40,
           "decayMs": 400,
+          "bypassed": true
+        },
+        {
+          "name": "drop wave",
+          "sourceId": "audio_drop",
+          "operator": "MUL",
+          "depth": 1.0,
           "bypassed": true
         }
       ]

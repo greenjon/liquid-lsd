@@ -1,5 +1,19 @@
 ## [Unreleased]
 
+### Effects Answer Drops Too, Sparingly (`resources/stock_defaults/filters/*.json`, `defaults/fx_chains/*.lsdfxchain`, `web/content/fxchains/*`)
+- **New: six stock effects hit on the drop**: Bloom and Anamorphic Streak flare, Radial Blur throws out light shafts, Kaleidoscope punches in, Pinch/Bulge punches, and Vortex Swirl twists hard, each fading over 4 bars. Only a few run because the source underneath already makes its own move.
+- **In a breakdown**, Bloom's glow spreads wider and softer and Fluid Smear melts further.
+- **Every other effect except Invert and Luma Key has a drop hit ready but bypassed** (for example "drop split" on RGB Split, "drop tape wreck" on VHS Glitch, "drop strobe" on Video Strobe). Switch it on in the effect's modulator list.
+- The hit multiplies the effect's main amount, so an effect turned down to zero stays off on the drop too. The stock FX chains (and the web TV's copies) carry the new responses. Transitions are unchanged: they only show during a fade, which rarely meets a drop.
+
+### Every Stock Source Answers Breakdowns and Drops (`resources/stock_defaults/sources/*.json`, `web/presets/stock-*.lsd`)
+- **New: every stock source now uses the song-section signals out of the box.** Each one changes its look in a breakdown (Section **Energy**) and makes one big move on the drop (Section **Drop**, fading over 4 bars). In normal playing both rest, so nothing changes until the song does.
+- **In a breakdown**, most fractals and tilings lose their colour and get it back as the music builds (Apollonian, KIFS, Mandelbulb, Escape Time, Gyroid and others). The rest change something of their own: Isometric Voxels flattens, Thin Film calms to a few colour bands, Nebula thins to filaments, Tunnel Scenes fogs in, Aurora's sky goes black, Hyper Slice and Icosa H3 turn glassy, Mandelbox's camera pulls back, Chladni settles into a simpler mode, Video Feedback's trails linger, Voronoi's cells grow.
+- **On the drop**, the fly-throughs surge forward (Apollonian, Gyroid, Pseudo-Kleinian, Tunnel Scenes; KIFS, still until then, flies for 4 bars), Mandelbox, Kali Set, Chladni and Fractal Flame punch in, Celestial Engine fires one big shockwave, Escape Time lurches into a new shape, Glitch Blocks crushes its colours, and Aurora, Metaballs and Nebula flash.
+- **Cyclic CA, Lenia and Reaction-Diffusion restart on the drop.** Lenia used to reseed on every hard kick; that is now a bypassed alternative next to the drop.
+- **Fluid Ink responds for the first time**: the ink clears in a breakdown and gets a hard stir on the drop.
+- The section modulators run on top of the existing beat and level responses rather than replacing them. To turn one off, bypass it in the parameter's modulator list (they are named, for example "breakdown drains colour" or "drop surge"), and Save as Default to keep the change. The web TV plays the same responses.
+
 ### Web TV: No Flash of the TV's Controls in Kiosk or Embedded Mode (`web/index.html`)
 - **Fixed: inside the Spaz Radio app (and with `?kiosk`), the TV's buttons and labels (PWR, VOL, CH, FX ...) flashed up for a moment before the picture.** The page now hides them before it first draws. The web TV is now **v3**.
 

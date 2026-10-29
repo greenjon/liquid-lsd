@@ -9,7 +9,7 @@
   ],
   "params": {
     "bloomIntensity": {
-      "note": "Kick pumps the glow, scaled by the knob (MUL keeps a knob at zero dark).",
+      "note": "Kick pumps the glow, scaled by the knob (MUL keeps a knob at zero dark). Blooms hard on the drop and fades over 4 bars.",
       "modulators": [
         {
           "name": "kick bloom",
@@ -29,6 +29,12 @@
           "attackMs": 40,
           "decayMs": 400,
           "bypassed": true
+        },
+        {
+          "name": "drop flare",
+          "sourceId": "audio_drop",
+          "operator": "MUL",
+          "depth": 1.0
         }
       ]
     },
@@ -51,10 +57,18 @@
       ]
     },
     "blurAmount": {
-      "note": "Rolls: tight halo to wide haze. Rolls: tight halo to wide haze.",
+      "note": "Rolls: tight halo to wide haze. Rolls: tight halo to wide haze. The glow spreads wider and softer in a breakdown.",
       "randomizeBase": true,
       "baseMin": 0.1,
-      "baseMax": 0.85
+      "baseMax": 0.85,
+      "modulators": [
+        {
+          "name": "breakdown softens",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "depth": -0.15
+        }
+      ]
     }
   }
 }

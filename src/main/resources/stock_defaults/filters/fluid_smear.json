@@ -26,7 +26,7 @@
       ]
     },
     "smearAmount": {
-      "note": "Bass thickens the smear; off by default.",
+      "note": "Bass thickens the smear; off by default. Melts further in a breakdown and firms up with the build. A melt on the drop; off by default.",
       "modulators": [
         {
           "name": "bass pulse",
@@ -36,6 +36,19 @@
           "followerMode": "PUNCHY",
           "attackMs": 5,
           "decayMs": 150,
+          "bypassed": true
+        },
+        {
+          "name": "breakdown melts",
+          "sourceId": "audio_energy",
+          "operator": "MUL",
+          "depth": -0.4
+        },
+        {
+          "name": "drop melt",
+          "sourceId": "audio_drop",
+          "operator": "MUL",
+          "depth": 0.8,
           "bypassed": true
         }
       ]

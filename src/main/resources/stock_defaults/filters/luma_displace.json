@@ -9,7 +9,7 @@
   ],
   "params": {
     "refractAmount": {
-      "note": "Bass melts the surface, scaled by the knob.",
+      "note": "Bass melts the surface, scaled by the knob. Refracts hard on the drop; off by default.",
       "modulators": [
         {
           "name": "bass melt",
@@ -28,6 +28,13 @@
           "followerMode": "SMOOTH",
           "attackMs": 40,
           "decayMs": 400,
+          "bypassed": true
+        },
+        {
+          "name": "drop surge",
+          "sourceId": "audio_drop",
+          "operator": "MUL",
+          "depth": 1.0,
           "bypassed": true
         }
       ]

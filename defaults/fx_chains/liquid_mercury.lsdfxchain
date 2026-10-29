@@ -47,6 +47,12 @@
                             "attackMs": 40,
                             "decayMs": 400,
                             "bypassed": true
+                        },
+                        {
+                            "sourceId": "audio_drop",
+                            "operator": "MUL",
+                            "depth": 1.0,
+                            "bypassed": true
                         }
                     ]
                 },
@@ -116,6 +122,17 @@
                             "followerMode": "PUNCHY",
                             "attackMs": 5,
                             "decayMs": 150,
+                            "bypassed": true
+                        },
+                        {
+                            "sourceId": "audio_energy",
+                            "operator": "MUL",
+                            "depth": -0.4
+                        },
+                        {
+                            "sourceId": "audio_drop",
+                            "operator": "MUL",
+                            "depth": 0.8,
                             "bypassed": true
                         }
                     ]
@@ -201,6 +218,11 @@
                             "attackMs": 40,
                             "decayMs": 400,
                             "bypassed": true
+                        },
+                        {
+                            "sourceId": "audio_drop",
+                            "operator": "MUL",
+                            "depth": 1.0
                         }
                     ]
                 },
@@ -226,7 +248,13 @@
                     "baseMin": 0.1,
                     "baseMax": 0.85,
                     "randomizeBase": true,
-                    "modulators": []
+                    "modulators": [
+                        {
+                            "sourceId": "audio_energy",
+                            "operator": "ADD",
+                            "depth": -0.15
+                        }
+                    ]
                 }
             }
         }

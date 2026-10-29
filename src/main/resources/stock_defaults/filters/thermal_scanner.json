@@ -9,7 +9,7 @@
   ],
   "params": {
     "thermalBloom": {
-      "note": "Edges heat up on the bass. Rolls: leaves room for the kick.",
+      "note": "Edges heat up on the bass. Rolls: leaves room for the kick. Heat flares on the drop; off by default.",
       "randomizeBase": true,
       "baseMin": 0.1,
       "baseMax": 0.5,
@@ -22,6 +22,13 @@
           "followerMode": "PUNCHY",
           "attackMs": 5,
           "decayMs": 150
+        },
+        {
+          "name": "drop heat flare",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.25,
+          "bypassed": true
         }
       ]
     },

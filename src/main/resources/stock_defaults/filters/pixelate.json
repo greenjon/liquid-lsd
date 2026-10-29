@@ -9,7 +9,7 @@
   ],
   "params": {
     "pixelSize": {
-      "note": "Kick blows the blocks up, scaled by the size. At size 1 (off) a hit makes 2-pixel blocks.",
+      "note": "Kick blows the blocks up, scaled by the size. At size 1 (off) a hit makes 2-pixel blocks. Crunches into big blocks on the drop; off by default.",
       "modulators": [
         {
           "name": "kick blocks",
@@ -28,6 +28,13 @@
           "followerMode": "PUNCHY",
           "attackMs": 5,
           "decayMs": 150,
+          "bypassed": true
+        },
+        {
+          "name": "drop crunch",
+          "sourceId": "audio_drop",
+          "operator": "MUL",
+          "depth": 1.0,
           "bypassed": true
         }
       ]

@@ -9,7 +9,7 @@
   ],
   "params": {
     "sphereRadius": {
-      "note": "The sphere pumps on the bass, scaled by the knob.",
+      "note": "The sphere pumps on the bass, scaled by the knob. The sphere swells on the drop; off by default.",
       "modulators": [
         {
           "name": "bass pulse",
@@ -19,6 +19,13 @@
           "followerMode": "PUNCHY",
           "attackMs": 5,
           "decayMs": 150
+        },
+        {
+          "name": "drop swell",
+          "sourceId": "audio_drop",
+          "operator": "MUL",
+          "depth": 0.4,
+          "bypassed": true
         }
       ]
     },

@@ -9,7 +9,7 @@
   ],
   "params": {
     "refraction": {
-      "note": "Bass bends the facets harder, scaled by the knob.",
+      "note": "Bass bends the facets harder, scaled by the knob. The facets bend hard on the drop; off by default.",
       "modulators": [
         {
           "name": "bass pulse",
@@ -19,6 +19,13 @@
           "followerMode": "PUNCHY",
           "attackMs": 5,
           "decayMs": 150
+        },
+        {
+          "name": "drop shatter",
+          "sourceId": "audio_drop",
+          "operator": "MUL",
+          "depth": 0.8,
+          "bypassed": true
         }
       ]
     },

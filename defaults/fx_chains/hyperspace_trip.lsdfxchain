@@ -61,6 +61,11 @@
                             "followerMode": "PUNCHY",
                             "attackMs": 5,
                             "decayMs": 150
+                        },
+                        {
+                            "sourceId": "audio_drop",
+                            "operator": "ADD",
+                            "depth": 0.12
                         }
                     ]
                 },
@@ -124,6 +129,12 @@
                             "followerMode": "PUNCHY",
                             "attackMs": 5,
                             "decayMs": 150
+                        },
+                        {
+                            "sourceId": "audio_drop",
+                            "operator": "ADD",
+                            "depth": 0.03,
+                            "bypassed": true
                         }
                     ]
                 },
@@ -197,6 +208,12 @@
                             "followerMode": "SMOOTH",
                             "attackMs": 40,
                             "decayMs": 400
+                        },
+                        {
+                            "sourceId": "audio_drop",
+                            "operator": "ADD",
+                            "depth": 0.4,
+                            "bypassed": true
                         }
                     ]
                 },

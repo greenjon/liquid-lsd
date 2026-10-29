@@ -9,7 +9,7 @@
   ],
   "params": {
     "amount": {
-      "note": "Kick splits the channels, scaled by the knob.",
+      "note": "Kick splits the channels, scaled by the knob. The channels tear apart on the drop; off by default.",
       "modulators": [
         {
           "name": "kick split",
@@ -28,6 +28,13 @@
           "followerMode": "PUNCHY",
           "attackMs": 5,
           "decayMs": 110,
+          "bypassed": true
+        },
+        {
+          "name": "drop split",
+          "sourceId": "audio_drop",
+          "operator": "MUL",
+          "depth": 1.0,
           "bypassed": true
         }
       ]

@@ -9,7 +9,7 @@
   ],
   "params": {
     "dotScale": {
-      "note": "Dots swell on the bass, scaled by the knob.",
+      "note": "Dots swell on the bass, scaled by the knob. The dots blow up on the drop; off by default.",
       "modulators": [
         {
           "name": "bass pulse",
@@ -19,6 +19,13 @@
           "followerMode": "PUNCHY",
           "attackMs": 5,
           "decayMs": 150
+        },
+        {
+          "name": "drop blowup",
+          "sourceId": "audio_drop",
+          "operator": "MUL",
+          "depth": 1.0,
+          "bypassed": true
         }
       ]
     },

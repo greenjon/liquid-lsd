@@ -9,7 +9,7 @@
   ],
   "params": {
     "brightnessBoost": {
-      "note": "Phosphor flares on the kick.",
+      "note": "Phosphor flares on the kick. The tube flares on the drop; off by default.",
       "modulators": [
         {
           "name": "kick flare",
@@ -19,6 +19,13 @@
           "followerMode": "PUNCHY",
           "attackMs": 5,
           "decayMs": 150
+        },
+        {
+          "name": "drop tube flare",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.3,
+          "bypassed": true
         }
       ]
     },

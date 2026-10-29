@@ -301,8 +301,8 @@ class ISFAutoBindEngineTest {
     fun `stock filter gets its shipped response and a saved default replaces it`() {
         val hash = "test_shipped_${System.nanoTime()}"
         val shipped = bundled("default_filters", "rgb_split", hash).parameters["amount"]!!.modulators
-        assertEquals(listOf("audio_flux_bass", "audio_high"), shipped.map { it.sourceId })
-        assertEquals(listOf(false, true), shipped.map { it.bypassed })
+        assertEquals(listOf("audio_flux_bass", "audio_high", "audio_drop"), shipped.map { it.sourceId })
+        assertEquals(listOf(false, true, true), shipped.map { it.bypassed })
 
         val edited = bundled("default_filters", "rgb_split", hash)
         edited.parameters["amount"]!!.modulators.clear()
@@ -310,7 +310,7 @@ class ISFAutoBindEngineTest {
         assertTrue(bundled("default_filters", "rgb_split", hash).parameters["amount"]!!.modulators.isEmpty())
 
         ISFAutoBindEngine.deleteOverride(hash)
-        assertEquals(2, bundled("default_filters", "rgb_split", hash).parameters["amount"]!!.modulators.size)
+        assertEquals(3, bundled("default_filters", "rgb_split", hash).parameters["amount"]!!.modulators.size)
     }
 
     @Test

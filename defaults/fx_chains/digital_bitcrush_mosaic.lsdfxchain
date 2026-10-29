@@ -45,6 +45,12 @@
                             "attackMs": 5,
                             "decayMs": 150,
                             "bypassed": true
+                        },
+                        {
+                            "sourceId": "audio_drop",
+                            "operator": "MUL",
+                            "depth": 1.0,
+                            "bypassed": true
                         }
                     ]
                 },
@@ -89,6 +95,12 @@
                             "attackMs": 5,
                             "decayMs": 110,
                             "bypassed": true
+                        },
+                        {
+                            "sourceId": "audio_drop",
+                            "operator": "MUL",
+                            "depth": 1.0,
+                            "bypassed": true
                         }
                     ]
                 },
@@ -124,6 +136,12 @@
                             "followerMode": "SMOOTH",
                             "attackMs": 40,
                             "decayMs": 400,
+                            "bypassed": true
+                        },
+                        {
+                            "sourceId": "audio_drop",
+                            "operator": "MUL",
+                            "depth": 1.0,
                             "bypassed": true
                         }
                     ]
