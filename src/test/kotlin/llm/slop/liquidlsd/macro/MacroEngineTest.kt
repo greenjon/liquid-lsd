@@ -107,6 +107,26 @@ class MacroEngineTest {
     }
 
     @Test
+    fun testKnobDriveMovesTheMetaknobNotALeftoverMacroOnTheSameTarget() {
+        val meta = ModulatableParameter(0.1f, minClamp = 0f, maxClamp = 1f)
+        val p = ModulatableParameter(0.3f, minClamp = 0f, maxClamp = 1f)
+        p.metaDrivenBy = "Metaknob"
+        p.metaDrivenBinding = llm.slop.liquidlsd.rendering.isf.FxMetaBinding(targetParamName = "p", minVal = 0f, maxVal = 1f)
+        p.metaDrivenKnob = meta
+        val mixer = createTestMixer(listOf("Deck A/fx/p" to p))
+        val control = MacroControl(label = "K1", value = 0.9f, bindings = mutableListOf(
+            MacroBinding(parameterId = "Deck A/fx/p", targetType = MacroTargetType.PARAM_BASE_VALUE)
+        ))
+        MacroEngine.registerBank(null, MacroBank(knobs = listOf(control)))
+        MacroEngine.tick(mixer)
+
+        assertTrue(KnobDrive.setViaKnob("Deck A/fx/p", p, 0.6f))
+        assertEquals(0.6f, meta.baseValue, absoluteTolerance = 1e-5f, "the Metaknob owns the value, as in tick")
+        assertEquals(0.9f, control.value, absoluteTolerance = 1e-5f, "the leftover macro knob doesn't move")
+        assertEquals(0.6f, p.baseValue, absoluteTolerance = 1e-5f)
+    }
+
+    @Test
     fun testMappingSuspendedWhileMacroBindingExists() {
         val p = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
         val mixer = createTestMixer(listOf("Deck A/fbZoom" to p))
