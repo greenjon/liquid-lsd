@@ -9,6 +9,7 @@ import llm.slop.liquidlsd.macro.MacroControl
 import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.macro.MacroTargetType
 import llm.slop.liquidlsd.models.DeckPresetDto
+import llm.slop.liquidlsd.models.FXChainDto
 import llm.slop.liquidlsd.models.ParameterDto
 import llm.slop.liquidlsd.models.applyDto
 import llm.slop.liquidlsd.models.toDto
@@ -122,6 +123,7 @@ class DeckOpsTest {
     @AfterTest
     fun tearDown() {
         DeckOps.drainOnGlThread(mixer)
+        FxOps.drainOnGlThread(mixer)
         DeckOps.mixerProvider = { null }
         DeckOps.prompt = null
         DeckOps.undoSink = null
@@ -333,24 +335,58 @@ class DeckOpsTest {
 
     @Test
     fun scopeDecidesWhetherSourceFxOrBothTravel() {
-        val fxA = llm.slop.liquidlsd.models.FXChainDto(name = "chain_a")
-        every { a.deck.toFxChainDto(any(), any()) } returns fxA
-        every { a.deck.fxSlots } returns arrayOfNulls(3)
+        val chainA = FxChain("Deck A FX")
+        val chainB = FxChain("Deck B FX")
+        every { a.deck.fxChain } returns chainA
+        every { b.deck.fxChain } returns chainB
+        chainA.name = "chain_a"
+        chainA.markClean(java.io.File("chain_a.lsdfxchain"))
+        chainB.name = "chain_b"
 
         DeckOps.request(DeckSlot.B, DeckChange.CopyFrom(DeckSlot.A, DeckScope.FX))
         DeckOps.drainOnGlThread(mixer)
-        io.mockk.verify(exactly = 1) { b.deck.applyFxChain(fxA) }
+        assertEquals("chain_b", chainB.name, "the chain changes through FxOps, not inside DeckOps")
+        FxOps.drainOnGlThread(mixer)
+        assertEquals("chain_a", chainB.name)
+        assertEquals("chain_a.lsdfxchain", chainB.sourceFile?.name, "a copied saved chain keeps its file (Save, not Save As)")
+        assertNotNull(chainB.baselineDto)
+        assertFalse(chainB.isDirty(), "a clean chain arrives clean")
         assertEquals("other_gen", b.current.id, "FX-only copy leaves the source")
 
+        chainB.name = "chain_b"
         DeckOps.request(DeckSlot.B, DeckChange.CopyFrom(DeckSlot.A, DeckScope.SOURCE))
         DeckOps.drainOnGlThread(mixer)
-        io.mockk.verify(exactly = 1) { b.deck.applyFxChain(any()) }
+        FxOps.drainOnGlThread(mixer)
+        assertEquals("chain_b", chainB.name, "source-only copy leaves the chain")
         assertEquals("old_gen", b.current.id)
 
         DeckOps.request(DeckSlot.B, DeckChange.MoveFrom(DeckSlot.A))
         DeckOps.drainOnGlThread(mixer)
-        io.mockk.verify(exactly = 2) { b.deck.applyFxChain(fxA) }
-        io.mockk.verify(exactly = 1) { a.deck.clearFxSlot(0) }
+        FxOps.drainOnGlThread(mixer)
+        assertEquals("chain_a", chainB.name)
+        assertEquals("Untitled", chainA.name, "the moved-out chain is a new unsaved one")
+        assertNull(chainA.sourceFile)
+    }
+
+    @Test
+    fun swapWithFxTradesBothChainsWithTheirFiles() {
+        val chainA = FxChain("Deck A FX")
+        val chainB = FxChain("Deck B FX")
+        every { a.deck.fxChain } returns chainA
+        every { b.deck.fxChain } returns chainB
+        chainA.applyFxChain(FXChainDto(name = "chain_a", slotSuperKnobLink = listOf(false, false, false)), java.io.File("a.lsdfxchain"), isBaseline = true)
+        chainB.applyFxChain(FXChainDto(name = "chain_b"))
+
+        DeckOps.request(DeckSlot.A, DeckChange.SwapWith(DeckSlot.B, DeckScope.FX))
+        DeckOps.drainOnGlThread(mixer)
+        FxOps.drainOnGlThread(mixer)
+
+        assertEquals("chain_b", chainA.name)
+        assertNull(chainA.sourceFile)
+        assertEquals("chain_a", chainB.name)
+        assertEquals("a.lsdfxchain", chainB.sourceFile?.name)
+        assertFalse(chainB.slotSuperKnobLink[0], "link flags travel with the chain")
+        assertTrue(chainA.slotSuperKnobLink[0])
     }
 
     @Test

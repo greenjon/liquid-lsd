@@ -180,7 +180,7 @@ internal object LibraryNavigation {
         val files = if (LibraryPanel.activeSelectionSource == SelectionSource.TREE) {
             unifiedKind()?.let { BrowserPane.cursorPlaylistFile(it) }?.let(::listOf) ?: emptyList()
         } else enqueueTargets(session)
-        return QueueKnobs.insertFromBrowser(files, browseSession)
+        return QueueKnobs.insertFromBrowser(files, browseSession, session.parametersState)
     }
 
     /** Appends the cursor item(s) (on the unified tree: the cursor playlist) to the background queue ([bg]) or the A/B queue of the current tab. Returns false if nothing was added. */

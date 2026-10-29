@@ -99,16 +99,16 @@ class QueueKnobsTest {
     @Test
     fun `the browser item goes after the touched queue's cursor, only in that session and while the tab fits`() {
         fill(Queue.BG, "a", "b")
-        assertFalse(QueueKnobs.insertFromBrowser(listOf(File("/l/x.lsd")), session = 1), "nothing touched")
+        assertFalse(QueueKnobs.insertFromBrowser(listOf(File("/l/x.lsd")), session = 1, state = state), "nothing touched")
         QueueOps.setCursor(Queue.BG, 0)
         QueueKnobs.turn(bg, 0, false, session = 1, state = state)
-        assertTrue(QueueKnobs.insertFromBrowser(listOf(File("/l/x.lsd"), File("/l/fx.lsdfx")), session = 1))
+        assertTrue(QueueKnobs.insertFromBrowser(listOf(File("/l/x.lsd"), File("/l/fx.lsdfx")), session = 1, state = state))
         assertEquals(listOf("a", "x", "b"), names(Queue.BG))
         assertEquals(1, QueueOps.cursor(Queue.BG), "the cursor is on the new item, so the next one follows it")
 
-        assertFalse(QueueKnobs.insertFromBrowser(listOf(File("/l/y.lsd")), session = 2), "a new browse session")
+        assertFalse(QueueKnobs.insertFromBrowser(listOf(File("/l/y.lsd")), session = 2, state = state), "a new browse session")
         LibraryPanel.viewMode = LibraryViewMode.FX
-        assertFalse(QueueKnobs.insertFromBrowser(listOf(File("/l/y.lsd")), session = 1), "the BG queue isn't this tab's")
+        assertFalse(QueueKnobs.insertFromBrowser(listOf(File("/l/y.lsd")), session = 1, state = state), "the BG queue isn't this tab's")
     }
 
     @Test

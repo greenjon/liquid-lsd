@@ -114,11 +114,11 @@ object QueueKnobs {
      * playing row, else the end); with none touched, the end of the tab's A-side queue. Files of another kind are dropped. Returns
      * false when no queue knob was touched, so the caller can fall back to its plain enqueue.
      */
-    fun insertFromBrowser(files: List<File>, session: Int): Boolean {
+    fun insertFromBrowser(files: List<File>, session: Int, state: ParametersState?): Boolean {
         val queue = lastTouched(session) ?: return false
         val fitting = files.filter { QueueDrop.fits(queue, it) }.flatMap { QueueDrop.expandForQueue(queue, it) }
         val anchor = QueueOps.cursor(queue).takeIf { it >= 0 } ?: playing(queue).takeIf { it >= 0 } ?: QueueOps.items(queue).lastIndex
-        QueueOps.insertAfter(queue, anchor, fitting)
+        QueueOps.insertAfter(queue, anchor, fitting, state)
         return true
     }
 }

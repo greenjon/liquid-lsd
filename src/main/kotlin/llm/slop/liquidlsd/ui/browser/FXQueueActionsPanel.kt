@@ -47,10 +47,7 @@ object FXQueueActionsPanel {
             exportTooltip = "Export: save live FX queue as a new FX playlist.",
             onExport = { BrowserPopupHandler.pendingOpenExportFxQueuePopup = true },
             clearTooltip = "Clear: empty the live FX queue.",
-            onClear = {
-                FXQueueManager.clearQueue()
-                selectedIndex = -1
-            }
+            onClear = { QueueOps.clear(QueueDrop.Queue.FX_AB, session.parametersState) }
         ))
 
         if (ImGui.beginChild("##fx_queue_items_scroll", 0f, 0f, false)) {
@@ -141,7 +138,7 @@ object FXQueueActionsPanel {
                         moveTo = rawTo.coerceIn(0, FXQueueManager.queue.size - 1)
                     }
 
-                    QueueDrop.acceptBrowserDrop(QueueDrop.Queue.FX_AB, effectiveSlot)
+                    QueueDrop.acceptBrowserDrop(QueueDrop.Queue.FX_AB, effectiveSlot, session.parametersState)
                     ImGui.endDragDropTarget()
                 }
                 ImGui.popStyleColor()
@@ -192,7 +189,7 @@ object FXQueueActionsPanel {
                 ImGui.dummy(ImGui.getWindowWidth(), remainingH)
                 ImGui.pushStyleColor(ImGuiCol.DragDropTarget, 0f, 0f, 0f, 0f)
                 if (QueueDrop.beginTarget(QueueDrop.Queue.FX_AB)) {
-                    QueueDrop.acceptBrowserDrop(QueueDrop.Queue.FX_AB, null)
+                    QueueDrop.acceptBrowserDrop(QueueDrop.Queue.FX_AB, null, session.parametersState)
                     ImGui.endDragDropTarget()
                 }
                 ImGui.popStyleColor()

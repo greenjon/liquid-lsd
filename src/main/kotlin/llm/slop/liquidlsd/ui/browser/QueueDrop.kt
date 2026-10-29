@@ -6,6 +6,7 @@ import llm.slop.liquidlsd.presets.FXBgQueueManager
 import llm.slop.liquidlsd.presets.FXQueueManager
 import llm.slop.liquidlsd.presets.PlayQueueManager
 import llm.slop.liquidlsd.presets.TransitionQueueManager
+import llm.slop.liquidlsd.ui.ParametersState
 import llm.slop.liquidlsd.ui.ToastOverlay
 import llm.slop.liquidlsd.utils.TimeSource
 import java.io.File
@@ -81,15 +82,14 @@ object QueueDrop {
      * Drops [payload] (one path per line) into [queue] before [index], or at the end when null. Files of another kind are skipped,
      * with a toast saying so. Returns how many items went in.
      */
-    fun insert(queue: Queue, index: Int?, payload: String): Int {
+    fun insert(queue: Queue, index: Int?, payload: String, state: ParametersState?): Int {
         val sorted = sort(queue, payload)
         val files = sorted.files.flatMap { expandForQueue(queue, it) }
-        insertFiles(queue, (index ?: size(queue)).coerceIn(0, size(queue)), files)
+        QueueOps.insert(queue, index ?: size(queue), files, state)
         if (sorted.skipped > 0) {
             val what = when (queue.kind) { BrowseKind.SRC -> "sources"; BrowseKind.FX -> "FX"; BrowseKind.TRANS -> "transitions" }
             ToastOverlay.show("${sorted.skipped} skipped: the ${queue.label} takes $what")
         }
-        if (files.isNotEmpty()) flash(queue)
         return files.size
     }
 
@@ -109,9 +109,9 @@ object QueueDrop {
     fun beginTarget(queue: Queue): Boolean = !blocked(queue) && ImGui.beginDragDropTarget()
 
     /** Inside a drop target: takes browser rows or a tree playlist dropped there, inserting before [index] (null: at the end). */
-    fun acceptBrowserDrop(queue: Queue, index: Int?) {
-        ImGui.acceptDragDropPayload<String>(PAYLOAD_ASSET)?.let { insert(queue, index, it) }
-        ImGui.acceptDragDropPayload<String>(BrowserPane.PAYLOAD_PLAYLIST)?.let { insert(queue, index, it) }
+    fun acceptBrowserDrop(queue: Queue, index: Int?, state: ParametersState?) {
+        ImGui.acceptDragDropPayload<String>(PAYLOAD_ASSET)?.let { insert(queue, index, it, state) }
+        ImGui.acceptDragDropPayload<String>(BrowserPane.PAYLOAD_PLAYLIST)?.let { insert(queue, index, it, state) }
     }
 
     // --- scrolling at the edges while dragging -------------------------------------------------------------------------------

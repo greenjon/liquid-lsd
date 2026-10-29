@@ -129,9 +129,17 @@ object FxOps {
         }
     }
 
-    /** Replaces [chain]'s whole contents with [dto]. */
-    fun applyChain(chain: FxChain, dto: FXChainDto, source: File? = null, isBaseline: Boolean = false, undoable: Boolean = false) =
-        postChainChange(chain, undoable) { it.applyFxChain(dto, source, isBaseline) }
+    /**
+     * Replaces [chain]'s whole contents with [dto]. A non-null [baseline] becomes the dirty baseline instead of what
+     * [isBaseline] picks, so a chain carried over from another deck keeps its saved state.
+     */
+    fun applyChain(
+        chain: FxChain, dto: FXChainDto, source: File? = null, isBaseline: Boolean = false, undoable: Boolean = false,
+        baseline: FXChainDto? = null
+    ) = postChainChange(chain, undoable) { c ->
+        c.applyFxChain(dto, source, isBaseline)
+        if (baseline != null) c.baselineDto = baseline
+    }
 
     /** Empties all of [chain]'s slots and makes it a new, unsaved "Untitled" chain (so a later Save can't overwrite the old file). */
     fun clearChain(chain: FxChain, undoable: Boolean = false) = postChainChange(chain, undoable) { c ->

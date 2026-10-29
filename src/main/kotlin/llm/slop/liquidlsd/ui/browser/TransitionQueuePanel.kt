@@ -52,10 +52,7 @@ object TransitionQueuePanel {
             exportTooltip = "Export: save live transition queue as a new playlist.",
             onExport = { BrowserPopupHandler.pendingOpenExportQueuePopup = true },
             clearTooltip = "Clear: empty the live transition queue.",
-            onClear = {
-                TransitionQueueManager.clearQueue()
-                selectedIndex = -1
-            }
+            onClear = { QueueOps.clear(QueueDrop.Queue.TRANS, session.parametersState) }
         ))
 
         if (ImGui.beginChild("##trans_queue_items_scroll", 0f, 0f, false)) {
@@ -146,7 +143,7 @@ object TransitionQueuePanel {
                         moveTo = rawTo.coerceIn(0, TransitionQueueManager.queue.size - 1)
                     }
 
-                    QueueDrop.acceptBrowserDrop(QueueDrop.Queue.TRANS, effectiveSlot)
+                    QueueDrop.acceptBrowserDrop(QueueDrop.Queue.TRANS, effectiveSlot, session.parametersState)
                     ImGui.endDragDropTarget()
                 }
                 ImGui.popStyleColor()
@@ -197,7 +194,7 @@ object TransitionQueuePanel {
                 ImGui.dummy(ImGui.getWindowWidth(), remainingH)
                 ImGui.pushStyleColor(ImGuiCol.DragDropTarget, 0f, 0f, 0f, 0f)
                 if (QueueDrop.beginTarget(QueueDrop.Queue.TRANS)) {
-                    QueueDrop.acceptBrowserDrop(QueueDrop.Queue.TRANS, null)
+                    QueueDrop.acceptBrowserDrop(QueueDrop.Queue.TRANS, null, session.parametersState)
                     ImGui.endDragDropTarget()
                 }
                 ImGui.popStyleColor()

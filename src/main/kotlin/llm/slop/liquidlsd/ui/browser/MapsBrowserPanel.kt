@@ -35,15 +35,17 @@ object MapsBrowserPanel {
     private val bankDir get() = File("library/knobpresets")
     private const val SUFFIX = ".knobpreset.json"
 
-    /** A bank a saved file can be saved from or applied to. Deck banks retarget to their deck; FX banks are rewritten from the FX chain and excluded. */
+    /**
+     * A bank a saved file can be saved from or applied to. Deck banks retarget to their deck. FX and Transitions banks are
+     * excluded: they're rewritten from what's loaded, so an applied file would only wipe them.
+     */
     private data class BankTarget(val label: String, val bankId: String, val deckLabel: String?)
     private val targets = listOf(
         BankTarget("Deck A", MacroEngine.DECK_A, "Deck A"),
         BankTarget("Deck B", MacroEngine.DECK_B, "Deck B"),
         BankTarget("Deck BG", MacroEngine.DECK_BG, "Deck BG"),
         BankTarget("Deck PV", MacroEngine.DECK_PV, "Deck PV"),
-        BankTarget("Master", MacroEngine.MASTER, null),
-        BankTarget("Transition", MacroEngine.TRANS, null)
+        BankTarget("Master", MacroEngine.MASTER, null)
     )
 
     private var cachedFiles: List<File> = emptyList()
