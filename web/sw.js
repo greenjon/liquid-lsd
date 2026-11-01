@@ -28,7 +28,11 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== self.location.origin) return;
-  e.respondWith(fetch(e.request).then((res) => {
+  // spaz.org sends no Cache-Control (and ignores .htaccess), so browsers guess a lifetime from Last-Modified and
+  // a reload after a publish could pair the new index.html with an old ui.js. Every file is checked with the
+  // server instead (a cheap 304 when unchanged). A navigation can't take a cache mode; reloads revalidate it anyway.
+  const req = e.request.mode === 'navigate' ? fetch(e.request) : fetch(e.request, { cache: 'no-cache' });
+  e.respondWith(req.then((res) => {
     if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(e.request, copy)); }
     return res;
   }).catch(() => caches.match(e.request).then((hit) => hit || Response.error())));

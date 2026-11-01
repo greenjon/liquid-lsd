@@ -3,7 +3,8 @@
 ### Web TV: SCHEDULE Button (`web/schedule.js`, `web/ui.js`, `web/index.html`, `web/tv.css`)
 - **New SCHEDULE button on the web TV** (also `G`, or MENU › SCHEDULE): Spaz Radio's upcoming shows over the picture, grouped by day, in the viewer's own time zone, with the show on air marked ON AIR. Any key or a click closes it. It uses the same schedule feed as the Spaz Radio app.
 - **The on-screen display names the next show** (`NEXT: <show> · <time>`) under the track line.
-- The TV's version is now v4.
+- **Fixed: reloading the web TV after a publish could keep the old code** (a new button that did nothing until a new tab was opened). The TV now checks every file with the server on load; installed copies pick this up on their next visit.
+- The TV's version is now v5.
 
 ### Copy, Move and Swap With FX Keep the FX Row in Step (`presets/DeckOps.kt`, `presets/FxOps.kt`)
 - **Fixed: after Copy, Move or Swap with FX, the receiving deck's FX row, Chain view and Twister kept showing the old chain's knobs**, some of them dead or driving the wrong effect. The chain now changes the same way as any other chain load: the knobs follow the new effects, the Super Knob links are worked out again, and the swap dip plays.
