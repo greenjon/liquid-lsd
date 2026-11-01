@@ -82,6 +82,7 @@ const HISTORY_MAX = 50;
 
 let bgPlaylist = [];
 let bgPlaylistIdx = 0;
+let bgOnAir = '';               // the background playlist line on screen (nowShowing, the OSD)
 let bgTransitionState = 'hold'; // 'hold' | 'fade_out' | 'fade_in'
 let bgSwitchAt = 0;
 let bgFadeStart = 0;
@@ -280,7 +281,9 @@ export function tickAutopilot(dt, beats, music = {}) {
         autopilotState.bgAlpha = Math.max(0.0, 1.0 - (beats - bgFadeStart) / half);
         if (autopilotState.bgAlpha <= 0.0) {
           autopilotState.deckBG = bgNext.deck;
+          bgOnAir = bgNext.line;
           console.log(`[autopilot] Background: ${bgNext.line}`);
+          if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('lsd-background', { detail: nowShowing() }));
           bgNext = null;
           bgTransitionState = 'fade_in';
           bgFadeStart = beats;
@@ -509,7 +512,8 @@ export function nowShowing() {
   const deck = fgActiveDeck === 'A' ? autopilotState.deckA : autopilotState.deckB;
   const line = fgHistory.at(-1)?.line ?? fgPlaylist[fgPlaylistIdx] ?? '';
   const name = line.split('|')[0].trim();
-  return { name, chain: deck?.chainName ?? null, channel: fgPlaylist.indexOf(line) + 1, channels: fgPlaylist.length };
+  const background = bgOnAir.split('|')[0].trim() || null;
+  return { name, chain: deck?.chainName ?? null, background, channel: fgPlaylist.indexOf(line) + 1, channels: fgPlaylist.length };
 }
 
 function announce() {
@@ -765,6 +769,7 @@ export async function startAutopilot() {
   if (bgPlaylist.length > 0) {
     bgPlaylistIdx = 0;
     autopilotState.deckBG = await buildDeck(bgPlaylist[0]);
+    bgOnAir = bgPlaylist[0];
     autopilotState.bgAlpha = 1.0;
     bgSwitchAt = nextSwitchBeat(lastBeats, autopilotSettings.bgHoldBars, autopilotSettings.bgFadeBeats);
   }

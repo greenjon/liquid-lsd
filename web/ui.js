@@ -13,7 +13,7 @@ import { scheduleState, refreshSchedule, setShows, groupByDay, zoneLabel, nextLi
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v9';
+export const TV_VERSION = 'v10';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -78,9 +78,11 @@ function showLook(info = nowShowing(), ms = 4000, brand = false) {
     flash('osd-ch', 'LIVE', ms);
     if (autopilotState.broadcaster) flash('osd-name', autopilotState.broadcaster, ms);
   } else {
+    // Bottom left, one size: the scene, the background behind it, the scene's FX chain.
     if (info.channel > 0) flash('osd-ch', `CH ${String(info.channel).padStart(2, '0')}`, ms);
-    flash('osd-name', prettyName(info.name), ms);
-    flash('osd-chain', info.chain ? `FX ${prettyName(info.chain)}` : 'NO FX', ms);
+    flash('osd-name', `SCENE: ${prettyName(info.name)}`, ms);
+    if (info.background) flash('osd-bg', `BACKGROUND: ${prettyName(info.background)}`, ms);
+    flash('osd-chain', `FX: ${info.chain ? prettyName(info.chain) : 'NONE'}`, ms);
   }
   if (nowPlaying) flash('osd-track', `♪ ${nowPlaying}`, ms);
   flashNext(ms);
@@ -200,9 +202,19 @@ export function initUI() {
   };
 
   // --- Power ---
+  // Hover help follows the power state: off, the whole set is the power target; on, only PWR is.
+  // (The menu, ABOUT and SCHEDULE overlays carry an empty title so they don't inherit either.)
+  const updatePowerTitles = () => {
+    tvBody.title = powerState.on ? 'Click the power button (PWR) to turn the TV off' : 'Click the TV to turn it on';
+    canvas.title = powerState.on
+      ? 'Click once for info (or press I). Double-click for fullscreen (or press S).'
+      : 'Click the TV to turn it on';
+  };
+  updatePowerTitles();
   powerSwitch.addEventListener('click', async () => {
     if (powerState.on) {
       powerState.on = false;
+      updatePowerTitles();
       viewerState.schedule?.hide();
       letScreenSleep();
       updateMediaSession();
@@ -214,6 +226,7 @@ export function initUI() {
       try { await stopAudio(); } catch (err) { console.error('Audio stop failed:', err); }
     } else {
       powerState.on = true;
+      updatePowerTitles();
       powerState.warmupProgress = embed ? 1 : 0;  // renderer will advance this (embed: no CRT warm-up)
       powerState.shutdownProgress = 0;
       tvBody.classList.remove('shutting-down');
@@ -244,14 +257,29 @@ export function initUI() {
     }
   });
 
-  // The whole TV is a power target: when it is off, a click anywhere on it turns it on; when it is on, a
-  // click on the cabinet (not the picture, which shows the info, and not the other controls) turns it off,
-  // unless the menu is open: then it only closes the menu.
+  // When the TV is off, a click anywhere on it turns it on. When it is on, the cabinet itself does nothing:
+  // only the power switch turns it off. A click that just misses a control (on its label, or in the gap
+  // beside it) presses the nearest one, within a square of NEAR_MISS px around it; a near-miss on a dial
+  // does nothing (dials are dragged). With the menu open, a stray click only closes the menu.
+  const NEAR_MISS = 22;
+  const nearTargets = [...document.querySelectorAll('#tv-controls button, #tv-controls .rotary-dial')];
+  const nearestControl = (x, y) => {
+    let best = null, bestD = NEAR_MISS;
+    for (const el of nearTargets) {
+      const r = el.getBoundingClientRect();
+      if (!r.width || !r.height) continue; // hidden (e.g. CHAT before the board loads)
+      const d = Math.max(r.left - x, x - r.right, r.top - y, y - r.bottom, 0); // square (Chebyshev) distance
+      if (d <= bestD) { best = el; bestD = d; }
+    }
+    return best;
+  };
   tvBody.addEventListener('click', (e) => {
     if (e.target.closest('button, .rotary-dial, .rocker, #tv-menu, #about, #schedule, a')) return; // they handle their own clicks
-    if (powerState.on && e.target.closest('#tv-screen-area')) return;
+    if (!powerState.on) { powerSwitch.click(); return; }
     if (viewerState.menu?.open) { viewerState.menu.hide(); return; } // a near-miss on the menu closes it, not the TV
-    powerSwitch.click();
+    if (!e.target.closest('#tv-controls')) return; // the picture shows the info; the cabinet is inert
+    const near = nearestControl(e.clientX, e.clientY);
+    if (near?.tagName === 'BUTTON') near.click();
   });
 
   // --- Volume ---
@@ -349,7 +377,7 @@ export function initUI() {
       help: 'Press Enter, then tap Space or the picture on 8 beats you hear: sets SYNC for you.' },
     { label: 'ANNOUNCE SCENES', value: () => onOff(viewerState.announce),
       step: () => { viewerState.announce = !viewerState.announce; save('lsd.announce', viewerState.announce); },
-      help: 'Show the name of each new scene and its effects when it comes on. Off: only when you press I or click the picture.' },
+      help: 'Show the name of each new scene, its background and its effects when it comes on, and the background when it changes. Off: only when you press I or click the picture.' },
     { label: 'REACT', locked: live, help: 'How strongly the picture moves with the music. Raise it for quiet shows, lower it if it is too busy.', value: () => `${Math.round(viewerState.react * 100)}%`,
       step: (dir) => reactDial.set(toDial(Math.max(REACT_MIN, Math.min(REACT_MAX, viewerState.react + dir * 0.05)))) },
     { label: 'TIME', locked: live, help: 'How long each scene stays before the next one, in bars of the music.', value: () => timeLabel.textContent,
@@ -629,6 +657,12 @@ export function initUI() {
 
   // --- Autopilot and broadcast events ---
   window.addEventListener('lsd-now-showing', (e) => { announceLook(e.detail); updateMediaSession(); });
+  // The background changes on its own clock: with ANNOUNCE SCENES on, only its line comes up.
+  window.addEventListener('lsd-background', (e) => {
+    if (viewerState.announce && powerState.on && !autopilotState.isLiveBroadcast && e.detail.background) {
+      flash('osd-bg', `BACKGROUND: ${prettyName(e.detail.background)}`, 4000);
+    }
+  });
   window.addEventListener('lsd-broadcast-status', (e) => {
     const text = document.querySelector('#station-badge .station-text');
     tvBody.classList.toggle('live', e.detail.live);

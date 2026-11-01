@@ -1,5 +1,15 @@
 ## [Unreleased]
 
+### Web TV: Info Panel Rearranged (`web/ui.js`, `web/autopilot.js`, `web/index.html`, `web/tv.css`)
+- **The info panel is laid out afresh.** Top left: what Spaz Radio is playing, with the next show under it. Bottom left, all the same size: **SCENE:** the scene on air, **BACKGROUND:** the scene playing behind it (new: the background was never named before), and **FX:** the scene's effects (`FX: NONE` when there are none). Control messages (HOLD, BARS, SYNC, NO SIGNAL…) now come up in the middle of the picture.
+- The background changes on its own clock (twice the scene length). With MENU › ANNOUNCE SCENES on, its line comes up by itself when it changes.
+- During a live broadcast the panel shows the broadcaster, as before, with no BACKGROUND or FX lines.
+
+### Web TV: Missed Clicks No Longer Switch It Off (`web/ui.js`, `web/index.html`, `web/menu.js`)
+- **Fixed: a click that just missed a button switched the TV off.** Once the TV is on, the cabinet ignores clicks; only the PWR switch turns it off. A click a little outside a button (on its label, or in the gap beside it) now presses the nearest button instead, so small misses still land. A near-miss on a dial does nothing. Clicking a TV that is off still turns it on.
+- **The hover help says so too**: on the cabinet, "Click the power button (PWR) to turn the TV off"; on the picture, how to show the info (click or I) and go fullscreen (double-click or S). Off, both say a click turns the TV on.
+- The TV's version is now v10.
+
 ### Two New Generators That Draw the Sound: Spectrogram and Scope (`library/sources/spectrogram/`, `library/sources/scope/`, `web/audiotex.js`, `web/dsp.js`, `web/isf.js`)
 - **Spectrogram**: the music itself, scrolling: time along one axis, frequency along the other, so the kick, the bassline and every note are readable as they pass. Scroll, Rise, Ring or Tunnel layouts, a mirrored option with the bass in the middle, a log frequency axis like a piano's, and four palettes. A slow scroll still catches every hit.
 - **Scope**: an oscilloscope in a feedback loop: the waveform or the spectrum drawn as a glowing line or ring while the picture behind it zooms, turns, warps and fades into tunnels and trails. A steady tone stands still instead of sliding.

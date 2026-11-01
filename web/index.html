@@ -47,7 +47,7 @@
   <audio id="lsdAudio" crossorigin="anonymous" preload="none"></audio>
 
   <div id="tv-wrapper">
-    <div id="tv-body" title="Click the TV to turn it on or off">
+    <div id="tv-body" title="Click the TV to turn it on">
 
       <!-- Screen area — canvas is sized to fill this via CSS -->
       <div id="tv-screen-border">
@@ -56,12 +56,18 @@
           <!-- On-screen display: channel and scene on every change, control feedback, now playing -->
           <div id="osd" aria-live="polite">
             <div id="osd-ch"></div>
-            <div id="osd-msg"></div>
-            <div id="osd-info">
-              <div id="osd-name"></div>
-              <div id="osd-chain"></div>
+            <!-- Top left: what Spaz Radio is playing, and the next show -->
+            <div id="osd-radio">
               <div id="osd-track"></div>
               <div id="osd-next"></div>
+            </div>
+            <!-- Centre: control feedback (HOLD, BARS, SYNC, NO SIGNAL...) -->
+            <div id="osd-msg"></div>
+            <!-- Bottom left: the scene, the background behind it, the scene's FX -->
+            <div id="osd-info">
+              <div id="osd-name"></div>
+              <div id="osd-bg"></div>
+              <div id="osd-chain"></div>
               <div id="osd-brand">LIQUID LSD &middot; liquid-lsd.greenjon.com</div>
             </div>
           </div>
@@ -72,7 +78,7 @@
           <!-- Station bumper, about every 30 minutes -->
           <div id="bumper" aria-live="polite"></div>
           <!-- MENU › ABOUT -->
-          <div id="about" hidden>
+          <div id="about" title="" hidden>
             <div class="ab-head"><img src="icon-192.png" alt=""><div><div class="ab-name">LIQUID LSD</div><div class="ab-by">MADE BY GREENJON</div></div></div>
             <p>The free, open-source (GPLv3) VJ engine behind this TV.</p>
             <p>Desktop app for Linux, macOS and Windows: 35 generators, 27 effects, MIDI and OSC control, Ableton Link, Spout / Syphon output, and live broadcast to this TV.</p>
@@ -80,7 +86,7 @@
             <div class="ab-hint">ANY KEY OR CLICK TO CLOSE</div>
           </div>
           <!-- SCHEDULE: Spaz Radio's upcoming shows (schedule.js), in the viewer's local time -->
-          <div id="schedule" hidden>
+          <div id="schedule" title="" hidden>
             <div class="sc-head"><span class="sc-name">SPAZ RADIO &middot; SCHEDULE</span><span class="sc-zone"></span></div>
             <div class="sc-list" role="list"></div>
             <div class="sc-hint">ANY KEY OR CLICK TO CLOSE</div>
@@ -97,7 +103,7 @@
       </a>
 
       <!-- Controls row below screen -->
-      <div id="tv-controls">
+      <div id="tv-controls" title="">
 
         <!-- Power switch -->
         <div class="control-group">

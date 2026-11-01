@@ -32,7 +32,9 @@ try {
   check('REACT starts at 100%', w.LSD.viewerState.react === 1, w.LSD.viewerState.react);
   key('i');
   check('I shows the channel', osd('osd-ch').shown && /^CH \d+/.test(osd('osd-ch').text), JSON.stringify(osd('osd-ch')));
-  check('I names the scene', osd('osd-name').text.length > 0, osd('osd-name').text);
+  check('I names the scene', /^SCENE: \S/.test(osd('osd-name').text), osd('osd-name').text);
+  check('I names the background', osd('osd-bg').shown && /^BACKGROUND: \S/.test(osd('osd-bg').text), JSON.stringify(osd('osd-bg')));
+  check('I names the FX', osd('osd-chain').shown && /^FX: \S/.test(osd('osd-chain').text), JSON.stringify(osd('osd-chain')));
 
   // Dragging a knob and letting go over the TV must not click the TV (power off).
   const dial = d.getElementById('reactDial');
@@ -218,11 +220,20 @@ try {
   plate.click();
   check('Clicking the nameplate does not turn the TV off', w.LSD.powerState.on);
 
-  // Clicking the picture while on does not turn it off; clicking the cabinet does, and again turns it on.
+  // While on, neither the picture nor the cabinet turns it off (only PWR does); a near-miss presses the
+  // nearest button; off, a click anywhere turns it on again.
   d.getElementById('glCanvas').click();
   check('A click on the picture leaves the TV on', w.LSD.powerState.on);
-  d.getElementById('tv-controls').click();
-  check('A click on the cabinet turns the TV off', !w.LSD.powerState.on);
+  const at = (x, y) => d.elementFromPoint(x, y).dispatchEvent(new w.MouseEvent('click', { bubbles: true, clientX: x, clientY: y }));
+  const tb = d.getElementById('tv-body').getBoundingClientRect();
+  at(tb.left + 6, tb.top + 6);
+  check('A click on the cabinet leaves the TV on', w.LSD.powerState.on);
+  const hb = d.getElementById('holdBtn'), hr = hb.getBoundingClientRect(), held = w.LSD.autopilotState.hold;
+  at(hr.right + 8, hr.top + hr.height / 2);
+  check('A click just beside HOLD presses HOLD', w.LSD.powerState.on && w.LSD.autopilotState.hold !== held);
+  hb.click(); // back as it was
+  d.getElementById('powerSwitch').click();
+  check('PWR turns the TV off', !w.LSD.powerState.on);
   d.getElementById('tv-body').click();
   check('A click on the TV turns it on again', w.LSD.powerState.on);
   // CHAT: the blackboard, on a fake broker and log (?nolive never starts the real room).

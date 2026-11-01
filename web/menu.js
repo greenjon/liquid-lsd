@@ -9,6 +9,7 @@
 export function createMenu(screen, rows, { version = '', onOpen = () => {}, onClose = () => {} } = {}) {
   const el = document.createElement('div');
   el.id = 'tv-menu';
+  el.title = ''; // no inherited cabinet/picture hover help; rows carry their own
   el.setAttribute('role', 'menu');
   el.hidden = true;
   screen.appendChild(el);

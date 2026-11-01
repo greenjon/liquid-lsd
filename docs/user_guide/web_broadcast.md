@@ -105,7 +105,9 @@ The board is open on your first visit. The **X** in its top corner closes it, an
 
 **Going live:** when the desktop starts broadcasting, viewers see a LIVE title card with the broadcaster's name (if one is set in the desktop's Web Broadcast preferences).
 
-**Power:** click anywhere on the TV to turn it on (the browser needs that click to start the sound). Once it's on, a click on the cabinet turns it off; clicks on the picture show the info instead.
+**Power:** click anywhere on the TV to turn it on (the browser needs that click to start the sound). Once it's on, only the PWR switch turns it off: clicks on the cabinet are ignored, a click that just misses a button presses the nearest one, and clicks on the picture show the info.
+
+**The info panel:** click the picture or press **I** to see it. Top left: what Spaz Radio is playing and the next show. Bottom left: **SCENE** (the scene on air), **BACKGROUND** (the scene playing behind it, which changes on its own clock, twice the scene length) and **FX** (the scene's effects). With MENU › **ANNOUNCE SCENES** on, the panel comes up by itself for each new scene, and the BACKGROUND line when the background changes. Control messages (HOLD, BARS, SYNC…) come up in the middle of the picture.
 
 **About:** the nameplate under the screen opens the Liquid LSD website. MENU › **ABOUT** tells you about the desktop app (with a QR code for your phone), and **I** shows a Liquid LSD line with the info.
 

@@ -317,7 +317,7 @@ body {
   font-size: clamp(11px, 1.9vw, 26px);
 }
 
-#osd > div, #osd-info > div {
+#osd > div, #osd-info > div, #osd-radio > div {
   opacity: 0;
   transition: opacity 0.4s;
 }
@@ -331,10 +331,22 @@ body {
   font-size: 2.2em;
 }
 
-#osd-msg {
+#osd-radio {
   position: absolute;
   top: 5%;
   left: 5%;
+  right: 30%;  /* clear of CH nn */
+  opacity: 1 !important;
+}
+#osd-radio > div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+#osd-msg {
+  position: absolute;
+  top: 50%;
+  left: 5%;
+  right: 5%;
+  transform: translateY(-50%);
+  text-align: center;
   font-size: 1.3em;
 }
 
@@ -346,8 +358,9 @@ body {
   opacity: 1 !important;
 }
 
-#osd-name { font-size: 1.5em; }
-#osd-chain, #osd-track, #osd-next { font-size: 0.9em; margin-top: 0.2em; }
+#osd-name, #osd-bg, #osd-chain { font-size: 1em; margin-top: 0.15em; }
+#osd-track { font-size: 1em; }
+#osd-next { margin-top: 0.2em; }
 #osd-track { color: #c8ffc8; text-transform: none; }
 #osd-next { font-size: 0.75em; color: #d9c2ff; text-shadow: 0 0 8px rgba(160,90,255,0.9), 1px 1px 0 rgba(0,0,0,0.8); }
 #tv-body:not(.powered-on) #osd { display: none; }
