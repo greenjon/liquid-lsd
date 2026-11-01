@@ -122,7 +122,10 @@ await new Promise((r) => server.listen(0, '127.0.0.1', r));
 const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'lsd-ff-'));
 const ff = spawn('firefox', ['--headless', '--no-remote', '--profile', profile,
   `http://127.0.0.1:${server.address().port}/checks/render_check.html`], { stdio: 'ignore' });
-const timer = setTimeout(() => { console.error('timeout waiting for Firefox'); done(1); }, 600000);
+// About 300 cases at 1-2.5 s each, plus a PNG per case: well over 10 minutes with today's library.
+// RENDER_CHECK_TIMEOUT_S overrides the limit.
+const limitS = Number(process.env.RENDER_CHECK_TIMEOUT_S) || 1800;
+const timer = setTimeout(() => { console.error(`timeout waiting for Firefox (${limitS} s)`); done(1); }, limitS * 1000);
 function done(code) {
   clearTimeout(timer); ff.kill('SIGKILL'); server.close();
   fs.rmSync(profile, { recursive: true, force: true }); process.exit(code);

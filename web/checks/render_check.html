@@ -9,7 +9,9 @@ import { parseDeckPreset, parseFxChain, parseTransition } from '../preset.js';
 const app = document.getElementById('app');
 const errors = [];
 const post = (o) => fetch('/report', { method: 'POST', body: JSON.stringify(o) });
-await new Promise((r) => app.addEventListener('load', r));
+// The preset.js import runs before this, so the frame may have loaded already: waiting for 'load' then
+// would wait forever.
+if (app.contentDocument?.readyState !== 'complete' || app.contentWindow.location.href === 'about:blank') await new Promise((r) => app.addEventListener('load', r));
 const w = app.contentWindow;
 w.addEventListener('error', (e) => errors.push(String(e.message)));
 const origErr = w.console.error;
