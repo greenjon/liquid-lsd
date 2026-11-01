@@ -305,15 +305,20 @@ class ISFFilter(
         // Create modulatable parameters for non-image inputs
         for (input in header.INPUTS) {
             if (input.TYPE.lowercase() == "image") continue
+            // audio/audioFFT inputs are textures (bound in render), not knobs
+            if (ISFAudioInputs.isAudioType(input.TYPE)) continue
 
             val defaultVal = input.DEFAULT?.toString()?.toFloatOrNull() ?: 0.0f
             val valuesFloat = input.VALUES?.mapNotNull { it.toString().toFloatOrNull() }
-            val minVal = input.MIN?.toString()?.toFloatOrNull()
+            val declMin = input.MIN?.toString()?.toFloatOrNull()
                 ?: valuesFloat?.minOrNull()
                 ?: 0.0f
-            val maxVal = input.MAX?.toString()?.toFloatOrNull()
+            val declMax = input.MAX?.toString()?.toFloatOrNull()
                 ?: valuesFloat?.maxOrNull()
                 ?: 1.0f
+            // Some published ISFs declare MIN > MAX; other hosts accept that, so treat it as swapped.
+            val minVal = minOf(declMin, declMax)
+            val maxVal = maxOf(declMin, declMax)
 
             val steps = input.discreteSteps(minVal, maxVal)
             parameters[input.NAME] = ModulatableParameter(
@@ -458,6 +463,7 @@ class ISFFilter(
         }
         phases.advance(TimeSource.getTimeSec())
         phases.apply(shader)
+        bindAudioInputs()
 
         if (passesArray.isEmpty()) {
             shader.setUniform("PASSINDEX", 0)
@@ -604,6 +610,7 @@ class ISFFilter(
         }
         phases.advance(TimeSource.getTimeSec())
         phases.apply(shader)
+        bindAudioInputs()
 
         shader.setUniform("PASSINDEX", 0)
         shader.setUniform("RENDERSIZE", width.toFloat(), height.toFloat())
@@ -632,6 +639,16 @@ class ISFFilter(
 
         shader.unbind()
         glActiveTexture(GL_TEXTURE0)
+    }
+
+    private val audioInputs = ISFAudioInputs(header)
+
+    /** Points ISF `audio`/`audioFFT` inputs at the renderer's audio textures (fixed high units, clear of pass units). */
+    private fun bindAudioInputs() {
+        if (audioInputs.isEmpty) return
+        val audio = llm.slop.liquidlsd.rendering.AudioTexture.active ?: return
+        audio.bindAll()
+        audioInputs.apply(shader)
     }
 
     private fun resizePassFBOs() {

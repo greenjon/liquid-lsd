@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Audio Visualizers From Other ISF Hosts Work (`rendering/AudioTexture.kt`, `rendering/isf/ISFAudioInputs.kt`, `rendering/isf/ISFVisualSource.kt`, `rendering/isf/ISFFilter.kt`, `rendering/Shader.kt`, `rendering/Renderer.kt`)
+- **Fixed: ISF shaders with `audio` or `audioFFT` inputs drew black or garbage.** Their inputs were never connected to the audio. Each now gets the waveform or the spectrum under its own name, as other ISF hosts provide them, so the audio visualizers in the official ISF collection (FFT Spectrogram, Radial Spectrogram, FFT Color Lines, FFT Filled Waveform, Audio Waveform Shape) run as they are. Effects with an audio input get it too, and no longer show a useless knob for it.
+- **Fixed: a shader whose knob range is written backwards (`MIN` above `MAX`) stopped working.** The range is now read the right way round.
+- **Fixed: multi-pass shaders that keep a running value in a small buffer** (Radial Spectrogram's sweep) stood still: in-between passes were blended into their own buffers. Only the last pass blends now; every stock source looks exactly the same.
+- **Fixed: a shader that uses a name such as `time` for its own buffer or knob** got a GL error or had the app's clock written over its knob.
+
 ### Web TV: Spaz Radio Chat on a Blackboard (`web/chat.js`, `web/chatboard.js`, `web/mqtt.js`, `web/ui.js`, `web/index.html`, `web/tv.css`, `web/fonts/`)
 - **The Spaz Radio chat now hangs beside the web TV on a blackboard**, written in chalk. It's the same room as the Spaz Radio Android app and spaz.org/radio: the recent conversation, who is here, and a line to write on. Write your name in chalk to join (it's remembered next visit); click your name to change it. Links open in a new tab.
 - **The board is open on your first visit, and the big X in its corner closes it** (remembered). The new CHAT button, `C`, or MENU › CHAT brings it back, and the CHAT button's light comes on when new lines arrive while it is closed.

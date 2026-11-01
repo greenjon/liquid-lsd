@@ -183,28 +183,29 @@ class ISFVisualSource(
     }.toTypedArray()
 
     private sealed class ISFInputBinding {
+        abstract val name: String
         abstract fun apply(shader: Shader)
 
-        class FloatInput(val name: String, val param: ModulatableParameter?) : ISFInputBinding() {
+        class FloatInput(override val name: String, val param: ModulatableParameter?) : ISFInputBinding() {
             override fun apply(shader: Shader) {
                 shader.setUniform(name, param?.value ?: 0f)
             }
         }
 
-        class BoolInput(val name: String, val param: ModulatableParameter?) : ISFInputBinding() {
+        class BoolInput(override val name: String, val param: ModulatableParameter?) : ISFInputBinding() {
             override fun apply(shader: Shader) {
                 shader.setUniform(name, if ((param?.value ?: 0f) > 0.5f) 1 else 0)
             }
         }
 
-        class LongInput(val name: String, val param: ModulatableParameter?) : ISFInputBinding() {
+        class LongInput(override val name: String, val param: ModulatableParameter?) : ISFInputBinding() {
             override fun apply(shader: Shader) {
                 shader.setUniform(name, Math.round(param?.value ?: 0f))
             }
         }
 
         class ColorInput(
-            val name: String,
+            override val name: String,
             val r: ModulatableParameter?,
             val g: ModulatableParameter?,
             val b: ModulatableParameter?,
@@ -216,7 +217,7 @@ class ISFVisualSource(
         }
 
         class Point2DInput(
-            val name: String,
+            override val name: String,
             val x: ModulatableParameter?,
             val y: ModulatableParameter?
         ) : ISFInputBinding() {
@@ -246,6 +247,26 @@ class ISFVisualSource(
             else -> null
         }
     }.toTypedArray()
+
+    /**
+     * Inputs whose names are also built-in uniforms the renderer sets after [setupUniforms] (`time`, `mouse`, ...):
+     * [applyOverBuiltins] sets them again so the shader's own declared input wins.
+     */
+    private val shadowingInputBindings: Array<ISFInputBinding> = header.INPUTS.mapNotNull { input ->
+        if (input.NAME in Shader.SYSTEM_UNIFORMS) inputBindings.firstOrNull { it.name == input.NAME } else null
+    }.toTypedArray()
+
+    private val audioInputs = ISFAudioInputs(header)
+
+    /**
+     * Called by the renderer after its built-in uniforms: points the ISF `audio`/`audioFFT` inputs at their textures
+     * (this also overrides the stacked texture when an input is itself named `audioFFT`), then re-applies inputs that
+     * share a built-in's name.
+     */
+    fun applyOverBuiltins(shader: Shader) {
+        audioInputs.apply(shader)
+        for (i in 0 until shadowingInputBindings.size) shadowingInputBindings[i].apply(shader)
+    }
 
     private val phases = PhaseIntegrators(header.LSD_PHASES, parameters)
     init { shader.quietUniforms = header.LSD_PHASES.values.flatten().toSet() }
@@ -288,6 +309,10 @@ class ISFVisualSource(
         }
 
         val currentFbo = targetFBO.framebufferId
+        // Intermediate passes store data (a running time, a state buffer), so they write unblended, as other ISF
+        // hosts do; with blending a pass that writes alpha < 1 would mix into its own target. Only the final pass
+        // composites with the deck's blend state.
+        val blendWasEnabled = glIsEnabled(GL_BLEND)
 
         for (passIdx in passesArray.indices) {
             val pass = passesArray[passIdx]
@@ -307,6 +332,7 @@ class ISFVisualSource(
             }
 
             glBindFramebuffer(GL_FRAMEBUFFER, fboToBind)
+            if (isFinalPass && blendWasEnabled) glEnable(GL_BLEND) else glDisable(GL_BLEND)
 
             val renderWidth = passWidthExprs[passIdx]?.eval(passWidth, passHeight) ?: width
             val renderHeight = passHeightExprs[passIdx]?.eval(passWidth, passHeight) ?: height
@@ -430,8 +456,11 @@ class ISFVisualSource(
                         val isInt = input.TYPE.lowercase() != "float"
                         val values = input.VALUES?.mapNotNull { (it as? JsonPrimitive)?.floatOrNull }
                         val default = (input.DEFAULT as? JsonPrimitive)?.floatOrNull ?: if (isInt) (values?.minOrNull() ?: 0f) else 0.5f
-                        val min = (input.MIN as? JsonPrimitive)?.floatOrNull ?: values?.minOrNull() ?: 0.0f
-                        val max = (input.MAX as? JsonPrimitive)?.floatOrNull ?: values?.maxOrNull() ?: 1.0f
+                        val declMin = (input.MIN as? JsonPrimitive)?.floatOrNull ?: values?.minOrNull() ?: 0.0f
+                        val declMax = (input.MAX as? JsonPrimitive)?.floatOrNull ?: values?.maxOrNull() ?: 1.0f
+                        // Some published ISFs declare MIN > MAX; other hosts accept that, so treat it as swapped.
+                        val min = minOf(declMin, declMax)
+                        val max = maxOf(declMin, declMax)
                         val steps = input.discreteSteps(min, max)
                         params[input.NAME] = ModulatableParameter(
                             baseValue = default,
@@ -476,8 +505,8 @@ class ISFVisualSource(
                         val maxX = (maxArray?.getOrNull(0) as? JsonPrimitive)?.floatOrNull ?: 1f
                         val maxY = (maxArray?.getOrNull(1) as? JsonPrimitive)?.floatOrNull ?: 1f
                         
-                        params["${input.NAME} X"] = ModulatableParameter(x, minClamp = minX, maxClamp = maxX)
-                        params["${input.NAME} Y"] = ModulatableParameter(y, minClamp = minY, maxClamp = maxY)
+                        params["${input.NAME} X"] = ModulatableParameter(x, minClamp = minOf(minX, maxX), maxClamp = maxOf(minX, maxX))
+                        params["${input.NAME} Y"] = ModulatableParameter(y, minClamp = minOf(minY, maxY), maxClamp = maxOf(minY, maxY))
                     }
                 }
             }

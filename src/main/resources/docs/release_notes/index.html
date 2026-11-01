@@ -1262,6 +1262,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#audio-visualizers-from-other-isf-hosts-work-renderingaudiotexturekt-renderingisfisfaudioinputskt-renderingisfisfvisualsourcekt-renderingisfisffilterkt-renderingshaderkt-renderingrendererkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audio Visualizers From Other ISF Hosts Work (rendering/AudioTexture.kt, rendering/isf/ISFAudioInputs.kt, rendering/isf/ISFVisualSource.kt, rendering/isf/ISFFilter.kt, rendering/Shader.kt, rendering/Renderer.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#web-tv-spaz-radio-chat-on-a-blackboard-webchatjs-webchatboardjs-webmqttjs-webuijs-webindexhtml-webtvcss-webfonts" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7334,6 +7345,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#audio-visualizers-from-other-isf-hosts-work-renderingaudiotexturekt-renderingisfisfaudioinputskt-renderingisfisfvisualsourcekt-renderingisfisffilterkt-renderingshaderkt-renderingrendererkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audio Visualizers From Other ISF Hosts Work (rendering/AudioTexture.kt, rendering/isf/ISFAudioInputs.kt, rendering/isf/ISFVisualSource.kt, rendering/isf/ISFFilter.kt, rendering/Shader.kt, rendering/Renderer.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#web-tv-spaz-radio-chat-on-a-blackboard-webchatjs-webchatboardjs-webmqttjs-webuijs-webindexhtml-webtvcss-webfonts" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -13357,6 +13379,13 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="audio-visualizers-from-other-isf-hosts-work-renderingaudiotexturekt-renderingisfisfaudioinputskt-renderingisfisfvisualsourcekt-renderingisfisffilterkt-renderingshaderkt-renderingrendererkt">Audio Visualizers From Other ISF Hosts Work (<code>rendering/AudioTexture.kt</code>, <code>rendering/isf/ISFAudioInputs.kt</code>, <code>rendering/isf/ISFVisualSource.kt</code>, <code>rendering/isf/ISFFilter.kt</code>, <code>rendering/Shader.kt</code>, <code>rendering/Renderer.kt</code>)</h3>
+<ul>
+<li><strong>Fixed: ISF shaders with <code>audio</code> or <code>audioFFT</code> inputs drew black or garbage.</strong> Their inputs were never connected to the audio. Each now gets the waveform or the spectrum under its own name, as other ISF hosts provide them, so the audio visualizers in the official ISF collection (FFT Spectrogram, Radial Spectrogram, FFT Color Lines, FFT Filled Waveform, Audio Waveform Shape) run as they are. Effects with an audio input get it too, and no longer show a useless knob for it.</li>
+<li><strong>Fixed: a shader whose knob range is written backwards (<code>MIN</code> above <code>MAX</code>) stopped working.</strong> The range is now read the right way round.</li>
+<li><strong>Fixed: multi-pass shaders that keep a running value in a small buffer</strong> (Radial Spectrogram's sweep) stood still: in-between passes were blended into their own buffers. Only the last pass blends now; every stock source looks exactly the same.</li>
+<li><strong>Fixed: a shader that uses a name such as <code>time</code> for its own buffer or knob</strong> got a GL error or had the app's clock written over its knob.</li>
+</ul>
 <h3 id="web-tv-spaz-radio-chat-on-a-blackboard-webchatjs-webchatboardjs-webmqttjs-webuijs-webindexhtml-webtvcss-webfonts">Web TV: Spaz Radio Chat on a Blackboard (<code>web/chat.js</code>, <code>web/chatboard.js</code>, <code>web/mqtt.js</code>, <code>web/ui.js</code>, <code>web/index.html</code>, <code>web/tv.css</code>, <code>web/fonts/</code>)</h3>
 <ul>
 <li><strong>The Spaz Radio chat now hangs beside the web TV on a blackboard</strong>, written in chalk. It's the same room as the Spaz Radio Android app and spaz.org/radio: the recent conversation, who is here, and a line to write on. Write your name in chalk to join (it's remembered next visit); click your name to change it. Links open in a new tab.</li>

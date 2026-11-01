@@ -1249,6 +1249,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#7-audio-inputs-and-third-party-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Audio inputs and third-party compatibility
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2051,6 +2062,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#7-audio-inputs-and-third-party-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Audio inputs and third-party compatibility
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2393,6 +2415,15 @@ This is the same domain-folded CSG technique as the old <code>icosa-v3</code> so
 - The rate uniform itself is often no longer referenced, so the GLSL compiler drops it and <code>Shader</code> logs one "Uniform not found" warning for it; harmless.
 - <code>web/isf.js</code> mirrors this (<code>advancePhases</code>, state in <code>ISFState.phases</code>, reset when the program changes). The web rotation gate (<code>web/tools/reactivity.test.mjs</code>) lets presets modulate a rate input only when its shader integrates it.</p>
 <p>LFOs and sequencers clocked in seconds or frames had the same bug (<code>clock / period</code>); see <code>ClockAnchors</code> in <a href="../modulation/#genunit">modulation.md</a>.</p>
+<h3 id="7-audio-inputs-and-third-party-compatibility">7. Audio inputs and third-party compatibility</h3>
+<p>Checked against the Vidvox ISF-Files "Audio Visualizer" shaders (<code>ISFAudioCompatTest</code> covers each point):
+- <strong><code>audio</code> / <code>audioFFT</code> inputs</strong> are bound under the shader's own input name (<code>fftImage</code>, <code>waveImage</code>, ...) by <code>ISFAudioInputs</code>: <code>audioFFT</code> to <code>AudioTexture.isfFftTextureId</code>, <code>audio</code> to <code>isfWaveTextureId</code>, both 512x1 (the ISF spec's one image per input, one row per channel; the analysis is mono, so every channel reads the same row). An input literally named <code>audioFFT</code> gets the 1-row texture too, overriding the stacked Shadertoy one. <code>MAX</code> is not applied; shaders read the width with <code>IMG_SIZE</code>. Sources bind in <code>Renderer.render</code> through <code>ISFVisualSource.applyOverBuiltins</code>, FX in <code>ISFFilter.render</code> / <code>renderTransition</code> through <code>AudioTexture.active</code>. <code>ISFFilter</code> makes no knob for these inputs.
+- <strong>Texture units:</strong> the three audio textures sit on fixed units 13-15 (<code>AudioTexture.UNIT_*</code>), clear of the pass, import and input-image units that count up from 0.
+- <strong><code>MIN</code> &gt; <code>MAX</code></strong> is treated as swapped (some published files declare it; other hosts accept it). Before, <code>evaluate()</code> threw on the empty range.
+- <strong>Built-in names:</strong> the renderer sets scalars by fixed names (<code>time</code>, <code>mouse</code>, <code>resolution</code>, ...). <code>Shader</code> records its sampler uniforms at link and its float/vector setters skip them, so a pass target called <code>time</code> no longer raises <code>GL_INVALID_OPERATION</code>; a declared scalar input that shares a built-in's name is set again after the built-ins, so the shader's own input wins.
+- <strong>Intermediate passes render unblended</strong> (<code>ISFVisualSource.renderTopology</code>); only the final pass uses the deck's blend state. A pass that wrote alpha &lt; 1 into its own target (Radial Spectrogram's 1x1 running time) used to blend with the old value and never advance. The five stock multipass sources render pixel-identical either way.
+- Shadertoy shaders reading <code>iChannel0</code> (<code>texture(..., vec2(x, 0.25))</code> or <code>texelFetch(..., ivec2(x, 0), 0)</code>) already worked. Its FFT reads dimmer than on Shadertoy (WebAudio maps -100..-30 dB; ours -80..0 dB full scale): left as is for now.
+- Not on the web player yet (<code>web/isf.js</code> has no audio textures).</p>
 
 
 

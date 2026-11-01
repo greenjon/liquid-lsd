@@ -20,6 +20,13 @@ class Shader(vertexSource: String, fragmentSource: String) {
     /** Uniforms the source expects the compiler to drop (LSD_PHASES rate inputs); a missing one is not worth a warning. */
     var quietUniforms: Set<String> = emptySet()
 
+    /**
+     * Active sampler uniforms. The renderer sets built-in scalars by fixed names (`time`, `mouse`, ...); a shader may
+     * use one of those names for its own texture (an ISF pass target called `time`), and a float set on a sampler is a
+     * GL error, so the float/vector setters skip these names.
+     */
+    private val samplerNames = HashSet<String>()
+
     init {
         var vId = 0
         var fId = 0
@@ -54,6 +61,8 @@ class Shader(vertexSource: String, fragmentSource: String) {
                 logger.warn { "Shader program validation warning:\n${glGetProgramInfoLog(pId)}" }
             }
             
+            collectSamplerNames(pId)
+
             vertexId = vId
             fragmentId = fId
             programId = pId
@@ -75,6 +84,19 @@ class Shader(vertexSource: String, fragmentSource: String) {
             throw e
         }
     }
+
+    private fun collectSamplerNames(program: Int) {
+        val count = glGetProgrami(program, GL_ACTIVE_UNIFORMS)
+        val size = org.lwjgl.BufferUtils.createIntBuffer(1)
+        val type = org.lwjgl.BufferUtils.createIntBuffer(1)
+        for (i in 0 until count) {
+            val name = glGetActiveUniform(program, i, size, type)
+            if (type.get(0) in SAMPLER_TYPES) samplerNames.add(name.removeSuffix("[0]"))
+        }
+    }
+
+    /** Location for a float/vector value: -1 (a no-op) when [name] is a sampler in this program. */
+    private fun valueLocation(name: String): Int = if (name in samplerNames) -1 else getUniformLocation(name)
 
     /**
      * Compile a shader from source code
@@ -140,19 +162,19 @@ class Shader(vertexSource: String, fragmentSource: String) {
     }
 
     fun setUniform(name: String, value: Float) {
-        glUniform1f(getUniformLocation(name), value)
+        glUniform1f(valueLocation(name), value)
     }
 
     fun setUniform(name: String, x: Float, y: Float) {
-        glUniform2f(getUniformLocation(name), x, y)
+        glUniform2f(valueLocation(name), x, y)
     }
 
     fun setUniform(name: String, x: Float, y: Float, z: Float) {
-        glUniform3f(getUniformLocation(name), x, y, z)
+        glUniform3f(valueLocation(name), x, y, z)
     }
 
     fun setUniform(name: String, x: Float, y: Float, z: Float, w: Float) {
-        glUniform4f(getUniformLocation(name), x, y, z, w)
+        glUniform4f(valueLocation(name), x, y, z, w)
     }
 
     fun setUniform4fv(name: String, values: FloatArray) {
@@ -188,6 +210,8 @@ class Shader(vertexSource: String, fragmentSource: String) {
 
 
     companion object {
+        private val SAMPLER_TYPES = setOf(GL_SAMPLER_1D, GL_SAMPLER_2D, GL_SAMPLER_3D, GL_SAMPLER_CUBE, GL_SAMPLER_2D_RECT, GL_SAMPLER_2D_SHADOW)
+
         val SYSTEM_UNIFORMS: Set<String> = setOf(
             "uTime", "uAlpha", "uResolution", "TIME", "TIMEDELTA", "FRAMEINDEX", "DATE",
             "RENDERSIZE", "uAspectRatio", "uZoom", "uRotateZ", "PASSINDEX", "src",

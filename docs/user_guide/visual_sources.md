@@ -447,6 +447,8 @@ The app reads the ISF JSON header inside each shader file, automatically lists i
 
 Shaders can read the live audio through the `audioFFT` sampler (Shadertoy-style `iChannel0` is the same texture), a 512x2 single-channel texture. Row 0 (`y = 0.25`) is the spectrum: 512 bins from 0 Hz to half the sample rate, 0 to 1 on a decibel scale (full scale is 1, -80 dB is 0), with a quick decay so bars fall smoothly. Row 1 (`y = 0.75`) is the waveform, centred on 0.5. Example: `float level = texture(audioFFT, vec2(pow(uv.x, 2.0), 0.25)).r;` gives a bar height with more resolution at the low end.
 
+ISF shaders written for other hosts can instead declare their own audio inputs, as the ISF spec describes: an input of `"TYPE": "audioFFT"` gets the spectrum and `"TYPE": "audio"` gets the waveform, each as a 512x1 image under whatever name the shader gives it. The audio visualizers from the official ISF collection (FFT Spectrogram, Radial Spectrogram, FFT Color Lines, FFT Filled Waveform, Audio Waveform Shape) run as they are. The audio is mono, so a shader's stereo mode shows the same signal on both sides.
+
 Mouse uniforms (`iMouse`, `u_mouse`, `mouse`) always read the centre of the frame with no click: the app's cursor is you working the controls, so it never steers the picture.
 
 ### Naming and 3D sources

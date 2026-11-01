@@ -150,11 +150,12 @@ class Renderer {
         source.shader.setUniform("audioMid",    audioMid)
         source.shader.setUniform("audioTreble", audioTreble)
 
-        // Update Audio FFT Texture and bind to unit 5
+        // Audio textures: the stacked Shadertoy one behind the fixed names, ISF audio/audioFFT inputs by their own names
         audioTexture.updateFromAudioEngine(llm.slop.liquidlsd.audio.AudioEngine)
-        audioTexture.bind(5)
-        source.shader.setUniform("audioFFT", 5)
-        source.shader.setUniform("iChannel0", 5)
+        audioTexture.bindAll()
+        source.shader.setUniform("audioFFT", AudioTexture.UNIT_STACKED)
+        source.shader.setUniform("iChannel0", AudioTexture.UNIT_STACKED)
+        if (source is llm.slop.liquidlsd.rendering.isf.ISFVisualSource) source.applyOverBuiltins(source.shader)
 
         if (hasFb) {
             source.shader.setUniform("src", 0)

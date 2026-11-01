@@ -1,8 +1,5 @@
 package llm.slop.liquidlsd.rendering
 
-import org.junit.jupiter.api.Assumptions.assumeTrue
-import org.lwjgl.glfw.GLFW.*
-import org.lwjgl.opengl.GL
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -10,29 +7,7 @@ import kotlin.test.assertTrue
 
 /** Runs the quality gate on the real iterate shader on a hidden GL 3.3 context; skipped where no context can be made. */
 class FlameProbeTest {
-    /**
-     * One hidden context for the whole class, never destroyed: [Geometry] caches its fullscreen-quad VAO, and VAOs are
-     * not shared between contexts, so a second context in the same JVM would draw nothing.
-     */
-    private fun withGl(body: () -> Unit) {
-        if (window == 0L) {
-            val hasGlfw = try { glfwInit() } catch (e: Throwable) { false }
-            assumeTrue(hasGlfw, "GLFW unavailable; skipping")
-            glfwDefaultWindowHints()
-            glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE)
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3)
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3)
-            glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE)
-            glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE)
-            window = glfwCreateWindow(64, 64, "Flame probe test", 0L, 0L)
-            assumeTrue(window != 0L, "No offscreen GL context; skipping")
-            glfwMakeContextCurrent(window)
-            GL.createCapabilities()
-        }
-        body()
-    }
-
-    private companion object { var window = 0L }
+    private fun withGl(body: () -> Unit) = SharedHiddenGl.use(body)
 
     private val params = FlameGenome.buildParameters()
 

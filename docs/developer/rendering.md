@@ -286,3 +286,13 @@ A shader must never compute motion as `TIME * Speed`: when Speed changes, that p
 - `web/isf.js` mirrors this (`advancePhases`, state in `ISFState.phases`, reset when the program changes). The web rotation gate (`web/tools/reactivity.test.mjs`) lets presets modulate a rate input only when its shader integrates it.
 
 LFOs and sequencers clocked in seconds or frames had the same bug (`clock / period`); see `ClockAnchors` in [modulation.md](modulation.md#genunit).
+
+### 7. Audio inputs and third-party compatibility
+Checked against the Vidvox ISF-Files "Audio Visualizer" shaders (`ISFAudioCompatTest` covers each point):
+- **`audio` / `audioFFT` inputs** are bound under the shader's own input name (`fftImage`, `waveImage`, ...) by `ISFAudioInputs`: `audioFFT` to `AudioTexture.isfFftTextureId`, `audio` to `isfWaveTextureId`, both 512x1 (the ISF spec's one image per input, one row per channel; the analysis is mono, so every channel reads the same row). An input literally named `audioFFT` gets the 1-row texture too, overriding the stacked Shadertoy one. `MAX` is not applied; shaders read the width with `IMG_SIZE`. Sources bind in `Renderer.render` through `ISFVisualSource.applyOverBuiltins`, FX in `ISFFilter.render` / `renderTransition` through `AudioTexture.active`. `ISFFilter` makes no knob for these inputs.
+- **Texture units:** the three audio textures sit on fixed units 13-15 (`AudioTexture.UNIT_*`), clear of the pass, import and input-image units that count up from 0.
+- **`MIN` > `MAX`** is treated as swapped (some published files declare it; other hosts accept it). Before, `evaluate()` threw on the empty range.
+- **Built-in names:** the renderer sets scalars by fixed names (`time`, `mouse`, `resolution`, ...). `Shader` records its sampler uniforms at link and its float/vector setters skip them, so a pass target called `time` no longer raises `GL_INVALID_OPERATION`; a declared scalar input that shares a built-in's name is set again after the built-ins, so the shader's own input wins.
+- **Intermediate passes render unblended** (`ISFVisualSource.renderTopology`); only the final pass uses the deck's blend state. A pass that wrote alpha < 1 into its own target (Radial Spectrogram's 1x1 running time) used to blend with the old value and never advance. The five stock multipass sources render pixel-identical either way.
+- Shadertoy shaders reading `iChannel0` (`texture(..., vec2(x, 0.25))` or `texelFetch(..., ivec2(x, 0), 0)`) already worked. Its FFT reads dimmer than on Shadertoy (WebAudio maps -100..-30 dB; ours -80..0 dB full scale): left as is for now.
+- Not on the web player yet (`web/isf.js` has no audio textures).

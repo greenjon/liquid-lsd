@@ -137,7 +137,7 @@ Beat detection and continuous modulation signal generation are handled by [`Beat
 
 ## Shader Audio Texture Spectrum (`SpectrumAnalyzer.kt`)
 
-Row 0 of the 512x2 `audioFFT` / `iChannel0` texture (`AudioTexture.kt`) comes from [`SpectrumAnalyzer.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/audio/SpectrumAnalyzer.kt), not from the beat tracker (which keeps no display spectrum). `AudioEngine.processAudio` pushes each block's mixed mono samples into it after the waveform tap.
+Row 0 of the 512x2 `audioFFT` / `iChannel0` texture (`AudioTexture.kt`; the same values also fill the 512x1 textures behind ISF `audioFFT` and `audio` inputs, see [rendering.md](rendering.md#7-audio-inputs-and-third-party-compatibility)) comes from [`SpectrumAnalyzer.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/audio/SpectrumAnalyzer.kt), not from the beat tracker (which keeps no display spectrum). `AudioEngine.processAudio` pushes each block's mixed mono samples into it after the waveform tap.
 - **Transform:** newest 1024 samples, Hann window, radix-2 FFT, 512 linear bins (0 Hz to Nyquist; bin spacing sampleRate/1024).
 - **Scaling:** magnitude normalised so a full-scale sine is 1.0, then dB mapped -80..0 dB onto 0..1.
 - **Smoothing:** instant attack, one-pole release with a 0.08 s time constant computed from the block length, so it does not depend on the buffer size.
