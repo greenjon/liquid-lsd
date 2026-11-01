@@ -164,6 +164,7 @@ export class DeckPipeline {
       targetFBO: this.clean.fbo, width: this.clean.w, height: this.clean.h,
       params: evalParams(ctx, prog, deck.params ?? deck),
       frame: { ...frame, alpha: ctx.scalar(deck.globalAlpha, 1.0), view },
+      premultiply: true,
     });
     return true;
   }

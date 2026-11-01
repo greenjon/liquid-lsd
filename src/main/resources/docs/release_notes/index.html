@@ -1273,6 +1273,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#web-tv-scenes-no-longer-washed-out-webisfjs-webgraphjs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web TV: Scenes No Longer Washed Out (web/isf.js, web/graph.js)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#web-tv-spaz-radio-chat-on-a-blackboard-webchatjs-webchatboardjs-webmqttjs-webuijs-webindexhtml-webtvcss-webfonts" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7356,6 +7367,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#web-tv-scenes-no-longer-washed-out-webisfjs-webgraphjs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web TV: Scenes No Longer Washed Out (web/isf.js, web/graph.js)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#web-tv-spaz-radio-chat-on-a-blackboard-webchatjs-webchatboardjs-webmqttjs-webuijs-webindexhtml-webtvcss-webfonts" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -13385,6 +13407,11 @@
 <li><strong>Fixed: a shader whose knob range is written backwards (<code>MIN</code> above <code>MAX</code>) stopped working.</strong> The range is now read the right way round.</li>
 <li><strong>Fixed: multi-pass shaders that keep a running value in a small buffer</strong> (Radial Spectrogram's sweep) stood still: in-between passes were blended into their own buffers. Only the last pass blends now; every stock source looks exactly the same.</li>
 <li><strong>Fixed: a shader that uses a name such as <code>time</code> for its own buffer or knob</strong> got a GL error or had the app's clock written over its knob.</li>
+</ul>
+<h3 id="web-tv-scenes-no-longer-washed-out-webisfjs-webgraphjs">Web TV: Scenes No Longer Washed Out (<code>web/isf.js</code>, <code>web/graph.js</code>)</h3>
+<ul>
+<li><strong>Fixed: many web TV scenes looked washed out, almost white.</strong> Since the generators learned to treat black as transparent (2026-10-26), the web TV showed their dark areas as bright colour instead of letting them go dark. It now stores each source's picture the way the desktop does, so blacks are black again and colours are rich. About 17 presets were affected, among them Girih Ambient, Ambient Nebula, Build Drop Fluid and stock Domain Warp Fluid.</li>
+<li>The TV's version is now v7.</li>
 </ul>
 <h3 id="web-tv-spaz-radio-chat-on-a-blackboard-webchatjs-webchatboardjs-webmqttjs-webuijs-webindexhtml-webtvcss-webfonts">Web TV: Spaz Radio Chat on a Blackboard (<code>web/chat.js</code>, <code>web/chatboard.js</code>, <code>web/mqtt.js</code>, <code>web/ui.js</code>, <code>web/index.html</code>, <code>web/tv.css</code>, <code>web/fonts/</code>)</h3>
 <ul>

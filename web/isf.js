@@ -322,7 +322,7 @@ export class ISFState {
  * texture. Non-final passes go to their TARGETs; the last pass always writes `targetFBO`.
  * ctx: {gl, quadVAO, dummyTex, hasFloat}; frame: see applyUniforms.
  */
-export function renderISF(ctx, prog, state, { targetFBO, width, height, params, frame, images = {} }) {
+export function renderISF(ctx, prog, state, { targetFBO, width, height, params, frame, images = {}, premultiply = false }) {
   const { gl } = ctx;
   state.ensure(gl, prog, width, height, ctx.hasFloat);
   gl.disable(gl.BLEND);
@@ -364,7 +364,16 @@ export function renderISF(ctx, prog, state, { targetFBO, width, height, params, 
     for (const [name, t] of state.regular) bind(name, t.tex === selfTex ? ctx.dummyTex : t.tex);
     for (const [name, s] of state.persistent) bind(name, s.back.tex);
 
+    // A source's last pass is stored as colour x alpha (alpha as written) over the cleared target, like the
+    // desktop Renderer's glBlendFuncSeparate(SRC_ALPHA, ONE_MINUS_SRC_ALPHA, ONE, ONE_MINUS_SRC_ALPHA). The
+    // mixer and FX expect that; black-is-transparent sources write straight colour (c / a, a), which unmultiplied
+    // turns their dark areas bright.
+    if (premultiply && last) {
+      gl.enable(gl.BLEND);
+      gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    }
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    if (premultiply && last) gl.disable(gl.BLEND);
     if (pass && pass.persistent && pass.target && !last) {
       const s = state.persistent.get(pass.target);
       const tmp = s.front; s.front = s.back; s.back = tmp;

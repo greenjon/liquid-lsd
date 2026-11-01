@@ -6,6 +6,10 @@
 - **Fixed: multi-pass shaders that keep a running value in a small buffer** (Radial Spectrogram's sweep) stood still: in-between passes were blended into their own buffers. Only the last pass blends now; every stock source looks exactly the same.
 - **Fixed: a shader that uses a name such as `time` for its own buffer or knob** got a GL error or had the app's clock written over its knob.
 
+### Web TV: Scenes No Longer Washed Out (`web/isf.js`, `web/graph.js`)
+- **Fixed: many web TV scenes looked washed out, almost white.** Since the generators learned to treat black as transparent (2026-10-26), the web TV showed their dark areas as bright colour instead of letting them go dark. It now stores each source's picture the way the desktop does, so blacks are black again and colours are rich. About 17 presets were affected, among them Girih Ambient, Ambient Nebula, Build Drop Fluid and stock Domain Warp Fluid.
+- The TV's version is now v7.
+
 ### Web TV: Spaz Radio Chat on a Blackboard (`web/chat.js`, `web/chatboard.js`, `web/mqtt.js`, `web/ui.js`, `web/index.html`, `web/tv.css`, `web/fonts/`)
 - **The Spaz Radio chat now hangs beside the web TV on a blackboard**, written in chalk. It's the same room as the Spaz Radio Android app and spaz.org/radio: the recent conversation, who is here, and a line to write on. Write your name in chalk to join (it's remembered next visit); click your name to change it. Links open in a new tab.
 - **The board is open on your first visit, and the big X in its corner closes it** (remembered). The new CHAT button, `C`, or MENU › CHAT brings it back, and the CHAT button's light comes on when new lines arrive while it is closed.

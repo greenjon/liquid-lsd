@@ -76,9 +76,10 @@ else {
     }
     await sleep(spec.settleMs ?? 1500);
     let g = await grab();
-    // Flight sources (gyroid_hyperspace) are genuinely empty for ~25% of their cycle: resample a dark preset
-    // frame a few times before reporting it, so only a preset that stays dark fails.
-    for (let retry = 0; spec.preset && retry < 4 && (g.meanLuma < 1 || g.litFraction < 0.01); retry++) { await sleep(700); g = await grab(); }
+    // Flight sources (gyroid_hyperspace) are genuinely empty for ~25% of their cycle, and a strobe in Black Gate
+    // mode dips the whole frame to black (the_drop_weapon): resample a dark preset or chain frame a few times
+    // before reporting it, so only one that stays dark fails.
+    for (let retry = 0; (spec.preset || spec.chain) && retry < 4 && (g.meanLuma < 1 || g.litFraction < 0.01); retry++) { await sleep(700); g = await grab(); }
     frames.push({ name: spec.name, ...g });
     if (hold !== null) {
       w.cancelAnimationFrame(hold);
