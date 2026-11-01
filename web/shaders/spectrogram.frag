@@ -2,7 +2,7 @@
 precision highp float;
 /*
 {
-    "DESCRIPTION": "Scrolling spectrogram of the live audio: each moment's spectrum is written into a 512-column ring buffer, so time runs along one axis and frequency (linear to logarithmic) along the other. Scroll, rise, ring-outward or tunnel-inward layouts, optional mirrored frequency axis, four palettes and an age fade.",
+    "DESCRIPTION": "Scrolling spectrogram of the live audio: each moment's spectrum is written into a 512-column ring buffer, so time runs along one axis and frequency (linear to logarithmic) along the other. Each pixel sums the power of every FFT bin its band covers and a Tilt lifts the highs, as on a studio analyser, so the whole frequency axis lights up, not just the bass. Scroll, rise, ring-outward or tunnel-inward layouts, optional mirrored frequency axis, four palettes and an age fade.",
     "CREDIT": "Liquid LSD",
     "ISFVSN": "2.0",
     "CATEGORIES": [
@@ -17,8 +17,9 @@ precision highp float;
         { "NAME": "ScrollSpeed", "LABEL": "Scroll Speed", "TYPE": "float", "DEFAULT": 0.35, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "LogScale", "LABEL": "Log Scale", "TYPE": "float", "DEFAULT": 0.8, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "Range", "LABEL": "Range", "TYPE": "float", "DEFAULT": 0.75, "MIN": 0.0, "MAX": 1.0 },
-        { "NAME": "Floor", "LABEL": "Floor", "TYPE": "float", "DEFAULT": 0.6, "MIN": 0.0, "MAX": 1.0 },
-        { "NAME": "Gain", "LABEL": "Gain", "TYPE": "float", "DEFAULT": 0.2, "MIN": 0.0, "MAX": 1.0 },
+        { "NAME": "Tilt", "LABEL": "Tilt", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 },
+        { "NAME": "Floor", "LABEL": "Floor", "TYPE": "float", "DEFAULT": 0.45, "MIN": 0.0, "MAX": 1.0 },
+        { "NAME": "Gain", "LABEL": "Gain", "TYPE": "float", "DEFAULT": 0.25, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "Fade", "LABEL": "Age Fade", "TYPE": "float", "DEFAULT": 0.3, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "HueOffset", "LABEL": "Hue Offset", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "Saturation", "LABEL": "Saturation", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 },
@@ -34,7 +35,8 @@ precision highp float;
 
 // Inputs are normalized to 0..1; these remap them to the shader's working units.
 #define ScrollSpeed_ (8.0+ScrollSpeed*232.0)   // columns per second (512 columns on screen)
-#define Floor_ (Floor*0.8)                     // spectrum level (0..1, -80..0 dB) shown as black
+#define Tilt_ (Tilt*6.0)                       // dB per octave added above 1 kHz (and taken off below)
+#define Floor_ (Floor*0.8)                     // band level (0..1, -80..0 dB) shown as black
 #define Gain_ (0.25+Gain*3.75)
 #define Saturation_ (Saturation*2.0)
 #define Brightness_ (Brightness*2.0)
@@ -49,6 +51,8 @@ precision highp float;
 
 const float N = 512.0;
 const float TAU = 6.28318531;
+const float BANDS = 64.0;   // frequency-axis resolution: each pixel reads a band 1/64 of the axis wide
+const int TAPS = 8;         // samples across that band
 
 // Spectrum row of the current frame at a linear-bin coordinate (0..1).
 float spectrumAt(float y) {
@@ -91,23 +95,38 @@ vec4 historyPass() {
     return vec4(v, v, v, 1.0);
 }
 
-// History value at age a (0 = now, 1 = oldest on screen) and linear-bin coordinate y, smooth between columns.
-float historyAt(float a, float y) {
-    float pos = readHead() - a * (N - 2.0);
-    float c0 = floor(pos);
-    float f = pos - c0;
-    float x0 = (mod(c0, N) + 0.5) / N;
-    float x1 = (mod(c0 + 1.0, N) + 0.5) / N;
-    return mix(texture(history, vec2(x0, y)).r, texture(history, vec2(x1, y)).r, f);
-}
-
-// Screen frequency coordinate (0 = low, 1 = top of Range) -> linear FFT-bin coordinate.
+// Screen frequency coordinate (0 = low, 1 = top of Range) -> linear FFT-bin coordinate (0..1 of Nyquist). Log Scale
+// blends the frequency itself (geometrically), so 0.8 is nearly a log axis rather than a linear one with a log tail.
 float binCoord(float f) {
     float top = mix(0.12, 1.0, Range);                      // highest bin shown, fraction of Nyquist
-    float lin = f * top;
-    float lo = 1.5 / 512.0;                                  // lowest bin worth showing on a log axis
+    float lo = 0.65 / 512.0;                                 // bottom of the axis, about 30 Hz at 48 kHz
+    float lin = max(f * top, lo);
     float logc = lo * pow(top / lo, f);
-    return mix(lin, logc, LogScale);
+    return exp(mix(log(lin), log(logc), LogScale));
+}
+
+// Level (0..1 = -80..0 dB) at age a (0 = now, 1 = oldest on screen) of the band around screen frequency f. The band's
+// bins are summed as power, the way a fractional-octave analyser reads: on a log axis a pixel near 10 kHz spans
+// dozens of bins and gets all of their energy, not one bin's. Divided by the Hann window's noise bandwidth (1.5 bins)
+// so a pure tone still reads its own level. Then Tilt adds dB per octave from 1 kHz (the bin axis is taken as
+// 24 kHz, i.e. 48 kHz audio), which flattens music's natural fall-off. Smooth between history columns.
+float bandLevel(float a, float f) {
+    float pos = readHead() - a * (N - 2.0);
+    float c0 = floor(pos);
+    float t = pos - c0;
+    float x0 = (mod(c0, N) + 0.5) / N;
+    float x1 = (mod(c0 + 1.0, N) + 0.5) / N;
+    float yLo = binCoord(clamp(f - 0.5 / BANDS, 0.0, 1.0));
+    float yHi = binCoord(clamp(f + 0.5 / BANDS, 0.0, 1.0));
+    float p = 0.0;
+    for (int i = 0; i < TAPS; i++) {
+        float y = mix(yLo, yHi, (float(i) + 0.5) / float(TAPS));
+        float v = mix(texture(history, vec2(x0, y)).r, texture(history, vec2(x1, y)).r, t);
+        p += exp2((v - 1.0) * 26.5754248);                   // 10^(8(v-1)): level back to power
+    }
+    p *= max((yHi - yLo) * 512.0 / 1.5, 1.0) / float(TAPS);
+    float db = 3.01029996 * log2(max(p, 1e-12)) + Tilt_ * log2(binCoord(f) * 24.0);
+    return clamp(db / 80.0 + 1.0, 0.0, 1.0);
 }
 
 vec3 hsv2rgb(vec3 c) {
@@ -163,7 +182,7 @@ void main() {
     if (Mirror > 0.5) f = abs(f * 2.0 - 1.0);   // low frequencies in the middle
     age = clamp(age, 0.0, 1.0);
 
-    float raw = historyAt(age, binCoord(clamp(f, 0.0, 1.0)));
+    float raw = bandLevel(age, clamp(f, 0.0, 1.0));
     float v = clamp((raw - Floor_) / max(1.0 - Floor_, 1e-3), 0.0, 1.0) * Gain_;
     v *= mix(1.0, 1.0 - age, Fade);
     v = clamp(v, 0.0, 1.0);

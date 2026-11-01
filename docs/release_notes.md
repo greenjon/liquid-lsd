@@ -4,6 +4,7 @@
 - **Spectrogram**: the music itself, scrolling: time along one axis, frequency along the other, so the kick, the bassline and every note are readable as they pass. Scroll, Rise, Ring or Tunnel layouts, a mirrored option with the bass in the middle, a log frequency axis like a piano's, and four palettes. A slow scroll still catches every hit.
 - **Scope**: an oscilloscope in a feedback loop: the waveform or the spectrum drawn as a glowing line or ring while the picture behind it zooms, turns, warps and fades into tunnels and trails. A steady tone stands still instead of sliding.
 - Both have their own knobs and audio responses (Scope's trails punch out on the kick; Spectrogram scrolls a little faster when loud and rushes on the drop) and roll random looks like the other generators.
+- **The Spectrogram shows the whole spectrum, not just the bass** (on the web TV's CH 128 it drew only a narrow wedge at the top of its ring): each point now adds up all the sound in its slice of frequencies, a new **Tilt** knob lifts the highs the way studio analysers do, Log Scale spaces the bass properly, and the Floor and Gain defaults are retuned to match. The TV's version is now v9.
 - **Both are on the web TV too**: it now reads the music's spectrum and waveform the same way the desktop does (`web/audiotex.js`), so shaders that draw the sound run there as well, and the autopilot can show Spectrogram and Scope. The Spaz Radio app needs a new release to pick them up; until then it keeps its current looks.
 - The TV's version is now v8.
 

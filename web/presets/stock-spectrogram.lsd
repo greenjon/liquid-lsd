@@ -27,16 +27,23 @@
    ]
   },
   "Gain": {
-   "baseValue": 0.2,
-   "baseMin": 0.12,
-   "baseMax": 0.3,
+   "baseValue": 0.25,
+   "baseMin": 0.2,
+   "baseMax": 0.32,
+   "randomizeBase": true,
+   "modulators": []
+  },
+  "Tilt": {
+   "baseValue": 0.5,
+   "baseMin": 0.35,
+   "baseMax": 0.65,
    "randomizeBase": true,
    "modulators": []
   },
   "Floor": {
-   "baseValue": 0.6,
-   "baseMin": 0.5,
-   "baseMax": 0.7,
+   "baseValue": 0.45,
+   "baseMin": 0.38,
+   "baseMax": 0.52,
    "randomizeBase": true,
    "modulators": [
     {

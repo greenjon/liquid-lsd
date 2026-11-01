@@ -354,6 +354,7 @@ The sound itself, scrolling: time runs along one axis and frequency along the ot
 - **Layout**: Scroll (newest on the right), Rise (newest at the bottom), Ring (newest at the centre, flowing out) or Tunnel (newest at the rim, flowing in). **Mirror** puts the bass in the middle.
 - **Scroll Speed**: About 2 to 60 seconds of sound on screen. A slow scroll still catches every hit: each column keeps the loudest moment of its slice.
 - **Log Scale, Range**: Log Scale 1 gives every octave the same room, like a piano; 0 is the plain linear spectrum, where the bass is a thin strip. Range lowers the top frequency to zoom in on the bass and mids.
+- **Tilt**: Music gets quieter toward the highs, so a plain spectrum is mostly bass. Tilt lifts the highs and trims the bass (0 to 6 dB per octave around 1 kHz) so the whole axis lights up; about halfway is even for most music. Each point on the axis also adds up all the sound in its slice of frequencies, the way a studio analyser does, so the highs show their full strength.
 - **Floor, Gain**: The level shown as black, and the brightness. The spectrum is not auto-gained, so turn Gain up for a quiet input and Floor up to hide the background.
 - **Age Fade, Palette, Hue Offset**: Darker history, and Fire, Ice, Rainbow (by frequency) or Mono colours.
 
