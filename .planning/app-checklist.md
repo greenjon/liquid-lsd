@@ -254,6 +254,7 @@ Light wave 2: - [ ] cyclic_ca - [ ] metaballs - [ ] wave_ripples - [ ] aurora_ri
 - [ ] Frame time on the integrated GPU is acceptable (notes in `.planning/light-sources-notes`).
 - [ ] Every-ISF binding audit (v1.0 scope): a sample of filters, every parameter binds to a knob.
 
+- [ ] Spectrogram and Scope (2026-11-01), with music playing: Spectrogram in all four Layouts, Mirror, each Palette; notes and kicks readable; Scroll Speed sweeps smoothly with no jump; a quiet input needs Gain, a loud one doesn't burn to solid colour at the defaults. Scope: all four Traces; a held synth note stands still on Wave Line; trails zoom/turn/warp, the kick punches them out; no spokes at the centre of Spectrum Ring. Both: the die rolls varied looks; frame time fine on the integrated GPU.
 - [ ] Third-party audio visualizers (2026-11-01): put the Vidvox ISF-Files audio set (FFT Spectrogram, Radial Spectrogram, FFT Color Lines, FFT Filled Waveform, Audio Waveform Shape; `gh api repos/Vidvox/ISF-Files/...` or the scratch copies) in a user ISF folder, play music: each moves with the audio, Radial Spectrogram sweeps round, no knob called fftImage/audio. Also Waveform Displace as an FX. Stock multipass sources (Reaction Diffusion, Lenia, Fluid Ink, Cyclic CA, Video Feedback) look as before.
 ## 14. Twister hardware
 

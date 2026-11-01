@@ -1720,6 +1720,20 @@ commercial release.</p>
 <td></td>
 </tr>
 <tr>
+<td>Spectrogram source (<code>spectrogram</code>)</td>
+<td>Short-time spectrum history (the textbook spectrogram), ring buffer with a moving write head, log-frequency axis</td>
+<td>Written from the definition. The Vidvox ISF-Files "FFT Spectrogram" and "Radial Spectrogram" were run and read as host compatibility tests (2026-11-01); this shader shares no code with them and uses a different structure (wrapped write head with peak hold instead of shifting the whole buffer each frame)</td>
+<td><code>library/sources/spectrogram/spectrogram.fs</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Scope source (<code>scope</code>)</td>
+<td>Oscilloscope trace with rising-edge trigger, line distance field |y - h(x)| / sqrt(1 + h'^2), feedback by inverse-warp resampling (as in <code>video_feedback</code>)</td>
+<td>Written from the definitions; the Vidvox "Audio Waveform Shape" was run and read as a compatibility test, no code taken</td>
+<td><code>library/sources/scope/scope.fs</code></td>
+<td></td>
+</tr>
+<tr>
 <td>Variation statistics and curated library</td>
 <td>Counts from public flame collections; our own search generates the shipped flames</td>
 <td>Tallies only; no genome is shipped (the Electric Sheep archive has non-commercial terms for some genomes)</td>

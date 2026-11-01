@@ -78,6 +78,8 @@ To preserve the right to commercially distribute or monetize Liquid LSD:
 | **Girih Stars** | `library/sources/girih_stars/girih_stars.fs` | Liquid LSD Engine (Cleanroom) | MIT | Approved | Girih / Hankin strapwork on square, hexagonal and 4.8.8 lattices via wallpaper-group folding. |
 | **Glitch Blocks** | `library/sources/glitch_blocks/glitch_blocks.fs` | Liquid LSD Engine (Cleanroom) | MIT | Approved | Procedural glitch generator (block displacement, tearing, RGB split, posterise). |
 | **Voronoi Cells** | `library/sources/voronoi_cells/voronoi_cells.fs` | Liquid LSD Engine (Cleanroom) | MIT | Approved | Animated Worley / Voronoi cells with F1 and F2 shading styles. |
+| **Spectrogram** | `library/sources/spectrogram/spectrogram.fs` | Liquid LSD Engine (Cleanroom) | MIT | Approved | Scrolling spectrogram of the live audio in a 512-column ring buffer. |
+| **Scope** | `library/sources/scope/scope.fs` | Liquid LSD Engine (Cleanroom) | MIT | Approved | Audio oscilloscope (waveform or spectrum trace) in a zoom / rotate / warp feedback loop. |
 
 ---
 

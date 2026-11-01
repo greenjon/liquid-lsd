@@ -94,7 +94,9 @@ object VisualSourceRegistry {
         "kali_set",
         "girih_stars",
         "glitch_blocks",
-        "voronoi_cells"
+        "voronoi_cells",
+        "spectrogram",
+        "scope"
     )
 
     /** Branch-only sources extracted like defaults but not part of the stock set (no curated macros, not asserted by tests). */

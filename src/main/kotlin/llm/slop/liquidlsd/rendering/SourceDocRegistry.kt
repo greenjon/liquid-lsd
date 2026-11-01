@@ -54,6 +54,8 @@ object SourceDocRegistry {
         "girih_stars" to "Islamic girih star-and-polygon strapwork on a square, hexagonal or 4.8.8 lattice, with adjustable contact angle and interlace.",
         "glitch_blocks" to "Procedural glitch generator with no image input: block displacement, scanline offsets, tearing, RGB split, posterise and dropouts over a test pattern.",
         "voronoi_cells" to "Animated Worley/Voronoi cells with flat colours, cracked-glass edge glow, distance rings or a faceted gem look.",
+        "spectrogram" to "Scrolling spectrogram of the live audio: time along one axis, frequency along the other, as a scroll, a rising sheet, a ring or a tunnel.",
+        "scope" to "Audio oscilloscope in a feedback loop: the waveform or spectrum drawn as a line or ring that zooms, turns and smears into trails.",
     )
 
     /**
@@ -746,6 +748,42 @@ object SourceDocRegistry {
         "voronoi_cells/Brightness" to "Overall brightness multiplier; 0.5 is neutral.",
         "voronoi_cells/Detail" to "Antialiasing, 1 to 3.",
         "voronoi_cells/Quality" to "Antialiasing, 1 to 3.",
+
+        "spectrogram/Layout" to "Scroll (newest on the right), Rise (newest at the bottom), Ring (newest at the centre, flowing out) or Tunnel (newest at the rim, flowing in).",
+        "spectrogram/Mirror" to "Mirrors the frequency axis so the bass sits in the middle.",
+        "spectrogram/PaletteMode" to "Fire, Ice, Rainbow (colour by frequency) or Mono (tinted by Hue Offset).",
+        "spectrogram/Palette" to "Fire, Ice, Rainbow (colour by frequency) or Mono (tinted by Hue Offset).",
+        "spectrogram/ScrollSpeed" to "How fast time moves across the screen, from about 2 to 60 seconds of history on screen.",
+        "spectrogram/Scroll Speed" to "How fast time moves across the screen, from about 2 to 60 seconds of history on screen.",
+        "spectrogram/LogScale" to "0 spaces frequencies evenly (the bass is a thin strip); 1 gives each octave the same room, like a piano.",
+        "spectrogram/Log Scale" to "0 spaces frequencies evenly (the bass is a thin strip); 1 gives each octave the same room, like a piano.",
+        "spectrogram/Range" to "Highest frequency shown; lower it to zoom in on the bass and mids.",
+        "spectrogram/Floor" to "Level shown as black; raise it to hide the quiet background.",
+        "spectrogram/Gain" to "Brightness of the spectrum; turn up for quiet input (the spectrum is not auto-gained).",
+        "spectrogram/Fade" to "Darkens older history so the newest sound stands out.",
+        "spectrogram/Age Fade" to "Darkens older history so the newest sound stands out.",
+        "spectrogram/HueOffset" to "Rotates the palette's colours; tints Mono.",
+        "spectrogram/Hue Offset" to "Rotates the palette's colours; tints Mono.",
+        "spectrogram/Saturation" to "Colour saturation.",
+        "spectrogram/Brightness" to "Overall brightness multiplier; 0.5 is neutral.",
+
+        "scope/Mode" to "What is drawn: the waveform as a line or a ring, or the spectrum as a mirrored line or a ring.",
+        "scope/Trace" to "What is drawn: the waveform as a line or a ring, or the spectrum as a mirrored line or a ring.",
+        "scope/Amplitude" to "Height of the trace.",
+        "scope/Smoothing" to "Smooths the waveform so high frequencies don't fill it in; no effect on the spectrum traces.",
+        "scope/Thickness" to "Line width.",
+        "scope/RingSize" to "Radius of the ring traces.",
+        "scope/Ring Size" to "Radius of the ring traces.",
+        "scope/Zoom" to "How fast the trails zoom: positive flows outward, negative inward.",
+        "scope/Rotation" to "How fast the trails turn; negative turns the other way.",
+        "scope/Warp" to "Wavy distortion of the trails.",
+        "scope/Decay" to "How fast the trails fade; low leaves long trails.",
+        "scope/HueSpeed" to "How fast the trace colour cycles; negative reverses.",
+        "scope/Hue Speed" to "How fast the trace colour cycles; negative reverses.",
+        "scope/HueOffset" to "Base colour of the trace.",
+        "scope/Hue Offset" to "Base colour of the trace.",
+        "scope/Saturation" to "Colour saturation.",
+        "scope/Brightness" to "Overall brightness multiplier; 0.5 is neutral.",
 
 
         // Deck

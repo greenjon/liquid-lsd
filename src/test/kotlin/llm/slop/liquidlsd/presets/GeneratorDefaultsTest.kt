@@ -253,7 +253,9 @@ class GeneratorDefaultsTest {
             "kali_set" to listOf("OrbitRadius", "Speed", "Zoom", "Twist"),
             "girih_stars" to listOf("Angle", "Sweep", "Speed", "Interlace"),
             "glitch_blocks" to listOf("Intensity", "BlockSize", "Rate", "Tear"),
-            "voronoi_cells" to listOf("CellScale", "Jitter", "Speed", "EdgeGlow")
+            "voronoi_cells" to listOf("CellScale", "Jitter", "Speed", "EdgeGlow"),
+            "spectrogram" to listOf("ScrollSpeed", "Gain", "Floor", "HueOffset"),
+            "scope" to listOf("Zoom", "Rotation", "Decay", "Warp")
         )
 
         for (sourceId in VisualSourceRegistry.DEFAULT_SOURCE_IDS) {

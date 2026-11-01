@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "sourceId": "spectrogram",
+  "parameters": {
+    "ScrollSpeed": {
+      "note": "The picture is already the audio; it scrolls faster on the drop.",
+      "randomizeBase": true,
+      "baseMin": 0.2,
+      "baseMax": 0.5,
+      "modulators": [
+        {
+          "name": "drop rush",
+          "sourceId": "audio_drop",
+          "operator": "ADD",
+          "depth": 0.3
+        }
+      ]
+    },
+    "Gain": {
+      "note": "Turn up for quiet input; the spectrum is not auto-gained.",
+      "randomizeBase": true,
+      "baseMin": 0.12,
+      "baseMax": 0.3
+    },
+    "Floor": {
+      "note": "Higher hides more of the quiet background. Rises in a breakdown so the sparse parts stand out.",
+      "randomizeBase": true,
+      "baseMin": 0.5,
+      "baseMax": 0.7,
+      "modulators": [
+        {
+          "name": "breakdown cleans up",
+          "sourceId": "audio_energy",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.1
+        }
+      ]
+    },
+    "LogScale": {
+      "randomizeBase": true,
+      "baseMin": 0.6,
+      "baseMax": 1
+    },
+    "Fade": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 0.6
+    },
+    "HueOffset": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 0.7,
+      "modulators": [
+        {
+          "name": "slow hue drift",
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 64,
+          "depth": 0.15,
+          "dcOffset": 0.15
+        }
+      ]
+    },
+    "Layout": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 3
+    },
+    "Mirror": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 1
+    },
+    "PaletteMode": {
+      "randomizeBase": true,
+      "baseMin": 0,
+      "baseMax": 3
+    },
+    "Brightness": {
+      "note": "Kick flash; off by default.",
+      "modulators": [
+        {
+          "name": "kick hit",
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "bypassed": true,
+          "depth": 0.2,
+          "followerMode": "SNAP",
+          "attackMs": 0,
+          "decayMs": 35
+        }
+      ]
+    }
+  },
+  "macroBank": {
+    "knobs": [
+      { "label": "SPEED", "bindings": [ { "parameterId": "ScrollSpeed" } ] },
+      { "label": "GAIN", "bindings": [ { "parameterId": "Gain" } ] },
+      { "label": "FLOOR", "bindings": [ { "parameterId": "Floor" } ] },
+      { "label": "HUE", "bindings": [ { "parameterId": "HueOffset" } ] }
+    ]
+  }
+}

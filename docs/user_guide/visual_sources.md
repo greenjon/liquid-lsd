@@ -28,7 +28,7 @@ Streams are not files, so they cannot be saved as presets, added to playlists or
 
 ## Built-In Generators
 
-Liquid LSD includes a curated suite of 34 built-in procedural generators spanning harmonic geometry, 3D raymarching, 3D fractals, volumetric gas, 4D polytopes, organic fluid dynamics, living simulations, acoustic wavefields, and a set of light generators that run comfortably on integrated graphics.
+Liquid LSD includes a curated suite of 36 built-in procedural generators spanning harmonic geometry, 3D raymarching, 3D fractals, volumetric gas, 4D polytopes, organic fluid dynamics, living simulations, acoustic wavefields, two audio visualizers that draw the sound itself, and a set of light generators that run comfortably on integrated graphics.
 
 The raymarchers (Icosa-H3, Gyroid Hyperspace, 4D Hyper-Slice, Nebula Volume and the fractals below) show a gauge mark in the browser: they are GPU-intensive and can run slowly on integrated graphics. The fractals are tuned for a mid-range discrete GPU (an RTX A2000 or better); every one has a **Quality** knob, and lowering it is the first thing to try if a deck stutters.
 
@@ -347,6 +347,26 @@ Animated Worley cells.
 - **Cell Scale, Jitter, Speed, Edge Width, Edge Glow**: The cells.
 - **Relief, Zoom, Color Mode**: Embossed lighting, magnification, four colourings.
 
+### Spectrogram (`spectrogram`)
+
+The sound itself, scrolling: time runs along one axis and frequency along the other, so you can read the kick, the bassline and every note as it passes. Desktop only for now (the web TV can't read the audio this way yet).
+
+- **Layout**: Scroll (newest on the right), Rise (newest at the bottom), Ring (newest at the centre, flowing out) or Tunnel (newest at the rim, flowing in). **Mirror** puts the bass in the middle.
+- **Scroll Speed**: About 2 to 60 seconds of sound on screen. A slow scroll still catches every hit: each column keeps the loudest moment of its slice.
+- **Log Scale, Range**: Log Scale 1 gives every octave the same room, like a piano; 0 is the plain linear spectrum, where the bass is a thin strip. Range lowers the top frequency to zoom in on the bass and mids.
+- **Floor, Gain**: The level shown as black, and the brightness. The spectrum is not auto-gained, so turn Gain up for a quiet input and Floor up to hide the background.
+- **Age Fade, Palette, Hue Offset**: Darker history, and Fire, Ice, Rainbow (by frequency) or Mono colours.
+
+### Scope (`scope`)
+
+An oscilloscope in a feedback loop, in the spirit of classic music visualizers: the live waveform or spectrum is drawn as a glowing line or ring, and each frame the previous picture zooms, turns, warps and fades behind it, so the trace smears into tunnels, spirals and trails. Desktop only for now.
+
+- **Trace**: Wave Line, Wave Ring, Spectrum Line (mirrored above and below the centre) or Spectrum Ring. A steady tone stands still on the wave traces instead of sliding.
+- **Amplitude, Smoothing, Thickness, Ring Size**: The trace. Smoothing calms the waveform so cymbals don't fill it in.
+- **Zoom, Rotation, Warp, Decay**: The feedback, per second: positive Zoom flows outward, negative inward; low Decay leaves long trails.
+- **Hue Speed, Hue Offset**: The trace colour and how fast it cycles.
+- The trails buffer is square, so on a widescreen output about half of its height is visible.
+
 ### Fractal Flame (`fractal_flame`, experimental)
 
 A fractal-flame generator: millions of points are pushed through a handful of randomly chosen transforms (xforms), splatted into a density buffer and tone-mapped, which gives the feathered, glowing filaments the technique is known for. It is the one generator built around **evolving** a look rather than just tweaking it. The math follows Draves & Reckase, "The Fractal Flame Algorithm" (credited in the licenses page, under Algorithm Credits).
@@ -447,7 +467,7 @@ The app reads the ISF JSON header inside each shader file, automatically lists i
 
 Shaders can read the live audio through the `audioFFT` sampler (Shadertoy-style `iChannel0` is the same texture), a 512x2 single-channel texture. Row 0 (`y = 0.25`) is the spectrum: 512 bins from 0 Hz to half the sample rate, 0 to 1 on a decibel scale (full scale is 1, -80 dB is 0), with a quick decay so bars fall smoothly. Row 1 (`y = 0.75`) is the waveform, centred on 0.5. Example: `float level = texture(audioFFT, vec2(pow(uv.x, 2.0), 0.25)).r;` gives a bar height with more resolution at the low end.
 
-ISF shaders written for other hosts can instead declare their own audio inputs, as the ISF spec describes: an input of `"TYPE": "audioFFT"` gets the spectrum and `"TYPE": "audio"` gets the waveform, each as a 512x1 image under whatever name the shader gives it. The audio visualizers from the official ISF collection (FFT Spectrogram, Radial Spectrogram, FFT Color Lines, FFT Filled Waveform, Audio Waveform Shape) run as they are. The audio is mono, so a shader's stereo mode shows the same signal on both sides.
+ISF shaders written for other hosts can instead declare their own audio inputs, as the ISF spec describes: an input of `"TYPE": "audioFFT"` gets the spectrum and `"TYPE": "audio"` gets the waveform, each as a 512x1 image under whatever name the shader gives it. The audio visualizers from the official ISF collection (FFT Spectrogram, Radial Spectrogram, FFT Color Lines, FFT Filled Waveform, Audio Waveform Shape) run as they are, and the stock Spectrogram and Scope use these inputs too. The audio is mono, so a shader's stereo mode shows the same signal on both sides.
 
 Mouse uniforms (`iMouse`, `u_mouse`, `mouse`) always read the centre of the frame with no click: the app's cursor is you working the controls, so it never steers the picture.
 
