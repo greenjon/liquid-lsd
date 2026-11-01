@@ -3,6 +3,7 @@
 <title>LSD UI check</title>
 <iframe id="app" src="../index.html?nolive&nostatic" width="1100" height="760" style="border:0"></iframe>
 <script type="module">
+import { createFakeBroker, fakeHistory } from '../tools/fakebroker.mjs';
 // Drives the TV's viewer controls in the real page (driven by ui_check.mjs): power on, CH up/down, FX,
 // HOLD, TIME, REACT, keyboard, and the live lock. POSTs {results:[{name, ok, detail}]} to /report.
 const app = document.getElementById('app');
@@ -11,7 +12,8 @@ const check = (name, ok, detail = '') => results.push({ name, ok: !!ok, detail: 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const post = (o) => fetch('/report', { method: 'POST', body: JSON.stringify(o) });
 try {
-  await new Promise((r) => app.addEventListener('load', r));
+  // The fake-broker import runs before this, so the frame may have loaded already.
+  if (app.contentDocument?.readyState !== 'complete' || app.contentWindow.location.href === 'about:blank') await new Promise((r) => app.addEventListener('load', r));
   const w = app.contentWindow, d = w.document;
   for (let i = 0; i < 100 && !w.LSD; i++) await sleep(100);
   const st = w.LSD.autopilotState;
@@ -170,7 +172,7 @@ try {
   // Branding: I adds the Liquid LSD line; MENU › ABOUT opens and any key closes it; the bumper; the nameplate.
   key('i');
   check('I shows the Liquid LSD line', osd('osd-brand').shown && osd('osd-brand').text.includes('liquid-lsd.greenjon.com'));
-  key('m'); for (let i = 0; i < 11; i++) key('ArrowDown'); key('Enter'); // row 11 = ABOUT
+  key('m'); for (let i = 0; i < 12; i++) key('ArrowDown'); key('Enter'); // row 12 = ABOUT
   const aboutEl = d.getElementById('about');
   check('MENU › ABOUT opens the about page', !aboutEl.hidden && aboutEl.textContent.includes('greenjon'), aboutEl.hidden);
   key('x');
@@ -196,7 +198,7 @@ try {
   check('G opens the schedule', !schedEl.hidden);
   schedEl.click();
   check('A click closes the schedule and leaves the TV on', schedEl.hidden && w.LSD.powerState.on);
-  key('m'); for (let i = 0; i < 10; i++) key('ArrowDown'); key('Enter'); // row 10 = SCHEDULE
+  key('m'); for (let i = 0; i < 11; i++) key('ArrowDown'); key('Enter'); // row 11 = SCHEDULE
   check('MENU › SCHEDULE opens the schedule and closes the menu', !schedEl.hidden && menuEl.hidden);
   key('Escape');
   key('i');
@@ -223,6 +225,65 @@ try {
   check('A click on the cabinet turns the TV off', !w.LSD.powerState.on);
   d.getElementById('tv-body').click();
   check('A click on the TV turns it on again', w.LSD.powerState.on);
+  // CHAT: the blackboard, on a fake broker and log (?nolive never starts the real room).
+  const board = d.getElementById('chalkboard'), chatBtn = d.getElementById('chatBtn');
+  const cb = w.LSD.viewerState.chat;
+  check('Chat board is open on a first visit', !board.hidden && d.body.classList.contains('chat-open') && getComputedStyle(board).display !== 'none');
+  const tvBox = d.getElementById('tv-body').getBoundingClientRect(), boardBox = board.getBoundingClientRect();
+  check('Chat board hangs beside the TV, inside the window, as tall as the cabinet',
+    boardBox.left >= tvBox.right && boardBox.right <= w.innerWidth && Math.abs(boardBox.height - tvBox.height) < 2,
+    `tv ${tvBox.left|0}-${tvBox.right|0} h${tvBox.height|0}, board ${boardBox.left|0}-${boardBox.right|0} h${boardBox.height|0}, window ${w.innerWidth}`);
+  check('Chat board has a close X', !!board.querySelector('.cb-close[aria-label="Close chat"]'));
+  check('Chat waits for the check under ?nolive (no real room)', cb.chat.state.status === 'idle');
+  const broker = createFakeBroker();
+  broker.retained.set('presence/mutabu', 'abu');
+  const t1 = Date.now();
+  cb.chat.useTransport({ WebSocketImpl: broker.WebSocket, fetchImpl: fakeHistory([
+    { user: 'abu', message: 'earlier &amp; <i>wiser</i> https://spaz.org/tv/', time_received: t1 - 60000 },
+  ]) });
+  cb.chat.start();
+  await sleep(300);
+  const log = board.querySelector('.cb-log');
+  check('Chat shows the log, links and all, as text', log.textContent.includes('earlier & wiser') && !log.querySelector('i')
+    && log.querySelector('a')?.href === 'https://spaz.org/tv/' && log.querySelector('a').rel.includes('noopener'), log.textContent);
+  check('Chat shows who is here', /1 here: abu/.test(board.querySelector('.cb-roster').textContent), board.querySelector('.cb-roster').textContent);
+  const input = board.querySelector('.cb-input'), form = board.querySelector('.cb-form');
+  check('Chat asks for a name first', /name/.test(input.placeholder), input.placeholder);
+  const onAirBefore = onAir();
+  input.focus();
+  for (const k of ['n', 'm', 'c', ' ']) input.dispatchEvent(new w.KeyboardEvent('keydown', { key: k, bubbles: true }));
+  check('Typing in the chat leaves the TV keys alone (n, m, c, space)', onAir() === onAirBefore && menuEl.hidden && !board.hidden);
+  input.value = 'tester';
+  form.requestSubmit();
+  await sleep(200);
+  check('Joining puts the name in the room', broker.retained.get(`presence/${cb.chat.clientId}`) === 'tester' && /tester/.test(board.querySelector('.cb-roster').textContent));
+  input.value = 'hello from the check';
+  form.requestSubmit();
+  await sleep(300);
+  const sent = broker.published.filter((p) => p.topic === 'spazradio').map((p) => p.payload);
+  check('Sending posts {user, message} on spazradio', sent.length === 1 && JSON.parse(sent[0]).user === 'tester' && JSON.parse(sent[0]).message === 'hello from the check', sent.join(' | '));
+  const last = [...log.querySelectorAll('.cb-msg')].at(-1);
+  check('Your own line comes back in yellow, with a time', last?.textContent.includes('hello from the check') && !!last.querySelector('.cb-mine') && !!last.querySelector('.cb-time')?.textContent, last?.outerHTML);
+  check('The box is empty again after sending', input.value === '');
+  board.querySelector('.cb-close').click();
+  check('The X closes the board, and the TV takes the room back', board.hidden && !d.body.classList.contains('chat-open') && getComputedStyle(board).display === 'none'
+    && d.getElementById('tv-body').getBoundingClientRect().width > tvBox.width);
+  check('Closing is remembered', w.localStorage.getItem('lsd.chat.open') === '0');
+  broker.inject('spazradio', JSON.stringify({ user: 'abu', message: 'you there?' }));
+  await sleep(100);
+  check('A new line while closed lights the CHAT LED', chatBtn.classList.contains('unread'));
+  key('c');
+  check('C opens the board and the LED goes out', !board.hidden && !chatBtn.classList.contains('unread'));
+  chatBtn.click();
+  check('The CHAT button closes it', board.hidden);
+  key('m'); for (let i = 0; i < 10; i++) key('ArrowDown');
+  check('MENU has a CHAT row', menuEl.querySelector('.menu-row.sel')?.textContent.includes('CHAT') && menuEl.querySelector('.menu-row.sel').textContent.includes('CLOSED'), menuEl.querySelector('.menu-row.sel')?.textContent);
+  key('Enter');
+  check('MENU › CHAT opens the board', !board.hidden);
+  key('Escape');
+  cb.chat.leave();
+  await sleep(50);
+  check('Leaving the page clears our name from the room', !broker.retained.has(`presence/${cb.chat.clientId}`));
   check('No page errors', errors.length === 0, errors.join(' | '));
   await post({ results });
 } catch (err) {

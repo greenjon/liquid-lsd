@@ -1,7 +1,7 @@
 // sw.js — lets the web TV install as an app and start without a network.
 // Network first for everything on this site (so updated presets and code always land when online), with
-// the last copy as the fallback; the app shell is cached at install. The radio stream, its status and
-// the relay are other origins and are never touched.
+// the last copy as the fallback; the app shell is cached at install. The radio stream, its status, the
+// relay and the chat (broker and log) are other origins and are never touched.
 const CACHE = 'lsd-tv-v1';
 const SHELL = [
   './', 'index.html', 'tv.css', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'favicon.png',
@@ -10,6 +10,7 @@ const SHELL = [
   'settings.json', 'catalog.json', 'mandala_recipes.json', 'playlists/default.lsdplay', 'playlists/default_bg.lsdplay',
   'shaders/blit.vert', 'shaders/blit.frag', 'shaders/mandala.vert', 'shaders/mandala.frag', 'shaders/mixer.frag',
   'shaders/crt_post.frag',
+  'mqtt.js', 'chat.js', 'chatboard.js', 'fonts/caveat-latin.woff2', 'fonts/caveat-latin-ext.woff2',
 ];
 
 self.addEventListener('install', (e) => {

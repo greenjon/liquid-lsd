@@ -6,6 +6,8 @@ import { embed } from './embedmode.js';
 import { autopilotState, advanceForeground, previousForeground, nextFxChain, setHold, setHoldBars, nowShowing, setHeavyAllowed, setReducedMotion } from './autopilot.js';
 import { createMenu } from './menu.js';
 import { heardBeats, tapOffset } from './sync.js';
+import { createChat } from './chat.js';
+import { createChatboard } from './chatboard.js';
 import { scheduleState, refreshSchedule, setShows, groupByDay, zoneLabel, nextLine, SCHEDULE_REFRESH_MS, SCHEDULE_STALE_MS } from './schedule.js';
 
 // Power state — imported by renderer.js each frame
@@ -180,6 +182,7 @@ function showIdent() {
   el.classList.add('show');
 }
 const kiosk = embed || new URLSearchParams(location.search).has('kiosk'); // embed is a kiosk without the extras
+let chatboard = null;      // the chat's blackboard (chatboard.js); none under kiosk / embed
 
 export function initUI() {
   const powerSwitch = document.getElementById('powerSwitch');
@@ -327,7 +330,11 @@ export function initUI() {
   };
   if (viewerState.heavyMode !== 'auto') applyHeavy();
   // Reduced motion: REACT capped (renderer.js), calmer rotation (autopilot.setReducedMotion).
-  const applyReduced = () => { viewerState.reducedNow = viewerState.reduced; setReducedMotion(viewerState.reducedNow); };
+  const applyReduced = () => {
+    viewerState.reducedNow = viewerState.reduced;
+    setReducedMotion(viewerState.reducedNow);
+    document.body.classList.toggle('reduced-motion', viewerState.reducedNow); // the page's own small motions (tv.css)
+  };
   applyReduced();
   if (typeof matchMedia === 'function') matchMedia('(prefers-reduced-motion: reduce)').addEventListener?.('change', applyReduced);
   const cycle = (mode, dir) => MODES[(MODES.indexOf(mode) + dir + MODES.length) % MODES.length];
@@ -373,6 +380,8 @@ export function initUI() {
       viewerState.announce = false; save('lsd.announce', false);
       if (!live()) { reactDial.set(toDial(REACT_DEFAULT)); timeDial.set(TIME_STEPS.indexOf(16) / (TIME_STEPS.length - 1)); }
     } },
+    ...(kiosk ? [] : [{ label: 'CHAT', help: 'The Spaz Radio chat, on a blackboard beside the TV: the same room as the Spaz Radio app. Press C or the CHAT button any time.',
+      value: () => (chatboard?.open ? 'OPEN' : 'CLOSED'), step: () => chatboard?.toggle(), run: () => chatboard?.toggle() }]),
     { label: 'SCHEDULE', help: 'Spaz Radio\u2019s upcoming shows, in your local time. Press G or the SCHEDULE button to open it any time.', value: () => 'SPAZ RADIO', run: () => { menu.hide(); schedule.show(); } },
     { label: 'ABOUT', help: 'About Liquid LSD, the software that makes these visuals.', value: () => 'LIQUID LSD', run: () => { menu.hide(); about.hidden = false; } },
     { label: 'EXIT', run: () => menu.hide() },
@@ -510,6 +519,24 @@ export function initUI() {
   schedulePage.addEventListener('click', () => schedule.hide());
   viewerState.schedule = schedule;
 
+  // --- CHAT (chat.js, chatboard.js): the Spaz Radio chat on a blackboard beside the TV. It connects at page
+  // load whether the TV is on or off, and not at all under ?kiosk / ?embed (the Spaz Radio app has its own
+  // chat). The headless checks (?nolive) never reach the real room: they start it on a fake broker. ---
+  if (!kiosk) {
+    let storage = null;
+    try { storage = localStorage; } catch { /* private window: nothing remembered */ }
+    const chat = createChat({ storage, onChange: (what) => chatboard?.onChange(what), onLive: (msg) => chatboard?.onLive(msg) });
+    chatboard = createChatboard({ chat, board: document.getElementById('chalkboard'), button: document.getElementById('chatBtn'),
+      reduced: () => viewerState.reducedNow, storage });
+    const noLive = new URLSearchParams(location.search).has('nolive');
+    if (!noLive) chat.start();
+    document.getElementById('chatBtn').addEventListener('click', () => { chatboard.toggle(); menu.refresh(); });
+    window.addEventListener('online', () => chat.reconnectNow());
+    window.addEventListener('pagehide', () => chat.leave()); // clears our name from the room at once
+    window.addEventListener('pageshow', (e) => { if (e.persisted && !noLive) chat.start(); }); // back from the cache
+    viewerState.chat = { board: chatboard, chat };
+  }
+
   // --- Keyboard ---
   window.addEventListener('keydown', (e) => {
     if (e.ctrlKey || e.metaKey || e.altKey || e.target.closest?.('input, textarea')) return;
@@ -519,6 +546,7 @@ export function initUI() {
     if (menu.key(e)) { e.preventDefault(); return; }
     if ((e.key === 'm' || e.key === 'M') && powerState.on) { e.preventDefault(); menu.show(); return; }
     if ((e.key === 'g' || e.key === 'G') && powerState.on) { e.preventDefault(); schedule.show(); return; }
+    if ((e.key === 'c' || e.key === 'C') && chatboard) { e.preventDefault(); chatboard.toggle(); menu.refresh(); return; }
     const keys = {
       ArrowRight: next, ArrowUp: next, n: next, N: next,
       ArrowLeft: prev, ArrowDown: prev, p: prev, P: prev,

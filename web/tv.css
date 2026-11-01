@@ -596,6 +596,143 @@ body.kiosk #nameplate { display: none; }
 
 #tv-menu .menu-hint.help { opacity: 0.9; font-size: 0.8em; line-height: 1.3; text-transform: none; letter-spacing: 0.02em; }
 
+/* --- CHAT (chatboard.js): the Spaz Radio chat on a blackboard hung beside the TV ---------------------------
+   Caveat (OFL, web/fonts/OFL.txt), served from here so it works offline. Name, line and time are styled apart:
+   the line in bold chalk white, the name a size up in a pastel chalk (yellow is yours alone), the time small and
+   faded without the chalk-dust blur. No letter-spacing anywhere: it breaks Caveat's joins. */
+@font-face {
+  font-family: "Caveat"; font-style: normal; font-weight: 400 700; font-display: swap;
+  src: url("fonts/caveat-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Caveat"; font-style: normal; font-weight: 400 700; font-display: swap;
+  src: url("fonts/caveat-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+:root {
+  --slate: #21352e;
+  --chalk: #eeebdd;
+  --chalk-dim: #9ea79f;
+  --chalk-yellow: #f4d06f;
+  --chalk-font: "Caveat", "Comic Neue", "Comic Sans MS", cursive;
+  --chalk-dust: 0 0 1px rgba(238, 235, 221, 0.6), 0 0 4px rgba(238, 235, 221, 0.2);
+}
+
+/* Side by side on a wide, landscape window: the TV gives up the board's width. */
+#tv-wrapper { gap: 22px; align-items: stretch; }
+@media (min-width: 1001px) and (orientation: landscape) {
+  body.chat-open {
+    --board-w: clamp(280px, 26vw, 400px);
+    --tv-screen-w: min(calc(100vw - var(--board-w) - 140px), 128vh);
+  }
+}
+#chalkboard { display: none; }
+body.chat-open:not(.kiosk) #chalkboard {
+  display: block;
+  position: relative;          /* the slate is absolute: the board takes the TV's height, its lines never set it */
+  flex: 0 0 var(--board-w, 320px);
+  width: var(--board-w, 320px);
+  border-radius: 12px;
+  /* the wooden frame */
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.05), transparent 30%, rgba(0,0,0,0.12) 70%, rgba(255,255,255,0.04)),
+    repeating-linear-gradient(88deg, #6b4428 0 7px, #74492b 7px 11px, #643f25 11px 19px);
+  box-shadow: inset 0 2px 1px rgba(255,220,180,0.25), inset 0 -2px 2px rgba(0,0,0,0.5),
+    0 8px 40px rgba(0,0,0,0.85), 0 2px 8px rgba(0,0,0,0.6);
+}
+/* Narrow or portrait: the board hangs under the TV, and the page scrolls to it. */
+@media (max-width: 1000px), (orientation: portrait) {
+  #tv-wrapper { flex-direction: column; }
+  body.chat-open:not(.kiosk) { overflow-y: auto; align-items: flex-start; padding-block: 12px; }
+  body.chat-open:not(.kiosk) #chalkboard { width: 100%; flex: 0 0 auto; height: min(60vh, 520px); }
+}
+
+.cb-slate {
+  position: absolute;
+  inset: 14px 14px 30px 14px;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 14px 6px;
+  border-radius: 3px;
+  background-color: var(--slate);
+  /* chalk dust: fine noise, plus a couple of faint eraser smears */
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 .09 0 0 0 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    radial-gradient(ellipse 70% 22% at 32% 30%, rgba(238,235,221,0.045), transparent 70%),
+    radial-gradient(ellipse 55% 18% at 70% 72%, rgba(238,235,221,0.035), transparent 70%);
+  box-shadow: inset 0 0 18px rgba(0,0,0,0.55), 0 0 0 2px rgba(0,0,0,0.35);
+  color: var(--chalk);
+  font-family: var(--chalk-font);
+  font-weight: 700;
+  text-shadow: var(--chalk-dust);
+  overflow: hidden;
+}
+.cb-slate button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-shadow: inherit; }
+
+/* The X: obviously there, so the board is obviously optional */
+.cb-close { position: absolute; top: 2px; right: 2px; width: 44px; height: 44px; display: grid; place-items: center; opacity: 0.85; }
+.cb-close svg { width: 30px; height: 30px; fill: none; stroke: var(--chalk); stroke-width: 3.4; stroke-linecap: round;
+  filter: drop-shadow(0 0 1px rgba(238,235,221,0.6)); }
+.cb-close:hover, .cb-close:focus-visible { opacity: 1; }
+.cb-close:hover svg, .cb-close:focus-visible svg { stroke: #fff; }
+.cb-slate :focus-visible { outline: 2px dashed rgba(238,235,221,0.6); outline-offset: 2px; border-radius: 4px; }
+
+.cb-title { margin: 0 44px 0 0; font-size: 30px; font-weight: 700; line-height: 1.3; color: var(--chalk-yellow);
+  text-shadow: 0 0 1px rgba(244,208,111,0.6), 0 0 4px rgba(244,208,111,0.2);
+  text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 5px; text-decoration-color: rgba(244,208,111,0.5); }
+.cb-roster { display: block; width: 100%; text-align: left; margin-top: 2px; font-size: 19px !important; font-weight: 500 !important;
+  line-height: 1.35; opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cb-roster.expanded { white-space: normal; }
+
+.cb-log { flex: 1 1 0; min-height: 0; overflow-y: auto; overflow-x: hidden; margin: 6px -8px 0 0; padding-right: 8px;
+  scrollbar-width: thin; scrollbar-color: rgba(238,235,221,0.3) transparent; }
+.cb-msg { margin-top: 0.5em; }
+.cb-msg.cont { margin-top: 0.1em; }
+.cb-who { display: flex; align-items: baseline; gap: 0.5em; flex-wrap: wrap; }
+.cb-name { font-size: 26px; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
+.cb-time { font-size: 17px; font-weight: 500; color: var(--chalk-dim); text-shadow: none; white-space: nowrap; }
+.cb-text { font-size: clamp(22px, 1.9vw, 26px); line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere; }
+.cb-text a { color: inherit; text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 3px; text-decoration-color: rgba(238,235,221,0.55); }
+.cb-text a:hover { text-decoration-color: var(--chalk); }
+.cb-empty { margin-top: 1em; color: var(--chalk-dim); font-size: 22px; text-shadow: none; }
+.cb-msg.new .cb-who, .cb-msg.new .cb-text { animation: cb-write 0.25s ease-out; }
+@keyframes cb-write { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+
+/* Pastel chalks for names, picked from the name; yellow is only ever your own (contrast on the slate 6.8-9:1) */
+.cb-c0 { color: #f2a7b8; } .cb-c1 { color: #9fcbea; } .cb-c2 { color: #b5e3a1; } .cb-c3 { color: #f5b67a; } .cb-c4 { color: #c9b6f0; }
+.cb-mine { color: var(--chalk-yellow); }
+.cb-name[class*="cb-c"], .cb-mine { text-shadow: 0 0 1px currentColor, 0 0 4px rgba(255,255,255,0.08); }
+
+.cb-newer { position: absolute; right: 18px; bottom: 74px; font-size: 22px !important; padding: 0 10px !important;
+  border-radius: 14px; background: rgba(33,53,46,0.92) !important; box-shadow: 0 0 0 1.5px rgba(238,235,221,0.5); }
+.cb-newer[hidden] { display: none; }
+
+/* The bottom line: your name in yellow, then a chalk underline to write on */
+.cb-form { display: flex; align-items: baseline; gap: 0.35em; margin-top: 6px; }
+.cb-me { flex: 0 1 auto; max-width: 45%; font-size: 24px !important; color: var(--chalk-yellow) !important;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cb-me[hidden] { display: none; }
+.cb-input { flex: 1 1 auto; min-width: 0; font: inherit; font-size: 24px; font-weight: 700; color: var(--chalk); text-shadow: var(--chalk-dust);
+  background: transparent; border: 0; border-bottom: 2px solid rgba(238,235,221,0.45); border-radius: 0; padding: 0 2px; caret-color: var(--chalk); }
+.cb-input::placeholder { color: var(--chalk-dim); opacity: 0.8; font-weight: 500; text-shadow: none; }
+.cb-input:focus { outline: none; border-bottom-color: rgba(238,235,221,0.8); }
+.cb-status { min-height: 1.2em; font-size: 17px; font-weight: 500; color: var(--chalk-dim); text-shadow: none; line-height: 1.2; }
+
+/* The chalk tray along the bottom of the frame: one stick of chalk and the eraser */
+.cb-tray { position: absolute; left: 8px; right: 8px; bottom: 6px; height: 14px; border-radius: 2px;
+  background: linear-gradient(#7a4f30, #4e321d); box-shadow: 0 2px 3px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,220,180,0.25); }
+.cb-chalk { position: absolute; left: 22%; top: -3px; width: 34px; height: 7px; border-radius: 3px;
+  background: linear-gradient(#fbf9f0, #d8d4c4); box-shadow: 0 1px 1px rgba(0,0,0,0.5); transform: rotate(-4deg); }
+.cb-eraser { position: absolute; right: 16%; top: -9px; width: 54px; height: 13px; border-radius: 2px;
+  background: linear-gradient(#4f4a44 0 55%, #d9d3c3 55% 100%); box-shadow: 0 1px 2px rgba(0,0,0,0.6); }
+
+/* The CHAT button's LED: lit for new lines while the board is closed (not for open, like HOLD's) */
+#chatBtn[aria-pressed="true"] .btn-led { background: #2a1a00; box-shadow: none; }
+#chatBtn.unread .btn-led { background: #ffaa00; box-shadow: 0 0 6px rgba(255,170,0,0.9); }
+body:not(.reduced-motion) #chatBtn.unread .btn-led { animation: cb-blink 1.6s ease-in-out infinite; }
+@keyframes cb-blink { 50% { opacity: 0.45; } }
+
 /* --- Embed (?embed): the picture only, inside a host app. Nothing on the page takes touches or shows chrome --- */
 body.embed { overflow: hidden; user-select: none; -webkit-user-select: none; touch-action: none; }
 body.embed * { pointer-events: none; }

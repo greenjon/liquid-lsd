@@ -37,6 +37,11 @@
       var q = new URLSearchParams(location.search);
       if (q.has('kiosk') || q.has('embed')) document.body.classList.add('kiosk');
       if (q.has('embed')) document.body.classList.add('embed');
+      // The chat's blackboard is open unless this viewer closed it: lay the room out for it before the first
+      // paint too, so the TV doesn't jump narrower when chatboard.js fills the board in.
+      var closed = false;
+      try { closed = localStorage.getItem('lsd.chat.open') === '0'; } catch (e) { /* no storage: open */ }
+      if (!q.has('kiosk') && !q.has('embed') && !closed) document.body.classList.add('chat-open');
     })();
   </script>
   <audio id="lsdAudio" crossorigin="anonymous" preload="none"></audio>
@@ -143,6 +148,12 @@
           <span class="control-label">SCHEDULE</span>
         </div>
 
+        <!-- Spaz Radio chat, on the blackboard beside the TV (chatboard.js); the LED lights for new lines -->
+        <div class="control-group">
+          <button id="chatBtn" class="push-btn" title="Spaz Radio chat, on a blackboard beside the TV (C)" aria-label="Chat" aria-pressed="false"><span class="btn-led"></span></button>
+          <span class="control-label">CHAT</span>
+        </div>
+
         <!-- How long each scene holds, in bars -->
         <div class="control-group">
           <div id="timeDial" class="rotary-dial" title="How long each scene holds: drag, scroll or click ([ and ])" role="slider" aria-label="Scene length in bars" tabindex="0">
@@ -169,6 +180,9 @@
       </div><!-- /tv-controls -->
 
     </div><!-- /tv-body -->
+
+    <!-- The Spaz Radio chat in chalk (chat.js, chatboard.js); filled in by ui.js, never under ?kiosk / ?embed -->
+    <aside id="chalkboard" aria-label="Spaz Radio chat" hidden></aside>
   </div><!-- /tv-wrapper -->
 
   <script type="module" src="ui.js"></script>

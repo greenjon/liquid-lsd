@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Web TV: Spaz Radio Chat on a Blackboard (`web/chat.js`, `web/chatboard.js`, `web/mqtt.js`, `web/ui.js`, `web/index.html`, `web/tv.css`, `web/fonts/`)
+- **The Spaz Radio chat now hangs beside the web TV on a blackboard**, written in chalk. It's the same room as the Spaz Radio Android app and spaz.org/radio: the recent conversation, who is here, and a line to write on. Write your name in chalk to join (it's remembered next visit); click your name to change it. Links open in a new tab.
+- **The board is open on your first visit, and the big X in its corner closes it** (remembered). The new CHAT button, `C`, or MENU › CHAT brings it back, and the CHAT button's light comes on when new lines arrive while it is closed.
+- Each name always gets the same chalk colour; yours is the only yellow one. Lines that arrive while you watch get the time they arrived; lines said while your connection was down are filled in when it comes back.
+- On a narrow or portrait screen the board hangs under the TV. Fullscreen is still the picture only. The Spaz Radio app's built-in picture (which has its own chat) and kiosk mode never show or connect the chat.
+
 ### Web TV: SCHEDULE Button (`web/schedule.js`, `web/ui.js`, `web/index.html`, `web/tv.css`)
 - **New SCHEDULE button on the web TV** (also `G`, or MENU › SCHEDULE): Spaz Radio's upcoming shows over the picture, grouped by day, in the viewer's own time zone, with the show on air marked ON AIR. Any key or a click closes it. It uses the same schedule feed as the Spaz Radio app.
 - **The on-screen display names the next show** (`NEXT: <show> · <time>`) under the track line.
