@@ -6,11 +6,12 @@ import { embed } from './embedmode.js';
 import { autopilotState, advanceForeground, previousForeground, nextFxChain, setHold, setHoldBars, nowShowing, setHeavyAllowed, setReducedMotion } from './autopilot.js';
 import { createMenu } from './menu.js';
 import { heardBeats, tapOffset } from './sync.js';
+import { scheduleState, refreshSchedule, setShows, groupByDay, zoneLabel, nextLine, SCHEDULE_REFRESH_MS, SCHEDULE_STALE_MS } from './schedule.js';
 
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v3';
+export const TV_VERSION = 'v4';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -80,10 +81,17 @@ function showLook(info = nowShowing(), ms = 4000, brand = false) {
     flash('osd-chain', info.chain ? `FX ${prettyName(info.chain)}` : 'NO FX', ms);
   }
   if (nowPlaying) flash('osd-track', `♪ ${nowPlaying}`, ms);
+  flashNext(ms);
   if (brand) flash('osd-brand', undefined, ms); // asked for (I, a click on the picture): who made this
 }
 
 const message = (text, ms = 1500) => flash('osd-msg', text, ms);
+
+/** Under the track line: the next show on Spaz Radio, when the schedule knows one. */
+function flashNext(ms) {
+  const line = nextLine(scheduleState.shows, Date.now());
+  if (line) flash('osd-next', line, ms);
+}
 
 // -------------------------------------------------------
 // Dials: drag up/down, mouse wheel, arrow keys when focused
@@ -192,6 +200,7 @@ export function initUI() {
   powerSwitch.addEventListener('click', async () => {
     if (powerState.on) {
       powerState.on = false;
+      viewerState.schedule?.hide();
       letScreenSleep();
       updateMediaSession();
       powerState.warmupProgress = 0;
@@ -217,6 +226,7 @@ export function initUI() {
       }
       lastBumper = performance.now();
       pollNowPlaying();
+      pollSchedule();
       holdScreenAwake();
       updateMediaSession();
       try {
@@ -235,7 +245,7 @@ export function initUI() {
   // click on the cabinet (not the picture, which shows the info, and not the other controls) turns it off,
   // unless the menu is open: then it only closes the menu.
   tvBody.addEventListener('click', (e) => {
-    if (e.target.closest('button, .rotary-dial, .rocker, #tv-menu, #about, a')) return; // they handle their own clicks
+    if (e.target.closest('button, .rotary-dial, .rocker, #tv-menu, #about, #schedule, a')) return; // they handle their own clicks
     if (powerState.on && e.target.closest('#tv-screen-area')) return;
     if (viewerState.menu?.open) { viewerState.menu.hide(); return; } // a near-miss on the menu closes it, not the TV
     powerSwitch.click();
@@ -304,8 +314,9 @@ export function initUI() {
   const stepReact = control((dir) => reactDial.set(reactDial.get() + dir * 0.05));
 
   const about = document.getElementById('about');
+  const schedulePage = document.getElementById('schedule');
 
-  // --- Service MENU (menu.js): SYNC, REACT, TIME, Reduced motion, Heavy scenes, About ---
+  // --- Service MENU (menu.js): SYNC, REACT, TIME, Reduced motion, Heavy scenes, Schedule, About ---
   viewerState.syncMs = Math.max(SYNC_MIN, Math.min(SYNC_MAX, Number(load('lsd.sync', 0)) || 0));
   viewerState.announce = load('lsd.announce', false) === true;
   viewerState.reducedMode = MODES.includes(load('lsd.reduced', 'auto')) ? load('lsd.reduced', 'auto') : 'auto';
@@ -362,6 +373,7 @@ export function initUI() {
       viewerState.announce = false; save('lsd.announce', false);
       if (!live()) { reactDial.set(toDial(REACT_DEFAULT)); timeDial.set(TIME_STEPS.indexOf(16) / (TIME_STEPS.length - 1)); }
     } },
+    { label: 'SCHEDULE', help: 'Spaz Radio\u2019s upcoming shows, in your local time. Press G or the SCHEDULE button to open it any time.', value: () => 'SPAZ RADIO', run: () => { menu.hide(); schedule.show(); } },
     { label: 'ABOUT', help: 'About Liquid LSD, the software that makes these visuals.', value: () => 'LIQUID LSD', run: () => { menu.hide(); about.hidden = false; } },
     { label: 'EXIT', run: () => menu.hide() },
   ];
@@ -430,17 +442,83 @@ export function initUI() {
     onOpen: () => screen.classList.add('menu-open'),   // the OSD steps aside while the menu is up
     onClose: () => screen.classList.remove('menu-open'),
   });
-  const toggleMenu = () => { if (powerState.on) menu.toggle(); };
+  const toggleMenu = () => { if (powerState.on) { schedule.hide(); menu.toggle(); } };
   document.getElementById('menuBtn').addEventListener('click', toggleMenu);
   viewerState.menu = menu;
+
+  // --- SCHEDULE (schedule.js): Spaz Radio's upcoming shows, like ABOUT; any key or click closes it ---
+  const schedule = {
+    get open() { return !schedulePage.hidden; },
+    show() {
+      if (!powerState.on) return;
+      menu.hide();
+      about.hidden = true;
+      schedulePage.hidden = false;
+      // A list older than 10 minutes (or none yet) is fetched again; the page fills in when it lands.
+      if (Date.now() - scheduleState.fetchedAt > SCHEDULE_STALE_MS) {
+        refreshSchedule().then(() => { if (!schedulePage.hidden) renderSchedule(); });
+      }
+      renderSchedule();
+    },
+    hide() { schedulePage.hidden = true; },
+    toggle() { schedulePage.hidden ? schedule.show() : schedule.hide(); },
+    /** The headless check's fixture: parsed shows ({start, end, name}) instead of the network. */
+    setShows,
+  };
+  function renderSchedule() {
+    const now = Date.now();
+    const days = groupByDay(scheduleState.shows, now);
+    const zone = zoneLabel(now);
+    schedulePage.querySelector('.sc-zone').textContent = zone ? `TIMES IN ${zone}` : '';
+    const list = schedulePage.querySelector('.sc-list');
+    list.replaceChildren();
+    if (!days.length) {
+      const empty = document.createElement('div');
+      empty.className = 'sc-empty';
+      empty.textContent = scheduleState.loading && !scheduleState.fetchedAt ? 'LOADING\u2026'
+        : scheduleState.failed ? 'SCHEDULE UNAVAILABLE \u00B7 TRY AGAIN LATER' : 'NO SHOWS SCHEDULED';
+      list.appendChild(empty);
+      return;
+    }
+    for (const { day, shows } of days) {
+      const head = document.createElement('div');
+      head.className = 'sc-day';
+      head.textContent = day;
+      list.appendChild(head);
+      for (const s of shows) {
+        const row = document.createElement('div');
+        row.className = 'sc-show' + (s.onAir ? ' on-air' : '');
+        row.setAttribute('role', 'listitem');
+        const time = document.createElement('span');
+        time.className = 'sc-time';
+        time.textContent = s.time;
+        const name = document.createElement('span');
+        name.className = 'sc-show-name';
+        if (s.onAir) {
+          const tag = document.createElement('span');
+          tag.className = 'sc-on-air';
+          tag.textContent = 'ON AIR \u00B7';
+          name.appendChild(tag);
+        }
+        name.append(s.name); // text, never markup: names come from the station's feed
+        row.append(time, name);
+        list.appendChild(row);
+      }
+    }
+  }
+  document.getElementById('scheduleBtn').addEventListener('click', () => schedule.toggle());
+  schedulePage.addEventListener('click', () => schedule.hide());
+  viewerState.schedule = schedule;
 
   // --- Keyboard ---
   window.addEventListener('keydown', (e) => {
     if (e.ctrlKey || e.metaKey || e.altKey || e.target.closest?.('input, textarea')) return;
     if (!about.hidden) { e.preventDefault(); about.hidden = true; return; }
+    if (schedule.open) { e.preventDefault(); schedule.hide(); return; }
     if (tapping && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); tapSync(); return; }
     if (menu.key(e)) { e.preventDefault(); return; }
     if ((e.key === 'm' || e.key === 'M') && powerState.on) { e.preventDefault(); menu.show(); return; }
+    if ((e.key === 'g' || e.key === 'G') && powerState.on) { e.preventDefault(); schedule.show(); return; }
     const keys = {
       ArrowRight: next, ArrowUp: next, n: next, N: next,
       ArrowLeft: prev, ArrowDown: prev, p: prev, P: prev,
@@ -552,7 +630,7 @@ export function initUI() {
   // while the menu or ABOUT is open; the timer restarts at power-on) ---
   const bumper = document.getElementById('bumper');
   setInterval(() => {
-    if (embed || !powerState.on || live() || menu.open || !about.hidden) return;
+    if (embed || !powerState.on || live() || menu.open || !about.hidden || schedule.open) return;
     if (performance.now() - lastBumper < BUMPER_EVERY_MS) return;
     lastBumper = performance.now();
     showBumper();
@@ -640,9 +718,22 @@ async function pollNowPlaying() {
       nowPlaying = title;
       updateMediaSession();
       flash('osd-track', `♪ ${nowPlaying}`, 6000);
+      flashNext(6000);
     }
   } catch { /* status unavailable: no track line */ }
   pollTimer = setTimeout(pollNowPlaying, 30000);
+}
+
+// -------------------------------------------------------
+// Spaz Radio schedule (schedule.js), refreshed at power-on and hourly while the TV is on. Not in embed (the
+// host app has its own) or in the headless checks (?nolive: the check gives the page a fixture).
+// -------------------------------------------------------
+let scheduleTimer = null;
+function pollSchedule() {
+  clearTimeout(scheduleTimer);
+  if (embed || !powerState.on || new URLSearchParams(location.search).has('nolive')) return;
+  refreshSchedule();
+  scheduleTimer = setTimeout(pollSchedule, SCHEDULE_REFRESH_MS);
 }
 
 // Auto-init when DOM is ready

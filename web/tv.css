@@ -347,8 +347,9 @@ body {
 }
 
 #osd-name { font-size: 1.5em; }
-#osd-chain, #osd-track { font-size: 0.9em; margin-top: 0.2em; }
+#osd-chain, #osd-track, #osd-next { font-size: 0.9em; margin-top: 0.2em; }
 #osd-track { color: #c8ffc8; text-transform: none; }
+#osd-next { font-size: 0.75em; color: #d9c2ff; text-shadow: 0 0 8px rgba(160,90,255,0.9), 1px 1px 0 rgba(0,0,0,0.8); }
 #tv-body:not(.powered-on) #osd { display: none; }
 
 /* --- Fullscreen: the screen (picture + OSD) fills the display --- */
@@ -558,6 +559,41 @@ body.kiosk #nameplate { display: none; }
 
 #tv-screen-area:has(#about:not([hidden])) #osd { visibility: hidden; }
 
+/* SCHEDULE (schedule.js): the same page as ABOUT, a list of the days and shows to come */
+#schedule {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  padding: 4% 8% 3%;
+  background: rgba(0, 8, 0, 0.88);
+  color: #8cff8c;
+  font-family: "VT323", "Courier New", monospace;
+  font-weight: bold;
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 6px rgba(80,255,80,0.7);
+  font-size: clamp(10px, 1.45vw, 21px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+  overflow: auto;
+}
+#schedule[hidden] { display: none; }
+#schedule { scrollbar-width: thin; scrollbar-color: rgba(140,255,140,0.4) transparent; }
+#schedule .sc-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1em; flex-wrap: wrap; }
+#schedule .sc-name { font-size: 1.4em; letter-spacing: 0.2em; color: #d9c2ff; text-shadow: 0 0 10px rgba(160,90,255,0.9); }
+#schedule .sc-zone { font-size: 0.7em; opacity: 0.7; }
+#schedule .sc-day { margin-top: 0.5em; color: #d9c2ff; letter-spacing: 0.15em; text-shadow: 0 0 8px rgba(160,90,255,0.8); }
+#schedule .sc-show { display: flex; gap: 1em; padding: 0.05em 0.5em; }
+#schedule .sc-time { flex: 0 0 auto; min-width: 13em; opacity: 0.85; }
+#schedule .sc-show-name { flex: 1 1 auto; overflow-wrap: anywhere; }
+#schedule .sc-show.on-air { background: #8cff8c; color: #021; text-shadow: none; }
+#schedule .sc-on-air { margin-right: 0.6em; }
+#schedule .sc-empty { margin-top: 1em; opacity: 0.8; }
+#schedule .sc-hint { margin-top: auto; padding-top: 0.6em; font-size: 0.7em; opacity: 0.7; }
+#tv-screen-area:has(#schedule:not([hidden])) #osd { visibility: hidden; }
+#tv-body:not(.powered-on) #schedule { display: none; }
+@media (max-width: 700px) { #schedule .sc-time { min-width: 0; } #schedule .sc-show { flex-direction: column; gap: 0; } }
+
 #tv-menu .menu-hint.help { opacity: 0.9; font-size: 0.8em; line-height: 1.3; text-transform: none; letter-spacing: 0.02em; }
 
 /* --- Embed (?embed): the picture only, inside a host app. Nothing on the page takes touches or shows chrome --- */
@@ -567,4 +603,4 @@ body.embed * { pointer-events: none; }
    then had no height and the screen stayed black). */
 body.embed #tv-screen-area { position: fixed; inset: 0; width: auto; height: auto; padding: 0; }
 body.embed #osd, body.embed #title-card, body.embed #ident, body.embed #bumper,
-body.embed #about, body.embed #tv-menu, body.embed #nameplate { display: none !important; }
+body.embed #about, body.embed #schedule, body.embed #tv-menu, body.embed #nameplate { display: none !important; }

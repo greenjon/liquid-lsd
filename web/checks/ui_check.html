@@ -170,11 +170,44 @@ try {
   // Branding: I adds the Liquid LSD line; MENU › ABOUT opens and any key closes it; the bumper; the nameplate.
   key('i');
   check('I shows the Liquid LSD line', osd('osd-brand').shown && osd('osd-brand').text.includes('liquid-lsd.greenjon.com'));
-  key('m'); for (let i = 0; i < 10; i++) key('ArrowDown'); key('Enter'); // row 10 = ABOUT
+  key('m'); for (let i = 0; i < 11; i++) key('ArrowDown'); key('Enter'); // row 11 = ABOUT
   const aboutEl = d.getElementById('about');
   check('MENU › ABOUT opens the about page', !aboutEl.hidden && aboutEl.textContent.includes('greenjon'), aboutEl.hidden);
   key('x');
   check('Any key closes ABOUT', aboutEl.hidden);
+  // SCHEDULE: a fixture instead of the network (?nolive skips the fetch); button, G, MENU row, any key, click.
+  const H = 3600e3, t0 = Date.now();
+  const sched = w.LSD.viewerState.schedule;
+  sched.setShows([
+    { start: t0 - H, end: t0 + H, name: 'Blind Spot Radio' },
+    { start: t0 + 2 * H, end: t0 + 3 * H, name: "Spukkin Faceship's <b>Spaceship</b>" },
+    { start: t0 + 50 * H, end: t0 + 52 * H, name: 'Telepathic Bubblebath' },
+  ]);
+  const schedEl = d.getElementById('schedule');
+  d.getElementById('scheduleBtn').click();
+  check('SCHEDULE button opens the schedule', !schedEl.hidden);
+  check('Schedule: the show on air is marked ON AIR', schedEl.querySelector('.sc-show.on-air')?.textContent.includes('ON AIR') && schedEl.querySelector('.sc-show.on-air').textContent.includes('Blind Spot Radio'), schedEl.querySelector('.sc-list').textContent);
+  check('Schedule: names are text, not markup', schedEl.textContent.includes('<b>Spaceship</b>') && !schedEl.querySelector('.sc-list b'));
+  check('Schedule: grouped by day', [...schedEl.querySelectorAll('.sc-day')].length >= 2 && schedEl.querySelector('.sc-day').textContent === 'TODAY', [...schedEl.querySelectorAll('.sc-day')].map((e) => e.textContent).join(','));
+  check('Schedule: says which time zone', /^TIMES IN \S+/.test(schedEl.querySelector('.sc-zone').textContent), schedEl.querySelector('.sc-zone').textContent);
+  key('ArrowRight');
+  check('Any key closes the schedule', schedEl.hidden);
+  key('g');
+  check('G opens the schedule', !schedEl.hidden);
+  schedEl.click();
+  check('A click closes the schedule and leaves the TV on', schedEl.hidden && w.LSD.powerState.on);
+  key('m'); for (let i = 0; i < 10; i++) key('ArrowDown'); key('Enter'); // row 10 = SCHEDULE
+  check('MENU › SCHEDULE opens the schedule and closes the menu', !schedEl.hidden && menuEl.hidden);
+  key('Escape');
+  key('i');
+  check('The OSD names the next show', osd('osd-next').shown && osd('osd-next').text.startsWith("NEXT: Spukkin Faceship's"), JSON.stringify(osd('osd-next')));
+  key('g');
+  d.getElementById('powerSwitch').click();
+  await sleep(100);
+  check('Power off hides the schedule', schedEl.hidden || getComputedStyle(schedEl).display === 'none');
+  d.getElementById('powerSwitch').click();
+  await sleep(1800);
+  check('Schedule stays closed after power on', schedEl.hidden);
   w.LSD.viewerState.showBumper();
   check('Bumper names Liquid LSD and the site', d.getElementById('bumper').classList.contains('show') && /LIQUID-LSD\.GREENJON\.COM/.test(d.getElementById('bumper').textContent));
   const plate = d.getElementById('nameplate');

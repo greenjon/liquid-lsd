@@ -78,7 +78,7 @@ The standalone browser client (`web/index.html`) presents the visualizer in a re
 | **TIME** | How long each scene holds: 8, 16, 32 or 64 bars (drag, scroll or click) | `[` `]` |
 | **REACT** | How strongly the picture reacts to the music, 25-200%, 100% to start (double-click for 100%). The TV levels quiet and loud shows itself, so this is about taste, not volume | `-` `=` |
 
-Click or tap the picture (or press `I`) to show the channel, the scene, its FX chain and the track playing on the radio. TIME and REACT are remembered in the browser.
+Click or tap the picture (or press `I`) to show the channel, the scene, its FX chain, the track playing on the radio and the next show on Spaz Radio. TIME and REACT are remembered in the browser.
 
 **No signal:** if the radio stream drops or goes quiet, the screen shows snow and NO SIGNAL, and the TV reconnects by itself.
 
@@ -92,7 +92,9 @@ Click or tap the picture (or press `I`) to show the channel, the scene, its FX c
 
 **Kiosk mode:** `index.html?kiosk` shows only the picture (no TV body), turns itself on and hides the mouse pointer; use the keyboard or swipes. Browsers that refuse to start sound on their own get a "click or press a key for sound" prompt.
 
-**MENU:** the MENU button or `M` opens the service menu (arrows or clicks to change, Esc or M to close): **SYNC** (how late the sound reaches you, for Bluetooth and other delayed speakers), **Announce scenes** (name each new scene on screen; off by default), **REACT**, **TIME**, **Reduced motion** (Auto follows your system setting), **Big GPU scenes** (Auto lets the GPU check decide), **Input** (radio or microphone) and **Fullscreen**. The selected row explains itself at the bottom of the menu (and on mouse hover). Settings are remembered in this browser. REACT, TIME and Heavy scenes are locked during a live broadcast.
+**MENU:** the MENU button or `M` opens the service menu (arrows or clicks to change, Esc or M to close): **SYNC** (how late the sound reaches you, for Bluetooth and other delayed speakers), **Announce scenes** (name each new scene on screen; off by default), **REACT**, **TIME**, **Reduced motion** (Auto follows your system setting), **Big GPU scenes** (Auto lets the GPU check decide), **Input** (radio or microphone), **Fullscreen**, **SCHEDULE** and **ABOUT**. The selected row explains itself at the bottom of the menu (and on mouse hover). Settings are remembered in this browser. REACT, TIME and Heavy scenes are locked during a live broadcast.
+
+**SCHEDULE:** the SCHEDULE button, `G`, or MENU › **SCHEDULE** lays Spaz Radio's upcoming shows over the picture, grouped by day (Today, Tomorrow, then the date), in your own time zone (shown at the top). The show playing now is marked ON AIR. Any key or a click closes it. It works during a live broadcast too. When the track name comes up on screen, the next show comes up under it (`NEXT: <show> · <time>`). If the station's schedule can't be reached, the page says so and the TV keeps the last copy it had.
 
 **SYNC:** if the picture's pulses come before the beat you hear (Bluetooth speakers are often 150-250 ms late), open MENU › **TAP SYNC** and tap Space or the picture on 8 beats; or set **SYNC** by hand. It needs the beat light to be green (or a live broadcast).
 

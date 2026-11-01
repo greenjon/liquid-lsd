@@ -56,6 +56,7 @@
               <div id="osd-name"></div>
               <div id="osd-chain"></div>
               <div id="osd-track"></div>
+              <div id="osd-next"></div>
               <div id="osd-brand">LIQUID LSD &middot; liquid-lsd.greenjon.com</div>
             </div>
           </div>
@@ -72,6 +73,12 @@
             <p>Desktop app for Linux, macOS and Windows: 35 generators, 27 effects, MIDI and OSC control, Ableton Link, Spout / Syphon output, and live broadcast to this TV.</p>
             <div class="ab-link"><svg class="ab-qr" role="img" aria-label="QR code for liquid-lsd.greenjon.com" viewBox="0 0 37 37" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg" width="37" height="37"><path fill="#c8ffc8" d="M0 0h37v37h-37z"/><path class="qrline" stroke="#001a00" d="M4 4.5h7m2 0h8m1 0h2m2 0h7m-29 1h1m5 0h1m1 0h1m1 0h1m3 0h4m2 0h1m1 0h1m5 0h1m-29 1h1m1 0h3m1 0h1m1 0h1m1 0h3m2 0h1m2 0h1m1 0h1m1 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m4 0h2m1 0h1m2 0h1m1 0h2m1 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m3 0h2m1 0h2m3 0h2m2 0h1m1 0h3m1 0h1m-29 1h1m5 0h1m3 0h1m1 0h3m2 0h4m1 0h1m5 0h1m-29 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-13 1h2m2 0h1m-20 1h3m1 0h2m2 0h1m1 0h3m2 0h3m7 0h2m-28 1h1m1 0h4m2 0h1m1 0h1m2 0h2m3 0h8m2 0h1m-28 1h1m3 0h4m1 0h1m1 0h1m3 0h3m3 0h1m3 0h2m-28 1h2m1 0h1m3 0h3m1 0h4m3 0h1m1 0h1m2 0h1m1 0h1m2 0h1m-29 1h1m1 0h1m3 0h1m1 0h1m1 0h1m1 0h3m2 0h1m1 0h1m1 0h1m1 0h1m2 0h3m-29 1h1m1 0h1m1 0h1m5 0h1m1 0h1m2 0h1m1 0h1m1 0h1m2 0h2m1 0h2m1 0h1m-29 1h1m2 0h1m2 0h2m1 0h2m3 0h2m1 0h1m1 0h1m1 0h5m1 0h2m-29 1h1m1 0h1m4 0h1m2 0h1m1 0h2m2 0h1m3 0h1m3 0h2m2 0h1m-29 1h1m1 0h1m2 0h2m1 0h1m1 0h2m1 0h2m3 0h4m1 0h3m-21 1h1m1 0h1m1 0h1m1 0h1m1 0h2m1 0h2m2 0h1m2 0h1m2 0h1m-27 1h1m5 0h2m1 0h1m2 0h2m1 0h1m2 0h1m3 0h1m3 0h1m-20 1h1m1 0h1m1 0h1m1 0h2m2 0h7m1 0h4m-28 1h1m2 0h1m1 0h1m5 0h2m2 0h3m1 0h8m-20 1h2m6 0h3m1 0h1m3 0h2m2 0h1m-29 1h7m4 0h2m1 0h1m1 0h1m1 0h3m1 0h1m1 0h1m1 0h2m-28 1h1m5 0h1m1 0h2m3 0h1m4 0h1m1 0h1m3 0h1m3 0h1m-29 1h1m1 0h3m1 0h1m3 0h1m1 0h3m2 0h1m2 0h7m1 0h1m-29 1h1m1 0h3m1 0h1m1 0h4m1 0h1m3 0h1m1 0h1m4 0h4m-28 1h1m1 0h3m1 0h1m1 0h2m1 0h2m5 0h1m1 0h1m2 0h1m2 0h1m1 0h1m-29 1h1m5 0h1m1 0h1m3 0h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h2m1 0h1m-28 1h7m2 0h1m2 0h1m2 0h1m3 0h2m1 0h2m1 0h1m1 0h1"/></svg><a href="https://liquid-lsd.greenjon.com" target="_blank" rel="noopener">liquid-lsd.greenjon.com</a></div>
             <div class="ab-hint">ANY KEY OR CLICK TO CLOSE</div>
+          </div>
+          <!-- SCHEDULE: Spaz Radio's upcoming shows (schedule.js), in the viewer's local time -->
+          <div id="schedule" hidden>
+            <div class="sc-head"><span class="sc-name">SPAZ RADIO &middot; SCHEDULE</span><span class="sc-zone"></span></div>
+            <div class="sc-list" role="list"></div>
+            <div class="sc-hint">ANY KEY OR CLICK TO CLOSE</div>
           </div>
           <!-- Overlay shown when TV is off; hidden by .powered-on class -->
           <div id="screen-off-overlay"></div>
@@ -124,10 +131,16 @@
           <span class="control-label">HOLD</span>
         </div>
 
-        <!-- Service menu: SYNC, REACT, TIME, Reduced motion, Heavy scenes -->
+        <!-- Service menu: SYNC, REACT, TIME, Reduced motion, Heavy scenes, Schedule, About -->
         <div class="control-group">
           <button id="menuBtn" class="push-btn" title="Menu: sync, reaction, scene length, input, fullscreen, reduced motion, heavy scenes (M)" aria-label="Menu"></button>
           <span class="control-label">MENU</span>
+        </div>
+
+        <!-- Spaz Radio's upcoming shows, over the picture -->
+        <div class="control-group">
+          <button id="scheduleBtn" class="push-btn" title="Spaz Radio's upcoming shows, in your local time (G)" aria-label="Schedule"></button>
+          <span class="control-label">SCHEDULE</span>
         </div>
 
         <!-- How long each scene holds, in bars -->
