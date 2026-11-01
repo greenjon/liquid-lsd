@@ -3,6 +3,7 @@ import { powerState, viewerState } from './ui.js';
 import { autopilotState, autopilotSettings, tickAutopilot, startAutopilot, handleRelayMessage, advanceForeground, setPrewarm, setHeavyAllowed } from './autopilot.js';
 import { evaluateParameter, makeEvalContext, paramSpec } from './evaluator.js';
 import { lookupParam } from './isf.js';
+import { AudioTextures, audioFrame } from './audiotex.js';
 import { Library, DeckPipeline, MixerPipeline } from './graph.js';
 import { MandalaRecipes } from './mandala.js';
 import { heardBeats, DelayLine } from './sync.js';
@@ -223,6 +224,7 @@ async function init() {
   const ctx = {
     gl, quadVAO, dummyTex, fmt,
     hasFloat: !!extFloat,
+    audio: new AudioTextures(gl),   // spectrum / waveform for audio shaders (isf.js binds them)
     library: new Library(gl, blitVertSrc, catalog),
     input: evalInput,
     scalar: (raw, fallback) => evalP(raw, fallback),
@@ -326,7 +328,7 @@ async function init() {
   const pipeBG = new DeckPipeline(ctx, renderW, renderH);
   const mixerPipe = new MixerPipeline(ctx, renderW, renderH);
 
-  window.LSD = { cvState, autopilotState, powerState, viewerState, library: ctx.library, handleRelayMessage, advanceForeground,
+  window.LSD = { cvState, audioFrame, autopilotState, powerState, viewerState, library: ctx.library, handleRelayMessage, advanceForeground,
     renderSize: () => [renderW, renderH, SCALES[adapt.idx]], gpu };
 
   function frameInfo() {
@@ -395,6 +397,7 @@ async function init() {
 
     // Tick DSP analysis and autopilot scheduler
     tick(dt);
+    ctx.audio.update(audioFrame);
     updateEvalContext();
     tickAutopilot(dt, evalCtx.beats, { section: cvState.section, drops: cvState.drops, bpm: cvState.bpm, locked: cvState.beatLocked });
 

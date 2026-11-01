@@ -23,7 +23,7 @@
         { "NAME": "Brightness", "LABEL": "Brightness", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 }
     ],
     "PASSES": [
-        { "TARGET": "headState", "PERSISTENT": true, "FLOAT": true, "WIDTH": "1", "HEIGHT": "1" },
+        { "TARGET": "headState", "PERSISTENT": true, "WIDTH": "1", "HEIGHT": "1" },
         { "TARGET": "history", "PERSISTENT": true, "WIDTH": "512", "HEIGHT": "512" },
         { }
     ]
@@ -38,10 +38,12 @@
 #define Brightness_ (Brightness*2.0)
 
 // The history is a ring of N columns (time) x 512 rows (linear FFT bins). headState holds the write head as a
-// running column count (r = this frame, g = last frame), advanced by ScrollSpeed x TIMEDELTA, so the scroll
-// speed is per second, not per frame, and a speed change never jumps the picture. Columns the head passed this
-// frame get the current spectrum; while the head stays inside one column that column keeps the peak, so a slow
-// scroll still shows every transient.
+// running column position, advanced by ScrollSpeed x TIMEDELTA, so the scroll speed is per second, not per
+// frame, and a speed change never jumps the picture. Columns the head passed this frame get the current
+// spectrum; while the head stays inside one column that column keeps the peak, so a slow scroll still shows
+// every transient. The head is stored in an 8-bit-safe form (column / 32 and column % 32 as byte values, the
+// fraction in b), so it survives a host that renders the pass to RGBA8; last frame's head is not stored but
+// recomputed from this frame's step, which every pass sees identically.
 
 const float N = 512.0;
 const float TAU = 6.28318531;
@@ -51,18 +53,26 @@ float spectrumAt(float y) {
     return texture(fftImage, vec2(y, 0.5)).r;
 }
 
+// Columns the head moves this frame: below N, so the ring never laps itself.
+float headStep() {
+    return min(ScrollSpeed_ * clamp(TIMEDELTA, 0.0, 0.1), N - 1.0);
+}
+
+float readHead() {
+    vec3 h = texture(headState, vec2(0.5)).rgb;
+    return floor(h.r * 255.0 + 0.5) * 32.0 + floor(h.g * 255.0 + 0.5) + clamp(h.b, 0.0, 0.996);
+}
+
 vec4 headPass() {
-    vec2 prev = texture(headState, vec2(0.5)).rg;
-    float dt = clamp(TIMEDELTA, 0.0, 0.1);
-    // Kept below N columns a frame and wrapped, so the float never loses precision over a long set.
-    float now = mod(prev.r + min(ScrollSpeed_ * dt, N - 1.0), N);
-    return vec4(now, prev.r, 0.0, 1.0);
+    float now = mod(readHead() + headStep(), N);
+    float col = floor(now);
+    return vec4(floor(col / 32.0) / 255.0, mod(col, 32.0) / 255.0, now - col, 1.0);
 }
 
 vec4 historyPass() {
-    vec2 head = texture(headState, vec2(0.5)).rg;
-    float colNow = floor(head.r);
-    float colOld = floor(head.g);
+    float now = readHead();
+    float colNow = floor(now);
+    float colOld = floor(mod(now - headStep(), N));
     float c = floor(gl_FragCoord.x);
     float y = gl_FragCoord.y / 512.0;
     float fresh = spectrumAt(y);
@@ -81,7 +91,7 @@ vec4 historyPass() {
 
 // History value at age a (0 = now, 1 = oldest on screen) and linear-bin coordinate y, smooth between columns.
 float historyAt(float a, float y) {
-    float pos = texture(headState, vec2(0.5)).r - a * (N - 2.0);
+    float pos = readHead() - a * (N - 2.0);
     float c0 = floor(pos);
     float f = pos - c0;
     float x0 = (mod(c0, N) + 0.5) / N;

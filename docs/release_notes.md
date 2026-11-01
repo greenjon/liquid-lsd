@@ -1,9 +1,11 @@
 ## [Unreleased]
 
-### Two New Generators That Draw the Sound: Spectrogram and Scope (`library/sources/spectrogram/`, `library/sources/scope/`)
+### Two New Generators That Draw the Sound: Spectrogram and Scope (`library/sources/spectrogram/`, `library/sources/scope/`, `web/audiotex.js`, `web/dsp.js`, `web/isf.js`)
 - **Spectrogram**: the music itself, scrolling: time along one axis, frequency along the other, so the kick, the bassline and every note are readable as they pass. Scroll, Rise, Ring or Tunnel layouts, a mirrored option with the bass in the middle, a log frequency axis like a piano's, and four palettes. A slow scroll still catches every hit.
 - **Scope**: an oscilloscope in a feedback loop: the waveform or the spectrum drawn as a glowing line or ring while the picture behind it zooms, turns, warps and fades into tunnels and trails. A steady tone stands still instead of sliding.
-- Both have their own knobs and audio responses (Scope's trails punch out on the kick; Spectrogram scrolls faster on the drop) and roll random looks like the other generators. Desktop only for now: the web TV can't read the audio this way yet.
+- Both have their own knobs and audio responses (Scope's trails punch out on the kick; Spectrogram scrolls a little faster when loud and rushes on the drop) and roll random looks like the other generators.
+- **Both are on the web TV too**: it now reads the music's spectrum and waveform the same way the desktop does (`web/audiotex.js`), so shaders that draw the sound run there as well, and the autopilot can show Spectrogram and Scope. The Spaz Radio app needs a new release to pick them up; until then it keeps its current looks.
+- The TV's version is now v8.
 
 ### Audio Visualizers From Other ISF Hosts Work (`rendering/AudioTexture.kt`, `rendering/isf/ISFAudioInputs.kt`, `rendering/isf/ISFVisualSource.kt`, `rendering/isf/ISFFilter.kt`, `rendering/Shader.kt`, `rendering/Renderer.kt`)
 - **Fixed: ISF shaders with `audio` or `audioFFT` inputs drew black or garbage.** Their inputs were never connected to the audio. Each now gets the waveform or the spectrum under its own name, as other ISF hosts provide them, so the audio visualizers in the official ISF collection (FFT Spectrogram, Radial Spectrogram, FFT Color Lines, FFT Filled Waveform, Audio Waveform Shape) run as they are. Effects with an audio input get it too, and no longer show a useless knob for it.

@@ -1,9 +1,9 @@
 // Minimal ISF loader for WebGL2. Port of the desktop ISFParser.buildGLSLFragmentShader
 // (src/main/kotlin/.../rendering/isf/ISFParser.kt). Keep the two in step.
 //
-// Scope: float/long/bool/event/color/point2D/image inputs, multi-pass shaders with PASSES,
-// TARGET, PERSISTENT, FLOAT and $WIDTH/$HEIGHT dimension expressions. IMPORTED assets and
-// audio/audioFFT inputs are not supported yet (nothing bundled uses them).
+// Scope: float/long/bool/event/color/point2D/image inputs, audio/audioFFT inputs (bound to audiotex.js's
+// textures under the shader's own names, as AudioTexture.kt / ISFAudioInputs.kt do), multi-pass shaders with
+// PASSES, TARGET, PERSISTENT, FLOAT and $WIDTH/$HEIGHT dimension expressions. IMPORTED assets are not supported.
 // See .planning/web-renderer-parity-plan.md, phase 1.
 
 const HEADER_RE = /\/\*\s*(\{[\s\S]*?\})\s*\*\//;
@@ -110,11 +110,12 @@ export function buildFragmentShader(rawSource, header = parseHeader(rawSource)) 
  */
 export function applyUniforms(gl, prog, params, frame) {
   const { header } = prog;
-  const set1f = (n, v) => { const l = prog.loc(n); if (l) gl.uniform1f(l, v); };
-  const set1i = (n, v) => { const l = prog.loc(n); if (l) gl.uniform1i(l, v); };
+  // Built-in scalars skip a name the shader uses for a texture (an ISF pass target called `time`), as Shader.kt does.
+  const set1f = (n, v) => { if (prog.samplerNames.has(n)) return; const l = prog.loc(n); if (l) gl.uniform1f(l, v); };
+  const set1i = (n, v) => { if (prog.samplerNames.has(n)) return; const l = prog.loc(n); if (l) gl.uniform1i(l, v); };
 
   for (const n of ['uResolution', 'u_resolution', 'resolution']) {
-    const l = prog.loc(n); if (l) gl.uniform2f(l, frame.width, frame.height);
+    const l = !prog.samplerNames.has(n) && prog.loc(n); if (l) gl.uniform2f(l, frame.width, frame.height);
   }
   const res3 = prog.loc('iResolution'); if (res3) gl.uniform3f(res3, frame.width, frame.height, 1);
   for (const n of ['TIME', 'iTime', 'u_time', 'time', 'uTime']) set1f(n, frame.time);
@@ -254,6 +255,13 @@ export class ISFProgram {
     this.inputName = images[0] ?? null;
     this.startName = images.find((n) => /^(startImage|inputImage|uTex1)$/i.test(n)) ?? images[0] ?? 'startImage';
     this.endName = images.find((n) => /^(endImage|toImage|uTex2)$/i.test(n)) ?? images[1] ?? 'endImage';
+    // ISF audio inputs: `audioFFT` gets the 512x1 spectrum, `audio` the 512x1 waveform (AudioTextures).
+    this.audioInputs = this.header.INPUTS
+      .filter((i) => /^(audio|audiofft)$/i.test(i.TYPE))
+      .map((i) => ({ name: i.NAME, fft: i.TYPE.toLowerCase() === 'audiofft' }));
+    this.samplerNames = new Set([
+      ...this.header.INPUTS.filter((i) => /^(image|audio|audiofft)$/i.test(i.TYPE)).map((i) => i.NAME),
+      ...this.header.PASSES.map((p) => p.TARGET).filter(Boolean)]);
     this.passes = this.header.PASSES.map((p) => ({
       target: p.TARGET || null, persistent: !!p.PERSISTENT, float: !!p.FLOAT,
       width: parseDim(p.WIDTH), height: parseDim(p.HEIGHT),
@@ -363,6 +371,11 @@ export function renderISF(ctx, prog, state, { targetFBO, width, height, params, 
     for (const name of Object.keys(images)) bind(name, images[name]);
     for (const [name, t] of state.regular) bind(name, t.tex === selfTex ? ctx.dummyTex : t.tex);
     for (const [name, s] of state.persistent) bind(name, s.back.tex);
+    if (ctx.audio) {
+      // The stacked Shadertoy texture behind the fixed names, unless the shader declared that name as an input.
+      for (const name of ['audioFFT', 'iChannel0']) if (!prog.samplerNames.has(name)) bind(name, ctx.audio.stacked);
+      for (const a of prog.audioInputs) bind(a.name, a.fft ? ctx.audio.fft : ctx.audio.wave);
+    }
 
     // A source's last pass is stored as colour x alpha (alpha as written) over the cleared target, like the
     // desktop Renderer's glBlendFuncSeparate(SRC_ALPHA, ONE_MINUS_SRC_ALPHA, ONE, ONE_MINUS_SRC_ALPHA). The

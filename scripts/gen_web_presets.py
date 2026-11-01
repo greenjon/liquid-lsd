@@ -137,13 +137,13 @@ def write_json(path, data):
 # Sources that fill the frame with colour: feedback and bloom chains wash them out to one flat colour,
 # so their presets are tagged `fullframe` and the autopilot skips those chains for them (web/pairing.js).
 FULL_FRAME_SOURCES = {"cyclic_ca", "kali_set", "glitch_blocks", "halftone_matrix", "quasicrystal", "thin_film",
-                      "voronoi_cells", "wave_ripples", "isometric_voxels", "girih_stars",
+                      "voronoi_cells", "wave_ripples", "isometric_voxels", "girih_stars", "spectrogram",
                       "apollonian", "escape_time", "nebula_volume", "pseudo_kleinian"}
 
 
 # Sources drawn as fine dots or thin lines on black: pixelate and halftone chains average them away to
 # nothing, so their presets are tagged `sparse` and skip those chains (web/pairing.js).
-SPARSE_SOURCES = {"dynamic_spiral"}
+SPARSE_SOURCES = {"dynamic_spiral", "scope"}
 
 
 def preset(name, source, spec, tags, notes=""):

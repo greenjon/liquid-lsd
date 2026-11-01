@@ -27,7 +27,7 @@
         { "NAME": "Brightness", "LABEL": "Brightness", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 }
     ],
     "PASSES": [
-        { "TARGET": "trigger", "WIDTH": "1", "HEIGHT": "1", "FLOAT": true },
+        { "TARGET": "trigger", "WIDTH": "1", "HEIGHT": "1" },
         { "TARGET": "trails", "PERSISTENT": true, "WIDTH": "1024", "HEIGHT": "1024" },
         { }
     ]
@@ -67,7 +67,7 @@ vec3 hsv2rgb(vec3 c) {
 mat2 rot2(float a) { float c = cos(a), s = sin(a); return mat2(c, s, -s, c); }
 
 // Pass 0: the first rising zero crossing in the first half of the waveform, so a steady tone stands still
-// instead of sliding. Stored as a sample index; 0 when there is none (noise, silence).
+// instead of sliding. Stored as sample index / 255 (exact in an 8-bit target); 0 when there is none (noise, silence).
 vec4 triggerPass() {
     float idx = 0.0;
     float prev = texelFetch(waveImage, ivec2(0, 0), 0).r;
@@ -76,7 +76,7 @@ vec4 triggerPass() {
         if (prev < 0.5 && cur >= 0.5) { idx = float(i); break; }
         prev = cur;
     }
-    return vec4(idx, 0.0, 0.0, 1.0);
+    return vec4(idx / 255.0, 0.0, 0.0, 1.0);
 }
 
 // Trace value at u (0..1 along the trace), signed, in buffer units.
@@ -168,7 +168,7 @@ vec4 blackToAlpha(vec3 c) {
 void main() {
     int mode = clamp(int(floor(Mode + 0.5)), 0, 3);
     if (PASSINDEX == 0) { gl_FragColor = triggerPass(); return; }
-    float trig = mode <= 1 ? texture(trigger, vec2(0.5)).r : 0.0;
+    float trig = mode <= 1 ? floor(texture(trigger, vec2(0.5)).r * 255.0 + 0.5) : 0.0;
     if (PASSINDEX == 1) { gl_FragColor = trailsPass(mode, trig); return; }
 
     // Display: the square buffer covers the frame (crops the long axis); the current trace is drawn again at

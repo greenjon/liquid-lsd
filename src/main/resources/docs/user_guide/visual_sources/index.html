@@ -2780,7 +2780,7 @@
 <li><strong>Relief, Zoom, Color Mode</strong>: Embossed lighting, magnification, four colourings.</li>
 </ul>
 <h3 id="spectrogram-spectrogram">Spectrogram (<code>spectrogram</code>)</h3>
-<p>The sound itself, scrolling: time runs along one axis and frequency along the other, so you can read the kick, the bassline and every note as it passes. Desktop only for now (the web TV can't read the audio this way yet).</p>
+<p>The sound itself, scrolling: time runs along one axis and frequency along the other, so you can read the kick, the bassline and every note as it passes.</p>
 <ul>
 <li><strong>Layout</strong>: Scroll (newest on the right), Rise (newest at the bottom), Ring (newest at the centre, flowing out) or Tunnel (newest at the rim, flowing in). <strong>Mirror</strong> puts the bass in the middle.</li>
 <li><strong>Scroll Speed</strong>: About 2 to 60 seconds of sound on screen. A slow scroll still catches every hit: each column keeps the loudest moment of its slice.</li>
@@ -2789,7 +2789,7 @@
 <li><strong>Age Fade, Palette, Hue Offset</strong>: Darker history, and Fire, Ice, Rainbow (by frequency) or Mono colours.</li>
 </ul>
 <h3 id="scope-scope">Scope (<code>scope</code>)</h3>
-<p>An oscilloscope in a feedback loop, in the spirit of classic music visualizers: the live waveform or spectrum is drawn as a glowing line or ring, and each frame the previous picture zooms, turns, warps and fades behind it, so the trace smears into tunnels, spirals and trails. Desktop only for now.</p>
+<p>An oscilloscope in a feedback loop, in the spirit of classic music visualizers: the live waveform or spectrum is drawn as a glowing line or ring, and each frame the previous picture zooms, turns, warps and fades behind it, so the trace smears into tunnels, spirals and trails.</p>
 <ul>
 <li><strong>Trace</strong>: Wave Line, Wave Ring, Spectrum Line (mirrored above and below the centre) or Spectrum Ring. A steady tone stands still on the wave traces instead of sliding.</li>
 <li><strong>Amplitude, Smoothing, Thickness, Ring Size</strong>: The trace. Smoothing calms the waveform so cymbals don't fill it in.</li>
@@ -2891,7 +2891,7 @@
 <p>The app reads the ISF JSON header inside each shader file, automatically lists its parameters in the deck's SRC tab, and makes every one of them available to modulators, macros and MIDI/OSC learn. No configuration required.</p>
 <h3 id="audio-in-your-shaders">Audio in your shaders</h3>
 <p>Shaders can read the live audio through the <code>audioFFT</code> sampler (Shadertoy-style <code>iChannel0</code> is the same texture), a 512x2 single-channel texture. Row 0 (<code>y = 0.25</code>) is the spectrum: 512 bins from 0 Hz to half the sample rate, 0 to 1 on a decibel scale (full scale is 1, -80 dB is 0), with a quick decay so bars fall smoothly. Row 1 (<code>y = 0.75</code>) is the waveform, centred on 0.5. Example: <code>float level = texture(audioFFT, vec2(pow(uv.x, 2.0), 0.25)).r;</code> gives a bar height with more resolution at the low end.</p>
-<p>ISF shaders written for other hosts can instead declare their own audio inputs, as the ISF spec describes: an input of <code>"TYPE": "audioFFT"</code> gets the spectrum and <code>"TYPE": "audio"</code> gets the waveform, each as a 512x1 image under whatever name the shader gives it. The audio visualizers from the official ISF collection (FFT Spectrogram, Radial Spectrogram, FFT Color Lines, FFT Filled Waveform, Audio Waveform Shape) run as they are, and the stock Spectrogram and Scope use these inputs too. The audio is mono, so a shader's stereo mode shows the same signal on both sides.</p>
+<p>ISF shaders written for other hosts can instead declare their own audio inputs, as the ISF spec describes: an input of <code>"TYPE": "audioFFT"</code> gets the spectrum and <code>"TYPE": "audio"</code> gets the waveform, each as a 512x1 image under whatever name the shader gives it. The audio visualizers from the official ISF collection (FFT Spectrogram, Radial Spectrogram, FFT Color Lines, FFT Filled Waveform, Audio Waveform Shape) run as they are, and the stock Spectrogram and Scope use these inputs too. The web TV provides the same textures, so these shaders also run there. The audio is mono, so a shader's stereo mode shows the same signal on both sides.</p>
 <p>Mouse uniforms (<code>iMouse</code>, <code>u_mouse</code>, <code>mouse</code>) always read the centre of the frame with no click: the app's cursor is you working the controls, so it never steers the picture.</p>
 <h3 id="naming-and-3d-sources">Naming and 3D sources</h3>
 <p>A shader's file name (without <code>.fs</code>) is its id, which presets use to find it. Two shaders with the same file name can't both load: the first one found wins and the other is skipped with a warning in the log, so rename one of them. This includes a shader named like a bundled one (<code>metaballs.fs</code>).</p>

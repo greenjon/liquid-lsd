@@ -376,6 +376,18 @@
       "description": "Voronoi Cells generator"
     },
     {
+      "desktop": "library/sources/spectrogram/spectrogram.fs",
+      "web": "web/shaders/spectrogram.frag",
+      "mode": "auto_shader",
+      "description": "Spectrogram audio visualizer"
+    },
+    {
+      "desktop": "library/sources/scope/scope.fs",
+      "web": "web/shaders/scope.frag",
+      "mode": "auto_shader",
+      "description": "Scope audio visualizer"
+    },
+    {
       "desktop": "library/sources/apollonian/apollonian.fs",
       "web": "web/shaders/apollonian.frag",
       "mode": "auto_shader",
@@ -450,6 +462,13 @@
       "mode": "manual_review",
       "description": "JSON preset serialization schema & dead reckoning state sync",
       "last_synced_hash": "252ef239e084664ea92e043ccdd7d1135f74acc9a6926b236b61dad42d10e1d1"
+    },
+    {
+      "desktop": "src/main/kotlin/llm/slop/liquidlsd/audio/SpectrumAnalyzer.kt",
+      "web": "web/audiotex.js",
+      "mode": "manual_review",
+      "description": "Shader audio spectrum (FFT, dB mapping, release); golden vectors in web/tools/spectrum_vectors.json",
+      "last_synced_hash": "584f0d9997565e122b4808df50cd6bef155dd977ae3e04ab5f4afe386bb2dce4"
     }
   ],
   "content": [

@@ -349,7 +349,7 @@ Animated Worley cells.
 
 ### Spectrogram (`spectrogram`)
 
-The sound itself, scrolling: time runs along one axis and frequency along the other, so you can read the kick, the bassline and every note as it passes. Desktop only for now (the web TV can't read the audio this way yet).
+The sound itself, scrolling: time runs along one axis and frequency along the other, so you can read the kick, the bassline and every note as it passes.
 
 - **Layout**: Scroll (newest on the right), Rise (newest at the bottom), Ring (newest at the centre, flowing out) or Tunnel (newest at the rim, flowing in). **Mirror** puts the bass in the middle.
 - **Scroll Speed**: About 2 to 60 seconds of sound on screen. A slow scroll still catches every hit: each column keeps the loudest moment of its slice.
@@ -359,7 +359,7 @@ The sound itself, scrolling: time runs along one axis and frequency along the ot
 
 ### Scope (`scope`)
 
-An oscilloscope in a feedback loop, in the spirit of classic music visualizers: the live waveform or spectrum is drawn as a glowing line or ring, and each frame the previous picture zooms, turns, warps and fades behind it, so the trace smears into tunnels, spirals and trails. Desktop only for now.
+An oscilloscope in a feedback loop, in the spirit of classic music visualizers: the live waveform or spectrum is drawn as a glowing line or ring, and each frame the previous picture zooms, turns, warps and fades behind it, so the trace smears into tunnels, spirals and trails.
 
 - **Trace**: Wave Line, Wave Ring, Spectrum Line (mirrored above and below the centre) or Spectrum Ring. A steady tone stands still on the wave traces instead of sliding.
 - **Amplitude, Smoothing, Thickness, Ring Size**: The trace. Smoothing calms the waveform so cymbals don't fill it in.
@@ -467,7 +467,7 @@ The app reads the ISF JSON header inside each shader file, automatically lists i
 
 Shaders can read the live audio through the `audioFFT` sampler (Shadertoy-style `iChannel0` is the same texture), a 512x2 single-channel texture. Row 0 (`y = 0.25`) is the spectrum: 512 bins from 0 Hz to half the sample rate, 0 to 1 on a decibel scale (full scale is 1, -80 dB is 0), with a quick decay so bars fall smoothly. Row 1 (`y = 0.75`) is the waveform, centred on 0.5. Example: `float level = texture(audioFFT, vec2(pow(uv.x, 2.0), 0.25)).r;` gives a bar height with more resolution at the low end.
 
-ISF shaders written for other hosts can instead declare their own audio inputs, as the ISF spec describes: an input of `"TYPE": "audioFFT"` gets the spectrum and `"TYPE": "audio"` gets the waveform, each as a 512x1 image under whatever name the shader gives it. The audio visualizers from the official ISF collection (FFT Spectrogram, Radial Spectrogram, FFT Color Lines, FFT Filled Waveform, Audio Waveform Shape) run as they are, and the stock Spectrogram and Scope use these inputs too. The audio is mono, so a shader's stereo mode shows the same signal on both sides.
+ISF shaders written for other hosts can instead declare their own audio inputs, as the ISF spec describes: an input of `"TYPE": "audioFFT"` gets the spectrum and `"TYPE": "audio"` gets the waveform, each as a 512x1 image under whatever name the shader gives it. The audio visualizers from the official ISF collection (FFT Spectrogram, Radial Spectrogram, FFT Color Lines, FFT Filled Waveform, Audio Waveform Shape) run as they are, and the stock Spectrogram and Scope use these inputs too. The web TV provides the same textures, so these shaders also run there. The audio is mono, so a shader's stereo mode shows the same signal on both sides.
 
 Mouse uniforms (`iMouse`, `u_mouse`, `mouse`) always read the centre of the frame with no click: the app's cursor is you working the controls, so it never steers the picture.
 

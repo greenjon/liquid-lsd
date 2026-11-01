@@ -136,6 +136,16 @@
       "name": "Gray-Scott reaction-diffusion on a persistent fixed-size grid"
     },
     {
+      "id": "scope",
+      "file": "shaders/scope.frag",
+      "name": "Scope audio visualizer"
+    },
+    {
+      "id": "spectrogram",
+      "file": "shaders/spectrogram.frag",
+      "name": "Spectrogram audio visualizer"
+    },
+    {
       "id": "thin_film",
       "file": "shaders/thin_film.frag",
       "name": "Thin-film oil-slick iridescence"

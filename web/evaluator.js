@@ -28,8 +28,11 @@ export function paramSpec(input) {
   const type = String(input.TYPE).toLowerCase();
   if (type !== 'float' && type !== 'long' && type !== 'int') return null;
   const values = Array.isArray(input.VALUES) ? input.VALUES.filter((v) => typeof v === 'number') : null;
-  const min = typeof input.MIN === 'number' ? input.MIN : (values?.length ? Math.min(...values) : 0);
-  const max = typeof input.MAX === 'number' ? input.MAX : (values?.length ? Math.max(...values) : 1);
+  const declMin = typeof input.MIN === 'number' ? input.MIN : (values?.length ? Math.min(...values) : 0);
+  const declMax = typeof input.MAX === 'number' ? input.MAX : (values?.length ? Math.max(...values) : 1);
+  // Some published ISFs declare MIN > MAX; read it as swapped, as the desktop does.
+  const min = Math.min(declMin, declMax);
+  const max = Math.max(declMin, declMax);
   let steps = null;
   if (type === 'float') {
     const step = Number(input.STEP);

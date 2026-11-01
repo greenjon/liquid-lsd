@@ -4,6 +4,7 @@
 import { BeatTracker, BeatClock } from './beattrack.js';
 import { EnergyWatch } from './energy.js';
 import { embed } from './embedmode.js';
+import { SpectrumAnalyzer, audioFrame, BINS } from './audiotex.js';
 
 export const cvState = {
   // The audio_* signals are normalised exactly as the desktop's AudioEngine publishes them (auto gain,
@@ -44,6 +45,10 @@ let midBuf = null;
 let highBuf = null;
 
 let analysisReady = false;
+// Shader audio textures (audiotex.js): the newest 1024 samples each frame -> spectrum + waveform.
+let texAnalyser = null;
+let texBuf = null;
+const spectrum = new SpectrumAnalyzer();
 let feedNode = null;     // embed mode: the worklet the host's PCM goes into
 
 // ~11.6 ms of samples at 44.1 kHz: the same block length the desktop takes its RMS over
@@ -229,8 +234,26 @@ function reconnect() {
   audioEl.play().then(() => { analysisReady = true; cvState.isLive = true; }).catch(() => { /* next try in 10 s */ });
 }
 
+/** Refreshes audioFrame (the shaders' spectrum and waveform) from the newest samples. */
+function updateAudioFrame(dt) {
+  if (audioFrame.hold) return; // render_check pins a test signal
+  if (analysisReady && texAnalyser) {
+    texAnalyser.getFloatTimeDomainData(texBuf);
+    const rate = audioCtx.sampleRate;
+    spectrum.process(texBuf, texBuf.length, rate, Math.max(0, dt) * rate);
+    audioFrame.wave.set(texBuf.subarray(texBuf.length - BINS));
+  } else {
+    // No input: the spectrum falls away at the release rate and the trace goes flat.
+    const decay = Math.exp(-Math.max(0, dt) / 0.08);
+    for (let k = 0; k < BINS; k++) spectrum.spectrum[k] *= decay;
+    audioFrame.wave.fill(0);
+  }
+  audioFrame.spectrum.set(spectrum.spectrum);
+}
+
 export function tick(dt) {
   updateSignal(dt);
+  updateAudioFrame(dt);
   if (analysisReady) {
     updateAmplitudes(dt);
     // Sections come from auto gain's own watch (updated in updateAmplitudes), fed the fixed-scale levels.
@@ -352,6 +375,12 @@ export async function startAudio() {
     highAnalyser.fftSize = ANALYSER_FFT;
     highAnalyser.smoothingTimeConstant = 0.85;
 
+    // Shader audio textures: the desktop's analyser takes the newest 1024 samples (audiotex.js).
+    texAnalyser = audioCtx.createAnalyser();
+    texAnalyser.fftSize = 1024;
+    source.connect(texAnalyser);
+    texBuf = new Float32Array(texAnalyser.fftSize);
+
     gainNode = audioCtx.createGain();
     gainNode.gain.value = currentVolumeRatio * currentVolumeRatio;
 
@@ -377,7 +406,7 @@ export async function startAudio() {
       feedNode.connect(source);
       const sink = audioCtx.createGain();
       sink.gain.value = 0;
-      for (const a of [broadbandAnalyser, bassAnalyser, midAnalyser, highAnalyser]) a.connect(sink);
+      for (const a of [broadbandAnalyser, bassAnalyser, midAnalyser, highAnalyser, texAnalyser]) a.connect(sink);
       sink.connect(audioCtx.destination);
       window.dispatchEvent(new CustomEvent('lsd-embed-ready'));
     }

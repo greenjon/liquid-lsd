@@ -3,11 +3,20 @@
   "sourceId": "spectrogram",
   "parameters": {
     "ScrollSpeed": {
-      "note": "The picture is already the audio; it scrolls faster on the drop.",
+      "note": "The picture is already the audio; it scrolls a little faster when loud, and rushes on the drop.",
       "randomizeBase": true,
       "baseMin": 0.2,
       "baseMax": 0.5,
       "modulators": [
+        {
+          "name": "loudness push",
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.15,
+          "followerMode": "SMOOTH",
+          "attackMs": 40,
+          "decayMs": 400
+        },
         {
           "name": "drop rush",
           "sourceId": "audio_drop",

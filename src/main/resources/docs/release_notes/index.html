@@ -1262,10 +1262,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#two-new-generators-that-draw-the-sound-spectrogram-and-scope-librarysourcesspectrogram-librarysourcesscope" class="md-nav__link">
+  <a href="#two-new-generators-that-draw-the-sound-spectrogram-and-scope-librarysourcesspectrogram-librarysourcesscope-webaudiotexjs-webdspjs-webisfjs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Two New Generators That Draw the Sound: Spectrogram and Scope (library/sources/spectrogram/, library/sources/scope/)
+        Two New Generators That Draw the Sound: Spectrogram and Scope (library/sources/spectrogram/, library/sources/scope/, web/audiotex.js, web/dsp.js, web/isf.js)
       
     </span>
   </a>
@@ -7367,10 +7367,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#two-new-generators-that-draw-the-sound-spectrogram-and-scope-librarysourcesspectrogram-librarysourcesscope" class="md-nav__link">
+  <a href="#two-new-generators-that-draw-the-sound-spectrogram-and-scope-librarysourcesspectrogram-librarysourcesscope-webaudiotexjs-webdspjs-webisfjs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Two New Generators That Draw the Sound: Spectrogram and Scope (library/sources/spectrogram/, library/sources/scope/)
+        Two New Generators That Draw the Sound: Spectrogram and Scope (library/sources/spectrogram/, library/sources/scope/, web/audiotex.js, web/dsp.js, web/isf.js)
       
     </span>
   </a>
@@ -13423,11 +13423,13 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
-<h3 id="two-new-generators-that-draw-the-sound-spectrogram-and-scope-librarysourcesspectrogram-librarysourcesscope">Two New Generators That Draw the Sound: Spectrogram and Scope (<code>library/sources/spectrogram/</code>, <code>library/sources/scope/</code>)</h3>
+<h3 id="two-new-generators-that-draw-the-sound-spectrogram-and-scope-librarysourcesspectrogram-librarysourcesscope-webaudiotexjs-webdspjs-webisfjs">Two New Generators That Draw the Sound: Spectrogram and Scope (<code>library/sources/spectrogram/</code>, <code>library/sources/scope/</code>, <code>web/audiotex.js</code>, <code>web/dsp.js</code>, <code>web/isf.js</code>)</h3>
 <ul>
 <li><strong>Spectrogram</strong>: the music itself, scrolling: time along one axis, frequency along the other, so the kick, the bassline and every note are readable as they pass. Scroll, Rise, Ring or Tunnel layouts, a mirrored option with the bass in the middle, a log frequency axis like a piano's, and four palettes. A slow scroll still catches every hit.</li>
 <li><strong>Scope</strong>: an oscilloscope in a feedback loop: the waveform or the spectrum drawn as a glowing line or ring while the picture behind it zooms, turns, warps and fades into tunnels and trails. A steady tone stands still instead of sliding.</li>
-<li>Both have their own knobs and audio responses (Scope's trails punch out on the kick; Spectrogram scrolls faster on the drop) and roll random looks like the other generators. Desktop only for now: the web TV can't read the audio this way yet.</li>
+<li>Both have their own knobs and audio responses (Scope's trails punch out on the kick; Spectrogram scrolls a little faster when loud and rushes on the drop) and roll random looks like the other generators.</li>
+<li><strong>Both are on the web TV too</strong>: it now reads the music's spectrum and waveform the same way the desktop does (<code>web/audiotex.js</code>), so shaders that draw the sound run there as well, and the autopilot can show Spectrogram and Scope. The Spaz Radio app needs a new release to pick them up; until then it keeps its current looks.</li>
+<li>The TV's version is now v8.</li>
 </ul>
 <h3 id="audio-visualizers-from-other-isf-hosts-work-renderingaudiotexturekt-renderingisfisfaudioinputskt-renderingisfisfvisualsourcekt-renderingisfisffilterkt-renderingshaderkt-renderingrendererkt">Audio Visualizers From Other ISF Hosts Work (<code>rendering/AudioTexture.kt</code>, <code>rendering/isf/ISFAudioInputs.kt</code>, <code>rendering/isf/ISFVisualSource.kt</code>, <code>rendering/isf/ISFFilter.kt</code>, <code>rendering/Shader.kt</code>, <code>rendering/Renderer.kt</code>)</h3>
 <ul>
