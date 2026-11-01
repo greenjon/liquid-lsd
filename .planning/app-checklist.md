@@ -12,13 +12,14 @@ Before starting: a build from current `main`, a fresh run, and a note of the scr
 
 Library tabs are now Sources, FX, Transitions, Queues, Macros.
 
-- [ ] Ctrl+F opens the Library on the current tab; Esc goes back to where you were (from Edit or a pair view: the same view, with the same slot still bound).
-- [ ] Sources, FX and Transitions tabs: list scrolls, search works, typing a letter while the list has the keyboard starts a search (shortcut keys such as `Q` keep their shortcut).
-- [ ] Rows: no empty box on stock items, long names end in "..." with the full name on hover, `hyperspace_crash_zoom` reads "Hyperspace crash zoom", heavy shaders show a muted gauge with an explanation on hover.
-- [ ] Loaded-where chips: `A`/`B`/`BG`/`PV`/`M` on sources; `A2`/`M1` on effects; a deck playing a saved preset marks the preset row, not the generator; many slots collapse to `×n` with the full list on hover.
-- [ ] Recent folder in Sources, FX and Transitions: last 20 loads, newest first, still there after a restart.
-- [ ] Menus match across tabs (right-click works on FX and transition rows too): Rename..., Clone, Delete..., Add to playlist, **Reveal in File Manager**.
-- [ ] Deleting a saved effect or transition also removes it from queues and playlists.
+- [x] Ctrl+F opens the Library on the current tab; Esc goes back to where you were (from Edit or a pair view: the same view, with the same slot still bound).
+  !!needs ESC pressed twice. first time exits text box, second closes (could be by design)
+- [x] Sources, FX and Transitions tabs: list scrolls, search works, typing a letter while the list has the keyboard starts a search (shortcut keys such as `Q` keep their shortcut). !!tooltip on transitions: "add to a/b queue" should be "add to transitions queue" right?
+- [x] Rows: no empty box on stock items, long names end in "..." with the full name on hover, `hyperspace_crash_zoom` reads "Hyperspace crash zoom", heavy shaders show a muted gauge with an explanation on hover.
+- [x] Loaded-where chips: `A`/`B`/`BG`/`PV`/`M` on sources; `A2`/`M1` on effects; a deck playing a saved preset marks the preset row, not the generator; many slots collapse to `×n` with the full list on hover. !!loading the same source to all 4 decks was fine up to A+B+BG  but then when I added PV also, I had 4 colored chips with no text in them. same with effects. no xn, nothing on hover
+- [x] Recent folder in Sources, FX and Transitions: last 20 loads, newest first, still there after a restart.
+- [x] Menus match across tabs (right-click works on FX and transition rows too): Rename..., Clone, Delete..., Add to playlist, **Reveal in File Manager**. !!we should make "add to playlist"" open a side menu with the playlists and the subfolders of playlists
+- [x] Deleting a saved effect or transition also removes it from queues and playlists.
 - [ ] Rename a saved FX single, an FX chain and a transition that are in a playlist and a queue: the playlist and queue rows still play, Favorites/Recent still list it. Rename a preset loaded on Deck A, then Save: it writes the renamed file (no old-name file reappears) and the preset's garden thumbnail is still shown.
 - [ ] Delete a preset loaded on a deck: it drops out of Recent/Favorites; Save on that deck asks for a name. Delete an FX chain loaded on Master: Master's chain header no longer offers overwrite.
 - [ ] Folders: folder-plus button and right-click New/Rename/Delete Folder on Saved presets, Saved single FX, Saved chains, Saved transitions (not on stock sections); an empty folder shows in the tree; with FX and no saved section selected the button is greyed with a tooltip.
@@ -253,9 +254,10 @@ Light wave 2: - [ ] cyclic_ca - [ ] metaballs - [ ] wave_ripples - [ ] aurora_ri
 - [ ] Speeds never jump (2026-10-23): after the app has run 15+ minutes, sweep each source's speed knob (Speed, Flight/Morph/Wave/Orbit/Drift Speed...) fast, and put an LFO or audio on one. The motion speeds up and slows down, never jumps or stutters. Also Dynamic Spiral Shear and Wave Amp, Harmonograph Detune, and the Wave Displace, Luma Displace, Fluid Smear, Gradient Map cycle and Video Strobe rate effects. A freshly loaded source looks as before.
 - [ ] Frame time on the integrated GPU is acceptable (notes in `.planning/light-sources-notes`).
 - [ ] Every-ISF binding audit (v1.0 scope): a sample of filters, every parameter binds to a knob.
-
 - [ ] Spectrogram and Scope (2026-11-01), with music playing: Spectrogram in all four Layouts, Mirror, each Palette; notes and kicks readable; Scroll Speed sweeps smoothly with no jump; a quiet input needs Gain, a loud one doesn't burn to solid colour at the defaults. Scope: all four Traces; a held synth note stands still on Wave Line; trails zoom/turn/warp, the kick punches them out; no spokes at the centre of Spectrum Ring. Both: the die rolls varied looks; frame time fine on the integrated GPU.
+- [ ] Spectrogram full axis (2026-11-01, desktop + web TV v9 CH 128): on bass-heavy music the Ring lights most of the way round, not just 11-to-1 o'clock; Tilt 0 brings back the bass-only look, Tilt 1 leans to the highs; Log Scale 0.8 gives the bass real room; no hot speckle at the top; at defaults loud music doesn't burn to solid colour and a -20 dBFS track still shows something; frame time still fine on the integrated GPU (8 taps per pixel now).
 - [ ] Third-party audio visualizers (2026-11-01): put the Vidvox ISF-Files audio set (FFT Spectrogram, Radial Spectrogram, FFT Color Lines, FFT Filled Waveform, Audio Waveform Shape; `gh api repos/Vidvox/ISF-Files/...` or the scratch copies) in a user ISF folder, play music: each moves with the audio, Radial Spectrogram sweeps round, no knob called fftImage/audio. Also Waveform Displace as an FX. Stock multipass sources (Reaction Diffusion, Lenia, Fluid Ink, Cyclic CA, Video Feedback) look as before.
+
 ## 14. Twister hardware
 
 - [ ] Clock knob (13): beat-pulse LED, tempo ring, push to tap.
@@ -338,4 +340,5 @@ Known remaining literals: dropdown selected text, ParametersRenderer fills and g
 - [ ] Black-is-transparent sources (30 generators + Renderer separate-alpha blend): put Video Feedback and a few others (Kali Set, Lenia, Fluid Ink, Hyper Slice) on a deck over a coloured BG deck; dark areas should show the BG, bright areas cover it; Chladni / Dynamic Spiral / Icosa H3 should look as before (alpha now linear, not squared).
 
 ---
+
 Notes:
