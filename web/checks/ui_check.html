@@ -35,6 +35,11 @@ try {
   check('I names the scene', /^SCENE: \S/.test(osd('osd-name').text), osd('osd-name').text);
   check('I names the background', osd('osd-bg').shown && /^BACKGROUND: \S/.test(osd('osd-bg').text), JSON.stringify(osd('osd-bg')));
   check('I names the FX', osd('osd-chain').shown && /^FX: \S/.test(osd('osd-chain').text), JSON.stringify(osd('osd-chain')));
+  check('I turns INFO on, its light too', w.LSD.viewerState.info && d.getElementById('infoBtn').getAttribute('aria-pressed') === 'true');
+  await sleep(4500);
+  check('INFO keeps the info on screen', osd('osd-name').shown && osd('osd-ch').shown);
+  d.getElementById('infoBtn').click();
+  check('The INFO button turns it off and the info goes', !w.LSD.viewerState.info && !osd('osd-name').shown && d.getElementById('infoBtn').getAttribute('aria-pressed') === 'false');
 
   // Dragging a knob and letting go over the TV must not click the TV (power off).
   const dial = d.getElementById('reactDial');
@@ -91,12 +96,41 @@ try {
   key('=');
   check('= raises REACT', w.LSD.viewerState.react > react0, `${react0} -> ${w.LSD.viewerState.react}`);
   key('-');
+  const vol = () => Number(d.getElementById('volumeDial').getAttribute('aria-valuenow'));
+  const vol0 = vol(), sceneBeforeVol = onAir();
+  key('ArrowDown');
+  check('Down arrow lowers the volume, not the channel', vol() < vol0 && onAir() === sceneBeforeVol && osd('osd-msg').text.startsWith('VOL'), `${vol0} -> ${vol()}`);
+  key('ArrowUp');
+  check('Up arrow raises the volume', vol() === vol0, `${vol()}`);
+  const beforeRandom = onAir();
+  key('r');
+  await sleep(3000);
+  check('R tunes a random other channel', onAir() !== beforeRandom);
+  const afterRandom = onAir();
+  const keysEl = d.getElementById('keys');
+  key('?');
+  check('? shows the keyboard shortcuts', !keysEl.hidden && keysEl.textContent.includes('RANDOM CHANNEL'));
+  key('n');
+  check('Any key closes the shortcuts (and does nothing else)', keysEl.hidden && onAir() === afterRandom);
+  const menuBox = d.getElementById('tv-menu'), chatOpen = () => d.getElementById('chatBtn').getAttribute('aria-pressed') === 'true';
+  const chat0 = chatOpen();
+  key('m'); key('c');
+  check('With the menu open, C toggles the chat and the menu stays', chatOpen() !== chat0 && !menuBox.hidden);
+  key('c');
+  key('i');
+  check('With the menu open, I closes it and turns INFO on', menuBox.hidden && w.LSD.viewerState.info);
+  key('i');
+  key('m'); key('?');
+  check('With the menu open, ? closes it and lists the keys', menuBox.hidden && !keysEl.hidden);
+  key('Escape');
+  check('The screen tooltip lists one command per line', d.getElementById('glCanvas').title.split('\n').length === 3 && /\?/.test(d.getElementById('glCanvas').title));
 
   // Service MENU: M opens it, it owns the arrows (no scene change), SYNC moves in 10 ms steps, Esc closes.
   const lookBefore = onAir();
   key('m');
   const menuEl = d.getElementById('tv-menu');
   check('M opens the menu', menuEl && !menuEl.hidden);
+  check('MENU LED lights while the menu is open', d.getElementById('menuBtn').getAttribute('aria-pressed') === 'true');
   check('Menu: the title shows the TV version', /^v\d+$/.test(menuEl.querySelector('.menu-version')?.textContent ?? ''), menuEl.querySelector('.menu-title').textContent);
   key('ArrowRight'); key('ArrowRight'); key('ArrowRight');
   check('Menu: right arrow raises SYNC by 10 ms steps', w.LSD.viewerState.syncMs === 30, w.LSD.viewerState.syncMs);
@@ -174,6 +208,7 @@ try {
   // Branding: I adds the Liquid LSD line; MENU › ABOUT opens and any key closes it; the bumper; the nameplate.
   key('i');
   check('I shows the Liquid LSD line', osd('osd-brand').shown && osd('osd-brand').text.includes('liquid-lsd.greenjon.com'));
+  key('i');
   key('m'); for (let i = 0; i < 12; i++) key('ArrowDown'); key('Enter'); // row 12 = ABOUT
   const aboutEl = d.getElementById('about');
   check('MENU › ABOUT opens the about page', !aboutEl.hidden && aboutEl.textContent.includes('greenjon'), aboutEl.hidden);
@@ -197,14 +232,15 @@ try {
   key('ArrowRight');
   check('Any key closes the schedule', schedEl.hidden);
   key('g');
-  check('G opens the schedule', !schedEl.hidden);
+  check('G opens the schedule', !schedEl.hidden && d.getElementById('scheduleBtn').getAttribute('aria-pressed') === 'true');
   schedEl.click();
-  check('A click closes the schedule and leaves the TV on', schedEl.hidden && w.LSD.powerState.on);
+  check('A click closes the schedule and leaves the TV on', schedEl.hidden && w.LSD.powerState.on && d.getElementById('scheduleBtn').getAttribute('aria-pressed') === 'false');
   key('m'); for (let i = 0; i < 11; i++) key('ArrowDown'); key('Enter'); // row 11 = SCHEDULE
   check('MENU › SCHEDULE opens the schedule and closes the menu', !schedEl.hidden && menuEl.hidden);
   key('Escape');
   key('i');
   check('The OSD names the next show', osd('osd-next').shown && osd('osd-next').text.startsWith("NEXT: Spukkin Faceship's"), JSON.stringify(osd('osd-next')));
+  key('i');
   key('g');
   d.getElementById('powerSwitch').click();
   await sleep(100);
@@ -284,7 +320,7 @@ try {
   await sleep(100);
   check('A new line while closed lights the CHAT LED', chatBtn.classList.contains('unread'));
   key('c');
-  check('C opens the board and the LED goes out', !board.hidden && !chatBtn.classList.contains('unread'));
+  check('C opens the board and the LED stops blinking, lit like HOLD', !board.hidden && !chatBtn.classList.contains('unread') && chatBtn.getAttribute('aria-pressed') === 'true');
   chatBtn.click();
   check('The CHAT button closes it', board.hidden);
   key('m'); for (let i = 0; i < 10; i++) key('ArrowDown');

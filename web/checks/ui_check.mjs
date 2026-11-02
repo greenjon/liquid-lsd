@@ -27,7 +27,7 @@ await new Promise((r) => server.listen(0, '127.0.0.1', r));
 const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'lsd-ff-'));
 const ff = spawn('firefox', ['--headless', '--no-remote', '--profile', profile,
   `http://127.0.0.1:${server.address().port}/checks/ui_check.html`], { stdio: 'ignore' });
-const rep = await Promise.race([reported, new Promise((r) => setTimeout(() => r({ fatal: 'timeout', results: [] }), 90000))]);
+const rep = await Promise.race([reported, new Promise((r) => setTimeout(() => r({ fatal: "timeout", results: [] }), 150000))]);
 ff.kill('SIGKILL');
 server.close();
 fs.rmSync(profile, { recursive: true, force: true });

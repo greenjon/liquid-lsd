@@ -191,12 +191,19 @@ body {
   border-radius: 1px;
 }
 
+/* --- The toggles (MENU, SCHEDULE, INFO, CHAT), grouped on the right beside the station badge --- */
+#toggle-group {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-left: auto;
+}
+
 /* --- Station Badge --- */
 #station-badge {
   display: flex;
   align-items: center;
   gap: 7px;
-  margin-left: auto;
   padding: 4px 10px;
   background: rgba(0,0,0,0.4);
   border-radius: 4px;
@@ -383,7 +390,7 @@ body {
   #tv-body { padding: 12px 10px 10px 10px; border-radius: 12px; }
   #tv-screen-border { padding: 6px; }
   #tv-controls { gap: 12px; justify-content: center; }
-  #station-badge { margin-left: 0; }
+  #toggle-group { gap: 12px; margin-left: 0; }
 }
 
 /* --- Kiosk (?kiosk): no TV body, the picture fills the window; keyboard and swipe still work --- */
@@ -607,6 +614,36 @@ body.kiosk #nameplate { display: none; }
 #tv-body:not(.powered-on) #schedule { display: none; }
 @media (max-width: 700px) { #schedule .sc-time { min-width: 0; } #schedule .sc-show { flex-direction: column; gap: 0; } }
 
+/* ? : the keyboard shortcuts, the same page as SCHEDULE */
+#keys {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  padding: 4% 8% 3%;
+  background: rgba(0, 8, 0, 0.88);
+  color: #8cff8c;
+  font-family: "VT323", "Courier New", monospace;
+  font-weight: bold;
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 6px rgba(80,255,80,0.7);
+  font-size: clamp(10px, 1.45vw, 21px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(140,255,140,0.4) transparent;
+}
+#keys[hidden] { display: none; }
+#keys .ky-name { font-size: 1.4em; letter-spacing: 0.2em; color: #d9c2ff; text-shadow: 0 0 10px rgba(160,90,255,0.9); }
+#keys .ky-list { display: grid; grid-template-columns: auto 1fr; column-gap: 2em; row-gap: 0.1em; margin: 0.4em 0 0; }
+#keys dt { color: #d9c2ff; text-shadow: 0 0 8px rgba(160,90,255,0.8); white-space: nowrap; }
+#keys dd { margin: 0; }
+#keys .sc-hint { margin-top: auto; padding-top: 0.6em; font-size: 0.7em; opacity: 0.7; }
+body.kiosk #keys .ky-chat { display: none; }
+#tv-screen-area:has(#keys:not([hidden])) #osd { visibility: hidden; }
+#tv-body:not(.powered-on) #keys { display: none; }
+
 #tv-menu .menu-hint.help { opacity: 0.9; font-size: 0.8em; line-height: 1.3; text-transform: none; letter-spacing: 0.02em; }
 
 /* --- CHAT (chatboard.js): the Spaz Radio chat on a blackboard hung beside the TV ---------------------------
@@ -740,8 +777,7 @@ body.chat-open:not(.kiosk) #chalkboard {
 .cb-eraser { position: absolute; right: 16%; top: -9px; width: 54px; height: 13px; border-radius: 2px;
   background: linear-gradient(#4f4a44 0 55%, #d9d3c3 55% 100%); box-shadow: 0 1px 2px rgba(0,0,0,0.6); }
 
-/* The CHAT button's LED: lit for new lines while the board is closed (not for open, like HOLD's) */
-#chatBtn[aria-pressed="true"] .btn-led { background: #2a1a00; box-shadow: none; }
+/* The CHAT button's LED: lit while the board is open, like HOLD's; blinks for new lines while it is closed */
 #chatBtn.unread .btn-led { background: #ffaa00; box-shadow: 0 0 6px rgba(255,170,0,0.9); }
 body:not(.reduced-motion) #chatBtn.unread .btn-led { animation: cb-blink 1.6s ease-in-out infinite; }
 @keyframes cb-blink { 50% { opacity: 0.45; } }
@@ -753,4 +789,4 @@ body.embed * { pointer-events: none; }
    then had no height and the screen stayed black). */
 body.embed #tv-screen-area { position: fixed; inset: 0; width: auto; height: auto; padding: 0; }
 body.embed #osd, body.embed #title-card, body.embed #ident, body.embed #bumper,
-body.embed #about, body.embed #schedule, body.embed #tv-menu, body.embed #nameplate { display: none !important; }
+body.embed #about, body.embed #schedule, body.embed #keys, body.embed #tv-menu, body.embed #nameplate { display: none !important; }

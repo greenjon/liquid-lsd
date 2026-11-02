@@ -91,6 +91,27 @@
             <div class="sc-list" role="list"></div>
             <div class="sc-hint">ANY KEY OR CLICK TO CLOSE</div>
           </div>
+          <!-- ? : every keyboard shortcut -->
+          <div id="keys" title="" hidden>
+            <div class="ky-name">KEYBOARD</div>
+            <dl class="ky-list">
+              <dt>&rarr; &larr; &middot; N P</dt><dd>NEXT / PREVIOUS CHANNEL</dd>
+              <dt>R</dt><dd>RANDOM CHANNEL</dd>
+              <dt>&uarr; &darr;</dt><dd>VOLUME</dd>
+              <dt>F</dt><dd>NEXT FX</dd>
+              <dt>H &middot; SPACE</dt><dd>HOLD THIS SCENE</dd>
+              <dt>[ ]</dt><dd>SCENE LENGTH</dd>
+              <dt>- =</dt><dd>REACTION TO THE MUSIC</dd>
+              <dt>I</dt><dd>INFO ON / OFF</dd>
+              <dt>S</dt><dd>FULLSCREEN (ESC LEAVES)</dd>
+              <dt>A</dt><dd>INPUT: RADIO / MICROPHONE</dd>
+              <dt>M</dt><dd>MENU</dd>
+              <dt>G</dt><dd>SCHEDULE</dd>
+              <dt class="ky-chat">C</dt><dd class="ky-chat">CHAT</dd>
+              <dt>?</dt><dd>THIS LIST</dd>
+            </dl>
+            <div class="sc-hint">ANY KEY OR CLICK TO CLOSE</div>
+          </div>
           <!-- Overlay shown when TV is off; hidden by .powered-on class -->
           <div id="screen-off-overlay"></div>
         </div>
@@ -115,7 +136,7 @@
 
         <!-- Volume dial -->
         <div class="control-group">
-          <div id="volumeDial" class="rotary-dial">
+          <div id="volumeDial" class="rotary-dial" title="Volume: drag or scroll (&uarr; and &darr;)" role="slider" aria-label="Volume" tabindex="0">
             <div class="dial-marker"></div>
           </div>
           <span class="control-label">VOL</span>
@@ -124,8 +145,8 @@
         <!-- Channel rocker: next / previous channel -->
         <div class="control-group">
           <div class="rocker">
-            <button id="chUp" class="rocker-btn" title="Next channel (&rarr; or N)" aria-label="Next channel">&#9650;</button>
-            <button id="chDown" class="rocker-btn" title="Previous channel (&larr; or P)" aria-label="Previous channel">&#9660;</button>
+            <button id="chUp" class="rocker-btn" title="Next channel (&rarr; or N). Random channel: R" aria-label="Next channel">&#9650;</button>
+            <button id="chDown" class="rocker-btn" title="Previous channel (&larr; or P). Random channel: R" aria-label="Previous channel">&#9660;</button>
           </div>
           <span class="control-label">CH</span>
         </div>
@@ -142,24 +163,6 @@
           <span class="control-label">HOLD</span>
         </div>
 
-        <!-- Service menu: SYNC, REACT, TIME, Reduced motion, Heavy scenes, Schedule, About -->
-        <div class="control-group">
-          <button id="menuBtn" class="push-btn" title="Menu: sync, reaction, scene length, input, fullscreen, reduced motion, heavy scenes (M)" aria-label="Menu"></button>
-          <span class="control-label">MENU</span>
-        </div>
-
-        <!-- Spaz Radio's upcoming shows, over the picture -->
-        <div class="control-group">
-          <button id="scheduleBtn" class="push-btn" title="Spaz Radio's upcoming shows, in your local time (G)" aria-label="Schedule"></button>
-          <span class="control-label">SCHEDULE</span>
-        </div>
-
-        <!-- Spaz Radio chat, on the blackboard beside the TV (chatboard.js); the LED lights for new lines -->
-        <div class="control-group">
-          <button id="chatBtn" class="push-btn" title="Spaz Radio chat, on a blackboard beside the TV (C)" aria-label="Chat" aria-pressed="false"><span class="btn-led"></span></button>
-          <span class="control-label">CHAT</span>
-        </div>
-
         <!-- How long each scene holds, in bars -->
         <div class="control-group">
           <div id="timeDial" class="rotary-dial" title="How long each scene holds: drag, scroll or click ([ and ])" role="slider" aria-label="Scene length in bars" tabindex="0">
@@ -174,6 +177,35 @@
             <div class="dial-marker"></div>
           </div>
           <span class="control-label">REACT</span>
+        </div>
+
+        <!-- The toggles, grouped on the right; each one's light is on while it is -->
+        <div id="toggle-group">
+
+          <!-- Service menu: SYNC, REACT, TIME, Reduced motion, Heavy scenes, Schedule, About -->
+          <div class="control-group">
+            <button id="menuBtn" class="push-btn" title="Menu: sync, reaction, scene length, input, fullscreen, reduced motion, heavy scenes (M)" aria-label="Menu" aria-pressed="false"><span class="btn-led"></span></button>
+            <span class="control-label">MENU</span>
+          </div>
+
+          <!-- Spaz Radio's upcoming shows, over the picture -->
+          <div class="control-group">
+            <button id="scheduleBtn" class="push-btn" title="Spaz Radio's upcoming shows, in your local time (G)" aria-label="Schedule" aria-pressed="false"><span class="btn-led"></span></button>
+            <span class="control-label">SCHEDULE</span>
+          </div>
+
+          <!-- INFO: keeps the channel, scene, background, FX, track and next show on screen -->
+          <div class="control-group">
+            <button id="infoBtn" class="push-btn" title="Info: keep the channel, scene, background, FX, track and next show on screen (I). Off: click the picture to see them for a few seconds" aria-label="Info" aria-pressed="false"><span class="btn-led"></span></button>
+            <span class="control-label">INFO</span>
+          </div>
+
+          <!-- Spaz Radio chat, on the blackboard beside the TV (chatboard.js); the LED lights for new lines -->
+          <div class="control-group">
+            <button id="chatBtn" class="push-btn" title="Spaz Radio chat, on a blackboard beside the TV (C)" aria-label="Chat" aria-pressed="false"><span class="btn-led"></span></button>
+            <span class="control-label">CHAT</span>
+          </div>
+
         </div>
 
         <!-- Station badge: power LED, beat LED (green = locked to the music's beat, amber = keeping time) -->

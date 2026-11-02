@@ -3,7 +3,7 @@
 // on-screen display, keyboard and touch. Viewer controls are locked while the desktop broadcasts live.
 import { startAudio, stopAudio, setVolume, setMic, isMicOn, micAvailable, cvState } from './dsp.js';
 import { embed } from './embedmode.js';
-import { autopilotState, advanceForeground, previousForeground, nextFxChain, setHold, setHoldBars, nowShowing, setHeavyAllowed, setReducedMotion } from './autopilot.js';
+import { autopilotState, advanceForeground, previousForeground, randomForeground, nextFxChain, setHold, setHoldBars, nowShowing, setHeavyAllowed, setReducedMotion } from './autopilot.js';
 import { createMenu } from './menu.js';
 import { heardBeats, tapOffset } from './sync.js';
 import { createChat } from './chat.js';
@@ -13,7 +13,7 @@ import { scheduleState, refreshSchedule, setShows, groupByDay, zoneLabel, nextLi
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v10';
+export const TV_VERSION = 'v11';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -25,6 +25,7 @@ export const powerState = {
 export const viewerState = {
   react: 1.0,
   announce: false,     // show the scene and its FX on every change (off: only when asked, or after a control)
+  info: false,         // INFO: the info lines stay on screen
   awake: false,        // a screen wake lock is held
   syncMs: 0,           // SYNC: how late the sound reaches the viewer (speakers, Bluetooth), in ms
   reducedMode: 'auto', // Reduced motion: 'auto' (follows the system setting), 'on', 'off'
@@ -68,8 +69,16 @@ function flash(id, text, ms = 3000) {
   if (text !== undefined) el.textContent = text;
   el.classList.add('show');
   clearTimeout(osdTimers[id]);
+  if (viewerState.info && INFO_IDS.includes(id)) return; // INFO on: the info lines stay up
   osdTimers[id] = setTimeout(() => el.classList.remove('show'), ms);
 }
+/** Takes an OSD line down now. */
+function unflash(id) {
+  clearTimeout(osdTimers[id]);
+  document.getElementById(id)?.classList.remove('show');
+}
+/** The info lines the INFO button keeps on screen (everything on the OSD but the control messages). */
+const INFO_IDS = ['osd-ch', 'osd-name', 'osd-bg', 'osd-chain', 'osd-track', 'osd-next', 'osd-brand'];
 
 let nowPlaying = '';
 function showLook(info = nowShowing(), ms = 4000, brand = false) {
@@ -77,11 +86,13 @@ function showLook(info = nowShowing(), ms = 4000, brand = false) {
   if (autopilotState.isLiveBroadcast) {
     flash('osd-ch', 'LIVE', ms);
     if (autopilotState.broadcaster) flash('osd-name', autopilotState.broadcaster, ms);
+    unflash('osd-bg'); unflash('osd-chain'); // the desktop's scene is not ours to name
   } else {
     // Bottom left, one size: the scene, the background behind it, the scene's FX chain.
     if (info.channel > 0) flash('osd-ch', `CH ${String(info.channel).padStart(2, '0')}`, ms);
     flash('osd-name', `SCENE: ${prettyName(info.name)}`, ms);
     if (info.background) flash('osd-bg', `BACKGROUND: ${prettyName(info.background)}`, ms);
+    else unflash('osd-bg');
     flash('osd-chain', `FX: ${info.chain ? prettyName(info.chain) : 'NONE'}`, ms);
   }
   if (nowPlaying) flash('osd-track', `♪ ${nowPlaying}`, ms);
@@ -157,9 +168,9 @@ function makeDial(el, { initial, onChange, steps = 0, locked = () => false }) {
 // -------------------------------------------------------
 let audioBlocked = false;  // the browser refused to start audio without a click
 let lastUserChange = -Infinity; // a viewer's CH / FX press: its result is announced even with ANNOUNCE off
-/** A new scene is on: show it if ANNOUNCE SCENES is on, or if the viewer just asked for the change. */
+/** A new scene is on: show it if INFO or ANNOUNCE SCENES is on, or if the viewer just asked for the change. */
 function announceLook(info) {
-  if (viewerState.announce || performance.now() - lastUserChange < 4000) showLook(info);
+  if (viewerState.info || viewerState.announce || performance.now() - lastUserChange < 4000) showLook(info);
 }
 let identShown = false;    // the Liquid LSD ident plays at the first power-on of a visit
 let lastBumper = 0;        // performance.now() of the last bumper (or the power-on)
@@ -205,9 +216,11 @@ export function initUI() {
   // Hover help follows the power state: off, the whole set is the power target; on, only PWR is.
   // (The menu, ABOUT and SCHEDULE overlays carry an empty title so they don't inherit either.)
   const updatePowerTitles = () => {
-    tvBody.title = powerState.on ? 'Click the power button (PWR) to turn the TV off' : 'Click the TV to turn it on';
+    tvBody.title = powerState.on
+      ? 'Click the power button (PWR) to turn the TV off\nPress ? for keyboard shortcuts'
+      : 'Click the TV to turn it on';
     canvas.title = powerState.on
-      ? 'Click once for info (or press I). Double-click for fullscreen (or press S).'
+      ? 'Click for info (press I or INFO to keep it on screen)\nDouble-click for fullscreen (or press S)\nPress ? for keyboard shortcuts'
       : 'Click the TV to turn it on';
   };
   updatePowerTitles();
@@ -216,6 +229,7 @@ export function initUI() {
       powerState.on = false;
       updatePowerTitles();
       viewerState.schedule?.hide();
+      document.getElementById('keys').hidden = true;
       letScreenSleep();
       updateMediaSession();
       powerState.warmupProgress = 0;
@@ -283,12 +297,17 @@ export function initUI() {
   });
 
   // --- Volume ---
-  makeDial(document.getElementById('volumeDial'), { initial: 0.8, onChange: (v) => setVolume(v) });
+  const volumeDial = makeDial(document.getElementById('volumeDial'), {
+    initial: 0.8,
+    onChange: (v) => { setVolume(v); if (powerState.on) message(`VOL ${Math.round(v * 100)}%`); },
+  });
   setVolume(0.8);
+  const stepVolume = (dir) => volumeDial.set(volumeDial.get() + dir * 0.05);
 
   // --- Channel rocker, FX, HOLD ---
   const next = control(() => { lastUserChange = performance.now(); advanceForeground(); });
   const prev = control(() => { lastUserChange = performance.now(); previousForeground(); });
+  const random = control(() => { lastUserChange = performance.now(); randomForeground(); });
   const fx = control(() => { lastUserChange = performance.now(); nextFxChain(); });
   const hold = control(() => {
     setHold(!autopilotState.hold);
@@ -346,6 +365,9 @@ export function initUI() {
 
   const about = document.getElementById('about');
   const schedulePage = document.getElementById('schedule');
+  const keysPage = document.getElementById('keys');
+  const menuBtn = document.getElementById('menuBtn');
+  const scheduleBtn = document.getElementById('scheduleBtn');
 
   // --- Service MENU (menu.js): SYNC, REACT, TIME, Reduced motion, Heavy scenes, Schedule, About ---
   viewerState.syncMs = Math.max(SYNC_MIN, Math.min(SYNC_MAX, Number(load('lsd.sync', 0)) || 0));
@@ -377,7 +399,7 @@ export function initUI() {
       help: 'Press Enter, then tap Space or the picture on 8 beats you hear: sets SYNC for you.' },
     { label: 'ANNOUNCE SCENES', value: () => onOff(viewerState.announce),
       step: () => { viewerState.announce = !viewerState.announce; save('lsd.announce', viewerState.announce); },
-      help: 'Show the name of each new scene, its background and its effects when it comes on, and the background when it changes. Off: only when you press I or click the picture.' },
+      help: 'Show the name of each new scene, its background and its effects when it comes on, and the background when it changes. Off: only when you click the picture (or turn INFO on).' },
     { label: 'REACT', locked: live, help: 'How strongly the picture moves with the music. Raise it for quiet shows, lower it if it is too busy.', value: () => `${Math.round(viewerState.react * 100)}%`,
       step: (dir) => reactDial.set(toDial(Math.max(REACT_MIN, Math.min(REACT_MAX, viewerState.react + dir * 0.05)))) },
     { label: 'TIME', locked: live, help: 'How long each scene stays before the next one, in bars of the music.', value: () => timeLabel.textContent,
@@ -476,11 +498,11 @@ export function initUI() {
 
   const menu = createMenu(screen, rows, {
     version: TV_VERSION,
-    onOpen: () => screen.classList.add('menu-open'),   // the OSD steps aside while the menu is up
-    onClose: () => screen.classList.remove('menu-open'),
+    onOpen: () => { screen.classList.add('menu-open'); menuBtn.setAttribute('aria-pressed', 'true'); }, // the OSD steps aside
+    onClose: () => { screen.classList.remove('menu-open'); menuBtn.setAttribute('aria-pressed', 'false'); },
   });
   const toggleMenu = () => { if (powerState.on) { schedule.hide(); menu.toggle(); } };
-  document.getElementById('menuBtn').addEventListener('click', toggleMenu);
+  menuBtn.addEventListener('click', toggleMenu);
   viewerState.menu = menu;
 
   // --- SCHEDULE (schedule.js): Spaz Radio's upcoming shows, like ABOUT; any key or click closes it ---
@@ -490,14 +512,16 @@ export function initUI() {
       if (!powerState.on) return;
       menu.hide();
       about.hidden = true;
+      keysPage.hidden = true;
       schedulePage.hidden = false;
+      scheduleBtn.setAttribute('aria-pressed', 'true');
       // A list older than 10 minutes (or none yet) is fetched again; the page fills in when it lands.
       if (Date.now() - scheduleState.fetchedAt > SCHEDULE_STALE_MS) {
         refreshSchedule().then(() => { if (!schedulePage.hidden) renderSchedule(); });
       }
       renderSchedule();
     },
-    hide() { schedulePage.hidden = true; },
+    hide() { schedulePage.hidden = true; scheduleBtn.setAttribute('aria-pressed', 'false'); },
     toggle() { schedulePage.hidden ? schedule.show() : schedule.hide(); },
     /** The headless check's fixture: parsed shows ({start, end, name}) instead of the network. */
     setShows,
@@ -543,8 +567,32 @@ export function initUI() {
       }
     }
   }
-  document.getElementById('scheduleBtn').addEventListener('click', () => schedule.toggle());
+  scheduleBtn.addEventListener('click', () => schedule.toggle());
   schedulePage.addEventListener('click', () => schedule.hide());
+
+  // --- ? : every keyboard shortcut, like ABOUT; any key or click closes it ---
+  const showKeys = () => {
+    if (!powerState.on) return;
+    menu.hide();
+    schedule.hide();
+    about.hidden = true;
+    keysPage.hidden = false;
+  };
+  keysPage.addEventListener('click', () => { keysPage.hidden = true; });
+
+  // --- INFO: keeps the info lines (channel, scene, background, FX, track, next show) on screen ---
+  const infoBtn = document.getElementById('infoBtn');
+  function setInfo(on) {
+    viewerState.info = on;
+    save('lsd.info', on);
+    infoBtn.setAttribute('aria-pressed', String(on));
+    if (on) showLook(undefined, 4000, true);
+    else for (const id of INFO_IDS) unflash(id);
+  }
+  const toggleInfo = () => { if (powerState.on) setInfo(!viewerState.info); };
+  viewerState.info = load('lsd.info', false) === true;
+  infoBtn.setAttribute('aria-pressed', String(viewerState.info));
+  infoBtn.addEventListener('click', toggleInfo);
   viewerState.schedule = schedule;
 
   // --- CHAT (chat.js, chatboard.js): the Spaz Radio chat on a blackboard beside the TV. It connects at page
@@ -570,20 +618,26 @@ export function initUI() {
     if (e.ctrlKey || e.metaKey || e.altKey || e.target.closest?.('input, textarea')) return;
     if (!about.hidden) { e.preventDefault(); about.hidden = true; return; }
     if (schedule.open) { e.preventDefault(); schedule.hide(); return; }
+    if (!keysPage.hidden) { e.preventDefault(); keysPage.hidden = true; return; }
     if (tapping && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); tapSync(); return; }
-    if (menu.key(e)) { e.preventDefault(); return; }
+    // With the menu open these still work: ? and G and I close it and do their thing, C toggles the chat.
+    if (menu.open && ['?', 'i', 'I', 'g', 'G'].includes(e.key)) menu.hide();
+    if (!(menu.open && (e.key === 'c' || e.key === 'C')) && menu.key(e)) { e.preventDefault(); return; }
     if ((e.key === 'm' || e.key === 'M') && powerState.on) { e.preventDefault(); menu.show(); return; }
     if ((e.key === 'g' || e.key === 'G') && powerState.on) { e.preventDefault(); schedule.show(); return; }
     if ((e.key === 'c' || e.key === 'C') && chatboard) { e.preventDefault(); chatboard.toggle(); menu.refresh(); return; }
+    if (e.key === '?') { e.preventDefault(); showKeys(); return; }
     const keys = {
-      ArrowRight: next, ArrowUp: next, n: next, N: next,
-      ArrowLeft: prev, ArrowDown: prev, p: prev, P: prev,
+      ArrowRight: next, n: next, N: next,
+      ArrowLeft: prev, p: prev, P: prev,
+      r: random, R: random,
+      ArrowUp: () => stepVolume(1), ArrowDown: () => stepVolume(-1),
       f: fx, F: fx, h: hold, H: hold, ' ': hold,
       '[': () => stepTime(-1), ']': () => stepTime(1),
       '-': () => stepReact(-1), '=': () => stepReact(1), '+': () => stepReact(1),
       Escape: () => document.fullscreenElement && document.exitFullscreen().catch(console.error),
       s: toggleFullscreen, S: toggleFullscreen, a: toggleMic, A: toggleMic,
-      i: () => showLook(undefined, 4000, true), I: () => showLook(undefined, 4000, true),
+      i: toggleInfo, I: toggleInfo,
     };
     const fn = keys[e.key];
     if (!fn) return;
@@ -659,7 +713,7 @@ export function initUI() {
   window.addEventListener('lsd-now-showing', (e) => { announceLook(e.detail); updateMediaSession(); });
   // The background changes on its own clock: with ANNOUNCE SCENES on, only its line comes up.
   window.addEventListener('lsd-background', (e) => {
-    if (viewerState.announce && powerState.on && !autopilotState.isLiveBroadcast && e.detail.background) {
+    if ((viewerState.announce || viewerState.info) && powerState.on && !autopilotState.isLiveBroadcast && e.detail.background) {
       flash('osd-bg', `BACKGROUND: ${prettyName(e.detail.background)}`, 4000);
     }
   });

@@ -72,13 +72,17 @@ The standalone browser client (`web/index.html`) presents the visualizer in a re
 
 | Control | What it does | Keys / touch |
 |---------|-------------|--------------|
-| **CH ▲ / ▼** | The next / previous channel, now (a channel you've seen keeps the FX chain it had; the autopilot itself still picks channels at random) | `→` `↑` `N` / `←` `↓` `P`; swipe left / right on the picture |
+| **VOL** | The volume (drag or scroll) | `↑` `↓` |
+| **CH ▲ / ▼** | The next / previous channel, now (a channel you've seen keeps the FX chain it had; the autopilot itself still picks channels at random) | `→` `N` / `←` `P`; swipe left / right on the picture |
+| *(random channel)* | A channel picked at random, now | `R` |
 | **FX** | Puts the next FX chain on the scene on air | `F` |
-| **HOLD** | Keeps the current scene until you press it again (the background keeps changing) | `H` or `Space`; long-press the picture |
+| **HOLD** | Keeps the current scene until you press it again (the background keeps changing); its light is on while it holds | `H` or `Space`; long-press the picture |
 | **TIME** | How long each scene holds: 8, 16, 32 or 64 bars (drag, scroll or click) | `[` `]` |
 | **REACT** | How strongly the picture reacts to the music, 25-200%, 100% to start (double-click for 100%). The TV levels quiet and loud shows itself, so this is about taste, not volume | `-` `=` |
 
-Click or tap the picture (or press `I`) to show the channel, the scene, its FX chain, the track playing on the radio and the next show on Spaz Radio. TIME and REACT are remembered in the browser.
+Press `?` to list every key on the screen (any key or a click closes the list). MENU, SCHEDULE, INFO and CHAT sit together on the right and light up while they're on, like HOLD. With the menu open, `?`, `I` and `G` still work (they close it first), and `C` opens or closes the chat.
+
+Click or tap the picture to show the channel, the scene, its FX chain, the track playing on the radio and the next show on Spaz Radio for a few seconds. **INFO** (or `I`) keeps them on screen, updating as they change, until you turn it off; the TV remembers it. TIME, REACT and INFO are remembered in the browser.
 
 **No signal:** if the radio stream drops or goes quiet, the screen shows snow and NO SIGNAL, and the TV reconnects by itself.
 
@@ -97,7 +101,7 @@ Click or tap the picture (or press `I`) to show the channel, the scene, its FX c
 **SCHEDULE:** the SCHEDULE button, `G`, or MENU › **SCHEDULE** lays Spaz Radio's upcoming shows over the picture, grouped by day (Today, Tomorrow, then the date), in your own time zone (shown at the top). The show playing now is marked ON AIR. Any key or a click closes it. It works during a live broadcast too. When the track name comes up on screen, the next show comes up under it (`NEXT: <show> · <time>`). If the station's schedule can't be reached, the page says so and the TV keeps the last copy it had.
 
 **CHAT:** the Spaz Radio chat hangs beside the TV on a blackboard: the same room as the Spaz Radio Android app and spaz.org/radio. You can read the recent conversation and see who is here straight away (the list at the top; click it to see every name). To say something, write your name in chalk on the bottom line, press Enter, then write and press Enter to send. Your name is remembered in this browser; click it to change it. Each name is always the same colour of chalk, and yours is the only yellow one. Times are in your own time zone. Links open in a new tab.
-The board is open on your first visit. The **X** in its top corner closes it, and the TV grows back to full size; the CHAT button, `C` or MENU › **CHAT** brings it back. While it is closed, the CHAT button's light blinks when someone says something. Keys typed on the board stay on the board (Esc leaves the line). The chat runs whether the TV is on or off, works during a live broadcast, and stays out of fullscreen. On a phone, or any narrow or upright window, the board hangs under the TV: scroll down to it. If the connection drops, the board says "offline · reconnecting…" and fills in what was said meanwhile when it's back. Kiosk mode and the picture inside the Spaz Radio app (which has its own chat) leave it out.
+The board is open on your first visit. The **X** in its top corner closes it, and the TV grows back to full size; the CHAT button, `C` or MENU › **CHAT** brings it back. The CHAT button's light is on while the board is open; while it is closed, the light blinks when someone says something. Keys typed on the board stay on the board (Esc leaves the line). The chat runs whether the TV is on or off, works during a live broadcast, and stays out of fullscreen. On a phone, or any narrow or upright window, the board hangs under the TV: scroll down to it. If the connection drops, the board says "offline · reconnecting…" and fills in what was said meanwhile when it's back. Kiosk mode and the picture inside the Spaz Radio app (which has its own chat) leave it out.
 
 **SYNC:** if the picture's pulses come before the beat you hear (Bluetooth speakers are often 150-250 ms late), open MENU › **TAP SYNC** and tap Space or the picture on 8 beats; or set **SYNC** by hand. It needs the beat light to be green (or a live broadcast).
 

@@ -534,7 +534,7 @@ function settleCrossfade() {
  * to), in playlist order, now. A scene that was on air before comes back with the chain it had.
  */
 let fgTuning = null;       // the line a channel change is building, so quick presses keep counting
-async function changeChannel(dir) {
+function changeChannel(dir) {
   const n = fgPlaylist.length;
   if (autopilotState.isLiveBroadcast || n === 0) return;
   const from = fgPlaylist.indexOf(fgTuning ?? fgHistory.at(-1)?.line);
@@ -543,6 +543,22 @@ async function changeChannel(dir) {
     idx = (idx + dir + n) % n;
     if (playable(fgPlaylist[idx])) break;
   }
+  return tuneChannel(idx);
+}
+
+/** R: a playable channel picked at random, never the one on air (or being tuned to). */
+function randomChannel(rand = Math.random) {
+  const n = fgPlaylist.length;
+  if (autopilotState.isLiveBroadcast || n === 0) return;
+  const current = fgTuning ?? fgHistory.at(-1)?.line;
+  const choices = [];
+  for (let i = 0; i < n; i++) if (fgPlaylist[i] !== current && playable(fgPlaylist[i])) choices.push(i);
+  if (!choices.length) return;
+  return tuneChannel(choices[Math.floor(rand() * choices.length)]);
+}
+
+/** Puts playlist line `idx` on air now (shared by CH up / down and R). */
+async function tuneChannel(idx) {
   const line = fgPlaylist[idx];
   fgPlaylistIdx = idx;
   fgNext = null;
@@ -567,6 +583,7 @@ async function changeChannel(dir) {
 
 export const advanceForeground = () => changeChannel(1);
 export const previousForeground = () => changeChannel(-1);
+export const randomForeground = () => randomChannel();
 
 /** Puts the next suitable FX chain on the scene on air, now. */
 export async function nextFxChain() {

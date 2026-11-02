@@ -1,5 +1,13 @@
 ## [Unreleased]
 
+### Web TV: New Keys, an INFO Button and Lit Buttons (`web/ui.js`, `web/autopilot.js`, `web/index.html`, `web/tv.css`)
+- **New INFO button** (or `I`): keeps the channel, scene, background, FX, track and next show on screen, updating as they change, until you turn it off. A click on the picture still shows them for a few seconds. The TV remembers the setting.
+- **MENU, SCHEDULE, INFO and CHAT light up while they're on**, like HOLD, and sit together on the right, beside the station badge. CHAT's light still blinks for new lines while the board is closed.
+- **New keys.** `↑` `↓` now turn the volume up and down (they used to change the channel, as `→` `←` still do). `R` tunes a random channel. `?` lists every key on the screen; any key or a click closes the list.
+- **With the menu open**, `?`, `I` and `G` close it and do their own thing, and `C` opens or closes the chat beside it.
+- **The hover help says so**: the volume knob names its keys, the channel buttons mention `R`, INFO explains itself, and the picture's help is one line per command (click for info, double-click for fullscreen, `?` for the keys). The cabinet's help mentions `?` too.
+- The TV's version is now v11.
+
 ### Web TV: Info Panel Rearranged (`web/ui.js`, `web/autopilot.js`, `web/index.html`, `web/tv.css`)
 - **The info panel is laid out afresh.** Top left: what Spaz Radio is playing, with the next show under it. Bottom left, all the same size: **SCENE:** the scene on air, **BACKGROUND:** the scene playing behind it (new: the background was never named before), and **FX:** the scene's effects (`FX: NONE` when there are none). Control messages (HOLD, BARS, SYNC, NO SIGNAL…) now come up in the middle of the picture.
 - The background changes on its own clock (twice the scene length). With MENU › ANNOUNCE SCENES on, its line comes up by itself when it changes.
