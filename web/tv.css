@@ -228,6 +228,7 @@ body {
   color: #444;
   font-size: 0.6rem;
   letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums; /* the channel number keeps its width */
   user-select: none;
   transition: color 0.3s;
 }

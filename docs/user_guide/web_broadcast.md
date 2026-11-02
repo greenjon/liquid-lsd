@@ -82,7 +82,7 @@ The standalone browser client (`web/index.html`) presents the visualizer in a re
 
 Press `?` to list every key on the screen (any key or a click closes the list). MENU, SCHEDULE, INFO and CHAT sit together on the right and light up while they're on, like HOLD. With the menu open, `?`, `I` and `G` still work (they close it first), and `C` opens or closes the chat.
 
-Click or tap the picture to show the channel, the scene, its FX chain, the track playing on the radio and the next show on Spaz Radio for a few seconds. **INFO** (or `I`) keeps them on screen, updating as they change, until you turn it off; the TV remembers it. TIME, REACT and INFO are remembered in the browser.
+Click or tap the picture to show the channel, the scene, its FX chain, the track playing on the radio and the next show on Spaz Radio for a few seconds. **INFO** (or `I`) keeps them on screen, updating as they change, until you turn it off; the TV remembers it. TIME, REACT and INFO are remembered in the browser. The badge on the right shows the channel on air (`SPAZ RADIO • CH.042`), or LIVE during a live broadcast.
 
 **No signal:** if the radio stream drops or goes quiet, the screen shows snow and NO SIGNAL, and the TV reconnects by itself.
 

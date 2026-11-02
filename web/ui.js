@@ -89,7 +89,7 @@ function showLook(info = nowShowing(), ms = 4000, brand = false) {
     unflash('osd-bg'); unflash('osd-chain'); // the desktop's scene is not ours to name
   } else {
     // Bottom left, one size: the scene, the background behind it, the scene's FX chain.
-    if (info.channel > 0) flash('osd-ch', `CH ${String(info.channel).padStart(2, '0')}`, ms);
+    if (info.channel > 0) flash('osd-ch', `CH ${String(info.channel).padStart(3, '0')}`, ms);
     flash('osd-name', `SCENE: ${prettyName(info.name)}`, ms);
     if (info.background) flash('osd-bg', `BACKGROUND: ${prettyName(info.background)}`, ms);
     else unflash('osd-bg');
@@ -710,7 +710,13 @@ export function initUI() {
   }
 
   // --- Autopilot and broadcast events ---
-  window.addEventListener('lsd-now-showing', (e) => { announceLook(e.detail); updateMediaSession(); });
+  // The station badge: the channel on air, three digits so the badge keeps its width (CH.001 .. CH.100).
+  const stationText = document.querySelector('#station-badge .station-text');
+  const updateBadge = (info = nowShowing()) => {
+    const ch = info.channel > 0 ? String(info.channel).padStart(3, '0') : '---';
+    stationText.textContent = live() ? 'SPAZ RADIO \u2022 LIVE' : `SPAZ RADIO \u2022 CH.${ch}`;
+  };
+  window.addEventListener('lsd-now-showing', (e) => { announceLook(e.detail); updateMediaSession(); updateBadge(e.detail); });
   // The background changes on its own clock: with ANNOUNCE SCENES on, only its line comes up.
   window.addEventListener('lsd-background', (e) => {
     if ((viewerState.announce || viewerState.info) && powerState.on && !autopilotState.isLiveBroadcast && e.detail.background) {
@@ -718,10 +724,9 @@ export function initUI() {
     }
   });
   window.addEventListener('lsd-broadcast-status', (e) => {
-    const text = document.querySelector('#station-badge .station-text');
     tvBody.classList.toggle('live', e.detail.live);
-    if (text) text.textContent = e.detail.live ? 'SPAZ RADIO • LIVE' : 'SPAZ RADIO • CH.1';
-    if (text) text.title = e.detail.live && autopilotState.broadcaster ? `Live: ${autopilotState.broadcaster}` : '';
+    updateBadge();
+    stationText.title = e.detail.live && autopilotState.broadcaster ? `Live: ${autopilotState.broadcaster}` : '';
     for (const id of ['chUp', 'chDown', 'fxBtn', 'holdBtn']) document.getElementById(id).setAttribute('aria-disabled', String(e.detail.live));
     if (e.detail.live) {
       setHold(false);

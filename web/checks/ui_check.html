@@ -78,6 +78,8 @@ try {
   key('ArrowRight');
   await sleep(3000);
   check('Right arrow is CH up', onAir() !== first);
+  const badge = d.querySelector('#station-badge .station-text').textContent;
+  check('The badge shows the channel on air, in three digits', badge.endsWith(`CH.${osd('osd-ch').text.replace(/\D/g, '').padStart(3, '0')}`), `${badge} / ${osd('osd-ch').text}`);
 
   const before = onAir().chainName;
   let changed = false;
@@ -204,7 +206,7 @@ try {
   check('Live: OSD says controls are locked', osd('osd-msg').text.includes('LOCKED'), osd('osd-msg').text);
   w.LSD.handleRelayMessage({ type: 'broadcaster_offline' });
   await sleep(300);
-  check('Offline: badge back to CH.1', d.querySelector('#station-badge .station-text').textContent.includes('CH.1'));
+  check('Offline: the badge shows the channel again', /CH\.\d{3}$/.test(d.querySelector('#station-badge .station-text').textContent), d.querySelector('#station-badge .station-text').textContent);
   // Branding: I adds the Liquid LSD line; MENU › ABOUT opens and any key closes it; the bumper; the nameplate.
   key('i');
   check('I shows the Liquid LSD line', osd('osd-brand').shown && osd('osd-brand').text.includes('liquid-lsd.greenjon.com'));
