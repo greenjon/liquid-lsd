@@ -4,30 +4,18 @@
   "visualSourceType": "mandala",
   "parameters": {
     "Lobes": {
-      "baseValue": 9,
+      "baseValue": 4,
       "baseMin": 3,
       "baseMax": 26,
-      "randomizeBase": false,
+      "randomizeBase": true,
       "modulators": []
     },
     "Recipe Select": {
-      "baseValue": 0.45,
+      "baseValue": 0.0,
       "baseMin": 0.0,
       "baseMax": 1.0,
-      "randomizeBase": false,
-      "modulators": [
-        {
-          "sourceId": "lfo",
-          "operator": "ADD",
-          "depth": 0.1,
-          "dcOffset": 0.1,
-          "waveform": "SQUARE",
-          "genUnit": "BEAT",
-          "subdivision": 16.0,
-          "slope": 0.5,
-          "phaseOffset": 0.0
-        }
-      ]
+      "randomizeBase": true,
+      "modulators": []
     },
     "L1": {
       "baseValue": 0.45,
@@ -162,7 +150,7 @@
     "bass",
     "mid"
   ],
-  "presetNotes": "Nine lobes that sway every four beats, thicken with the bass and pulse softly on each beat.",
+  "presetNotes": "A random mandala whose arms sway every four beats, thicken with the bass and pulse softly on each beat.",
   "globalAlpha": {
     "baseValue": 1.0,
     "baseMin": 0.0,

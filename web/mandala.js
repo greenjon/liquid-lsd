@@ -31,6 +31,24 @@ export class MandalaRecipes {
     return list[i];
   }
 
+  /**
+   * One recipe drawn uniformly from every recipe whose petal count lies in [lo, hi] (each recipe
+   * equally likely, not each lobe count), as the {lobes, select} pair pickRecipe maps back to it.
+   * A range with no recipes in it falls back to the petal count closest to its middle.
+   */
+  rollRecipe(lo, hi, rng = Math.random) {
+    let pool = this.petals.filter((p) => p >= lo && p <= hi);
+    if (!pool.length) pool = [this.closestPetals(Math.round((lo + hi) / 2))];
+    const total = pool.reduce((s, p) => s + this.byPetals.get(p).length, 0);
+    let k = Math.min(total - 1, Math.floor(rng() * total));
+    for (const p of pool) {
+      const n = this.byPetals.get(p).length;
+      if (k < n) return { lobes: p, select: n > 1 ? k / (n - 1) : 0 };
+      k -= n;
+    }
+    return { lobes: pool[0], select: 0 };
+  }
+
   symmetricHueCycles(petals) {
     const p = Math.max(1, petals);
     let opts = this.hueCache.get(p);

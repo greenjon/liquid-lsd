@@ -149,51 +149,18 @@
    ]
   },
   "Recipe Select": {
-   "baseValue": 0.5,
-   "baseMin": 0.25,
-   "baseMax": 0.75,
+   "baseValue": 0.0,
+   "baseMin": 0.0,
+   "baseMax": 1.0,
    "randomizeBase": true,
-   "modulators": [
-    {
-     "sourceId": "lfo",
-     "operator": "ADD",
-     "waveform": "RANDOM",
-     "genUnit": "BEAT",
-     "subdivision": 32,
-     "depth": 0.25,
-     "hold": 1.0,
-     "dcOffset": 0
-    },
-    {
-     "sourceId": "lfo",
-     "operator": "ADD",
-     "bypassed": true,
-     "waveform": "RANDOM",
-     "genUnit": "BEAT",
-     "subdivision": 64,
-     "depth": 0.25,
-     "hold": 1.0,
-     "dcOffset": 0
-    }
-   ]
+   "modulators": []
   },
   "Lobes": {
-   "baseValue": 5.5,
-   "baseMin": 3.0,
-   "baseMax": 8.0,
+   "baseValue": 4,
+   "baseMin": 3,
+   "baseMax": 26,
    "randomizeBase": true,
-   "modulators": [
-    {
-     "sourceId": "lfo",
-     "operator": "ADD",
-     "waveform": "RANDOM",
-     "genUnit": "BEAT",
-     "subdivision": 256,
-     "depth": 0.25,
-     "hold": 1.0,
-     "dcOffset": 0.25
-    }
-   ]
+   "modulators": []
   },
   "Thickness": {
    "baseValue": 0.5,

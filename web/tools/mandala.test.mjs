@@ -36,3 +36,21 @@ test('all-zero arms draw nothing (maxR collapses, arms stay zero)', () => {
   assert.deepEqual([u.uL1, u.uL2, u.uL3, u.uL4], [0, 0, 0, 0]);
   assert.equal(u.uMaxR, 0.001);
 });
+
+test('rollRecipe reaches every recipe exactly once over evenly spaced draws, and pickRecipe maps back', () => {
+  const total = [...recipes.byPetals.values()].reduce((s, l) => s + l.length, 0);
+  const seen = new Set();
+  for (let k = 0; k < total; k++) {
+    const { lobes, select } = recipes.rollRecipe(3, 26, () => (k + 0.5) / total);
+    seen.add(recipes.pickRecipe(lobes, select));
+  }
+  assert.equal(seen.size, total);
+});
+
+test('rollRecipe stays inside the lobe range, and an empty range falls back to the closest count', () => {
+  for (let k = 0; k < 50; k++) {
+    const { lobes } = recipes.rollRecipe(5, 9, () => k / 50);
+    assert.ok(lobes >= 5 && lobes <= 9);
+  }
+  assert.equal(recipes.rollRecipe(16, 16, () => 0.5).lobes, recipes.closestPetals(16));
+});

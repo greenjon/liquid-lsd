@@ -291,6 +291,7 @@ Known remaining literals: dropdown selected text, ParametersRenderer fills and g
 - [ ] Preset pack (125 presets, 35 FX chains; the raymarched fractals should stay fluid on a laptop and a phone) loads and looks like the app; every web source now has a groove, hard and ambient look (2026-10-23).
 - [ ] Spectrogram and Scope on the web TV (2026-11-01, local server, not yet published): with the radio playing (and once with the microphone), both move with the music like on the desktop; the spectrum isn't much hotter or dimmer than the desktop's on the same track; no console errors; a phone (Android WebView via ?embed too) shows them. Their scenes get suitable chains (Scope is `sparse`, Spectrogram `fullframe`).
 - [ ] Leave the web TV running 20+ minutes: the picture no longer jitters (speeds are now integrated, so even a modulated speed is smooth).
+- [ ] Mandala recipe roll (2026-11-01, TV v12): tune through the mandala scenes (web-bass/bloom/groove/hard/build-drop-mandala, stock-mandala) several times: each comes on with a different shape, often 3-lobed, and holds it for the whole scene (arms, thickness, colour still move); web-mandala-lace and -heart look as before.
 - [ ] Full-frame looks (Cyclic CA, Kali Set, Voronoi, Ripples, Quasicrystal...) never get trail or bloom chains, and don't wash out.
 - [ ] Cyclic CA hard look reseeds on the biggest bass hits and recovers within a few seconds.
 - [ ] Drop strobe chain flashes negative once per loud bass hit (no random strobe).

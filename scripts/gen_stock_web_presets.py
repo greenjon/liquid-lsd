@@ -53,6 +53,17 @@ def number(x):
     return round(float(x), 5)
 
 
+# Web-only overrides, applied after the stock values. Mandala: the web TV rolls one recipe per load,
+# uniformly over all of them, and holds it (web/preset.js), so Lobes spans the whole table and the
+# recipe parameters drop the LFOs that would switch it on air.
+WEB_OVERRIDES = {
+    "mandala": {
+        "Lobes": {"baseValue": 4, "baseMin": 3, "baseMax": 26, "randomizeBase": True, "modulators": []},
+        "Recipe Select": {"baseValue": 0.0, "baseMin": 0.0, "baseMax": 1.0, "randomizeBase": True, "modulators": []},
+    },
+}
+
+
 def build(stock):
     source = stock["sourceId"]
     inputs = shader_inputs(source)
@@ -74,6 +85,7 @@ def build(stock):
                     tags.add("bar")
         params[name] = {"baseValue": number(base), "baseMin": number(lo), "baseMax": number(hi),
                         "randomizeBase": bool(p.get("randomizeBase", False)), "modulators": mods}
+    params.update(WEB_OVERRIDES.get(source, {}))
     out_tags = ["stock"] + sorted(tags)
     if source in FULL_FRAME_SOURCES:
         out_tags.append("fullframe")

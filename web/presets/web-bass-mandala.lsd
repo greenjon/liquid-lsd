@@ -4,30 +4,18 @@
   "visualSourceType": "mandala",
   "parameters": {
     "Lobes": {
-      "baseValue": 7,
+      "baseValue": 4,
       "baseMin": 3,
       "baseMax": 26,
-      "randomizeBase": false,
+      "randomizeBase": true,
       "modulators": []
     },
     "Recipe Select": {
-      "baseValue": 0.3,
+      "baseValue": 0.0,
       "baseMin": 0.0,
       "baseMax": 1.0,
-      "randomizeBase": false,
-      "modulators": [
-        {
-          "sourceId": "lfo",
-          "operator": "ADD",
-          "depth": 0.125,
-          "dcOffset": 0.125,
-          "waveform": "SQUARE",
-          "genUnit": "BEAT",
-          "subdivision": 16.0,
-          "slope": 0.5,
-          "phaseOffset": 0.0
-        }
-      ]
+      "randomizeBase": true,
+      "modulators": []
     },
     "L1": {
       "baseValue": 0.4,
@@ -160,7 +148,7 @@
     "bass-gated",
     "mid"
   ],
-  "presetNotes": "A fourth arm appears only on loud bass and the lines thicken with it; the recipe flips every two bars; arms breathe at 4 and 6 beats.",
+  "presetNotes": "A fourth arm appears only on loud bass and the lines thicken with it; arms breathe at 4 and 6 beats.",
   "globalAlpha": {
     "baseValue": 1.0,
     "baseMin": 0.0,

@@ -5,6 +5,7 @@ import { embed } from './embedmode.js';
 import { parseDeckPreset, parseFxChain, parseTransition } from './preset.js';
 import { BeatFlywheel } from './beatclock.js';
 import { chainFits, chainAnswers, dominantBand } from './pairing.js';
+import { MandalaRecipes } from './mandala.js';
 
 const RELAY_URL = 'wss://spaz.org/lsd-relay';
 let relayEnabled = !embed;   // embed mode starts with it off (the host app turns it on with the `live` option)
@@ -158,6 +159,7 @@ function getNextIndex(currentIdx, length, order) {
 
 // Content catalog (web/catalog.json): FX chain and transition presets by id.
 let catalog = { fxChains: [], transitionPresets: [] };
+let mandalaRecipes = null; // MandalaRecipes, loaded at startup for the recipe roll
 const contentCache = new Map();
 let fxIdx = -1;
 let transitionIdx = -1;
@@ -185,7 +187,7 @@ async function fetchContent(list, id) {
 async function buildDeck(line) {
   const [presetName, pinned] = line.split('|').map((p) => p.trim());
   const raw = await fetchPreset(presetName);
-  const deck = parseDeckPreset(raw);
+  const deck = parseDeckPreset(raw, Math.random, { mandalaRecipes });
   deck.tags = raw?.tags ?? [];
   deck.dominant = dominantBand(raw); // the band the scene mostly follows (pairing.js)
   let dto = null;
@@ -739,6 +741,14 @@ export async function startAutopilot() {
     }
   } catch (e) {
     console.warn('[autopilot] Could not load settings.json, using defaults.');
+  }
+
+  // 1a. Mandala's recipe table, so each mandala scene rolls one recipe as it loads (preset.js)
+  try {
+    const res = await fetch('mandala_recipes.json');
+    if (res.ok) mandalaRecipes = new MandalaRecipes(await res.json());
+  } catch (e) {
+    console.warn('[autopilot] Could not load mandala_recipes.json; mandala scenes keep their stored recipe.');
   }
 
   // 1b. Load the content catalog (FX chain and transition presets)

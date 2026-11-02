@@ -4,30 +4,18 @@
   "visualSourceType": "mandala",
   "parameters": {
     "Lobes": {
-      "baseValue": 12,
+      "baseValue": 4,
       "baseMin": 3,
       "baseMax": 26,
-      "randomizeBase": false,
+      "randomizeBase": true,
       "modulators": []
     },
     "Recipe Select": {
-      "baseValue": 0.6,
+      "baseValue": 0.0,
       "baseMin": 0.0,
       "baseMax": 1.0,
-      "randomizeBase": false,
-      "modulators": [
-        {
-          "sourceId": "lfo",
-          "operator": "ADD",
-          "depth": 0.1,
-          "dcOffset": 0.1,
-          "waveform": "SQUARE",
-          "genUnit": "BEAT",
-          "subdivision": 8.0,
-          "slope": 0.5,
-          "phaseOffset": 0.0
-        }
-      ]
+      "randomizeBase": true,
+      "modulators": []
     },
     "L1": {
       "baseValue": 0.45,
@@ -150,7 +138,7 @@
     "bar",
     "high"
   ],
-  "presetNotes": "Twelve-lobed mandala whose arm pulses on the beat and whose line thickens on every hi-hat.",
+  "presetNotes": "A random mandala whose arm pulses on the beat and whose line thickens on every hi-hat.",
   "globalAlpha": {
     "baseValue": 1.0,
     "baseMin": 0.0,

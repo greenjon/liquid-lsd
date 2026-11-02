@@ -31,6 +31,14 @@ WEB = ROOT / "web"
 
 MANDALA_RANGE = {"Lobes": (3, 26)}  # everything else on Mandala is 0..1
 
+# Mandala recipe roll: with Lobes and Recipe Select both randomized, the web TV draws one recipe at
+# load, uniformly over all of them, and holds it while the scene is on air (web/preset.js). So these
+# two carry no modulators: a recipe never changes mid-scene. Spread into a mandala preset's spec.
+RECIPE_ROLL = {
+    "Lobes": {"baseValue": 4, "baseMin": 3, "baseMax": 26, "randomizeBase": True, "modulators": []},
+    "Recipe Select": {"baseValue": 0.0, "baseMin": 0.0, "baseMax": 1.0, "randomizeBase": True, "modulators": []},
+}
+
 
 def header(path):
     m = re.search(r"/\*\s*(\{.*?\})\s*\*/", Path(path).read_text(), re.S)
@@ -122,6 +130,9 @@ def isf_params(source, spec):
 def mandala_params(spec):
     out = {}
     for name, v in spec.items():
+        if isinstance(v, dict):  # a finished ParameterDto (RECIPE_ROLL)
+            out[name] = dict(v)
+            continue
         mods = []
         if isinstance(v, tuple):
             v, *mods = v
@@ -194,12 +205,12 @@ preset("web-beat-spiral", "dynamic_spiral", {
     "Spiral thumps on every beat, dots swell on the kick, twists only when the bass is loud, hue turns over 16 bars.")
 
 preset("web-bass-mandala", "mandala", {
-    "Lobes": 7, "Recipe Select": (0.3, lfo(16, 0.25, wave="SQUARE")),
+    **RECIPE_ROLL,
     "L1": 0.4, "L2": (0.2, lfo(4, 0.25)), "L3": (0.2, lfo(6, 0.2)), "L4": (0.0, gate("audio_bass", 0.5, 1.0)),
     "Thickness": (0.2, bass(0.35)),
     "Hue Offset": (0.0, lfo(32, 1.0)), "Hue Sweep": 0.5, "Depth": (0.35, mid(0.4)),
 }, ["beat", "bar", "bass", "bass-gated", "mid"],
-    "A fourth arm appears only on loud bass and the lines thicken with it; the recipe flips every two bars; arms breathe at 4 and 6 beats.")
+    "A fourth arm appears only on loud bass and the lines thicken with it; arms breathe at 4 and 6 beats.")
 
 preset("web-kick-icosa", "icosa_h3", {
     "Morph": (0.1, kick(0.8, 350)), "StellationBoost": (0.0, gate("audio_bass", 0.6, 1.5)),
@@ -263,12 +274,12 @@ preset("web-spiral-storm", "dynamic_spiral", {
     "Dense spiral that reverses direction every eight beats; dots tick on every half beat; mids shear it.")
 
 preset("web-mandala-bloom", "mandala", {
-    "Lobes": 12, "Recipe Select": (0.6, lfo(8, 0.2, wave="SQUARE")),
+    **RECIPE_ROLL,
     "L1": 0.45, "L2": (0.25, pulse(1, 0.2)), "L3": (0.2, lfo(5, 0.2)), "L4": 0.1,
     "Thickness": (0.35, hat(0.6)), "Hue Offset": (0.15, lfo(16, 1.0)), "Hue Sweep": 0.7,
     "Depth": (0.5, pulse(2, 0.3)),
 }, ["beat", "bar", "high"],
-    "Twelve-lobed mandala whose arm pulses on the beat and whose line thickens on every hi-hat.")
+    "A random mandala whose arm pulses on the beat and whose line thickens on every hi-hat.")
 
 # ================================================================ FX chains
 chain("web-kaleido", ["kaleidoscope", "feedback"],
@@ -410,12 +421,12 @@ preset("web-ambient-crystal", "icosa_h3", {
     "A translucent crystal turning over 16 bars in muted colour; the rim glow follows the loudness.")
 
 preset("web-groove-mandala", "mandala", {
-    "Lobes": 9, "Recipe Select": (0.45, lfo(16, 0.2, wave="SQUARE")),
+    **RECIPE_ROLL,
     "L1": 0.45, "L2": (0.3, lfo(4, 0.25)), "L3": (0.25, mid(0.3)), "L4": (0.1, pulse(2, 0.15)),
     "Thickness": (0.4, bass(0.3)), "Hue Offset": (0.3, lfo(32, 1.0)), "Hue Sweep": 0.5,
     "Depth": (0.45, pulse(1, 0.2)),
 }, ["groove", "beat", "bar", "bass", "mid"],
-    "Nine lobes that sway every four beats, thicken with the bass and pulse softly on each beat.")
+    "A random mandala whose arms sway every four beats, thicken with the bass and pulse softly on each beat.")
 
 preset("web-groove-prism", "hyper_slice", {
     "SliceOffset": (0.0, lfo(12, 0.4, wave="TRIANGLE")), "RotateXW": (0.0, lfo(6, 0.6)), "RotateYW": (0.2, lfo(8, 0.4)),
@@ -451,12 +462,12 @@ preset("web-hard-celestial", "celestial_engine", {
     "Symmetry jumps every two beats, rings and lines kick, shimmer on hats and a pulse wave on bass hits.")
 
 preset("web-hard-mandala", "mandala", {
-    "Lobes": (8, lfo(2, 0.25, wave="SQUARE")), "Recipe Select": (0.2, lfo(8, 0.3, wave="SQUARE")),
+    **RECIPE_ROLL,
     "L1": 0.5, "L2": (0.3, kick(0.4, 150)), "L3": (0.3, hat(0.3)), "L4": (0.0, gate("audio_bass", 0.5, 1.0, 5, 120)),
     "Thickness": (0.35, kick(0.4, 150)), "Hue Offset": (0.0, lfo(8, 1.0)), "Hue Sweep": 1.0,
     "Depth": (0.5, pulse(0.5, 0.3)),
 }, ["hard", "beat", "bass", "kick", "high", "bass-gated"],
-    "Lobe count flips every beat, lines punch on kicks, arms flicker on hats and a fourth arm slams in on bass.")
+    "A random mandala: lines punch on kicks, arms flicker on hats and a fourth arm slams in on bass.")
 
 
 # ---------------------------------------------------------------- batch 4: one signal is the point
@@ -508,7 +519,7 @@ preset("web-build-drop-fluid", "domain_warp_fluid", {
     "Calm marble that winds up over eight bars (faster, swirlier, glossier) and gets slammed open by bass hits.")
 
 preset("web-build-drop-mandala", "mandala", {
-    "Lobes": 6, "Recipe Select": (0.3, lfo(32, 0.3, wave="SQUARE")),
+    **RECIPE_ROLL,
     "L1": 0.4, "L2": (0.2, ramp(32, 0.3)), "L3": (0.2, ramp(16, 0.3)), "L4": (0.0, gate("audio_bass", 0.6, 1.0)),
     "Thickness": (0.15, ramp(32, 0.4)), "Hue Offset": (0.0, ramp(32, 0.5)), "Hue Sweep": (0.3, ramp(32, 0.6)),
     "Depth": (0.3, ramp(32, 0.4)),

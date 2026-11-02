@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Web TV: Every Mandala Scene Is a Fresh Recipe (`web/preset.js`, `web/mandala.js`, `web/autopilot.js`, `web/presets/*mandala*.lsd`)
+- **Each mandala scene now picks a new shape every time it comes on**, drawn evenly from all 296 Mandala recipes (every recipe as likely as any other, so the many 3-lobe shapes turn up as often as they should), and **keeps it for the whole scene**. Before, five of them cycled through a few fixed shapes on a beat timer, `web-hard-mandala` changed shape several times a beat, and the stock mandala only ever reached about 37 shapes, none of them 3-lobed.
+- Arms, line weight, depth and colour still move with the music and the beat, as before.
+- `web-mandala-lace` and `web-mandala-heart` keep their own shapes.
+- The TV's version is now v12.
+
 ### Web TV: New Keys, an INFO Button and Lit Buttons (`web/ui.js`, `web/autopilot.js`, `web/index.html`, `web/tv.css`)
 - **New INFO button** (or `I`): keeps the channel, scene, background, FX, track and next show on screen, updating as they change, until you turn it off. A click on the picture still shows them for a few seconds. The TV remembers the setting.
 - **MENU, SCHEDULE, INFO and CHAT light up while they're on**, like HOLD, and sit together on the right, beside the station badge. CHAT's light still blinks for new lines while the board is closed.
