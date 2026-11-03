@@ -45,6 +45,8 @@ export function validatePreset(file, dto, cat = catalog()) {
   const src = dto.visualSourceType;
   if (src === 'mandala') {
     checkParams(where, dto.parameters, MANDALA_PARAMS, problems);
+  } else if (src === 'gallery') {   // the Spaz Radio photos (gallery.js): drawn outside the ISF graph, no parameters
+    checkParams(where, dto.parameters, [], problems);
   } else {
     const entry = cat.sources.find((s) => s.id === src);
     if (!entry) problems.push(`${where}: unknown source ${src}`);

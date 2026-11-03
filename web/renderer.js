@@ -6,6 +6,7 @@ import { lookupParam } from './isf.js';
 import { AudioTextures, audioFrame } from './audiotex.js';
 import { Library, DeckPipeline, MixerPipeline } from './graph.js';
 import { MandalaRecipes } from './mandala.js';
+import { Gallery } from './gallery.js';
 import { heardBeats, DelayLine } from './sync.js';
 import { DropEnvelope } from './energy.js';
 import { installEmbedApi } from './embed.js';
@@ -272,7 +273,7 @@ async function init() {
   }
   // Shader prewarm for scenes the autopilot has queued (Library.get starts the fetch and compile).
   setPrewarm((deck, transition) => {
-    if (deck?.source && deck.source !== 'mandala') ctx.library.get('sources', deck.source.toLowerCase());
+    if (deck?.source && !['mandala', 'gallery'].includes(deck.source)) ctx.library.get('sources', deck.source.toLowerCase());
     for (const slot of deck?.fx ?? []) if (slot?.id) ctx.library.get('filters', slot.id);
     if (transition?.transition) ctx.library.get('transitions', transition.transition);
   });
@@ -351,6 +352,7 @@ async function init() {
     pipe.blank = false;
     const srcType = (deckData.source || 'mandala').toLowerCase();
     if (srcType === 'mandala') renderMandala(deckData, pipe.clean);
+    else if (srcType === 'gallery') gallery.render(pipe.clean, { dt: frameDt, bpm: evalCtx.bpm, beats: evalCtx.beats, calm: viewerState.reducedNow });
     else if (!ctx.library.has('sources', srcType)) pipe.clean.clear(); // a source the web cannot draw
     else if (!pipe.renderSource(deckData, frameInfo())) return null; // still loading
     return pipe.renderFx(deckData, frameInfo());
@@ -363,6 +365,7 @@ async function init() {
   };
   const UNIT_SPEC = { min: 0, max: 1, steps: null };
   const mandalaRecipes = new MandalaRecipes(mandalaTable);
+  const gallery = new Gallery(gl, quadVAO);   // the Spaz Radio photo gallery (gallery.js); loads on first use
 
   function renderMandala(deckData, target) {
     target.bind();

@@ -1008,6 +1008,10 @@ export async function startAutopilot() {
   } catch (e) {
     console.warn('[autopilot] Could not load settings.json, using defaults.');
   }
+  // Trial (branch trial/spaz-gallery-bg): ?bg=gallery plays the Spaz Radio photo gallery as the only background.
+  if (typeof location !== 'undefined' && new URLSearchParams(location.search).get('bg') === 'gallery') {
+    autopilotSettings.bgPlaylist = 'gallery_bg.lsdplay';
+  }
 
   // 1a. Mandala's recipe table, so each mandala scene rolls one recipe as it loads (preset.js)
   try {
