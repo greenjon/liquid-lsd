@@ -15,7 +15,7 @@ import { scheduleState, refreshSchedule, setShows, groupByDay, zoneLabel, nextLi
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v14';
+export const TV_VERSION = 'v15';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -489,7 +489,7 @@ export function initUI() {
       step: (dir) => applyAutoRoll(stepIn(AUTO_ROLL_STEPS, viewerState.autoRoll, dir)),
       help: 'Rolls a new variation of the scene on air every few bars, like pressing ROLL (D). Best with HOLD on: the scene stays and keeps changing.' },
     { label: 'BACKGROUND', locked: () => live() || viewerState.bgMode === 'off',
-      value: () => (viewerState.bgMode === 'off' ? 'OFF' : prettyName(nowShowing().background ?? '') || '---'),
+      value: () => (viewerState.bgMode === 'off' ? 'OFF' : prettyName(nowShowing().backgroundPicked ?? '') || '---'),
       step: (dir) => stepBackground(dir).then(() => menu.refresh()),
       help: 'The picture behind the scene, which shows through wherever the scene is dark or see-through: the Spaz Radio photo gallery to start with. \u25C0 \u25B6 or B pick another one now.' },
     { label: 'BG CHANGES', locked: live, value: () => BG_MODE_LABELS[viewerState.bgMode],

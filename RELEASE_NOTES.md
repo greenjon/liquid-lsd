@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Web TV: MENU › BACKGROUND Steps From the Background on Screen (`web/autopilot.js`, `web/ui.js`)
+- **Fixed**: MENU › **BACKGROUND** (◀ ▶) and `B` stepped from a background the TV had already lined up at random, not from the one on screen, so ◀ often never got back to the photo gallery. The row also kept showing the old name until the change was done, so it could read *spaz gallery* while another background was on. Steps now go through the list in order from the background on screen, and the row names the new one as soon as you press.
+- Turning MENU › BG CHANGES from *Off* back on brings back the background that was on before, not a random one.
+- The TV's version is now v15.
+
 ### Web TV: The Spaz Radio Photo Gallery Is the Background (`web/gallery.js`, `web/gallery.json`, `web/presets/spaz-gallery.lsd`, `web/playlists/default_bg.lsdplay`, `web/renderer.js`, `web/autopilot.js`, `web/ui.js`, `scripts/gallery_curate.py`)
 - **The TV's background is now the listener photo gallery from the old Spaz Radio page** (spaz.org/radio, the photos added with "Add Pic"), drawn the way that page drew them behind the player, only smoother: a new photo comes in on the beat every few beats and fades in over several more, then turns and grows slowly around a point off its middle, so it swings across the screen as the next one comes in on top. Photos keep their shape. The background's effects still apply on top of it.
 - For now it plays the 200 earliest uploads (2013 to 2017), until a hand-picked set replaces them. Only a few photos are held at a time, and a new one is fetched about every 20 seconds.

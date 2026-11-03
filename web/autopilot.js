@@ -91,6 +91,8 @@ let bgSwitchAt = 0;
 let bgFadeStart = 0;
 let bgNext = null;
 let bgPreparing = false;
+let bgPicked = null;            // the line BACKGROUND / B asked for, until it is on air (steps go on from it)
+let bgResume = '';              // the line on air when BG CHANGES went OFF: it comes back with the next mode
 
 /** Beat the next change starts on: `fadeBeats` before the first bar line at least `holdBars` from `beats`. */
 export function nextSwitchBeat(beats, holdBars, fadeBeats) {
@@ -291,10 +293,14 @@ export function tickAutopilot(dt, beats, music = {}) {
       case 'off':
         // BG CHANGES back on: the next background fades in from black.
         if (bgMode === 'off') break;
-        prepareBackground();
+        if (!bgNext && !bgPreparing) {
+          const back = bgPlaylist.indexOf(bgResume);
+          prepareBackground(back >= 0 ? back : null);
+        }
         if (bgNext) {
           autopilotState.deckBG = bgNext.deck;
           bgOnAir = bgNext.line;
+          if (bgPicked === bgOnAir) bgPicked = null;
           bgNext = null;
           bgFadeLen = 4;
           bgTransitionState = 'fade_in';
@@ -307,6 +313,7 @@ export function tickAutopilot(dt, beats, music = {}) {
         if (autopilotState.bgAlpha <= 0.0) {
           if (bgMode === 'off' || !bgNext) {   // BG CHANGES OFF: stays black, and is not rendered
             autopilotState.deckBG = null;
+            if (bgOnAir) bgResume = bgOnAir;
             bgOnAir = '';
             bgNext = null;
             bgTransitionState = 'off';
@@ -314,6 +321,7 @@ export function tickAutopilot(dt, beats, music = {}) {
           }
           autopilotState.deckBG = bgNext.deck;
           bgOnAir = bgNext.line;
+          if (bgPicked === bgOnAir) bgPicked = null;
           console.log(`[autopilot] Background: ${bgNext.line}`);
           announceBackground();
           bgNext = null;
@@ -567,7 +575,8 @@ export function nowShowing() {
   const line = fgHistory.at(-1)?.line ?? fgPlaylist[fgPlaylistIdx] ?? '';
   const name = line.split('|')[0].trim();
   const background = bgOnAir.split('|')[0].trim() || null;
-  return { name, chain: deck?.chainName ?? null, background, channel: fgPlaylist.indexOf(line) + 1, channels: fgPlaylist.length,
+  const backgroundPicked = (bgPicked ?? bgOnAir).split('|')[0].trim() || null;   // BACKGROUND's row: where a step is going
+  return { name, chain: deck?.chainName ?? null, background, backgroundPicked, channel: fgPlaylist.indexOf(line) + 1, channels: fgPlaylist.length,
     skipped: skipped.has(name), effects: effectsOn, bgMode };
 }
 
@@ -804,7 +813,7 @@ export function setBackgroundMode(mode) {
   if (!['scenes', 'hold', 'off'].includes(mode) || mode === bgMode) return;
   bgMode = mode;
   if (mode === 'off' && bgTransitionState !== 'off' && autopilotState.deckBG) {
-    bgPrepareToken++; bgPreparing = false; bgNext = null;
+    bgPrepareToken++; bgPreparing = false; bgNext = null; bgPicked = null;
     startBackgroundChange(lastBeats, 4);
     if (autopilotState.bgAlpha < 1) bgFadeStart = lastBeats - (1 - autopilotState.bgAlpha) * 2; // carry on from a fade in progress
   }
@@ -817,13 +826,16 @@ export async function stepBackground(dir = 1) {
   if (bgMode === 'off') return 'off';
   const n = bgPlaylist.length;
   if (n === 0) return 'none';
-  let idx = bgPlaylist.indexOf(bgNext?.line ?? bgOnAir);
+  // From the one on screen (or the one a step is already fading to), not the one the rotation has queued.
+  let idx = bgPlaylist.indexOf(bgPicked ?? bgOnAir);
   if (idx < 0) idx = bgPlaylistIdx;
   for (let tries = 0; tries < n; tries++) {
     idx = (idx + dir + n) % n;
     if (playable(bgPlaylist[idx])) break;
   }
-  const ok = await prepareBackground(idx);
+  const line = bgPicked = bgPlaylist[idx];
+  const ok = await Promise.resolve(prepareBackground(idx)).catch(() => false);
+  if (!ok && bgPicked === line) bgPicked = null;
   if (!ok || bgMode === 'off' || autopilotState.isLiveBroadcast) return 'superseded';
   if (bgTransitionState === 'hold' || bgTransitionState === 'fade_in') startBackgroundChange(lastBeats, 2);
   return bgNext?.line ?? bgOnAir;
