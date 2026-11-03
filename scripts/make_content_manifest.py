@@ -20,7 +20,7 @@ is lower ignores the update instead of showing broken looks.
 import hashlib, json, os, subprocess, sys, time
 from pathlib import Path
 
-CONTENT_ENGINE = 2  # 2: audio/audioFFT inputs (spectrogram, scope; web/audiotex.js)
+CONTENT_ENGINE = 3  # 2: audio/audioFFT inputs (spectrogram, scope; web/audiotex.js). 3: source `gallery` (web/gallery.js)
 ROOT = Path(__file__).resolve().parent.parent
 WEB = ROOT / "web"
 DIRS = ["presets", "playlists", "shaders", "fxchains", "content"]

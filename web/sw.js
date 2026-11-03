@@ -6,7 +6,7 @@ const CACHE = 'lsd-tv-v1';
 const SHELL = [
   './', 'index.html', 'tv.css', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'favicon.png',
   'ui.js', 'renderer.js', 'autopilot.js', 'dsp.js', 'beatclock.js', 'beattrack.js', 'energy.js', 'onset-worklet.js',
-  'evaluator.js', 'graph.js', 'isf.js', 'mandala.js', 'pairing.js', 'preset.js',
+  'evaluator.js', 'graph.js', 'isf.js', 'mandala.js', 'gallery.js', 'gallery.json', 'pairing.js', 'preset.js',
   'settings.json', 'catalog.json', 'mandala_recipes.json', 'playlists/default.lsdplay', 'playlists/default_bg.lsdplay',
   'shaders/blit.vert', 'shaders/blit.frag', 'shaders/mandala.vert', 'shaders/mandala.frag', 'shaders/mixer.frag',
   'shaders/crt_post.frag',

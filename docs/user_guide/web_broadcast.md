@@ -104,7 +104,7 @@ Click or tap the picture to show the channel, the scene, its FX chain, the track
 
 **Variations:** no scene looks exactly the same twice. Each one's settings roll within a narrow span around the values it was tuned with whenever it comes on, and again on **ROLL** (`D`). Settings that come in steps (a colour mode, a number of petals, Mandala's shape) change on the bar line; the rest glide over it. MENU › **Auto roll** rolls the scene on air every 4, 8 or 16 bars, which goes well with HOLD.
 
-**Background:** the background plays behind the scene and shows wherever the scene is dark or see-through. `B` or MENU › **Background** changes it now. MENU › **BG changes**: *With scenes* (a new one every two scenes, the default), *Hold* (stays until you change it) or *Off* (no background).
+**Background:** the background plays behind the scene and shows wherever the scene is dark or see-through. It starts as the **Spaz Radio photo gallery**: the photos listeners added to the old radio page (spaz.org/radio), fading in on the beat and slowly turning and growing, as they did there. `B` or MENU › **Background** changes it now (to the other backgrounds, and back). MENU › **BG changes**: *Hold* (stays until you change it, the default), *With scenes* (a new one every two scenes) or *Off* (no background).
 
 **Effects and following the music:** MENU › **Effects** *Off* plays the scenes and backgrounds without FX chains (the info panel says `FX: OFF`). MENU › **Follow music** *Off* stops the calm scene for a breakdown, the hard cut on the drop and the tempo-weighted picks.
 
@@ -123,7 +123,7 @@ The board is open on your first visit. The **X** in its top corner closes it, an
 
 **Power:** click anywhere on the TV to turn it on (the browser needs that click to start the sound). Once it's on, only the PWR switch turns it off: clicks on the cabinet are ignored, a click that just misses a button presses the nearest one, and clicks on the picture show the info.
 
-**The info panel:** click the picture or press **I** to see it. Top left: what Spaz Radio is playing and the next show. Bottom left: **SCENE** (the scene on air), **BACKGROUND** (the scene playing behind it, which changes on its own clock, twice the scene length) and **FX** (the scene's effects). With MENU › **ANNOUNCE SCENES** on, the panel comes up by itself for each new scene, and the BACKGROUND line when the background changes. Control messages (HOLD, BARS, SYNC…) come up in the middle of the picture.
+**The info panel:** click the picture or press **I** to see it. Top left: what Spaz Radio is playing and the next show. Bottom left: **SCENE** (the scene on air), **BACKGROUND** (what plays behind it: the photo gallery, or with BG changes *With scenes*, a scene that changes on its own clock, twice the scene length) and **FX** (the scene's effects). With MENU › **ANNOUNCE SCENES** on, the panel comes up by itself for each new scene, and the BACKGROUND line when the background changes. Control messages (HOLD, BARS, SYNC…) come up in the middle of the picture.
 
 **About:** the nameplate under the screen opens the Liquid LSD website. MENU › **ABOUT** tells you about the desktop app (with a QR code for your phone), and **I** shows a Liquid LSD line with the info.
 
@@ -137,7 +137,7 @@ The viewer's browser also connects to a live audio stream and runs its own audio
 
 ## Autopilot mode
 
-When no broadcaster is connected, the web player switches to **Autopilot** — running its own curated visual playlist against the live audio stream. It keeps the visualizer interesting and audio-reactive 24/7 without needing a human operator. It finds the beat of the radio stream itself, so beat-synced movement lands on the music, and changes scenes on the bar: every 16 bars by default (the TIME dial), with the background changing half as often. It also follows the song: when the bass drops out for a breakdown a calm or building scene comes in, and when the drop lands a hard scene cuts in on it (unless HOLD is on).
+When no broadcaster is connected, the web player switches to **Autopilot** — running its own curated visual playlist against the live audio stream. It keeps the visualizer interesting and audio-reactive 24/7 without needing a human operator. It finds the beat of the radio stream itself, so beat-synced movement lands on the music, and changes scenes on the bar: every 16 bars by default (the TIME dial), with the background (the photo gallery unless you pick another) held, or changing half as often with BG changes *With scenes*. It also follows the song: when the bass drops out for a breakdown a calm or building scene comes in, and when the drop lands a hard scene cuts in on it (unless HOLD is on).
 
 When a broadcaster connects, Autopilot smoothly hands off control to the live stream. When the broadcast ends, it picks up again automatically.
 

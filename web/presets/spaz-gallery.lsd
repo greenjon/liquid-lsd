@@ -4,6 +4,6 @@
   "visualSourceType": "gallery",
   "parameters": {},
   "tags": ["web", "ambient", "bar"],
-  "presetNotes": "The Spaz Radio listener photos (spaz.org/radio), turning and growing behind the scene as on the old radio page. Trial: open the TV with ?bg=gallery.",
+  "presetNotes": "The Spaz Radio listener photos (spaz.org/radio), turning and growing behind the scene as on the old radio page.",
   "globalAlpha": { "baseValue": 1.0, "baseMin": 0.0, "baseMax": 1.0, "randomizeBase": false, "modulators": [] }
 }

@@ -321,6 +321,7 @@ Known remaining literals: dropdown selected text, ParametersRenderer fills and g
 - [ ] Web breakdowns (2026-10-28): in a radio breakdown the picture's bass motion goes calm and stays calm, and the calm look the autopilot brings in is not undone by the gain climbing back; the drop still cuts to a hard look. `LSD.cvState.energy` in the console shows the watcher (`section`, `holding`, `short`, `long`).
 - [ ] Web section modulators (2026-10-28): the stock presets (every `stock-*.lsd` now uses `audio_energy` and `audio_drop`) breathe out in a radio breakdown and hit on the drop as on the desktop. With SYNC set, the drop hit is delayed with the sound. With reduced motion, the drop hit is softer.
 - [ ] Phase 8 CI is not done yet, so nothing to check there.
+- [ ] Photo gallery background (2026-11-03, TV v14): a fresh visit (or after RESET) starts with the old radio page's photos behind the scene, turning and growing slowly, a new one on the beat every few beats; BG CHANGES reads HOLD. `B` steps to the shader backgrounds and back to the gallery. First photo within a few seconds; no console errors; a phone and the Android app's WebView (once it ships the new web) keep a steady frame rate. Look out for any photo you'd rather drop (the list is the 200 earliest uploads, `web/gallery.json`, until you curate it).
 
 ## 16b. Audit fixes (2026-10-29)
 

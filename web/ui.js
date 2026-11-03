@@ -15,7 +15,7 @@ import { scheduleState, refreshSchedule, setShows, groupByDay, zoneLabel, nextLi
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v13';
+export const TV_VERSION = 'v14';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -33,7 +33,7 @@ export const viewerState = {
   reducedMode: 'auto', // Reduced motion: 'auto' (follows the system setting), 'on', 'off'
   heavyMode: 'auto',   // Heavy scenes: 'auto' (the GPU probe decides), 'on', 'off'
   autoRoll: 0,         // AUTO ROLL: bars between rolls of the scene on air (0 = off)
-  bgMode: 'scenes',    // BG CHANGES: 'scenes' (every 2x TIME), 'hold', 'off'
+  bgMode: 'hold',      // BG CHANGES: 'scenes' (every 2x TIME), 'hold' (the default: the photo gallery stays), 'off'
   effects: true,       // EFFECTS: AUTO (true) or OFF
   follow: true,        // FOLLOW MUSIC: breakdowns and drops pick the scene
   reducedNow: false,   // reduced motion in effect (updated by applyReduced; the renderer reads it)
@@ -439,7 +439,7 @@ export function initUI() {
   viewerState.reducedMode = MODES.includes(load('lsd.reduced', 'auto')) ? load('lsd.reduced', 'auto') : 'auto';
   viewerState.heavyMode = MODES.includes(load('lsd.heavy', 'auto')) ? load('lsd.heavy', 'auto') : 'auto';
   viewerState.autoRoll = AUTO_ROLL_STEPS.includes(load('lsd.autoRoll', 0)) ? load('lsd.autoRoll', 0) : 0;
-  viewerState.bgMode = BG_MODES.includes(load('lsd.bgMode', 'scenes')) ? load('lsd.bgMode', 'scenes') : 'scenes';
+  viewerState.bgMode = BG_MODES.includes(load('lsd.bgMode', 'hold')) ? load('lsd.bgMode', 'hold') : 'hold';
   viewerState.effects = load('lsd.effects', true) !== false;
   viewerState.follow = load('lsd.follow', true) !== false;
   setAutoRollBars(viewerState.autoRoll);
@@ -491,10 +491,10 @@ export function initUI() {
     { label: 'BACKGROUND', locked: () => live() || viewerState.bgMode === 'off',
       value: () => (viewerState.bgMode === 'off' ? 'OFF' : prettyName(nowShowing().background ?? '') || '---'),
       step: (dir) => stepBackground(dir).then(() => menu.refresh()),
-      help: 'The picture behind the scene, which shows through wherever the scene is dark or see-through. \u25C0 \u25B6 or B pick another one now.' },
+      help: 'The picture behind the scene, which shows through wherever the scene is dark or see-through: the Spaz Radio photo gallery to start with. \u25C0 \u25B6 or B pick another one now.' },
     { label: 'BG CHANGES', locked: live, value: () => BG_MODE_LABELS[viewerState.bgMode],
       step: (dir) => applyBgMode(BG_MODES[(BG_MODES.indexOf(viewerState.bgMode) + dir + BG_MODES.length) % BG_MODES.length]),
-      help: 'With scenes: a new background every two scenes (TIME). Hold: it stays until you change it. Off: no background, just the scene.' },
+      help: 'Hold (the default): the background stays until you change it. With scenes: a new one every two scenes (TIME). Off: no background, just the scene.' },
     { label: 'EFFECTS', locked: live, value: () => (viewerState.effects ? 'AUTO' : 'OFF'),
       step: () => applyEffects(!viewerState.effects),
       help: 'Auto: every scene and background gets an FX chain that suits it (FX or F picks another). Off: the scenes play clean.' },
@@ -530,7 +530,7 @@ export function initUI() {
       viewerState.announce = false; save('lsd.announce', false);
       if (!live()) {
         reactDial.set(toDial(REACT_DEFAULT)); timeDial.set(TIME_STEPS.indexOf(16) / (TIME_STEPS.length - 1));
-        applyAutoRoll(0); applyBgMode('scenes'); applyEffects(true); applyFollow(true);
+        applyAutoRoll(0); applyBgMode('hold'); applyEffects(true); applyFollow(true);
       }
     } },
     ...(kiosk ? [] : [{ label: 'CHAT', help: 'The Spaz Radio chat, on a blackboard beside the TV: the same room as the Spaz Radio app. Press C or the CHAT button any time.',
