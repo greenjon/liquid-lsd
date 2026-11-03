@@ -1553,10 +1553,17 @@ commercial release.</p>
 </tr>
 <tr>
 <td>KIFS source (<code>kifs</code>)</td>
-<td>Defining mathematics of iterated function systems: Menger sponge, Sierpinski tetrahedron and octahedron constructions, reflection-group fundamental-domain folding, similarity-scaled distance estimate, orbit traps</td>
+<td>Defining mathematics of iterated function systems: Menger sponge, Sierpinski tetrahedron, octahedron and icosahedral (H3 Coxeter group, mirrors reused from our own <code>icosa_h3</code>) constructions, reflection-group fundamental-domain folding, similarity-scaled distance estimate, orbit traps</td>
 <td>Written from the mathematics (folds, scale and offset about the IFS fixed vertex, base-shape distance divided by s^n); no Shadertoy, Fragmentarium or other shader source and no earlier removed <code>kifs</code> code read or recalled. The author assistant may have seen similar shaders in training</td>
 <td><code>library/sources/kifs/kifs.fs</code>, <code>.planning/heavy-sources-notes/kifs.md</code></td>
 <td>n/a (owner to accept the clean-room statement)</td>
+</tr>
+<tr>
+<td>KIFS Storm source (<code>kifs_storm</code>)</td>
+<td>The project's first KIFS shader (<code>144f22e</code>, <code>7761ec6</code>, <code>733ea2e</code>, <code>164b474</code>, 2026-06-27 to 2026-07-06) and its <code>Kifs.kt</code> symmetry-angle table; helper functions after Inigo Quilez's published articles (smooth min/max, cosine palette, box and sphere distance functions)</td>
+<td>Ported from our own git history on 2026-11-03, with two bug fixes (repetition) and normalized inputs. It is not a clean-room rewrite: the original was written before this ledger existed, and the newer <code>kifs</code> was written without reading it for that reason</td>
+<td><code>library/sources/kifs_storm/kifs_storm.fs</code>, <code>git show fc1ad3f^:library/sources/kifs/shader.frag</code></td>
+<td><strong>To confirm</strong>: how the original was written (by hand, or an AI assistant, and from which references); whether the Quilez helpers need a credit line or licence note (his article code is commonly reused, but check the terms)</td>
 </tr>
 <tr>
 <td>Mandelbulb source (<code>mandelbulb</code>)</td>

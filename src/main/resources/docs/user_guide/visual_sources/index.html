@@ -603,6 +603,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#kifs-storm-kifs_storm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        KIFS Storm (kifs_storm)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#mandelbulb-mandelbulb" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2032,6 +2043,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#kifs-storm-kifs_storm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        KIFS Storm (kifs_storm)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#mandelbulb-mandelbulb" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2590,7 +2612,8 @@
 <h3 id="kifs-kifs">KIFS (<code>kifs</code>)</h3>
 <p>A kaleidoscopic iterated-function-system fractal: repeated folds, a scale and an offset toward a fixed vertex, with a rotation added at every iteration. The light is camera-relative, so the lit side always faces you as the view turns.</p>
 <ul>
-<li><strong>Fractal Type</strong>: Menger-like, Sierpinski tetrahedron, octahedral, or a mixed construction.</li>
+<li><strong>Fractal Type</strong>: Menger-like, Sierpinski tetrahedron, octahedral, a mixed construction, or icosahedral (the same symmetry as the Icosahedron source, nested many levels deep).</li>
+<li><strong>Vertex</strong> (icosahedral type only): where the smaller copies sit, which sets the outline: 0 icosahedron, about 0.3 truncated icosahedron (a football), 0.5 icosidodecahedron, about 0.7 truncated dodecahedron, 1 dodecahedron. Low values (0.1 to 0.25) carve deep recessed panels inside raised frames. Pair it with Color Mode 1, which on this type colours the raised frames and the recessed panels in opposite hues (Hue Offset picks the frame colour: about 0.08 gives copper frames over blue panels).</li>
 <li><strong>Scale, Offset</strong>: Look controls on the construction; away from the centre it stops tiling exactly.</li>
 <li><strong>Twist X/Y/Z, Morph Speed</strong>: Rotation applied to each nested level of the fractal except the outermost, so the object stays in place while its inner geometry twists (safe to modulate with an LFO). Morph Speed adds a time-driven rotation to the same twist. Morph Speed defaults to 0, so nothing moves until you raise it.</li>
 <li><strong>Flight Speed</strong>: Endless self-similar dolly toward the fixed vertex; negative flies outward. Defaults to 0 (holds still).</li>
@@ -2598,6 +2621,19 @@
 <li><strong>Quality, Glow, Color Mode</strong>: Detail versus speed, a grazing-ray halo, and five colourings.</li>
 <li><strong>Color Spread</strong>: Folding makes every copy of a detail identical, so this shifts hue by fold depth, position in space and facing direction to bring in more colours. 0 is the plain ramp; the gold ramp ignores it.</li>
 </ul>
+<h3 id="kifs-storm-kifs_storm">KIFS Storm (<code>kifs_storm</code>)</h3>
+<p>The original KIFS, brought back. Where KIFS builds one clean crystal and holds it still, KIFS Storm turns every fold level, the outermost included, by a free angle before a six-way kaleidoscope fold. Each level turns against the one before, so the nested cubes tumble against each other and spread across the whole frame. The colour is flat neon with no shading depth: an acid palette, glow in the creases and a halo where it is dense. GPU-heavy.</p>
+<ul>
+<li><strong>Fold Angle X/Y/Z</strong>: The rotation applied at every level. Small changes swing the whole structure. Each base shape adds its own starting angles, so 0 is already twisted.</li>
+<li><strong>Tumble Speed</strong>: Keeps the fold angles turning on their own, each axis at a different rate, so the storm never repeats. On by default; 0 freezes it.</li>
+<li><strong>Iterations, Scale, Fold X/Y/Z</strong>: How many levels, how much each shrinks, and how far the copies are pushed apart on each axis. A low Scale (below about a third) and uneven Fold offsets give the densest storm.</li>
+<li><strong>Shape Morph, Smoothness</strong>: The base shape (cube, sphere, tetrahedron, dodecahedron, truncated icosahedron, melting together in between), and rounded creases for organic blobs.</li>
+<li><strong>Trap Mode, Trap Glow</strong>: What the colour measures, and neon in the creases. Trap Glow rises very fast; above about half it floods the surfaces.</li>
+<li><strong>Normal Coloring, Normal Frequency, Color Shift, Glow</strong>: Colour bands that follow the surface and slowly scroll, how many bands, the palette's hue, and the halo.</li>
+<li><strong>Repeat Spacing, Repeat 3D, Fly Speed</strong>: Repeat Spacing tiles the fractal into an endless lattice with the camera in a corridor between the copies (Repeat 3D on also stacks it up and down). Fly Speed then flies down the corridor. Without Repeat, Fly Speed moves the cluster away.</li>
+<li><strong>Zoom, Rotate X/Y/Z</strong>: Camera distance and turn. Too far in and the camera enters the cluster and the frame fills with one colour.</li>
+</ul>
+<p>Randomizing it rolls the full circle on every Fold Angle, as the original did, so each roll is a new storm.</p>
 <h3 id="mandelbulb-mandelbulb">Mandelbulb (<code>mandelbulb</code>)</h3>
 <p>A raymarched Mandelbulb, the 3D analogue of the Mandelbrot set built on a power map in spherical coordinates, with a turntable camera. The light is camera-relative, so the lit side always faces you as the view turns.</p>
 <ul>

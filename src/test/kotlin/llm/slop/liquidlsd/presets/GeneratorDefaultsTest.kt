@@ -231,6 +231,7 @@ class GeneratorDefaultsTest {
             "chladni_cymatics" to listOf("FrequencyM", "FrequencyN", "VibrationSpeed", "NodeSharpness"),
             "mandelbox" to listOf("Scale", "FoldLimit", "MinRadius", "FlightSpeed"),
             "kifs" to listOf("SurfaceType", "Scale", "TwistY", "MorphSpeed"),
+            "kifs_storm" to listOf("TumbleSpeed", "Scale", "ShapeMorph", "TrapGlow"),
             "mandelbulb" to listOf("Power", "PowerSwing", "JuliaMix", "FlightSpeed"),
             "pseudo_kleinian" to listOf("SlabSize", "InversionRadius", "CoreSize", "FlightSpeed"),
             "apollonian" to listOf("CellSize", "InversionRadius", "Twist", "FlightSpeed"),

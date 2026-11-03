@@ -1712,7 +1712,15 @@
 <td style="text-align: left;">Liquid LSD Engine (Cleanroom)</td>
 <td style="text-align: left;">MIT</td>
 <td style="text-align: left;">Approved</td>
-<td style="text-align: left;">Raymarched kaleidoscopic IFS fractal (Menger, Sierpinski, octahedral, mixed) with per-iteration rotation, orbit-trap colouring and self-similar flight; textbook IFS mathematics, no third-party shader code. GPU-heavy (<code>LSD_COST</code> 3).</td>
+<td style="text-align: left;">Raymarched kaleidoscopic IFS fractal (Menger, Sierpinski, octahedral, mixed, icosahedral) with per-iteration rotation, orbit-trap colouring and self-similar flight; textbook IFS mathematics, no third-party shader code. GPU-heavy (<code>LSD_COST</code> 3).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>KIFS Storm</strong></td>
+<td style="text-align: left;"><code>library/sources/kifs_storm/kifs_storm.fs</code></td>
+<td style="text-align: left;">Liquid LSD Engine</td>
+<td style="text-align: left;">MIT</td>
+<td style="text-align: left;"><strong>To confirm</strong></td>
+<td style="text-align: left;">Port of the project's first KIFS (commits <code>144f22e</code> to <code>164b474</code>, removed in <code>fc1ad3f</code>): per-level rotation before a six-way kaleidoscope fold, morphing base-shape SDFs, orbit-trap neon. Helper functions (<code>smin</code>/<code>smax</code>, cosine palette, box and sphere SDFs) follow Inigo Quilez's published articles. Not a clean-room rewrite; see <code>docs/developer/clean_room_provenance.md</code>. GPU-heavy (<code>LSD_COST</code> 3).</td>
 </tr>
 <tr>
 <td style="text-align: left;"><strong>Mandelbulb</strong></td>
@@ -1923,7 +1931,7 @@
 <li><strong>Mandelbulb</strong> (<code>mandelbulb</code>): the triplex power map in spherical coordinates is due to Daniel White and Paul Nylander (2009). Only the published formulas are used; no shader code was copied.</li>
 <li><strong>Orbit traps</strong> (<code>escape_time</code>, <code>mandelbox</code>, <code>mandelbulb</code>, <code>kifs</code>, <code>pseudo_kleinian</code>, <code>apollonian</code>): the colouring idea of recording an orbit's closest approach to a chosen set is due to J. C. Hart.</li>
 <li><strong>Apollonian and Kleinian structures</strong> (<code>apollonian</code>, <code>pseudo_kleinian</code>): the sphere packings of Apollonius of Perga and F. Soddy, and the reflection and inversion groups of Poincare and Klein, are textbook mathematics; the shaders were derived from them directly.</li>
-<li><strong>KIFS</strong> (<code>kifs</code>): iterated function systems (Menger sponge, Sierpinski tetrahedron) are textbook mathematics; no third-party shader code was used.</li>
+<li><strong>KIFS</strong> (<code>kifs</code>): iterated function systems (Menger sponge, Sierpinski tetrahedron) and the icosahedral reflection group H3 (Coxeter) are textbook mathematics; no third-party shader code was used.</li>
 <li><strong>Reaction Diffusion</strong> (<code>reaction_diffusion</code>): the Gray-Scott model is due to P. Gray and S. K. Scott, and the pattern map to John E. Pearson (1993). Only the published equations and the commonly published (feed, kill) regimes are used; no shader code was copied.</li>
 <li><strong>Fluid Ink</strong> (<code>fluid_ink</code>): the stable-fluids method is due to Jos Stam (1999); vorticity confinement to Fedkiw, Stam and Jensen (2001). Only the published method is used; no shader code was copied.</li>
 <li><strong>Lenia</strong> (<code>lenia</code>): the continuous cellular automaton is due to Bert Wang-Chak Chan (2019). Only the published kernel and growth formulas are used; no code was copied.</li>

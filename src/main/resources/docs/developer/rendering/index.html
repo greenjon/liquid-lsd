@@ -2259,7 +2259,7 @@ This is the same domain-folded CSG technique as the old <code>icosa-v3</code> so
 </tr>
 <tr>
 <td><code>kifs</code></td>
-<td>Fold into a fundamental domain, scale about the IFS fixed vertex, per-iteration rotation, base-shape SDF / s^n; four constructions via <code>SurfaceType</code></td>
+<td>Fold into a fundamental domain, scale about the IFS fixed vertex, per-iteration rotation, base-shape SDF / s^n; five constructions via <code>SurfaceType</code> (4 = icosahedral: three rounds of <code>abs</code> plus one H3 mirror reach the chamber, scale about <code>Vertex</code>-chosen point on the chamber edge, base = convex hull of that point's orbit)</td>
 <td>march 112, fold 12, AO 4</td>
 <td>0.5: 80 / 9 / 2 (range 48-112 / 5-12 / 0-4)</td>
 </tr>
@@ -2284,6 +2284,7 @@ This is the same domain-folded CSG technique as the old <code>icosa-v3</code> so
 </tbody>
 </table>
 <p><code>escape_time</code> (2D, below) is a sixth heavy generator in the same registry but is not a raymarcher.</p>
+<p><strong><code>kifs_storm</code></strong> (<code>library/sources/kifs_storm/kifs_storm.fs</code>, <code>LSD_COST</code> 3, <code>is3D</code>) is a port of the first KIFS, removed in <code>fc1ad3f</code>, and deliberately breaks the rules above: no <code>Quality</code>, no bounding volume, no AO or fog, a fixed 80-step march with full steps and a 0.001 hit distance, and its own camera at <code>z = -3 / Zoom_</code>. Per level: <code>z = R * z</code>, a six-way kaleidoscope fold (<code>abs</code> on x and y, one mirror across the 60-degree line in xy, <code>abs</code> on z, softened by IQ <code>smin</code>/<code>smax</code> when <code>Smoothness</code> &gt; 0), <code>z -= 2 * (FoldX, FoldY, FoldZ)</code>, <code>z *= 1 + 3 * Scale</code>. Distance = a blend of cube, sphere, tetrahedron, dodecahedron and truncated-icosahedron SDFs (<code>ShapeMorph</code>) over the accumulated scale. <code>R</code> is built from <code>FoldAngleX/Y/Z</code> plus per-shape symmetry angles (the old <code>Kifs.kt</code> table, now in the shader) plus <code>TumblePhase</code> (<code>LSD_PHASES</code>) at 0.5, 0.309 and 0.191 rad per unit on the three axes, each wrapped at 2 pi. Repetition fixes two bugs in the original (<code>mix(1e10, s, Repeat3D)</code> quantised y at 0 and cancelled to a 0 period, NaN, at 1): x and z always repeat, y only when <code>Repeat3D</code> is on, and the x and y lattice is offset half a cell so the camera sits in a corridor between copies. Colour is additive: IQ cosine palette <code>0.5 + 0.5 cos(2 pi ((2, 1, 0) t + (0.5, 0.2, 0.25)))</code>, <code>TrapGlow_ / (0.01 + trap)</code> crease glow and linear step-count glow, then black-to-alpha. Measured on the Intel UHD (TGL GT1) at 960x540: about 13 ms default, 22 ms with a frame-filling roll, 25 ms in a 3D lattice.</p>
 <p>Worst case per pixel is steps x iterations estimator passes (for example 88 x 9 = 792 for the Mandelbox default, 1536 at Quality 1); rays that miss or hit early cost far less. No shader uses textures, float buffers or extra passes.</p>
 <p><strong>Measured cost</strong> (RTX A2000 Laptop GPU via PRIME offload, <code>GL_RENDERER</code> confirmed, 1920x1080, hidden GL 3.3 context, offscreen RGBA8, glFinish-timed average of several frames; indicative only, GPU clocks not locked, single deck, no compositing):</p>
 <table>
@@ -2309,7 +2310,7 @@ This is the same domain-folded CSG technique as the old <code>icosa-v3</code> so
 <td>4.8 ms</td>
 <td>5.7 ms</td>
 <td>2.1 ms</td>
-<td>corners not searched</td>
+<td>corners not searched; icosahedral type 5.4 / 7.4 / 2.8 ms, Zoom 1 at Quality 1 10.1 ms (2026-11-03, Menger re-measured 7.8 / 9.2 / 3.8 the same run)</td>
 </tr>
 <tr>
 <td><code>mandelbulb</code></td>

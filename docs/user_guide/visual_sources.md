@@ -144,6 +144,21 @@ A kaleidoscopic iterated-function-system fractal: repeated folds, a scale and an
 - **Quality, Glow, Color Mode**: Detail versus speed, a grazing-ray halo, and five colourings.
 - **Color Spread**: Folding makes every copy of a detail identical, so this shifts hue by fold depth, position in space and facing direction to bring in more colours. 0 is the plain ramp; the gold ramp ignores it.
 
+### KIFS Storm (`kifs_storm`)
+
+The original KIFS, brought back. Where KIFS builds one clean crystal and holds it still, KIFS Storm turns every fold level, the outermost included, by a free angle before a six-way kaleidoscope fold. Each level turns against the one before, so the nested cubes tumble against each other and spread across the whole frame. The colour is flat neon with no shading depth: an acid palette, glow in the creases and a halo where it is dense. GPU-heavy.
+
+- **Fold Angle X/Y/Z**: The rotation applied at every level. Small changes swing the whole structure. Each base shape adds its own starting angles, so 0 is already twisted.
+- **Tumble Speed**: Keeps the fold angles turning on their own, each axis at a different rate, so the storm never repeats. On by default; 0 freezes it.
+- **Iterations, Scale, Fold X/Y/Z**: How many levels, how much each shrinks, and how far the copies are pushed apart on each axis. A low Scale (below about a third) and uneven Fold offsets give the densest storm.
+- **Shape Morph, Smoothness**: The base shape (cube, sphere, tetrahedron, dodecahedron, truncated icosahedron, melting together in between), and rounded creases for organic blobs.
+- **Trap Mode, Trap Glow**: What the colour measures, and neon in the creases. Trap Glow rises very fast; above about half it floods the surfaces.
+- **Normal Coloring, Normal Frequency, Color Shift, Glow**: Colour bands that follow the surface and slowly scroll, how many bands, the palette's hue, and the halo.
+- **Repeat Spacing, Repeat 3D, Fly Speed**: Repeat Spacing tiles the fractal into an endless lattice with the camera in a corridor between the copies (Repeat 3D on also stacks it up and down). Fly Speed then flies down the corridor. Without Repeat, Fly Speed moves the cluster away.
+- **Zoom, Rotate X/Y/Z**: Camera distance and turn. Too far in and the camera enters the cluster and the frame fills with one colour.
+
+Randomizing it rolls the full circle on every Fold Angle, as the original did, so each roll is a new storm.
+
 ### Mandelbulb (`mandelbulb`)
 
 A raymarched Mandelbulb, the 3D analogue of the Mandelbrot set built on a power map in spherical coordinates, with a turntable camera. The light is camera-relative, so the lit side always faces you as the view turns.

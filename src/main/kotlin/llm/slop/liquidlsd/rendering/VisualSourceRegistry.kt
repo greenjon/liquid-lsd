@@ -72,6 +72,7 @@ object VisualSourceRegistry {
         "chladni_cymatics",
         "mandelbox",
         "kifs",
+        "kifs_storm",
         "mandelbulb",
         "pseudo_kleinian",
         "apollonian",

@@ -26,7 +26,7 @@ class StockGpuCostAuditTest {
     fun `heavy raymarchers are tagged heavy`() {
         val heavy = setOf(
             "icosa_h3", "hyper_slice", "gyroid_hyperspace",
-            "mandelbox", "kifs", "mandelbulb", "pseudo_kleinian", "apollonian", "escape_time",
+            "mandelbox", "kifs", "kifs_storm", "mandelbulb", "pseudo_kleinian", "apollonian", "escape_time",
             "nebula_volume"
         )
         val found = shaders().filter { it.nameWithoutExtension in heavy }

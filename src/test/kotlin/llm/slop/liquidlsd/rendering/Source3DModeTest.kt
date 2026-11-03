@@ -20,6 +20,7 @@ class Source3DModeTest {
         "icosa_h3",
         "mandelbox",
         "kifs",
+        "kifs_storm",
         "mandelbulb",
         "pseudo_kleinian",
         "apollonian",

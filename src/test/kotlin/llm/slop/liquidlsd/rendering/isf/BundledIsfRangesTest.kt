@@ -12,7 +12,7 @@ class BundledIsfRangesTest {
         "scanlineCount", "strobeMode", "rate", "spiralArms", "fbKaleido",
         "Symmetries", "ColorMode", "FrequencyM", "FrequencyN", "FrequencyL", "PaletteMode", "Detail",
         "MaxPoints", "SurfaceType", "ColorMethod", "FractalType", "SeedShape", "P", "Q", "Outside", "Neighborhood", "RatioPreset", "Ribbons",
-        "Mode", "Layout"
+        "Mode", "Layout", "Iterations", "TrapMode"
     )
     private val inputRegex = Regex("""\{[^{}]*"TYPE"\s*:\s*"float"[^{}]*\}""")
     private fun num(obj: String, key: String) =
