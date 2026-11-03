@@ -183,6 +183,10 @@ void getPlane(int idx, int mode, float sep, out Plane p) {
 
 void main() {
     int intMode = int(mode3D);
+    // Tri-Axial planes all share the origin; pushing each one out along its own normal would
+    // shift the three apart in different directions and break the symmetry, so Plane Separation
+    // does nothing in that mode.
+    float sep = (intMode == 0) ? 0.0 : separation_;
 
     float aspect = RENDERSIZE.x / max(1.0, RENDERSIZE.y);
 
@@ -266,7 +270,7 @@ void main() {
     // clips out of view (ray origin ends up past it, t <= 0). Cube Cage planes sit at
     // baseOffset(1.0) + separation_, which can reach 3.0 at max separation_ (2.0) — beyond the
     // default 2.5 camera distance — so grow camDist to keep a safety margin in that case.
-    float camPlaneOffset = ((intMode == 2) ? 1.0 : 0.0) + separation_;
+    float camPlaneOffset = ((intMode == 2) ? 1.0 : 0.0) + sep;
     float camDist = max(2.5, camPlaneOffset + 0.75);
     vec3 roView, rdView;
     if (perspective < 0.001) {
@@ -295,7 +299,7 @@ void main() {
         if (i >= numPlanes) break;
 
         Plane pl;
-        getPlane(i, intMode, separation_, pl);
+        getPlane(i, intMode, sep, pl);
 
         float denom = dot(rd, pl.normal);
         if (abs(denom) < 1e-5) continue;

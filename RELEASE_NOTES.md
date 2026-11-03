@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### 3D Elevation: Plane Separation Leaves Tri-Axial Alone (`default_filters/3d_elevation.fs`)
+- **Changed**: in Tri-Axial mode (three planes crossing at one shared centre) Plane Separation now does nothing. It used to push each plane out along its own axis, so the three slid apart in different directions and the shape lost its symmetry. The other modes are unchanged.
+
 ### Web TV: The Gallery Recovers From a Bad Start (`web/gallery.js`, `web/ui.js`)
 - **Fixed**: if the photo list or the first photos could not be loaded (a slow or dropped connection, or a publish in progress), the gallery stayed blank until the page was reloaded. It now tries again every 20 seconds.
 - **Fixed**: MENU › BACKGROUND showed `---` after BG CHANGES came back from *Off*, even once the background was back. The row now names the background whenever it changes.
