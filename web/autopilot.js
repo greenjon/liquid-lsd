@@ -892,6 +892,7 @@ export function tuneTo(n) {
 
 /** Applies one relay message (state_full / state_delta / broadcaster_offline) to the live state. */
 export function handleRelayMessage(msg) {
+  if (tapeHold) { noteStationAir(msg); return; }
   switch (msg.type) {
     case 'state_full':
       if (msg.v !== PROTOCOL_VERSION) {
@@ -934,6 +935,45 @@ export function handleRelayMessage(msg) {
         bgSwitchAt = null;
       }
       break;
+  }
+}
+
+// A tape in the deck (tapedeck.js): a broadcast's picture follows the live sound, not the tape, so it does not
+// take over. The relay is still listened to, so the LIVE button can pulse, and the viewer's controls stay theirs.
+export const stationAir = { onAir: false, broadcaster: null };
+let tapeHold = false;
+
+function noteStationAir(msg) {
+  if (msg.type === 'state_full' && msg.v === PROTOCOL_VERSION) {
+    stationAir.onAir = true;
+    if (msg.preset) stationAir.broadcaster = typeof msg.preset.broadcaster === 'string' ? msg.preset.broadcaster : null;
+  } else if (msg.type === 'state_delta') {
+    stationAir.onAir = true;
+    if (typeof msg.patch?.broadcaster === 'string') stationAir.broadcaster = msg.patch.broadcaster;
+  } else if (msg.type === 'broadcaster_offline') {
+    stationAir.onAir = false;
+    stationAir.broadcaster = null;
+  }
+}
+
+export function setTapeHold(on) {
+  if (!!on === tapeHold) return;
+  if (on) {
+    stationAir.onAir = autopilotState.isLiveBroadcast;
+    stationAir.broadcaster = autopilotState.broadcaster;
+    if (stationAir.onAir) handleRelayMessage({ type: 'broadcaster_offline' }); // back to the autopilot's picture
+    tapeHold = true;
+    return;
+  }
+  tapeHold = false;
+  const wasOnAir = stationAir.onAir;
+  stationAir.onAir = false;
+  stationAir.broadcaster = null;
+  // The deltas we ignored are gone. A new connection gets the relay's cached snapshot and the broadcast takes over.
+  if (wasOnAir && relayEnabled) {
+    relaySocket?.close();
+    relaySocket = null;
+    connectRelay();
   }
 }
 

@@ -1,7 +1,8 @@
 // node --test web/tools/autopilot.test.mjs : autopilot scheduling.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { nextSwitchBeat, tempoWeight, weightedPick } from '../autopilot.js';
+import { nextSwitchBeat, tempoWeight, weightedPick, autopilotState, handleRelayMessage, setTapeHold, stationAir } from '../autopilot.js';
+const PROTOCOL_VERSION = 2; // state_full's "v"
 
 test('autopilot changes start so they finish on a bar line, after the hold', () => {
   assert.equal(nextSwitchBeat(0, 16, 4), 60);        // fade beats 60-64, new look on the bar at 64
@@ -38,4 +39,28 @@ test('a kick look does not get a kick-only chain; a mixed chain answers it', asy
   assert.equal(chainAnswers([], 'low', kickOnly), false);
   assert.equal(chainAnswers([], 'low', mixed), true);
   assert.equal(chainAnswers([], 'mid', kickOnly), true);
+});
+
+test('with a tape in, a broadcast is noted but does not take the picture', () => {
+  const full = { type: 'state_full', v: PROTOCOL_VERSION, preset: { broadcaster: 'DJ Test' } };
+  setTapeHold(true);
+  handleRelayMessage(full);
+  assert.equal(autopilotState.isLiveBroadcast, false);
+  assert.equal(stationAir.onAir, true);
+  assert.equal(stationAir.broadcaster, 'DJ Test');
+  handleRelayMessage({ type: 'state_delta', patch: { broadcaster: 'DJ Other' } });
+  assert.equal(stationAir.broadcaster, 'DJ Other');
+  assert.equal(autopilotState.broadcaster, null, 'a delta touches nothing of ours');
+  handleRelayMessage({ type: 'broadcaster_offline' });
+  assert.equal(stationAir.onAir, false);
+  assert.equal(stationAir.broadcaster, null);
+  setTapeHold(false);
+  handleRelayMessage(full);
+  assert.equal(autopilotState.isLiveBroadcast, true, 'out of the tape, a broadcast takes over as ever');
+  setTapeHold(true);
+  assert.equal(autopilotState.isLiveBroadcast, false, 'a tape going in during a broadcast returns to the autopilot');
+  assert.equal(stationAir.onAir, true);
+  assert.equal(stationAir.broadcaster, 'DJ Test');
+  handleRelayMessage({ type: 'broadcaster_offline' });
+  setTapeHold(false);
 });

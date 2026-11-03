@@ -1,5 +1,16 @@
 ## [Unreleased]
 
+### Web TV: TAPES, the Spaz Radio Archive on the TV (`web/tapes.js`, `web/tapedeck.js`, `web/dsp.js`, `web/autopilot.js`, `web/ui.js`, `web/index.html`, `web/tv.css`, `web/chatboard.js`, `web/renderer.js`, `web/sw.js`)
+- **New TAPES button on the web TV** (also `T`, or MENU › TAPES): the whole Spaz Radio archive, about 3,800 shows back to 2013, over the picture. Type to search by name or date. RANDOM TAPE lands on any show, ON THIS DAY finds today's date in every year, and RESUME goes back to the show you last stopped.
+- **The picture follows the tape**: a tape is an audio input like the radio, so the beat, the levels and the audio-reactive scenes all follow the old show. The badge reads `SPAZ RADIO • TAPE`.
+- **Transport strip** along the bottom of the picture, with the rest of the info (click the picture, or INFO keeps it up): eject, back and forward 30 seconds, pause, and the show's waveform to click or drag. Keys: `K` pause, `,` `.` 30 seconds, `<` `>` 5 minutes. The phone's lock screen can seek too.
+- **New LIVE button** (`L`) goes back to the radio. It is lit while a tape is in. If a live show starts, the tape keeps playing, the LIVE button pulses red, and `LIVE NOW: <name>` comes up once. Viewer controls stay yours on a tape.
+- **Your place is remembered** per show, in this browser, for the last 50 shows. Turning the TV off and on keeps the tape in; a reload starts on the radio, with RESUME in the list. At the end of a show, the TV goes back to the radio.
+- **Chat stays on the live room**, with a small note on the board that you're on a tape.
+- Not in the Spaz Radio app's embedded picture (the app has its own archive tab) or under `?kiosk`.
+- **Fixed**: `CLICK OR PRESS A KEY FOR SOUND` could stay on screen after sound had started, if the stream failed at power-on and then came back.
+- The TV's version is now v19.
+
 ### KIFS Storm: The Original KIFS Is Back (`library/sources/kifs_storm/kifs_storm.fs`, `stock_defaults/sources/kifs_storm.json`, `rendering/SourceDocRegistry.kt`)
 - **New source, KIFS Storm**: the first KIFS, removed when it was too heavy for integrated graphics. It sits next to the current KIFS and does the opposite: every fold level turns freely, so nested cubes tumble against each other and fill the frame, coloured in flat neon with glow in the creases.
 - **Tumble Speed** (new) keeps it moving on its own, each axis at a different rate. The original only moved when you put a modulator on its Fold Angles.

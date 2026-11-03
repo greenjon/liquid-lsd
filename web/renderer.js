@@ -477,7 +477,9 @@ async function init() {
     gl.uniform1f(crtUniforms.uWarmupProgress,      powerState.warmupProgress);
     gl.uniform1f(crtUniforms.uShutdownProgress,    powerState.shutdownProgress);
     // Snow fades in over ~1 s when the stream drops (not during a live broadcast: the picture comes from the desktop).
-    noSignal += ((cvState.noSignal && !autopilotState.isLiveBroadcast ? 1 : 0) - noSignal) * Math.min(1, dt * 2);
+    // A tape going in or out rolls the picture through the same snow, briefly (cvState.glitchUntil).
+    const snow = (cvState.noSignal && !autopilotState.isLiveBroadcast) || performance.now() < cvState.glitchUntil;
+    noSignal += ((snow ? 1 : 0) - noSignal) * Math.min(1, dt * (performance.now() < cvState.glitchUntil ? 8 : 2));
     gl.uniform1f(crtUniforms.uNoSignal,            noSignal);
 
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);

@@ -1,7 +1,7 @@
 // ui.js
 // The TV's controls: power, volume, the viewer controls (channel rocker, FX, HOLD, TIME, REACT), the
 // on-screen display, keyboard and touch. Viewer controls are locked while the desktop broadcasts live.
-import { startAudio, stopAudio, setVolume, setMic, isMicOn, micAvailable, cvState } from './dsp.js';
+import { startAudio, stopAudio, setVolume, setMic, isMicOn, micAvailable, cvState, tapeStatus } from './dsp.js';
 import { embed } from './embedmode.js';
 import { autopilotState, advanceForeground, previousForeground, randomForeground, nextFxChain, setHold, setHoldBars, nowShowing, setHeavyAllowed, setReducedMotion,
   rollScene, setAutoRollBars, setEffects, setFollowMusic, setBackgroundMode, stepBackground,
@@ -10,12 +10,13 @@ import { createMenu } from './menu.js';
 import { heardBeats, tapOffset } from './sync.js';
 import { createChat } from './chat.js';
 import { createChatboard } from './chatboard.js';
+import { createTapeDeck } from './tapedeck.js';
 import { scheduleState, refreshSchedule, setShows, groupByDay, zoneLabel, nextLine, SCHEDULE_REFRESH_MS, SCHEDULE_STALE_MS } from './schedule.js';
 
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v18';
+export const TV_VERSION = 'v19';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -104,15 +105,19 @@ function showLook(info = nowShowing(), ms = 4000, brand = false) {
     else unflash('osd-bg');
     flash('osd-chain', `FX: ${!info.effects ? 'OFF' : info.chain ? prettyName(info.chain) : 'NONE'}`, ms);
   }
-  if (nowPlaying) flash('osd-track', `♪ ${nowPlaying}`, ms);
+  if (deck?.current) flash('osd-track', tapeLine(), ms);
+  else if (nowPlaying) flash('osd-track', `♪ ${nowPlaying}`, ms);
   flashNext(ms);
+  deck?.showStrip(ms);
   if (brand) flash('osd-brand', undefined, ms); // asked for (I, a click on the picture): who made this
 }
 
 const message = (text, ms = 1500) => flash('osd-msg', text, ms);
+const tapeLine = () => `\u25B6 ${deck.current.title}${deck.current.date ? ` \u00B7 ${deck.current.date}` : ''}`;
 
 /** Under the track line: the next show on Spaz Radio, when the schedule knows one. */
 function flashNext(ms) {
+  if (deck?.current && deck.airName) { flash('osd-next', `LIVE NOW: ${deck.airName}`, ms); return; }
   const line = nextLine(scheduleState.shows, Date.now());
   if (line) flash('osd-next', line, ms);
 }
@@ -205,6 +210,7 @@ function showIdent() {
 }
 const kiosk = embed || new URLSearchParams(location.search).has('kiosk'); // embed is a kiosk without the extras
 let chatboard = null;      // the chat's blackboard (chatboard.js); none under kiosk / embed
+let deck = null;           // the VCR (tapedeck.js); none under kiosk / embed
 
 export function initUI() {
   const powerSwitch = document.getElementById('powerSwitch');
@@ -238,6 +244,8 @@ export function initUI() {
       powerState.on = false;
       updatePowerTitles();
       viewerState.schedule?.hide();
+      deck?.close();
+      deck?.save();
       document.getElementById('keys').hidden = true;
       document.getElementById('skipped').hidden = true;
       letScreenSleep();
@@ -518,8 +526,8 @@ export function initUI() {
         return gpu?.state === 'done' ? `AUTO (${onOff(gpu.heavy)}, ${gpu.ms.toFixed(0)} MS)` : `AUTO (${onOff(gpu?.heavy)})`;
       },
       step: (dir) => { viewerState.heavyMode = cycle(viewerState.heavyMode, dir); save('lsd.heavy', viewerState.heavyMode); applyHeavy(); } },
-    { label: 'INPUT', locked: live, value: () => (isMicOn() ? 'MICROPHONE' : 'RADIO'),
-      help: 'What the picture listens to. Radio: the Spaz Radio stream. Microphone: the sound in the room (the browser asks first; it is analysed only, never played back).',
+    { label: 'INPUT', locked: live, value: () => (isMicOn() ? 'MICROPHONE' : deck?.current ? 'TAPE' : 'RADIO'),
+      help: 'What the picture listens to. Radio: the Spaz Radio stream, or the tape if one is in. Microphone: the sound in the room (the browser asks first; it is analysed only, never played back).',
       step: () => toggleMic() },
     { label: 'FULLSCREEN', value: () => (document.fullscreenElement ? 'ON' : 'OFF'), step: () => toggleFullscreen(), run: () => toggleFullscreen(),
       help: 'The picture and its on-screen display fill the screen. Double-click the picture or press S to toggle; Esc leaves.' },
@@ -535,6 +543,8 @@ export function initUI() {
     } },
     ...(kiosk ? [] : [{ label: 'CHAT', help: 'The Spaz Radio chat, on a blackboard beside the TV: the same room as the Spaz Radio app. Press C or the CHAT button any time.',
       value: () => (chatboard?.open ? 'OPEN' : 'CLOSED'), step: () => chatboard?.toggle(), run: () => chatboard?.toggle() }]),
+    ...(kiosk ? [] : [{ label: 'TAPES', help: 'Shows from the Spaz Radio archive. The picture follows the tape, and the LIVE button takes you back to the radio. Press T or the TAPES button any time.',
+      value: () => (deck?.current ? 'TAPE IN' : 'ARCHIVE'), run: () => { menu.hide(); deck?.open(); } }]),
     { label: 'SCHEDULE', help: 'Spaz Radio\u2019s upcoming shows, in your local time. Press G or the SCHEDULE button to open it any time.', value: () => 'SPAZ RADIO', run: () => { menu.hide(); schedule.show(); } },
     { label: 'ABOUT', help: 'About Liquid LSD, the software that makes these visuals.', value: () => 'LIQUID LSD', run: () => { menu.hide(); about.hidden = false; } },
     { label: 'EXIT', run: () => menu.hide() },
@@ -545,7 +555,7 @@ export function initUI() {
     if (!micAvailable()) { message('NO MICROPHONE ACCESS HERE', 3000); return; }
     try {
       await setMic(!isMicOn());
-      message(isMicOn() ? 'INPUT \u00B7 MICROPHONE' : 'INPUT \u00B7 RADIO', 2500);
+      message(isMicOn() ? 'INPUT \u00B7 MICROPHONE' : deck?.current ? 'INPUT \u00B7 TAPE' : 'INPUT \u00B7 RADIO', 2500);
     } catch (err) {
       console.warn('Microphone unavailable:', err);
       message('MICROPHONE BLOCKED', 3000);
@@ -604,7 +614,7 @@ export function initUI() {
     onOpen: () => { screen.classList.add('menu-open'); menuBtn.setAttribute('aria-pressed', 'true'); }, // the OSD steps aside
     onClose: () => { screen.classList.remove('menu-open'); menuBtn.setAttribute('aria-pressed', 'false'); },
   });
-  const toggleMenu = () => { if (powerState.on) { schedule.hide(); menu.toggle(); } };
+  const toggleMenu = () => { if (powerState.on) { schedule.hide(); deck?.close(); menu.toggle(); } };
   menuBtn.addEventListener('click', toggleMenu);
   viewerState.menu = menu;
 
@@ -614,6 +624,7 @@ export function initUI() {
     show() {
       if (!powerState.on) return;
       menu.hide();
+      deck?.close();
       about.hidden = true;
       keysPage.hidden = true;
       schedulePage.hidden = false;
@@ -678,6 +689,7 @@ export function initUI() {
     if (!powerState.on) return;
     menu.hide();
     schedule.hide();
+    deck?.close();
     about.hidden = true;
     keysPage.hidden = false;
   };
@@ -765,7 +777,7 @@ export function initUI() {
     save('lsd.info', on);
     infoBtn.setAttribute('aria-pressed', String(on));
     if (on) showLook(undefined, 4000, true);
-    else for (const id of INFO_IDS) unflash(id);
+    else { for (const id of INFO_IDS) unflash(id); deck?.hideStrip(); }
   }
   const toggleInfo = () => { if (powerState.on) setInfo(!viewerState.info); };
   viewerState.info = load('lsd.info', false) === true;
@@ -791,6 +803,28 @@ export function initUI() {
     viewerState.chat = { board: chatboard, chat };
   }
 
+  // --- TAPES (tapedeck.js): the archive, played as an audio input. Not under ?kiosk / ?embed. ---
+  if (!kiosk) {
+    let storage = null;
+    try { storage = localStorage; } catch { /* private window: nothing remembered */ }
+    deck = createTapeDeck({
+      page: document.getElementById('tapes'), strip: document.getElementById('tape-strip'),
+      button: document.getElementById('tapesBtn'), liveBtn: document.getElementById('liveBtn'), storage,
+      isOn: () => powerState.on, reduced: () => viewerState.reducedNow, stickyStrip: () => viewerState.info,
+      message,
+      onOpen: () => { menu.hide(); schedule.hide(); skippedPage.hide(); about.hidden = true; keysPage.hidden = true; },
+      onChange: (show) => {
+        updateBadge();
+        updateMediaSession();
+        chatboard?.setTape(!!show);
+        menu.refresh();
+        if (show) showLook();
+        else { unflash('osd-track'); unflash('osd-next'); announceLook(); }
+      },
+    });
+    viewerState.tapes = deck;
+  }
+
   // --- Keyboard ---
   window.addEventListener('keydown', (e) => {
     if (e.ctrlKey || e.metaKey || e.altKey || e.target.closest?.('input, textarea')) return;
@@ -798,12 +832,14 @@ export function initUI() {
     if (schedule.open) { e.preventDefault(); schedule.hide(); return; }
     if (!keysPage.hidden) { e.preventDefault(); keysPage.hidden = true; return; }
     if (skippedPage.open) { e.preventDefault(); skippedPage.key(e); return; }
+    if (deck?.pageOpen) { deck.key(e); return; }
     if (tapping && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); tapSync(); return; }
     // With the menu open these still work: ? and G and I close it and do their thing, C toggles the chat.
-    if (menu.open && ['?', 'i', 'I', 'g', 'G'].includes(e.key)) menu.hide();
+    if (menu.open && ['?', 'i', 'I', 'g', 'G', 't', 'T'].includes(e.key)) menu.hide();
     if (!(menu.open && (e.key === 'c' || e.key === 'C')) && menu.key(e)) { e.preventDefault(); return; }
     if ((e.key === 'm' || e.key === 'M') && powerState.on) { e.preventDefault(); menu.show(); return; }
     if ((e.key === 'g' || e.key === 'G') && powerState.on) { e.preventDefault(); schedule.show(); return; }
+    if ((e.key === 't' || e.key === 'T') && deck && powerState.on) { e.preventDefault(); deck.open(); return; }
     if ((e.key === 'c' || e.key === 'C') && chatboard) { e.preventDefault(); chatboard.toggle(); menu.refresh(); return; }
     if (e.key === '?') { e.preventDefault(); showKeys(); return; }
     const keys = {
@@ -819,6 +855,10 @@ export function initUI() {
       Escape: () => document.fullscreenElement && document.exitFullscreen().catch(console.error),
       s: toggleFullscreen, S: toggleFullscreen, a: toggleMic, A: toggleMic,
       i: toggleInfo, I: toggleInfo,
+      ...(deck && powerState.on ? {
+        k: deck.togglePause, K: deck.togglePause, l: () => document.getElementById('liveBtn').click(), L: () => document.getElementById('liveBtn').click(),
+        ',': () => deck.seekBy(-30), '.': () => deck.seekBy(30), '<': () => deck.seekBy(-300), '>': () => deck.seekBy(300),
+      } : {}),
     };
     const fn = keys[e.key];
     if (!fn) return;
@@ -859,11 +899,16 @@ export function initUI() {
   if ('mediaSession' in navigator) {
     const ms = navigator.mediaSession;
     const handle = (action, fn) => { try { ms.setActionHandler(action, fn); } catch { /* action not supported */ } };
-    handle('play', () => { if (!powerState.on) powerSwitch.click(); });
-    handle('pause', () => { if (powerState.on) powerSwitch.click(); });
+    handle('play', () => { if (!powerState.on) powerSwitch.click(); else if (deck?.current && tapeStatus()?.paused) deck.togglePause(); });
+    handle('pause', () => { if (deck?.current && powerState.on) { if (!tapeStatus()?.paused) deck.togglePause(); } else if (powerState.on) powerSwitch.click(); });
     handle('stop', () => { if (powerState.on) powerSwitch.click(); });
     handle('nexttrack', next);
     handle('previoustrack', prev);
+    if (deck) {
+      handle('seekbackward', (d) => deck.seekBy(-(d.seekOffset || 30)));
+      handle('seekforward', (d) => deck.seekBy(d.seekOffset || 30));
+      handle('seekto', (d) => { if (Number.isFinite(d.seekTime)) deck.seekTo(d.seekTime); });
+    }
   }
 
   // --- Sound after a blocked start: the first click or key anywhere starts it ---
@@ -871,6 +916,8 @@ export function initUI() {
     if (!audioBlocked || !powerState.on) return;
     try { await startAudio(); audioBlocked = false; showLook(); } catch { /* still blocked or no stream */ }
   };
+  // Sound is sound, however it came: a stream that came back, or a tape put in while the radio was down.
+  document.getElementById('lsdAudio')?.addEventListener('playing', () => { audioBlocked = false; });
   window.addEventListener('pointerdown', unblock);
   window.addEventListener('keydown', unblock);
 
@@ -895,7 +942,7 @@ export function initUI() {
   const stationText = document.querySelector('#station-badge .station-text');
   const updateBadge = (info = nowShowing()) => {
     const ch = info.channel > 0 ? String(info.channel).padStart(3, '0') : '---';
-    stationText.textContent = live() ? 'SPAZ RADIO \u2022 LIVE' : `SPAZ RADIO \u2022 CH.${ch}`;
+    stationText.textContent = deck?.current ? 'SPAZ RADIO \u2022 TAPE' : live() ? 'SPAZ RADIO \u2022 LIVE' : `SPAZ RADIO \u2022 CH.${ch}`;
   };
   // The first scene on air means the playlist has loaded: drop stored skips for channels it no longer has.
   let skipsPruned = false;
@@ -939,7 +986,7 @@ export function initUI() {
   // while the menu or ABOUT is open; the timer restarts at power-on) ---
   const bumper = document.getElementById('bumper');
   setInterval(() => {
-    if (embed || !powerState.on || live() || menu.open || !about.hidden || schedule.open) return;
+    if (embed || !powerState.on || live() || menu.open || !about.hidden || schedule.open || deck?.pageOpen) return;
     if (performance.now() - lastBumper < BUMPER_EVERY_MS) return;
     lastBumper = performance.now();
     showBumper();
@@ -958,7 +1005,7 @@ export function initUI() {
     // Standing notices only fill the message line when nothing else (HOLD, REACT...) is showing there.
     const msgFree = !document.getElementById('osd-msg').classList.contains('show');
     if (audioBlocked && powerState.on) { if (msgFree) message('CLICK OR PRESS A KEY FOR SOUND', 1500); noSignalShown = true; }
-    else if (cvState.noSignal && powerState.on && !live()) { if (msgFree) message('NO SIGNAL', 1500); noSignalShown = true; }
+    else if (cvState.noSignal && powerState.on && !live()) { if (msgFree) message(deck?.current && !isMicOn() ? 'LOADING TAPE\u2026' : 'NO SIGNAL', 1500); noSignalShown = true; }
     else if (noSignalShown) { noSignalShown = false; announceLook(); }
     const isLive = live() && autopilotState.clock.valid;
     const beats = heardBeats(performance.now(), viewerState.syncMs);
@@ -977,15 +1024,21 @@ function updateMediaSession() {
   if (!('mediaSession' in navigator) || typeof MediaMetadata === 'undefined') return;
   const look = autopilotState.isLiveBroadcast ? 'LIVE' : prettyName(nowShowing().name).toUpperCase();
   navigator.mediaSession.metadata = new MediaMetadata({
-    title: nowPlaying || 'Spaz Radio',
-    artist: 'Spaz Radio',
+    title: deck?.current?.title || nowPlaying || 'Spaz Radio',
+    artist: deck?.current ? `Spaz Radio archive${deck.current.date ? ` \u00B7 ${deck.current.date}` : ''}` : 'Spaz Radio',
     album: look ? `Liquid LSD \u00B7 ${look}` : 'Liquid LSD',
     artwork: [
       { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
       { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
     ],
   });
-  navigator.mediaSession.playbackState = powerState.on ? 'playing' : 'paused';
+  navigator.mediaSession.playbackState = powerState.on && !tapeStatus()?.paused ? 'playing' : 'paused';
+  try {
+    const status = tapeStatus();
+    if (status && deck?.current?.seconds) {
+      navigator.mediaSession.setPositionState({ duration: deck.current.seconds, position: Math.min(status.pos, deck.current.seconds), playbackRate: 1 });
+    } else navigator.mediaSession.setPositionState();
+  } catch { /* not supported here */ }
 }
 
 // -------------------------------------------------------
@@ -1026,8 +1079,10 @@ async function pollNowPlaying() {
     if (title && title !== nowPlaying) {
       nowPlaying = title;
       updateMediaSession();
-      flash('osd-track', `♪ ${nowPlaying}`, 6000);
-      flashNext(6000);
+      if (!deck?.current) { // on a tape, the track line is the tape's
+        flash('osd-track', `♪ ${nowPlaying}`, 6000);
+        flashNext(6000);
+      }
     }
   } catch { /* status unavailable: no track line */ }
   pollTimer = setTimeout(pollNowPlaying, 30000);

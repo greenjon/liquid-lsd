@@ -28,6 +28,7 @@ export const cvState = {
   dropLag:        0,     // s between the latest drop and its detection (audio_drop dates the hit back by it)
   audio_energy:   0.0,   // log2(now / usual level), -1..1, 0 in warm-up and silence (energy.js); no auto gain
   noSignal:       false, // the TV is on but the stream is down or silent (renderer shows snow)
+  glitchUntil:    0,     // performance.now() until which the picture rolls: a tape going in or out (renderer)
   isLive:         false, // true once AudioContext is running and stream is connected
 };
 
@@ -217,6 +218,7 @@ const noStatic = typeof location !== 'undefined' && new URLSearchParams(location
 
 function updateSignal(dt) {
   if (embed) { cvState.noSignal = false; return; } // the host plays the radio; silence is just a quiet picture
+  if (tape && !micOn) { updateTapeSignal(dt); return; }
   quietFor = analysisReady && cvState.raw.audio_amp > SILENT_AMP ? 0 : quietFor + dt;
   cvState.noSignal = wantAudio && !noStatic && quietFor > 4;
   const now = performance.now();
@@ -230,8 +232,97 @@ function updateSignal(dt) {
 function reconnect() {
   const audioEl = document.getElementById('lsdAudio');
   if (!audioEl || !audioCtx) return;
+  if (tape) { loadTape().catch(() => { /* next try in 10 s */ }); return; }
   audioEl.src = `${STREAM_URL}?t=${Date.now()}`;
   audioEl.play().then(() => { analysisReady = true; cvState.isLive = true; }).catch(() => { /* next try in 10 s */ });
+}
+
+// A tape (tapedeck.js): an archive show playing through the same <audio> element and analysis graph as the
+// radio, so everything that follows the radio follows it. Quiet is not a fault on a tape (shows have quiet
+// passages), so its watchdog looks at whether the playhead moves. It stays through power-off, and comes back
+// where it was.
+const TAPE_STUCK_S = 6;
+let tape = null; // { url, pos, paused, ready, stuck, lastT }
+
+/** Points the element at the tape, from `tape.pos`. The promise is play()'s: it rejects if the browser refuses. */
+function loadTape() {
+  const audioEl = document.getElementById('lsdAudio');
+  if (!audioEl || !audioCtx || !tape) return Promise.resolve();
+  const t = tape;
+  t.ready = false;
+  t.stuck = 0;
+  audioEl.addEventListener('loadedmetadata', () => {
+    if (tape !== t) return;
+    if (t.pos > 0) audioEl.currentTime = t.pos;
+    t.ready = true;
+    t.lastT = t.pos;
+  }, { once: true });
+  audioEl.src = t.url;
+  if (t.paused || micOn) return Promise.resolve();
+  return audioEl.play().then(() => { analysisReady = true; cvState.isLive = true; });
+}
+
+function updateTapeSignal(dt) {
+  const audioEl = document.getElementById('lsdAudio');
+  const now = performance.now();
+  const moved = audioEl.currentTime !== tape.lastT;
+  if (tape.ready && moved && !audioEl.seeking) tape.pos = audioEl.currentTime;
+  tape.lastT = audioEl.currentTime;
+  tape.stuck = !wantAudio || tape.paused || audioEl.ended || moved ? 0 : tape.stuck + dt;
+  cvState.noSignal = !noStatic && tape.stuck > TAPE_STUCK_S;
+  if (cvState.noSignal && now - lastRetryMs > 10000) {
+    lastRetryMs = now;
+    reconnect();
+  }
+}
+
+/** A seek or a new source is a new stretch of music: the beat and the levels start afresh. */
+function resetAnalysis() {
+  tracker.reset();
+  agc.reset();
+  quietFor = 0;
+  lastRetryMs = performance.now();
+}
+
+/** Plays a tape from `startAt` seconds, instead of the radio or the microphone. */
+export function insertTape(url, startAt = 0) {
+  tape = { url, pos: startAt, paused: false, ready: false, stuck: 0, lastT: 0 };
+  releaseMic();
+  resetAnalysis();
+  loadTape().catch((err) => console.warn('[dsp] tape did not start:', err.message));
+}
+
+/** Takes the tape out and goes back to the radio (or stays on the microphone, if it took over). */
+export function ejectTape() {
+  if (!tape) return;
+  tape = null;
+  resetAnalysis();
+  cvState.noSignal = false;
+  if (wantAudio && !micOn) reconnect();
+}
+
+export function setTapePaused(paused) {
+  if (!tape) return;
+  tape.paused = paused;
+  if (micOn) return; // the microphone has the input: the tape waits either way
+  const audioEl = document.getElementById('lsdAudio');
+  if (paused) audioEl?.pause();
+  else if (wantAudio) audioEl?.play().catch((err) => console.warn('[dsp] tape did not resume:', err.message));
+}
+
+export function seekTape(seconds) {
+  if (!tape) return;
+  tape.pos = Math.max(0, seconds);
+  resetAnalysis();
+  const audioEl = document.getElementById('lsdAudio');
+  if (tape.ready && audioEl) audioEl.currentTime = tape.pos; // not loaded yet: loadedmetadata goes to tape.pos
+}
+
+/** { pos, paused, duration } of the tape in, or null. `duration` is 0 until the browser knows it. */
+export function tapeStatus() {
+  if (!tape) return null;
+  const d = document.getElementById('lsdAudio')?.duration;
+  return { pos: tape.pos, paused: tape.paused, duration: Number.isFinite(d) ? d : 0 };
 }
 
 /** Refreshes audioFrame (the shaders' spectrum and waveform) from the newest samples. */
@@ -328,11 +419,12 @@ export async function startAudio() {
   quietFor = 0;
   lastRetryMs = performance.now(); // the first reconnect waits for this attempt to fail
   // Set stream src on user gesture (embed mode: the host app plays the radio and feeds us instead)
-  if (!embed) audioEl.src = STREAM_URL;
+  if (!embed && !tape) audioEl.src = STREAM_URL;
 
   if (!audioCtx) {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     audioCtx = new AudioContextClass();
+    audioEl?.addEventListener('ended', () => { if (tape) window.dispatchEvent(new CustomEvent('lsd-tape-ended')); });
 
     const radio = embed ? null : audioCtx.createMediaElementSource(audioEl);
     // Everything that is analysed comes through `source`: the radio, or the microphone (which is never
@@ -442,6 +534,7 @@ export async function startAudio() {
 
   if (embed) { /* the host app plays the radio */ }
   else if (micOn) audioEl.pause();  // the microphone is the input; the radio waits
+  else if (tape) { tape.paused = false; await loadTape(); }
   else await audioEl.play();
 
   cvState.isLive = true;
@@ -452,6 +545,7 @@ export async function startAudio() {
 export async function stopAudio() {
   wantAudio = false;
   releaseMic();
+  if (tape) tape.ready = false; // it stays in, at tape.pos
   cvState.noSignal = false;
   const audioEl = document.getElementById('lsdAudio');
   if (audioEl) {

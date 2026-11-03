@@ -1,0 +1,206 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>LSD TAPES check</title>
+<iframe id="app" src="../index.html?nolive&nostatic" width="1100" height="760" style="border:0" allow="autoplay"></iframe>
+<script type="module">
+// Drives the VCR in the real page (driven by tape_check.mjs). POSTs {results:[{name, ok, detail}]} to /report.
+const app = document.getElementById('app');
+const results = [];
+const check = (name, ok, detail = '') => results.push({ name, ok: !!ok, detail: String(detail) });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const post = (o) => fetch('/report', { method: 'POST', body: JSON.stringify(o) });
+try {
+  if (app.contentDocument?.readyState !== 'complete' || app.contentWindow.location.href === 'about:blank') await new Promise((r) => app.addEventListener('load', r, { once: true }));
+  const w = app.contentWindow, d = w.document;
+  for (let i = 0; i < 100 && !w.LSD; i++) await sleep(100);
+  const errors = [];
+  w.addEventListener('error', (e) => errors.push(e.message));
+  w.addEventListener('unhandledrejection', (e) => errors.push(String(e.reason)));
+  const L = w.LSD, st = L.autopilotState;
+  const key = (k) => w.dispatchEvent(new w.KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+  const audio = d.getElementById('lsdAudio');
+  const page = d.getElementById('tapes'), strip = d.getElementById('tape-strip');
+  const liveBtn = d.getElementById('liveBtn'), tapesBtn = d.getElementById('tapesBtn');
+  const badge = () => d.querySelector('#station-badge .station-text').textContent;
+  const msg = () => d.getElementById('osd-msg').textContent;
+  const onFixture = () => audio.currentSrc.includes('tape_fixture') || audio.src.includes('tape_fixture');
+  const sel = () => page.querySelector('.tp-row.sel');
+  const search = page.querySelector?.('.tp-search');
+  const FULL = { type: 'state_full', v: 2, preset: { broadcaster: 'DJ Test' } };
+
+  d.getElementById('tv-screen-area').click();
+  await sleep(1500);
+  const deck = L.viewerState.tapes;
+  check('The deck exists', !!deck);
+  const FIX = new URL('tape_fixture.ogg', location.href).href;
+  const shows = [
+    { id: 'fixture-one', url: FIX, title: 'Fixture <b>One</b>', date: '2026-11-02', seconds: 12, search: 'fixture <b>one</b> 2026-11-02' },
+    { id: 'fixture-two', url: FIX, title: 'Second Show', date: '2020-05-01', seconds: 12, search: 'second show 2020-05-01' },
+  ];
+  for (let i = 0; i < 4000; i++) shows.push({ id: `pad-${i}`, url: FIX, title: `Padding ${i}`, date: '2015-01-01', seconds: 3600, search: `padding ${i} 2015-01-01` });
+  deck.setShows(shows);
+
+  // --- The list ---
+  check('LIVE is inert with no tape in', liveBtn.getAttribute('aria-disabled') === 'true' && liveBtn.getAttribute('aria-pressed') === 'false');
+  key('t');
+  check('T opens TAPES, its light too', !page.hidden && tapesBtn.getAttribute('aria-pressed') === 'true');
+  const box = page.querySelector('.tp-search');
+  check('The search box says how many shows', box.placeholder.includes('4,002'), box.placeholder);
+  check('Only the rows in view exist', page.querySelectorAll('.tp-row').length < 80, page.querySelectorAll('.tp-row').length);
+  check('RANDOM TAPE and ON THIS DAY come first', page.querySelector('.tp-row').textContent.includes('RANDOM TAPE') && page.querySelectorAll('.tp-row')[1].textContent.includes('ON THIS DAY'));
+  check('Names are text, not markup', page.textContent.includes('<b>One</b>') && !page.querySelector('.tp-title b'));
+  const list = page.querySelector('.tp-list');
+  list.scrollTop = list.scrollHeight;
+  await sleep(300);
+  check('Scrolling to the end reaches the last show', page.textContent.includes('Padding 3999'), `${page.querySelector('.tp-row:last-child')?.textContent} top=${list.scrollTop} sh=${list.scrollHeight} ch=${list.clientHeight} rowh=${page.querySelector('.tp-row').getBoundingClientRect().height} sizer=${page.querySelector('.tp-sizer').style.height}`);
+  list.scrollTop = 0;
+  await sleep(50);
+  box.value = 'second'; box.dispatchEvent(new w.Event('input', { bubbles: true }));
+  check('Search filters the list and drops the action rows', page.querySelectorAll('.tp-row').length === 1 && page.textContent.includes('Second Show'));
+  box.value = 'zzzz'; box.dispatchEvent(new w.Event('input', { bubbles: true }));
+  check('No match says so', page.querySelector('.tp-empty')?.textContent === 'NO SHOWS MATCH');
+  box.value = ''; box.dispatchEvent(new w.Event('input', { bubbles: true }));
+  key('ArrowDown'); key('ArrowDown');
+  check('Arrow keys move the selection', sel()?.textContent.includes('Fixture'), sel()?.textContent);
+  key('Escape');
+  check('Esc closes it', page.hidden && tapesBtn.getAttribute('aria-pressed') === 'false');
+  tapesBtn.click();
+  check('The TAPES button opens it', !page.hidden);
+  d.getElementById('menuBtn').click();
+  check('MENU replaces it', page.hidden && !d.getElementById('tv-menu').hidden);
+  key('Escape');
+  key('t');
+
+  // --- Inserting ---
+  key('ArrowDown'); key('ArrowDown');
+  key('Enter');
+  await sleep(100);
+  check('Enter inserts the show and closes the list', page.hidden && deck.current?.id === 'fixture-one', deck.current?.id);
+  check('The badge says TAPE', badge().endsWith('TAPE'), badge());
+  check('LIVE lights', liveBtn.getAttribute('aria-pressed') === 'true' && liveBtn.getAttribute('aria-disabled') === 'false');
+  check('The strip comes up', strip.classList.contains('show'));
+  check('The track line names the tape', d.getElementById('osd-track').textContent.includes('Fixture <b>One</b>'), d.getElementById('osd-track').textContent);
+  check('The audio element plays the tape', onFixture(), audio.src);
+  await sleep(2500);
+  check('The tape is really playing', !audio.paused && audio.currentTime > 0.5, `${audio.paused} ${audio.currentTime} err=${audio.error?.message}`);
+  let amp = 0;
+  for (let i = 0; i < 40; i++) { amp = Math.max(amp, L.cvState.raw.audio_amp); await sleep(25); }
+  check('The picture hears it: the audio signal moves', amp > 0.01, amp);
+  check('No NO SIGNAL on a tape', !L.cvState.noSignal);
+  await sleep(1600); // the check's radio is unreachable, so power-on left the TV asking for a click
+  check('A playing tape clears the request for a click', !msg().includes('FOR SOUND') || !d.getElementById('osd-msg').classList.contains('show'), msg());
+
+  // --- Transport ---
+  key('k');
+  await sleep(100);
+  check('K pauses the tape', audio.paused && msg() === 'TAPE PAUSED', msg());
+  const pausedAt = audio.currentTime;
+  await sleep(500);
+  check('Paused stays put', audio.currentTime === pausedAt);
+  key('k');
+  await sleep(300);
+  check('K plays it again', !audio.paused);
+  const before = audio.currentTime;
+  key('.');
+  await sleep(600);
+  check('Forward: the seek lands (clamped to the end of a short show)', audio.currentTime > before, `${before} -> ${audio.currentTime}`);
+  key(',');
+  await sleep(600);
+  check('Back 30 s goes to the start of a short show', audio.currentTime < 5, audio.currentTime);
+  const wave = strip.querySelector('.ts-wave');
+  const r = wave.getBoundingClientRect();
+  deck.showStrip();
+  check('The strip draws at a real size', r.width > 50 && r.height > 10, `${r.width}x${r.height}`);
+  const at = (frac) => ({ clientX: r.left + r.width * frac, clientY: r.top + 2, bubbles: true, pointerId: 1 });
+  wave.dispatchEvent(new w.PointerEvent('pointerdown', at(0.5)));
+  wave.dispatchEvent(new w.PointerEvent('pointerup', at(0.5)));
+  await sleep(600);
+  check('A click on the waveform seeks there', audio.currentTime > 5 && audio.currentTime < 8, audio.currentTime);
+  check('The strip clock reads position / length', /^\d+:\d\d \/ 0:12$/.test(strip.querySelector('.ts-clock').textContent), strip.querySelector('.ts-clock').textContent);
+
+  // --- A live show during a tape ---
+  L.handleRelayMessage(FULL);
+  await sleep(1200);
+  check('A broadcast does not take the picture from a tape', !st.isLiveBroadcast && !d.getElementById('tv-body').classList.contains('live'));
+  check('LIVE pulses', liveBtn.classList.contains('pulsing'));
+  check('It says so once', msg().includes('LIVE NOW: DJ Test'), msg());
+  check('The tape keeps playing', !audio.paused && onFixture());
+  check('The badge still says TAPE', badge().endsWith('TAPE'));
+  L.handleRelayMessage({ type: 'broadcaster_offline' });
+  await sleep(1200);
+  check('LIVE stops pulsing when the show ends', !liveBtn.classList.contains('pulsing'));
+  L.viewerState.schedule.setShows([{ start: Date.now() - 1000, end: Date.now() + 60000, name: 'Scheduled Show' }]);
+  await sleep(1200);
+  check('The schedule\'s show on air pulses LIVE too', liveBtn.classList.contains('pulsing') && deck.airName === 'Scheduled Show', deck.airName);
+  L.viewerState.schedule.setShows([]);
+  await sleep(1200);
+  check('...and stops with it', !liveBtn.classList.contains('pulsing'));
+
+  // --- Chat marker ---
+  const note = d.querySelector('#chalkboard .cb-tape');
+  check('The chat notes the tape', note && !note.hidden && note.textContent.includes('on a tape'));
+
+  // --- Power off and on: the tape stays in ---
+  deck.seekTo(1); // the fixture is 12 s: leave room to come back to
+  await sleep(500);
+  const heldAt = audio.currentTime;
+  d.getElementById('powerSwitch').click();
+  await sleep(400);
+  check('Power off stops the sound; the tape stays in', deck.current?.id === 'fixture-one' && audio.paused);
+  d.getElementById('powerSwitch').click();
+  await sleep(1500);
+  check('Power on resumes the tape near where it was', onFixture() && !audio.paused && audio.currentTime >= heldAt - 1, `${heldAt} -> ${audio.currentTime} paused=${audio.paused}`);
+
+  // --- Eject ---
+  key('l');
+  await sleep(300);
+  check('L ejects: back on the radio stream', deck.current === null && audio.src.includes('radio.ogg'), audio.src);
+  check('The strip goes', !strip.classList.contains('show'));
+  check('The badge shows the channel again', /CH\.\d+|CH\.---/.test(badge()), badge());
+  check('LIVE goes dark', liveBtn.getAttribute('aria-pressed') === 'false' && !liveBtn.classList.contains('pulsing'));
+  check('The chat note goes', note.hidden);
+  L.handleRelayMessage(FULL);
+  await sleep(100);
+  check('Off the tape, a broadcast takes over as ever', st.isLiveBroadcast);
+
+  // --- Inserting during a broadcast ---
+  key('t');
+  check('TAPES opens during a broadcast', !page.hidden);
+  check('...and its button is not dimmed', getComputedStyle(tapesBtn).opacity === '1');
+  box.value = 'second'; box.dispatchEvent(new w.Event('input', { bubbles: true }));
+  key('Enter');
+  await sleep(1200);
+  check('A tape during a broadcast takes the picture back', deck.current?.id === 'fixture-two' && !st.isLiveBroadcast);
+  check('LIVE pulses for the broadcast it left', liveBtn.classList.contains('pulsing'));
+  check('Viewer controls are unlocked on a tape', !d.getElementById('tv-body').classList.contains('live'));
+
+  // --- The end of the tape ---
+  L.handleRelayMessage({ type: 'broadcaster_offline' });
+  deck.seekTo(11);
+  for (let i = 0; i < 60 && deck.current; i++) await sleep(100);
+  check('The end of the tape goes back to the radio', deck.current === null && audio.src.includes('radio.ogg'), deck.current?.id);
+  check('...and says so', msg() === 'END OF TAPE', msg());
+  check('A finished show is not offered for resume', !JSON.parse(w.localStorage.getItem('lsd.tapes.resume') || '[]').some((e) => e.id === 'fixture-two'));
+
+  // --- Resume (the fixture is too short for a real saved position: positions within 30 s of an end are not kept) ---
+  w.localStorage.setItem('lsd.tapes.resume', JSON.stringify([{ id: 'fixture-one', t: 5 }]));
+  key('t');
+  box.value = ''; box.dispatchEvent(new w.Event('input', { bubbles: true }));
+  const resumeRow = page.querySelector('.tp-row');
+  check('RESUME offers the show last played, with its place', resumeRow.textContent.includes('RESUME') && resumeRow.textContent.includes('Fixture') && resumeRow.textContent.includes('0:05'), resumeRow.textContent);
+  key('Enter');
+  await sleep(1200);
+  check('RESUME picks up where it stopped', deck.current?.id === 'fixture-one' && audio.currentTime >= 5 && audio.currentTime < 9, audio.currentTime);
+  check('...and says so', msg().startsWith('RESUMING AT') || msg() === 'END OF TAPE', msg());
+  deck.eject();
+
+  // --- Help ---
+  key('?');
+  check('The ? page lists the tape keys', d.getElementById('keys').textContent.includes('TAPES: THE ARCHIVE'));
+  key('x');
+  check('No page errors', errors.length === 0, errors.join(' | '));
+  await post({ results });
+} catch (err) {
+  await post({ fatal: String(err && err.stack || err), results });
+}
+</script>

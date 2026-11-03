@@ -91,6 +91,9 @@
             <div class="sc-list" role="list"></div>
             <div class="sc-hint">ANY KEY OR CLICK TO CLOSE</div>
           </div>
+          <!-- TAPES: the Spaz Radio archive (tapedeck.js fills these in) -->
+          <div id="tapes" title="" hidden></div>
+          <div id="tape-strip" title=""></div>
           <!-- ? : every keyboard shortcut -->
           <div id="keys" title="" hidden>
             <div class="ky-name">KEYBOARD</div>
@@ -108,9 +111,13 @@
               <dt>- =</dt><dd>REACTION TO THE MUSIC</dd>
               <dt>I</dt><dd>INFO ON / OFF</dd>
               <dt>S</dt><dd>FULLSCREEN (ESC LEAVES)</dd>
-              <dt>A</dt><dd>INPUT: RADIO / MICROPHONE</dd>
+              <dt>A</dt><dd>INPUT: RADIO OR TAPE / MICROPHONE</dd>
               <dt>M</dt><dd>MENU</dd>
               <dt>G</dt><dd>SCHEDULE</dd>
+              <dt class="ky-chat">T</dt><dd class="ky-chat">TAPES: THE ARCHIVE</dd>
+              <dt class="ky-chat">K</dt><dd class="ky-chat">TAPE: PAUSE / PLAY</dd>
+              <dt class="ky-chat">, . &middot; &lt; &gt;</dt><dd class="ky-chat">TAPE: 30 SECONDS &middot; 5 MINUTES</dd>
+              <dt class="ky-chat">L</dt><dd class="ky-chat">EJECT: BACK TO LIVE RADIO</dd>
               <dt class="ky-chat">C</dt><dd class="ky-chat">CHAT</dd>
               <dt>?</dt><dd>THIS LIST</dd>
             </dl>
@@ -197,6 +204,16 @@
 
         <!-- The toggles, grouped on the right; each one's light is on while it is -->
         <div id="toggle-group">
+
+          <!-- The archive, and the way back from it -->
+          <div class="control-group kiosk-off">
+            <button id="tapesBtn" class="push-btn" title="Tapes: play shows from the Spaz Radio archive; the picture follows them (T)" aria-label="Tapes" aria-pressed="false"><span class="btn-led"></span></button>
+            <span class="control-label">TAPES</span>
+          </div>
+          <div class="control-group kiosk-off">
+            <button id="liveBtn" class="push-btn" title="Back to the live radio (L). Lit while a tape is in; it pulses when a live show is on" aria-label="Back to live radio" aria-pressed="false"><span class="btn-led"></span></button>
+            <span class="control-label">LIVE</span>
+          </div>
 
           <!-- Service menu (ui.js builds the rows) -->
           <div class="control-group">
