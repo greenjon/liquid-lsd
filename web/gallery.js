@@ -8,8 +8,11 @@
 // steady zoom and turn around a point off the photo's middle; the newest photo on top; the photo keeps its
 // shape. Only a few photos are held at a time (the old page kept all of them, 500 MB and more).
 //
-// Images come from gallery.json (scripts/gen_gallery_manifest.py). spaz.org sends Access-Control-Allow-Origin: *,
-// so the pixels can go to WebGL from any page (spaz.org/tv, localhost, the Android app's WebView).
+// Images come from gallery.json, built by scripts/gallery_curate.py (not in git; publish_web_tv.sh uploads it).
+//
+// Curating (?gallery=curate, served by `scripts/gallery_curate.py preview`): the photos left in gallery-curate/,
+// one at a time in name order with the name on screen, the list re-read every 10 s (so deleting in a file manager
+// works too). Delete / Backspace rejects the photo on top, U puts the last reject back, . brings the next one in.
 
 const VERT = `#version 300 es
 precision highp float;
@@ -67,6 +70,13 @@ export class Gallery {
     this.clock = 0;          // smooth beat clock (dt * bpm / 60): drives motion, never jumps
     this.nextSpawn = 0;      // clock value from which the next photo may come in
     this.lastBeats = null;
+    this.curate = typeof location !== 'undefined' && new URLSearchParams(location.search).get('gallery') === 'curate';
+    if (this.curate) {
+      this.manifestUrl = 'curate/list.json';
+      this.names = [];         // what is left in gallery-curate/, sorted
+      this.seen = new Set();   // names fetched this pass
+      this.fetching = new Set();
+    }
   }
 
   /** Starts fetching the manifest and photos; called the first time a gallery deck is drawn. */
@@ -86,6 +96,7 @@ export class Gallery {
     this.prog = prog;
     this.loc = Object.fromEntries(['uHalf', 'uPivotUV', 'uPivotPos', 'uAngle', 'uAspect', 'uTex', 'uAlpha']
       .map((n) => [n, gl.getUniformLocation(prog, n)]));
+    if (this.curate) { this.startCurate(); return; }
     fetch(this.manifestUrl).then((r) => r.json()).then((m) => {
       this.urls = m.images.map((n) => m.base + encodeURIComponent(n));
       for (let i = this.urls.length - 1; i > 0; i--) {
@@ -103,11 +114,24 @@ export class Gallery {
 
   /** Fetches and decodes the next photo, scaled down, onto a canvas for upload. */
   fetchNext() {
-    if (this.urls.length === 0) return;
+    let url, name = null;
+    if (this.curate) {
+      name = this.names.find((n) => !this.seen.has(n) && !this.fetching.has(n));
+      if (name === undefined) {                     // a full pass: start over
+        if (this.names.length && this.names.every((n) => this.seen.has(n))) this.seen.clear();
+        return;
+      }
+      this.seen.add(name);
+      this.fetching.add(name);
+      url = 'curate/' + encodeURIComponent(name);
+    } else {
+      if (this.urls.length === 0) return;
+      url = this.urls[this.next];
+      this.next = (this.next + 1) % this.urls.length;
+    }
     this.inflight++;
     this.lastFetch = performance.now();
-    const url = this.urls[this.next];
-    this.next = (this.next + 1) % this.urls.length;
+    const done = () => { this.inflight--; if (name !== null) this.fetching.delete(name); };
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.decoding = 'async';
@@ -117,12 +141,13 @@ export class Gallery {
       c.width = Math.max(1, Math.round(img.naturalWidth * k));
       c.height = Math.max(1, Math.round(img.naturalHeight * k));
       c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      c.photoName = name;
       this.decoded.push(c);
-      this.inflight--;
+      done();
       this.failures = 0;
       this.fill();
     };
-    img.onerror = () => { this.inflight--; this.failures++; console.warn('[gallery] could not load', url); this.fill(); };
+    img.onerror = () => { done(); this.failures++; console.warn('[gallery] could not load', url); this.fill(); };
     img.src = url;
   }
 
@@ -153,6 +178,7 @@ export class Gallery {
     slot.aspect = c.width / c.height;
     slot.shown = 0;
     slot.fresh = true;
+    slot.name = c.photoName;
   }
 
   /** A photo for a new layer: a fresh one first, else the least shown that is not already on screen. */
@@ -161,7 +187,7 @@ export class Gallery {
     const free = this.pool.filter((p) => !onScreen.has(p));
     if (free.length === 0) return null;
     const fresh = free.find((p) => p.fresh);
-    if (fresh) return fresh;
+    if (fresh || this.curate) return fresh ?? null;   // curating: each photo once, in order
     const least = Math.min(...free.map((p) => p.shown));
     const pick = free.filter((p) => p.shown === least);
     return pick[Math.floor(Math.random() * pick.length)];
@@ -178,15 +204,15 @@ export class Gallery {
     }
     // Cover the screen at the start, then grow: the turn and the off-centre pivot sweep the photo across.
     const cover = Math.max(1, aspect / photo.aspect);
-    const fadeIn = rand(6, 16);
-    const life = rand(24, 48);
+    const fadeIn = this.curate ? 2 : rand(6, 16);
+    const life = this.curate ? 6 : rand(24, 48);
     const turn = (calm ? 0.4 : 1) * rand(1.5, 4) * (Math.random() < 0.5 ? -1 : 1) * Math.PI / 180; // radians per beat
     this.layers.push({
       photo,
       born: this.clock,
       fadeIn,
       outAt: this.clock + fadeIn + life,
-      fadeOut: rand(6, 16),
+      fadeOut: this.curate ? 3 : rand(6, 16),
       scale0: cover * rand(1.15, 1.5),
       grow: rand(0.006, 0.014) * (calm ? 0.5 : 1),          // log-scale growth per beat
       angle0: rand(-Math.PI, Math.PI),
@@ -214,9 +240,10 @@ export class Gallery {
     const due = this.clock >= this.nextSpawn && (onBeat || this.clock >= this.nextSpawn + 1);
     if (this.pool.length > 0 && (visible === 0 || due)) {
       this.spawn(aspect, calm);
-      this.nextSpawn = this.clock + rand(2, 8) * (calm ? 2 : 1) - 0.5;
+      this.nextSpawn = this.clock + (this.curate ? 4 : rand(2, 8) * (calm ? 2 : 1)) - 0.5;
     }
     this.layers = this.layers.filter((l) => this.clock < l.outAt + l.fadeOut);
+    if (this.curate) this.tickCurate();
 
     target.bind();
     gl.clearColor(0, 0, 0, 0);
@@ -244,5 +271,76 @@ export class Gallery {
     }
     gl.disable(gl.BLEND);
     gl.bindTexture(gl.TEXTURE_2D, null);
+  }
+
+  // ---------------------------------------------------------------- curating (?gallery=curate)
+  startCurate() {
+    const refresh = () => fetch('curate/list.json', { cache: 'no-store' }).then((r) => r.json()).then((m) => {
+      this.names = m.images;
+      const left = new Set(this.names);
+      for (const n of [...this.seen]) if (!left.has(n)) this.seen.delete(n);
+      this.fill();
+    }).catch((e) => console.warn('[gallery] curate list:', e.message));
+    refresh();
+    setInterval(refresh, 10000);
+    const el = document.createElement('div');
+    el.style.cssText = 'position:fixed;left:50%;top:max(8px, env(safe-area-inset-top));transform:translateX(-50%);z-index:9999;'
+      + 'background:rgba(0,0,0,.75);color:#ffe066;font:14px/1.4 monospace;padding:6px 12px;border-radius:6px;'
+      + 'max-width:calc(100vw - 32px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none';
+    document.body.appendChild(el);
+    this.overlay = el;
+    this.flashText = null;
+    this.flashUntil = 0;
+    window.addEventListener('keydown', (e) => {
+      if (e.target.closest?.('input, textarea')) return;
+      if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); this.reject(); }
+      else if (e.key === 'u' || e.key === 'U') { e.preventDefault(); this.undo(); }
+      else if (e.key === '.') { e.preventDefault(); this.nextSpawn = this.clock - 1; }
+    }, true);
+  }
+
+  /** The photo on top: the newest layer still on screen. */
+  current() {
+    for (let i = this.layers.length - 1; i >= 0; i--) if (this.layers[i].outAt > this.clock) return this.layers[i];
+    return null;
+  }
+
+  flash(text) { this.flashText = text; this.flashUntil = performance.now() + 2500; }
+
+  reject() {
+    const l = this.current();
+    const name = l?.photo.name;
+    if (!name) return;
+    l.outAt = this.clock;
+    l.fadeOut = 0.5;
+    this.nextSpawn = this.clock;
+    fetch('curate/reject', { method: 'POST', body: JSON.stringify({ name }) }).then((r) => r.json()).then((r) => {
+      if (!r.ok) return this.flash(`could not reject ${name}`);
+      this.names = this.names.filter((n) => n !== name);
+      l.photo.name = null;
+      this.flash(`REJECTED ${name}  \u00B7  U puts it back`);
+    }).catch(() => this.flash('reject failed: is gallery_curate.py preview running?'));
+  }
+
+  undo() {
+    fetch('curate/undo', { method: 'POST' }).then((r) => r.json()).then((r) => {
+      if (!r.ok) return this.flash('nothing to put back');
+      if (!this.names.includes(r.name)) this.names = [...this.names, r.name].sort();
+      this.seen.delete(r.name);
+      this.flash(`PUT BACK ${r.name}: it comes up next`);
+      this.fill();
+    }).catch(() => this.flash('undo failed'));
+  }
+
+  tickCurate() {
+    // Keep a few unseen photos ready, so the next one is always there on time.
+    const ready = this.pool.filter((p) => p.fresh).length + this.decoded.length + this.inflight;
+    if (ready < 3 && this.inflight < 2) this.fetchNext();
+    if (!this.overlay) return;
+    const done = this.names.filter((n) => this.seen.has(n)).length;
+    const cur = this.current()?.photo.name;
+    const text = performance.now() < this.flashUntil ? this.flashText
+      : `CURATE ${done}/${this.names.length}  \u00B7  ${cur ?? '...'}  \u00B7  DEL reject  U undo  . next`;
+    if (this.overlay.textContent !== text) this.overlay.textContent = text;
   }
 }

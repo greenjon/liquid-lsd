@@ -71,3 +71,8 @@ tours/out/
 tours/draft/
 tours/web-cache/
 .claude/
+
+# Web TV gallery: curating folder and the built photos (scripts/gallery_curate.py), uploaded by publish_web_tv.sh
+/gallery-curate/
+/web/gallery/
+/web/gallery.json

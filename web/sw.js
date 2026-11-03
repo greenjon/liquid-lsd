@@ -29,6 +29,8 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== self.location.origin) return;
+  // The gallery's photos (gallery.js) and the curating preview's are left to the browser: the cache would fill up.
+  if (/\/(gallery|curate)\//.test(url.pathname)) return;
   // spaz.org sends no Cache-Control (and ignores .htaccess), so browsers guess a lifetime from Last-Modified and
   // a reload after a publish could pair the new index.html with an old ui.js. Every file is checked with the
   // server instead (a cheap 304 when unchanged). A navigation can't take a cache mode; reloads revalidate it anyway.

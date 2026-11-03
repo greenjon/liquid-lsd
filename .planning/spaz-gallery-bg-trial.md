@@ -15,7 +15,7 @@ first line of `default_bg.lsdplay`, BG CHANGES defaults to HOLD; the `?bg=galler
 
 ## The trial
 
-- `scripts/gen_gallery_manifest.py` -> `web/gallery.json`: the 200 oldest uploads by Last-Modified (2013-05 .. 2017-03),
+- (first version, now deleted: gen_gallery_manifest.py) `web/gallery.json`: the 200 oldest uploads by Last-Modified (2013-05 .. 2017-03),
   none over 1.5 MB (162 of the 748 are bigger originals). User call: early uploads were more curated.
 - `web/gallery.js`: source type `gallery`, drawn like `mandala` (outside the ISF graph) then the deck's FX chain.
   Smooth version: a new photo every 2-8 beats on the beat, fades 6-16 beats, slow zoom (log growth) and turn around
@@ -31,7 +31,10 @@ first line of `default_bg.lsdplay`, BG CHANGES defaults to HOLD; the `?bg=galler
 ## Open
 
 - "Jerkier" (old snap-back turn, square stretch, faster swaps) only if asked.
-- User will hand-curate the 700+ uploads to 100-300 favourites: then gallery.json becomes that list (hand-edited
-  or a curated-list input to gen_gallery_manifest.py), not the oldest 200.
+- Curating (2026-11-03): `scripts/gallery_curate.py download | preview | build`; gallery-curate/, web/gallery/ and
+  web/gallery.json are out of git, publish uploads them. User curates in the preview (?gallery=curate), then build +
+  publish. The live gallery.json (200 oldest, absolute spaz.org/images/ground base) is now untracked in the working tree.
+- The Android app will need the photos reachable (base is relative `gallery/` after build: the bundled WebView would
+  need an absolute https://spaz.org/tv/gallery/ base, and CORS from spaz.org/tv) when the app syncs.
 - Android data use (~1 photo per 20 s, median 130 kB); a live endpoint on spaz.org for new uploads.
 - Music reaction (beat zoom bump, energy -> turn speed, drop -> cut to a new photo) is a possible step 2.

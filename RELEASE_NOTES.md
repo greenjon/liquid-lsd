@@ -1,8 +1,9 @@
 ## [Unreleased]
 
-### Web TV: The Spaz Radio Photo Gallery Is the Background (`web/gallery.js`, `web/gallery.json`, `web/presets/spaz-gallery.lsd`, `web/playlists/default_bg.lsdplay`, `web/renderer.js`, `web/autopilot.js`, `web/ui.js`, `scripts/gen_gallery_manifest.py`)
+### Web TV: The Spaz Radio Photo Gallery Is the Background (`web/gallery.js`, `web/gallery.json`, `web/presets/spaz-gallery.lsd`, `web/playlists/default_bg.lsdplay`, `web/renderer.js`, `web/autopilot.js`, `web/ui.js`, `scripts/gallery_curate.py`)
 - **The TV's background is now the listener photo gallery from the old Spaz Radio page** (spaz.org/radio, the photos added with "Add Pic"), drawn the way that page drew them behind the player, only smoother: a new photo comes in on the beat every few beats and fades in over several more, then turns and grows slowly around a point off its middle, so it swings across the screen as the next one comes in on top. Photos keep their shape. The background's effects still apply on top of it.
-- For now it plays the 200 earliest uploads (2013 to 2017). Only a few photos are held at a time, and a new one is fetched about every 20 seconds.
+- For now it plays the 200 earliest uploads (2013 to 2017), until a hand-picked set replaces them. Only a few photos are held at a time, and a new one is fetched about every 20 seconds.
+- **Curating the photos** (for whoever runs the TV): `scripts/gallery_curate.py download` copies every upload into `gallery-curate/` (kept out of git), `preview` plays them one by one on the real TV at `localhost:8000/?gallery=curate` with each name on screen (`Delete` rejects the photo on top, `U` puts it back, `.` brings the next one in), and `build` turns what is left into small copies in `web/gallery/` that the usual publish uploads to spaz.org/tv.
 - **MENU › BG CHANGES now starts on *Hold***, so the gallery stays. `B` and MENU › **BACKGROUND** still step to the other backgrounds (and back to the gallery), and *With scenes* brings back a new background every two scenes. RESET goes back to *Hold*.
 - The Spaz Radio app needs an update to show the gallery: the content it downloads now asks for engine 3, so the app's current release keeps its own backgrounds until then.
 - The TV's version is now v14.
