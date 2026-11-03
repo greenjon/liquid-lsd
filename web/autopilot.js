@@ -1056,12 +1056,15 @@ export async function startAutopilot() {
   } else {
     bgPlaylist = await loadPlaylistFile(autopilotSettings.bgPlaylist);
     await loadPresetTags();
-    fgPlaylistIdx = 0;
-    autopilotState.deckA = await buildDeck(fgPlaylist[0]);
-    autopilotState.deckB = await buildDeck(fgPlaylist[0]);
+    // A random playable channel to start on, so every visit doesn't open on the same scene.
+    const starts = fgPlaylist.flatMap((line, i) => (playable(line) ? [i] : []));
+    fgPlaylistIdx = starts.length ? starts[Math.floor(Math.random() * starts.length)] : 0;
+    const first = fgPlaylist[fgPlaylistIdx];
+    autopilotState.deckA = await buildDeck(first);
+    autopilotState.deckB = await buildDeck(first);
     autopilotState.mixer.balance = 0.0;
     fgActiveDeck = 'A';
-    fgHistory.push({ line: fgPlaylist[0], deck: autopilotState.deckA, transition: {} });
+    fgHistory.push({ line: first, deck: autopilotState.deckA, transition: {} });
     fgSwitchAt = nextSwitchBeat(lastBeats, autopilotSettings.fgHoldBars, autopilotSettings.fgFadeBeats);
     announce();
   }
