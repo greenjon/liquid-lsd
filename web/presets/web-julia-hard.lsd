@@ -24,9 +24,9 @@
     },
     "JuliaRadius": {
       "baseValue": 0.6,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.45,
+      "baseMax": 0.75,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "audio_flux_bass",
@@ -41,9 +41,9 @@
     },
     "TrapGlow": {
       "baseValue": 0.4,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.25,
+      "baseMax": 0.4,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "audio_flux_bass",
@@ -85,8 +85,8 @@
     "HueOffset": {
       "baseValue": 0.0,
       "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMax": 0.3,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -103,9 +103,9 @@
     },
     "Brightness": {
       "baseValue": 0.4,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.25,
+      "baseMax": 0.4,
+      "randomizeBase": true,
       "modulators": []
     }
   },

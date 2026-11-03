@@ -99,6 +99,10 @@
               <dt>R</dt><dd>RANDOM CHANNEL</dd>
               <dt>&uarr; &darr;</dt><dd>VOLUME</dd>
               <dt>F</dt><dd>NEXT FX</dd>
+              <dt>D</dt><dd>ROLL: A NEW VARIATION OF THIS SCENE</dd>
+              <dt>B</dt><dd>NEXT BACKGROUND</dd>
+              <dt>0 &ndash; 9</dt><dd>TUNE TO A CHANNEL BY NUMBER</dd>
+              <dt>X</dt><dd>SKIP THIS CHANNEL / RESTORE IT</dd>
               <dt>H &middot; SPACE</dt><dd>HOLD THIS SCENE</dd>
               <dt>[ ]</dt><dd>SCENE LENGTH</dd>
               <dt>- =</dt><dd>REACTION TO THE MUSIC</dd>
@@ -111,6 +115,12 @@
               <dt>?</dt><dd>THIS LIST</dd>
             </dl>
             <div class="sc-hint">ANY KEY OR CLICK TO CLOSE</div>
+          </div>
+          <!-- MENU › SKIPPED: the skipped channels; click one to tune to it (X there restores it) -->
+          <div id="skipped" title="" hidden>
+            <div class="ky-name">SKIPPED CHANNELS</div>
+            <div class="sk-list" role="list"></div>
+            <div class="sc-hint">CLICK A CHANNEL TO WATCH IT &middot; X THERE RESTORES IT &middot; ESC CLOSES</div>
           </div>
           <!-- Overlay shown when TV is off; hidden by .powered-on class -->
           <div id="screen-off-overlay"></div>
@@ -157,6 +167,12 @@
           <span class="control-label">FX</span>
         </div>
 
+        <!-- ROLL: a new variation of the scene on air (its random settings roll again) -->
+        <div class="control-group">
+          <button id="rollBtn" class="push-btn" title="Roll: a new variation of this scene, gliding in on the next bar (D). Auto roll: MENU" aria-label="Roll a new variation of this scene"></button>
+          <span class="control-label">ROLL</span>
+        </div>
+
         <!-- Hold the current scene -->
         <div class="control-group">
           <button id="holdBtn" class="push-btn latch" title="Hold this scene (H or Space)" aria-label="Hold this scene" aria-pressed="false"><span class="btn-led"></span></button>
@@ -182,9 +198,9 @@
         <!-- The toggles, grouped on the right; each one's light is on while it is -->
         <div id="toggle-group">
 
-          <!-- Service menu: SYNC, REACT, TIME, Reduced motion, Heavy scenes, Schedule, About -->
+          <!-- Service menu (ui.js builds the rows) -->
           <div class="control-group">
-            <button id="menuBtn" class="push-btn" title="Menu: sync, reaction, scene length, input, fullscreen, reduced motion, heavy scenes (M)" aria-label="Menu" aria-pressed="false"><span class="btn-led"></span></button>
+            <button id="menuBtn" class="push-btn" title="Menu: sync, reaction, scene length, auto roll, background, effects, skipped channels, input, fullscreen, reduced motion, heavy scenes (M)" aria-label="Menu" aria-pressed="false"><span class="btn-led"></span></button>
             <span class="control-label">MENU</span>
           </div>
 

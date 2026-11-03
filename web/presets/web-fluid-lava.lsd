@@ -5,9 +5,9 @@
   "parameters": {
     "WarpStrength": {
       "baseValue": 0.6,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.45,
+      "baseMax": 0.75,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "audio_bass",
@@ -22,9 +22,9 @@
     },
     "Swirl": {
       "baseValue": -0.4,
-      "baseMin": -1.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": -0.6,
+      "baseMax": -0.2,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -41,16 +41,16 @@
     },
     "Viscosity": {
       "baseValue": 0.7,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.55,
+      "baseMax": 0.85,
+      "randomizeBase": true,
       "modulators": []
     },
     "Speed": {
       "baseValue": 0.08,
-      "baseMin": -1.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.04,
+      "baseMax": 0.12,
+      "randomizeBase": true,
       "modulators": []
     },
     "Detail": {
@@ -62,9 +62,9 @@
     },
     "Gloss": {
       "baseValue": 0.1,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.05,
+      "baseMax": 0.15,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -98,8 +98,8 @@
     "HueOffset": {
       "baseValue": 0.0,
       "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMax": 0.3,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -116,9 +116,9 @@
     },
     "HueCycleSpeed": {
       "baseValue": 0.05,
-      "baseMin": -1.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.025,
+      "baseMax": 0.65,
+      "randomizeBase": true,
       "modulators": []
     },
     "Zoom": {

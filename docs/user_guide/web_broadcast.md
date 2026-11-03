@@ -76,13 +76,17 @@ The standalone browser client (`web/index.html`) presents the visualizer in a re
 | **CH ▲ / ▼** | The next / previous channel, now (a channel you've seen keeps the FX chain it had; the autopilot itself still picks channels at random) | `→` `N` / `←` `P`; swipe left / right on the picture |
 | *(random channel)* | A channel picked at random, now | `R` |
 | **FX** | Puts the next FX chain on the scene on air | `F` |
+| **ROLL** | A new variation of the scene on air: its settings and its effects' roll new values, gliding in to land on the next bar line | `D` |
+| *(background)* | The next background, now (MENU › BACKGROUND steps either way) | `B` |
+| *(tune by number)* | Type a channel's digits, like a remote: three digits tune at once, fewer after a short pause | `0`-`9` |
+| *(channel skip)* | Skips the channel on air and moves on; `X` again within 5 s undoes it; `X` on a skipped channel restores it | `X` |
 | **HOLD** | Keeps the current scene until you press it again (the background keeps changing); its light is on while it holds | `H` or `Space`; long-press the picture |
 | **TIME** | How long each scene holds: 8, 16, 32 or 64 bars (drag, scroll or click) | `[` `]` |
 | **REACT** | How strongly the picture reacts to the music, 25-200%, 100% to start (double-click for 100%). The TV levels quiet and loud shows itself, so this is about taste, not volume | `-` `=` |
 
 Press `?` to list every key on the screen (any key or a click closes the list). MENU, SCHEDULE, INFO and CHAT sit together on the right and light up while they're on, like HOLD. With the menu open, `?`, `I` and `G` still work (they close it first), and `C` opens or closes the chat.
 
-Click or tap the picture to show the channel, the scene, its FX chain, the track playing on the radio and the next show on Spaz Radio for a few seconds. **INFO** (or `I`) keeps them on screen, updating as they change, until you turn it off; the TV remembers it. TIME, REACT and INFO are remembered in the browser. The badge on the right shows the channel on air (`SPAZ RADIO • CH.042`), or LIVE during a live broadcast.
+Click or tap the picture to show the channel, the scene, its FX chain, the track playing on the radio and the next show on Spaz Radio for a few seconds. **INFO** (or `I`) keeps them on screen, updating as they change, until you turn it off; the TV remembers it. TIME, REACT, INFO, the MENU settings and your skipped channels are remembered in the browser. The badge on the right shows the channel on air (`SPAZ RADIO • CH.042`), or LIVE during a live broadcast.
 
 **No signal:** if the radio stream drops or goes quiet, the screen shows snow and NO SIGNAL, and the TV reconnects by itself.
 
@@ -96,7 +100,15 @@ Click or tap the picture to show the channel, the scene, its FX chain, the track
 
 **Kiosk mode:** `index.html?kiosk` shows only the picture (no TV body), turns itself on and hides the mouse pointer; use the keyboard or swipes. Browsers that refuse to start sound on their own get a "click or press a key for sound" prompt.
 
-**MENU:** the MENU button or `M` opens the service menu (arrows or clicks to change, Esc or M to close): **SYNC** (how late the sound reaches you, for Bluetooth and other delayed speakers), **Announce scenes** (name each new scene on screen; off by default), **REACT**, **TIME**, **Reduced motion** (Auto follows your system setting), **Big GPU scenes** (Auto lets the GPU check decide), **Input** (radio or microphone), **Fullscreen**, **CHAT**, **SCHEDULE** and **ABOUT**. The selected row explains itself at the bottom of the menu (and on mouse hover). Settings are remembered in this browser. REACT, TIME and Heavy scenes are locked during a live broadcast.
+**MENU:** the MENU button or `M` opens the service menu (arrows or clicks to change, Esc or M to close): **SYNC** (how late the sound reaches you, for Bluetooth and other delayed speakers), **Announce scenes** (name each new scene on screen; off by default), **REACT**, **TIME**, **Auto roll**, **Background**, **BG changes**, **Effects**, **Follow music**, **Skip this channel**, **Skipped**, **Reduced motion** (Auto follows your system setting), **Big GPU scenes** (Auto lets the GPU check decide), **Input** (radio or microphone), **Fullscreen**, **CHAT**, **SCHEDULE** and **ABOUT**. The selected row explains itself at the bottom of the menu (and on mouse hover). Settings are remembered in this browser. REACT, TIME, Auto roll, the background, effects and follow-music rows, Input and Heavy scenes are locked during a live broadcast. RESET puts every setting back but leaves skipped channels skipped.
+
+**Variations:** no scene looks exactly the same twice. Each one's settings roll within a narrow span around the values it was tuned with whenever it comes on, and again on **ROLL** (`D`). Settings that come in steps (a colour mode, a number of petals, Mandala's shape) change on the bar line; the rest glide over it. MENU › **Auto roll** rolls the scene on air every 4, 8 or 16 bars, which goes well with HOLD.
+
+**Background:** the background plays behind the scene and shows wherever the scene is dark or see-through. `B` or MENU › **Background** changes it now. MENU › **BG changes**: *With scenes* (a new one every two scenes, the default), *Hold* (stays until you change it) or *Off* (no background).
+
+**Effects and following the music:** MENU › **Effects** *Off* plays the scenes and backgrounds without FX chains (the info panel says `FX: OFF`). MENU › **Follow music** *Off* stops the calm scene for a breakdown, the hard cut on the drop and the tempo-weighted picks.
+
+**Channel skip:** don't like a channel? `X` skips it (or MENU › **Skip this channel** on a touch screen). It keeps its number but never comes up by itself again: not from the autopilot, `R`, CH up or down. MENU › **Skipped** lists the channels you skipped; pick one to watch it, and `X` there brings it back into the rotation. At least 8 channels always stay.
 
 **SCHEDULE:** the SCHEDULE button, `G`, or MENU › **SCHEDULE** lays Spaz Radio's upcoming shows over the picture, grouped by day (Today, Tomorrow, then the date), in your own time zone (shown at the top). The show playing now is marked ON AIR. Any key or a click closes it. It works during a live broadcast too. When the track name comes up on screen, the next show comes up under it (`NEXT: <show> · <time>`). If the station's schedule can't be reached, the page says so and the TV keeps the last copy it had.
 

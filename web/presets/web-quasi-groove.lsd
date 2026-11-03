@@ -38,9 +38,9 @@
     },
     "Frequency": {
       "baseValue": 0.35,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.2,
+      "baseMax": 0.5,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "audio_bass",
@@ -55,9 +55,9 @@
     },
     "Bands": {
       "baseValue": 0.4,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.25,
+      "baseMax": 0.55,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -74,16 +74,16 @@
     },
     "Sharpness": {
       "baseValue": 0.6,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.45,
+      "baseMax": 0.75,
+      "randomizeBase": true,
       "modulators": []
     },
     "Rotation": {
       "baseValue": 0.0,
-      "baseMin": -1.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": -0.3,
+      "baseMax": 0.3,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -100,23 +100,23 @@
     },
     "SpinSpeed": {
       "baseValue": 0.1,
-      "baseMin": -1.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.05,
+      "baseMax": 0.15,
+      "randomizeBase": true,
       "modulators": []
     },
     "DriftSpeed": {
       "baseValue": 0.25,
-      "baseMin": -1.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.125,
+      "baseMax": 0.375,
+      "randomizeBase": true,
       "modulators": []
     },
     "HueOffset": {
       "baseValue": 0.0,
       "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMax": 0.3,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -133,16 +133,16 @@
     },
     "Saturation": {
       "baseValue": 0.85,
-      "baseMin": 0.0,
+      "baseMin": 0.7,
       "baseMax": 1.0,
-      "randomizeBase": false,
+      "randomizeBase": true,
       "modulators": []
     },
     "Brightness": {
       "baseValue": 0.5,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.35,
+      "baseMax": 0.5,
+      "randomizeBase": true,
       "modulators": []
     }
   },

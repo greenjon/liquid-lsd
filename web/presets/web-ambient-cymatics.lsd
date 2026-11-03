@@ -5,9 +5,9 @@
   "parameters": {
     "FrequencyM": {
       "baseValue": 4,
-      "baseMin": 1.0,
-      "baseMax": 16.0,
-      "randomizeBase": false,
+      "baseMin": 2.5,
+      "baseMax": 5.5,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -24,9 +24,9 @@
     },
     "FrequencyN": {
       "baseValue": 6,
-      "baseMin": 1.0,
-      "baseMax": 16.0,
-      "randomizeBase": false,
+      "baseMin": 3.75,
+      "baseMax": 8.25,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -43,9 +43,9 @@
     },
     "FrequencyL": {
       "baseValue": 3,
-      "baseMin": 0.0,
-      "baseMax": 12.0,
-      "randomizeBase": false,
+      "baseMin": 1.5,
+      "baseMax": 4.5,
+      "randomizeBase": true,
       "modulators": []
     },
     "PlateShape": {
@@ -69,23 +69,23 @@
     },
     "NodeSharpness": {
       "baseValue": 0.2,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.1,
+      "baseMax": 0.3,
+      "randomizeBase": true,
       "modulators": []
     },
     "SandAccumulation": {
       "baseValue": 0.6,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.45,
+      "baseMax": 0.75,
+      "randomizeBase": true,
       "modulators": []
     },
     "VibrationSpeed": {
       "baseValue": 0.08,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.04,
+      "baseMax": 0.12,
+      "randomizeBase": true,
       "modulators": []
     },
     "InvertMode": {
@@ -97,9 +97,9 @@
     },
     "Glow": {
       "baseValue": 0.35,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.2,
+      "baseMax": 0.35,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "audio_amp",
@@ -122,8 +122,8 @@
     "HueOffset": {
       "baseValue": 0.0,
       "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMax": 0.3,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -140,9 +140,9 @@
     },
     "Scale": {
       "baseValue": 0.5,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.35,
+      "baseMax": 0.65,
+      "randomizeBase": true,
       "modulators": []
     }
   },

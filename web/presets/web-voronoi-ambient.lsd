@@ -26,16 +26,16 @@
     },
     "CellScale": {
       "baseValue": 0.25,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.125,
+      "baseMax": 0.375,
+      "randomizeBase": true,
       "modulators": []
     },
     "Jitter": {
       "baseValue": 0.7,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.55,
+      "baseMax": 0.85,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -52,23 +52,23 @@
     },
     "Speed": {
       "baseValue": 0.1,
-      "baseMin": -1.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.05,
+      "baseMax": 0.15,
+      "randomizeBase": true,
       "modulators": []
     },
     "EdgeWidth": {
       "baseValue": 0.3,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.15,
+      "baseMax": 0.45,
+      "randomizeBase": true,
       "modulators": []
     },
     "EdgeGlow": {
       "baseValue": 0.3,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.15,
+      "baseMax": 0.3,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "audio_amp",
@@ -84,8 +84,8 @@
     "HueOffset": {
       "baseValue": 0.0,
       "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMax": 0.3,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -102,16 +102,16 @@
     },
     "Saturation": {
       "baseValue": 0.55,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.4,
+      "baseMax": 0.7,
+      "randomizeBase": true,
       "modulators": []
     },
     "Brightness": {
       "baseValue": 0.5,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.35,
+      "baseMax": 0.5,
+      "randomizeBase": true,
       "modulators": []
     }
   },

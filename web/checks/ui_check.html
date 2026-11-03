@@ -21,6 +21,9 @@ try {
   w.addEventListener('error', (e) => errors.push(e.message));
   const key = (k) => w.dispatchEvent(new w.KeyboardEvent('keydown', { key: k, bubbles: true }));
   const onAir = () => (st.mixer.balance > 0.5 ? st.deckB : st.deckA);
+  // Menu rows by label (the menu must be open), so adding a row doesn't move every check.
+  const row = (label) => [...d.querySelectorAll('#tv-menu .menu-label')].findIndex((e) => e.textContent === label);
+  const downTo = (label) => { const n = row(label); for (let i = 0; i < n; i++) key('ArrowDown'); return n; };
   const osd = (id) => ({ text: d.getElementById(id).textContent, shown: d.getElementById(id).classList.contains('show') });
 
   // The whole TV is a power target: a click on the screen of a TV that is off turns it on.
@@ -108,6 +111,41 @@ try {
   key('r');
   await sleep(3000);
   check('R tunes a random other channel', onAir() !== beforeRandom);
+  // ROLL, B, EFFECTS, channel skip and tuning by number.
+  const pad = (n) => String(n).padStart(3, '0');
+  const chNow = () => Number(/CH\.(\d+)/.exec(d.querySelector('#station-badge .station-text').textContent)?.[1]);
+  d.getElementById('rollBtn').click();
+  check('ROLL rolls the scene on air', osd('osd-msg').text === 'ROLL', osd('osd-msg').text);
+  const bg0 = st.deckBG;
+  key('b'); await sleep(2500);
+  check('B changes the background', st.deckBG && st.deckBG !== bg0);
+  key('m'); downTo('EFFECTS'); key('ArrowRight'); key('Escape');
+  check('MENU › EFFECTS OFF takes the FX off the scene', w.LSD.viewerState.effects === false && !onAir().fx.some(Boolean));
+  key('f'); await sleep(100);
+  check('F with effects off says so', osd('osd-msg').text.startsWith('EFFECTS OFF'), osd('osd-msg').text);
+  key('m'); downTo('EFFECTS'); key('ArrowRight'); key('Escape'); await sleep(500);
+  check('EFFECTS back to AUTO puts a chain back', w.LSD.viewerState.effects === true && onAir().fx.some(Boolean));
+  const skipCh = chNow();
+  key('x'); await sleep(2800);
+  check('X skips the channel and changes on', chNow() !== skipCh && /SKIPPED/.test(osd('osd-msg').text), `${skipCh} -> ${chNow()} ${osd('osd-msg').text}`);
+  key('x'); await sleep(2800);
+  check('X again within 5 s undoes the skip', chNow() === skipCh, `${chNow()}`);
+  key('x'); await sleep(2800);
+  const skippedEl = d.getElementById('skipped');
+  key('m'); downTo('SKIPPED'); key('Enter');
+  check('MENU › SKIPPED lists the skipped channel', !skippedEl.hidden && skippedEl.textContent.includes(`CH ${pad(skipCh)}`), skippedEl.textContent);
+  key('Enter'); await sleep(2800);
+  check('Picking it on the SKIPPED page tunes to it', skippedEl.hidden && chNow() === skipCh && /SKIPPED/.test(osd('osd-ch').text), `${chNow()} ${osd('osd-ch').text}`);
+  await sleep(2500); // past the undo window
+  key('x');
+  check('X on a skipped channel restores it', w.localStorage.getItem('lsd.skipped') === '[]', w.localStorage.getItem('lsd.skipped'));
+  key('x'); await sleep(5500);  // skip one more, past the undo window
+  key('m'); downTo('SKIPPED'); key('Enter'); key('ArrowUp'); // up from the first row wraps to RESTORE ALL
+  check('The SKIPPED page ends with RESTORE ALL', skippedEl.querySelector('.sk-row.sel')?.textContent === 'RESTORE ALL', skippedEl.textContent);
+  key('Enter');
+  check('RESTORE ALL empties the list', skippedEl.hidden && w.localStorage.getItem('lsd.skipped') === '[]', w.localStorage.getItem('lsd.skipped'));
+  key('0'); key('0'); key('3'); await sleep(2800);
+  check('Typing 003 tunes to channel 3', chNow() === 3, `${chNow()}`);
   const afterRandom = onAir();
   const keysEl = d.getElementById('keys');
   key('?');
@@ -138,9 +176,9 @@ try {
   check('Menu: right arrow raises SYNC by 10 ms steps', w.LSD.viewerState.syncMs === 30, w.LSD.viewerState.syncMs);
   await sleep(3000);
   check('Menu: the arrows do not change the scene while it is open', onAir() === lookBefore);
-  key('ArrowDown'); key('ArrowDown'); key('ArrowDown'); key('ArrowDown'); key('ArrowDown'); key('ArrowRight');
+  const reducedRow = downTo('REDUCED MOTION'); key('ArrowRight');
   check('Menu: reduced motion row cycles AUTO -> ON', w.LSD.viewerState.reducedMode === 'on', w.LSD.viewerState.reducedMode);
-  key('ArrowLeft'); key('ArrowUp'); key('ArrowUp'); key('ArrowUp'); key('ArrowUp'); key('ArrowUp'); key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft');
+  key('ArrowLeft'); for (let i = 0; i < reducedRow; i++) key('ArrowUp'); key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft');
   check('Menu: back to defaults', w.LSD.viewerState.syncMs === 0 && w.LSD.viewerState.reducedMode === 'auto', `${w.LSD.viewerState.syncMs} ${w.LSD.viewerState.reducedMode}`);
   key('ArrowDown'); key('ArrowDown');
   check('Menu: the selected row explains itself', /name of each new scene/.test(menuEl.querySelector('.menu-hint').textContent), menuEl.querySelector('.menu-hint').textContent);
@@ -159,7 +197,7 @@ try {
   // Reduced motion: no hard scenes, no strobe/glitch chains and no flash transitions come on air.
   const settingsJson = await (await fetch('../settings.json')).json();
   w.LSD.viewerState.reducedMode = 'on';
-  key('m'); for (let i = 0; i < 5; i++) key('ArrowDown'); key('ArrowRight'); key('ArrowLeft'); key('Escape'); // applies 'on'
+  key('m'); downTo('REDUCED MOTION'); key('ArrowRight'); key('ArrowLeft'); key('Escape'); // applies 'on'
   const calmSeen = [];
   for (let i = 0; i < 6; i++) {
     d.getElementById('chUp').click(); await sleep(4600); // fades are twice as long
@@ -169,7 +207,7 @@ try {
   check('Reduced motion: no flash transitions', !calmSeen.some((c) => ['luminous_flash', 'cyber_datamosh', 'film_burn'].includes(c.trans)), calmSeen.map((c) => c.trans).join(','));
   check('Reduced motion: REACT is capped', w.LSD.viewerState.reducedNow === true);
   w.LSD.viewerState.reducedMode = 'off';
-  key('m'); for (let i = 0; i < 5; i++) key('ArrowDown'); key('ArrowRight'); key('ArrowLeft'); key('Escape');
+  key('m'); downTo('REDUCED MOTION'); key('ArrowRight'); key('ArrowLeft'); key('Escape');
   check('Reduced motion off again', w.LSD.viewerState.reducedNow === false);
 
   // Song sections: a breakdown brings a calm or building scene at the next bar line, the drop cuts to a hard one.
@@ -211,7 +249,7 @@ try {
   key('i');
   check('I shows the Liquid LSD line', osd('osd-brand').shown && osd('osd-brand').text.includes('liquid-lsd.greenjon.com'));
   key('i');
-  key('m'); for (let i = 0; i < 12; i++) key('ArrowDown'); key('Enter'); // row 12 = ABOUT
+  key('m'); downTo('ABOUT'); key('Enter');
   const aboutEl = d.getElementById('about');
   check('MENU › ABOUT opens the about page', !aboutEl.hidden && aboutEl.textContent.includes('greenjon'), aboutEl.hidden);
   key('x');
@@ -237,7 +275,7 @@ try {
   check('G opens the schedule', !schedEl.hidden && d.getElementById('scheduleBtn').getAttribute('aria-pressed') === 'true');
   schedEl.click();
   check('A click closes the schedule and leaves the TV on', schedEl.hidden && w.LSD.powerState.on && d.getElementById('scheduleBtn').getAttribute('aria-pressed') === 'false');
-  key('m'); for (let i = 0; i < 11; i++) key('ArrowDown'); key('Enter'); // row 11 = SCHEDULE
+  key('m'); downTo('SCHEDULE'); key('Enter');
   check('MENU › SCHEDULE opens the schedule and closes the menu', !schedEl.hidden && menuEl.hidden);
   key('Escape');
   key('i');
@@ -325,7 +363,7 @@ try {
   check('C opens the board and the LED stops blinking, lit like HOLD', !board.hidden && !chatBtn.classList.contains('unread') && chatBtn.getAttribute('aria-pressed') === 'true');
   chatBtn.click();
   check('The CHAT button closes it', board.hidden);
-  key('m'); for (let i = 0; i < 10; i++) key('ArrowDown');
+  key('m'); downTo('CHAT');
   check('MENU has a CHAT row', menuEl.querySelector('.menu-row.sel')?.textContent.includes('CHAT') && menuEl.querySelector('.menu-row.sel').textContent.includes('CLOSED'), menuEl.querySelector('.menu-row.sel')?.textContent);
   key('Enter');
   check('MENU › CHAT opens the board', !board.hidden);

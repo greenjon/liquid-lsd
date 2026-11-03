@@ -12,9 +12,9 @@
     },
     "CurtainHeight": {
       "baseValue": 0.4,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.25,
+      "baseMax": 0.55,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "audio_flux_bass",
@@ -29,9 +29,9 @@
     },
     "WaveAmp": {
       "baseValue": 0.5,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.35,
+      "baseMax": 0.65,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "audio_bass",
@@ -46,16 +46,16 @@
     },
     "WaveSpeed": {
       "baseValue": 0.6,
-      "baseMin": -1.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.3,
+      "baseMax": 0.9,
+      "randomizeBase": true,
       "modulators": []
     },
     "Shimmer": {
       "baseValue": 0.5,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.35,
+      "baseMax": 0.65,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "audio_flux_high",
@@ -70,9 +70,9 @@
     },
     "SkyDarkness": {
       "baseValue": 0.7,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.55,
+      "baseMax": 0.85,
+      "randomizeBase": true,
       "modulators": []
     },
     "PaletteMode": {
@@ -104,8 +104,8 @@
     "HueShift": {
       "baseValue": 0.0,
       "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMax": 0.3,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -122,16 +122,16 @@
     },
     "Saturation": {
       "baseValue": 0.8,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.65,
+      "baseMax": 0.95,
+      "randomizeBase": true,
       "modulators": []
     },
     "Brightness": {
       "baseValue": 0.45,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.3,
+      "baseMax": 0.45,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "audio_flux_bass",

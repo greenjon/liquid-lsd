@@ -58,9 +58,9 @@
       "parameters": {
         "contrast": {
           "baseValue": 0.33,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.18,
+          "baseMax": 0.33,
+          "randomizeBase": true,
           "modulators": [
             {
               "sourceId": "audio_flux_bass",

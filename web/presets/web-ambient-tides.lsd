@@ -5,9 +5,9 @@
   "parameters": {
     "WarpStrength": {
       "baseValue": 0.45,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.3,
+      "baseMax": 0.6,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -24,9 +24,9 @@
     },
     "Swirl": {
       "baseValue": 0.2,
-      "baseMin": -1.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.1,
+      "baseMax": 0.3,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -43,16 +43,16 @@
     },
     "Viscosity": {
       "baseValue": 0.5,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.35,
+      "baseMax": 0.65,
+      "randomizeBase": true,
       "modulators": []
     },
     "Speed": {
       "baseValue": 0.05,
-      "baseMin": -1.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.025,
+      "baseMax": 0.075,
+      "randomizeBase": true,
       "modulators": []
     },
     "Detail": {
@@ -64,9 +64,9 @@
     },
     "Gloss": {
       "baseValue": 0.2,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.1,
+      "baseMax": 0.3,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -100,8 +100,8 @@
     "HueOffset": {
       "baseValue": 0.0,
       "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMax": 0.3,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -118,9 +118,9 @@
     },
     "HueCycleSpeed": {
       "baseValue": 0.03,
-      "baseMin": -1.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.015,
+      "baseMax": 0.63,
+      "randomizeBase": true,
       "modulators": []
     },
     "Zoom": {

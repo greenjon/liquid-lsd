@@ -28,9 +28,9 @@
       "parameters": {
         "depth": {
           "baseValue": 0.18,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.09,
+          "baseMax": 0.27,
+          "randomizeBase": true,
           "modulators": [
             {
               "sourceId": "audio_bass",
@@ -45,9 +45,9 @@
         },
         "twist": {
           "baseValue": 0.0,
-          "baseMin": -3.14159,
-          "baseMax": 3.14159,
-          "randomizeBase": false,
+          "baseMin": -0.9425,
+          "baseMax": 0.9425,
+          "randomizeBase": true,
           "modulators": [
             {
               "sourceId": "lfo",
@@ -64,16 +64,16 @@
         },
         "centerX": {
           "baseValue": 0.5,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.35,
+          "baseMax": 0.65,
+          "randomizeBase": true,
           "modulators": []
         },
         "centerY": {
           "baseValue": 0.5,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.35,
+          "baseMax": 0.65,
+          "randomizeBase": true,
           "modulators": []
         },
         "zoom": {
@@ -104,9 +104,9 @@
         },
         "depthFog": {
           "baseValue": 0.4,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.25,
+          "baseMax": 0.55,
+          "randomizeBase": true,
           "modulators": []
         }
       }

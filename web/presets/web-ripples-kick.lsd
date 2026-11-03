@@ -12,9 +12,9 @@
     },
     "Wavelength": {
       "baseValue": 0.35,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.2,
+      "baseMax": 0.5,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "audio_flux_bass",
@@ -29,23 +29,23 @@
     },
     "WaveSpeed": {
       "baseValue": 0.35,
-      "baseMin": -1.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.175,
+      "baseMax": 0.525,
+      "randomizeBase": true,
       "modulators": []
     },
     "OrbitSpeed": {
       "baseValue": 0.25,
-      "baseMin": -1.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.125,
+      "baseMax": 0.375,
+      "randomizeBase": true,
       "modulators": []
     },
     "Falloff": {
       "baseValue": 0.3,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.15,
+      "baseMax": 0.45,
+      "randomizeBase": true,
       "modulators": []
     },
     "SurfaceType": {
@@ -71,9 +71,9 @@
     },
     "Contrast": {
       "baseValue": 0.5,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.35,
+      "baseMax": 0.5,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "audio_flux_bass",
@@ -89,8 +89,8 @@
     "HueShift": {
       "baseValue": 0.0,
       "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMax": 0.3,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "audio_flux_bass",
@@ -105,16 +105,16 @@
     },
     "Saturation": {
       "baseValue": 0.8,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.65,
+      "baseMax": 0.95,
+      "randomizeBase": true,
       "modulators": []
     },
     "Brightness": {
       "baseValue": 0.5,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.35,
+      "baseMax": 0.5,
+      "randomizeBase": true,
       "modulators": []
     }
   },

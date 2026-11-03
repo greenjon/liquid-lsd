@@ -3,7 +3,9 @@
 // on-screen display, keyboard and touch. Viewer controls are locked while the desktop broadcasts live.
 import { startAudio, stopAudio, setVolume, setMic, isMicOn, micAvailable, cvState } from './dsp.js';
 import { embed } from './embedmode.js';
-import { autopilotState, advanceForeground, previousForeground, randomForeground, nextFxChain, setHold, setHoldBars, nowShowing, setHeavyAllowed, setReducedMotion } from './autopilot.js';
+import { autopilotState, advanceForeground, previousForeground, randomForeground, nextFxChain, setHold, setHoldBars, nowShowing, setHeavyAllowed, setReducedMotion,
+  rollScene, setAutoRollBars, setEffects, setFollowMusic, setBackgroundMode, stepBackground,
+  setSkipped, skippedChannels, prunedSkips, toggleSkip, restoreChannel, restoreAllChannels, tuneTo, SKIP_FLOOR } from './autopilot.js';
 import { createMenu } from './menu.js';
 import { heardBeats, tapOffset } from './sync.js';
 import { createChat } from './chat.js';
@@ -13,7 +15,7 @@ import { scheduleState, refreshSchedule, setShows, groupByDay, zoneLabel, nextLi
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v12';
+export const TV_VERSION = 'v13';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -30,6 +32,10 @@ export const viewerState = {
   syncMs: 0,           // SYNC: how late the sound reaches the viewer (speakers, Bluetooth), in ms
   reducedMode: 'auto', // Reduced motion: 'auto' (follows the system setting), 'on', 'off'
   heavyMode: 'auto',   // Heavy scenes: 'auto' (the GPU probe decides), 'on', 'off'
+  autoRoll: 0,         // AUTO ROLL: bars between rolls of the scene on air (0 = off)
+  bgMode: 'scenes',    // BG CHANGES: 'scenes' (every 2x TIME), 'hold', 'off'
+  effects: true,       // EFFECTS: AUTO (true) or OFF
+  follow: true,        // FOLLOW MUSIC: breakdowns and drops pick the scene
   reducedNow: false,   // reduced motion in effect (updated by applyReduced; the renderer reads it)
   /** Reduced motion as the setting and the system ask for it now. */
   get reduced() {
@@ -41,6 +47,9 @@ const SYNC_MIN = -100, SYNC_MAX = 400;
 const MODES = ['auto', 'on', 'off'];
 
 const TIME_STEPS = [8, 16, 32, 64];   // bars per scene on the TIME dial
+const AUTO_ROLL_STEPS = [0, 4, 8, 16]; // AUTO ROLL: bars between rolls (0 = off)
+const BG_MODES = ['scenes', 'hold', 'off'];
+const BG_MODE_LABELS = { scenes: 'WITH SCENES', hold: 'HOLD', off: 'OFF' };
 // 100% = the desktop's Audio Response at 100%. Auto gain levels the stream, so no boost is needed by default.
 const REACT_MIN = 0.25, REACT_MAX = 2.0, REACT_DEFAULT = 1.0;
 // Saved under a new key: values saved before auto gain (200% was the default) would run twice as hot.
@@ -89,11 +98,11 @@ function showLook(info = nowShowing(), ms = 4000, brand = false) {
     unflash('osd-bg'); unflash('osd-chain'); // the desktop's scene is not ours to name
   } else {
     // Bottom left, one size: the scene, the background behind it, the scene's FX chain.
-    if (info.channel > 0) flash('osd-ch', `CH ${String(info.channel).padStart(3, '0')}`, ms);
+    if (info.channel > 0) flash('osd-ch', `CH ${String(info.channel).padStart(3, '0')}${info.skipped ? ' \u00B7 SKIPPED' : ''}`, ms);
     flash('osd-name', `SCENE: ${prettyName(info.name)}`, ms);
     if (info.background) flash('osd-bg', `BACKGROUND: ${prettyName(info.background)}`, ms);
     else unflash('osd-bg');
-    flash('osd-chain', `FX: ${info.chain ? prettyName(info.chain) : 'NONE'}`, ms);
+    flash('osd-chain', `FX: ${!info.effects ? 'OFF' : info.chain ? prettyName(info.chain) : 'NONE'}`, ms);
   }
   if (nowPlaying) flash('osd-track', `♪ ${nowPlaying}`, ms);
   flashNext(ms);
@@ -230,6 +239,7 @@ export function initUI() {
       updatePowerTitles();
       viewerState.schedule?.hide();
       document.getElementById('keys').hidden = true;
+      document.getElementById('skipped').hidden = true;
       letScreenSleep();
       updateMediaSession();
       powerState.warmupProgress = 0;
@@ -288,7 +298,7 @@ export function initUI() {
     return best;
   };
   tvBody.addEventListener('click', (e) => {
-    if (e.target.closest('button, .rotary-dial, .rocker, #tv-menu, #about, #schedule, a')) return; // they handle their own clicks
+    if (e.target.closest('button, .rotary-dial, .rocker, #tv-menu, #about, #schedule, #skipped, a')) return; // they handle their own clicks
     if (!powerState.on) { powerSwitch.click(); return; }
     if (viewerState.menu?.open) { viewerState.menu.hide(); return; } // a near-miss on the menu closes it, not the TV
     if (!e.target.closest('#tv-controls')) return; // the picture shows the info; the cabinet is inert
@@ -308,7 +318,60 @@ export function initUI() {
   const next = control(() => { lastUserChange = performance.now(); advanceForeground(); });
   const prev = control(() => { lastUserChange = performance.now(); previousForeground(); });
   const random = control(() => { lastUserChange = performance.now(); randomForeground(); });
-  const fx = control(() => { lastUserChange = performance.now(); nextFxChain(); });
+  const fx = control(async () => {
+    lastUserChange = performance.now();
+    if (await nextFxChain() === 'off') message('EFFECTS OFF \u00B7 MENU', 2000);
+  });
+  // ROLL: a new variation of the scene on air (autopilot.rollScene glides it in on the next bar).
+  const roll = control(() => message(rollScene() ? 'ROLL' : 'NOTHING TO ROLL HERE'));
+  // B: the next background now.
+  const nextBackground = control(async () => {
+    const r = await stepBackground(1);
+    if (r === 'off') message('BACKGROUND OFF \u00B7 MENU', 2000);
+    else if (r && !['live', 'none', 'superseded'].includes(r)) { message(`BACKGROUND: ${prettyName(r.split('|')[0])}`, 2500); menu.refresh(); }
+  });
+  // X: skip the channel on air (it changes on at once), or restore a skipped one; X again within 5 s undoes a skip.
+  let lastSkip = null;
+  const saveSkips = () => save('lsd.skipped', prunedSkips());
+  const skip = control(() => {
+    if (lastSkip && performance.now() - lastSkip.at < 5000) {
+      const { name, channel } = lastSkip;
+      lastSkip = null;
+      lastUserChange = performance.now();
+      restoreChannel(name, true);
+      saveSkips();
+      message(`CH ${String(channel).padStart(3, '0')} RESTORED`, 2500);
+      return;
+    }
+    const r = toggleSkip();
+    if (r.action === 'none') return;
+    const ch = `CH ${String(r.channel).padStart(3, '0')}`;
+    if (r.action === 'floor') { message(`${SKIP_FLOOR} CHANNELS MUST STAY`, 2500); return; }
+    lastUserChange = performance.now();
+    if (r.action === 'skipped') { lastSkip = { ...r, at: performance.now() }; message(`${ch} SKIPPED \u00B7 X TO UNDO`, 5000); }
+    else message(`${ch} RESTORED`, 2500);
+    saveSkips();
+    menu.refresh();
+  });
+  // 0-9: tune by number, like a remote: three digits tune at once, fewer after a pause.
+  let digits = '', digitTimer = null;
+  const tuneDigits = () => {
+    clearTimeout(digitTimer);
+    const n = Number(digits);
+    digits = '';
+    if (!n) { message('CH ---', 1000); return; }
+    lastUserChange = performance.now();
+    const r = tuneTo(n);
+    if (r === 'range') message(`NO CH ${String(n).padStart(3, '0')}`, 2000);
+    else if (r === 'heavy') message(`CH ${String(n).padStart(3, '0')} \u00B7 NEEDS BIG GPU SCENES (MENU)`, 3000);
+  };
+  const digit = control((d) => {
+    digits += d;
+    message(`CH ${digits.padEnd(3, '-')}`, 1600);
+    clearTimeout(digitTimer);
+    if (digits.length >= 3) tuneDigits();
+    else digitTimer = setTimeout(tuneDigits, 1500);
+  });
   const hold = control(() => {
     setHold(!autopilotState.hold);
     holdBtn.setAttribute('aria-pressed', String(autopilotState.hold));
@@ -317,6 +380,7 @@ export function initUI() {
   document.getElementById('chUp').addEventListener('click', next);
   document.getElementById('chDown').addEventListener('click', prev);
   document.getElementById('fxBtn').addEventListener('click', fx);
+  document.getElementById('rollBtn').addEventListener('click', roll);
   holdBtn.addEventListener('click', hold);
 
   // --- TIME: bars per scene ---
@@ -374,6 +438,20 @@ export function initUI() {
   viewerState.announce = load('lsd.announce', false) === true;
   viewerState.reducedMode = MODES.includes(load('lsd.reduced', 'auto')) ? load('lsd.reduced', 'auto') : 'auto';
   viewerState.heavyMode = MODES.includes(load('lsd.heavy', 'auto')) ? load('lsd.heavy', 'auto') : 'auto';
+  viewerState.autoRoll = AUTO_ROLL_STEPS.includes(load('lsd.autoRoll', 0)) ? load('lsd.autoRoll', 0) : 0;
+  viewerState.bgMode = BG_MODES.includes(load('lsd.bgMode', 'scenes')) ? load('lsd.bgMode', 'scenes') : 'scenes';
+  viewerState.effects = load('lsd.effects', true) !== false;
+  viewerState.follow = load('lsd.follow', true) !== false;
+  setAutoRollBars(viewerState.autoRoll);
+  setBackgroundMode(viewerState.bgMode);
+  setEffects(viewerState.effects);
+  setFollowMusic(viewerState.follow);
+  setSkipped(Array.isArray(load('lsd.skipped', [])) ? load('lsd.skipped', []) : []);
+  const stepIn = (list, v, dir) => list[Math.max(0, Math.min(list.length - 1, list.indexOf(v) + dir))];
+  const applyAutoRoll = (bars) => { viewerState.autoRoll = bars; save('lsd.autoRoll', bars); setAutoRollBars(bars); };
+  const applyBgMode = (mode) => { viewerState.bgMode = mode; save('lsd.bgMode', mode); setBackgroundMode(mode); };
+  const applyEffects = (on) => { viewerState.effects = on; save('lsd.effects', on); setEffects(on); };
+  const applyFollow = (on) => { viewerState.follow = on; save('lsd.follow', on); setFollowMusic(on); };
   const applyHeavy = () => {
     if (viewerState.heavyMode === 'auto') setHeavyAllowed(!!window.LSD?.gpu?.heavy);
     else setHeavyAllowed(viewerState.heavyMode === 'on');
@@ -407,6 +485,28 @@ export function initUI() {
         const i = Math.round(timeDial.get() * (TIME_STEPS.length - 1));
         timeDial.set(Math.max(0, Math.min(TIME_STEPS.length - 1, i + dir)) / (TIME_STEPS.length - 1));
       } },
+    { label: 'AUTO ROLL', locked: live, value: () => (viewerState.autoRoll ? `EVERY ${viewerState.autoRoll} BARS` : 'OFF'),
+      step: (dir) => applyAutoRoll(stepIn(AUTO_ROLL_STEPS, viewerState.autoRoll, dir)),
+      help: 'Rolls a new variation of the scene on air every few bars, like pressing ROLL (D). Best with HOLD on: the scene stays and keeps changing.' },
+    { label: 'BACKGROUND', locked: () => live() || viewerState.bgMode === 'off',
+      value: () => (viewerState.bgMode === 'off' ? 'OFF' : prettyName(nowShowing().background ?? '') || '---'),
+      step: (dir) => stepBackground(dir).then(() => menu.refresh()),
+      help: 'The picture behind the scene, which shows through wherever the scene is dark or see-through. \u25C0 \u25B6 or B pick another one now.' },
+    { label: 'BG CHANGES', locked: live, value: () => BG_MODE_LABELS[viewerState.bgMode],
+      step: (dir) => applyBgMode(BG_MODES[(BG_MODES.indexOf(viewerState.bgMode) + dir + BG_MODES.length) % BG_MODES.length]),
+      help: 'With scenes: a new background every two scenes (TIME). Hold: it stays until you change it. Off: no background, just the scene.' },
+    { label: 'EFFECTS', locked: live, value: () => (viewerState.effects ? 'AUTO' : 'OFF'),
+      step: () => applyEffects(!viewerState.effects),
+      help: 'Auto: every scene and background gets an FX chain that suits it (FX or F picks another). Off: the scenes play clean.' },
+    { label: 'FOLLOW MUSIC', locked: live, value: () => onOff(viewerState.follow),
+      step: () => applyFollow(!viewerState.follow),
+      help: 'On: a calm scene comes in for a breakdown, a hard one cuts in on the drop, and the tempo leans the picks. Off: the scenes just take turns.' },
+    { label: 'SKIP THIS CHANNEL', locked: live, value: () => (nowShowing().skipped ? 'SKIPPED' : `CH ${String(nowShowing().channel).padStart(3, '0')}`),
+      run: () => skip(),
+      help: 'Skipped channels never come up by themselves (X does this too). Type a channel number to watch one again; X there restores it.' },
+    { label: 'SKIPPED', value: () => { const n = skippedChannels().length; return n ? `${n} CHANNEL${n === 1 ? '' : 'S'}` : 'NONE'; },
+      run: () => { menu.hide(); skippedPage.show(); },
+      help: 'The channels you skipped: pick one to watch it, then X restores it.' },
     { label: 'REDUCED MOTION', help: 'Gentler: no flashes, no hard scenes, slower changes. Auto follows your system setting.',
       value: () => (viewerState.reducedMode === 'auto' ? `AUTO (${onOff(viewerState.reduced)})` : viewerState.reducedMode.toUpperCase()),
       step: (dir) => { viewerState.reducedMode = cycle(viewerState.reducedMode, dir); save('lsd.reduced', viewerState.reducedMode); applyReduced(); } },
@@ -423,12 +523,15 @@ export function initUI() {
       step: () => toggleMic() },
     { label: 'FULLSCREEN', value: () => (document.fullscreenElement ? 'ON' : 'OFF'), step: () => toggleFullscreen(), run: () => toggleFullscreen(),
       help: 'The picture and its on-screen display fill the screen. Double-click the picture or press S to toggle; Esc leaves.' },
-    { label: 'RESET', help: 'Put every setting back to its default.', run: () => {
+    { label: 'RESET', help: 'Put every setting back to its default. Skipped channels stay skipped (MENU \u203A SKIPPED).', run: () => {
       viewerState.syncMs = 0; save('lsd.sync', 0);
       viewerState.reducedMode = 'auto'; save('lsd.reduced', 'auto'); applyReduced();
       viewerState.heavyMode = 'auto'; save('lsd.heavy', 'auto'); applyHeavy();
       viewerState.announce = false; save('lsd.announce', false);
-      if (!live()) { reactDial.set(toDial(REACT_DEFAULT)); timeDial.set(TIME_STEPS.indexOf(16) / (TIME_STEPS.length - 1)); }
+      if (!live()) {
+        reactDial.set(toDial(REACT_DEFAULT)); timeDial.set(TIME_STEPS.indexOf(16) / (TIME_STEPS.length - 1));
+        applyAutoRoll(0); applyBgMode('scenes'); applyEffects(true); applyFollow(true);
+      }
     } },
     ...(kiosk ? [] : [{ label: 'CHAT', help: 'The Spaz Radio chat, on a blackboard beside the TV: the same room as the Spaz Radio app. Press C or the CHAT button any time.',
       value: () => (chatboard?.open ? 'OPEN' : 'CLOSED'), step: () => chatboard?.toggle(), run: () => chatboard?.toggle() }]),
@@ -580,6 +683,81 @@ export function initUI() {
   };
   keysPage.addEventListener('click', () => { keysPage.hidden = true; });
 
+  // --- MENU › SKIPPED: the skipped channels; picking one tunes to it (X there restores it). ↑↓ Enter, Esc ---
+  const skippedEl = document.getElementById('skipped');
+  const skippedList = skippedEl.querySelector('.sk-list');
+  let skipSel = 0;
+  const skippedPage = {
+    get open() { return !skippedEl.hidden; },
+    show() {
+      if (!powerState.on) return;
+      menu.hide(); schedule.hide(); about.hidden = true; keysPage.hidden = true;
+      skipSel = 0;
+      skippedEl.hidden = false;
+      this.render();
+    },
+    hide() { skippedEl.hidden = true; },
+    render() {
+      const list = skippedChannels();
+      skippedList.replaceChildren();
+      if (!list.length) {
+        const empty = document.createElement('div');
+        empty.className = 'sk-empty';
+        empty.textContent = 'NO SKIPPED CHANNELS. PRESS X ON A CHANNEL TO SKIP IT.';
+        skippedList.appendChild(empty);
+        return;
+      }
+      skipSel = Math.min(skipSel, list.length);
+      list.forEach((c, i) => {
+        const row = document.createElement('button');
+        row.className = 'sk-row' + (i === skipSel ? ' sel' : '');
+        row.setAttribute('role', 'listitem');
+        const ch = document.createElement('span');
+        ch.className = 'sk-ch';
+        ch.textContent = `CH ${String(c.channel).padStart(3, '0')}`;
+        const name = document.createElement('span');
+        name.textContent = prettyName(c.name).toUpperCase();
+        row.append(ch, name);
+        row.addEventListener('click', (e) => { e.stopPropagation(); this.pick(i); });
+        skippedList.appendChild(row);
+      });
+      // Last row: RESTORE ALL
+      const all = document.createElement('button');
+      all.className = 'sk-row sk-all' + (skipSel === list.length ? ' sel' : '');
+      all.textContent = 'RESTORE ALL';
+      all.addEventListener('click', (e) => { e.stopPropagation(); this.pick(list.length); });
+      skippedList.appendChild(all);
+      skippedList.children[skipSel]?.scrollIntoView?.({ block: 'nearest' });
+    },
+    pick(i) {
+      const list = skippedChannels();
+      if (i === list.length && list.length) {   // RESTORE ALL
+        restoreAllChannels();
+        saveSkips();
+        this.hide();
+        message(`${list.length} CHANNEL${list.length === 1 ? '' : 'S'} RESTORED`, 2500);
+        return;
+      }
+      const c = list[i];
+      this.hide();
+      if (!c) return;
+      if (live()) { message('LIVE \u00B7 CONTROLS LOCKED', 2000); return; }
+      lastUserChange = performance.now();
+      const r = tuneTo(c.channel);
+      if (r === 'heavy') message(`CH ${String(c.channel).padStart(3, '0')} \u00B7 NEEDS BIG GPU SCENES (MENU)`, 3000);
+      else message(`CH ${String(c.channel).padStart(3, '0')} \u00B7 SKIPPED \u00B7 X RESTORES IT`, 4000);
+    },
+    key(e) {
+      const n = skippedChannels().length && skippedChannels().length + 1; // the channels and RESTORE ALL
+      if (e.key === 'ArrowDown' && n) { skipSel = (skipSel + 1) % n; this.render(); }
+      else if (e.key === 'ArrowUp' && n) { skipSel = (skipSel + n - 1) % n; this.render(); }
+      else if ((e.key === 'Enter' || e.key === ' ') && n) this.pick(skipSel);
+      else this.hide();
+    },
+  };
+  skippedEl.addEventListener('click', () => skippedPage.hide());
+  viewerState.skippedPage = skippedPage;
+
   // --- INFO: keeps the info lines (channel, scene, background, FX, track, next show) on screen ---
   const infoBtn = document.getElementById('infoBtn');
   function setInfo(on) {
@@ -619,6 +797,7 @@ export function initUI() {
     if (!about.hidden) { e.preventDefault(); about.hidden = true; return; }
     if (schedule.open) { e.preventDefault(); schedule.hide(); return; }
     if (!keysPage.hidden) { e.preventDefault(); keysPage.hidden = true; return; }
+    if (skippedPage.open) { e.preventDefault(); skippedPage.key(e); return; }
     if (tapping && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); tapSync(); return; }
     // With the menu open these still work: ? and G and I close it and do their thing, C toggles the chat.
     if (menu.open && ['?', 'i', 'I', 'g', 'G'].includes(e.key)) menu.hide();
@@ -633,6 +812,8 @@ export function initUI() {
       r: random, R: random,
       ArrowUp: () => stepVolume(1), ArrowDown: () => stepVolume(-1),
       f: fx, F: fx, h: hold, H: hold, ' ': hold,
+      d: roll, D: roll, b: nextBackground, B: nextBackground, x: skip, X: skip,
+      ...Object.fromEntries([...'0123456789'].map((d) => [d, () => digit(d)])),
       '[': () => stepTime(-1), ']': () => stepTime(1),
       '-': () => stepReact(-1), '=': () => stepReact(1), '+': () => stepReact(1),
       Escape: () => document.fullscreenElement && document.exitFullscreen().catch(console.error),
@@ -716,7 +897,13 @@ export function initUI() {
     const ch = info.channel > 0 ? String(info.channel).padStart(3, '0') : '---';
     stationText.textContent = live() ? 'SPAZ RADIO \u2022 LIVE' : `SPAZ RADIO \u2022 CH.${ch}`;
   };
-  window.addEventListener('lsd-now-showing', (e) => { announceLook(e.detail); updateMediaSession(); updateBadge(e.detail); });
+  // The first scene on air means the playlist has loaded: drop stored skips for channels it no longer has.
+  let skipsPruned = false;
+  window.addEventListener('lsd-now-showing', (e) => {
+    announceLook(e.detail); updateMediaSession(); updateBadge(e.detail);
+    if (!skipsPruned) { skipsPruned = true; save('lsd.skipped', prunedSkips()); }
+    menu.refresh();
+  });
   // The background changes on its own clock: with ANNOUNCE SCENES on, only its line comes up.
   window.addEventListener('lsd-background', (e) => {
     if ((viewerState.announce || viewerState.info) && powerState.on && !autopilotState.isLiveBroadcast && e.detail.background) {
@@ -727,7 +914,7 @@ export function initUI() {
     tvBody.classList.toggle('live', e.detail.live);
     updateBadge();
     stationText.title = e.detail.live && autopilotState.broadcaster ? `Live: ${autopilotState.broadcaster}` : '';
-    for (const id of ['chUp', 'chDown', 'fxBtn', 'holdBtn']) document.getElementById(id).setAttribute('aria-disabled', String(e.detail.live));
+    for (const id of ['chUp', 'chDown', 'fxBtn', 'rollBtn', 'holdBtn']) document.getElementById(id).setAttribute('aria-disabled', String(e.detail.live));
     if (e.detail.live) {
       setHold(false);
       holdBtn.setAttribute('aria-pressed', 'false');

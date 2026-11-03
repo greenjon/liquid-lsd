@@ -1,6 +1,6 @@
 import { cvState, tick, suspendAudio, resumeAudio } from './dsp.js';
 import { powerState, viewerState } from './ui.js';
-import { autopilotState, autopilotSettings, tickAutopilot, startAutopilot, handleRelayMessage, advanceForeground, setPrewarm, setHeavyAllowed } from './autopilot.js';
+import { autopilotState, autopilotSettings, tickAutopilot, startAutopilot, handleRelayMessage, advanceForeground, setPrewarm, setHeavyAllowed, setSteppedLookup } from './autopilot.js';
 import { evaluateParameter, makeEvalContext, paramSpec } from './evaluator.js';
 import { lookupParam } from './isf.js';
 import { AudioTextures, audioFrame } from './audiotex.js';
@@ -275,6 +275,12 @@ async function init() {
     if (deck?.source && deck.source !== 'mandala') ctx.library.get('sources', deck.source.toLowerCase());
     for (const slot of deck?.fx ?? []) if (slot?.id) ctx.library.get('filters', slot.id);
     if (transition?.transition) ctx.library.get('transitions', transition.transition);
+  });
+  // ROLL snaps stepped inputs (STEP, long, VALUES) instead of gliding them through every step.
+  setSteppedLookup((kind, id, name) => {
+    const prog = ctx.library.get(kind, kind === 'sources' ? String(id).toLowerCase() : id);
+    const input = prog?.header.INPUTS.find((i) => i.NAME === name || i.LABEL === name);
+    return (input && paramSpec(input)?.steps > 1) || false;
   });
   // GPU probe, once, at the first power-on: render the heaviest source a few times with gl.finish() and let
   // the heavy sources (settings.json heavySources) into the rotation only if it is fast enough. Integrated

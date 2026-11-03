@@ -5,9 +5,9 @@
   "parameters": {
     "Morph": {
       "baseValue": 0.2,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.1,
+      "baseMax": 0.3,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -38,9 +38,9 @@
     },
     "SpikePhase": {
       "baseValue": 0.0,
-      "baseMin": -3.14159,
-      "baseMax": 3.14159,
-      "randomizeBase": false,
+      "baseMin": -0.9425,
+      "baseMax": 0.9425,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -57,16 +57,16 @@
     },
     "SpikeSharpness": {
       "baseValue": 0.5,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.35,
+      "baseMax": 0.65,
+      "randomizeBase": true,
       "modulators": []
     },
     "BlockerSize": {
       "baseValue": 0.4,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.25,
+      "baseMax": 0.55,
+      "randomizeBase": true,
       "modulators": []
     },
     "ColorMode": {
@@ -79,8 +79,8 @@
     "HueOffset": {
       "baseValue": 0.0,
       "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMax": 0.3,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -97,44 +97,44 @@
     },
     "Saturation": {
       "baseValue": 0.7,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.55,
+      "baseMax": 0.85,
+      "randomizeBase": true,
       "modulators": []
     },
     "Brightness": {
       "baseValue": 0.7,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.55,
+      "baseMax": 0.7,
+      "randomizeBase": true,
       "modulators": []
     },
     "Opacity": {
       "baseValue": 0.6,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.45,
+      "baseMax": 0.75,
+      "randomizeBase": true,
       "modulators": []
     },
     "EdgeThickness": {
       "baseValue": 0.1,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.05,
+      "baseMax": 0.15,
+      "randomizeBase": true,
       "modulators": []
     },
     "EdgeBrightness": {
       "baseValue": 0.4,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.25,
+      "baseMax": 0.4,
+      "randomizeBase": true,
       "modulators": []
     },
     "RimGlow": {
       "baseValue": 0.4,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.25,
+      "baseMax": 0.4,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "audio_amp",
@@ -156,9 +156,9 @@
     },
     "RotateX": {
       "baseValue": 0.0,
-      "baseMin": -3.14159265,
-      "baseMax": 3.14159265,
-      "randomizeBase": false,
+      "baseMin": -0.9425,
+      "baseMax": 0.9425,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -175,9 +175,9 @@
     },
     "RotateY": {
       "baseValue": 0.0,
-      "baseMin": -3.14159265,
-      "baseMax": 3.14159265,
-      "randomizeBase": false,
+      "baseMin": -0.9425,
+      "baseMax": 0.9425,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",

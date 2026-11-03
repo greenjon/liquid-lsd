@@ -78,8 +78,12 @@ else {
     const catalog = await (await fetch('/catalog.json')).json();
     const content = async (list, id) => (await (await fetch('/' + list.find((e) => e.id === id).file)).json());
     let deck = spec.deck;
-    if (spec.preset) deck = parseDeckPreset(await (await fetch(spec.preset)).json());
-    if (spec.chain) Object.assign(deck, parseFxChain(await content(catalog.fxChains, spec.chain)));
+    // `roll`: 'base' keeps every tuned value (the default for presets, so the check is repeatable), a number
+    // (0..1) pins every randomized base to that point of its span, 'random' rolls as on air (RC_ROLL).
+    const rng = typeof spec.roll === 'number' ? () => spec.roll : Math.random;
+    const fixed = (dto) => (spec.roll === 'base' ? JSON.parse(JSON.stringify(dto), (k, v) => (k === 'randomizeBase' ? false : v)) : dto);
+    if (spec.preset) deck = parseDeckPreset(fixed(await (await fetch(spec.preset)).json()), rng);
+    if (spec.chain) Object.assign(deck, parseFxChain(fixed(await content(catalog.fxChains, spec.chain)), rng));
     if (spec.transitionPreset) spec.mixer = { ...spec.mixer, ...parseTransition(await content(catalog.transitionPresets, spec.transitionPreset)) };
     w.LSD.autopilotState.deckA = deck;
     w.LSD.autopilotState.deckB = spec.deckB ?? null;

@@ -31,9 +31,9 @@
       "parameters": {
         "pixelSize": {
           "baseValue": 4.0,
-          "baseMin": 1.0,
-          "baseMax": 128.0,
-          "randomizeBase": false,
+          "baseMin": 2.5,
+          "baseMax": 5.5,
+          "randomizeBase": true,
           "modulators": [
             {
               "sourceId": "audio_flux_bass",
@@ -55,9 +55,9 @@
         },
         "colorDepth": {
           "baseValue": 16.0,
-          "baseMin": 0.0,
-          "baseMax": 32.0,
-          "randomizeBase": false,
+          "baseMin": 11.2,
+          "baseMax": 20.8,
+          "randomizeBase": true,
           "modulators": []
         }
       }
@@ -75,9 +75,9 @@
       "parameters": {
         "scanlineIntensity": {
           "baseValue": 0.45,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.3,
+          "baseMax": 0.45,
+          "randomizeBase": true,
           "modulators": [
             {
               "sourceId": "lfo",
@@ -101,30 +101,30 @@
         },
         "curvature": {
           "baseValue": 0.2,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.1,
+          "baseMax": 0.3,
+          "randomizeBase": true,
           "modulators": []
         },
         "phosphorMask": {
           "baseValue": 0.3,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.15,
+          "baseMax": 0.45,
+          "randomizeBase": true,
           "modulators": []
         },
         "vignette": {
           "baseValue": 0.35,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.2,
+          "baseMax": 0.5,
+          "randomizeBase": true,
           "modulators": []
         },
         "brightnessBoost": {
           "baseValue": 0.375,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.225,
+          "baseMax": 0.375,
+          "randomizeBase": true,
           "modulators": [
             {
               "sourceId": "audio_bass",
@@ -152,9 +152,9 @@
       "parameters": {
         "amount": {
           "baseValue": 0.1,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.05,
+          "baseMax": 0.15,
+          "randomizeBase": true,
           "modulators": [
             {
               "sourceId": "audio_flux_high",
@@ -169,9 +169,9 @@
         },
         "angle": {
           "baseValue": 0.0,
-          "baseMin": -3.14159,
-          "baseMax": 3.14159,
-          "randomizeBase": false,
+          "baseMin": -0.9425,
+          "baseMax": 0.9425,
+          "randomizeBase": true,
           "modulators": []
         },
         "radialMode": {

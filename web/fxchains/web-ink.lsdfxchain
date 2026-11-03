@@ -30,9 +30,9 @@
       "parameters": {
         "smearAmount": {
           "baseValue": 0.2,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.1,
+          "baseMax": 0.3,
+          "randomizeBase": true,
           "modulators": [
             {
               "sourceId": "audio_bass",
@@ -47,30 +47,30 @@
         },
         "curlScale": {
           "baseValue": 0.18,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.09,
+          "baseMax": 0.27,
+          "randomizeBase": true,
           "modulators": []
         },
         "flowSpeed": {
           "baseValue": 0.25,
-          "baseMin": -1.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.125,
+          "baseMax": 0.375,
+          "randomizeBase": true,
           "modulators": []
         },
         "decay": {
           "baseValue": 0.8,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.65,
+          "baseMax": 0.95,
+          "randomizeBase": true,
           "modulators": []
         },
         "gravity": {
           "baseValue": 0.0,
-          "baseMin": -1.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": -0.3,
+          "baseMax": 0.3,
+          "randomizeBase": true,
           "modulators": [
             {
               "sourceId": "lfo",
@@ -100,9 +100,9 @@
       "parameters": {
         "mixAmount": {
           "baseValue": 0.5,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.35,
+          "baseMax": 0.65,
+          "randomizeBase": true,
           "modulators": [
             {
               "sourceId": "audio_mid",
@@ -124,9 +124,9 @@
         },
         "cycleSpeed": {
           "baseValue": 0.0,
-          "baseMin": -1.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": -0.3,
+          "baseMax": 0.3,
+          "randomizeBase": true,
           "modulators": []
         },
         "cycleOffset": {
@@ -151,8 +151,8 @@
         "hueShift": {
           "baseValue": 0.0,
           "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMax": 0.3,
+          "randomizeBase": true,
           "modulators": []
         }
       }

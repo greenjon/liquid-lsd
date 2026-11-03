@@ -5,9 +5,9 @@
   "parameters": {
     "JuliaAngle": {
       "baseValue": 0.1,
-      "baseMin": -1.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.05,
+      "baseMax": 0.15,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -24,9 +24,9 @@
     },
     "JuliaRadius": {
       "baseValue": 0.65,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.5,
+      "baseMax": 0.8,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -43,9 +43,9 @@
     },
     "ColorCycle": {
       "baseValue": 0.3,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.15,
+      "baseMax": 0.45,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "audio_amp",
@@ -60,23 +60,23 @@
     },
     "MorphSpeed": {
       "baseValue": 0.05,
-      "baseMin": -1.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.025,
+      "baseMax": 0.075,
+      "randomizeBase": true,
       "modulators": []
     },
     "Saturation": {
       "baseValue": 0.6,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.45,
+      "baseMax": 0.75,
+      "randomizeBase": true,
       "modulators": []
     },
     "HueOffset": {
       "baseValue": 0.0,
       "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMax": 0.3,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -93,9 +93,9 @@
     },
     "Brightness": {
       "baseValue": 0.38,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.23,
+      "baseMax": 0.38,
+      "randomizeBase": true,
       "modulators": []
     }
   },

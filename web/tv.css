@@ -615,8 +615,8 @@ body.kiosk #nameplate { display: none; }
 #tv-body:not(.powered-on) #schedule { display: none; }
 @media (max-width: 700px) { #schedule .sc-time { min-width: 0; } #schedule .sc-show { flex-direction: column; gap: 0; } }
 
-/* ? : the keyboard shortcuts, the same page as SCHEDULE */
-#keys {
+/* ? : the keyboard shortcuts, and MENU › SKIPPED: the same page as SCHEDULE */
+#keys, #skipped {
   position: absolute;
   inset: 0;
   z-index: 5;
@@ -635,15 +635,21 @@ body.kiosk #nameplate { display: none; }
   scrollbar-width: thin;
   scrollbar-color: rgba(140,255,140,0.4) transparent;
 }
-#keys[hidden] { display: none; }
-#keys .ky-name { font-size: 1.4em; letter-spacing: 0.2em; color: #d9c2ff; text-shadow: 0 0 10px rgba(160,90,255,0.9); }
+#keys[hidden], #skipped[hidden] { display: none; }
+#keys .ky-name, #skipped .ky-name { font-size: 1.4em; letter-spacing: 0.2em; color: #d9c2ff; text-shadow: 0 0 10px rgba(160,90,255,0.9); }
 #keys .ky-list { display: grid; grid-template-columns: auto 1fr; column-gap: 2em; row-gap: 0.1em; margin: 0.4em 0 0; }
 #keys dt { color: #d9c2ff; text-shadow: 0 0 8px rgba(160,90,255,0.8); white-space: nowrap; }
 #keys dd { margin: 0; }
-#keys .sc-hint { margin-top: auto; padding-top: 0.6em; font-size: 0.7em; opacity: 0.7; }
+#keys .sc-hint, #skipped .sc-hint { margin-top: auto; padding-top: 0.6em; font-size: 0.7em; opacity: 0.7; }
 body.kiosk #keys .ky-chat { display: none; }
-#tv-screen-area:has(#keys:not([hidden])) #osd { visibility: hidden; }
-#tv-body:not(.powered-on) #keys { display: none; }
+#tv-screen-area:has(#keys:not([hidden])) #osd, #tv-screen-area:has(#skipped:not([hidden])) #osd { visibility: hidden; }
+#tv-body:not(.powered-on) #keys, #tv-body:not(.powered-on) #skipped { display: none; }
+#skipped .sk-list { display: flex; flex-direction: column; margin: 0.4em 0 0; }
+#skipped .sk-row { all: unset; display: flex; gap: 1.5em; padding: 0.05em 0.3em; cursor: pointer; }
+#skipped .sk-row:hover, #skipped .sk-row:focus-visible, #skipped .sk-row.sel { background: rgba(140,255,140,0.18); }
+#skipped .sk-ch { color: #d9c2ff; text-shadow: 0 0 8px rgba(160,90,255,0.8); white-space: nowrap; }
+#skipped .sk-empty { opacity: 0.7; }
+#skipped .sk-all { margin-top: 0.5em; color: #d9c2ff; text-shadow: 0 0 8px rgba(160,90,255,0.8); }
 
 #tv-menu .menu-hint.help { opacity: 0.9; font-size: 0.8em; line-height: 1.3; text-transform: none; letter-spacing: 0.02em; }
 

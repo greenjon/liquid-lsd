@@ -22,9 +22,9 @@
     },
     "Rotation": {
       "baseValue": 0.35,
-      "baseMin": -1.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.175,
+      "baseMax": 0.525,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -41,9 +41,9 @@
     },
     "HueShift": {
       "baseValue": 0.2,
-      "baseMin": -1.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.1,
+      "baseMax": 0.8,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "audio_mid",
@@ -58,9 +58,9 @@
     },
     "Decay": {
       "baseValue": 0.15,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.075,
+      "baseMax": 0.225,
+      "randomizeBase": true,
       "modulators": []
     },
     "SeedShape": {
@@ -84,9 +84,9 @@
     },
     "SeedSize": {
       "baseValue": 0.4,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.25,
+      "baseMax": 0.55,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "audio_bass",
@@ -101,23 +101,23 @@
     },
     "Drift": {
       "baseValue": 0.3,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.15,
+      "baseMax": 0.45,
+      "randomizeBase": true,
       "modulators": []
     },
     "Saturation": {
       "baseValue": 0.5,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.35,
+      "baseMax": 0.65,
+      "randomizeBase": true,
       "modulators": []
     },
     "Brightness": {
       "baseValue": 0.5,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.35,
+      "baseMax": 0.5,
+      "randomizeBase": true,
       "modulators": []
     }
   },

@@ -62,16 +62,16 @@
         },
         "fbRotate": {
           "baseValue": 0.004,
-          "baseMin": -3.14159,
-          "baseMax": 3.14159,
-          "randomizeBase": false,
+          "baseMin": 0.002,
+          "baseMax": 0.006,
+          "randomizeBase": true,
           "modulators": []
         },
         "fbHueShift": {
           "baseValue": 0.002,
-          "baseMin": -1.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.001,
+          "baseMax": 0.602,
+          "randomizeBase": true,
           "modulators": []
         },
         "fbBlur": {
@@ -83,9 +83,9 @@
         },
         "fbChroma": {
           "baseValue": 0.3,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.15,
+          "baseMax": 0.45,
+          "randomizeBase": true,
           "modulators": [
             {
               "sourceId": "audio_flux_high",

@@ -51,23 +51,23 @@
         },
         "thermalBloom": {
           "baseValue": 0.3,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.15,
+          "baseMax": 0.3,
+          "randomizeBase": true,
           "modulators": []
         },
         "sensorGrain": {
           "baseValue": 0.2,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.1,
+          "baseMax": 0.3,
+          "randomizeBase": true,
           "modulators": []
         },
         "vignette": {
           "baseValue": 0.3,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.15,
+          "baseMax": 0.45,
+          "randomizeBase": true,
           "modulators": []
         }
       }

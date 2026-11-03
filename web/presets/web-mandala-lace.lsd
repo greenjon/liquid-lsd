@@ -31,16 +31,16 @@
     },
     "L1": {
       "baseValue": 0.5,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.35,
+      "baseMax": 0.65,
+      "randomizeBase": true,
       "modulators": []
     },
     "L2": {
       "baseValue": 0.3,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.15,
+      "baseMax": 0.45,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -57,9 +57,9 @@
     },
     "L3": {
       "baseValue": 0.25,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.125,
+      "baseMax": 0.375,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -76,9 +76,9 @@
     },
     "L4": {
       "baseValue": 0.15,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.075,
+      "baseMax": 0.225,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -95,9 +95,9 @@
     },
     "Thickness": {
       "baseValue": 0.1,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.1,
+      "baseMax": 0.15,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "audio_mid",
@@ -112,9 +112,9 @@
     },
     "Hue Offset": {
       "baseValue": 0.6,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.3,
+      "baseMax": 0.9,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -132,15 +132,15 @@
     "Hue Sweep": {
       "baseValue": 0.3,
       "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMax": 0.6,
+      "randomizeBase": true,
       "modulators": []
     },
     "Depth": {
       "baseValue": 0.7,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.55,
+      "baseMax": 0.85,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "audio_amp",

@@ -30,9 +30,9 @@
       "parameters": {
         "trackingJitter": {
           "baseValue": 0.2,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.1,
+          "baseMax": 0.3,
+          "randomizeBase": true,
           "modulators": [
             {
               "sourceId": "audio_flux_bass",
@@ -47,16 +47,16 @@
         },
         "headSwitching": {
           "baseValue": 0.5,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.35,
+          "baseMax": 0.65,
+          "randomizeBase": true,
           "modulators": []
         },
         "ycDelay": {
           "baseValue": 0.3,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.15,
+          "baseMax": 0.45,
+          "randomizeBase": true,
           "modulators": [
             {
               "sourceId": "audio_mid",
@@ -71,9 +71,9 @@
         },
         "rfDropouts": {
           "baseValue": 0.1,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.05,
+          "baseMax": 0.15,
+          "randomizeBase": true,
           "modulators": [
             {
               "sourceId": "audio_flux_high",
@@ -88,9 +88,9 @@
         },
         "tapeNoise": {
           "baseValue": 0.3,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.15,
+          "baseMax": 0.45,
+          "randomizeBase": true,
           "modulators": []
         },
         "mixRatio": {
@@ -115,9 +115,9 @@
       "parameters": {
         "scanlineIntensity": {
           "baseValue": 0.5,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.35,
+          "baseMax": 0.5,
+          "randomizeBase": true,
           "modulators": []
         },
         "scanlineCount": {
@@ -129,30 +129,30 @@
         },
         "curvature": {
           "baseValue": 0.3,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.15,
+          "baseMax": 0.45,
+          "randomizeBase": true,
           "modulators": []
         },
         "phosphorMask": {
           "baseValue": 0.3,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.15,
+          "baseMax": 0.45,
+          "randomizeBase": true,
           "modulators": []
         },
         "vignette": {
           "baseValue": 0.35,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.2,
+          "baseMax": 0.5,
+          "randomizeBase": true,
           "modulators": []
         },
         "brightnessBoost": {
           "baseValue": 0.35,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.2,
+          "baseMax": 0.35,
+          "randomizeBase": true,
           "modulators": []
         }
       }
@@ -170,16 +170,16 @@
       "parameters": {
         "contrast": {
           "baseValue": 0.42,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.27,
+          "baseMax": 0.42,
+          "randomizeBase": true,
           "modulators": []
         },
         "saturation": {
           "baseValue": 0.3,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.15,
+          "baseMax": 0.45,
+          "randomizeBase": true,
           "modulators": []
         }
       }

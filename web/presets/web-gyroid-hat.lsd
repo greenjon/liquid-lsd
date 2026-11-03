@@ -12,23 +12,23 @@
     },
     "WallThickness": {
       "baseValue": 0.3,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.15,
+      "baseMax": 0.45,
+      "randomizeBase": true,
       "modulators": []
     },
     "Frequency": {
       "baseValue": 0.5,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.35,
+      "baseMax": 0.65,
+      "randomizeBase": true,
       "modulators": []
     },
     "FlightSpeed": {
       "baseValue": 0.15,
-      "baseMin": -1.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.075,
+      "baseMax": 0.225,
+      "randomizeBase": true,
       "modulators": []
     },
     "WireframeMode": {
@@ -40,9 +40,9 @@
     },
     "CoreGlow": {
       "baseValue": 0.3,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.15,
+      "baseMax": 0.3,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "audio_flux_high",
@@ -65,8 +65,8 @@
     "HueOffset": {
       "baseValue": 0.0,
       "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMax": 0.3,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "audio_flux_high",
@@ -81,16 +81,16 @@
     },
     "Saturation": {
       "baseValue": 0.9,
-      "baseMin": 0.0,
+      "baseMin": 0.75,
       "baseMax": 1.0,
-      "randomizeBase": false,
+      "randomizeBase": true,
       "modulators": []
     },
     "Brightness": {
       "baseValue": 0.4,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.25,
+      "baseMax": 0.4,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "audio_flux_high",
@@ -112,9 +112,9 @@
     },
     "RotateX": {
       "baseValue": 0.0,
-      "baseMin": -3.14159265,
-      "baseMax": 3.14159265,
-      "randomizeBase": false,
+      "baseMin": -0.9425,
+      "baseMax": 0.9425,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",

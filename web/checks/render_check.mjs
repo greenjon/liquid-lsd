@@ -67,7 +67,7 @@ const fittingChain = (f) => {
   return ids.find((id) => chainAnswers(dto.tags, dominantBand(dto), chainDto(id))) ?? ids.find((id) => chainFits(dto.tags, chainDto(id)));
 };
 fs.readdirSync(path.join(web, 'presets')).sort().filter((f) => f.endsWith('.lsd')).forEach((f) => {
-  sources.push({ name: 'preset_' + f.replace('.lsd', ''), preset: '/presets/' + f, chain: pins[f.replace('.lsd', '')] ?? fittingChain(f), settleMs: 2500 });
+  sources.push({ name: 'preset_' + f.replace('.lsd', ''), preset: '/presets/' + f, chain: pins[f.replace('.lsd', '')] ?? fittingChain(f), roll: 'base', settleMs: 2500 });
 });
 // Desktop-shipped Mandala presets, unmodified (Lobes / Recipe Select / the recipe table)
 for (const f of ['mandala-7', 'mandala-10']) {
@@ -86,6 +86,12 @@ for (const t of catalog.transitionPresets) {
 // RC_ONLY=substr,substr keeps only specs whose name contains one of them (skips the library/autopilot asserts).
 // RC_LOUD=1 also renders every preset and chain with the audio signals held high (`<name>_loud`), so the
 // silent and loud frames side by side show how much a preset reacts.
+// Presets render at their tuned values. RC_ROLL=n also renders each n times rolled as on air (`_roll1`..),
+// and prints how many of those rolls left the brightness band: the variation spans' health, a sample, not a gate.
+const ROLLS = Number(process.env.RC_ROLL) || 0;
+for (const s of sources.filter((x) => x.preset && ROLLS)) {
+  sources.splice(sources.indexOf(s) + 1, 0, ...[...Array(ROLLS)].map((_, i) => ({ ...s, name: `${s.name}_roll${i + 1}`, roll: 'random' })));
+}
 if (process.env.RC_EXTRA) sources.push(...JSON.parse(fs.readFileSync(process.env.RC_EXTRA, 'utf8')));
 const only = process.env.RC_ONLY ? process.env.RC_ONLY.split(',') : null;
 if (only) sources.splice(0, sources.length, ...sources.filter((s) => only.some((o) => s.name.includes(o))));
@@ -133,13 +139,16 @@ function done(code) {
 const rep = await reported;
 if (rep.fatal) console.error('FATAL:', rep.fatal);
 let bad = rep.fatal ? 1 : 0;
+const rollStats = { n: 0, out: 0 };
 for (const f of rep.frames || []) {
   fs.writeFileSync(path.join(outDir, f.name + '.png'), Buffer.from(f.png.split(',')[1], 'base64'));
   // Presets are also held to a brightness band (0-255 luma): near-black or washed-out frames are failures.
   const preset = f.name.startsWith('preset_');
   const blank = (f.meanLuma < 0.5 && f.litFraction < 0.002) || (preset && (f.meanLuma < 1 || f.litFraction < 0.01));
   const washed = preset && f.meanLuma > 190;
-  if (blank || washed) bad++;
+  const rolled = /_roll\d+$/.test(f.name);
+  if (rolled) { rollStats.n++; if (blank || washed) rollStats.out++; }
+  else if (blank || washed) bad++;
   if (f.glError) { bad++; console.log(`GL ERROR 0x${f.glError.toString(16)} after ${f.name}`); }
   console.log(`${blank ? 'BLANK' : washed ? 'WASHED' : 'ok   '} ${f.name.padEnd(20)} luma=${f.meanLuma.toFixed(1)} lit=${(f.litFraction * 100).toFixed(1)}%`);
 }
@@ -155,6 +164,7 @@ if (rep.autopilot) {
   }
 }
 if (rep.library) { console.log('library loaded:', rep.library.loaded.join(', ')); if (rep.library.failed.length) { console.log('library FAILED:', rep.library.failed.join(', ')); bad++; } }
+if (rollStats.n) console.log(`rolled presets: ${rollStats.out} of ${rollStats.n} outside the brightness band (not counted as failures)`);
 console.log(`PNGs in ${outDir}`);
 // Contact sheet of every preset frame (ImageMagick montage, optional) so duplicates and bad frames show at a glance.
 const shots = (rep.frames || []).filter((f) => f.name.startsWith('preset_')).map((f) => path.join(outDir, f.name + '.png'));

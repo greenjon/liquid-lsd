@@ -30,9 +30,9 @@
       "parameters": {
         "streakIntensity": {
           "baseValue": 0.2,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.1,
+          "baseMax": 0.2,
+          "randomizeBase": true,
           "modulators": [
             {
               "sourceId": "audio_flux_bass",
@@ -47,23 +47,23 @@
         },
         "streakLength": {
           "baseValue": 0.63,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.48,
+          "baseMax": 0.78,
+          "randomizeBase": true,
           "modulators": []
         },
         "threshold": {
           "baseValue": 0.6,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.45,
+          "baseMax": 0.75,
+          "randomizeBase": true,
           "modulators": []
         },
         "knee": {
           "baseValue": 0.39,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.24,
+          "baseMax": 0.54,
+          "randomizeBase": true,
           "modulators": []
         },
         "colorMode": {
@@ -105,9 +105,9 @@
       "parameters": {
         "bloomIntensity": {
           "baseValue": 0.2,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.1,
+          "baseMax": 0.2,
+          "randomizeBase": true,
           "modulators": [
             {
               "sourceId": "audio_bass",
@@ -122,16 +122,16 @@
         },
         "threshold": {
           "baseValue": 0.45,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.3,
+          "baseMax": 0.6,
+          "randomizeBase": true,
           "modulators": []
         },
         "blurAmount": {
           "baseValue": 0.38,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.23,
+          "baseMax": 0.53,
+          "randomizeBase": true,
           "modulators": []
         }
       }
@@ -149,16 +149,16 @@
       "parameters": {
         "contrast": {
           "baseValue": 0.43,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.28,
+          "baseMax": 0.43,
+          "randomizeBase": true,
           "modulators": []
         },
         "saturation": {
           "baseValue": 0.38,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.23,
+          "baseMax": 0.53,
+          "randomizeBase": true,
           "modulators": []
         }
       }

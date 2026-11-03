@@ -49,8 +49,35 @@ def ranges(file):
     return {i["NAME"]: (i.get("MIN", 0.0), i.get("MAX", 1.0)) for i in header(file)["INPUTS"] if i["TYPE"] != "image"}
 
 
+def stepped(file):
+    """Inputs that take whole steps (STEP, long/int, VALUES): a variation roll leaves them alone."""
+    return {i["NAME"] for i in header(file)["INPUTS"]
+            if "STEP" in i or "VALUES" in i or i["TYPE"] in ("long", "int", "bool")}
+
+
 SOURCE_RANGES = {p.stem: ranges(p) for p in (WEB / "shaders").glob("*.frag") if "/*" in p.read_text()}
 FILTER_RANGES = {p.stem: ranges(p) for p in (WEB / "shaders" / "fx").glob("*.fs")}
+SOURCE_STEPPED = {p.stem: stepped(p) for p in (WEB / "shaders").glob("*.frag") if "/*" in p.read_text()}
+FILTER_STEPPED = {p.stem: stepped(p) for p in (WEB / "shaders" / "fx").glob("*.fs")}
+
+# Variation roll: every curated parameter that varies rolls within +/- VARIATION of its range around
+# the tuned value, each time the scene loads and on the TV's ROLL. Wide enough to notice, narrow enough
+# that the look stays the one that was tuned. Hues get twice that.
+VARIATION = 0.15
+HUE_VARIATION = 0.30
+# Parameters that stay as tuned: the feedback loop's stability (decay / gain push it to white-out or
+# black) and its structural mode switches.
+NO_ROLL = {"fbDecay", "fbGain", "fbMode", "fbKaleido"}
+# Floats that pick a kind of thing (a surface type, a plate shape) without declaring a STEP.
+SELECTOR_NAME = re.compile(r"(type|shape|mode|style|layout|variant)$", re.I)
+# Framing: the camera distance decides how much of the frame the scene fills (15% of Zoom takes an icosahedron
+# from 5% to 60% of the screen lit), so it stays as tuned.
+FRAMING_NAME = re.compile(r"(zoom|distance|fov)", re.I)
+# On fine-dot and thin-line looks (SPARSE_SOURCES, Mandala) a smaller dot, a thinner line or less glow
+# (or a smaller spiral) drops the picture into black: there these roll upward only.
+UPWARD_WORDS = ("size", "glow", "thick", "width", "bright", "scale")
+# Everywhere else a roll is never brighter than the tuned look on these (a bright scene washes out).
+BRIGHT_WORDS = ("bright", "glow", "gain", "exposure", "intensity", "bloom", "contrast")
 
 
 # ---------------------------------------------------------------- modulators
@@ -111,9 +138,44 @@ def _keep_swing(m, lo):
     return out
 
 
-def P(base, lo, hi, *mods):
-    return {"baseValue": base, "baseMin": lo, "baseMax": hi, "randomizeBase": False,
+def P(base, lo, hi, *mods, roll=None):
+    """A ParameterDto over the input's range lo..hi. `roll` = (rlo, rhi) randomizes the base within that
+    narrower span instead (baseMin / baseMax); modulation still scales by the input's own range."""
+    rlo, rhi = roll if roll else (lo, hi)
+    return {"baseValue": base, "baseMin": rlo, "baseMax": rhi, "randomizeBase": bool(roll),
             "modulators": [_keep_swing(m, lo) for m in mods]}
+
+
+def _is_gate(m):
+    return m["sourceId"].startswith("audio") and m["operator"] == "ADD" and m["dcOffset"] < 0
+
+
+def variation(name, base, lo, hi, mods, stepped=(), upward=False):
+    """The roll span for a curated parameter, or None to keep it as tuned. Left alone: stepped inputs,
+    NO_ROLL, a gated parameter (a gate needs its base at the minimum), and a base on either end of its
+    range (0 = off, or full on), except a hue, which then rolls inward."""
+    if name in stepped or name in NO_ROLL or SELECTOR_NAME.search(name) or FRAMING_NAME.search(name) or any(_is_gate(m) for m in mods) or hi <= lo:
+        return None
+    hue = "hue" in name.lower()
+    if base <= lo or base >= hi:
+        if not hue:
+            return None
+    w = (HUE_VARIATION if hue else VARIATION) * (hi - lo)
+    # A small value moves by at most half of itself (from 0 on a bipolar range, else from the minimum):
+    # an edge width of 0.08 rolls 0.04-0.12, not up to 0.23, and a speed of 0.15 stays 0.075-0.225.
+    dist = abs(base - (0.0 if lo < 0 else lo))
+    if not hue and dist > 0:
+        w = min(w, dist / 2)
+    rlo, rhi = max(lo, base - w), min(hi, base + w)
+    if upward and any(word in name.lower() for word in UPWARD_WORDS):
+        rlo = base
+    elif not upward and any(word in name.lower() for word in BRIGHT_WORDS):
+        rhi = base
+    if lo < 0 and base > 0:      # a bipolar setting (a speed, a turn) keeps its direction and never stops
+        rlo = max(rlo, base / 2)
+    elif lo < 0 and base < 0:
+        rhi = min(rhi, base / 2)
+    return (round(rlo, 4), round(rhi, 4)) if rhi > rlo else None
 
 
 def isf_params(source, spec):
@@ -123,7 +185,8 @@ def isf_params(source, spec):
         mods = []
         if isinstance(v, tuple):
             v, *mods = v
-        out[name] = P(v, *rng[name], *mods)
+        out[name] = P(v, *rng[name], *mods,
+                      roll=variation(name, v, *rng[name], mods, SOURCE_STEPPED[source], source in SPARSE_SOURCES))
     return out
 
 
@@ -136,7 +199,8 @@ def mandala_params(spec):
         mods = []
         if isinstance(v, tuple):
             v, *mods = v
-        out[name] = P(v, *MANDALA_RANGE.get(name, (0.0, 1.0)), *mods)
+        lo, hi = MANDALA_RANGE.get(name, (0.0, 1.0))
+        out[name] = P(v, lo, hi, *mods, roll=variation(name, v, lo, hi, mods, {"Lobes", "Recipe Select"}, upward=True))
     return out
 
 
@@ -177,7 +241,7 @@ def slot(filter_id, spec, wet=1.0):
         mods = []
         if isinstance(v, tuple):
             v, *mods = v
-        params[name] = P(v, *rng[name], *mods)
+        params[name] = P(v, *rng[name], *mods, roll=variation(name, v, *rng[name], mods, FILTER_STEPPED[filter_id]))
     return {"filterId": filter_id, "enabled": True, "dryWet": P(wet, 0.0, 1.0), "parameters": params}
 
 
@@ -200,7 +264,7 @@ preset("web-beat-spiral", "dynamic_spiral", {
     "WaveAmp": (0.0, gate("audio_bass", 0.5, 0.9)),
     "Shear": (0.25, lfo(32, 0.25)), "Speed": 0.45,
     "DotSize": (0.5, kick(0.25, 180)), "Glow": (0.8, high(0.2)),
-    "HueOffset": (0.0, lfo(64, 1.0)), "HueSweep": 0.2, "TrailDecay": 0.93,
+    "HueOffset": (0.0, lfo(64, 1.0)), "HueSweep": 0.2,
 }, ["beat", "kick", "bass-gated", "high"],
     "Spiral thumps on every beat, dots swell on the kick, twists only when the bass is loud, hue turns over 16 bars.")
 
@@ -269,7 +333,7 @@ preset("web-spiral-storm", "dynamic_spiral", {
     "MaxPoints": 1200, "Scale": (0.3, lfo(8, 0.15)), "Damping": 0.4, "WaveFreq": 0.3,
     "WaveAmp": (0.15, mid(0.3)), "Shear": (0.2, mid(0.4)), "Speed": 0.5,
     "DotSize": (0.2, pulse(0.5, 0.15)), "Glow": 0.5, "HueOffset": (0.3, lfo(16, 1.0)),
-    "HueSweep": (0.3, lfo(8, 0.2)), "TrailDecay": 0.88,
+    "HueSweep": (0.3, lfo(8, 0.2)),
 }, ["beat", "bar", "mid"],
     "Dense spiral that reverses direction every eight beats; dots tick on every half beat; mids shear it.")
 
@@ -357,7 +421,7 @@ preset("web-fluid-lava", "domain_warp_fluid", {
 preset("web-spiral-galaxy", "dynamic_spiral", {
     "MaxPoints": 2000, "Scale": (0.2, pulse(1, 0.04)), "Damping": 0.6, "WaveFreq": 0.1,
     "WaveAmp": 0.0, "Shear": (0.5, lfo(48, 0.3)), "Speed": 0.15, "DotSize": (0.32, kick(0.1, 200)),
-    "Glow": 0.8, "HueOffset": (0.55, lfo(64, 1.0)), "HueSweep": 0.4, "TrailDecay": 0.92,
+    "Glow": 0.8, "HueOffset": (0.55, lfo(64, 1.0)), "HueSweep": 0.4,
 }, ["beat", "bar", "kick"],
     "A fine, dense galaxy arm turning slowly; dots swell on each kick.")
 
@@ -365,7 +429,7 @@ preset("web-spiral-sparks", "dynamic_spiral", {
     "MaxPoints": 300, "Scale": (0.55, lfo(8, 0.1)), "Damping": 0.1, "WaveFreq": 0.4,
     "WaveAmp": (0.0, gate("audio_flux_high", 0.4, 1.0, 3, 200)), "Shear": (-0.2, lfo(16, 0.4)),
     "Speed": 0.3, "DotSize": (0.4, hat(0.3)), "Glow": (0.55, amp(0.25)),
-    "HueOffset": (0.0, lfo(24, 1.0)), "HueSweep": 0.2, "TrailDecay": 0.6,
+    "HueOffset": (0.0, lfo(24, 1.0)), "HueSweep": 0.2,
 }, ["beat", "bar", "amp", "high"],
     "Few big dots with short trails; the wave only ripples through them when the hats are busy.")
 
@@ -440,7 +504,7 @@ preset("web-groove-spiral", "dynamic_spiral", {
     "MaxPoints": 900, "Scale": (0.38, pulse(2, 0.08)), "Damping": 0.3, "WaveFreq": 0.25,
     "WaveAmp": (0.1, mid(0.25)), "Shear": (0.3, lfo(8, 0.4)), "Speed": 0.35,
     "DotSize": (0.3, kick(0.12, 220)), "Glow": 0.5, "HueOffset": (0.1, lfo(24, 1.0)),
-    "HueSweep": 0.2, "TrailDecay": 0.84,
+    "HueSweep": 0.2,
 }, ["groove", "beat", "bar", "mid", "kick"],
     "A mid-density spiral that shears every eight beats, swells on kicks and ripples with the mids.")
 
@@ -476,7 +540,7 @@ preset("web-hard-mandala", "mandala", {
 preset("web-hat-sparkle", "dynamic_spiral", {
     "MaxPoints": 900, "Scale": 0.4, "Damping": 0.25, "WaveFreq": 0.2, "WaveAmp": 0.0, "Shear": 0.2, "Speed": 0.25,
     "DotSize": (0.38, hat(0.25, 140)), "Glow": (0.5, hat(0.4, 160)), "HueOffset": (0.0, hat(0.5, 200)),
-    "HueSweep": 0.15, "TrailDecay": 0.8,
+    "HueSweep": 0.15,
 }, ["hat", "high"],
     "A calm spiral that does nothing but sparkle: dots grow, glow and the colour jumps with every hi-hat.")
 
@@ -530,7 +594,7 @@ preset("web-build-drop-spiral", "dynamic_spiral", {
     "MaxPoints": 700, "Scale": (0.45, ramp(32, -0.15)), "Damping": 0.3, "WaveFreq": 0.2,
     "WaveAmp": (0.0, gate("audio_bass", 0.6, 1.0)), "Shear": (0.1, ramp(32, 0.6)), "Speed": 0.2,
     "DotSize": (0.2, ramp(32, 0.2), kick(0.15, 200)), "Glow": (0.4, ramp(32, 0.3)),
-    "HueOffset": (0.0, ramp(32, 0.8)), "HueSweep": 0.15, "TrailDecay": 0.8,
+    "HueOffset": (0.0, ramp(32, 0.8)), "HueSweep": 0.15,
 }, ["build", "bar", "bass", "kick", "bass-gated"],
     "A spiral that speeds up, shears and zooms through a phrase; the wave only breaks loose on loud bass.")
 

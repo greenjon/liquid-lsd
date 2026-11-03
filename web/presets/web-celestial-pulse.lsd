@@ -24,9 +24,9 @@
     },
     "RingDensity": {
       "baseValue": 0.26,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.13,
+      "baseMax": 0.39,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -43,9 +43,9 @@
     },
     "PhaseTwist": {
       "baseValue": 0.25,
-      "baseMin": -1.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.125,
+      "baseMax": 0.375,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -62,9 +62,9 @@
     },
     "MoireStrength": {
       "baseValue": 0.45,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.3,
+      "baseMax": 0.6,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "audio_high",
@@ -79,9 +79,9 @@
     },
     "FlowerFold": {
       "baseValue": 0.5,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.35,
+      "baseMax": 0.65,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -117,16 +117,16 @@
     },
     "Speed": {
       "baseValue": 0.15,
-      "baseMin": -1.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.075,
+      "baseMax": 0.225,
+      "randomizeBase": true,
       "modulators": []
     },
     "LineWidth": {
       "baseValue": 0.28,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.14,
+      "baseMax": 0.42,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "audio_flux_bass",
@@ -141,9 +141,9 @@
     },
     "Glow": {
       "baseValue": 0.34,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.19,
+      "baseMax": 0.34,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "audio_bass",
@@ -166,8 +166,8 @@
     "HueOffset": {
       "baseValue": 0.0,
       "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMax": 0.3,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -185,15 +185,15 @@
     "HueSweep": {
       "baseValue": 0.25,
       "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMax": 0.55,
+      "randomizeBase": true,
       "modulators": []
     },
     "Scale": {
       "baseValue": 0.5,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.35,
+      "baseMax": 0.65,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",

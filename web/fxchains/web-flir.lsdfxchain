@@ -56,9 +56,9 @@
         },
         "thermalBloom": {
           "baseValue": 0.3,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.15,
+          "baseMax": 0.3,
+          "randomizeBase": true,
           "modulators": [
             {
               "sourceId": "audio_bass",
@@ -73,9 +73,9 @@
         },
         "sensorGrain": {
           "baseValue": 0.2,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.1,
+          "baseMax": 0.3,
+          "randomizeBase": true,
           "modulators": [
             {
               "sourceId": "audio_flux_high",
@@ -90,9 +90,9 @@
         },
         "vignette": {
           "baseValue": 0.3,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.15,
+          "baseMax": 0.45,
+          "randomizeBase": true,
           "modulators": []
         }
       }
@@ -110,9 +110,9 @@
       "parameters": {
         "scanlineIntensity": {
           "baseValue": 0.25,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.125,
+          "baseMax": 0.25,
+          "randomizeBase": true,
           "modulators": []
         },
         "scanlineCount": {
@@ -124,9 +124,9 @@
         },
         "curvature": {
           "baseValue": 0.1,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.05,
+          "baseMax": 0.15,
+          "randomizeBase": true,
           "modulators": []
         },
         "phosphorMask": {
@@ -138,16 +138,16 @@
         },
         "vignette": {
           "baseValue": 0.2,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.1,
+          "baseMax": 0.3,
+          "randomizeBase": true,
           "modulators": []
         },
         "brightnessBoost": {
           "baseValue": 0.25,
-          "baseMin": 0.0,
-          "baseMax": 1.0,
-          "randomizeBase": false,
+          "baseMin": 0.125,
+          "baseMax": 0.25,
+          "randomizeBase": true,
           "modulators": []
         }
       }

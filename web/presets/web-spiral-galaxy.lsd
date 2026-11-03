@@ -12,9 +12,9 @@
     },
     "Scale": {
       "baseValue": 0.2,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.2,
+      "baseMax": 0.3,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -31,16 +31,16 @@
     },
     "Damping": {
       "baseValue": 0.6,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.45,
+      "baseMax": 0.75,
+      "randomizeBase": true,
       "modulators": []
     },
     "WaveFreq": {
       "baseValue": 0.1,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.05,
+      "baseMax": 0.15,
+      "randomizeBase": true,
       "modulators": []
     },
     "WaveAmp": {
@@ -52,9 +52,9 @@
     },
     "Shear": {
       "baseValue": 0.5,
-      "baseMin": -1.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.25,
+      "baseMax": 0.75,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -71,16 +71,16 @@
     },
     "Speed": {
       "baseValue": 0.15,
-      "baseMin": -1.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.075,
+      "baseMax": 0.225,
+      "randomizeBase": true,
       "modulators": []
     },
     "DotSize": {
       "baseValue": 0.32,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.32,
+      "baseMax": 0.47,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "audio_flux_bass",
@@ -95,16 +95,16 @@
     },
     "Glow": {
       "baseValue": 0.8,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.8,
+      "baseMax": 0.95,
+      "randomizeBase": true,
       "modulators": []
     },
     "HueOffset": {
       "baseValue": 0.55,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.25,
+      "baseMax": 0.85,
+      "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "lfo",
@@ -121,9 +121,9 @@
     },
     "HueSweep": {
       "baseValue": 0.4,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseMin": 0.1,
+      "baseMax": 0.7,
+      "randomizeBase": true,
       "modulators": []
     }
   },
