@@ -245,7 +245,7 @@ Preferences: randomization on. For each source: pick it fresh from Browse (not a
 
 Open each: renders, animates, parameters do something. Note anything black, flickering or slow.
 
-Heavy: - [ ] mandelbox (opens on a face, square) - [ ] kifs (static and face-on by default, Color Spread gives several colours, Twist/Morph reshape inside without turning the object) - [ ] mandelbulb - [ ] pseudo_kleinian - [ ] apollonian - [ ] escape_time - [ ] nebula_volume - [ ] reaction_diffusion (pushing Regime / trims never goes black; reseeds) - [ ] fluid_ink - [ ] lenia (Growth Center high then back: recovers)
+Heavy: - [ ] mandelbox (opens on a face, square) - [ ] kifs (static and face-on by default, Color Spread gives several colours, Twist/Morph reshape inside without turning the object) - [ ] kifs Icosahedral type (2026-11-03): Fractal Type 4; sweep Vertex 0 to 1 (icosahedron, football, icosidodecahedron, truncated dodecahedron, dodecahedron outlines); Vertex 0.2 + Color Mode 1 + Hue Offset 0.08 = copper frames over blue recessed panels; Flight Speed pops at the wrap like the octahedral type; Rand rolls type 4 and Vertex - [ ] mandelbulb - [ ] pseudo_kleinian - [ ] apollonian - [ ] escape_time - [ ] nebula_volume - [ ] reaction_diffusion (pushing Regime / trims never goes black; reseeds) - [ ] fluid_ink - [ ] lenia (Growth Center high then back: recovers)
 
 Light wave 1: - [ ] quasicrystal - [ ] thin_film - [ ] tunnel_scenes - [ ] video_feedback - [ ] hyperbolic_tiling
 

@@ -52,3 +52,14 @@ Header: `LSD_COST` 3, `is3D` true, CREDIT "Liquid LSD", CATEGORIES Generator / 3
 ## Draft SHADERS_LICENSE row (Bundled Visual Sources)
 | **KIFS** | `default_sources/kifs/kifs.fs` | Liquid LSD Engine (Cleanroom) | MIT | Approved | Raymarched kaleidoscopic IFS fractal (Menger, Sierpinski, octahedral, mixed) with per-iteration rotation, orbit-trap colouring and self-similar flight. Algorithm credit: textbook IFS mathematics, no third-party shader code. |
 (Match the column layout of the existing Bundled Visual Sources table when pasting.)
+
+## Icosahedral type (SurfaceType 4, added 2026-11-03)
+- Group: H3 (order 120), icosahedron vertices at cyclic permutations of (0, +-1, +-PHI). The axis planes are mirrors; N1 = (-PHI/2, -1/2, 1/(2 PHI)) is a unit mirror normal at 120 deg to x and 144 deg to y (dihedral angles pi/3 and pi/5), same mirrors as our `icosa_h3`. Chamber {x >= 0, y >= 0, p.N1 >= 0}, corners C5 (vertex), C2 (edge midpoint), C3 (face centre).
+- Fold: 3 rounds of (abs, reflect across N1 if negative). Checked numerically on 200k random points: 3 rounds land 100% in the chamber (2 rounds 47%).
+- IFS: p -> s fold(p) - (s - 1) V, V = Offset * normalize(mix along C5 -> C2 -> C3) chosen by `Vertex` (0..0.5..1). Orbit of V: 12 (icosahedron), 60 (truncated icosahedron near 0.315), 30 (icosidodecahedron at 0.5), 60 (truncated dodecahedron near 0.73), 20 (dodecahedron at 1). Nominal scale 2.3 (Scale 0.5).
+- Base shape: convex hull of the orbit of V. For a reflection group, with p and V both in the chamber, the support of every face family is max(p.C - V.C) over the three chamber corner normals, so d = max over C5, C2, C3 of (fold(p).C - V.C).
+- Colour Mode 1 on this type: depth below that outer hull, smoothstep(0.3, 0.7, -hull / (0.03 Offset)), so raised frames and recessed panels take hues half a turn apart.
+- Camera: looks down the C3 axis (a hexagon/triangle face), d0 2.6, flight toward V.
+- Known: flight wrap pops like the octahedral type (the copies overlap their neighbours, so the zoomed-in view is not one isolated copy). Vertex is ignored by the other types.
+- Measured RTX A2000 Laptop, 1080p: default 5.4 ms, Quality 1 7.4 ms, Quality 0 2.8 ms, Zoom 1 + Quality 1 10.1 ms (Menger same run 7.8 / 9.2 / 3.8).
+- Inspiration: a user-supplied render of a truncated-icosahedron KIFS (copper frames, blue recessed panels), no source code seen.

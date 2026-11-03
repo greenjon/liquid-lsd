@@ -244,7 +244,14 @@
   "SurfaceType": {
    "baseValue": 0.0,
    "baseMin": 0.0,
-   "baseMax": 3.0,
+   "baseMax": 4.0,
+   "randomizeBase": true,
+   "modulators": []
+  },
+  "Vertex": {
+   "baseValue": 0.2,
+   "baseMin": 0.1,
+   "baseMax": 0.6,
    "randomizeBase": true,
    "modulators": []
   },

@@ -135,7 +135,8 @@ A raymarched Mandelbox: space is repeatedly folded into a box, inverted in a sph
 
 A kaleidoscopic iterated-function-system fractal: repeated folds, a scale and an offset toward a fixed vertex, with a rotation added at every iteration. The light is camera-relative, so the lit side always faces you as the view turns.
 
-- **Fractal Type**: Menger-like, Sierpinski tetrahedron, octahedral, or a mixed construction.
+- **Fractal Type**: Menger-like, Sierpinski tetrahedron, octahedral, a mixed construction, or icosahedral (the same symmetry as the Icosahedron source, nested many levels deep).
+- **Vertex** (icosahedral type only): where the smaller copies sit, which sets the outline: 0 icosahedron, about 0.3 truncated icosahedron (a football), 0.5 icosidodecahedron, about 0.7 truncated dodecahedron, 1 dodecahedron. Low values (0.1 to 0.25) carve deep recessed panels inside raised frames. Pair it with Color Mode 1, which on this type colours the raised frames and the recessed panels in opposite hues (Hue Offset picks the frame colour: about 0.08 gives copper frames over blue panels).
 - **Scale, Offset**: Look controls on the construction; away from the centre it stops tiling exactly.
 - **Twist X/Y/Z, Morph Speed**: Rotation applied to each nested level of the fractal except the outermost, so the object stays in place while its inner geometry twists (safe to modulate with an LFO). Morph Speed adds a time-driven rotation to the same twist. Morph Speed defaults to 0, so nothing moves until you raise it.
 - **Flight Speed**: Endless self-similar dolly toward the fixed vertex; negative flies outward. Defaults to 0 (holds still).

@@ -3,6 +3,13 @@
 ### 3D Elevation: Plane Separation Leaves Tri-Axial Alone (`default_filters/3d_elevation.fs`)
 - **Changed**: in Tri-Axial mode (three planes crossing at one shared centre) Plane Separation now does nothing. It used to push each plane out along its own axis, so the three slid apart in different directions and the shape lost its symmetry. The other modes are unchanged.
 
+### KIFS Gets an Icosahedral Type (`library/sources/kifs/kifs.fs`, `rendering/SourceDocRegistry.kt`, `stock_defaults/sources/kifs.json`, `web/presets/stock-kifs.lsd`)
+- **New Fractal Type 4, Icosahedral**: the Icosahedron source's symmetry, nested many levels deep, so every face holds smaller frames that hold smaller frames again.
+- **New Vertex knob** (icosahedral type only) picks the outline: icosahedron at 0, truncated icosahedron (a football) near 0.3, icosidodecahedron at 0.5, truncated dodecahedron near 0.7, dodecahedron at 1. Low values (0.1 to 0.25) carve deep recessed panels inside raised frames.
+- **Color Mode 1 on this type is a two-tone**: raised frames and recessed panels get opposite hues. Hue Offset picks the frame colour; about 0.08 gives copper frames over blue panels.
+- About as heavy as the other types (lighter than Menger on the RTX A2000). Randomizing the source now also rolls this type and its Vertex.
+- The web TV gets it too: its KIFS channel (`web/presets/stock-kifs.lsd`, `web/shaders/kifs.frag`) rolls the new type and Vertex the same way.
+
 ### Web TV: The Gallery Recovers From a Bad Start (`web/gallery.js`, `web/ui.js`)
 - **Fixed**: if the photo list or the first photos could not be loaded (a slow or dropped connection, or a publish in progress), the gallery stayed blank until the page was reloaded. It now tries again every 20 seconds.
 - **Fixed**: MENU › BACKGROUND showed `---` after BG CHANGES came back from *Off*, even once the background was back. The row now names the background whenever it changes.

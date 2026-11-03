@@ -216,8 +216,9 @@ object SourceDocRegistry {
         "mandelbox/Rotate Z" to "Roll rotation of the camera rig around the Z axis.",
 
         // Kifs
-        "kifs/SurfaceType" to "Construction: 0 = Menger-like, 1 = Sierpinski tetrahedron, 2 = octahedral, 3 = mixed Menger and Sierpinski steps.",
-        "kifs/Fractal Type" to "Construction: 0 = Menger-like, 1 = Sierpinski tetrahedron, 2 = octahedral, 3 = mixed Menger and Sierpinski steps.",
+        "kifs/SurfaceType" to "Construction: 0 = Menger-like, 1 = Sierpinski tetrahedron, 2 = octahedral, 3 = mixed Menger and Sierpinski steps, 4 = icosahedral (pick its polyhedron with Vertex).",
+        "kifs/Fractal Type" to "Construction: 0 = Menger-like, 1 = Sierpinski tetrahedron, 2 = octahedral, 3 = mixed Menger and Sierpinski steps, 4 = icosahedral (pick its polyhedron with Vertex).",
+        "kifs/Vertex" to "Icosahedral type only: where the copies sit, which sets the outline. 0 = icosahedron, about 0.3 = truncated icosahedron (the football), 0.5 = icosidodecahedron, about 0.7 = truncated dodecahedron, 1 = dodecahedron. Low values (0.1 to 0.25) give deep recessed panels inside raised frames.",
         "kifs/Scale" to "Multiplies the per-iteration scale of the construction (0.5 = nominal). Away from the centre the shape stops tiling exactly and becomes a look control.",
         "kifs/Offset" to "Multiplies the fold offset, the distance of the fixed vertex that the structure folds toward (0.5 = nominal).",
         "kifs/TwistX" to "Rotation about the X axis applied to each nested level of the fractal, except the outermost. The overall shape stays put while the sub-structure inside twists, so it is safe to modulate. 0 is untwisted. Use Rotate to turn the whole object.",
@@ -233,8 +234,8 @@ object SourceDocRegistry {
         "kifs/Glow" to "Soft halo around the surface, taken from near-miss ray steps.",
         "kifs/ColorSpread" to "How far hue wanders across the surface. The folds make every copy of a detail identical, so this shifts hue by fold depth, position in space and facing direction. 0 is the plain ramp; ignored by the gold ramp.",
         "kifs/Color Spread" to "How far hue wanders across the surface. The folds make every copy of a detail identical, so this shifts hue by fold depth, position in space and facing direction. 0 is the plain ramp; ignored by the gold ramp.",
-        "kifs/ColorMode" to "Colouring: 0 = point orbit trap, 1 = axis-plane trap, 2 = iteration-of-minimum trap, 3 = normal spectrum, 4 = gold ramp.",
-        "kifs/Color Mode" to "Colouring: 0 = point orbit trap, 1 = axis-plane trap, 2 = iteration-of-minimum trap, 3 = normal spectrum, 4 = gold ramp.",
+        "kifs/ColorMode" to "Colouring: 0 = point orbit trap, 1 = axis-plane trap (on the icosahedral type, a two-tone that colours raised frames and recessed panels apart), 2 = iteration-of-minimum trap, 3 = normal spectrum, 4 = gold ramp.",
+        "kifs/Color Mode" to "Colouring: 0 = point orbit trap, 1 = axis-plane trap (on the icosahedral type, a two-tone that colours raised frames and recessed panels apart), 2 = iteration-of-minimum trap, 3 = normal spectrum, 4 = gold ramp.",
         "kifs/HueOffset" to "Rotates the base hue of the palette.",
         "kifs/Hue Offset" to "Rotates the base hue of the palette.",
         "kifs/Saturation" to "Colour saturation of the surface.",

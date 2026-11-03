@@ -236,7 +236,13 @@
     "SurfaceType": {
       "randomizeBase": true,
       "baseMin": 0,
-      "baseMax": 3
+      "baseMax": 4
+    },
+    "Vertex": {
+      "note": "Icosahedral type only: which polyhedron the copies sit on.",
+      "randomizeBase": true,
+      "baseMin": 0.1,
+      "baseMax": 0.6
     },
     "ColorMode": {
       "randomizeBase": true,

@@ -2,7 +2,7 @@
 precision highp float;
 /*
 {
-    "DESCRIPTION": "Raymarched kaleidoscopic IFS fractal: iterated abs/plane folds, per-iteration rotation, scale and offset. Menger, Sierpinski, octahedral and mixed constructions, with orbit-trap colouring and an endless self-similar zoom.",
+    "DESCRIPTION": "Raymarched kaleidoscopic IFS fractal: iterated abs/plane folds, per-iteration rotation, scale and offset. Menger, Sierpinski, octahedral, mixed and icosahedral constructions, with orbit-trap colouring and an endless self-similar zoom.",
     "CREDIT": "Liquid LSD",
     "LSD_COST": 3,
     "ISFVSN": "2.0",
@@ -14,7 +14,8 @@ precision highp float;
     ],
     "LSD_PHASES": {"MorphPhase": ["MorphSpeed"], "FlightPhase": ["FlightSpeed"]},
     "INPUTS": [
-        { "NAME": "SurfaceType", "LABEL": "Fractal Type", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 3.0, "STEP": 1 },
+        { "NAME": "SurfaceType", "LABEL": "Fractal Type", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 4.0, "STEP": 1 },
+        { "NAME": "Vertex", "LABEL": "Vertex", "TYPE": "float", "DEFAULT": 0.2, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "Scale", "LABEL": "Scale", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "Offset", "LABEL": "Offset", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "TwistX", "LABEL": "Twist X", "TYPE": "float", "DEFAULT": 0.1, "MIN": -1.0, "MAX": 1.0 },
@@ -49,6 +50,15 @@ precision highp float;
 #define Zoom_ (Zoom<0.5?pow(0.1,1.0-2.0*Zoom):pow(5.0,2.0*Zoom-1.0))
 
 const float PI = 3.14159265358979323846;
+const float PHI = 1.61803398874989484820;
+
+// Icosahedral reflection group (H3), icosahedron vertices at the cyclic permutations of (0, +-1, +-PHI). The axis planes
+// are mirrors; with the mirror normal N1 they bound the fundamental chamber {x >= 0, y >= 0, dot(p, N1) >= 0}, whose
+// corners point at an icosahedron vertex (C5), an edge midpoint (C2) and a face centre (C3).
+const vec3 N1 = vec3(-0.5 * PHI, -0.5, 0.5 / PHI);
+const vec3 C5 = vec3(0.0, 0.52573111, 0.85065081);
+const vec3 C2 = vec3(0.0, 0.0, 1.0);
+const vec3 C3 = vec3(0.35682209, 0.0, 0.93417236);
 
 // Hard loop caps. The Quality input picks the live counts below these.
 const int MAX_STEPS = 112;
@@ -68,7 +78,8 @@ vec3 hsv2rgb(vec3 c) {
 mat3 gRot;       // rotation applied before every fold
 float gScale;    // scale per iteration
 float gOff;      // offset multiplier
-int gType;       // construction: 0 Menger, 1 Sierpinski, 2 octahedral, 3 mixed
+int gType;       // construction: 0 Menger, 1 Sierpinski, 2 octahedral, 3 mixed, 4 icosahedral
+vec3 gV;         // icosahedral fixed vertex (offset times a direction in the chamber, picked by Vertex)
 int gIter;       // live fold iterations
 // Orbit traps written by map(): x = min |p|^2, y = min axis-plane distance, z = iteration of the min |p|^2.
 vec3 gTrap;
@@ -87,6 +98,16 @@ vec3 tetraFold(vec3 p) {
     if (p.x + p.y < 0.0) p.xy = -p.yx;
     if (p.x + p.z < 0.0) p.xz = -p.zx;
     if (p.y + p.z < 0.0) p.yz = -p.zy;
+    return p;
+}
+
+// Fold into the icosahedral chamber. abs() applies the three axis mirrors; three rounds of abs plus the N1 mirror reach
+// the chamber from any point (checked numerically over random points).
+vec3 icoFold(vec3 p) {
+    for (int j = 0; j < 3; j++) {
+        p = abs(p);
+        p -= 2.0 * min(0.0, dot(p, N1)) * N1;
+    }
     return p;
 }
 
@@ -117,6 +138,10 @@ float map(vec3 p) {
             p = tetraFold(p);
             c = vec3(k * (s - 1.0));
             p = p * s - c;
+        } else if (t == 4) {
+            // Icosahedral: fold into the chamber, scale about the vertex gV (its orbit holds 12 to 60 copies).
+            p = icoFold(p);
+            p = p * s - gV * (s - 1.0);
         } else {
             // Octahedral: sorted abs fold, scale about the vertex (k,0,0).
             p = sortFold(p);
@@ -139,6 +164,10 @@ float map(vec3 p) {
         float m = max(max(dot(p, vec3(-1.0, -1.0, -1.0)), dot(p, vec3(-1.0, 1.0, 1.0))),
                       max(dot(p, vec3(1.0, -1.0, 1.0)), dot(p, vec3(1.0, 1.0, -1.0))));
         d = (m - k) * 0.57735027;
+    } else if (bt == 4) {
+        // Convex hull of the orbit of gV: in the chamber, the three face families have normals C5, C2 and C3.
+        vec3 f = icoFold(p);
+        d = max(max(dot(f, C5) - dot(gV, C5), dot(f, C2) - dot(gV, C2)), dot(f, C3) - dot(gV, C3));
     } else {
         // Octahedron |x|+|y|+|z| <= k.
         d = (abs(p.x) + abs(p.y) + abs(p.z) - k) * 0.57735027;
@@ -198,10 +227,14 @@ void main() {
     int steps = clamp(int(floor(48.0 + q * 64.0)), 48, MAX_STEPS);
     int aoTaps = q < 0.2 ? 0 : (q < 0.6 ? 2 : 4);
 
-    gType = clamp(int(floor(SurfaceType + 0.5)), 0, 3);
-    float nominal = (gType == 0) ? 3.0 : 2.0;
+    gType = clamp(int(floor(SurfaceType + 0.5)), 0, 4);
+    float nominal = (gType == 0) ? 3.0 : (gType == 4 ? 2.3 : 2.0);
     gScale = max(nominal * ScaleMul_, 1.2);
     gOff = clamp(OffsetMul_, 0.3, 2.0);
+    // Vertex walks the chamber edge icosahedron vertex (0) -> edge midpoint (0.5) -> face centre (1): icosahedron,
+    // truncated icosahedron, icosidodecahedron, truncated dodecahedron, dodecahedron.
+    float vw = clamp(Vertex, 0.0, 1.0);
+    gV = gOff * normalize(vw < 0.5 ? mix(C5, C2, vw * 2.0) : mix(C2, C3, vw * 2.0 - 1.0));
 
     // Per-level rotation (skipped on the first level, see map()): static twist plus a slow time-driven morph.
     float m = MorphPhase * 0.3;
@@ -213,7 +246,8 @@ void main() {
     vec3 fp;
     vec3 face;     // unit direction from the centre to the camera
     float d0;
-    if (gType == 2) { fp = vec3(gOff, 0.0, 0.0); face = normalize(vec3(1.0)); d0 = 2.4; }
+    if (gType == 4) { fp = gV; face = C3; d0 = 2.6; }
+    else if (gType == 2) { fp = vec3(gOff, 0.0, 0.0); face = normalize(vec3(1.0)); d0 = 2.4; }
     else if (gType == 1) { fp = gOff * vec3(1.0, -1.0, -1.0); face = -normalize(vec3(1.0)); d0 = 4.0; }
     else { fp = vec3(gOff); face = vec3(0.0, 0.0, 1.0); d0 = 2.9; }
     vec3 ro0 = face * d0 * max(gOff, 1.0);
@@ -277,6 +311,13 @@ void main() {
         int cMode = clamp(int(floor(ColorMode + 0.5)), 0, 4);
         float tv;
         if (cMode == 0) tv = clamp(sqrt(max(trap.x, 0.0)) * 0.35, 0.0, 1.0);
+        else if (cMode == 1 && gType == 4) {
+            // Icosahedral two-tone: depth below the outer hull, so the raised frames take one hue and the recessed
+            // panels the other.
+            vec3 f = icoFold(p);
+            float hull = max(max(dot(f, C5) - dot(gV, C5), dot(f, C2) - dot(gV, C2)), dot(f, C3) - dot(gV, C3));
+            tv = smoothstep(0.3, 0.7, -hull / (0.03 * gOff));
+        }
         else if (cMode == 1) tv = clamp(trap.y * 2.0, 0.0, 1.0);
         else if (cMode == 2) tv = clamp(trap.z / float(max(gIter, 1)), 0.0, 1.0);
         else if (cMode == 3) tv = clamp(dot(n, vec3(0.4, 0.5, 0.3)) + 0.5, 0.0, 1.0);

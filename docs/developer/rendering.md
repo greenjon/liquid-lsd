@@ -173,7 +173,7 @@ Every one exposes a normalised `Quality` input that remaps to live loop counts u
 | Source | Algorithm | Constant caps | Default Quality: steps / iterations / AO taps |
 |---|---|---|---|
 | `mandelbox` | Box fold + sphere fold + scale, running-derivative DE (`z <- s * sphereFold(boxFold(z)) + c`, `DE = norm(z) / dr`) | march 128, fold 12, AO 4 | 0.5: 88 / 9 / 2 (range 48-128 / 6-12 / 0-4) |
-| `kifs` | Fold into a fundamental domain, scale about the IFS fixed vertex, per-iteration rotation, base-shape SDF / s^n; four constructions via `SurfaceType` | march 112, fold 12, AO 4 | 0.5: 80 / 9 / 2 (range 48-112 / 5-12 / 0-4) |
+| `kifs` | Fold into a fundamental domain, scale about the IFS fixed vertex, per-iteration rotation, base-shape SDF / s^n; five constructions via `SurfaceType` (4 = icosahedral: three rounds of `abs` plus one H3 mirror reach the chamber, scale about `Vertex`-chosen point on the chamber edge, base = convex hull of that point's orbit) | march 112, fold 12, AO 4 | 0.5: 80 / 9 / 2 (range 48-112 / 5-12 / 0-4) |
 | `mandelbulb` | Triplex power map `z^n + c` in spherical coordinates, DE `0.5 log(r) r / dr`; analytic bounding sphere skips misses | march 80, iter 10, AO 4 | 0.5: 64 / 8 / 3 (range 48-80 / 6-10 / 2-4) |
 | `pseudo_kleinian` | Periodic triangle-wave slab fold, sphere inversion scale capped at `kmax`, offset, DE `(norm(p) - core) / dr` | march 120, iter 12, AO 4 | 0.33: 72 / 8 / 2 (range 48-120 / 6-12 / 1-4) |
 | `apollonian` | Cell wrap, optional y twist, capped sphere inversion, same DE form | march 120, iter 12, AO 4 | 0.08: 54 / 6 / 1 (range 48-120 / 6-12 / 1-4) |
@@ -187,7 +187,7 @@ Worst case per pixel is steps x iterations estimator passes (for example 88 x 9 
 | Source | Default | Quality 1 | Quality 0 | Notes |
 |---|---|---|---|---|
 | `mandelbox` | 7.7 ms | 8.4 ms | 5.0 ms | closest-camera, Zoom 1, Quality 1 corners 14 to 42 ms |
-| `kifs` | 4.8 ms | 5.7 ms | 2.1 ms | corners not searched |
+| `kifs` | 4.8 ms | 5.7 ms | 2.1 ms | corners not searched; icosahedral type 5.4 / 7.4 / 2.8 ms, Zoom 1 at Quality 1 10.1 ms (2026-11-03, Menger re-measured 7.8 / 9.2 / 3.8 the same run) |
 | `mandelbulb` | 5.2 ms | 5.7 ms | 4.5 ms | corners not searched |
 | `pseudo_kleinian` | about 11.2 ms | 14.8 ms | 8.1 ms | everything-max corner 27.7 ms |
 | `apollonian` | 8.7 ms | 27.3 ms | 7.8 ms | the earlier default 0.25 cost 15.5 ms; lowered to 0.08 for two-deck headroom |
