@@ -12,6 +12,10 @@ visuals (by hand in a file manager, or in the preview), then build the TV's copi
                                                  # Delete rejects the photo on top (moved to gallery-curate/_rejected/),
                                                  # U puts the last one back, . brings the next one in now
     python3 scripts/gallery_curate.py build      # what is left -> web/gallery/ (1024 px JPEGs) + web/gallery.json
+    python3 scripts/gallery_curate.py export DIR [SIDE]
+                                                 # web/gallery/ scaled to SIDE px (default 768) -> DIR/gallery/ +
+                                                 # DIR/gallery.json: the Spaz Radio app's bundled copy (its
+                                                 # scripts/sync_visuals.sh runs this)
 
 web/gallery/ and web/gallery.json are not in git either; scripts/publish_web_tv.sh uploads them with the rest of
 web/ (it copies the working tree), so the TV loads them from spaz.org/tv/gallery/.
@@ -212,6 +216,31 @@ def build():
     print(f'{len(out)} photos -> {OUT_DIR} ({size // 2**20} MB) and {OUT_JSON}')
 
 
+# ------------------------------------------------------------------ export
+def export(dest, side=768):
+    """The built gallery (web/gallery.json + web/gallery/) at phone size, for an app that bundles the TV."""
+    from PIL import Image
+    if not OUT_JSON.exists():
+        sys.exit(f'no {OUT_JSON}: run "{sys.argv[0]} build" first')
+    manifest = json.loads(OUT_JSON.read_text())
+    dest = Path(dest)
+    out_dir = dest / 'gallery'
+    out_dir.mkdir(parents=True, exist_ok=True)
+    names = [n for n in manifest['images'] if (OUT_DIR / n).is_file()]
+    for name in names:
+        with Image.open(OUT_DIR / name) as im:
+            im = im.convert('RGB')
+            im.thumbnail((side, side), Image.LANCZOS)
+            im.save(out_dir / name, 'JPEG', quality=80, optimize=True, progressive=True)
+    keep = set(names)
+    for stale in out_dir.iterdir():
+        if stale.name not in keep:
+            stale.unlink()
+    (dest / 'gallery.json').write_text(json.dumps(dict(manifest, base='gallery/', images=names), indent=1) + '\n')
+    size = sum(p.stat().st_size for p in out_dir.iterdir())
+    print(f'{len(names)} photos at {side} px -> {out_dir} ({size / 2**20:.1f} MB)')
+
+
 if __name__ == '__main__':
     cmd = sys.argv[1] if len(sys.argv) > 1 else ''
     if cmd == 'download':
@@ -220,5 +249,7 @@ if __name__ == '__main__':
         preview(int(sys.argv[2]) if len(sys.argv) > 2 else 8000)
     elif cmd == 'build':
         build()
+    elif cmd == 'export' and len(sys.argv) > 2:
+        export(sys.argv[2], int(sys.argv[3]) if len(sys.argv) > 3 else 768)
     else:
         sys.exit(__doc__)

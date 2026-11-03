@@ -16,6 +16,7 @@
 - **Curating the photos** (for whoever runs the TV): `scripts/gallery_curate.py download` copies every upload into `gallery-curate/` (kept out of git), `preview` plays them one by one on the real TV at `localhost:8000/?gallery=curate` with each name on screen (`Delete` rejects the photo on top, `U` puts it back, `.` brings the next one in), and `build` turns what is left into small copies in `web/gallery/` that the usual publish uploads to spaz.org/tv.
 - **MENU › BG CHANGES now starts on *Hold***, so the gallery stays. `B` and MENU › **BACKGROUND** still step to the other backgrounds (and back to the gallery), and *With scenes* brings back a new background every two scenes. RESET goes back to *Hold*.
 - The Spaz Radio app needs an update to show the gallery: the content it downloads now asks for engine 3, so the app's current release keeps its own backgrounds until then.
+- **The Spaz Radio app gets the gallery too**, with the photos built into the app at phone size (768 px, about 11 MB), so it works offline: `scripts/gallery_curate.py export DIR` makes that copy, and the app's `scripts/sync_visuals.sh` runs it. A new curation reaches the app with its next release.
 - The TV's version is now v14.
 
 ### Web TV: ROLL, Background and Effects Controls, Channel Skip (`web/autopilot.js`, `web/ui.js`, `web/index.html`, `web/tv.css`, `web/menu.js`, `scripts/gen_web_presets.py`, `web/presets/web-*.lsd`, `web/fxchains/*.lsdfxchain`)
