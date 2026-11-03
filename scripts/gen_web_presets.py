@@ -213,7 +213,9 @@ def write_json(path, data):
 # so their presets are tagged `fullframe` and the autopilot skips those chains for them (web/pairing.js).
 FULL_FRAME_SOURCES = {"cyclic_ca", "kali_set", "glitch_blocks", "halftone_matrix", "quasicrystal", "thin_film",
                       "voronoi_cells", "wave_ripples", "isometric_voxels", "girih_stars", "spectrogram",
-                      "apollonian", "escape_time", "nebula_volume", "pseudo_kleinian"}
+                      "apollonian", "escape_time", "nebula_volume", "pseudo_kleinian",
+                      # additive neon that fills the frame: feedback and bloom wash it out
+                      "kifs_storm"}
 
 
 # Sources drawn as fine dots or thin lines on black: pixelate and halftone chains average them away to
@@ -1094,6 +1096,18 @@ preset("web-kifs-ambient", "kifs", {
     "ColorMode": 1.0, "HueOffset": (0.58, lfo(96, 1.0)), "Saturation": 0.7, "Brightness": 0.75,
 }, ["ambient", "bar", "amp"],
     "A kaleidoscopic fractal slowly turning and refolding.")
+preset("web-kifs-storm-groove", "kifs_storm", {
+    "Iterations": 5.0, "Scale": (0.2, lfo(32, 0.08)), "FoldX": (0.45, kick(0.08, 200)), "FoldY": 0.2, "FoldZ": 0.3,
+    "FoldAngleX": (1.1, lfo(64, 0.3)), "FoldAngleY": -0.7, "FoldAngleZ": 2.0, "TumbleSpeed": 0.15, "Zoom": 0.6,
+    "Glow": (0.35, pulse(1, 0.25)), "TrapGlow": (0.2, bass(0.15)), "ColorShift": (0.0, lfo(48, 1.0)),
+}, ["groove", "beat", "bar", "kick", "bass"],
+    "The original KIFS: nested cubes tumbling against each other; the kick pushes them apart, the bass lights the creases.")
+preset("web-kifs-storm-flight", "kifs_storm", {
+    "Iterations": 5.0, "Scale": 0.33, "RepeatSpacing": 0.3, "Repeat3D": 1.0, "FlySpeed": 0.12,
+    "FoldAngleX": 1.1, "TumbleSpeed": 0.1, "NormalColoring": 1.0, "NormalFrequency": 0.3,
+    "TrapGlow": (0.15, kick(0.2, 250)), "Glow": (0.3, amp(0.2)), "ColorShift": (0.0, lfo(64, 1.0)),
+}, ["groove", "bar", "kick", "amp"],
+    "A flight down a corridor through an endless lattice of tumbling KIFS; kicks light the creases.")
 
 preset("web-lenia-groove", "lenia", {
     "Relief": (0.5, pulse(1, 0.3)), "Brightness": (0.5, bass(0.25)), "Zoom": (0.5, lfo(32, 0.1)),

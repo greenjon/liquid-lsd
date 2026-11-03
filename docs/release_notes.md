@@ -6,7 +6,8 @@
 - Randomizing it rolls the full circle on every Fold Angle, as before, plus the shape, the offsets, the scale and the colouring. Out of the box it tumbles faster with loudness and spins harder on the drop, the kick pushes the copies apart and flashes the glow, and the crease neon dims in a breakdown. Macro knobs: TMBL, SCALE, SHAPE, NEON.
 - **Fixed** from the original: Repeat Spacing drew stripes with Repeat 3D off and a blank frame with it on. Now it tiles the fractal into a lattice with the camera in a corridor between the copies, and Fly Speed flies down it. Repeat 3D is now an on/off switch.
 - Its knobs use the same 0 to 1 ranges as the other sources (Scale, Fold X/Y/Z, Zoom, Repeat Spacing, Fly Speed, Trap Glow and Normal Frequency were in raw units before).
-- GPU-heavy (the browser triangle). Desktop only for now; the web TV does not have it.
+- GPU-heavy (the browser triangle).
+- **On the web TV too** (and the Spaz Radio app, through its content updates): three new channels at the end of the list, so no channel is renumbered: CH 130 is the desktop's stock look, CH 131 a tumbling storm under the kaleidoscope chain, CH 132 a flight through the endless lattice. They count as big GPU scenes, so they only play where the TV's GPU check passes. The TV's version is now v18.
 
 ### 3D Elevation: Plane Separation Leaves Tri-Axial Alone (`default_filters/3d_elevation.fs`)
 - **Changed**: in Tri-Axial mode (three planes crossing at one shared centre) Plane Separation now does nothing. It used to push each plane out along its own axis, so the three slid apart in different directions and the shape lost its symmetry. The other modes are unchanged.

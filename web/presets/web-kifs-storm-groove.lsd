@@ -1,0 +1,183 @@
+{
+  "version": 1,
+  "name": "web-kifs-storm-groove",
+  "visualSourceType": "kifs_storm",
+  "parameters": {
+    "Iterations": {
+      "baseValue": 5.0,
+      "baseMin": 1.0,
+      "baseMax": 8.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Scale": {
+      "baseValue": 0.2,
+      "baseMin": 0.1,
+      "baseMax": 0.3,
+      "randomizeBase": true,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.04,
+          "dcOffset": 0.04,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 32.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "FoldX": {
+      "baseValue": 0.45,
+      "baseMin": 0.3,
+      "baseMax": 0.6,
+      "randomizeBase": true,
+      "modulators": [
+        {
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "depth": 0.08,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 4.0,
+          "decayMs": 200.0
+        }
+      ]
+    },
+    "FoldY": {
+      "baseValue": 0.2,
+      "baseMin": 0.1,
+      "baseMax": 0.3,
+      "randomizeBase": true,
+      "modulators": []
+    },
+    "FoldZ": {
+      "baseValue": 0.3,
+      "baseMin": 0.15,
+      "baseMax": 0.45,
+      "randomizeBase": true,
+      "modulators": []
+    },
+    "FoldAngleX": {
+      "baseValue": 1.1,
+      "baseMin": 0.55,
+      "baseMax": 1.65,
+      "randomizeBase": true,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.3,
+          "dcOffset": 0.0,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 64.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "FoldAngleY": {
+      "baseValue": -0.7,
+      "baseMin": -1.05,
+      "baseMax": -0.35,
+      "randomizeBase": true,
+      "modulators": []
+    },
+    "FoldAngleZ": {
+      "baseValue": 2.0,
+      "baseMin": 1.0575,
+      "baseMax": 2.9425,
+      "randomizeBase": true,
+      "modulators": []
+    },
+    "TumbleSpeed": {
+      "baseValue": 0.15,
+      "baseMin": 0.075,
+      "baseMax": 0.225,
+      "randomizeBase": true,
+      "modulators": []
+    },
+    "Zoom": {
+      "baseValue": 0.6,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Glow": {
+      "baseValue": 0.35,
+      "baseMin": 0.2,
+      "baseMax": 0.35,
+      "randomizeBase": true,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.125,
+          "dcOffset": 0.125,
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 1.0,
+          "slope": 0.0,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "TrapGlow": {
+      "baseValue": 0.2,
+      "baseMin": 0.1,
+      "baseMax": 0.2,
+      "randomizeBase": true,
+      "modulators": [
+        {
+          "sourceId": "audio_bass",
+          "operator": "ADD",
+          "depth": 0.15,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 20.0,
+          "decayMs": 300.0
+        }
+      ]
+    },
+    "ColorShift": {
+      "baseValue": 0.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.5,
+          "dcOffset": 0.5,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 48.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    }
+  },
+  "tags": [
+    "web",
+    "groove",
+    "beat",
+    "bar",
+    "kick",
+    "bass",
+    "fullframe"
+  ],
+  "presetNotes": "The original KIFS: nested cubes tumbling against each other; the kick pushes them apart, the bass lights the creases.",
+  "globalAlpha": {
+    "baseValue": 1.0,
+    "baseMin": 0.0,
+    "baseMax": 1.0,
+    "randomizeBase": false,
+    "modulators": []
+  }
+}

@@ -26,7 +26,7 @@ FULL_FRAME_SOURCES = {"cyclic_ca", "kali_set", "glitch_blocks", "halftone_matrix
                       "apollonian", "escape_time", "nebula_volume", "pseudo_kleinian",
                       # their stock ranges run bright: feedback and bloom washed them out in render_check
                       "domain_warp_fluid", "hyper_slice", "hyperbolic_tiling", "mandelbox", "metaballs",
-                      "reaction_diffusion"}
+                      "reaction_diffusion", "kifs_storm"}
 SPARSE_SOURCES = {"dynamic_spiral", "scope"}
 
 # Audio signals -> the tag a preset earns by having an active modulator on one (reactivity.test.mjs checks each).

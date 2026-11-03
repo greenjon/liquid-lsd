@@ -96,6 +96,11 @@
       "name": "Raymarched kaleidoscopic IFS fractal"
     },
     {
+      "id": "kifs_storm",
+      "file": "shaders/kifs_storm.frag",
+      "name": "KIFS Storm: the original tumbling kaleidoscopic IFS"
+    },
+    {
       "id": "lenia",
       "file": "shaders/lenia.frag",
       "name": "Lenia"

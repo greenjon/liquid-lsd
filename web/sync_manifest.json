@@ -412,6 +412,12 @@
       "description": "Raymarched kaleidoscopic IFS fractal"
     },
     {
+      "desktop": "library/sources/kifs_storm/kifs_storm.fs",
+      "web": "web/shaders/kifs_storm.frag",
+      "mode": "auto_shader",
+      "description": "KIFS Storm: the original tumbling kaleidoscopic IFS"
+    },
+    {
       "desktop": "library/sources/lenia/lenia.fs",
       "web": "web/shaders/lenia.frag",
       "mode": "auto_shader",
