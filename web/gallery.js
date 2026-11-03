@@ -97,14 +97,21 @@ export class Gallery {
     this.loc = Object.fromEntries(['uHalf', 'uPivotUV', 'uPivotPos', 'uAngle', 'uAspect', 'uTex', 'uAlpha']
       .map((n) => [n, gl.getUniformLocation(prog, n)]));
     if (this.curate) { this.startCurate(); return; }
+    this.loadManifest();
+  }
+
+  /** The photo list (gallery.json), shuffled. A failure is tried again with the 20 s fetch (render). */
+  loadManifest() {
+    this.inflight++;
+    this.lastFetch = performance.now();
     fetch(this.manifestUrl).then((r) => r.json()).then((m) => {
       this.urls = m.images.map((n) => m.base + encodeURIComponent(n));
       for (let i = this.urls.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [this.urls[i], this.urls[j]] = [this.urls[j], this.urls[i]];
       }
-      this.fill();
-    }).catch((e) => console.warn('[gallery] no manifest:', e.message));
+    }).catch((e) => console.warn('[gallery] no manifest:', e.message))
+      .finally(() => { this.inflight--; this.fill(); });
   }
 
   /** At the start: three photos at a time until the first few are in, so the picture starts quickly. */
@@ -229,7 +236,12 @@ export class Gallery {
     const gl = this.gl;
     this.clock += dt * Math.min(180, Math.max(60, bpm || 120)) / 60;
     if (this.decoded.length) this.upload();
-    if (this.inflight === 0 && this.pool.length > 0 && performance.now() - this.lastFetch > FETCH_EVERY_S * 1000) this.fetchNext();
+    // Every 20 s, one more photo; after a bad start (no list, or every photo failing: offline), try again.
+    if (this.inflight === 0 && performance.now() - this.lastFetch > FETCH_EVERY_S * 1000) {
+      if (!this.curate && this.urls.length === 0) this.loadManifest();
+      else if (this.pool.length > 0) this.fetchNext();
+      else { this.failures = 0; this.fill(); }
+    }
 
     const aspect = target.w / target.h;
     // A new photo every 2-8 beats, on a beat (or a beat late, when the beat stands still: no audio yet);

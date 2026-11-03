@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Web TV: The Gallery Recovers From a Bad Start (`web/gallery.js`, `web/ui.js`)
+- **Fixed**: if the photo list or the first photos could not be loaded (a slow or dropped connection, or a publish in progress), the gallery stayed blank until the page was reloaded. It now tries again every 20 seconds.
+- **Fixed**: MENU › BACKGROUND showed `---` after BG CHANGES came back from *Off*, even once the background was back. The row now names the background whenever it changes.
+- The TV's version is now v16.
+
 ### Web TV: MENU › BACKGROUND Steps From the Background on Screen (`web/autopilot.js`, `web/ui.js`)
 - **Fixed**: MENU › **BACKGROUND** (◀ ▶) and `B` stepped from a background the TV had already lined up at random, not from the one on screen, so ◀ often never got back to the photo gallery. The row also kept showing the old name until the change was done, so it could read *spaz gallery* while another background was on. Steps now go through the list in order from the background on screen, and the row names the new one as soon as you press.
 - Turning MENU › BG CHANGES from *Off* back on brings back the background that was on before, not a random one.

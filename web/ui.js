@@ -15,7 +15,7 @@ import { scheduleState, refreshSchedule, setShows, groupByDay, zoneLabel, nextLi
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v15';
+export const TV_VERSION = 'v16';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -909,6 +909,7 @@ export function initUI() {
     if ((viewerState.announce || viewerState.info) && powerState.on && !autopilotState.isLiveBroadcast && e.detail.background) {
       flash('osd-bg', `BACKGROUND: ${prettyName(e.detail.background)}`, 4000);
     }
+    menu.refresh();   // MENU › BACKGROUND names the new one
   });
   window.addEventListener('lsd-broadcast-status', (e) => {
     tvBody.classList.toggle('live', e.detail.live);
