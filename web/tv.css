@@ -915,13 +915,14 @@ body.embed #about, body.embed #schedule, body.embed #keys, body.embed #tv-menu, 
   .ts-clock { font-size: 0.85em; }
 }
 
-/* LIVE: lit while a tape is in (aria-pressed), and it pulses when a live show is on */
+/* LIVE: lit while the radio plays (aria-pressed); on a tape it pulses when a live show is on */
 #liveBtn[aria-disabled="true"] { cursor: default; }
 #liveBtn.pulsing .btn-led { background: #ff4d4d; box-shadow: 0 0 10px rgba(255,70,70,0.95); animation: live-pulse 1.1s ease-in-out infinite; }
 @keyframes live-pulse { 0%, 100% { opacity: 1; transform: scale(1.15); } 50% { opacity: 0.35; transform: scale(1); } }
 body.reduced-motion #liveBtn.pulsing .btn-led { animation: none; }
 /* A broadcast locks the viewer controls, but the archive is still there */
 #tv-body.live #tapesBtn { opacity: 1; cursor: pointer; }
+#tv-body.live #liveBtn { opacity: 1; } /* a broadcast dims the locked controls, not the light that says you're live */
 body.kiosk .kiosk-off { display: none; }
 
 /* The chat's note that the viewer is hearing a tape */

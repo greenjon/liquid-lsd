@@ -4,7 +4,7 @@
 - **New TAPES button on the web TV** (also `T`, or MENU › TAPES): the whole Spaz Radio archive, about 3,800 shows back to 2013, over the picture. Type to search by name or date. RANDOM TAPE lands on any show, ON THIS DAY finds today's date in every year, and RESUME goes back to the show you last stopped.
 - **The picture follows the tape**: a tape is an audio input like the radio, so the beat, the levels and the audio-reactive scenes all follow the old show. The badge reads `SPAZ RADIO • TAPE`.
 - **Transport strip** along the bottom of the picture, with the rest of the info (click the picture, or INFO keeps it up): eject, back and forward 30 seconds, pause, and the show's waveform to click or drag. Keys: `K` pause, `,` `.` 30 seconds, `<` `>` 5 minutes. The phone's lock screen can seek too.
-- **New LIVE button** (`L`) goes back to the radio. It is lit while a tape is in. If a live show starts, the tape keeps playing, the LIVE button pulses red, and `LIVE NOW: <name>` comes up once. Viewer controls stay yours on a tape.
+- **New LIVE button** (`L`) goes back to the radio. LIVE is lit while the radio is playing and TAPES while a tape is in or its list is open. If a live show starts during a tape, the tape keeps playing, the LIVE button pulses red, and `LIVE NOW: <name>` comes up once. Viewer controls stay yours on a tape.
 - **Your place is remembered** per show, in this browser, for the last 50 shows. Turning the TV off and on keeps the tape in; a reload starts on the radio, with RESUME in the list. At the end of a show, the TV goes back to the radio.
 - **Chat stays on the live room**, with a small note on the board that you're on a tape.
 - Not in the Spaz Radio app's embedded picture (the app has its own archive tab) or under `?kiosk`.

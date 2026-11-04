@@ -3,7 +3,7 @@
 // button that goes back to the radio. A tape is an audio input (dsp.js), so the picture reacts to it as it
 // does to the radio. While one is in, a desktop broadcast does not take the picture over (autopilot.js
 // setTapeHold): its picture follows the live sound, not the tape. The LIVE button pulses instead.
-import { cvState, insertTape, ejectTape, setTapePaused, seekTape, tapeStatus } from './dsp.js';
+import { cvState, insertTape, ejectTape, setTapePaused, seekTape, tapeStatus, isMicOn } from './dsp.js';
 import { setTapeHold, stationAir } from './autopilot.js';
 import { scheduleState, upcoming } from './schedule.js';
 import { tapesState, setTapes, refreshTapes, tapesStale, searchShows, randomShow, onThisDayQuery, formatClock, createResumeStore, fetchPeaks } from './tapes.js';
@@ -169,7 +169,7 @@ export function createTapeDeck({ page, strip, button, liveBtn, storage = null, i
     if (!isOn() || isOpen()) return;
     onOpen();
     page.hidden = false;
-    button.setAttribute('aria-pressed', 'true');
+    lights();
     rowH = 0;
     sel = 0;
     list.scrollTop = 0;
@@ -184,7 +184,7 @@ export function createTapeDeck({ page, strip, button, liveBtn, storage = null, i
     if (!isOpen()) return;
     input.blur();
     page.hidden = true;
-    button.setAttribute('aria-pressed', 'false');
+    lights();
   }
   closeBtn.addEventListener('click', close);
   page.addEventListener('click', (e) => e.stopPropagation()); // the cabinet's near-miss handler stays out of it
@@ -265,6 +265,15 @@ export function createTapeDeck({ page, strip, button, liveBtn, storage = null, i
   pauseBtn.addEventListener('click', () => togglePause());
 
   // --- The deck ---
+  /** The two lights say where the sound comes from. TAPES: a tape is in, or its list is open. LIVE: the radio is
+   *  playing, or (pulsing red) a live show is on while a tape plays. Both are dark with the TV off. */
+  function lights() {
+    const on = isOn();
+    button.setAttribute('aria-pressed', String(on && (isOpen() || !!current)));
+    liveBtn.setAttribute('aria-pressed', String(on && !current && !isMicOn()));
+    liveBtn.setAttribute('aria-disabled', String(!current));
+    liveBtn.classList.toggle('pulsing', on && !!current && !!airName);
+  }
   function save() {
     const status = tapeStatus();
     if (current && status) resume.set(current.id, status.pos, current.seconds);
@@ -281,10 +290,8 @@ export function createTapeDeck({ page, strip, button, liveBtn, storage = null, i
     if (!reduced()) cvState.glitchUntil = performance.now() + GLITCH_MS; // the picture rolls as the tape goes in
     insertTape(show.url, startAt);
     close();
-    liveBtn.setAttribute('aria-pressed', 'true');
-    liveBtn.setAttribute('aria-disabled', 'false');
     airName = currentAir(); // already on when the tape went in: the viewer chose this, so no announcement
-    liveBtn.classList.toggle('pulsing', !!airName);
+    lights();
     saveIn = SAVE_EVERY_S;
     onChange(current);
     showStrip(6000);
@@ -297,9 +304,7 @@ export function createTapeDeck({ page, strip, button, liveBtn, storage = null, i
     peaks = null;
     airName = '';
     hideStrip();
-    liveBtn.classList.remove('pulsing');
-    liveBtn.setAttribute('aria-pressed', 'false');
-    liveBtn.setAttribute('aria-disabled', 'true');
+    lights();
     if (!reduced()) cvState.glitchUntil = performance.now() + GLITCH_MS;
     ejectTape();
     setTapeHold(false);
@@ -340,7 +345,7 @@ export function createTapeDeck({ page, strip, button, liveBtn, storage = null, i
     if (air !== airName) {
       if (air && !airName) message(`LIVE NOW: ${air} · PRESS L`, 6000); // the tape plays on; the button pulses
       airName = air;
-      liveBtn.classList.toggle('pulsing', !!air);
+      lights();
       onChange(current);
     }
     drawStrip();
@@ -348,7 +353,7 @@ export function createTapeDeck({ page, strip, button, liveBtn, storage = null, i
   }
   setInterval(everySecond, 1000);
 
-  liveBtn.setAttribute('aria-disabled', 'true');
+  lights();
   liveBtn.addEventListener('click', () => {
     if (!isOn()) return;
     if (current) eject();
@@ -367,6 +372,8 @@ export function createTapeDeck({ page, strip, button, liveBtn, storage = null, i
     get airName() { return airName; },
     get pageOpen() { return isOpen(); },
     open, close, insert, eject, seekBy, seekTo, togglePause, save, showStrip, hideStrip,
+    /** The power or the input changed: the lights follow. */
+    refreshLights: lights,
     toggle() { isOpen() ? close() : open(); },
     /** Keys while the list is open and its search box does not have them. A character goes to the search box. */
     key(e) {

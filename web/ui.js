@@ -16,7 +16,7 @@ import { scheduleState, refreshSchedule, setShows, groupByDay, zoneLabel, nextLi
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v19';
+export const TV_VERSION = 'v20';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -246,6 +246,7 @@ export function initUI() {
       viewerState.schedule?.hide();
       deck?.close();
       deck?.save();
+      deck?.refreshLights();
       document.getElementById('keys').hidden = true;
       document.getElementById('skipped').hidden = true;
       letScreenSleep();
@@ -259,6 +260,7 @@ export function initUI() {
     } else {
       powerState.on = true;
       updatePowerTitles();
+      deck?.refreshLights();
       powerState.warmupProgress = embed ? 1 : 0;  // renderer will advance this (embed: no CRT warm-up)
       powerState.shutdownProgress = 0;
       tvBody.classList.remove('shutting-down');
@@ -560,6 +562,7 @@ export function initUI() {
       console.warn('Microphone unavailable:', err);
       message('MICROPHONE BLOCKED', 3000);
     }
+    deck?.refreshLights();
     menu.refresh();
   });
   function toggleFullscreen() {

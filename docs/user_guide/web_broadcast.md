@@ -116,7 +116,7 @@ Click or tap the picture to show the channel, the scene, its FX chain, the track
 
 The picture follows the tape as it follows the radio, and the badge reads `SPAZ RADIO • TAPE`. Click the picture for the transport strip along the bottom (INFO keeps it up): eject, 30 seconds back and forward, pause, and the show's waveform to click or drag. Keys: `K` pause, `,` and `.` 30 seconds, `<` and `>` 5 minutes.
 
-The **LIVE** button or `L` takes the tape out and goes back to the radio. It is lit while a tape is in. If a live show starts, the tape keeps playing, LIVE pulses red and `LIVE NOW: <name>` comes up once; a broadcast's picture does not take over until you go back. The chat stays on the live room, with a note on the board that you're on a tape.
+The **LIVE** button or `L` takes the tape out and goes back to the radio. LIVE is lit while the radio is playing, and TAPES while a tape is in or its list is open. If a live show starts during a tape, the tape keeps playing, LIVE pulses red and `LIVE NOW: <name>` comes up once; a broadcast's picture does not take over until you go back. The chat stays on the live room, with a note on the board that you're on a tape.
 
 Your place in each show is remembered in this browser. Turning the TV off and on keeps the tape in; a reload starts on the radio, with RESUME in the list. At the end of a show, the TV goes back to the radio.
 
