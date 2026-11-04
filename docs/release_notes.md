@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Web TV: A Light Theme, and How Many Mutants Are Watching (`web/tv.css`, `web/ui.js`, `web/index.html`)
+- **New MENU › THEME: dark or light.** Dark is the default. Light is an almond cabinet in a sunlit room, with ivory knobs and buttons, an aluminium nameplate and an oak frame on the chat's blackboard. The choice is remembered in the browser, and RESET puts it back to dark. The picture, its on-screen display and the chat's slate look the same in both.
+- **The dark theme shares the new materials**: a fine grain on the cabinet and a soft pool of light on the wall behind it. Its colours are otherwise unchanged.
+- **New line under the station badge**: `12 mutants watching TV.`, everyone on the Spaz Radio stream right now, in any player (the same number the Spaz Radio app shows). It refreshes every 30 seconds while the TV is on, and is blank when the count is zero or can't be read.
+- The badge now stays on the right when the controls wrap to a second row.
+- The TV's version is now v22.
+
 ### Web TV: Keys That Match Their Names (`web/ui.js`, `web/index.html`, `web/tv.css`)
 - **Some keys moved, so a button's key is its first letter**: `R` is ROLL (was `D`), `S` is SCHEDULE (was `G`), `F` is fullscreen, as on other video players (was `S`), `E` is the next FX, for effects (was `F`), and `J` jumps to a random channel (was `R`).
 - **New**: `U` mutes and brings the volume back. `Space` pauses a tape while one is in; with no tape in it still holds the scene, and `H` always does.

@@ -42,6 +42,13 @@
       var closed = false;
       try { closed = localStorage.getItem('lsd.chat.open') === '0'; } catch (e) { /* no storage: open */ }
       if (!q.has('kiosk') && !q.has('embed') && !closed) document.body.classList.add('chat-open');
+      // MENU › THEME, before the first paint too: a light room must not flash dark. Kiosk and embed have no cabinet.
+      var light = false;
+      try { light = localStorage.getItem('lsd.theme') === '"light"'; } catch (e) { /* no storage: dark */ }
+      if (light && !q.has('kiosk') && !q.has('embed')) {
+        document.documentElement.setAttribute('data-theme', 'light');
+        document.querySelector('meta[name="theme-color"]').setAttribute('content', '#d6ccb6');
+      }
     })();
   </script>
   <audio id="lsdAudio" crossorigin="anonymous" preload="none"></audio>
@@ -242,7 +249,7 @@
 
           <!-- Service menu (ui.js builds the rows) -->
           <div class="control-group">
-            <button id="menuBtn" class="push-btn" title="Menu: sync, reaction, scene length, auto roll, background, effects, skipped channels, input, fullscreen, reduced motion, heavy scenes (M)" aria-label="Menu" aria-pressed="false"><span class="btn-led"></span></button>
+            <button id="menuBtn" class="push-btn" title="Menu: sync, reaction, scene length, auto roll, background, effects, skipped channels, input, fullscreen, reduced motion, heavy scenes, theme (M)" aria-label="Menu" aria-pressed="false"><span class="btn-led"></span></button>
             <span class="control-label">MENU</span>
           </div>
 
@@ -267,10 +274,14 @@
         </div>
 
         <!-- Station badge: power LED, beat LED (green = locked to the music's beat, amber = keeping time) -->
-        <div id="station-badge">
-          <div class="led" id="stationLed"></div>
-          <div class="led beat-led" id="beatLed" title="Beat: green when locked to the music"></div>
-          <span class="station-text">SPAZ RADIO &bull; CH.---</span>
+        <div id="station-block">
+          <div id="station-badge">
+            <div class="led" id="stationLed"></div>
+            <div class="led beat-led" id="beatLed" title="Beat: green when locked to the music"></div>
+            <span class="station-text">SPAZ RADIO &bull; CH.---</span>
+          </div>
+          <!-- Everyone on the Spaz Radio stream right now (ui.js, from the Icecast status) -->
+          <div id="listeners" title="Everyone tuned in to Spaz Radio right now: on this TV, in the app or in any other player"></div>
         </div>
 
       </div><!-- /tv-controls -->

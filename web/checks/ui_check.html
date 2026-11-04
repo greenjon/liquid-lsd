@@ -207,6 +207,36 @@ try {
   key('Escape');
   check('Esc closes the menu', menuEl.hidden);
 
+  // THEME: dark by default, a menu row flips it and remembers it, RESET puts it back; the screen stays dark glass.
+  const rootEl = d.documentElement, themeBar = () => d.querySelector('meta[name="theme-color"]').getAttribute('content');
+  const cabinet = () => w.getComputedStyle(d.getElementById('tv-body')).backgroundColor;
+  const screenGlass = () => w.getComputedStyle(d.getElementById('tv-screen-border')).backgroundColor;
+  const darkCabinet = cabinet(), darkGlass = screenGlass();
+  check('THEME: dark by default', rootEl.getAttribute('data-theme') === 'dark' && w.LSD.viewerState.theme === 'dark', rootEl.getAttribute('data-theme'));
+  key('m'); downTo('THEME');
+  check('THEME: the row says DARK', menuEl.querySelector('.menu-row.sel')?.textContent.includes('DARK'), menuEl.querySelector('.menu-row.sel')?.textContent);
+  key('ArrowRight');
+  check('THEME: the row flips to LIGHT', menuEl.querySelector('.menu-row.sel')?.textContent.includes('LIGHT') && rootEl.getAttribute('data-theme') === 'light');
+  check('THEME: light is remembered', w.localStorage.getItem('lsd.theme') === '"light"', w.localStorage.getItem('lsd.theme'));
+  check('THEME: the cabinet changes', cabinet() !== darkCabinet, cabinet());
+  check('THEME: the screen surround does not', screenGlass() === darkGlass, screenGlass());
+  check('THEME: the browser bar follows', themeBar() === '#d6ccb6', themeBar());
+  key('Escape');
+  key('m'); downTo('RESET'); key('Enter');
+  check('RESET puts the theme back to dark', rootEl.getAttribute('data-theme') === 'dark' && w.localStorage.getItem('lsd.theme') === '"dark"', rootEl.getAttribute('data-theme'));
+  key('Escape');
+
+  // The listener count under the badge
+  const listeners = d.getElementById('listeners');
+  w.LSD.viewerState.showListeners(7);
+  check('Listeners: plural', listeners.textContent === '7 mutants watching TV.', listeners.textContent);
+  w.LSD.viewerState.showListeners(1);
+  check('Listeners: singular', listeners.textContent === '1 mutant watching TV.', listeners.textContent);
+  const badgeRow = d.getElementById('station-badge').getBoundingClientRect();
+  check('Listeners: under the badge', listeners.getBoundingClientRect().top >= badgeRow.bottom, `${listeners.getBoundingClientRect().top} ${badgeRow.bottom}`);
+  w.LSD.viewerState.showListeners(0);
+  check('Listeners: no line for nobody, and the row keeps its height', listeners.textContent === '' && listeners.getBoundingClientRect().height > 0);
+
   // Reduced motion: no hard scenes, no strobe/glitch chains and no flash transitions come on air.
   const settingsJson = await (await fetch('../settings.json')).json();
   w.LSD.viewerState.reducedMode = 'on';

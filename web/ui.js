@@ -16,7 +16,7 @@ import { scheduleState, refreshSchedule, setShows, groupByDay, zoneLabel, nextLi
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v21';
+export const TV_VERSION = 'v22';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -37,6 +37,7 @@ export const viewerState = {
   bgMode: 'hold',      // BG CHANGES: 'scenes' (every 2x TIME), 'hold' (the default: the photo gallery stays), 'off'
   effects: true,       // EFFECTS: AUTO (true) or OFF
   follow: true,        // FOLLOW MUSIC: breakdowns and drops pick the scene
+  theme: 'dark',       // THEME: the cabinet and the room, 'dark' or 'light' (tv.css)
   reducedNow: false,   // reduced motion in effect (updated by applyReduced; the renderer reads it)
   /** Reduced motion as the setting and the system ask for it now. */
   get reduced() {
@@ -57,6 +58,8 @@ const REACT_MIN = 0.25, REACT_MAX = 2.0, REACT_DEFAULT = 1.0;
 const REACT_KEY = 'lsd.react.agc';
 const STREAM_STATUS_URL = 'https://radio.spaz.org:8060/status-json.xsl';
 const STREAM_MOUNT = '/radio.ogg';
+// THEME: the browser's own bar matches the cabinet (index.html sets a saved light theme before the first paint).
+const THEME_BAR = { dark: '#2a2520', light: '#d6ccb6' };
 
 // Per-viewer conveniences; the TV works the same without storage.
 function load(key, fallback) {
@@ -113,6 +116,12 @@ function showLook(info = nowShowing(), ms = 4000, brand = false) {
 }
 
 const message = (text, ms = 1500) => flash('osd-msg', text, ms);
+
+/** Under the badge: everyone on the stream. Nothing when the count is unknown or zero, as in the Spaz Radio app. */
+function showListeners(n) {
+  const el = document.getElementById('listeners');
+  if (el) el.textContent = n > 0 ? `${n} ${n === 1 ? 'mutant' : 'mutants'} watching TV.` : '';
+}
 const tapeLine = () => `\u25B6 ${deck.current.title}${deck.current.date ? ` \u00B7 ${deck.current.date}` : ''}`;
 
 /** Under the track line: the next show on Spaz Radio, when the schedule knows one. */
@@ -461,6 +470,14 @@ export function initUI() {
   viewerState.bgMode = BG_MODES.includes(load('lsd.bgMode', 'hold')) ? load('lsd.bgMode', 'hold') : 'hold';
   viewerState.effects = load('lsd.effects', true) !== false;
   viewerState.follow = load('lsd.follow', true) !== false;
+  viewerState.theme = load('lsd.theme', 'dark') === 'light' ? 'light' : 'dark';
+  const paintTheme = () => {
+    document.documentElement.setAttribute('data-theme', viewerState.theme);
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_BAR[viewerState.theme]);
+  };
+  const applyTheme = (theme) => { viewerState.theme = theme; save('lsd.theme', theme); paintTheme(); };
+  if (!kiosk) paintTheme(); // kiosk and embed have no cabinet to paint
+  viewerState.showListeners = showListeners; // for the headless check
   setAutoRollBars(viewerState.autoRoll);
   setBackgroundMode(viewerState.bgMode);
   setEffects(viewerState.effects);
@@ -537,6 +554,9 @@ export function initUI() {
         return gpu?.state === 'done' ? `AUTO (${onOff(gpu.heavy)}, ${gpu.ms.toFixed(0)} MS)` : `AUTO (${onOff(gpu?.heavy)})`;
       },
       step: (dir) => { viewerState.heavyMode = cycle(viewerState.heavyMode, dir); save('lsd.heavy', viewerState.heavyMode); applyHeavy(); } },
+    ...(kiosk ? [] : [{ label: 'THEME', value: () => viewerState.theme.toUpperCase(),
+      step: () => applyTheme(viewerState.theme === 'dark' ? 'light' : 'dark'),
+      help: 'The TV\u2019s cabinet and the room around it: dark (the default) or light. The picture is the same in both.' }]),
     { label: 'AUDIO INPUT', locked: live, value: () => (isMicOn() ? 'MICROPHONE' : deck?.current ? 'TAPE' : 'RADIO'),
       help: 'What the picture listens to. Radio: the Spaz Radio stream, or the tape if one is in. Microphone: the sound in the room (the browser asks first; it is analysed only, never played back).',
       step: () => toggleMic() },
@@ -547,6 +567,7 @@ export function initUI() {
       viewerState.reducedMode = 'auto'; save('lsd.reduced', 'auto'); applyReduced();
       viewerState.heavyMode = 'auto'; save('lsd.heavy', 'auto'); applyHeavy();
       viewerState.announce = false; save('lsd.announce', false);
+      if (!kiosk) applyTheme('dark');
       if (!live()) {
         reactDial.set(toDial(REACT_DEFAULT)); timeDial.set(TIME_STEPS.indexOf(16) / (TIME_STEPS.length - 1));
         applyAutoRoll(0); applyBgMode('hold'); applyEffects(true); applyFollow(true);
@@ -1085,6 +1106,9 @@ async function pollNowPlaying() {
   try {
     const res = await fetch(STREAM_STATUS_URL, { cache: 'no-store' });
     const sources = [].concat((await res.json())?.icestats?.source ?? []);
+    // Every mount (the app's low-bandwidth stream too) makes the number the app shows from radio.spaz.org/playing.
+    // The TV can't read that one itself: it sends no CORS header, and this status does.
+    showListeners(sources.reduce((n, s) => n + (Number(s.listeners) || 0), 0));
     const src = sources.find((s) => String(s.listenurl || '').endsWith(STREAM_MOUNT)) ?? sources[0];
     // The Ogg mount sends artist and title separately; the title alone may be just a date.
     const artist = String(src?.artist ?? ''), name = String(src?.title ?? '');
@@ -1097,7 +1121,7 @@ async function pollNowPlaying() {
         flashNext(6000);
       }
     }
-  } catch { /* status unavailable: no track line */ }
+  } catch { showListeners(0); /* status unavailable: no track line, no count */ }
   pollTimer = setTimeout(pollNowPlaying, 30000);
 }
 
