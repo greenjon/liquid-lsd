@@ -16,7 +16,7 @@ import { scheduleState, refreshSchedule, setShows, groupByDay, zoneLabel, nextLi
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v20';
+export const TV_VERSION = 'v21';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -323,6 +323,15 @@ export function initUI() {
   });
   setVolume(0.8);
   const stepVolume = (dir) => volumeDial.set(volumeDial.get() + dir * 0.05);
+  // U: the dial goes to zero and back to where it was (if it is still at zero).
+  let unmuted = 0.8;
+  const toggleMute = () => {
+    if (volumeDial.get() > 0) {
+      unmuted = volumeDial.get();
+      volumeDial.set(0);
+      if (powerState.on) message('MUTE');
+    } else volumeDial.set(unmuted);
+  };
 
   // --- Channel rocker, FX, HOLD ---
   const next = control(() => { lastUserChange = performance.now(); advanceForeground(); });
@@ -497,7 +506,7 @@ export function initUI() {
       } },
     { label: 'AUTO ROLL', locked: live, value: () => (viewerState.autoRoll ? `EVERY ${viewerState.autoRoll} BARS` : 'OFF'),
       step: (dir) => applyAutoRoll(stepIn(AUTO_ROLL_STEPS, viewerState.autoRoll, dir)),
-      help: 'Rolls a new variation of the scene on air every few bars, like pressing ROLL (D). Best with HOLD on: the scene stays and keeps changing.' },
+      help: 'Rolls a new variation of the scene on air every few bars, like pressing ROLL (R). Best with HOLD on: the scene stays and keeps changing.' },
     { label: 'BACKGROUND', locked: () => live() || viewerState.bgMode === 'off',
       value: () => (viewerState.bgMode === 'off' ? 'OFF' : prettyName(nowShowing().backgroundPicked ?? '') || '---'),
       step: (dir) => stepBackground(dir).then(() => menu.refresh()),
@@ -528,11 +537,11 @@ export function initUI() {
         return gpu?.state === 'done' ? `AUTO (${onOff(gpu.heavy)}, ${gpu.ms.toFixed(0)} MS)` : `AUTO (${onOff(gpu?.heavy)})`;
       },
       step: (dir) => { viewerState.heavyMode = cycle(viewerState.heavyMode, dir); save('lsd.heavy', viewerState.heavyMode); applyHeavy(); } },
-    { label: 'INPUT', locked: live, value: () => (isMicOn() ? 'MICROPHONE' : deck?.current ? 'TAPE' : 'RADIO'),
+    { label: 'AUDIO INPUT', locked: live, value: () => (isMicOn() ? 'MICROPHONE' : deck?.current ? 'TAPE' : 'RADIO'),
       help: 'What the picture listens to. Radio: the Spaz Radio stream, or the tape if one is in. Microphone: the sound in the room (the browser asks first; it is analysed only, never played back).',
       step: () => toggleMic() },
     { label: 'FULLSCREEN', value: () => (document.fullscreenElement ? 'ON' : 'OFF'), step: () => toggleFullscreen(), run: () => toggleFullscreen(),
-      help: 'The picture and its on-screen display fill the screen. Double-click the picture or press S to toggle; Esc leaves.' },
+      help: 'The picture and its on-screen display fill the screen. Double-click the picture or press F to toggle; Esc leaves.' },
     { label: 'RESET', help: 'Put every setting back to its default. Skipped channels stay skipped (MENU \u203A SKIPPED).', run: () => {
       viewerState.syncMs = 0; save('lsd.sync', 0);
       viewerState.reducedMode = 'auto'; save('lsd.reduced', 'auto'); applyReduced();
@@ -547,7 +556,7 @@ export function initUI() {
       value: () => (chatboard?.open ? 'OPEN' : 'CLOSED'), step: () => chatboard?.toggle(), run: () => chatboard?.toggle() }]),
     ...(kiosk ? [] : [{ label: 'TAPES', help: 'Shows from the Spaz Radio archive. The picture follows the tape, and the LIVE button takes you back to the radio. Press T or the TAPES button any time.',
       value: () => (deck?.current ? 'TAPE IN' : 'ARCHIVE'), run: () => { menu.hide(); deck?.open(); } }]),
-    { label: 'SCHEDULE', help: 'Spaz Radio\u2019s upcoming shows, in your local time. Press G or the SCHEDULE button to open it any time.', value: () => 'SPAZ RADIO', run: () => { menu.hide(); schedule.show(); } },
+    { label: 'SCHEDULE', help: 'Spaz Radio\u2019s upcoming shows, in your local time. Press S or the SCHEDULE button to open it any time.', value: () => 'SPAZ RADIO', run: () => { menu.hide(); schedule.show(); } },
     { label: 'ABOUT', help: 'About Liquid LSD, the software that makes these visuals.', value: () => 'LIQUID LSD', run: () => { menu.hide(); about.hidden = false; } },
     { label: 'EXIT', run: () => menu.hide() },
   ];
@@ -557,7 +566,7 @@ export function initUI() {
     if (!micAvailable()) { message('NO MICROPHONE ACCESS HERE', 3000); return; }
     try {
       await setMic(!isMicOn());
-      message(isMicOn() ? 'INPUT \u00B7 MICROPHONE' : deck?.current ? 'INPUT \u00B7 TAPE' : 'INPUT \u00B7 RADIO', 2500);
+      message(isMicOn() ? 'AUDIO INPUT \u00B7 MICROPHONE' : deck?.current ? 'AUDIO INPUT \u00B7 TAPE' : 'AUDIO INPUT \u00B7 RADIO', 2500);
     } catch (err) {
       console.warn('Microphone unavailable:', err);
       message('MICROPHONE BLOCKED', 3000);
@@ -837,26 +846,27 @@ export function initUI() {
     if (skippedPage.open) { e.preventDefault(); skippedPage.key(e); return; }
     if (deck?.pageOpen) { deck.key(e); return; }
     if (tapping && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); tapSync(); return; }
-    // With the menu open these still work: ? and G and I close it and do their thing, C toggles the chat.
-    if (menu.open && ['?', 'i', 'I', 'g', 'G', 't', 'T'].includes(e.key)) menu.hide();
+    // With the menu open these still work: ?, S, I and T close it and do their thing, C toggles the chat.
+    if (menu.open && ['?', 'i', 'I', 's', 'S', 't', 'T'].includes(e.key)) menu.hide();
     if (!(menu.open && (e.key === 'c' || e.key === 'C')) && menu.key(e)) { e.preventDefault(); return; }
     if ((e.key === 'm' || e.key === 'M') && powerState.on) { e.preventDefault(); menu.show(); return; }
-    if ((e.key === 'g' || e.key === 'G') && powerState.on) { e.preventDefault(); schedule.show(); return; }
+    if ((e.key === 's' || e.key === 'S') && powerState.on) { e.preventDefault(); schedule.show(); return; }
     if ((e.key === 't' || e.key === 'T') && deck && powerState.on) { e.preventDefault(); deck.open(); return; }
     if ((e.key === 'c' || e.key === 'C') && chatboard) { e.preventDefault(); chatboard.toggle(); menu.refresh(); return; }
     if (e.key === '?') { e.preventDefault(); showKeys(); return; }
     const keys = {
       ArrowRight: next, n: next, N: next,
       ArrowLeft: prev, p: prev, P: prev,
-      r: random, R: random,
-      ArrowUp: () => stepVolume(1), ArrowDown: () => stepVolume(-1),
-      f: fx, F: fx, h: hold, H: hold, ' ': hold,
-      d: roll, D: roll, b: nextBackground, B: nextBackground, x: skip, X: skip,
+      j: random, J: random,
+      ArrowUp: () => stepVolume(1), ArrowDown: () => stepVolume(-1), u: toggleMute, U: toggleMute,
+      e: fx, E: fx, h: hold, H: hold,
+      ' ': deck?.current && powerState.on ? deck.togglePause : hold, // a tape in: Space pauses it, as on any player; H still holds
+      r: roll, R: roll, b: nextBackground, B: nextBackground, x: skip, X: skip,
       ...Object.fromEntries([...'0123456789'].map((d) => [d, () => digit(d)])),
       '[': () => stepTime(-1), ']': () => stepTime(1),
       '-': () => stepReact(-1), '=': () => stepReact(1), '+': () => stepReact(1),
       Escape: () => document.fullscreenElement && document.exitFullscreen().catch(console.error),
-      s: toggleFullscreen, S: toggleFullscreen, a: toggleMic, A: toggleMic,
+      f: toggleFullscreen, F: toggleFullscreen, a: toggleMic, A: toggleMic,
       i: toggleInfo, I: toggleInfo,
       ...(deck && powerState.on ? {
         k: deck.togglePause, K: deck.togglePause, l: () => document.getElementById('liveBtn').click(), L: () => document.getElementById('liveBtn').click(),

@@ -107,13 +107,19 @@ try {
   check('Down arrow lowers the volume, not the channel', vol() < vol0 && onAir() === sceneBeforeVol && osd('osd-msg').text.startsWith('VOL'), `${vol0} -> ${vol()}`);
   key('ArrowUp');
   check('Up arrow raises the volume', vol() === vol0, `${vol()}`);
+  key('u');
+  check('U mutes', vol() === 0 && osd('osd-msg').text === 'MUTE', `${vol()}`);
+  key('u');
+  check('U again brings the volume back', vol() === vol0, `${vol()}`);
   const beforeRandom = onAir();
-  key('r');
+  key('j');
   await sleep(3000);
-  check('R tunes a random other channel', onAir() !== beforeRandom);
+  check('J tunes a random other channel', onAir() !== beforeRandom);
   // ROLL, B, EFFECTS, channel skip and tuning by number.
   const pad = (n) => String(n).padStart(3, '0');
   const chNow = () => Number(/CH\.(\d+)/.exec(d.querySelector('#station-badge .station-text').textContent)?.[1]);
+  key('r'); await sleep(100);
+  check('R rolls the scene on air', osd('osd-msg').text === 'ROLL', osd('osd-msg').text);
   d.getElementById('rollBtn').click();
   check('ROLL rolls the scene on air', osd('osd-msg').text === 'ROLL', osd('osd-msg').text);
   const bg0 = st.deckBG;
@@ -128,8 +134,8 @@ try {
   key('Escape');
   key('m'); downTo('EFFECTS'); key('ArrowRight'); key('Escape');
   check('MENU › EFFECTS OFF takes the FX off the scene', w.LSD.viewerState.effects === false && !onAir().fx.some(Boolean));
-  key('f'); await sleep(100);
-  check('F with effects off says so', osd('osd-msg').text.startsWith('EFFECTS OFF'), osd('osd-msg').text);
+  key('e'); await sleep(100);
+  check('E with effects off says so', osd('osd-msg').text.startsWith('EFFECTS OFF'), osd('osd-msg').text);
   key('m'); downTo('EFFECTS'); key('ArrowRight'); key('Escape'); await sleep(500);
   check('EFFECTS back to AUTO puts a chain back', w.LSD.viewerState.effects === true && onAir().fx.some(Boolean));
   const skipCh = chNow();
@@ -156,7 +162,7 @@ try {
   const afterRandom = onAir();
   const keysEl = d.getElementById('keys');
   key('?');
-  check('? shows the keyboard shortcuts', !keysEl.hidden && keysEl.textContent.includes('RANDOM CHANNEL'));
+  check('? shows the keyboard shortcuts', !keysEl.hidden && keysEl.textContent.includes('JUMP TO RANDOM'));
   key('n');
   check('Any key closes the shortcuts (and does nothing else)', keysEl.hidden && onAir() === afterRandom);
   const menuBox = d.getElementById('tv-menu'), chatOpen = () => d.getElementById('chatBtn').getAttribute('aria-pressed') === 'true';
@@ -194,7 +200,7 @@ try {
   key('ArrowRight');
   check('Menu: ANNOUNCE SCENES turns off', w.LSD.viewerState.announce === false);
   const labels = [...menuEl.querySelectorAll('.menu-label')].map((e) => e.textContent);
-  check('Menu: has INPUT and FULLSCREEN rows', labels.includes('INPUT') && labels.includes('FULLSCREEN'), labels.join(','));
+  check('Menu: has AUDIO INPUT and FULLSCREEN rows', labels.includes('AUDIO INPUT') && labels.includes('FULLSCREEN'), labels.join(','));
   menuEl.querySelectorAll('.menu-label')[0].click(); // re-renders the menu under the click
   check('Menu: clicking a row label leaves the TV on', w.LSD.powerState.on);
   check('Menu: clicking a row label keeps the menu open', !menuEl.hidden);
@@ -278,8 +284,8 @@ try {
   check('Schedule: says which time zone', /^TIMES IN \S+/.test(schedEl.querySelector('.sc-zone').textContent), schedEl.querySelector('.sc-zone').textContent);
   key('ArrowRight');
   check('Any key closes the schedule', schedEl.hidden);
-  key('g');
-  check('G opens the schedule', !schedEl.hidden && d.getElementById('scheduleBtn').getAttribute('aria-pressed') === 'true');
+  key('s');
+  check('S opens the schedule', !schedEl.hidden && d.getElementById('scheduleBtn').getAttribute('aria-pressed') === 'true');
   schedEl.click();
   check('A click closes the schedule and leaves the TV on', schedEl.hidden && w.LSD.powerState.on && d.getElementById('scheduleBtn').getAttribute('aria-pressed') === 'false');
   key('m'); downTo('SCHEDULE'); key('Enter');
@@ -288,7 +294,7 @@ try {
   key('i');
   check('The OSD names the next show', osd('osd-next').shown && osd('osd-next').text.startsWith("NEXT: Spukkin Faceship's"), JSON.stringify(osd('osd-next')));
   key('i');
-  key('g');
+  key('s');
   d.getElementById('powerSwitch').click();
   await sleep(100);
   check('Power off hides the schedule', schedEl.hidden || getComputedStyle(schedEl).display === 'none');

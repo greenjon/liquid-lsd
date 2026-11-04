@@ -102,6 +102,13 @@ try {
   key('k');
   await sleep(300);
   check('K plays it again', !audio.paused);
+  const heldBefore = w.LSD.autopilotState.hold;
+  key(' ');
+  await sleep(100);
+  check('With a tape in, Space pauses it and leaves HOLD alone', audio.paused && w.LSD.autopilotState.hold === heldBefore, msg());
+  key(' ');
+  await sleep(300);
+  check('Space plays it again', !audio.paused);
   const before = audio.currentTime;
   key('.');
   await sleep(600);

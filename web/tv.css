@@ -637,7 +637,11 @@ body.kiosk #nameplate { display: none; }
 }
 #keys[hidden], #skipped[hidden] { display: none; }
 #keys .ky-name, #skipped .ky-name { font-size: 1.4em; letter-spacing: 0.2em; color: #d9c2ff; text-shadow: 0 0 10px rgba(160,90,255,0.9); }
-#keys .ky-list { display: grid; grid-template-columns: auto 1fr; column-gap: 2em; row-gap: 0.1em; margin: 0.4em 0 0; }
+#keys .ky-groups { columns: 2; column-gap: 1.5em; font-size: 0.8em; }
+#keys .ky-group { break-inside: avoid; margin-bottom: 0.5em; }
+#keys .ky-head { font-size: 0.8em; letter-spacing: 0.2em; opacity: 0.65; }
+#keys .ky-list { display: grid; grid-template-columns: 6em 1fr; column-gap: 0.8em; margin: 0; }
+#keys dd b { font-weight: inherit; color: #d9c2ff; text-shadow: 0 0 8px rgba(160,90,255,0.8); }
 #keys dt { color: #d9c2ff; text-shadow: 0 0 8px rgba(160,90,255,0.8); white-space: nowrap; }
 #keys dd { margin: 0; }
 #keys .sc-hint, #skipped .sc-hint { margin-top: auto; padding-top: 0.6em; font-size: 0.7em; opacity: 0.7; }

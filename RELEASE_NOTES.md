@@ -1,5 +1,13 @@
 ## [Unreleased]
 
+### Web TV: Keys That Match Their Names (`web/ui.js`, `web/index.html`, `web/tv.css`)
+- **Some keys moved, so a button's key is its first letter**: `R` is ROLL (was `D`), `S` is SCHEDULE (was `G`), `F` is fullscreen, as on other video players (was `S`), `E` is the next FX, for effects (was `F`), and `J` jumps to a random channel (was `R`).
+- **New**: `U` mutes and brings the volume back. `Space` pauses a tape while one is in; with no tape in it still holds the scene, and `H` always does.
+- **The `?` page is grouped** into Channel, Scene, Sound, Screen and Tapes, with each key's letter lit in its name.
+- MENU › INPUT is now **AUDIO INPUT**, to go with its key, `A`.
+- **Fixed**: the REACT dial's tooltip said double-click goes to 200%; it goes to 100%.
+- The TV's version is now v21.
+
 ### Web TV: TAPES, the Spaz Radio Archive on the TV (`web/tapes.js`, `web/tapedeck.js`, `web/dsp.js`, `web/autopilot.js`, `web/ui.js`, `web/index.html`, `web/tv.css`, `web/chatboard.js`, `web/renderer.js`, `web/sw.js`)
 - **New TAPES button on the web TV** (also `T`, or MENU › TAPES): the whole Spaz Radio archive, about 3,800 shows back to 2013, over the picture. Type to search by name or date. RANDOM TAPE lands on any show, ON THIS DAY finds today's date in every year, and RESUME goes back to the show you last stopped.
 - **The picture follows the tape**: a tape is an audio input like the radio, so the beat, the levels and the audio-reactive scenes all follow the old show. The badge reads `SPAZ RADIO • TAPE`.

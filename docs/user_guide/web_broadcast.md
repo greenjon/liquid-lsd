@@ -62,29 +62,29 @@ The standalone browser client (`web/index.html`) presents the visualizer in a re
 
 **Volume dial:** Drag the rotary dial up or down to adjust volume. The curve is tuned to feel perceptually linear — small moves at the bottom, bigger moves at the top.
 
-**Fullscreen:** Double-click the TV screen, press `S`, or choose MENU › **Fullscreen** to expand to full-screen (the on-screen display comes along). Do any of them again, or press `Esc`, to go back to the TV shell. Choosing it from the MENU closes the menu. In Chrome and Edge, `Esc` closes the menu first if it is open (hold `Esc` to leave full screen right away); other browsers always leave full screen on `Esc`.
+**Fullscreen:** Double-click the TV screen, press `F`, or choose MENU › **Fullscreen** to expand to full-screen (the on-screen display comes along). Do any of them again, or press `Esc`, to go back to the TV shell. Choosing it from the MENU closes the menu. In Chrome and Edge, `Esc` closes the menu first if it is open (hold `Esc` to leave full screen right away); other browsers always leave full screen on `Esc`.
 
 **Version:** the MENU title shows the TV's version (v1, v2, …) on the right. If it is older than the one just announced, reload the page to get the latest.
 
-**Microphone:** press `A` or choose MENU › **Input** to make the picture follow your microphone instead of the radio, for a room playing its own music. Your browser asks permission the first time; the sound is only analysed, never played through the speakers. Press `A` again for the radio. Turning the TV off also puts the radio back. Locked during a live broadcast.
+**Microphone:** press `A` or choose MENU › **Audio Input** to make the picture follow your microphone instead of the radio, for a room playing its own music. Your browser asks permission the first time; the sound is only analysed, never played through the speakers. Press `A` again for the radio. Turning the TV off also puts the radio back. Locked during a live broadcast.
 
 **Viewer controls** (Autopilot only; while you broadcast live they are locked and the screen says so):
 
 | Control | What it does | Keys / touch |
 |---------|-------------|--------------|
-| **VOL** | The volume (drag or scroll) | `↑` `↓` |
+| **VOL** | The volume (drag or scroll); `U` mutes, and again brings it back | `↑` `↓` `U` |
 | **CH ▲ / ▼** | The next / previous channel, now (a channel you've seen keeps the FX chain it had; the autopilot itself still picks channels at random) | `→` `N` / `←` `P`; swipe left / right on the picture |
-| *(random channel)* | A channel picked at random, now | `R` |
-| **FX** | Puts the next FX chain on the scene on air | `F` |
-| **ROLL** | A new variation of the scene on air: its settings and its effects' roll new values, gliding in to land on the next bar line | `D` |
+| *(jump)* | A channel picked at random, now | `J` |
+| **FX** | Puts the next FX chain on the scene on air | `E` |
+| **ROLL** | A new variation of the scene on air: its settings and its effects' roll new values, gliding in to land on the next bar line | `R` |
 | *(background)* | The next background, now (MENU › BACKGROUND steps either way) | `B` |
 | *(tune by number)* | Type a channel's digits, like a remote: three digits tune at once, fewer after a short pause | `0`-`9` |
 | *(channel skip)* | Skips the channel on air and moves on; `X` again within 5 s undoes it; `X` on a skipped channel restores it | `X` |
-| **HOLD** | Keeps the current scene until you press it again (the background keeps changing); its light is on while it holds | `H` or `Space`; long-press the picture |
+| **HOLD** | Keeps the current scene until you press it again (the background keeps changing); its light is on while it holds | `H`, or `Space` when no tape is in; long-press the picture |
 | **TIME** | How long each scene holds: 8, 16, 32 or 64 bars (drag, scroll or click) | `[` `]` |
 | **REACT** | How strongly the picture reacts to the music, 25-200%, 100% to start (double-click for 100%). The TV levels quiet and loud shows itself, so this is about taste, not volume | `-` `=` |
 
-Press `?` to list every key on the screen (any key or a click closes the list). TAPES, LIVE, MENU, SCHEDULE, INFO and CHAT sit together on the right and light up while they're on, like HOLD. With the menu open, `?`, `I`, `G` and `T` still work (they close it first), and `C` opens or closes the chat.
+Press `?` to list every key on the screen (any key or a click closes the list). TAPES, LIVE, MENU, SCHEDULE, INFO and CHAT sit together on the right and light up while they're on, like HOLD. With the menu open, `?`, `I`, `S` and `T` still work (they close it first), and `C` opens or closes the chat.
 
 Click or tap the picture to show the channel, the scene, its FX chain, the track playing on the radio and the next show on Spaz Radio for a few seconds. **INFO** (or `I`) keeps them on screen, updating as they change, until you turn it off; the TV remembers it. TIME, REACT, INFO, the MENU settings and your skipped channels are remembered in the browser. The badge on the right shows the channel on air (`SPAZ RADIO • CH.042`), or LIVE during a live broadcast.
 
@@ -102,19 +102,19 @@ Click or tap the picture to show the channel, the scene, its FX chain, the track
 
 **MENU:** the MENU button or `M` opens the service menu (arrows or clicks to change, Esc or M to close): **SYNC** (how late the sound reaches you, for Bluetooth and other delayed speakers), **Announce scenes** (name each new scene on screen; off by default), **REACT**, **TIME**, **Auto roll**, **Background**, **BG changes**, **Effects**, **Follow music**, **Skip this channel**, **Skipped**, **Reduced motion** (Auto follows your system setting), **Big GPU scenes** (Auto lets the GPU check decide), **Input** (radio or microphone), **Fullscreen**, **CHAT**, **SCHEDULE** and **ABOUT**. The selected row explains itself at the bottom of the menu (and on mouse hover). Settings are remembered in this browser. REACT, TIME, Auto roll, the background, effects and follow-music rows, Input and Heavy scenes are locked during a live broadcast. RESET puts every setting back but leaves skipped channels skipped.
 
-**Variations:** no scene looks exactly the same twice. Each one's settings roll within a narrow span around the values it was tuned with whenever it comes on, and again on **ROLL** (`D`). Settings that come in steps (a colour mode, a number of petals, Mandala's shape) change on the bar line; the rest glide over it. MENU › **Auto roll** rolls the scene on air every 4, 8 or 16 bars, which goes well with HOLD.
+**Variations:** no scene looks exactly the same twice. Each one's settings roll within a narrow span around the values it was tuned with whenever it comes on, and again on **ROLL** (`R`). Settings that come in steps (a colour mode, a number of petals, Mandala's shape) change on the bar line; the rest glide over it. MENU › **Auto roll** rolls the scene on air every 4, 8 or 16 bars, which goes well with HOLD.
 
 **Background:** the background plays behind the scene and shows wherever the scene is dark or see-through. It starts as the **Spaz Radio photo gallery**: the photos listeners added to the old radio page (spaz.org/radio), fading in on the beat and slowly turning and growing, as they did there. `B` or MENU › **Background** changes it now (to the other backgrounds, and back). MENU › **BG changes**: *Hold* (stays until you change it, the default), *With scenes* (a new one every two scenes) or *Off* (no background).
 
 **Effects and following the music:** MENU › **Effects** *Off* plays the scenes and backgrounds without FX chains (the info panel says `FX: OFF`). MENU › **Follow music** *Off* stops the calm scene for a breakdown, the hard cut on the drop and the tempo-weighted picks.
 
-**Channel skip:** don't like a channel? `X` skips it (or MENU › **Skip this channel** on a touch screen). It keeps its number but never comes up by itself again: not from the autopilot, `R`, CH up or down. MENU › **Skipped** lists the channels you skipped; pick one to watch it, and `X` there brings it back into the rotation. At least 8 channels always stay.
+**Channel skip:** don't like a channel? `X` skips it (or MENU › **Skip this channel** on a touch screen). It keeps its number but never comes up by itself again: not from the autopilot, `J`, CH up or down. MENU › **Skipped** lists the channels you skipped; pick one to watch it, and `X` there brings it back into the rotation. At least 8 channels always stay.
 
-**SCHEDULE:** the SCHEDULE button, `G`, or MENU › **SCHEDULE** lays Spaz Radio's upcoming shows over the picture, grouped by day (Today, Tomorrow, then the date), in your own time zone (shown at the top). The show playing now is marked ON AIR. Any key or a click closes it. It works during a live broadcast too. When the track name comes up on screen, the next show comes up under it (`NEXT: <show> · <time>`). If the station's schedule can't be reached, the page says so and the TV keeps the last copy it had.
+**SCHEDULE:** the SCHEDULE button, `S`, or MENU › **SCHEDULE** lays Spaz Radio's upcoming shows over the picture, grouped by day (Today, Tomorrow, then the date), in your own time zone (shown at the top). The show playing now is marked ON AIR. Any key or a click closes it. It works during a live broadcast too. When the track name comes up on screen, the next show comes up under it (`NEXT: <show> · <time>`). If the station's schedule can't be reached, the page says so and the TV keeps the last copy it had.
 
 **TAPES:** the TAPES button, `T`, or MENU › **TAPES** opens the Spaz Radio archive over the picture. Type to search by name or date, use the arrows and Enter or click a show to play it, and Esc or the **✕** to close. **RANDOM TAPE** picks any show, **ON THIS DAY** finds today's date in every year, and **RESUME** goes back to the show you last stopped.
 
-The picture follows the tape as it follows the radio, and the badge reads `SPAZ RADIO • TAPE`. Click the picture for the transport strip along the bottom (INFO keeps it up): eject, 30 seconds back and forward, pause, and the show's waveform to click or drag. Keys: `K` pause, `,` and `.` 30 seconds, `<` and `>` 5 minutes.
+The picture follows the tape as it follows the radio, and the badge reads `SPAZ RADIO • TAPE`. Click the picture for the transport strip along the bottom (INFO keeps it up): eject, 30 seconds back and forward, pause, and the show's waveform to click or drag. Keys: `K` or `Space` pause, `,` and `.` 30 seconds, `<` and `>` 5 minutes.
 
 The **LIVE** button or `L` takes the tape out and goes back to the radio. LIVE is lit while the radio is playing, and TAPES while a tape is in or its list is open. If a live show starts during a tape, the tape keeps playing, LIVE pulses red and `LIVE NOW: <name>` comes up once; a broadcast's picture does not take over until you go back. The chat stays on the live room, with a note on the board that you're on a tape.
 

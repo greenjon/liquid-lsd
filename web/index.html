@@ -97,30 +97,55 @@
           <!-- ? : every keyboard shortcut -->
           <div id="keys" title="" hidden>
             <div class="ky-name">KEYBOARD</div>
-            <dl class="ky-list">
-              <dt>&rarr; &larr; &middot; N P</dt><dd>NEXT / PREVIOUS CHANNEL</dd>
-              <dt>R</dt><dd>RANDOM CHANNEL</dd>
-              <dt>&uarr; &darr;</dt><dd>VOLUME</dd>
-              <dt>F</dt><dd>NEXT FX</dd>
-              <dt>D</dt><dd>ROLL: A NEW VARIATION OF THIS SCENE</dd>
-              <dt>B</dt><dd>NEXT BACKGROUND</dd>
-              <dt>0 &ndash; 9</dt><dd>TUNE TO A CHANNEL BY NUMBER</dd>
-              <dt>X</dt><dd>SKIP THIS CHANNEL / RESTORE IT</dd>
-              <dt>H &middot; SPACE</dt><dd>HOLD THIS SCENE</dd>
-              <dt>[ ]</dt><dd>SCENE LENGTH</dd>
-              <dt>- =</dt><dd>REACTION TO THE MUSIC</dd>
-              <dt>I</dt><dd>INFO ON / OFF</dd>
-              <dt>S</dt><dd>FULLSCREEN (ESC LEAVES)</dd>
-              <dt>A</dt><dd>INPUT: RADIO OR TAPE / MICROPHONE</dd>
-              <dt>M</dt><dd>MENU</dd>
-              <dt>G</dt><dd>SCHEDULE</dd>
-              <dt class="ky-chat">T</dt><dd class="ky-chat">TAPES: THE ARCHIVE</dd>
-              <dt class="ky-chat">K</dt><dd class="ky-chat">TAPE: PAUSE / PLAY</dd>
-              <dt class="ky-chat">, . &middot; &lt; &gt;</dt><dd class="ky-chat">TAPE: 30 SECONDS &middot; 5 MINUTES</dd>
-              <dt class="ky-chat">L</dt><dd class="ky-chat">EJECT: BACK TO LIVE RADIO</dd>
-              <dt class="ky-chat">C</dt><dd class="ky-chat">CHAT</dd>
-              <dt>?</dt><dd>THIS LIST</dd>
-            </dl>
+            <div class="ky-groups">
+              <div class="ky-group">
+                <div class="ky-head">CHANNEL</div>
+                <dl class="ky-list">
+                  <dt>&rarr; &larr; &middot; N P</dt><dd><b>N</b>EXT / <b>P</b>REVIOUS</dd>
+                  <dt>0 &ndash; 9</dt><dd>TUNE BY NUMBER</dd>
+                  <dt>J</dt><dd><b>J</b>UMP TO RANDOM</dd>
+                  <dt>X</dt><dd>SKIP / RESTORE</dd>
+                </dl>
+              </div>
+              <div class="ky-group">
+                <div class="ky-head">SCENE</div>
+                <dl class="ky-list">
+                  <dt>R</dt><dd><b>R</b>OLL A VARIATION</dd>
+                  <dt>E</dt><dd><b>E</b>FFECTS: NEXT FX</dd>
+                  <dt>B</dt><dd>NEXT <b>B</b>ACKGROUND</dd>
+                  <dt>H &middot; SPACE</dt><dd><b>H</b>OLD</dd>
+                  <dt>[ ]</dt><dd>SCENE LENGTH</dd>
+                </dl>
+              </div>
+              <div class="ky-group">
+                <div class="ky-head">SOUND</div>
+                <dl class="ky-list">
+                  <dt>&uarr; &darr;</dt><dd>VOLUME</dd>
+                  <dt>U</dt><dd>MUTE / <b>U</b>NMUTE</dd>
+                  <dt>- =</dt><dd>REACTION</dd>
+                  <dt>A</dt><dd><b>A</b>UDIO INPUT</dd>
+                </dl>
+              </div>
+              <div class="ky-group">
+                <div class="ky-head">SCREEN</div>
+                <dl class="ky-list">
+                  <dt>F</dt><dd><b>F</b>ULLSCREEN</dd>
+                  <dt>I</dt><dd><b>I</b>NFO</dd>
+                  <dt>M</dt><dd><b>M</b>ENU</dd>
+                  <dt>S</dt><dd><b>S</b>CHEDULE</dd>
+                  <dt class="ky-chat">C</dt><dd class="ky-chat"><b>C</b>HAT</dd>
+                </dl>
+              </div>
+              <div class="ky-group ky-chat">
+                <div class="ky-head">TAPES</div>
+                <dl class="ky-list">
+                  <dt>T</dt><dd><b>T</b>APES: THE ARCHIVE</dd>
+                  <dt>K &middot; SPACE</dt><dd>PAUSE / PLAY</dd>
+                  <dt>, . &middot; &lt; &gt;</dt><dd>30 SEC &middot; 5 MIN</dd>
+                  <dt>L</dt><dd>EJECT: <b>L</b>IVE RADIO</dd>
+                </dl>
+              </div>
+            </div>
             <div class="sc-hint">ANY KEY OR CLICK TO CLOSE</div>
           </div>
           <!-- MENU › SKIPPED: the skipped channels; click one to tune to it (X there restores it) -->
@@ -153,7 +178,7 @@
 
         <!-- Volume dial -->
         <div class="control-group">
-          <div id="volumeDial" class="rotary-dial" title="Volume: drag or scroll (&uarr; and &darr;)" role="slider" aria-label="Volume" tabindex="0">
+          <div id="volumeDial" class="rotary-dial" title="Volume: drag or scroll (&uarr; and &darr;; U mutes)" role="slider" aria-label="Volume" tabindex="0">
             <div class="dial-marker"></div>
           </div>
           <span class="control-label">VOL</span>
@@ -162,27 +187,27 @@
         <!-- Channel rocker: next / previous channel -->
         <div class="control-group">
           <div class="rocker">
-            <button id="chUp" class="rocker-btn" title="Next channel (&rarr; or N). Random channel: R" aria-label="Next channel">&#9650;</button>
-            <button id="chDown" class="rocker-btn" title="Previous channel (&larr; or P). Random channel: R" aria-label="Previous channel">&#9660;</button>
+            <button id="chUp" class="rocker-btn" title="Next channel (&rarr; or N). Random channel: J" aria-label="Next channel">&#9650;</button>
+            <button id="chDown" class="rocker-btn" title="Previous channel (&larr; or P). Random channel: J" aria-label="Previous channel">&#9660;</button>
           </div>
           <span class="control-label">CH</span>
         </div>
 
         <!-- Next FX chain on the scene on air -->
         <div class="control-group">
-          <button id="fxBtn" class="push-btn" title="Next FX chain on this scene (F)" aria-label="Next FX chain"></button>
+          <button id="fxBtn" class="push-btn" title="Next FX chain on this scene (E)" aria-label="Next FX chain"></button>
           <span class="control-label">FX</span>
         </div>
 
         <!-- ROLL: a new variation of the scene on air (its random settings roll again) -->
         <div class="control-group">
-          <button id="rollBtn" class="push-btn" title="Roll: a new variation of this scene, gliding in on the next bar (D). Auto roll: MENU" aria-label="Roll a new variation of this scene"></button>
+          <button id="rollBtn" class="push-btn" title="Roll: a new variation of this scene, gliding in on the next bar (R). Auto roll: MENU" aria-label="Roll a new variation of this scene"></button>
           <span class="control-label">ROLL</span>
         </div>
 
         <!-- Hold the current scene -->
         <div class="control-group">
-          <button id="holdBtn" class="push-btn latch" title="Hold this scene (H or Space)" aria-label="Hold this scene" aria-pressed="false"><span class="btn-led"></span></button>
+          <button id="holdBtn" class="push-btn latch" title="Hold this scene (H, or Space with no tape in)" aria-label="Hold this scene" aria-pressed="false"><span class="btn-led"></span></button>
           <span class="control-label">HOLD</span>
         </div>
 
@@ -196,7 +221,7 @@
 
         <!-- How strongly the picture reacts to the audio -->
         <div class="control-group">
-          <div id="reactDial" class="rotary-dial" title="How strongly the picture reacts to the music: drag or scroll; double-click for 200% (- and =)" role="slider" aria-label="Audio reaction" tabindex="0">
+          <div id="reactDial" class="rotary-dial" title="How strongly the picture reacts to the music: drag or scroll; double-click for 100% (- and =)" role="slider" aria-label="Audio reaction" tabindex="0">
             <div class="dial-marker"></div>
           </div>
           <span class="control-label">REACT</span>
@@ -223,7 +248,7 @@
 
           <!-- Spaz Radio's upcoming shows, over the picture -->
           <div class="control-group">
-            <button id="scheduleBtn" class="push-btn" title="Spaz Radio's upcoming shows, in your local time (G)" aria-label="Schedule" aria-pressed="false"><span class="btn-led"></span></button>
+            <button id="scheduleBtn" class="push-btn" title="Spaz Radio's upcoming shows, in your local time (S)" aria-label="Schedule" aria-pressed="false"><span class="btn-led"></span></button>
             <span class="control-label">SCHEDULE</span>
           </div>
 
