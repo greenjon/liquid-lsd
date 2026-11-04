@@ -1,0 +1,32 @@
+<!doctype html>
+<!-- The address printed on the QR stickers: https://spaz.org/go/ . Stickers can't be reprinted, so this URL has
+     to keep working. Android gets its install options; everything else goes straight to the TV. Without
+     JavaScript, everyone sees all three links. -->
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Get Spaz Radio</title>
+<script>
+  if (!/Android/i.test(navigator.userAgent)) {
+    document.documentElement.style.display = 'none';
+    location.replace('https://spaz.org/tv/');
+  }
+</script>
+<style>
+  body { font: 18px system-ui, sans-serif; background: #111; color: #eee;
+         max-width: 26rem; margin: auto; padding: 2rem 1rem; }
+  a { display: block; padding: 1rem; margin: .75rem 0; border-radius: .5rem;
+      background: #333; color: #fff; text-align: center; text-decoration: none; }
+  a.main { background: #0a7; font-weight: bold; }
+  p { color: #aaa; font-size: .9rem; }
+</style>
+<h1>Spaz Radio</h1>
+<a class="main" id="play" href="https://play.google.com/store/apps/details?id=llm.slop.spazradio">Get it on Google Play</a>
+<script>
+  // Fire tablets say "Android" but don't have the Play Store.
+  if (/Silk|Kindle|KF[A-Z]{2}/.test(navigator.userAgent)) document.getElementById('play').style.display = 'none';
+</script>
+<a href="https://github.com/greenjon/spazradio/releases/latest/download/app-release.apk">Download the APK from GitHub</a>
+<p>The APK is for installing without the Play Store. Android will ask you to allow the install.</p>
+<a href="https://spaz.org/tv/">Watch in the browser</a>
+</html>
