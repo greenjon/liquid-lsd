@@ -1273,6 +1273,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#web-tv-menus-with-the-tv-off-pages-in-the-menu-a-source-badge-webmenujs-webuijs-webindexhtml-webtapedeckjs-webdspjs-webtvcss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web TV: Menus With the TV Off, Pages in the Menu, a Source Badge (web/menu.js, web/ui.js, web/index.html, web/tapedeck.js, web/dsp.js, web/tv.css)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#web-tv-a-light-theme-and-how-many-mutants-are-watching-webtvcss-webuijs-webindexhtml" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7543,6 +7554,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#web-tv-menus-with-the-tv-off-pages-in-the-menu-a-source-badge-webmenujs-webuijs-webindexhtml-webtapedeckjs-webdspjs-webtvcss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web TV: Menus With the TV Off, Pages in the Menu, a Source Badge (web/menu.js, web/ui.js, web/index.html, web/tapedeck.js, web/dsp.js, web/tv.css)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#web-tv-a-light-theme-and-how-many-mutants-are-watching-webtvcss-webuijs-webindexhtml" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -13755,7 +13777,7 @@
 <h2 id="unreleased">[Unreleased]</h2>
 <h3 id="audio-cleaner-hits-a-hi-mid-band-energy-per-band-audiotransientdetectorkt-audioaudioagckt-audioaudioenginekt-cvaudiosignalskt-webdspjs">Audio: Cleaner Hits, a Hi-Mid Band, Energy per Band (<code>audio/TransientDetector.kt</code>, <code>audio/AudioAgc.kt</code>, <code>audio/AudioEngine.kt</code>, <code>cv/AudioSignals.kt</code>, <code>web/dsp.js</code>)</h3>
 <ul>
-<li><strong>Transient modulators now follow drum hits.</strong> The old signal was close to full most of the time on real music, so kicks barely stood out. It now scores each rise against what the band has just been doing. On three long mixes, bass-driven transients spend about half as long above 50%, and about 60% more separate hits get through.</li>
+<li><strong>Transient modulators now follow drum hits.</strong> The old signal was close to full most of the time on real music, so kicks barely stood out. It now scores each rise against what the band has just been doing, then sizes it against the band's own recent strong hits, so rock's snares and hats and a kick under a long sub use the range as fully as electronic music does. A breakdown still reads quiet. Checked on electronic mixes, drum and bass, dub, rock and jazz: bass-driven transients spend about half as long above 50%, and more separate hits get through.</li>
 <li><strong>Every preset and stock response using Transient changes feel</strong>, with no edits needed: more contrast between hits, and less motion on average. If a look feels too calm, raise its range or Audio Response.</li>
 <li><strong>Fixed: sustained bass no longer reads as hits.</strong> At a 64-frame JACK buffer, a held 50 Hz note read as full scale all the time. It now reads as nothing at every buffer size.</li>
 <li><strong>Fixed: the audio buffer size no longer changes how hard a kick hits.</strong> A kick now reads the same at 64 to 1024 frames.</li>
@@ -13764,7 +13786,23 @@
 <li><strong>New Section signals: Bass, Mid, Hi-Mid and High Energy.</strong> Like Energy, but for one band, so a look can follow the hats coming in or the bass leaving.</li>
 <li>The Transient button now reads <strong>Transient (Hits)</strong>, and Preferences &gt; Audio Hardware has scopes for the new signals.</li>
 <li><strong>Fixed</strong>: the Frequency Band tooltip gave the wrong ranges for Mid and High.</li>
-<li>The web TV gets the same signals, as of v23. Beat and downbeat detection are unchanged.</li>
+<li>The web TV gets the same signals: the new hits since v23, sized against the band's recent hits since v25. Beat and downbeat detection are unchanged.</li>
+</ul>
+<h3 id="web-tv-menus-with-the-tv-off-pages-in-the-menu-a-source-badge-webmenujs-webuijs-webindexhtml-webtapedeckjs-webdspjs-webtvcss">Web TV: Menus With the TV Off, Pages in the Menu, a Source Badge (<code>web/menu.js</code>, <code>web/ui.js</code>, <code>web/index.html</code>, <code>web/tapedeck.js</code>, <code>web/dsp.js</code>, <code>web/tv.css</code>)</h3>
+<ul>
+<li><strong>MENU, SCHEDULE, TAPES and the <code>?</code> shortcuts now open with the TV off</strong>, and using them leaves it off. Settings can be changed before turning it on. TAP SYNC, BACKGROUND, SKIP THIS CHANNEL and AUDIO INPUT need the picture or the sound, so they stay dimmed until then and say why.</li>
+<li><strong>Picking a tape with the TV off turns it on and plays the tape.</strong> Picking a channel in MENU › SKIPPED does the same for that channel.</li>
+<li><strong>The light theme's badge is now dark text on a light window</strong>, which is easier to read and fits the cabinet.</li>
+<li><strong>The mouse wheel only changes a menu value with the cursor directly on it.</strong> Anywhere else it scrolls the list, and a scroll that carries a value under the cursor stays a scroll until it pauses.</li>
+<li><strong>Menu rows are easier to follow across</strong>: faint stripes, a brighter stripe under the cursor, and a narrower list.</li>
+<li><strong>The badge keeps the channel during a live show too</strong>, with no more <code>LIVE</code> in its place. Above it, a new <strong>source badge</strong> says what the TV is listening to: <code>STREAM</code>, <code>LIVE SHOW</code>, <code>TAPE</code> or <code>MIC</code>. Hover it for the show's name.</li>
+<li><strong>Shows streamed in real time get <code>[LIVE!]</code> before their title</strong>, as in the Spaz Radio app, and count as <code>LIVE SHOW</code> on the source badge. The title comes from the same <code>radio.spaz.org/playing</code> feed the app reads. That feed needs a CORS header before browsers can read it; until then the title appears without <code>[LIVE!]</code>.</li>
+<li><strong>The menu is now three short pages</strong>: SCENES, SOUND and TV. It opens on the page tabs, on the page you used last: <code>←</code> <code>→</code> or <code>Tab</code> change page, <code>↓</code> goes into the rows, and clicking a tab works too.</li>
+<li><strong>The help line now always shows</strong>, under the rows. It explains the selected row or the one under the cursor, and replaces the hover tooltips on the rows.</li>
+<li><strong>CHAT, TAPES and SCHEDULE left the menu</strong>, since each has its own button and key. <strong>EXIT</strong> gave way to a <strong>✕</strong> at the top right.</li>
+<li><strong>Fixed</strong>: the menu jumped back to the selected row whenever a new scene or background came on while it was scrolled.</li>
+<li><strong>Fixed</strong>: turning the TV off with the menu open left the menu on the dark screen.</li>
+<li>The TV's version is now v24.</li>
 </ul>
 <h3 id="web-tv-a-light-theme-and-how-many-mutants-are-watching-webtvcss-webuijs-webindexhtml">Web TV: A Light Theme, and How Many Mutants Are Watching (<code>web/tv.css</code>, <code>web/ui.js</code>, <code>web/index.html</code>)</h3>
 <ul>

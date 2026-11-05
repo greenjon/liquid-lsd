@@ -96,36 +96,98 @@ class TransientDetectorTest {
         }
     }
 
-    @Test
-    fun aQuietHitInABreakdownReadsSmallerThanTheSameMusicBefore() {
+    /** A kick track through the bass filter, auto gain and sizing, [each] getting the time and unclamped signal per block. */
+    private fun sized(seconds: Double, gain: (Double) -> Double, each: (Double, Float, AudioAgc) -> Unit) {
         val agc = AudioAgc()
         val filter = BiquadFilter(BiquadFilter.Type.LOWPASS, sr, 150f)
         val detector = TransientDetector()
+        val scale = HitScale()
         val block = 512
         val samples = FloatArray(block)
         val dt = block / sr.toDouble()
         var i = 0L
-        var loud = 0f
-        var quiet = 0f
-        while (i < 50 * sr) {
-            val t = i / sr.toDouble()
-            val gain = if (t < 35.0) 0.6 else 0.1 // a breakdown from 35 s
+        while (i < seconds * sr) {
             var e = 0f
             for (k in 0 until block) {
-                val x = filter.process(kick((i + k) / sr.toDouble(), gain).toFloat())
+                val t = (i + k) / sr.toDouble()
+                val x = filter.process(kick(t, gain(t)).toFloat())
                 samples[k] = x
                 e += x * x
             }
             val rms = kotlin.math.sqrt(e / block)
             agc.update(rms, rms, rms * 0.1f, rms * 0.05f, rms * 0.05f, dt)
-            val div = agc.divisor(AudioAgc.BASS)
-            val v = detector.process(TransientDetector.BASS, samples, block, sr) / (TransientDetector.SCALE * div / AudioAgc.FIXED_SCALE) // unclamped
-            if (t in 25.0..35.0) loud = max(loud, v)
-            if (t in 42.0..50.0) quiet = max(quiet, v)
+            val hit = detector.process(TransientDetector.BASS, samples, block, sr)
+            val v = scale.signal(hit, TransientDetector.SCALE * agc.divisor(AudioAgc.BASS) / AudioAgc.FIXED_SCALE, dt.toFloat(), agc.watch.holding)
             i += block
+            each(i / sr.toDouble(), v, agc)
         }
-        assertTrue(agc.watch.section == SectionWatch.Section.BREAKDOWN, "the quiet stretch should be a breakdown")
-        assertTrue(quiet < loud * 0.3f, "in the breakdown $quiet, before it $loud") // a 6x quieter hit stays quieter: auto gain has frozen
+    }
+
+    @Test
+    fun aBreakdownStaysQuietAndTheDropLandsFull() {
+        var before = 0f
+        var inBreakdown = 0f
+        var drop = 0f
+        var section = SectionWatch.Section.NORMAL
+        // A 6x quieter stretch from 35 s to 55 s, longer than the reference's decay would take to forget it.
+        sized(62.0, { t -> if (t < 35.0 || t > 55.0) 0.6 else 0.1 }) { t, v, agc ->
+            if (t in 25.0..35.0) before = max(before, v)
+            if (t in 42.0..55.0) { inBreakdown = max(inBreakdown, v); section = agc.watch.section }
+            if (t in 55.0..58.0) drop = max(drop, v)
+        }
+        assertEquals(SectionWatch.Section.BREAKDOWN, section, "the quiet stretch should be a breakdown")
+        assertTrue(inBreakdown < before * 0.3f, "in the breakdown $inBreakdown, before it $before")
+        assertTrue(drop > before * 0.7f, "the drop $drop against the music before it $before")
+    }
+
+    @Test
+    fun quietAndLoudMusicUseTheRangeAlike() {
+        // Fixed scales read these differently; both should land near full on their ordinary hits.
+        fun typical(hitSize: Float, agcScale: Float): Float {
+            val scale = HitScale()
+            var last = 0f
+            repeat(60 * 44) { i ->
+                val hit = if (i % 40 < 3) hitSize else 0f // about 3 frames of hold, 1.5 hits a second at 60 steps a second
+                val v = scale.signal(hit, agcScale, 1f / 60, false)
+                if (hit > 0f) last = v
+            }
+            return last
+        }
+        val soft = typical(0.04f, 0.1f)
+        val hard = typical(0.2f, 0.1f)
+        assertTrue(soft > 0.9f && hard > 0.9f && abs(soft - hard) < 0.05f, "soft $soft, hard $hard")
+    }
+
+    @Test
+    fun oneHugeHitDoesNotFlattenTheNextOnes() {
+        val scale = HitScale()
+        val dt = 512f / sr
+        val stepsPerHit = (beatSec / dt).toInt()
+        var first = -1f
+        var after4s = -1f
+        var step = 0
+        val hugeAt = 200
+        repeat(hugeAt * 2) { n ->
+            val size = if (n == hugeAt) 0.6f else 0.2f
+            var peak = 0f
+            for (k in 0 until stepsPerHit) {
+                val hit = if (k < 3) size else 0f
+                peak = max(peak, scale.signal(hit, 0.1f, dt, false))
+                step++
+            }
+            if (n == hugeAt + 1) first = peak
+            if (n == hugeAt + (4.0 / beatSec).toInt()) after4s = peak
+        }
+        assertTrue(first > 0.4f, "the next hit reads $first")
+        assertTrue(after4s > 0.7f, "4 s on it reads $after4s")
+    }
+
+    @Test
+    fun aQuietBandIsNotLiftedPastTheCap() {
+        val scale = HitScale()
+        var v = 0f
+        repeat(2000) { v = scale.signal(0.001f, 0.1f, 1f / 60, false) }
+        assertEquals(0.001f / (0.1f / HitScale.MAX_BOOST), v, 1e-5f)
     }
 
     @Test
@@ -170,7 +232,14 @@ class TransientDetectorTest {
             val rise = String.format(Locale.ROOT, "%.5f", ripple + hit).toFloat()
             "[$rise,${String.format(Locale.ROOT, "%.6g", gate.step(rise, dt))}]"
         }
-        val text = "{\n\"dt\": $dt,\n\"steps\": [\n${rows.joinToString(",\n")}\n]\n}\n"
+        val scale = HitScale()
+        val scaleRows = (0 until 600).map { i ->
+            val hit = String.format(Locale.ROOT, "%.5f", if (i % 30 < 3) 0.1f + 0.05f * sin(i * 0.013f) else 0f).toFloat()
+            val agcScale = String.format(Locale.ROOT, "%.5f", 0.08f + 0.02f * sin(i * 0.007f)).toFloat()
+            val frozen = i in 250..330
+            "[$hit,$agcScale,${if (frozen) 1 else 0},${String.format(Locale.ROOT, "%.6g", scale.signal(hit, agcScale, dt, frozen))}]"
+        }
+        val text = "{\n\"dt\": $dt,\n\"steps\": [\n${rows.joinToString(",\n")}\n],\n\"scale\": [\n${scaleRows.joinToString(",\n")}\n]\n}\n"
         var dir = File(".").canonicalFile
         while (dir.parentFile != null && !File(dir, "web/sync_manifest.json").exists()) dir = dir.parentFile
         val file = File(dir, "web/tools/transient_vectors.json")

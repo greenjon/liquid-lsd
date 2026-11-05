@@ -1,6 +1,6 @@
 # Audio signals: better transients, a hi-mid band, per-band energy (plan)
 
-Started 2026-11-04. Status: phases 0-3 BUILT 2026-11-04 (desktop and web, tests pass, committed, live as TV v23, in-app check pending). Phase 4 waits until 1-3 are seen in the app. Target: v1.0. Desktop and web TV.
+Started 2026-11-04. Status: phases 0-3 BUILT 2026-11-04 (desktop and web, tests pass, committed, live on the TV (hits since v23, HitScale since v25), in-app check pending). Phase 4 waits until 1-3 are seen in the app. Target: v1.0. Desktop and web TV.
 
 **Results that changed the plan:** see *What the mixes showed* at the end. The calibration target changed, and a third bug was found (a hold was added).
 
@@ -140,6 +140,18 @@ Three mixes, about 2.7 h: Extra Spectrum "From Saw To Swing" (44.1 kHz), Magical
 - **Web frame rate:** the old formula was already fairly close (0.317 / 0.322 / 0.260 at 30 / 60 / 144 fps) and the new one is 0.317 / 0.322 / 0.374. So the web's gain is the gate, not frame-rate independence.
 - **Hi-Mid level** at `SCALE` 2.4: p50 0.35-0.36, p90 0.73-0.80, between mid and high.
 
-**Coverage gaps in these mixes:** all three are loud electronic mixes with heavy low end. Worth adding: live drums, drum and bass at 170+ BPM, and something sparse (ambient or dub with long sub notes). A quiet line-in or room mic is also untested on real audio.
+**Genre check (2026-11-04, no constants changed):** 30 seeded random tracks each from the user's library, about 8.7 h: modern jazz, older jazz, rock, dub.
+- **The gate holds up.** Above the bass it swallows 0-4% of large rises. In the bass it swallows 10-17% at 512 frames (up to 22% at 64), and only 4-14% of those look like real attacks (band up 1.5x, 100 ms against the 100 ms before). So about 1-2% of large bass rises are possibly missed, the rest being ripple. The attack test is a heuristic: a kick over a held note may not raise the 100 ms level that much.
+- **Buffer size stays immaterial on real music.** Bass mean at 64 / 512 / 1024 frames: rock 0.29 / 0.29 / 0.31, dub 0.34 / 0.35 / 0.37, older jazz 0.25 / 0.26 / 0.27.
+- **Open: acoustic music reads softer above the bass.** Mean mid, hi-mid and high is 0.16-0.24 on rock and jazz against 0.32-0.43 on the electronic mix and 0.34-0.42 on dub. It is mostly the fixed scale (the ungated signal is also low), and no single scale suits both. Decide from the in-app look on rock. If hats and snares feel weak, the fix is normalising hits against the band's recent strong hits, frozen in breakdowns like auto gain.
+- Sample lists are not kept. `AudioMixReportTest` takes any file list and `LSD_AUDIO_BLOCKS`.
+
+**Drum and bass check (2026-11-04):** Jezza, "Autumnal Liquid Drum & Bass", 2.4 h. The fixed scale misses in both directions: bass reads softest of any genre (mean 0.18, sustained sub raises its auto-gain reference) and high is still pegged (p50 0.87, 0.49 hits/s).
+
+**Phase 1b, BUILT 2026-11-04 (`HitScale`):** normalise each hit against the band's recent strong hits: `hit / max(ref, agcScale / 3)`, `ref` climbing with a 0.05 s attack and falling with an 8 s decay, frozen while the section watch holds. Attack chosen from 0.0005 / 0.05 / 0.15 / 0.4 s on all genres. First trial with an instant reference: Spread of mean across six sets, current to trial: bass 0.18-0.35 to 0.23-0.31; mid 0.18-0.35 to 0.24-0.32; hi-mid 0.16-0.43 to 0.22-0.32; high 0.19-0.51 to 0.22-0.42. p90 for hi-mid on rock goes 0.58 to 0.87 and drum and bass hits per second in high 0.49 to 0.86. Tests cover a breakdown staying quiet, the drop landing full, and recovery from one huge hit (over 0.4 on the next hit, over 0.7 after 4 s). A later frame-rate check belongs in the browser.
+
+**Separate bug found, not fixed:** the tempo tracker depends on buffer size. Synthetic 128 BPM kick: 200 BPM at 64 frames, 193 at 128, correct at 512 and 1024. The Jezza mix (about 174): at 512 frames 46% of locked time at 86-87, 23% at 115-116 (a 2/3 error); at 1024 frames 174 appears; at 64 frames it wanders. Predates this work (`beatDetector.processBlock` input is unchanged).
+
+**Coverage gap left:** a quiet line-in or room mic on real audio.
 
 **Not fixed here:** the web's mid filter has Q 1.0 and the desktop's 0.707, an older mismatch.

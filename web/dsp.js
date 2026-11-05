@@ -202,12 +202,13 @@ export class TransientGate {
 /**
  * A band's hits from one level per frame (the desktop measures on a fixed grid inside each audio block). The rise
  * is against the level about one analysis window ago, however many frames that is, so the frame rate matters little.
- * It reads once per frame, so unlike the desktop it needs no hold.
+ * Held like the desktop's, so HitScale's reference climbs the same amount per hit at any frame rate.
  */
 export class FrameTransient {
   static LAG = 0.0116; // s
+  static HOLD = 0.034;  // s, TransientDetector.HOLD_SEC
 
-  constructor() { this.gate = new TransientGate(); this.past = []; this.t = 0; }
+  constructor() { this.gate = new TransientGate(); this.past = []; this.t = 0; this.held = 0; this.age = 0; }
 
   update(level, dt) {
     this.t += dt;
@@ -217,19 +218,43 @@ export class FrameTransient {
     }
     this.past.push({ t: this.t, level });
     while (this.past.length > 2 && this.t - this.past[1].t >= FrameTransient.LAG) this.past.shift();
-    return this.gate.step(before === null ? 0 : Math.max(0, level - before), dt);
+    const hit = this.gate.step(before === null ? 0 : Math.max(0, level - before), dt);
+    this.age += dt;
+    if (hit >= this.held || this.age > FrameTransient.HOLD) { this.held = hit; this.age = 0; }
+    return this.held;
   }
 
-  reset() { this.gate.reset(); this.past.length = 0; this.t = 0; }
+  reset() { this.gate.reset(); this.past.length = 0; this.t = 0; this.held = 0; this.age = 0; }
 }
 
-const HIT_SCALE = 0.167;     // TransientDetector.SCALE: a rise of this reads 1.0 at the fixed scale
+/**
+ * Sizes a band's hits against its own recent strong hits, so every kind of music uses the range. A port of the
+ * desktop's HitScale (audio/TransientDetector.kt): keep the two identical. The reference stops falling while
+ * `frozen` (the section watch holds), so a breakdown stays quiet.
+ */
+export class HitScale {
+  static ATTACK = 0.05;  // s
+  static DECAY = 8;      // s
+  static MAX_BOOST = 3;  // the most a band is lifted above its auto-gain scale
+
+  constructor() { this.ref = 0; }
+
+  signal(hit, agcScale, dt, frozen) {
+    if (hit > this.ref) this.ref += (hit - this.ref) * (1 - Math.exp(-dt / HitScale.ATTACK));
+    else if (!frozen) this.ref *= Math.exp(-dt / HitScale.DECAY);
+    return hit / Math.max(this.ref, agcScale / HitScale.MAX_BOOST);
+  }
+
+  reset() { this.ref = 0; }
+}
+
+const HIT_SCALE = 0.167;     // TransientDetector.SCALE: a rise of this reads 1.0 on auto gain alone
 const HIT_AMP_SCALE = 0.333; // TransientDetector.AMP_SCALE
 const HIT_WEIGHTS = { bass: 2, mid: 0.8, himid: 0.5, high: 0.3 };
 
-/** The published audio_flux_* from the bands' hits and the auto-gain divisors, as AudioEngine does it. Pure. */
-export function hitSignals(hits, div) {
-  const scaled = (hit, scale, band) => clamp01(hit / (scale * div[band] / AMP_SCALE));
+/** The published audio_flux_* from the bands' hits and the auto-gain divisors, as AudioEngine does it. `scales`: a HitScale per band and amp. */
+export function hitSignals(hits, div, scales, dt, frozen) {
+  const scaled = (hit, scale, band) => clamp01(scales[band].signal(hit, scale * div[band] / AMP_SCALE, dt, frozen));
   let amp = 0;
   for (const band of Object.keys(HIT_WEIGHTS)) amp += hits[band] * HIT_WEIGHTS[band];
   return {
@@ -244,6 +269,7 @@ export function hitSignals(hits, div) {
 const agc = new AudioAgc();
 const prevRms = { bass: 0, mid: 0, high: 0 };
 const transients = { bass: new FrameTransient(), mid: new FrameTransient(), himid: new FrameTransient(), high: new FrameTransient() };
+const hitScales = { amp: new HitScale(), bass: new HitScale(), mid: new HitScale(), himid: new HitScale(), high: new HitScale() };
 
 function updateAmplitudes(dt) {
   const rms = {
@@ -264,7 +290,7 @@ function updateAmplitudes(dt) {
     mid: transients.mid.update(rms.mid, dt),
     himid: transients.himid.update(rms.himid, dt),
     high: transients.high.update(rms.high, dt),
-  }, div));
+  }, div, hitScales, dt, agc.watch.holding));
   prevRms.bass = rms.bass; prevRms.mid = rms.mid; prevRms.high = rms.high;
 }
 
@@ -369,6 +395,7 @@ function updateTapeSignal(dt) {
 
 function resetTransients() {
   for (const t of Object.values(transients)) t.reset();
+  for (const s of Object.values(hitScales)) s.reset();
 }
 
 /** A seek or a new source is a new stretch of music: the beat and the levels start afresh. */

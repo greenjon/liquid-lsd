@@ -98,19 +98,21 @@ The rest of the stage: hits use their fixed scale (`TransientDetector.SCALE`, `A
 
 ## Transient Detection
 
-`audio_flux_amp`, `audio_flux_bass`, `audio_flux_mid`, `audio_flux_himid` and `audio_flux_high` are hits: attacks that stand out from what the band has just been doing. The IDs keep the word flux because presets save them. `TransientDetector.kt` makes them in three steps, none of which depends on the audio block size:
+`audio_flux_amp`, `audio_flux_bass`, `audio_flux_mid`, `audio_flux_himid` and `audio_flux_high` are hits: attacks that stand out from what the band has just been doing. The IDs keep the word flux because presets save them. `TransientDetector.kt` makes them in four steps, none of which depends on the audio block size:
 
 1. **Rise on a fixed grid.** Squared samples are summed into hops of 5.8 ms inside the block, whatever its length. Two hops make an 11.6 ms level, and the rise is that level minus the level of the two hops before.
 2. **Gate.** `TransientGate` divides the rise by its own mean over the last second (`LOCAL_TAU`) and passes it through a smoothstep from 3x (`C_LOW`, nothing) to 8x (`C_HIGH`, all of it). A sustained bass note ripples in an 11.6 ms window, but evenly, so it never stands above its own mean. A kick does, including a kick on top of that note.
 3. **Hold.** A value is held for 34 ms (`HOLD_SEC`) unless a larger one replaces it, and each block publishes the largest value held during it. Modulators read once per render frame, and the audio thread overwrites between reads, so without this a short spike is lost: at 64-frame blocks a 60 fps reader caught under a quarter of the kicks.
 
-There is no jump to 1.0 and no built-in decay. The rise keeps its size, so accents read larger than ghost notes, and each modulator's envelope follower shapes the rest. `audio_flux_amp` is the weighted sum (2 bass + 0.8 mid + 0.5 himid + 0.3 high).
+4. **Size.** `HitScale` divides the hit by the band's own recent strong hits: a reference that climbs with a 0.05 s time constant and falls with an 8 s one, so a freak hit moves it only partway. It stops falling while `SectionWatch` holds, so a breakdown stays quiet and the drop lands where the music before it did. The divisor never goes below `agcScale / 3` (`MAX_BOOST`), where `agcScale` is `SCALE` (or `AMP_SCALE`) stretched by the band's auto gain.
 
-The scale (`SCALE` 0.167, `AMP_SCALE` 0.333) comes from three long mixes, about 2.7 hours in all. The old block-to-block signal was pegged on real music: through a 3 ms / 120 ms follower at 60 fps, a typical 100 ms peak read 0.62-0.87, and a sustained 50 Hz note read 0.15 at 512-frame blocks but full scale at 64.
+There is no jump to 1.0 and no built-in decay. Hits keep their relative size, so accents read larger than ghost notes, and each modulator's envelope follower shapes the rest. `audio_flux_amp` is the weighted sum (2 bass + 0.8 mid + 0.5 himid + 0.3 high) with its own `HitScale`.
+
+The old block-to-block signal was pegged on real music: through a 3 ms / 120 ms follower at 60 fps, a typical 100 ms peak read 0.62-0.87 on electronic mixes, and a sustained 50 Hz note read 0.15 at 512-frame blocks but full scale at 64. A fixed scale alone then missed by genre in both directions (mean hi-mid 0.16 on rock, 0.43 on drum and bass). With `HitScale` the means across electronic, drum and bass, dub, rock and jazz are bass 0.24-0.33, mid 0.26-0.34, hi-mid 0.24-0.33, high 0.24-0.43.
 
 **The beat and downbeat detectors do not use this.** They keep the plain block-to-block rise in band RMS (`bassFlux`, `onsetStrength` in `AudioEngine.processAudio`), so hits can change without touching the tempo tracking.
 
-`AudioMixReportTest` is the measuring tool: it reports what a modulator sees of each band on real files and synthetic signals. It is skipped unless `LSD_AUDIO_MIXES` lists files (see its header). Both Kotlin and web ports share `TransientGate`'s behaviour through `web/tools/transient_vectors.json`. The web has one level per frame, so `FrameTransient` in `web/dsp.js` compares with the level about 11.6 ms ago and needs no hold.
+`AudioMixReportTest` is the measuring tool: it reports what a modulator sees of each band on real files and synthetic signals. It is skipped unless `LSD_AUDIO_MIXES` lists files (see its header). Both Kotlin and web ports share `TransientGate`'s behaviour through `web/tools/transient_vectors.json`. The web has one level per frame, so `FrameTransient` in `web/dsp.js` compares with the level about 11.6 ms ago. It holds hits for the same 34 ms, so `HitScale`'s reference climbs the same amount per hit at any frame rate.
 
 ## Section Signals
 

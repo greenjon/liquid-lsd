@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.audio
 
+import kotlin.math.exp
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
@@ -23,6 +24,34 @@ class TransientGate {
 
     fun reset() {
         meanRise = 0f
+    }
+}
+
+/**
+ * Sizes a band's hits against its own recent strong hits, so every kind of music uses the range: a fixed scale read
+ * rock's hats at half the size of drum and bass's, and kicks under a long sub smallest of all. The reference climbs
+ * quickly and falls slowly, and stops falling while [frozen] (the section watch holds), so a breakdown stays quiet
+ * and the drop lands where the music before it did. [MAX_BOOST] caps the lift above the auto-gain scale.
+ * Ported to `web/dsp.js` (HitScale); `WebTransientVectorsTest` keeps the two identical.
+ */
+class HitScale(private val attackSec: Float = ATTACK_SEC) {
+    private var ref = 0f
+
+    /** [hit] over its scale, unclamped, for [dt] seconds of audio. [agcScale] is what it would be divided by on auto gain alone. */
+    fun signal(hit: Float, agcScale: Float, dt: Float, frozen: Boolean): Float {
+        if (hit > ref) ref += (hit - ref) * (1f - exp(-dt / attackSec))
+        else if (!frozen) ref *= exp(-dt / DECAY_SEC)
+        return hit / max(ref, agcScale / MAX_BOOST)
+    }
+
+    fun reset() {
+        ref = 0f
+    }
+
+    companion object {
+        const val ATTACK_SEC = 0.05f
+        const val DECAY_SEC = 8f
+        const val MAX_BOOST = 3f
     }
 }
 
@@ -111,10 +140,7 @@ class TransientDetector {
         const val C_HIGH = 8f           // ...a whole one at this many
         const val EPS = 1e-4f           // about -80 dBFS, so near silence has no contrast to speak of
 
-        /**
-         * A rise of this reads 1.0 at the fixed scale; auto gain stretches it like the band's level. Set on three long
-         * mixes (2026-11-04, `AudioMixReportTest`) so hits stand out and accents have room above an ordinary hit.
-         */
+        /** A rise of this reads 1.0 on auto gain alone; auto gain stretches it like the band's level. [HitScale] sizes hits from there. */
         const val SCALE = 0.167f
         /** The same for the weighted full-mix signal, [BASS_WEIGHT] etc. */
         const val AMP_SCALE = 0.333f

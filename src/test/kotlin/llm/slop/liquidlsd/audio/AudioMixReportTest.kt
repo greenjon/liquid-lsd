@@ -28,6 +28,9 @@ class AudioMixReportTest {
     private val fps = 60.0
     private val followAttack = 0.003
     private val followDecay = 0.120
+    /** Whether the section watch holds, for the variant being fed. Each run has its own report instance per thread. */
+    private val holdingFlag = ThreadLocal.withInitial { false }
+    private val holding: Boolean get() = holdingFlag.get()
     private val bandScale = 0.05f
     private val bands = arrayOf("bass", "mid", "himid", "high")
     private val agcBand = intArrayOf(AudioAgc.BASS, AudioAgc.MID, AudioAgc.HIMID, AudioAgc.HIGH)
@@ -96,12 +99,49 @@ class AudioMixReportTest {
             (detector.process(band, b, frames, sr) / (scale * div / AudioAgc.FIXED_SCALE)).coerceIn(0f, 1f)
     }
 
+    /** The rise on the same grid with no gate, to see what the gate takes away. */
+    private inner class Ungated : Variant("no gate") {
+        private var sum = 0.0
+        private var n = 0
+        private var e1 = 0.0; private var e2 = 0.0; private var e3 = 0.0
+        private var held = 0f; private var age = 0f
+        override fun block(b: FloatArray, frames: Int, sr: Float, blockRms: Float, div: Float): Float {
+            val hop = max(1, (sr * TransientDetector.HOP_SEC).toInt())
+            var peak = held
+            for (i in 0 until frames) {
+                sum += (b[i] * b[i]).toDouble()
+                if (++n >= hop) {
+                    val e0 = sum / hop
+                    val rise = max(0f, sqrt((e0 + e1) / 2.0).toFloat() - sqrt((e2 + e3) / 2.0).toFloat())
+                    e3 = e2; e2 = e1; e1 = e0; sum = 0.0; n = 0
+                    age += hop / sr
+                    if (rise >= held || age > TransientDetector.HOLD_SEC) { held = rise; age = 0f }
+                    peak = max(peak, held)
+                }
+            }
+            return (peak / (TransientDetector.SCALE * div / AudioAgc.FIXED_SCALE)).coerceIn(0f, 1f)
+        }
+    }
+
+    /** The detector through [HitScale], at a trial attack time. */
+    private inner class Scaled(name: String, val band: Int, attack: Float) : Variant(name) {
+        private val detector = TransientDetector()
+        private val scale = HitScale(attack)
+        override fun block(b: FloatArray, frames: Int, sr: Float, blockRms: Float, div: Float): Float {
+            val hit = detector.process(band, b, frames, sr)
+            return scale.signal(hit, TransientDetector.SCALE * div / AudioAgc.FIXED_SCALE, frames / sr, holding).coerceIn(0f, 1f)
+        }
+    }
+
     private fun variants(band: Int): List<Variant> = listOf(
         OldFlux(),
-        Prod("new .100", band, .100f),
-        Prod("new .125", band, .125f),
-        Prod("new .167", band, .167f),
+        Ungated(),
+        Prod("new .167", band, TransientDetector.SCALE),
         Prod("new .250", band, .250f),
+        Scaled("hs instant", band, 0.0005f),
+        Scaled("hs .05", band, 0.05f),
+        Scaled("hs .15", band, 0.15f),
+        Scaled("hs .4", band, 0.4f),
     )
 
     /** The chain the engine runs: band filters, AGC every block, one frame's read of each variant. */
@@ -133,6 +173,16 @@ class AudioMixReportTest {
         var breakdowns = 0
         var section = SectionWatch.Section.NORMAL
         val energyHist = IntArray(21)
+        var windowBlocks = 0L
+        var windowSec = 0.0
+        val rawMax = FloatArray(4)
+        val gatedMax = FloatArray(4)
+        val bigRises = LongArray(4)
+        val swallowed = LongArray(4)
+        val swallowedAttacks = LongArray(4)
+        val recent = Array(4) { DoubleArray(32) } // the band's RMS at 1/32 of a 200 ms span, newest at recentAt
+        var recentSec = 0.0
+        var recentAt = 0
 
         fun feed(s: FloatArray, frames: Int, sr: Float) {
             var amp = 0f
@@ -165,11 +215,45 @@ class AudioMixReportTest {
             energyHist[((agc.watch.energy + 1f) * 10f).toInt().coerceIn(0, 20)]++
             sumAmp += amp.toDouble()
             if (amp < 0.003f) silent += dt
+            windowBlocks++
+            holdingFlag.set(agc.watch.holding)
             for (b in 0 until 4) {
                 val div = agc.divisor(agcBand[b])
                 levelHist[b][((rms[b] / div).coerceIn(0f, 1f) * 1000).toInt()]++
                 energyBand[b][((agc.energy(agcBand[b]) + 1f) * 10f).toInt().coerceIn(0, 20)]++
                 for (k in v[b].indices) last[b][k] = v[b][k].block(buf[b], frames, sr, rms[b], div)
+            }
+            windowSec += dt
+            recentSec += dt
+            while (recentSec >= 0.2 / 32) {
+                recentSec -= 0.2 / 32
+                recentAt = (recentAt + 1) % 32
+                for (b in 0 until 4) recent[b][recentAt] = rms[b].toDouble()
+            }
+            for (b in 0 until 4) {
+                rawMax[b] = max(rawMax[b], last[b][1])
+                gatedMax[b] = max(gatedMax[b], last[b][2])
+            }
+            if (windowSec >= 0.1) {
+                for (b in 0 until 4) {
+                    if (rawMax[b] >= 0.5f) {
+                        bigRises[b]++
+                        if (gatedMax[b] < 0.25f) {
+                            swallowed[b]++
+                            // A real attack: the band over the last 100 ms is well above the 100 ms before it. Ripple is not.
+                            var newer = 0.0
+                            var older = 0.0
+                            for (k in 0 until 16) {
+                                newer += recent[b][(recentAt - k + 32) % 32]
+                                older += recent[b][(recentAt - k - 16 + 64) % 32]
+                            }
+                            if (newer > older * 1.5) swallowedAttacks[b]++
+                        }
+                    }
+                    rawMax[b] = 0f
+                    gatedMax[b] = 0f
+                }
+                windowSec = 0.0
             }
             seconds += dt
             frameDebt += dt * fps
@@ -199,7 +283,7 @@ class AudioMixReportTest {
                 val pl = { q: Double -> var acc = 0L; val want = (h.sumOf { it.toLong() } * q).toLong(); var r = 1.0; for (i in h.indices) { acc += h[i]; if (acc > want) { r = i / 1000.0; break } }; r }
                 val eh = c.energyBand[b]
                 val et = max(1, eh.sum())
-                out.append(String.format(Locale.ROOT, "  %s level p50 %.2f p90 %.2f p99 %.2f   energy <-.3: %d%%  >+.3: %d%%\n", bands[b], pl(.5), pl(.9), pl(.99), eh.take(7).sum() * 100 / et, eh.drop(14).sum() * 100 / et))
+                out.append(String.format(Locale.ROOT, "  %s level p50 %.2f p90 %.2f p99 %.2f   energy <-.3: %d%%  >+.3: %d%%   big rises/s %.2f, swallowed by gate %d%%, of those real attacks %d%%\n", bands[b], pl(.5), pl(.9), pl(.99), eh.take(7).sum() * 100 / et, eh.drop(14).sum() * 100 / et, c.bigRises[b] / max(1.0, c.seconds), c.swallowed[b] * 100 / max(1L, c.bigRises[b]), c.swallowedAttacks[b] * 100 / max(1L, c.swallowed[b])))
             }
             for (b in 0 until 4) {
                 out.append("  ${bands[b]}:   variant                p50   p90   p99  mean  >.5  hits/s\n")
@@ -243,7 +327,7 @@ class AudioMixReportTest {
         val list = System.getenv("LSD_AUDIO_MIXES")?.lines()?.map { it.trim() }?.filter { it.isNotEmpty() }.orEmpty()
         assumeTrue(list.isNotEmpty(), "LSD_AUDIO_MIXES not set")
         val out = StringBuilder()
-        synthetic(out)
+        if (System.getenv("LSD_AUDIO_SYNTH") != "0") synthetic(out)
         val blocks = System.getenv("LSD_AUDIO_BLOCKS")?.split(",")?.map { it.trim().toInt() } ?: listOf(512)
         val threads = list.flatMap { path ->
             val file = File(path)

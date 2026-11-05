@@ -139,6 +139,11 @@ object AudioEngine {
     private val highPass = BiquadFilter(BiquadFilter.Type.HIGHPASS, lastSampleRate, 5000f)
     private val himidPass = BiquadFilter(BiquadFilter.Type.BANDPASS, lastSampleRate, 3200f, 1.05f) // about 1.9-5.2 kHz, between mid and high
     private val transients = TransientDetector()
+    private val hitScaleAmp = HitScale()
+    private val hitScaleBass = HitScale()
+    private val hitScaleMid = HitScale()
+    private val hitScaleHimid = HitScale()
+    private val hitScaleHigh = HitScale()
 
     private val extractor = AmplitudeExtractor()
     val beatDetector = BeatDetector()
@@ -242,6 +247,11 @@ object AudioEngine {
     private var prevHigh = 0f
     private var localOnsetMean = 0f // fast adaptive mean for onset threshold
 
+    private fun resetHits() {
+        transients.reset()
+        hitScaleAmp.reset(); hitScaleBass.reset(); hitScaleMid.reset(); hitScaleHimid.reset(); hitScaleHigh.reset()
+    }
+
     fun getEstimatedBpm(): Float = estimatedBpm
 
     /**
@@ -250,7 +260,7 @@ object AudioEngine {
      */
     internal fun resetForOfflineFeed(bpm: Float, startTimeNs: Long) {
         lowPass.reset(); midPass.reset(); highPass.reset(); himidPass.reset()
-        transients.reset()
+        resetHits()
         spectrum.reset()
         agc.reset()
         beatDetector.reset()
@@ -478,7 +488,7 @@ object AudioEngine {
         CVRegistry.resetBeatAnchor(0.0, estimatedBpm, lastSignalTime)
 
         // Reset onset/flux trackers
-        transients.reset()
+        resetHits()
         prevBass = 0f
         prevMid  = 0f
         prevHigh = 0f
@@ -764,18 +774,20 @@ object AudioEngine {
         val highNorm     = (k * high / highDiv).coerceIn(0f, 1f)
         val himidNorm    = (k * himid / himidDiv).coerceIn(0f, 1f)
 
-        // Hits keep their own fixed scale, stretched by the same per-band ratio as the level.
+        // Hits are sized against the band's own recent strong hits; auto gain only caps how far that lifts them.
+        val hold = agc.watch.holding
+        val dtF = dtSec.toFloat()
         val hitBass  = transients.process(TransientDetector.BASS, lowBuffer, safeFrames, sampleRate)
         val hitMid   = transients.process(TransientDetector.MID, midBuffer, safeFrames, sampleRate)
         val hitHimid = transients.process(TransientDetector.HIMID, himidBuffer, safeFrames, sampleRate)
         val hitHigh  = transients.process(TransientDetector.HIGH, highBuffer, safeFrames, sampleRate)
         val hitAmp = hitBass * TransientDetector.BASS_WEIGHT + hitMid * TransientDetector.MID_WEIGHT +
             hitHimid * TransientDetector.HIMID_WEIGHT + hitHigh * TransientDetector.HIGH_WEIGHT
-        val fluxAmpNorm   = (k * hitAmp / (TransientDetector.AMP_SCALE * ampDiv / fixed)).coerceIn(0f, 1f)
-        val fluxBassNorm  = (k * hitBass / (TransientDetector.SCALE * bassDiv / fixed)).coerceIn(0f, 1f)
-        val fluxMidNorm   = (k * hitMid / (TransientDetector.SCALE * midDiv / fixed)).coerceIn(0f, 1f)
-        val fluxHimidNorm = (k * hitHimid / (TransientDetector.SCALE * himidDiv / fixed)).coerceIn(0f, 1f)
-        val fluxHighNorm  = (k * hitHigh / (TransientDetector.SCALE * highDiv / fixed)).coerceIn(0f, 1f)
+        val fluxAmpNorm   = (k * hitScaleAmp.signal(hitAmp, TransientDetector.AMP_SCALE * ampDiv / fixed, dtF, hold)).coerceIn(0f, 1f)
+        val fluxBassNorm  = (k * hitScaleBass.signal(hitBass, TransientDetector.SCALE * bassDiv / fixed, dtF, hold)).coerceIn(0f, 1f)
+        val fluxMidNorm   = (k * hitScaleMid.signal(hitMid, TransientDetector.SCALE * midDiv / fixed, dtF, hold)).coerceIn(0f, 1f)
+        val fluxHimidNorm = (k * hitScaleHimid.signal(hitHimid, TransientDetector.SCALE * himidDiv / fixed, dtF, hold)).coerceIn(0f, 1f)
+        val fluxHighNorm  = (k * hitScaleHigh.signal(hitHigh, TransientDetector.SCALE * highDiv / fixed, dtF, hold)).coerceIn(0f, 1f)
 
         CVRegistry.updatePushedValue("amp",       ampNorm)
         CVRegistry.updatePushedValue("bass",      bassNorm)
