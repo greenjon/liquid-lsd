@@ -19,7 +19,7 @@ class AudioAgcTest {
     private fun feed(agc: AudioAgc, seconds: Double, amp: Float, bass: Float, mid: Float = amp, high: Float = amp, each: (AudioAgc) -> Unit = {}) {
         repeat((seconds / dt).toInt()) {
             t += dt
-            agc.update(beat(amp, t), beat(bass, t), beat(mid, t), beat(high, t), dt)
+            agc.update(beat(amp, t), beat(bass, t), beat(mid, t), beat(high, t), beat(high, t), dt)
             each(agc)
         }
     }
@@ -88,5 +88,27 @@ class AudioAgcTest {
         val agc = AudioAgc()
         feed(agc, 10.0, 0.5f, 0.5f, 0.5f, high = 0f)
         assertEquals(AudioAgc.FLOOR, agc.divisor(AudioAgc.HIGH), 1e-6f)
+    }
+
+    @Test
+    fun bandEnergyFollowsOneBand() {
+        val agc = AudioAgc()
+        feed(agc, 10.0, amp = 0.2f, bass = 0.2f, mid = 0.1f, high = 0.05f)
+        assertEquals(0f, agc.energy(AudioAgc.HIGH), "warm-up")
+        feed(agc, 20.0, amp = 0.2f, bass = 0.2f, mid = 0.1f, high = 0.05f)
+        assertTrue(kotlin.math.abs(agc.energy(AudioAgc.HIGH)) < 0.05f, "usual level: ${agc.energy(AudioAgc.HIGH)}")
+        feed(agc, 3.0, amp = 0.2f, bass = 0.2f, mid = 0.1f, high = 0.2f)
+        assertTrue(agc.energy(AudioAgc.HIGH) > 0.5f, "hats came in: ${agc.energy(AudioAgc.HIGH)}")
+        assertTrue(kotlin.math.abs(agc.energy(AudioAgc.BASS)) < 0.05f, "the bass has not moved: ${agc.energy(AudioAgc.BASS)}")
+    }
+
+    @Test
+    fun bandEnergyIsZeroForAnEmptyBandAndClamped() {
+        val agc = AudioAgc()
+        repeat(40 * 60) { agc.update(0.2f, 0.2f, 0.1f, 0.0005f, 0f, dt) }
+        assertEquals(0f, agc.energy(AudioAgc.HIGH), "below the floor")
+        assertEquals(0f, agc.energy(AudioAgc.HIMID), "nothing in the band")
+        repeat(10 * 60) { agc.update(0.2f, 0.2f, 0.9f, 0.0005f, 0f, dt) }
+        assertEquals(1f, agc.energy(AudioAgc.MID), "clamped")
     }
 }

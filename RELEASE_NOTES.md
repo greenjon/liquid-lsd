@@ -1,5 +1,17 @@
 ## [Unreleased]
 
+### Audio: Cleaner Hits, a Hi-Mid Band, Energy per Band (`audio/TransientDetector.kt`, `audio/AudioAgc.kt`, `audio/AudioEngine.kt`, `cv/AudioSignals.kt`, `web/dsp.js`)
+- **Transient modulators now follow drum hits.** The old signal was close to full most of the time on real music, so kicks barely stood out. It now scores each rise against what the band has just been doing. On three long mixes, bass-driven transients spend about half as long above 50%, and about 60% more separate hits get through.
+- **Every preset and stock response using Transient changes feel**, with no edits needed: more contrast between hits, and less motion on average. If a look feels too calm, raise its range or Audio Response.
+- **Fixed: sustained bass no longer reads as hits.** At a 64-frame JACK buffer, a held 50 Hz note read as full scale all the time. It now reads as nothing at every buffer size.
+- **Fixed: the audio buffer size no longer changes how hard a kick hits.** A kick now reads the same at 64 to 1024 frames.
+- **Fixed: short hits could be missed.** Modulators read once per frame, and a spike could come and go between reads. A hit now lasts long enough for any frame rate from 30 fps up to see it.
+- **New band, Hi-Mid** (about 2-5 kHz): snare crack, vocal edge and guitars, which fell between Mid and High. It's in the Frequency Band list for Continuous and Transient.
+- **New Section signals: Bass, Mid, Hi-Mid and High Energy.** Like Energy, but for one band, so a look can follow the hats coming in or the bass leaving.
+- The Transient button now reads **Transient (Hits)**, and Preferences > Audio Hardware has scopes for the new signals.
+- **Fixed**: the Frequency Band tooltip gave the wrong ranges for Mid and High.
+- The web TV gets the same signals, as of v23. Beat and downbeat detection are unchanged.
+
 ### Web TV: A Light Theme, and How Many Mutants Are Watching (`web/tv.css`, `web/ui.js`, `web/index.html`)
 - **New MENU › THEME: dark or light.** Dark is the default. Light is an almond cabinet in a sunlit room, with ivory knobs and buttons, an aluminium nameplate and an oak frame on the chat's blackboard. The choice is remembered in the browser, and RESET puts it back to dark. The picture, its on-screen display and the chat's slate look the same in both.
 - **The dark theme shares the new materials**: a fine grain on the cabinet and a soft pool of light on the wall behind it. Its colours are otherwise unchanged.

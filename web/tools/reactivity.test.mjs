@@ -43,7 +43,7 @@ function targets(file, dto) {
   return out;
 }
 
-const SILENT = { audio_amp: 0, audio_bass: 0, audio_mid: 0, audio_high: 0, audio_flux_amp: 0, audio_flux_bass: 0, audio_flux_mid: 0, audio_flux_high: 0 };
+const SILENT = { audio_amp: 0, audio_bass: 0, audio_mid: 0, audio_himid: 0, audio_high: 0, audio_flux_amp: 0, audio_flux_bass: 0, audio_flux_mid: 0, audio_flux_himid: 0, audio_flux_high: 0 };
 
 /** Parameter values with the given signals held for 90 frames (so envelope followers settle). */
 function values(list, { beats = 0, cv = {} } = {}) {

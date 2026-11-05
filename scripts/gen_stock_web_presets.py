@@ -34,7 +34,7 @@ SIGNAL_TAGS = {"audio_bass": "bass", "audio_flux_bass": "kick", "audio_mid": "mi
                "audio_high": "high", "audio_flux_high": "high"}
 
 # Song-section signals: they move only in breakdowns and on drops, so they don't count as moving with the music.
-SECTION_SIGNALS = {"audio_energy", "audio_drop"}
+SECTION_SIGNALS = {"audio_energy", "audio_energy_bass", "audio_energy_mid", "audio_energy_himid", "audio_energy_high", "audio_drop"}
 
 
 def header(path):

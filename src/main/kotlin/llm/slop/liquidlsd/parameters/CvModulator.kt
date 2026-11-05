@@ -118,7 +118,7 @@ data class CvModulator(
      * bipolar sources, the sequencer and section energy swing -1..1 and span dcOffset±depth.
      */
     private val halfRange: Boolean
-        get() = sourceId != "seq" && sourceId != "audio_energy" && !llm.slop.liquidlsd.cv.isCvSourceBipolar(sourceId)
+        get() = sourceId != "seq" && !llm.slop.liquidlsd.cv.AudioSignals.isEnergy(sourceId) && !llm.slop.liquidlsd.cv.isCvSourceBipolar(sourceId)
 
     /** Applies [invert] to a source value: 1 - cv for unipolar sources, -cv for bipolar ones. */
     fun polarize(cv: Float): Float = if (!invert) cv else if (halfRange) 1f - cv else -cv

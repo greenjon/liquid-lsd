@@ -24,9 +24,6 @@ object ClipboardManager {
         val mappedSourceId = when (destCvId) {
             "audio" -> {
                 when (dto.sourceId) {
-                    "audio_amp", "audio_bass", "audio_mid", "audio_high",
-                    "audio_flux_amp", "audio_flux_bass", "audio_flux_mid", "audio_flux_high",
-                    "audio_energy", "audio_drop" -> dto.sourceId
                     "amp" -> "audio_amp"
                     "bass" -> "audio_bass"
                     "mid" -> "audio_mid"
@@ -35,7 +32,7 @@ object ClipboardManager {
                     "flux_bass" -> "audio_flux_bass"
                     "flux_mid" -> "audio_flux_mid"
                     "flux_high" -> "audio_flux_high"
-                    else -> "audio_amp"
+                    else -> if (llm.slop.liquidlsd.cv.AudioSignals.isAudio(dto.sourceId)) dto.sourceId else "audio_amp"
                 }
             }
             "midi" -> {

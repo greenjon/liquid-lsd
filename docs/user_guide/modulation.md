@@ -49,15 +49,17 @@ Stock **effects** and **transitions** ship random ranges the same way. The deck 
 | ---- | -------------------------------------------------- |
 | AMP  | Full-spectrum energy                               |
 | BASS | Low end — kick drums, sub-bass (below ~150 Hz)     |
-| MID  | Midrange — vocals, snares, lead synths (~1 kHz)    |
+| MID  | Midrange — vocals, snare body, lead synths (~1 kHz) |
+| HI-MID | Upper mids — snare crack, vocal edge, guitars (~2-5 kHz) |
 | HIGH | Top end — hi-hats, cymbals, texture (above ~5 kHz) |
 
 ### Detection modes
 
 - **Continuous** — Tracks the ongoing energy level of the band. Good for sustained movement, breathing dynamics, amplitude-following effects.
-- **Transient** — Fires on attacks and hits. Detects the moment energy *increases* in the band, making it sharp and percussive. Great for triggering flashes, jumps, or snaps on drum hits.
-- **Section** — Follows the shape of the song instead of its beats. Pick one of two signals:
+- **Transient** — Fires on drum hits and attacks that stand out from what the band has just been doing, so it is sharp and percussive. A sustained bass note doesn't trigger it, and a kick on top of one does. Great for flashes, jumps or snaps on drum hits.
+- **Section** — Follows the shape of the song instead of its beats. Pick a signal:
   - **Energy** compares how loud the music is now with the last 20 seconds or so. It rests in the middle of the range during normal playing, sinks toward Min in a breakdown and stays there until the drop, and rises toward Max when the song gets louder. Use it to calm things down in a breakdown (smaller, slower, darker) and open them up when the music builds.
+  - **Bass, Mid, Hi-Mid and High Energy** do the same for one band, so a look can follow the hats coming in or the bass leaving, whatever the rest of the mix is doing. A band with nothing in it stays in the middle.
   - **Drop** jumps to Max when a breakdown ends with the bass coming back, then falls back to Min over 4 bars. Use it for one big hit on the drop: a flash, a zoom punch, an effect swept in. The drop is detected about half a second after the bass comes back (two loud kicks in a row), and the hit is dated back to that beat, so it starts slightly decayed but in time with the music.
 
   Section signals need about 20 seconds of music before they react. They are not scaled by Audio Response and have no response profile (they're already smooth), so only the range applies. A breakdown has to last at least 4 seconds before its end counts as a drop.
@@ -105,10 +107,10 @@ On **MUL**, an inverted modulator ducks the parameter on every hit, like sidecha
 - **Device and routing** — **Enable Audio Engine**, the **Audio Backend** (Auto tries JACK first and falls back to Java Sound), the **Input Hardware Device** (greyed out while JACK / PipeWire manages capture; the refresh button rescans) and **Channel Routing** (Mix L + R, Left Only or Right Only).
 - **Input Trim** (0 to 10×, default 1×) and, where the system allows it, **System Volume** (the system's own recording level; the label shows `[MUTED]` when it is muted). Both are for setting up the input so beat detection hears enough. They don't change how much the picture moves, because auto gain levels the signals afterwards.
 - **Sync State** — `ACTIVE` when a signal is coming in and the tempo is being tracked, `SILENT` when there is no input or it is too quiet. If the peak meter moves but the state stays `SILENT`, the panel says the input is too quiet for beat detection: raise Input Trim or System Volume. If the engine isn't running at all, a **Retry Connection** button appears.
-- **Audio Response** (0% to 200%, default 100%) — the one control for how strongly everything that follows the music moves. It scales the Amp, Bass, Mid, High and Flux signals that every audio modulator reads, built-in or your own. Section signals, LFOs, beat detection and the beat clock are not affected.
+- **Audio Response** (0% to 200%, default 100%) — the one control for how strongly everything that follows the music moves. It scales the band levels and Transient signals that every audio modulator reads, built-in or your own. Section signals, LFOs, beat detection and the beat clock are not affected.
 - **Auto gain readout** — the line under Audio Response (`Auto gain  amp 1.0x  bass 1.3x ...`) shows how much auto gain is lifting each band right now. `1.0x` means the band is already at the reference level.
 - **Sections readout** — the next line shows the song-section detector behind the Section **Energy** and **Drop** signals: `listening...` for the first 20 seconds or so, then `normal` or `BREAKDOWN`, the low-end level now as a percentage of its usual level, how long it has been under 45% (a breakdown starts after 3 s), and how many drops it has called. The detector listens to the low end (70% bass, 30% full mix) before auto gain.
-- **Meters and scopes** — the right column has the stereo input peak meter (before routing; a channel that routing drops is marked `[Bypassed]`) and a scope for each signal a modulator can use: the raw buffer, the beat sine, the four bands (Continuous) and their transients (Flux), and the two Section signals, **Section Energy** and **Section Drop**. Watch the last two through a track to see when a breakdown and drop are detected.
+- **Meters and scopes** — the right column has the stereo input peak meter (before routing; a channel that routing drops is marked `[Bypassed]`) and a scope for each signal a modulator can use: the raw buffer, the beat sine, the five bands (Continuous) and their hits (Transient), and the Section signals. Watch **Section Energy** and **Section Drop** through a track to see when a breakdown and drop are detected.
 - **Master Tempo & Link** shows the current BPM, the clock source and Ableton Link status, with a button to the Tempo & Sync page.
 
 ---

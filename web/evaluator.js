@@ -16,8 +16,8 @@ export const GEN_MOD_MODES = ['NONE', 'AM', 'PM', 'ADD'];
 // midi_cc_* are not available on the web and are skipped.
 const GENERATORS = new Set(['lfo', 'seq']);
 const AUDIO_SOURCES = new Set([
-  'audio_amp', 'audio_bass', 'audio_mid', 'audio_high',
-  'audio_flux_amp', 'audio_flux_bass', 'audio_flux_mid', 'audio_flux_high',
+  'audio_amp', 'audio_bass', 'audio_mid', 'audio_himid', 'audio_high',
+  'audio_flux_amp', 'audio_flux_bass', 'audio_flux_mid', 'audio_flux_himid', 'audio_flux_high',
 ]);
 
 /**
@@ -272,7 +272,8 @@ function follow(ctx, mod, input) {
   return next;
 }
 
-const BIPOLAR_SOURCES = new Set(['beatSine', 'beatPhase', 'sampleAndHold', 'audio_energy']);
+const BIPOLAR_SOURCES = new Set(['beatSine', 'beatPhase', 'sampleAndHold', 'audio_energy',
+  'audio_energy_bass', 'audio_energy_mid', 'audio_energy_himid', 'audio_energy_high']);
 
 /** CvModulator.polarize: an inverted source reads 1 - cv when unipolar, -cv when bipolar. */
 function polarize(mod, cv) {

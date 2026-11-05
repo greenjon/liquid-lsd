@@ -1262,6 +1262,50 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#audio-cleaner-hits-a-hi-mid-band-energy-per-band-audiotransientdetectorkt-audioaudioagckt-audioaudioenginekt-cvaudiosignalskt-webdspjs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audio: Cleaner Hits, a Hi-Mid Band, Energy per Band (audio/TransientDetector.kt, audio/AudioAgc.kt, audio/AudioEngine.kt, cv/AudioSignals.kt, web/dsp.js)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#web-tv-a-light-theme-and-how-many-mutants-are-watching-webtvcss-webuijs-webindexhtml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web TV: A Light Theme, and How Many Mutants Are Watching (web/tv.css, web/ui.js, web/index.html)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#web-tv-keys-that-match-their-names-webuijs-webindexhtml-webtvcss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web TV: Keys That Match Their Names (web/ui.js, web/index.html, web/tv.css)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#web-tv-tapes-the-spaz-radio-archive-on-the-tv-webtapesjs-webtapedeckjs-webdspjs-webautopilotjs-webuijs-webindexhtml-webtvcss-webchatboardjs-webrendererjs-webswjs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web TV: TAPES, the Spaz Radio Archive on the TV (web/tapes.js, web/tapedeck.js, web/dsp.js, web/autopilot.js, web/ui.js, web/index.html, web/tv.css, web/chatboard.js, web/renderer.js, web/sw.js)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#kifs-storm-the-original-kifs-is-back-librarysourceskifs_stormkifs_stormfs-stock_defaultssourceskifs_stormjson-renderingsourcedocregistrykt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7488,6 +7532,50 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#audio-cleaner-hits-a-hi-mid-band-energy-per-band-audiotransientdetectorkt-audioaudioagckt-audioaudioenginekt-cvaudiosignalskt-webdspjs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audio: Cleaner Hits, a Hi-Mid Band, Energy per Band (audio/TransientDetector.kt, audio/AudioAgc.kt, audio/AudioEngine.kt, cv/AudioSignals.kt, web/dsp.js)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#web-tv-a-light-theme-and-how-many-mutants-are-watching-webtvcss-webuijs-webindexhtml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web TV: A Light Theme, and How Many Mutants Are Watching (web/tv.css, web/ui.js, web/index.html)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#web-tv-keys-that-match-their-names-webuijs-webindexhtml-webtvcss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web TV: Keys That Match Their Names (web/ui.js, web/index.html, web/tv.css)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#web-tv-tapes-the-spaz-radio-archive-on-the-tv-webtapesjs-webtapedeckjs-webdspjs-webautopilotjs-webuijs-webindexhtml-webtvcss-webchatboardjs-webrendererjs-webswjs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web TV: TAPES, the Spaz Radio Archive on the TV (web/tapes.js, web/tapedeck.js, web/dsp.js, web/autopilot.js, web/ui.js, web/index.html, web/tv.css, web/chatboard.js, web/renderer.js, web/sw.js)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#kifs-storm-the-original-kifs-is-back-librarysourceskifs_stormkifs_stormfs-stock_defaultssourceskifs_stormjson-renderingsourcedocregistrykt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -13665,6 +13753,48 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="audio-cleaner-hits-a-hi-mid-band-energy-per-band-audiotransientdetectorkt-audioaudioagckt-audioaudioenginekt-cvaudiosignalskt-webdspjs">Audio: Cleaner Hits, a Hi-Mid Band, Energy per Band (<code>audio/TransientDetector.kt</code>, <code>audio/AudioAgc.kt</code>, <code>audio/AudioEngine.kt</code>, <code>cv/AudioSignals.kt</code>, <code>web/dsp.js</code>)</h3>
+<ul>
+<li><strong>Transient modulators now follow drum hits.</strong> The old signal was close to full most of the time on real music, so kicks barely stood out. It now scores each rise against what the band has just been doing. On three long mixes, bass-driven transients spend about half as long above 50%, and about 60% more separate hits get through.</li>
+<li><strong>Every preset and stock response using Transient changes feel</strong>, with no edits needed: more contrast between hits, and less motion on average. If a look feels too calm, raise its range or Audio Response.</li>
+<li><strong>Fixed: sustained bass no longer reads as hits.</strong> At a 64-frame JACK buffer, a held 50 Hz note read as full scale all the time. It now reads as nothing at every buffer size.</li>
+<li><strong>Fixed: the audio buffer size no longer changes how hard a kick hits.</strong> A kick now reads the same at 64 to 1024 frames.</li>
+<li><strong>Fixed: short hits could be missed.</strong> Modulators read once per frame, and a spike could come and go between reads. A hit now lasts long enough for any frame rate from 30 fps up to see it.</li>
+<li><strong>New band, Hi-Mid</strong> (about 2-5 kHz): snare crack, vocal edge and guitars, which fell between Mid and High. It's in the Frequency Band list for Continuous and Transient.</li>
+<li><strong>New Section signals: Bass, Mid, Hi-Mid and High Energy.</strong> Like Energy, but for one band, so a look can follow the hats coming in or the bass leaving.</li>
+<li>The Transient button now reads <strong>Transient (Hits)</strong>, and Preferences &gt; Audio Hardware has scopes for the new signals.</li>
+<li><strong>Fixed</strong>: the Frequency Band tooltip gave the wrong ranges for Mid and High.</li>
+<li>The web TV gets the same signals, as of v23. Beat and downbeat detection are unchanged.</li>
+</ul>
+<h3 id="web-tv-a-light-theme-and-how-many-mutants-are-watching-webtvcss-webuijs-webindexhtml">Web TV: A Light Theme, and How Many Mutants Are Watching (<code>web/tv.css</code>, <code>web/ui.js</code>, <code>web/index.html</code>)</h3>
+<ul>
+<li><strong>New MENU › THEME: dark or light.</strong> Dark is the default. Light is an almond cabinet in a sunlit room, with ivory knobs and buttons, an aluminium nameplate and an oak frame on the chat's blackboard. The choice is remembered in the browser, and RESET puts it back to dark. The picture, its on-screen display and the chat's slate look the same in both.</li>
+<li><strong>The dark theme shares the new materials</strong>: a fine grain on the cabinet and a soft pool of light on the wall behind it. Its colours are otherwise unchanged.</li>
+<li><strong>New line under the station badge</strong>: <code>12 mutants watching TV.</code>, everyone on the Spaz Radio stream right now, in any player (the same number the Spaz Radio app shows). It refreshes every 30 seconds while the TV is on, and is blank when the count is zero or can't be read.</li>
+<li>The badge now stays on the right when the controls wrap to a second row.</li>
+<li>The TV's version is now v22.</li>
+</ul>
+<h3 id="web-tv-keys-that-match-their-names-webuijs-webindexhtml-webtvcss">Web TV: Keys That Match Their Names (<code>web/ui.js</code>, <code>web/index.html</code>, <code>web/tv.css</code>)</h3>
+<ul>
+<li><strong>Some keys moved, so a button's key is its first letter</strong>: <code>R</code> is ROLL (was <code>D</code>), <code>S</code> is SCHEDULE (was <code>G</code>), <code>F</code> is fullscreen, as on other video players (was <code>S</code>), <code>E</code> is the next FX, for effects (was <code>F</code>), and <code>J</code> jumps to a random channel (was <code>R</code>).</li>
+<li><strong>New</strong>: <code>U</code> mutes and brings the volume back. <code>Space</code> pauses a tape while one is in; with no tape in it still holds the scene, and <code>H</code> always does.</li>
+<li><strong>The <code>?</code> page is grouped</strong> into Channel, Scene, Sound, Screen and Tapes, with each key's letter lit in its name.</li>
+<li>MENU › INPUT is now <strong>AUDIO INPUT</strong>, to go with its key, <code>A</code>.</li>
+<li><strong>Fixed</strong>: the REACT dial's tooltip said double-click goes to 200%; it goes to 100%.</li>
+<li>The TV's version is now v21.</li>
+</ul>
+<h3 id="web-tv-tapes-the-spaz-radio-archive-on-the-tv-webtapesjs-webtapedeckjs-webdspjs-webautopilotjs-webuijs-webindexhtml-webtvcss-webchatboardjs-webrendererjs-webswjs">Web TV: TAPES, the Spaz Radio Archive on the TV (<code>web/tapes.js</code>, <code>web/tapedeck.js</code>, <code>web/dsp.js</code>, <code>web/autopilot.js</code>, <code>web/ui.js</code>, <code>web/index.html</code>, <code>web/tv.css</code>, <code>web/chatboard.js</code>, <code>web/renderer.js</code>, <code>web/sw.js</code>)</h3>
+<ul>
+<li><strong>New TAPES button on the web TV</strong> (also <code>T</code>, or MENU › TAPES): the whole Spaz Radio archive, about 3,800 shows back to 2013, over the picture. Type to search by name or date. RANDOM TAPE lands on any show, ON THIS DAY finds today's date in every year, and RESUME goes back to the show you last stopped.</li>
+<li><strong>The picture follows the tape</strong>: a tape is an audio input like the radio, so the beat, the levels and the audio-reactive scenes all follow the old show. The badge reads <code>SPAZ RADIO • TAPE</code>.</li>
+<li><strong>Transport strip</strong> along the bottom of the picture, with the rest of the info (click the picture, or INFO keeps it up): eject, back and forward 30 seconds, pause, and the show's waveform to click or drag. Keys: <code>K</code> pause, <code>,</code> <code>.</code> 30 seconds, <code>&lt;</code> <code>&gt;</code> 5 minutes. The phone's lock screen can seek too.</li>
+<li><strong>New LIVE button</strong> (<code>L</code>) goes back to the radio. LIVE is lit while the radio is playing and TAPES while a tape is in or its list is open. If a live show starts during a tape, the tape keeps playing, the LIVE button pulses red, and <code>LIVE NOW: &lt;name&gt;</code> comes up once. Viewer controls stay yours on a tape.</li>
+<li><strong>Your place is remembered</strong> per show, in this browser, for the last 50 shows. Turning the TV off and on keeps the tape in; a reload starts on the radio, with RESUME in the list. At the end of a show, the TV goes back to the radio.</li>
+<li><strong>Chat stays on the live room</strong>, with a small note on the board that you're on a tape.</li>
+<li>Not in the Spaz Radio app's embedded picture (the app has its own archive tab) or under <code>?kiosk</code>.</li>
+<li><strong>Fixed</strong>: <code>CLICK OR PRESS A KEY FOR SOUND</code> could stay on screen after sound had started, if the stream failed at power-on and then came back.</li>
+<li>The TV's version is now v19.</li>
+</ul>
 <h3 id="kifs-storm-the-original-kifs-is-back-librarysourceskifs_stormkifs_stormfs-stock_defaultssourceskifs_stormjson-renderingsourcedocregistrykt">KIFS Storm: The Original KIFS Is Back (<code>library/sources/kifs_storm/kifs_storm.fs</code>, <code>stock_defaults/sources/kifs_storm.json</code>, <code>rendering/SourceDocRegistry.kt</code>)</h3>
 <ul>
 <li><strong>New source, KIFS Storm</strong>: the first KIFS, removed when it was too heavy for integrated graphics. It sits next to the current KIFS and does the opposite: every fold level turns freely, so nested cubes tumble against each other and fill the frame, coloured in flat neon with glow in the creases.</li>

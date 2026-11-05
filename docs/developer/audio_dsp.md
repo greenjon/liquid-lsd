@@ -63,13 +63,15 @@ Every audio block processes the incoming mono signal sequentially:
 Input Audio ──► Biquad Filter Bank ──► Amplitude Extractor ──► CVRegistry
                  ├── Low-Pass  (<= 150 Hz)    -> bass
                  ├── Band-Pass (~ 1000 Hz)   -> mid
+                 ├── Band-Pass (~ 3200 Hz)   -> himid
                  └── High-Pass (>= 5000 Hz)   -> high
 ```
 
 ### Biquad IIR Filter Bank (`BiquadFilter.kt`)
-Three parallel second-order IIR (Infinite Impulse Response) biquad filters process the audio stream:
+Four parallel second-order IIR (Infinite Impulse Response) biquad filters process the audio stream:
 - **Low-pass**: Cutoff $\le 150\text{ Hz}$ (bass/kick band).
 - **Band-pass**: Center frequency $\approx 1000\text{ Hz}$ (vocal/snare band).
+- **Band-pass**: Center frequency $\approx 3200\text{ Hz}$, Q 1.05, about 1.9-5.2 kHz (snare crack/vocal edge band). It fills the gap between mid and high.
 - **High-pass**: Cutoff $\ge 5000\text{ Hz}$ (hi-hat/cymbal band).
 
 The filter difference equation evaluates without allocations:
@@ -84,37 +86,38 @@ $$\text{RMS} = \sqrt{\frac{1}{N} \sum_{i=1}^N x_i^2}$$
 
 RMS values are normalized and published to `CVRegistry`:
 - `audio_amp`: Full-band input RMS.
-- `audio_bass`, `audio_mid`, `audio_high`: Per-band filter RMS values.
+- `audio_bass`, `audio_mid`, `audio_himid`, `audio_high`: Per-band filter RMS values.
 
-The divisor is per band and comes from `AudioAgc`, which is always on: `max(longTermLevel * SCALE[band], 0.02)`. The long-term level is a 20 s mean of the band's raw RMS (a running mean while the first 20 s fill, so a new feed levels in at once), the way MilkDrop compares a band to its average rather than its recent peak. `SCALE` (1.5 / 2.0 / 2.0 / 2.7 for amp / bass / mid / high) was calibrated on four 10-minute DJ mixes so steady music lands where the earlier peak follower (8 s release, 0.85 headroom) put it, which the built-in responses are tuned for. The long-term levels stop following while `SectionWatch` holds: during a breakdown, and from the moment the level dips under the breakdown ratio while one is being confirmed. So a breakdown reads quiet for as long as it lasts (on a real mix: bass 0.04 instead of the peak follower's 0.25), a bass dropout is not boosted into kicks, and the drop lands where the music before it did. When the watch adopts a new normal (a "breakdown" over 60 s, or the level over 1.6x the reference for 4 s: a quieter or a louder song) every band's reference jumps to its 1.5 s level. After 2 s under 0.003 RMS (about -50 dBFS) everything waits and starts afresh. `resetForOfflineFeed` resets it.
+The divisor is per band and comes from `AudioAgc`, which is always on: `max(longTermLevel * SCALE[band], 0.02)`. The long-term level is a 20 s mean of the band's raw RMS (a running mean while the first 20 s fill, so a new feed levels in at once), the way MilkDrop compares a band to its average rather than its recent peak. `SCALE` (1.5 / 2.0 / 2.0 / 2.7 for amp / bass / mid / high) was calibrated on four 10-minute DJ mixes so steady music lands where the earlier peak follower (8 s release, 0.85 headroom) put it, which the built-in responses are tuned for. Hi-mid's 2.4 reads between mid and high on three long mixes. The long-term levels stop following while `SectionWatch` holds: during a breakdown, and from the moment the level dips under the breakdown ratio while one is being confirmed. So a breakdown reads quiet for as long as it lasts (on a real mix: bass 0.04 instead of the peak follower's 0.25), a bass dropout is not boosted into kicks, and the drop lands where the music before it did. When the watch adopts a new normal (a "breakdown" over 60 s, or the level over 1.6x the reference for 4 s: a quieter or a louder song) every band's reference jumps to its 1.5 s level. After 2 s under 0.003 RMS (about -50 dBFS) everything waits and starts afresh. `resetForOfflineFeed` resets it.
 
 **Section watch (`SectionWatch.kt`)** is a port of the web TV's `web/energy.js` (`EnergyWatch`): a 1.5 s level of `0.7 bass + 0.3 amp` (fixed scale) against a 20 s reference; a *breakdown* is the level under 45% of the reference for 3 s (not in the first 20 s or in silence), a *drop* is it back above 85% after at least 4 s. Besides auto gain it feeds two modulation sources (see *Section signals* below). `WebAudioAgcVectorsTest` writes `web/tools/agc_vectors.json` and fails when it is stale; `node --test web/tools/beatclock.test.mjs` replays it through the web port, so keep the two identical (regenerate with `UPDATE_WEB_VECTORS=1`).
 
-The rest of the stage: Flux uses its fixed scale (0.05 / 0.1) times the same per-band ratio. Every normalized signal (levels and flux) is then multiplied by `AudioEngine.response` (Audio Response, 0..2, default 1, preference `audioResponse`) and clamped to 0..1, so one setting scales every audio modulator. That is the only reactivity control: the AGC toggle and AGC Headroom slider were removed (a headroom only rescaled every signal, exactly as Response does; `AppPreferencesStore.LEGACY_DEFAULT_HEADROOM` is the 0.85 the scale was calibrated against); `AppPreferencesStore.responseForLegacyHeadroom` folds a saved `audioAgcHeadroom` into `audioResponse` once and drops both legacy keys. `inputGain` (**Input Trim** in the panel) is applied to the raw samples instead, so it is a setup control: auto gain undoes it for the CV signals, and it only changes what the detectors hear. The panel warns when the silence gate says SILENT while the post-trim input peak is over 0.01 (about -40 dBFS). The beat detector, downbeat detector and silence gate take the raw RMS, before this stage; the audio texture (FFT / waveform) is not scaled either.
+The rest of the stage: hits use their fixed scale (`TransientDetector.SCALE`, `AMP_SCALE`) times the same per-band ratio. Every normalized signal (levels and hits) is then multiplied by `AudioEngine.response` (Audio Response, 0..2, default 1, preference `audioResponse`) and clamped to 0..1, so one setting scales every audio modulator. That is the only reactivity control: the AGC toggle and AGC Headroom slider were removed (a headroom only rescaled every signal, exactly as Response does; `AppPreferencesStore.LEGACY_DEFAULT_HEADROOM` is the 0.85 the scale was calibrated against); `AppPreferencesStore.responseForLegacyHeadroom` folds a saved `audioAgcHeadroom` into `audioResponse` once and drops both legacy keys. `inputGain` (**Input Trim** in the panel) is applied to the raw samples instead, so it is a setup control: auto gain undoes it for the CV signals, and it only changes what the detectors hear. The panel warns when the silence gate says SILENT while the post-trim input peak is over 0.01 (about -40 dBFS). The beat detector, downbeat detector and silence gate take the raw RMS, before this stage; the audio texture (FFT / waveform) is not scaled either.
 
 ---
 
-## Transient & Spectral Flux Detection
+## Transient Detection
 
-Musical transients drive per-band Spectral Flux CV signals (`audio_flux_amp`, `audio_flux_bass`, `audio_flux_mid`, `audio_flux_high`).
+`audio_flux_amp`, `audio_flux_bass`, `audio_flux_mid`, `audio_flux_himid` and `audio_flux_high` are hits: attacks that stand out from what the band has just been doing. The IDs keep the word flux because presets save them. `TransientDetector.kt` makes them in three steps, none of which depends on the audio block size:
 
-### Spectral Flux Calculation
-Spectral flux measures positive frame-to-frame energy growth across frequency bands (half-wave rectified):
+1. **Rise on a fixed grid.** Squared samples are summed into hops of 5.8 ms inside the block, whatever its length. Two hops make an 11.6 ms level, and the rise is that level minus the level of the two hops before.
+2. **Gate.** `TransientGate` divides the rise by its own mean over the last second (`LOCAL_TAU`) and passes it through a smoothstep from 3x (`C_LOW`, nothing) to 8x (`C_HIGH`, all of it). A sustained bass note ripples in an 11.6 ms window, but evenly, so it never stands above its own mean. A kick does, including a kick on top of that note.
+3. **Hold.** A value is held for 34 ms (`HOLD_SEC`) unless a larger one replaces it, and each block publishes the largest value held during it. Modulators read once per render frame, and the audio thread overwrites between reads, so without this a short spike is lost: at 64-frame blocks a 60 fps reader caught under a quarter of the kicks.
 
-$$\text{Flux}_{band} = \max(0,\ \text{RMS}_{band}(t) - \text{RMS}_{band}(t-1))$$
+There is no jump to 1.0 and no built-in decay. The rise keeps its size, so accents read larger than ghost notes, and each modulator's envelope follower shapes the rest. `audio_flux_amp` is the weighted sum (2 bass + 0.8 mid + 0.5 himid + 0.3 high).
 
-- `audio_flux_amp`: Instantaneous energy growth on the full-mix signal.
-- `audio_flux_bass`: Low-frequency energy growth (kick transients and bass hits).
-- `audio_flux_mid`: Mid-frequency energy growth (vocal and snare attacks).
-- `audio_flux_high`: High-frequency energy growth (hi-hat and cymbal strikes).
+The scale (`SCALE` 0.167, `AMP_SCALE` 0.333) comes from three long mixes, about 2.7 hours in all. The old block-to-block signal was pegged on real music: through a 3 ms / 120 ms follower at 60 fps, a typical 100 ms peak read 0.62-0.87, and a sustained 50 Hz note read 0.15 at 512-frame blocks but full scale at 64.
 
-Both RMS and Flux signals are tracked in pre-cached ring buffer histories and modulated with customizable envelope follower dynamics (Attack and Decay) per audio slot.
+**The beat and downbeat detectors do not use this.** They keep the plain block-to-block rise in band RMS (`bassFlux`, `onsetStrength` in `AudioEngine.processAudio`), so hits can change without touching the tempo tracking.
+
+`AudioMixReportTest` is the measuring tool: it reports what a modulator sees of each band on real files and synthetic signals. It is skipped unless `LSD_AUDIO_MIXES` lists files (see its header). Both Kotlin and web ports share `TransientGate`'s behaviour through `web/tools/transient_vectors.json`. The web has one level per frame, so `FrameTransient` in `web/dsp.js` compares with the level about 11.6 ms ago and needs no hold.
 
 ## Section Signals
 
-Two CV sources come from the section watch rather than from one block's spectrum. Both sit in the Audio tab (`isAudioSource`), but `isSectionSource` keeps them out of the envelope follower, and Audio Response does not scale them: they already have their shape, and they say where the song is, not how hard it hits.
+These CV sources come from the section watch and the auto gain's long-term levels rather than from one block's spectrum. All sit in the Audio tab (`isAudioSource`), but `isSectionSource` keeps them out of the envelope follower, and Audio Response does not scale them: they already have their shape, and they say where the song is, not how hard it hits.
 
 - `audio_energy` (bipolar, -1..1): `log2(short / long)` from `SectionWatch.energy`, clamped. 0 is the usual level (also during the 20 s warm-up and in silence), -1 half of it or less, +1 twice it. While a breakdown holds, `long` is frozen, so energy stays low for the whole breakdown. The audio thread pushes it with its history. `CvModulator` treats it as bipolar (range dc ± depth); `isCvSourceBipolar` stays false because the scope reads that as "deterministic, can draw ahead".
+- `audio_energy_bass`, `_mid`, `_himid`, `_high` (bipolar, -1..1): `AudioAgc.energy(band)`, `log2(short / long)` of that band's 1.5 s and 20 s levels, clamped. 0 during the warm-up and when the band's long-term RMS is under `ENERGY_FLOOR`. The long-term levels freeze when the section watch holds, as for auto gain, so these see the same breakdowns. Bipolar handling reads `AudioSignals.isEnergy`.
 - `audio_drop` (0..1): `cv/SectionDrop.kt`, a `CVSource` the render loop updates from the beat clock. When the watch's drop count goes up, the hit is dated back by `SectionWatch.dropLag` and snapped to the nearest beat (never later than now). Then it falls as (1 - t)² over `SectionDrop.BARS` (4) bars. A 0.1 s `fast` level records when the low end actually came back (`backAt`). It counts as back until it has been under the drop ratio for more than 0.7 s (`FAST_GAP`), so the gaps between kicks don't reset it. The drop is called when the fast level has been back for 0.5 s (`DROP_CONFIRM`) and is above the ratio at that moment, which takes two loud hits in a row, not one hit and its tail. It is also called, as before, when `short` (1.5 s) gets back over the ratio, which on its own takes 1-2.5 s. `dropLag` is the time since `backAt`, capped at 4 s. On synthetic kick tracks at 90-174 bpm the drop is called 0.5-0.7 s after the bass returns and dated to within 0.07 s of it. A kick less than 0.7 s before the drop can date it one beat early. The earlier call also ends auto gain's freeze sooner, and the web TV's autopilot cuts sooner on a drop.
 
 The web port is `EnergyWatch.energy` / `dropLag` and `DropEnvelope` in `web/energy.js`. `web/renderer.js` reports drops at the analysis-time beat and reads the envelope at the heard beat, so SYNC delays the hit along with everything else. `audio_energy` goes through the same delay line as the other audio signals. REACT doesn't scale them; reduced motion caps the drop at 60%.

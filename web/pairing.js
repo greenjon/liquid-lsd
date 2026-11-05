@@ -24,6 +24,7 @@ export function chainFits(presetTags, chainDto) {
 const BAND = {
   audio_bass: 'low', audio_flux_bass: 'low',
   audio_mid: 'mid', audio_flux_mid: 'mid',
+  audio_himid: 'high', audio_flux_himid: 'high',
   audio_high: 'high', audio_flux_high: 'high',
 };
 

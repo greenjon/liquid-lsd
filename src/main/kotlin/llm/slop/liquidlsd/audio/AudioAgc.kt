@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.audio
 
+import kotlin.math.ln
 import kotlin.math.max
 import kotlin.math.min
 
@@ -29,7 +30,7 @@ class AudioAgc {
     private var quiet = 0f
 
     /** Feeds this block's raw RMS per band over [dtSec] seconds; read the divisors with [divisor]. */
-    fun update(amp: Float, bass: Float, mid: Float, high: Float, dtSec: Double) {
+    fun update(amp: Float, bass: Float, mid: Float, high: Float, himid: Float, dtSec: Double) {
         val dt = dtSec.toFloat()
         quiet = if (amp < SILENT_RMS) quiet + dt else 0f
         if (quiet > SILENCE_RESET) { // silence: forget the old level and wait, so the next feed levels in at once
@@ -43,6 +44,7 @@ class AudioAgc {
         follow(BASS, bass, dt, frozen)
         follow(MID, mid, dt, frozen)
         follow(HIGH, high, dt, frozen)
+        follow(HIMID, himid, dt, frozen)
     }
 
     private fun follow(band: Int, rms: Float, dt: Float, frozen: Boolean) {
@@ -53,6 +55,16 @@ class AudioAgc {
 
     /** Current divisor for [band] ([AMP]..[HIGH]). */
     fun divisor(band: Int): Float = max(ref[band] * SCALE[band], FLOOR)
+
+    /**
+     * How [band] sits against its own long-term level, as log2(short / long) clamped to -1..1: 0 is usual, -1 half of it
+     * or less, +1 twice it. Like `SectionWatch.energy`, 0 during the warm-up and when the band has nothing in it, and
+     * the long-term level freezes in a breakdown, so a band that has gone stays low until it is back.
+     */
+    fun energy(band: Int): Float {
+        if (time < LONG_TAU || ref[band] < ENERGY_FLOOR) return 0f
+        return (ln(max(short[band], 1e-4f) / ref[band]) / LN2).coerceIn(-1f, 1f)
+    }
 
     /** How much louder than the fixed scale [band] is being made (1 = unchanged). For the meter. */
     fun boost(band: Int): Float = FIXED_SCALE / divisor(band)
@@ -74,7 +86,8 @@ class AudioAgc {
         const val BASS = 1
         const val MID = 2
         const val HIGH = 3
-        const val BANDS = 4
+        const val HIMID = 4
+        const val BANDS = 5
 
         /** The pre-AGC normalisation scale: band RMS of this reads 1.0. Flux scales are relative to it. */
         const val FIXED_SCALE = 0.25f
@@ -83,12 +96,15 @@ class AudioAgc {
         const val SHORT_TAU = 1.5f      // s, the "now" level a new normal jumps to
         const val SILENT_RMS = 0.003f   // about -50 dBFS broadband...
         const val SILENCE_RESET = 2f    // ...for this long (s) starts afresh
+        const val ENERGY_FLOOR = 0.002f // a band's long-term RMS below this has nothing in it to compare with
+        private val LN2 = ln(2f)
 
         /**
          * Long-term mean to divisor, per band (amp, bass, mid, high). Calibrated on four 10-minute DJ mixes
          * (2026-10-28) so steady music lands where the earlier peak-following gain (8 s release, 0.85
          * headroom) put it, which the built-in responses are tuned for. Spikier bands need more.
+         * Hi-mid (added 2026-11-04) is set so it reads like the bands either side on three long mixes.
          */
-        val SCALE = floatArrayOf(1.5f, 2.0f, 2.0f, 2.7f)
+        val SCALE = floatArrayOf(1.5f, 2.0f, 2.0f, 2.7f, 2.4f)
     }
 }

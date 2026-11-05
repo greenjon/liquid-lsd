@@ -41,12 +41,14 @@ object CvTheme {
     val AUDIO_AMP         = Signal(1.00f, 0.75f, 0.20f) // Bright Amber
     val AUDIO_BASS        = Signal(1.00f, 0.42f, 0.15f) // Deep Orange
     val AUDIO_MID         = Signal(1.00f, 0.68f, 0.12f) // Golden Amber
+    val AUDIO_HIMID       = Signal(0.98f, 0.78f, 0.18f) // Clear Gold
     val AUDIO_HIGH        = Signal(0.95f, 0.88f, 0.25f) // Bright Gold
 
     // -- Audio transient flux triggers -----------------------------------------------------------
     val AUDIO_FLUX_AMP    = Signal(1.00f, 0.35f, 0.55f) // Coral Pink
     val AUDIO_FLUX_BASS   = Signal(1.00f, 0.20f, 0.35f) // Crimson Kick
     val AUDIO_FLUX_MID    = Signal(1.00f, 0.45f, 0.25f) // Flame Snare
+    val AUDIO_FLUX_HIMID  = Signal(1.00f, 0.58f, 0.28f) // Tangerine Crack
     val AUDIO_FLUX_HIGH   = Signal(1.00f, 0.70f, 0.30f) // Neon Gold Hat
 
     // -- Song sections -----------------------------------------------------------------------------
@@ -67,12 +69,18 @@ object CvTheme {
         "amp" to AUDIO_AMP, "audio_amp" to AUDIO_AMP,
         "bass" to AUDIO_BASS, "audio_bass" to AUDIO_BASS,
         "mid" to AUDIO_MID, "audio_mid" to AUDIO_MID,
+        "audio_himid" to AUDIO_HIMID,
         "high" to AUDIO_HIGH, "audio_high" to AUDIO_HIGH,
         "audio_flux_amp" to AUDIO_FLUX_AMP,
         "audio_flux_bass" to AUDIO_FLUX_BASS,
         "audio_flux_mid" to AUDIO_FLUX_MID,
+        "audio_flux_himid" to AUDIO_FLUX_HIMID,
         "audio_flux_high" to AUDIO_FLUX_HIGH,
         "audio_energy" to AUDIO_ENERGY,
+        "audio_energy_bass" to AUDIO_ENERGY,
+        "audio_energy_mid" to AUDIO_ENERGY,
+        "audio_energy_himid" to AUDIO_ENERGY,
+        "audio_energy_high" to AUDIO_ENERGY,
         "audio_drop" to AUDIO_DROP
     )
 

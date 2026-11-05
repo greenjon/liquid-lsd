@@ -71,23 +71,31 @@ object AudioEnginePanel {
         CvSignalDef("audio_amp", "Full Mix (RMS)", CvTheme.getThemeColor("audio_amp")),
         CvSignalDef("audio_bass", "Bass Band (RMS)", CvTheme.getThemeColor("audio_bass")),
         CvSignalDef("audio_mid", "Mid Band (RMS)", CvTheme.getThemeColor("audio_mid")),
+        CvSignalDef("audio_himid", "Hi-Mid Band (RMS)", CvTheme.getThemeColor("audio_himid")),
         CvSignalDef("audio_high", "High Band (RMS)", CvTheme.getThemeColor("audio_high"))
     )
 
     private val fluxSignals = arrayOf(
-        CvSignalDef("audio_flux_amp", "Full Mix Transient (Flux)", CvTheme.getThemeColor("audio_flux_amp")),
-        CvSignalDef("audio_flux_bass", "Kick Transient (Flux)", CvTheme.getThemeColor("audio_flux_bass")),
-        CvSignalDef("audio_flux_mid", "Snare Transient (Flux)", CvTheme.getThemeColor("audio_flux_mid")),
-        CvSignalDef("audio_flux_high", "Hat Transient (Flux)", CvTheme.getThemeColor("audio_flux_high"))
+        CvSignalDef("audio_flux_amp", "Full Mix Hits", CvTheme.getThemeColor("audio_flux_amp")),
+        CvSignalDef("audio_flux_bass", "Kick Hits", CvTheme.getThemeColor("audio_flux_bass")),
+        CvSignalDef("audio_flux_mid", "Snare Hits", CvTheme.getThemeColor("audio_flux_mid")),
+        CvSignalDef("audio_flux_himid", "Crack Hits", CvTheme.getThemeColor("audio_flux_himid")),
+        CvSignalDef("audio_flux_high", "Hat Hits", CvTheme.getThemeColor("audio_flux_high"))
     )
 
     private val energySignal = CvSignalDef("audio_energy", "Section Energy", CvTheme.getThemeColor("audio_energy"))
     private val dropSignal = CvSignalDef("audio_drop", "Section Drop", CvTheme.getThemeColor("audio_drop"))
+    private val bandEnergySignals = arrayOf(
+        CvSignalDef("audio_energy_bass", "Bass Energy", CvTheme.getThemeColor("audio_energy_bass")),
+        CvSignalDef("audio_energy_mid", "Mid Energy", CvTheme.getThemeColor("audio_energy_mid")),
+        CvSignalDef("audio_energy_himid", "Hi-Mid Energy", CvTheme.getThemeColor("audio_energy_himid")),
+        CvSignalDef("audio_energy_high", "High Energy", CvTheme.getThemeColor("audio_energy_high"))
+    )
 
     private fun drawCvScope(session: llm.slop.liquidlsd.SessionContext, sig: CvSignalDef) {
         val history = session.cvRegistry.getHistory(sig.id) ?: return
         history.copyTo(cvSamples)
-        val minV = if (sig.id == "beatSine" || sig.id == "audio_energy") -1.0f else 0.0f
+        val minV = if (sig.id == "beatSine" || llm.slop.liquidlsd.cv.AudioSignals.isEnergy(sig.id)) -1.0f else 0.0f
         val maxV = 1.0f
         OscilloscopeDrawer.drawBufferOscilloscope(
             session,
@@ -419,7 +427,7 @@ object AudioEnginePanel {
                 drawCvScope(session, beatSineSignal)
                 ImGui.spacing()
 
-                // Rows 1-4: RMS on Left, Flux Transient on Right
+                // One row per band: level on the left, hits on the right
                 for (i in rmsSignals.indices) {
                     ImGui.tableNextRow()
 
@@ -440,6 +448,14 @@ object AudioEnginePanel {
                 ImGui.tableSetColumnIndex(1)
                 drawCvScope(session, dropSignal)
                 ImGui.spacing()
+
+                // Energy per band, two to a row
+                for (i in bandEnergySignals.indices) {
+                    if (i % 2 == 0) ImGui.tableNextRow()
+                    ImGui.tableSetColumnIndex(i % 2)
+                    drawCvScope(session, bandEnergySignals[i])
+                    ImGui.spacing()
+                }
 
                 ImGui.endTable()
             }

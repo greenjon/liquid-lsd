@@ -1511,9 +1511,9 @@ Each viewer's browser — renders the visuals locally using WebGL
 <p>The standalone browser client (<code>web/index.html</code>) presents the visualizer in a retro CRT television shell.</p>
 <p><strong>Power switch:</strong> Click it (or anywhere on the TV) to turn the visualizer on. The browser requires this interaction to start Web Audio (standard browser security policy). Turning the TV on triggers a CRT warmup animation; turning it off plays a vintage beam-collapse animation.</p>
 <p><strong>Volume dial:</strong> Drag the rotary dial up or down to adjust volume. The curve is tuned to feel perceptually linear — small moves at the bottom, bigger moves at the top.</p>
-<p><strong>Fullscreen:</strong> Double-click the TV screen, press <code>S</code>, or choose MENU › <strong>Fullscreen</strong> to expand to full-screen (the on-screen display comes along). Do any of them again, or press <code>Esc</code>, to go back to the TV shell. Choosing it from the MENU closes the menu. In Chrome and Edge, <code>Esc</code> closes the menu first if it is open (hold <code>Esc</code> to leave full screen right away); other browsers always leave full screen on <code>Esc</code>.</p>
+<p><strong>Fullscreen:</strong> Double-click the TV screen, press <code>F</code>, or choose MENU › <strong>Fullscreen</strong> to expand to full-screen (the on-screen display comes along). Do any of them again, or press <code>Esc</code>, to go back to the TV shell. Choosing it from the MENU closes the menu. In Chrome and Edge, <code>Esc</code> closes the menu first if it is open (hold <code>Esc</code> to leave full screen right away); other browsers always leave full screen on <code>Esc</code>.</p>
 <p><strong>Version:</strong> the MENU title shows the TV's version (v1, v2, …) on the right. If it is older than the one just announced, reload the page to get the latest.</p>
-<p><strong>Microphone:</strong> press <code>A</code> or choose MENU › <strong>Input</strong> to make the picture follow your microphone instead of the radio, for a room playing its own music. Your browser asks permission the first time; the sound is only analysed, never played through the speakers. Press <code>A</code> again for the radio. Turning the TV off also puts the radio back. Locked during a live broadcast.</p>
+<p><strong>Microphone:</strong> press <code>A</code> or choose MENU › <strong>Audio Input</strong> to make the picture follow your microphone instead of the radio, for a room playing its own music. Your browser asks permission the first time; the sound is only analysed, never played through the speakers. Press <code>A</code> again for the radio. Turning the TV off also puts the radio back. Locked during a live broadcast.</p>
 <p><strong>Viewer controls</strong> (Autopilot only; while you broadcast live they are locked and the screen says so):</p>
 <table>
 <thead>
@@ -1526,8 +1526,8 @@ Each viewer's browser — renders the visuals locally using WebGL
 <tbody>
 <tr>
 <td><strong>VOL</strong></td>
-<td>The volume (drag or scroll)</td>
-<td><code>↑</code> <code>↓</code></td>
+<td>The volume (drag or scroll); <code>U</code> mutes, and again brings it back</td>
+<td><code>↑</code> <code>↓</code> <code>U</code></td>
 </tr>
 <tr>
 <td><strong>CH ▲ / ▼</strong></td>
@@ -1535,19 +1535,19 @@ Each viewer's browser — renders the visuals locally using WebGL
 <td><code>→</code> <code>N</code> / <code>←</code> <code>P</code>; swipe left / right on the picture</td>
 </tr>
 <tr>
-<td><em>(random channel)</em></td>
+<td><em>(jump)</em></td>
 <td>A channel picked at random, now</td>
-<td><code>R</code></td>
+<td><code>J</code></td>
 </tr>
 <tr>
 <td><strong>FX</strong></td>
 <td>Puts the next FX chain on the scene on air</td>
-<td><code>F</code></td>
+<td><code>E</code></td>
 </tr>
 <tr>
 <td><strong>ROLL</strong></td>
 <td>A new variation of the scene on air: its settings and its effects' roll new values, gliding in to land on the next bar line</td>
-<td><code>D</code></td>
+<td><code>R</code></td>
 </tr>
 <tr>
 <td><em>(background)</em></td>
@@ -1567,7 +1567,7 @@ Each viewer's browser — renders the visuals locally using WebGL
 <tr>
 <td><strong>HOLD</strong></td>
 <td>Keeps the current scene until you press it again (the background keeps changing); its light is on while it holds</td>
-<td><code>H</code> or <code>Space</code>; long-press the picture</td>
+<td><code>H</code>, or <code>Space</code> when no tape is in; long-press the picture</td>
 </tr>
 <tr>
 <td><strong>TIME</strong></td>
@@ -1581,20 +1581,24 @@ Each viewer's browser — renders the visuals locally using WebGL
 </tr>
 </tbody>
 </table>
-<p>Press <code>?</code> to list every key on the screen (any key or a click closes the list). MENU, SCHEDULE, INFO and CHAT sit together on the right and light up while they're on, like HOLD. With the menu open, <code>?</code>, <code>I</code> and <code>G</code> still work (they close it first), and <code>C</code> opens or closes the chat.</p>
-<p>Click or tap the picture to show the channel, the scene, its FX chain, the track playing on the radio and the next show on Spaz Radio for a few seconds. <strong>INFO</strong> (or <code>I</code>) keeps them on screen, updating as they change, until you turn it off; the TV remembers it. TIME, REACT, INFO, the MENU settings and your skipped channels are remembered in the browser. The badge on the right shows the channel on air (<code>SPAZ RADIO • CH.042</code>), or LIVE during a live broadcast.</p>
+<p>Press <code>?</code> to list every key on the screen (any key or a click closes the list). TAPES, LIVE, MENU, SCHEDULE, INFO and CHAT sit together on the right and light up while they're on, like HOLD. With the menu open, <code>?</code>, <code>I</code>, <code>S</code> and <code>T</code> still work (they close it first), and <code>C</code> opens or closes the chat.</p>
+<p>Click or tap the picture to show the channel, the scene, its FX chain, the track playing on the radio and the next show on Spaz Radio for a few seconds. <strong>INFO</strong> (or <code>I</code>) keeps them on screen, updating as they change, until you turn it off; the TV remembers it. TIME, REACT, INFO, the MENU settings and your skipped channels are remembered in the browser. The badge on the right shows the channel on air (<code>SPAZ RADIO • CH.042</code>), or LIVE during a live broadcast. Under it, while the TV is on, is how many people are on the Spaz Radio stream right now, in any player (<code>12 mutants watching TV.</code>); the line is blank when the count is zero or can't be read.</p>
 <p><strong>No signal:</strong> if the radio stream drops or goes quiet, the screen shows snow and NO SIGNAL, and the TV reconnects by itself.</p>
 <p><strong>Big GPU scenes:</strong> the most demanding 3D fractals and simulations only play on computers fast enough for them (the TV checks at power-on; MENU › Big GPU scenes overrides it). Add <code>?heavy=1</code> to the address to force them on, <code>?heavy=0</code> to keep them off.</p>
 <p><strong>Screen:</strong> while the TV is on, your computer or phone won't dim or lock (in browsers that support it).</p>
 <p><strong>Lock screen and media keys:</strong> your phone's lock screen and your keyboard's media keys show the show and the scene; play/pause is the power switch, next/previous change the scene.</p>
 <p><strong>Install as an app:</strong> use your browser's Install / Add to Home Screen; it opens fullscreen like a TV app.</p>
 <p><strong>Kiosk mode:</strong> <code>index.html?kiosk</code> shows only the picture (no TV body), turns itself on and hides the mouse pointer; use the keyboard or swipes. Browsers that refuse to start sound on their own get a "click or press a key for sound" prompt.</p>
-<p><strong>MENU:</strong> the MENU button or <code>M</code> opens the service menu (arrows or clicks to change, Esc or M to close): <strong>SYNC</strong> (how late the sound reaches you, for Bluetooth and other delayed speakers), <strong>Announce scenes</strong> (name each new scene on screen; off by default), <strong>REACT</strong>, <strong>TIME</strong>, <strong>Auto roll</strong>, <strong>Background</strong>, <strong>BG changes</strong>, <strong>Effects</strong>, <strong>Follow music</strong>, <strong>Skip this channel</strong>, <strong>Skipped</strong>, <strong>Reduced motion</strong> (Auto follows your system setting), <strong>Big GPU scenes</strong> (Auto lets the GPU check decide), <strong>Input</strong> (radio or microphone), <strong>Fullscreen</strong>, <strong>CHAT</strong>, <strong>SCHEDULE</strong> and <strong>ABOUT</strong>. The selected row explains itself at the bottom of the menu (and on mouse hover). Settings are remembered in this browser. REACT, TIME, Auto roll, the background, effects and follow-music rows, Input and Heavy scenes are locked during a live broadcast. RESET puts every setting back but leaves skipped channels skipped.</p>
-<p><strong>Variations:</strong> no scene looks exactly the same twice. Each one's settings roll within a narrow span around the values it was tuned with whenever it comes on, and again on <strong>ROLL</strong> (<code>D</code>). Settings that come in steps (a colour mode, a number of petals, Mandala's shape) change on the bar line; the rest glide over it. MENU › <strong>Auto roll</strong> rolls the scene on air every 4, 8 or 16 bars, which goes well with HOLD.</p>
+<p><strong>MENU:</strong> the MENU button or <code>M</code> opens the service menu (arrows or clicks to change, Esc or M to close): <strong>SYNC</strong> (how late the sound reaches you, for Bluetooth and other delayed speakers), <strong>Announce scenes</strong> (name each new scene on screen; off by default), <strong>REACT</strong>, <strong>TIME</strong>, <strong>Auto roll</strong>, <strong>Background</strong>, <strong>BG changes</strong>, <strong>Effects</strong>, <strong>Follow music</strong>, <strong>Skip this channel</strong>, <strong>Skipped</strong>, <strong>Reduced motion</strong> (Auto follows your system setting), <strong>Big GPU scenes</strong> (Auto lets the GPU check decide), <strong>Theme</strong> (the cabinet and the room around it, dark or light; dark by default), <strong>Input</strong> (radio or microphone), <strong>Fullscreen</strong>, <strong>CHAT</strong>, <strong>SCHEDULE</strong> and <strong>ABOUT</strong>. The selected row explains itself at the bottom of the menu (and on mouse hover). Settings are remembered in this browser. REACT, TIME, Auto roll, the background, effects and follow-music rows, Input and Heavy scenes are locked during a live broadcast. RESET puts every setting back but leaves skipped channels skipped.</p>
+<p><strong>Variations:</strong> no scene looks exactly the same twice. Each one's settings roll within a narrow span around the values it was tuned with whenever it comes on, and again on <strong>ROLL</strong> (<code>R</code>). Settings that come in steps (a colour mode, a number of petals, Mandala's shape) change on the bar line; the rest glide over it. MENU › <strong>Auto roll</strong> rolls the scene on air every 4, 8 or 16 bars, which goes well with HOLD.</p>
 <p><strong>Background:</strong> the background plays behind the scene and shows wherever the scene is dark or see-through. It starts as the <strong>Spaz Radio photo gallery</strong>: the photos listeners added to the old radio page (spaz.org/radio), fading in on the beat and slowly turning and growing, as they did there. <code>B</code> or MENU › <strong>Background</strong> changes it now (to the other backgrounds, and back). MENU › <strong>BG changes</strong>: <em>Hold</em> (stays until you change it, the default), <em>With scenes</em> (a new one every two scenes) or <em>Off</em> (no background).</p>
 <p><strong>Effects and following the music:</strong> MENU › <strong>Effects</strong> <em>Off</em> plays the scenes and backgrounds without FX chains (the info panel says <code>FX: OFF</code>). MENU › <strong>Follow music</strong> <em>Off</em> stops the calm scene for a breakdown, the hard cut on the drop and the tempo-weighted picks.</p>
-<p><strong>Channel skip:</strong> don't like a channel? <code>X</code> skips it (or MENU › <strong>Skip this channel</strong> on a touch screen). It keeps its number but never comes up by itself again: not from the autopilot, <code>R</code>, CH up or down. MENU › <strong>Skipped</strong> lists the channels you skipped; pick one to watch it, and <code>X</code> there brings it back into the rotation. At least 8 channels always stay.</p>
-<p><strong>SCHEDULE:</strong> the SCHEDULE button, <code>G</code>, or MENU › <strong>SCHEDULE</strong> lays Spaz Radio's upcoming shows over the picture, grouped by day (Today, Tomorrow, then the date), in your own time zone (shown at the top). The show playing now is marked ON AIR. Any key or a click closes it. It works during a live broadcast too. When the track name comes up on screen, the next show comes up under it (<code>NEXT: &lt;show&gt; · &lt;time&gt;</code>). If the station's schedule can't be reached, the page says so and the TV keeps the last copy it had.</p>
+<p><strong>Channel skip:</strong> don't like a channel? <code>X</code> skips it (or MENU › <strong>Skip this channel</strong> on a touch screen). It keeps its number but never comes up by itself again: not from the autopilot, <code>J</code>, CH up or down. MENU › <strong>Skipped</strong> lists the channels you skipped; pick one to watch it, and <code>X</code> there brings it back into the rotation. At least 8 channels always stay.</p>
+<p><strong>SCHEDULE:</strong> the SCHEDULE button, <code>S</code>, or MENU › <strong>SCHEDULE</strong> lays Spaz Radio's upcoming shows over the picture, grouped by day (Today, Tomorrow, then the date), in your own time zone (shown at the top). The show playing now is marked ON AIR. Any key or a click closes it. It works during a live broadcast too. When the track name comes up on screen, the next show comes up under it (<code>NEXT: &lt;show&gt; · &lt;time&gt;</code>). If the station's schedule can't be reached, the page says so and the TV keeps the last copy it had.</p>
+<p><strong>TAPES:</strong> the TAPES button, <code>T</code>, or MENU › <strong>TAPES</strong> opens the Spaz Radio archive over the picture. Type to search by name or date, use the arrows and Enter or click a show to play it, and Esc or the <strong>✕</strong> to close. <strong>RANDOM TAPE</strong> picks any show, <strong>ON THIS DAY</strong> finds today's date in every year, and <strong>RESUME</strong> goes back to the show you last stopped.</p>
+<p>The picture follows the tape as it follows the radio, and the badge reads <code>SPAZ RADIO • TAPE</code>. Click the picture for the transport strip along the bottom (INFO keeps it up): eject, 30 seconds back and forward, pause, and the show's waveform to click or drag. Keys: <code>K</code> or <code>Space</code> pause, <code>,</code> and <code>.</code> 30 seconds, <code>&lt;</code> and <code>&gt;</code> 5 minutes.</p>
+<p>The <strong>LIVE</strong> button or <code>L</code> takes the tape out and goes back to the radio. LIVE is lit while the radio is playing, and TAPES while a tape is in or its list is open. If a live show starts during a tape, the tape keeps playing, LIVE pulses red and <code>LIVE NOW: &lt;name&gt;</code> comes up once; a broadcast's picture does not take over until you go back. The chat stays on the live room, with a note on the board that you're on a tape.</p>
+<p>Your place in each show is remembered in this browser. Turning the TV off and on keeps the tape in; a reload starts on the radio, with RESUME in the list. At the end of a show, the TV goes back to the radio.</p>
 <p><strong>CHAT:</strong> the Spaz Radio chat hangs beside the TV on a blackboard: the same room as the Spaz Radio Android app and spaz.org/radio. You can read the recent conversation and see who is here straight away (the list at the top; click it to see every name). To say something, write your name in chalk on the bottom line, press Enter, then write and press Enter to send. Your name is remembered in this browser; click it to change it. Each name is always the same colour of chalk, and yours is the only yellow one. Times are in your own time zone. Links open in a new tab.
 The board is open on your first visit. The <strong>X</strong> in its top corner closes it, and the TV grows back to full size; the CHAT button, <code>C</code> or MENU › <strong>CHAT</strong> brings it back. The CHAT button's light is on while the board is open; while it is closed, the light blinks when someone says something. Keys typed on the board stay on the board (Esc leaves the line). The chat runs whether the TV is on or off, works during a live broadcast, and stays out of fullscreen. On a phone, or any narrow or upright window, the board hangs under the TV: scroll down to it. If the connection drops, the board says "offline · reconnecting…" and fills in what was said meanwhile when it's back. Kiosk mode and the picture inside the Spaz Radio app (which has its own chat) leave it out.</p>
 <p><strong>SYNC:</strong> if the picture's pulses come before the beat you hear (Bluetooth speakers are often 150-250 ms late), open MENU › <strong>TAP SYNC</strong> and tap Space or the picture on 8 beats; or set <strong>SYNC</strong> by hand. It needs the beat light to be green (or a live broadcast).</p>

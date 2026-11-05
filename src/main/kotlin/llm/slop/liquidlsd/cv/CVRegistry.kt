@@ -104,18 +104,11 @@ object CVRegistry {
         // SEQ: step sequencer — evaluates step pattern with hold/glide per CvModulator
         register(GenCVSource("seq"))
 
-        register(MutableCVSource("audio_amp"))
-        register(MutableCVSource("audio_bass"))
-        register(MutableCVSource("audio_mid"))
-        register(MutableCVSource("audio_high"))
+        for (id in AudioSignals.LEVELS) register(MutableCVSource(id))
+        for (id in AudioSignals.TRANSIENTS) register(MutableCVSource(id))
 
-        register(MutableCVSource("audio_flux_amp"))
-        register(MutableCVSource("audio_flux_bass"))
-        register(MutableCVSource("audio_flux_mid"))
-        register(MutableCVSource("audio_flux_high"))
-
-        // Song sections (audio/SectionWatch.kt): energy is pushed by the audio thread, drop runs on the beat clock.
-        register(MutableCVSource("audio_energy"))
+        // Song sections (audio/SectionWatch.kt): energies are pushed by the audio thread, drop runs on the beat clock.
+        for (id in AudioSignals.ENERGIES) register(MutableCVSource(id))
         register(sectionDrop)
     }
 
@@ -313,9 +306,5 @@ object CVRegistry {
     }
 
     /** Sources the audio thread pushes, with their histories, so [updateAll] leaves them alone. */
-    private fun isAudioSource(id: String): Boolean = when (id) {
-        "audio_amp", "audio_bass", "audio_mid", "audio_high",
-        "audio_flux_amp", "audio_flux_bass", "audio_flux_mid", "audio_flux_high", "audio_energy" -> true
-        else -> false
-    }
+    private fun isAudioSource(id: String): Boolean = AudioSignals.isPushed(id)
 }

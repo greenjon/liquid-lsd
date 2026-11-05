@@ -173,7 +173,8 @@ async function init() {
 
   const evalCtx = makeEvalContext();
   const audioDelay = new DelayLine();
-  const AUDIO_KEYS = ['audio_amp', 'audio_bass', 'audio_mid', 'audio_high', 'audio_flux_amp', 'audio_flux_bass', 'audio_flux_mid', 'audio_flux_high', 'audio_energy'];
+  const AUDIO_KEYS = ['audio_amp', 'audio_bass', 'audio_mid', 'audio_himid', 'audio_high', 'audio_flux_amp', 'audio_flux_bass', 'audio_flux_mid', 'audio_flux_himid', 'audio_flux_high',
+    'audio_energy', 'audio_energy_bass', 'audio_energy_mid', 'audio_energy_himid', 'audio_energy_high'];
   const drop = new DropEnvelope();
   function updateEvalContext() {
     // Live broadcast: the desktop's beat clock (phase-locked flywheel). Standalone: the web's own
@@ -197,11 +198,12 @@ async function init() {
     const r = (v) => Math.min(1, v * k);
     evalCtx.cv = {
       audio_amp: r(heard.audio_amp), audio_bass: r(heard.audio_bass),
-      audio_mid: r(heard.audio_mid), audio_high: r(heard.audio_high),
+      audio_mid: r(heard.audio_mid), audio_himid: r(heard.audio_himid), audio_high: r(heard.audio_high),
       audio_flux_amp: r(heard.audio_flux_amp), audio_flux_bass: r(heard.audio_flux_bass),
-      audio_flux_mid: r(heard.audio_flux_mid), audio_flux_high: r(heard.audio_flux_high),
+      audio_flux_mid: r(heard.audio_flux_mid), audio_flux_himid: r(heard.audio_flux_himid), audio_flux_high: r(heard.audio_flux_high),
       // Song sections are not scaled by REACT (like Audio Response on the desktop); reduced motion softens the hit.
-      audio_energy: heard.audio_energy ?? 0, audio_drop: drop.value(beats) * (viewerState.reducedNow ? 0.6 : 1),
+      audio_energy: heard.audio_energy ?? 0, audio_energy_bass: heard.audio_energy_bass ?? 0, audio_energy_mid: heard.audio_energy_mid ?? 0,
+      audio_energy_himid: heard.audio_energy_himid ?? 0, audio_energy_high: heard.audio_energy_high ?? 0, audio_drop: drop.value(beats) * (viewerState.reducedNow ? 0.6 : 1),
       beatSine: Math.sin(beats * 2 * Math.PI), bpm,
     };
   }

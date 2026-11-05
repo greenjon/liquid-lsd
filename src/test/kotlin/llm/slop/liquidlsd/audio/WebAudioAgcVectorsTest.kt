@@ -25,17 +25,17 @@ class WebAudioAgcVectorsTest {
 
     private val dt = 0.05
 
-    /** seconds, amp, bass, mid, high */
+    /** seconds, amp, bass, mid, high, himid */
     private val segments = listOf(
-        doubleArrayOf(30.0, 0.12, 0.2, 0.08, 0.03),   // steady music
-        doubleArrayOf(20.0, 0.06, 0.02, 0.1, 0.03),   // breakdown: the low end goes, the mids get louder
-        doubleArrayOf(15.0, 0.13, 0.22, 0.08, 0.03),  // the drop
-        doubleArrayOf(3.0, 0.0, 0.0, 0.0, 0.0),       // a gap between sets
-        doubleArrayOf(30.0, 0.03, 0.05, 0.02, 0.008), // a quieter feed
-        doubleArrayOf(12.0, 0.1, 0.16, 0.07, 0.025),  // a louder song
-        doubleArrayOf(70.0, 0.025, 0.035, 0.02, 0.008), // a long quiet stretch: the new normal
-        doubleArrayOf(2.0, 0.025, 0.005, 0.02, 0.008), // a short dip
-        doubleArrayOf(10.0, 0.025, 0.035, 0.02, 0.008),
+        doubleArrayOf(30.0, 0.12, 0.2, 0.08, 0.03, 0.048),   // steady music
+        doubleArrayOf(20.0, 0.06, 0.02, 0.1, 0.03, 0.06),   // breakdown: the low end goes, the mids get louder
+        doubleArrayOf(15.0, 0.13, 0.22, 0.08, 0.03, 0.048),  // the drop
+        doubleArrayOf(3.0, 0.0, 0.0, 0.0, 0.0, 0.0),       // a gap between sets
+        doubleArrayOf(30.0, 0.03, 0.05, 0.02, 0.008, 0.012), // a quieter feed
+        doubleArrayOf(12.0, 0.1, 0.16, 0.07, 0.025, 0.042),  // a louder song
+        doubleArrayOf(70.0, 0.025, 0.035, 0.02, 0.008, 0.012), // a long quiet stretch: the new normal
+        doubleArrayOf(2.0, 0.025, 0.005, 0.02, 0.008, 0.012), // a short dip
+        doubleArrayOf(10.0, 0.025, 0.035, 0.02, 0.008, 0.012),
     )
 
     private fun f(v: Float) = String.format(Locale.ROOT, "%.6g", v)
@@ -53,14 +53,15 @@ class WebAudioAgcVectorsTest {
                 t += dt
                 val wobble = 1.0 + 0.3 * sin(t * 2 * PI * 2.1) // a beat in the level
                 // Rounded before use, so the web replays exactly the input the desktop saw.
-                val b = FloatArray(4) { k -> String.format(Locale.ROOT, "%.5f", seg[k + 1] * wobble).toFloat() }
+                val b = FloatArray(5) { k -> String.format(Locale.ROOT, "%.5f", seg[k + 1] * wobble).toFloat() }
                 rms += "[${b.joinToString(",") { it.toString() }}]"
                 val before = agc.watch.section
-                agc.update(b[0], b[1], b[2], b[3], dt)
+                agc.update(b[0], b[1], b[2], b[3], b[4], dt)
                 if (before != agc.watch.section && agc.watch.section == SectionWatch.Section.BREAKDOWN) breakdowns++
                 if (i % 10 == 0) {
                     val div = (0 until AudioAgc.BANDS).joinToString(",") { f(agc.divisor(it)) }
-                    expect += "{\"i\":$i,\"div\":[$div],\"section\":\"${agc.watch.section.name.lowercase()}\",\"drops\":${agc.watch.drops}}"
+                    val energy = (0 until AudioAgc.BANDS).joinToString(",") { f(agc.energy(it)) }
+                    expect += "{\"i\":$i,\"div\":[$div],\"energy\":[$energy],\"section\":\"${agc.watch.section.name.lowercase()}\",\"drops\":${agc.watch.drops}}"
                 }
                 i++
             }

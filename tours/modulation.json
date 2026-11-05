@@ -40,7 +40,7 @@
 {"dt":4.5,"action":"click"},
 {"dt":1.0,"action":"move","target":"aud_band","oy":33,"durationSec":0.6},
 {"dt":1.0,"action":"click"},
-{"dt":2.0,"action":"move","target":"btn_Transient (Flux)","durationSec":1.4,"caption":"Continuous follows how loud the band is. Transient fires on each new hit."},
+{"dt":2.0,"action":"move","target":"btn_Transient (Hits)","durationSec":1.4,"caption":"Continuous follows how loud the band is. Transient fires on each new hit."},
 {"dt":5.0,"action":"click"},
 {"dt":2.5,"action":"move","target":"aud_profile","durationSec":1.4,"caption":"Response sets how fast it rises and falls. Punchy suits drums."},
 {"dt":4.5,"action":"click"},

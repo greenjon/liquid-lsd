@@ -56,11 +56,12 @@ test('auto gain and the section watch match the desktop (agc_vectors.json from W
   const v = JSON.parse(fs.readFileSync(new URL('./agc_vectors.json', import.meta.url), 'utf8'));
   const agc = new AudioAgc();
   const expect = new Map(v.expect.map((e) => [e.i, e]));
-  v.rms.forEach(([amp, bass, mid, high], i) => {
-    const div = agc.update({ amp, bass, mid, high }, v.dt);
+  v.rms.forEach(([amp, bass, mid, high, himid], i) => {
+    const div = agc.update({ amp, bass, mid, high, himid }, v.dt);
     const e = expect.get(i);
     if (!e) return;
-    const got = [div.amp, div.bass, div.mid, div.high];
+    const got = [div.amp, div.bass, div.mid, div.high, div.himid];
+    ['amp', 'bass', 'mid', 'high', 'himid'].forEach((band, k) => assert.ok(Math.abs(agc.energy(band) - e.energy[k]) <= 1e-3, `frame ${i} energy ${band}: ${agc.energy(band)} vs desktop ${e.energy[k]}`));
     e.div.forEach((d, k) => assert.ok(Math.abs(got[k] - d) <= 1e-4 * Math.max(1, d), `frame ${i} band ${k}: ${got[k]} vs desktop ${d}`));
     assert.equal(agc.watch.section, e.section, `frame ${i}`);
     assert.equal(agc.watch.drops, e.drops, `frame ${i}`);

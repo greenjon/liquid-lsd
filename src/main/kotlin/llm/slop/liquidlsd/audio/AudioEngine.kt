@@ -137,6 +137,8 @@ object AudioEngine {
     private val lowPass  = BiquadFilter(BiquadFilter.Type.LOWPASS,  lastSampleRate, 150f)
     private val midPass  = BiquadFilter(BiquadFilter.Type.BANDPASS, lastSampleRate, 1000f)
     private val highPass = BiquadFilter(BiquadFilter.Type.HIGHPASS, lastSampleRate, 5000f)
+    private val himidPass = BiquadFilter(BiquadFilter.Type.BANDPASS, lastSampleRate, 3200f, 1.05f) // about 1.9-5.2 kHz, between mid and high
+    private val transients = TransientDetector()
 
     private val extractor = AmplitudeExtractor()
     val beatDetector = BeatDetector()
@@ -156,17 +158,24 @@ object AudioEngine {
     private val bassHistory     = CVRegistry.getHistory("audio_bass")
     private val midHistory      = CVRegistry.getHistory("audio_mid")
     private val highHistory     = CVRegistry.getHistory("audio_high")
+    private val himidHistory    = CVRegistry.getHistory("audio_himid")
     private val fluxAmpHistory  = CVRegistry.getHistory("audio_flux_amp")
     private val fluxBassHistory = CVRegistry.getHistory("audio_flux_bass")
     private val fluxMidHistory  = CVRegistry.getHistory("audio_flux_mid")
     private val fluxHighHistory = CVRegistry.getHistory("audio_flux_high")
+    private val fluxHimidHistory = CVRegistry.getHistory("audio_flux_himid")
     private val energyHistory   = CVRegistry.getHistory("audio_energy")
+    private val energyBassHistory  = CVRegistry.getHistory("audio_energy_bass")
+    private val energyMidHistory   = CVRegistry.getHistory("audio_energy_mid")
+    private val energyHimidHistory = CVRegistry.getHistory("audio_energy_himid")
+    private val energyHighHistory  = CVRegistry.getHistory("audio_energy_high")
 
     // Temporary processing buffers — sized to standard maximum JACK limits to guarantee no allocations.
     private val mixedBuffer = FloatArray(16384)
     private val lowBuffer   = FloatArray(16384)
     private val midBuffer   = FloatArray(16384)
     private val highBuffer  = FloatArray(16384)
+    private val himidBuffer = FloatArray(16384)
     private val waveformHistory = llm.slop.liquidlsd.cv.CvHistoryBuffer(512)
     private val spectrum = SpectrumAnalyzer()
 
@@ -240,7 +249,8 @@ object AudioEngine {
      * so a deterministic offline feed (tour renders) starts from the same place on every run. Never called live.
      */
     internal fun resetForOfflineFeed(bpm: Float, startTimeNs: Long) {
-        lowPass.reset(); midPass.reset(); highPass.reset()
+        lowPass.reset(); midPass.reset(); highPass.reset(); himidPass.reset()
+        transients.reset()
         spectrum.reset()
         agc.reset()
         beatDetector.reset()
@@ -468,6 +478,7 @@ object AudioEngine {
         CVRegistry.resetBeatAnchor(0.0, estimatedBpm, lastSignalTime)
 
         // Reset onset/flux trackers
+        transients.reset()
         prevBass = 0f
         prevMid  = 0f
         prevHigh = 0f
@@ -578,6 +589,7 @@ object AudioEngine {
             lowPass.sampleRate  = sampleRate; lowPass.updateCoefficients()
             midPass.sampleRate  = sampleRate; midPass.updateCoefficients()
             highPass.sampleRate = sampleRate; highPass.updateCoefficients()
+            himidPass.sampleRate = sampleRate; himidPass.updateCoefficients()
             lastSampleRate = sampleRate
         }
 
@@ -626,6 +638,7 @@ object AudioEngine {
             lowBuffer[i]  = lowPass.process(sample)
             midBuffer[i]  = midPass.process(sample)
             highBuffer[i] = highPass.process(sample)
+            himidBuffer[i] = himidPass.process(sample)
         }
 
         meterPeakL = peakL * gain
@@ -648,8 +661,9 @@ object AudioEngine {
         val bass = extractor.calculateRms(lowBuffer,  safeFrames)
         val mid  = extractor.calculateRms(midBuffer,  safeFrames)
         val high = extractor.calculateRms(highBuffer, safeFrames)
+        val himid = extractor.calculateRms(himidBuffer, safeFrames)
 
-        // 5. Onset/Flux calculation: half-wave rectified multi-band spectral flux
+        // 5. The block-to-block rise in level, which the beat and downbeat detectors hear. The audio_flux_* signals come from TransientDetector.
         val bassFlux = max(0f, bass - prevBass)
         val midFlux  = max(0f, mid  - prevMid)
         val highFlux = max(0f, high - prevHigh)
@@ -735,11 +749,12 @@ object AudioEngine {
 
         // AGC and Audio Response only rescale the CV signals; the detectors above keep the raw band RMS.
         val dtSec = deltaTimeSec
-        agc.update(amp, bass, mid, high, dtSec)
+        agc.update(amp, bass, mid, high, himid, dtSec)
         val ampDiv  = agc.divisor(AudioAgc.AMP)
         val bassDiv = agc.divisor(AudioAgc.BASS)
         val midDiv  = agc.divisor(AudioAgc.MID)
         val highDiv = agc.divisor(AudioAgc.HIGH)
+        val himidDiv = agc.divisor(AudioAgc.HIMID)
         val fixed = AudioAgc.FIXED_SCALE
 
         val k = response
@@ -747,36 +762,60 @@ object AudioEngine {
         val bassNorm     = (k * bass / bassDiv).coerceIn(0f, 1f)
         val midNorm      = (k * mid  / midDiv).coerceIn(0f, 1f)
         val highNorm     = (k * high / highDiv).coerceIn(0f, 1f)
+        val himidNorm    = (k * himid / himidDiv).coerceIn(0f, 1f)
 
-        // Flux keeps its own fixed scale, stretched by the same per-band ratio as the level.
-        val fluxAmpNorm  = (k * onsetStrength / (0.1f  * ampDiv  / fixed)).coerceIn(0f, 1f)
-        val fluxBassNorm = (k * bassFlux / (0.05f * bassDiv / fixed)).coerceIn(0f, 1f)
-        val fluxMidNorm  = (k * midFlux  / (0.05f * midDiv  / fixed)).coerceIn(0f, 1f)
-        val fluxHighNorm = (k * highFlux / (0.05f * highDiv / fixed)).coerceIn(0f, 1f)
+        // Hits keep their own fixed scale, stretched by the same per-band ratio as the level.
+        val hitBass  = transients.process(TransientDetector.BASS, lowBuffer, safeFrames, sampleRate)
+        val hitMid   = transients.process(TransientDetector.MID, midBuffer, safeFrames, sampleRate)
+        val hitHimid = transients.process(TransientDetector.HIMID, himidBuffer, safeFrames, sampleRate)
+        val hitHigh  = transients.process(TransientDetector.HIGH, highBuffer, safeFrames, sampleRate)
+        val hitAmp = hitBass * TransientDetector.BASS_WEIGHT + hitMid * TransientDetector.MID_WEIGHT +
+            hitHimid * TransientDetector.HIMID_WEIGHT + hitHigh * TransientDetector.HIGH_WEIGHT
+        val fluxAmpNorm   = (k * hitAmp / (TransientDetector.AMP_SCALE * ampDiv / fixed)).coerceIn(0f, 1f)
+        val fluxBassNorm  = (k * hitBass / (TransientDetector.SCALE * bassDiv / fixed)).coerceIn(0f, 1f)
+        val fluxMidNorm   = (k * hitMid / (TransientDetector.SCALE * midDiv / fixed)).coerceIn(0f, 1f)
+        val fluxHimidNorm = (k * hitHimid / (TransientDetector.SCALE * himidDiv / fixed)).coerceIn(0f, 1f)
+        val fluxHighNorm  = (k * hitHigh / (TransientDetector.SCALE * highDiv / fixed)).coerceIn(0f, 1f)
 
         CVRegistry.updatePushedValue("amp",       ampNorm)
         CVRegistry.updatePushedValue("bass",      bassNorm)
         CVRegistry.updatePushedValue("mid",       midNorm)
         CVRegistry.updatePushedValue("high",      highNorm)
+        CVRegistry.updatePushedValue("audio_himid", himidNorm)
         CVRegistry.updatePushedValue("flux_amp",  fluxAmpNorm)
         CVRegistry.updatePushedValue("flux_bass", fluxBassNorm)
         CVRegistry.updatePushedValue("flux_mid",  fluxMidNorm)
         CVRegistry.updatePushedValue("flux_high", fluxHighNorm)
+        CVRegistry.updatePushedValue("audio_flux_himid", fluxHimidNorm)
 
         // Direct O(1) primitive array ring buffer writes
         ampHistory?.add(ampNorm)
         bassHistory?.add(bassNorm)
         midHistory?.add(midNorm)
         highHistory?.add(highNorm)
+        himidHistory?.add(himidNorm)
         fluxAmpHistory?.add(fluxAmpNorm)
         fluxBassHistory?.add(fluxBassNorm)
         fluxMidHistory?.add(fluxMidNorm)
         fluxHighHistory?.add(fluxHighNorm)
+        fluxHimidHistory?.add(fluxHimidNorm)
 
         // Song sections: not scaled by Audio Response, they say where the music is, not how hard it hits.
         val energy = agc.watch.energy
         CVRegistry.updatePushedValue("audio_energy", energy)
         energyHistory?.add(energy)
+        val energyBass = agc.energy(AudioAgc.BASS)
+        val energyMid = agc.energy(AudioAgc.MID)
+        val energyHimid = agc.energy(AudioAgc.HIMID)
+        val energyHigh = agc.energy(AudioAgc.HIGH)
+        CVRegistry.updatePushedValue("audio_energy_bass", energyBass)
+        CVRegistry.updatePushedValue("audio_energy_mid", energyMid)
+        CVRegistry.updatePushedValue("audio_energy_himid", energyHimid)
+        CVRegistry.updatePushedValue("audio_energy_high", energyHigh)
+        energyBassHistory?.add(energyBass)
+        energyMidHistory?.add(energyMid)
+        energyHimidHistory?.add(energyHimid)
+        energyHighHistory?.add(energyHigh)
         CVRegistry.sectionDrop.report(agc.watch.drops, agc.watch.dropLag)
 
         val callbackNanos = System.nanoTime() - currentTime

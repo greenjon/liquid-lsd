@@ -8,8 +8,7 @@ import llm.slop.liquidlsd.parameters.CvModulator
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 
 /**
- * Dedicated UI section for Audio CV modulators (audio_amp, audio_bass, audio_mid, audio_high, their flux, and the
- * song-section signals audio_energy / audio_drop). Renders the dynamics Envelope Follower preset dropdown,
+ * Dedicated UI section for Audio CV modulators ([llm.slop.liquidlsd.cv.AudioSignals]). Renders the dynamics Envelope Follower preset dropdown,
  * contextual Custom Attack/Decay sliders, DC Offset, and Depth. Section signals are already shaped, so they get
  * only a signal choice and the range.
  */
@@ -19,28 +18,17 @@ object AudioModulatorSection {
         "Full Mix (Amp)",
         "Low / Bass (Kick)",
         "Mid (Snare)",
+        "Hi-Mid (Crack)",
         "High (Hi-Hat)"
     )
 
-    private val RMS_SOURCES = arrayOf("audio_amp", "audio_bass", "audio_mid", "audio_high")
-    private val FLUX_SOURCES = arrayOf("audio_flux_amp", "audio_flux_bass", "audio_flux_mid", "audio_flux_high")
-    private val SECTION_SOURCES = arrayOf("audio_energy", "audio_drop")
-    private val SECTION_LABELS = arrayOf("Energy (vs. the song)", "Drop (4-bar hit)")
+    private val RMS_SOURCES = llm.slop.liquidlsd.cv.AudioSignals.LEVELS
+    private val FLUX_SOURCES = llm.slop.liquidlsd.cv.AudioSignals.TRANSIENTS
+    private val SECTION_SOURCES = llm.slop.liquidlsd.cv.AudioSignals.SECTIONS
+    private val SECTION_LABELS = arrayOf("Energy (vs. the song)", "Bass Energy", "Mid Energy", "Hi-Mid Energy", "High Energy", "Drop (4-bar hit)")
 
     /** Title for an Audio-tab source in modulator headers, or null for any other source. */
-    fun sourceLabel(sourceId: String): String? = when (sourceId) {
-        "audio_amp" -> "Full Mix (RMS)"
-        "audio_bass" -> "Low / Bass (RMS)"
-        "audio_mid" -> "Mid (RMS)"
-        "audio_high" -> "High (RMS)"
-        "audio_flux_amp" -> "Full Mix (Flux)"
-        "audio_flux_bass" -> "Low / Kick (Flux)"
-        "audio_flux_mid" -> "Mid / Snare (Flux)"
-        "audio_flux_high" -> "High / Hat (Flux)"
-        "audio_energy" -> "Energy (Section)"
-        "audio_drop" -> "Drop (Section)"
-        else -> null
-    }
+    fun sourceLabel(sourceId: String): String? = llm.slop.liquidlsd.cv.AudioSignals.label(sourceId)
 
     fun draw(
         session: SessionContext,
@@ -54,15 +42,9 @@ object AudioModulatorSection {
         val bypassed = existing.bypassed
         val fontScale = 0.95f
 
-        val isTransient = existing.sourceId.startsWith("audio_flux_")
+        val isTransient = llm.slop.liquidlsd.cv.AudioSignals.isTransient(existing.sourceId)
         val isSection = llm.slop.liquidlsd.cv.isSectionSource(existing.sourceId)
-        val currentBandIdx = when (existing.sourceId) {
-            "audio_amp", "audio_flux_amp"   -> 0
-            "audio_bass", "audio_flux_bass" -> 1
-            "audio_mid", "audio_flux_mid"   -> 2
-            "audio_high", "audio_flux_high" -> 3
-            else                            -> 0
-        }
+        val currentBandIdx = maxOf(RMS_SOURCES.indexOf(existing.sourceId), FLUX_SOURCES.indexOf(existing.sourceId), 0)
 
         if (bypassed) ImGui.popStyleVar()
 
@@ -81,10 +63,10 @@ object AudioModulatorSection {
 
         ImGui.sameLine(0f, 4f * fontScale)
 
-        if (ButtonChrome.toggleButton("Transient (Flux)##mode_flux_${existing.id}", isTransient, themeColor, btnW, btnH) && !isTransient) {
+        if (ButtonChrome.toggleButton("Transient (Hits)##mode_flux_${existing.id}", isTransient, themeColor, btnW, btnH) && !isTransient) {
             onReplace(existing.copy(sourceId = FLUX_SOURCES[currentBandIdx]))
         }
-        itemTooltip("Transient Trigger: Tracks sudden onsets, drum strikes, and energy growth (Spectral Flux).")
+        itemTooltip("Transient: Drum hits and attacks that stand out from what the band has just been doing.\nSustained notes do not trigger it.")
 
         ImGui.sameLine(0f, 4f * fontScale)
 
@@ -111,11 +93,11 @@ object AudioModulatorSection {
         val bandChanged = ImGui.combo("##band_${existing.id}", bandIdxWrapper, BAND_LABELS)
         llm.slop.liquidlsd.tour.WidgetRegistry.note { "aud_band" }
         if (bandChanged) {
-            val selectedIdx = bandIdxWrapper.get().coerceIn(0, 3)
+            val selectedIdx = bandIdxWrapper.get().coerceIn(0, BAND_LABELS.size - 1)
             val newSource = if (isTransient) FLUX_SOURCES[selectedIdx] else RMS_SOURCES[selectedIdx]
             onReplace(existing.copy(sourceId = newSource))
         }
-        itemTooltip("Frequency Band:\nFull Mix: Entire frequency spectrum\nLow / Bass: Sub and kick frequencies (< 150Hz)\nMid: Vocals, synths, and snares (150Hz - 2.5kHz)\nHigh: Cymbals, hi-hats, and air (> 2.5kHz)")
+        itemTooltip("Frequency Band:\nFull Mix: Entire frequency spectrum\nLow / Bass: Sub and kick frequencies (below 150 Hz)\nMid: Vocals, synths and snare body (around 1 kHz)\nHi-Mid: Snare crack, vocal edge and guitars (about 2-5 kHz)\nHigh: Cymbals, hi-hats and air (above 5 kHz)")
         ImGui.popItemWidth()
 
         ImGui.spacing()
@@ -249,6 +231,8 @@ object AudioModulatorSection {
         llm.slop.liquidlsd.tour.WidgetRegistry.note { "aud_section" }
         itemTooltip("Section Signal:\nEnergy: how loud the music is now against the last ~20 s. Rests mid-range;\n" +
             "falls in a breakdown, rises when the song gets louder. Needs ~20 s of music first.\n" +
+            "Bass / Mid / Hi-Mid / High Energy: the same for one band, so a look can follow the hats\n" +
+            "coming in or the bass leaving, whatever the rest of the mix does.\n" +
             "Drop: jumps to full when a breakdown ends with the bass back, then falls away over 4 bars.\n" +
             "Called about half a second after the bass returns, dated back to that beat.")
         ImGui.popItemWidth()

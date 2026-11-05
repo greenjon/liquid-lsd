@@ -65,7 +65,7 @@ Thread 0 (the OS main thread) owns GLFW, every OpenGL call, ImGui and the whole 
 - **Strict Constraint**: All LWJGL 3 GLFW window and OpenGL context manipulations must execute strictly on Thread 0.
 
 ### 2. Audio Thread (JACK Callback / Java Sound Capture Thread)
-- **Responsibilities**: Receives incoming audio sample buffers, executes parallel biquad IIR bandpass filtering (Bass, Mid, High), computes RMS amplitude, calculates spectral flux onset triggers, and updates beat clock state. It also runs the always-on auto gain (`AudioAgc`), the song-section watch (`SectionWatch`, which freezes the AGC's long-term level in breakdowns and feeds `audio_energy` / `audio_drop`), `DownbeatDetector` and the display spectrum (`SpectrumAnalyzer`), all allocation-free. Details: [audio_dsp.md](audio_dsp.md).
+- **Responsibilities**: Receives incoming audio sample buffers, executes parallel biquad IIR bandpass filtering (Bass, Mid, Hi-Mid, High), computes RMS amplitude, detects each band's hits (`TransientDetector`), and updates beat clock state. It also runs the always-on auto gain (`AudioAgc`), the song-section watch (`SectionWatch`, which freezes the AGC's long-term level in breakdowns and feeds `audio_energy` / `audio_drop`), `DownbeatDetector` and the display spectrum (`SpectrumAnalyzer`), all allocation-free. Details: [audio_dsp.md](audio_dsp.md).
 - **Strict Real-Time Constraints**:
   - **Zero-Allocation Rule**: No heap allocations (`new`, capturing closures, collection instantiations) inside the audio callback loop.
   - **Non-Blocking Rule**: No mutex locks, file I/O, database access, logging, or thread sleeping.
