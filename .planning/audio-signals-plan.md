@@ -1,6 +1,6 @@
 # Audio signals: better transients, a hi-mid band, per-band energy (plan)
 
-Started 2026-11-04. Status: phases 0-3 BUILT 2026-11-04 (desktop and web, tests pass, committed, live on the TV (hits since v23, HitScale since v25), in-app check pending). Phase 4 waits until 1-3 are seen in the app. Target: v1.0. Desktop and web TV.
+Started 2026-11-04. Status: phases 0-3 BUILT 2026-11-04 (desktop and web, tests pass, committed, live on the TV (hits since v23, HitScale since v25), user confirmed it looks good in the app 2026-11-04). Phase 4 waits until 1-3 are seen in the app. Target: v1.0. Desktop and web TV.
 
 **Results that changed the plan:** see *What the mixes showed* at the end. The calibration target changed, and a third bug was found (a hold was added).
 
