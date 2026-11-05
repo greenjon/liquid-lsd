@@ -89,6 +89,13 @@ export function nextLine(shows, now, opts = {}) {
   return `NEXT: ${s.name} · ${day === 'TODAY' ? '' : `${day} `}${timeLabel(s.start, opts)}`;
 }
 
+/** radio.spaz.org/playing -> { title, live }. The server decides what is live, and puts `[LIVE!] ` before the title. */
+export function parsePlaying(raw) {
+  const live = raw?.live === true || raw?.live === 'true';
+  const title = decodeName(raw?.playing);
+  return { title: live && title && !title.startsWith('[LIVE!]') ? `[LIVE!] ${title}` : title, live };
+}
+
 // -------------------------------------------------------
 // The live list: fetched at power-on, hourly while on, and when the page opens on a stale list.
 // -------------------------------------------------------

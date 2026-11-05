@@ -249,7 +249,7 @@
 
           <!-- Service menu (ui.js builds the rows) -->
           <div class="control-group">
-            <button id="menuBtn" class="push-btn" title="Menu: sync, reaction, scene length, auto roll, background, effects, skipped channels, input, fullscreen, reduced motion, heavy scenes, theme (M)" aria-label="Menu" aria-pressed="false"><span class="btn-led"></span></button>
+            <button id="menuBtn" class="push-btn" title="Menu: scene, sound and TV settings (M)" aria-label="Menu" aria-pressed="false"><span class="btn-led"></span></button>
             <span class="control-label">MENU</span>
           </div>
 
@@ -275,6 +275,8 @@
 
         <!-- Station badge: power LED, beat LED (green = locked to the music's beat, amber = keeping time) -->
         <div id="station-block">
+          <!-- What the TV is listening to (ui.js): STREAM, LIVE SHOW, TAPE or MIC -->
+          <div id="source-badge">STREAM</div>
           <div id="station-badge">
             <div class="led" id="stationLed"></div>
             <div class="led beat-led" id="beatLed" title="Beat: green when locked to the music"></div>

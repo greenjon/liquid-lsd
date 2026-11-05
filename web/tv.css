@@ -2,8 +2,8 @@
 
 /* Two themes, one set of materials: moulded grainy plastic on a cabinet in a softly lit room, turned controls,
    a metal nameplate, a framed blackboard. MENU › THEME sets data-theme on <html> (index.html does it before the
-   first paint). Only the room and the cabinet change: the screen, its surround and the badge's readout window are
-   dark glass in both, and everything on the picture stays phosphor on black. Kiosk and embed have no cabinet. */
+   first paint). Only the room and the cabinet change: the screen and its surround are dark glass in both, and
+   everything on the picture stays phosphor on black. Kiosk and embed have no cabinet. */
 :root {
   color-scheme:      dark;
   --room:            #141210;   /* the wall behind the TV */
@@ -34,6 +34,8 @@
   --focus:           #7a7;
   --badge-bg:        rgba(0,0,0,0.4);
   --badge-edge:      #222;
+  --badge-ink:       #888;
+  --badge-ink-off:   #444;
   --plate-hi:        #4a443c;   /* nameplate */
   --plate-lo:        #26221d;
   --plate-lift:      inset 0 1px 0 rgba(255,255,255,0.15), 0 1px 2px rgba(0,0,0,0.7);
@@ -81,8 +83,10 @@
   --cap-pressed:     0 1px 1px rgba(70,55,30,0.45), inset 0 1px 3px rgba(70,55,30,0.45);
   --btn-led-off:     #a3967a;
   --focus:           #2f6f3f;
-  --badge-bg:        #26221c;
+  --badge-bg:        #f1ebdc;
   --badge-edge:      #8f846d;
+  --badge-ink:       #2c2822;
+  --badge-ink-off:   #6e6451;
   --plate-hi:        #f1ede3;
   --plate-lo:        #bdb4a1;
   --plate-lift:      inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 2px rgba(70,55,30,0.5);
@@ -300,6 +304,21 @@ body {
 }
 #tv-body:not(.powered-on) #listeners { visibility: hidden; }
 
+#source-badge {
+  align-self: stretch;
+  padding: 2px 10px;
+  background: var(--badge-bg);
+  border-radius: 4px;
+  border: 1px solid var(--badge-edge);
+  color: var(--badge-ink);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-align: center;
+  white-space: nowrap;
+  user-select: none;
+}
+#tv-body:not(.powered-on) #source-badge { visibility: hidden; } /* off, nothing is playing */
+
 #station-badge {
   display: flex;
   align-items: center;
@@ -325,7 +344,7 @@ body {
 }
 
 .station-text {
-  color: #444;
+  color: var(--badge-ink-off);
   font-size: 0.6rem;
   letter-spacing: 0.08em;
   font-variant-numeric: tabular-nums; /* the channel number keeps its width */
@@ -334,7 +353,7 @@ body {
 }
 
 #tv-body.powered-on .station-text {
-  color: #888;
+  color: var(--badge-ink);
 }
 
 /* --- Push buttons (FX, HOLD) and the channel rocker --- */
@@ -508,9 +527,8 @@ body.kiosk.idle, body.kiosk.idle canvas { cursor: none; }
   position: absolute;
   inset: 0;
   z-index: 4;
-  padding: 3% 8% 2.5%;
+  padding: 3% 14% 2.5%;
   background: rgba(0, 8, 0, 0.72);
-  overflow-y: auto;
   color: #8cff8c;
   font-family: "VT323", "Courier New", monospace;
   font-weight: bold;
@@ -519,18 +537,28 @@ body.kiosk.idle, body.kiosk.idle canvas { cursor: none; }
   font-size: clamp(10px, 1.45vw, 21px);
   display: flex;
   flex-direction: column;
-  gap: 0.12em;
 }
 #tv-menu[hidden] { display: none; }
+@media (max-width: 700px) { #tv-menu { padding-inline: 6%; } }
 .menu-open #osd, .card-up #osd, .card-up #bumper { visibility: hidden; }
-#tv-menu .menu-title { font-size: 1.3em; margin-bottom: 0.2em; display: flex; justify-content: space-between; align-items: baseline; }
-#tv-menu .menu-version { font-size: 0.55em; opacity: 0.6; }
-#tv-menu .menu-row { display: flex; justify-content: space-between; align-items: center; padding: 0.1em 0.5em; cursor: pointer; }
+#tv-menu .menu-title { flex: none; font-size: 1.3em; margin-bottom: 0.3em; display: flex; align-items: center; gap: 0.6em; }
+#tv-menu .menu-tabs { display: flex; gap: 0.3em; }
+#tv-menu .menu-version { margin-left: auto; font-size: 0.55em; opacity: 0.6; }
+/* The rows scroll on their own in a short window, so the help line under them always shows */
+#tv-menu .menu-rows { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(140,255,140,0.4) transparent; }
+#tv-menu .menu-row { display: flex; justify-content: space-between; align-items: center; padding: 0.16em 0.5em; cursor: pointer; }
+/* Faint stripes, and a brighter one under the cursor, carry the eye from a label across to its value */
+#tv-menu .menu-row:nth-child(even) { background: rgba(140,255,140,0.08); }
+#tv-menu .menu-row:hover { background: rgba(140,255,140,0.22); }
 #tv-menu .menu-row.sel { background: #8cff8c; color: #021; text-shadow: none; }
-#tv-menu .menu-row.locked { opacity: 0.4; }
+#tv-menu .menu-row.locked { opacity: 0.4; cursor: default; }
 #tv-menu .menu-value { display: flex; align-items: center; gap: 0.6em; }
 #tv-menu button { background: none; border: 0; color: inherit; font: inherit; cursor: pointer; padding: 0 0.2em; }
-#tv-menu .menu-hint { margin-top: auto; padding-top: 0.4em; min-height: 2.6em; font-size: 0.7em; opacity: 0.7; }
+#tv-menu .menu-tab, #tv-menu .menu-close { font-size: 0.75em; padding: 0.05em 0.5em; border: 1px solid transparent; }
+#tv-menu .menu-tab.on { border-color: #8cff8c; }
+#tv-menu .menu-tab:hover, #tv-menu .menu-close:hover { background: rgba(140,255,140,0.22); }
+#tv-menu .menu-tab.sel { background: #8cff8c; color: #021; text-shadow: none; }
+#tv-menu .menu-hint { flex: none; box-sizing: border-box; margin-top: 0.3em; padding-top: 0.3em; min-height: 4.3em; border-top: 1px solid rgba(140,255,140,0.3); font-size: 0.8em; line-height: 1.3; opacity: 0.7; }
 
 /* --- LIVE title card: a station ident that rolls in over the picture when the desktop goes on air --- */
 #title-card {
@@ -713,7 +741,6 @@ body.kiosk #nameplate { display: none; }
 #schedule .sc-empty { margin-top: 1em; opacity: 0.8; }
 #schedule .sc-hint { margin-top: auto; padding-top: 0.6em; font-size: 0.7em; opacity: 0.7; }
 #tv-screen-area:has(#schedule:not([hidden])) #osd { visibility: hidden; }
-#tv-body:not(.powered-on) #schedule { display: none; }
 @media (max-width: 700px) { #schedule .sc-time { min-width: 0; } #schedule .sc-show { flex-direction: column; gap: 0; } }
 
 /* ? : the keyboard shortcuts, and MENU › SKIPPED: the same page as SCHEDULE */
@@ -748,7 +775,6 @@ body.kiosk #nameplate { display: none; }
 #keys .sc-hint, #skipped .sc-hint { margin-top: auto; padding-top: 0.6em; font-size: 0.7em; opacity: 0.7; }
 body.kiosk #keys .ky-chat { display: none; }
 #tv-screen-area:has(#keys:not([hidden])) #osd, #tv-screen-area:has(#skipped:not([hidden])) #osd { visibility: hidden; }
-#tv-body:not(.powered-on) #keys, #tv-body:not(.powered-on) #skipped { display: none; }
 #skipped .sk-list { display: flex; flex-direction: column; margin: 0.4em 0 0; }
 #skipped .sk-row { all: unset; display: flex; gap: 1.5em; padding: 0.05em 0.3em; cursor: pointer; }
 #skipped .sk-row:hover, #skipped .sk-row:focus-visible, #skipped .sk-row.sel { background: rgba(140,255,140,0.18); }
@@ -756,7 +782,7 @@ body.kiosk #keys .ky-chat { display: none; }
 #skipped .sk-empty { opacity: 0.7; }
 #skipped .sk-all { margin-top: 0.5em; color: #d9c2ff; text-shadow: 0 0 8px rgba(160,90,255,0.8); }
 
-#tv-menu .menu-hint.help { opacity: 0.9; font-size: 0.8em; line-height: 1.3; text-transform: none; letter-spacing: 0.02em; }
+#tv-menu .menu-hint.help { opacity: 0.9; text-transform: none; letter-spacing: 0.02em; }
 
 /* --- CHAT (chatboard.js): the Spaz Radio chat on a blackboard hung beside the TV ---------------------------
    Caveat (OFL, web/fonts/OFL.txt), served from here so it works offline. Name, line and time are styled apart:
@@ -921,7 +947,6 @@ body.embed #about, body.embed #schedule, body.embed #keys, body.embed #tv-menu, 
   font-size: clamp(11px, 1.45vw, 21px);
 }
 #tapes[hidden] { display: none; }
-#tv-body:not(.powered-on) #tapes { display: none; }
 #tv-screen-area:has(#tapes:not([hidden])) #osd { visibility: hidden; }
 .tp-head { display: flex; justify-content: space-between; align-items: center; gap: 1em; }
 .tp-name { font-size: 1.4em; letter-spacing: 0.2em; color: #d9c2ff; text-shadow: 0 0 10px rgba(160,90,255,0.9); }

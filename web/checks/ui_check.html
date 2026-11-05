@@ -23,7 +23,15 @@ try {
   const onAir = () => (st.mixer.balance > 0.5 ? st.deckB : st.deckA);
   // Menu rows by label (the menu must be open), so adding a row doesn't move every check.
   const row = (label) => [...d.querySelectorAll('#tv-menu .menu-label')].findIndex((e) => e.textContent === label);
-  const downTo = (label) => { const n = row(label); for (let i = 0; i < n; i++) key('ArrowDown'); return n; };
+  // Finds the row's page and selects it: up to the tabs, Tab through the pages, down to the row.
+  const downTo = (label) => {
+    while (d.querySelector('#tv-menu .menu-row.sel')) key('ArrowUp');
+    for (let i = 0; i < 3 && row(label) < 0; i++) key('Tab');
+    const n = row(label);
+    for (let i = 0; i <= n; i++) key('ArrowDown');
+    return n;
+  };
+  const source = () => d.getElementById('source-badge').textContent;
   const osd = (id) => ({ text: d.getElementById(id).textContent, shown: d.getElementById(id).classList.contains('show') });
 
   // The whole TV is a power target: a click on the screen of a TV that is off turns it on.
@@ -185,23 +193,60 @@ try {
   check('M opens the menu', menuEl && !menuEl.hidden);
   check('MENU LED lights while the menu is open', d.getElementById('menuBtn').getAttribute('aria-pressed') === 'true');
   check('Menu: the title shows the TV version', /^v\d+$/.test(menuEl.querySelector('.menu-version')?.textContent ?? ''), menuEl.querySelector('.menu-title').textContent);
+  // Pages: it opens on the tabs, where the arrows change page; the help line is always inside the menu.
+  const tabNames = () => [...menuEl.querySelectorAll('.menu-tab')].map((e) => e.textContent);
+  const pageNow = () => menuEl.querySelector('.menu-tab.on').textContent;
+  const hintText = () => menuEl.querySelector('.menu-hint').textContent;
+  check('Menu: three pages', tabNames().join() === 'SCENES,SOUND,TV', tabNames().join());
+  check('Menu: opens on the tabs, with no row selected', !!menuEl.querySelector('.menu-tab.sel') && !menuEl.querySelector('.menu-row.sel'));
+  check('Menu: the tabs say the keys', /PAGE/.test(hintText()), hintText());
+  key('ArrowRight');
+  check('Menu: right arrow on the tabs goes to the next page', pageNow() === 'SOUND', pageNow());
+  key('ArrowLeft'); key('ArrowLeft');
+  check('Menu: left arrow wraps round the pages', pageNow() === 'TV', pageNow());
+  key('Tab');
+  check('Menu: Tab changes page', pageNow() === 'SCENES', pageNow());
+  key('ArrowUp');
+  const lastRow = [...menuEl.querySelectorAll('.menu-row')].at(-1);
+  check('Menu: up from the tabs goes to the last row', lastRow.classList.contains('sel'));
+  key('ArrowDown');
+  check('Menu: down from the last row comes back to the tabs', !!menuEl.querySelector('.menu-tab.sel'));
+  const allLabels = [];
+  for (const name of tabNames()) {
+    menuEl.querySelectorAll('.menu-tab')[tabNames().indexOf(name)].click();
+    check(`Menu: ${name} fits without scrolling`, menuEl.querySelector('.menu-rows').scrollHeight <= menuEl.querySelector('.menu-rows').clientHeight + 1, `${menuEl.querySelector('.menu-rows').scrollHeight} ${menuEl.querySelector('.menu-rows').clientHeight}`);
+    const hb = menuEl.querySelector('.menu-hint').getBoundingClientRect(), mb = menuEl.getBoundingClientRect();
+    check(`Menu: ${name} shows the help line`, hb.top >= mb.top && hb.bottom <= mb.bottom + 1 && hb.height > 0);
+    allLabels.push(...[...menuEl.querySelectorAll('.menu-label')].map((e) => e.textContent));
+  }
+  check('Menu: CHAT, TAPES, SCHEDULE and EXIT are gone (they have their own buttons)', !['CHAT', 'TAPES', 'SCHEDULE', 'EXIT'].some((l) => allLabels.includes(l)), allLabels.join());
+  check('Menu: has AUDIO INPUT and FULLSCREEN rows', allLabels.includes('AUDIO INPUT') && allLabels.includes('FULLSCREEN'), allLabels.join());
+  downTo('REACT');
+  const hoverRow = [...menuEl.querySelectorAll('.menu-row')].find((r) => r.textContent.startsWith('SYNC'));
+  hoverRow.dispatchEvent(new w.MouseEvent('mouseover', { bubbles: true }));
+  check('Menu: the help line explains the row under the cursor', /Bluetooth/.test(hintText()), hintText());
+  menuEl.querySelector('.menu-rows').dispatchEvent(new w.MouseEvent('mouseleave'));
+  check('Menu: ...and goes back to the selected row', /quiet shows/.test(hintText()), hintText());
+  menuEl.querySelector('.menu-close').click();
+  check('Menu: the X closes it', menuEl.hidden);
+  key('m');
+  check('Menu: it comes back on the page used last', pageNow() === 'SOUND', pageNow());
+  downTo('SYNC');
   key('ArrowRight'); key('ArrowRight'); key('ArrowRight');
   check('Menu: right arrow raises SYNC by 10 ms steps', w.LSD.viewerState.syncMs === 30, w.LSD.viewerState.syncMs);
   await sleep(3000);
   check('Menu: the arrows do not change the scene while it is open', onAir() === lookBefore);
-  const reducedRow = downTo('REDUCED MOTION'); key('ArrowRight');
+  downTo('REDUCED MOTION'); key('ArrowRight');
   check('Menu: reduced motion row cycles AUTO -> ON', w.LSD.viewerState.reducedMode === 'on', w.LSD.viewerState.reducedMode);
-  key('ArrowLeft'); for (let i = 0; i < reducedRow; i++) key('ArrowUp'); key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft');
+  key('ArrowLeft'); downTo('SYNC'); key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft');
   check('Menu: back to defaults', w.LSD.viewerState.syncMs === 0 && w.LSD.viewerState.reducedMode === 'auto', `${w.LSD.viewerState.syncMs} ${w.LSD.viewerState.reducedMode}`);
-  key('ArrowDown'); key('ArrowDown');
+  downTo('ANNOUNCE SCENES');
   check('Menu: the selected row explains itself', /name of each new scene/.test(menuEl.querySelector('.menu-hint').textContent), menuEl.querySelector('.menu-hint').textContent);
   key('ArrowRight');
   check('Menu: ANNOUNCE SCENES turns on', w.LSD.viewerState.announce === true);
   key('ArrowRight');
   check('Menu: ANNOUNCE SCENES turns off', w.LSD.viewerState.announce === false);
-  const labels = [...menuEl.querySelectorAll('.menu-label')].map((e) => e.textContent);
-  check('Menu: has AUDIO INPUT and FULLSCREEN rows', labels.includes('AUDIO INPUT') && labels.includes('FULLSCREEN'), labels.join(','));
-  menuEl.querySelectorAll('.menu-label')[0].click(); // re-renders the menu under the click
+  menuEl.querySelector('.menu-row.sel .menu-label').click(); // ANNOUNCE SCENES: re-renders the menu under the click
   check('Menu: clicking a row label leaves the TV on', w.LSD.powerState.on);
   check('Menu: clicking a row label keeps the menu open', !menuEl.hidden);
   key('Escape');
@@ -271,7 +316,7 @@ try {
     broadcaster: 'DJ Test' } });
   await sleep(200);
   // TAP SYNC against the live clock (120 BPM): 8 steady taps give a SYNC inside the menu's range.
-  key('m'); key('ArrowDown'); key('Enter');
+  key('m'); downTo('TAP SYNC'); key('Enter');
   for (let i = 0; i < 8; i++) { key(' '); await sleep(500); }
   const syncAfterTaps = w.LSD.viewerState.syncMs;
   check('TAP SYNC: steady taps set SYNC', /^SYNC /.test(osd('osd-msg').text) && syncAfterTaps >= -100 && syncAfterTaps <= 400, `${osd('osd-msg').text} ${syncAfterTaps}`);
@@ -282,12 +327,14 @@ try {
   await sleep(500);
   const card = d.getElementById('title-card');
   check('Live: the title card shows LIVE and the broadcaster', card.classList.contains('show') && card.textContent.includes('DJ Test'), card.textContent);
-  check('Live: badge says LIVE', d.querySelector('#station-badge .station-text').textContent.includes('LIVE'));
+  check('Live: the badge keeps the channel', /CH\.\d{3}$/.test(d.querySelector('#station-badge .station-text').textContent), d.querySelector('#station-badge .station-text').textContent);
+  check('Live: the source badge says LIVE SHOW and who', source() === 'LIVE SHOW' && d.getElementById('source-badge').title.includes('DJ Test'), source());
   check('Live: CH up and HOLD do nothing', st.deckA === liveDeck && !st.hold);
   check('Live: OSD says controls are locked', osd('osd-msg').text.includes('LOCKED'), osd('osd-msg').text);
   w.LSD.handleRelayMessage({ type: 'broadcaster_offline' });
   await sleep(300);
-  check('Offline: the badge shows the channel again', /CH\.\d{3}$/.test(d.querySelector('#station-badge .station-text').textContent), d.querySelector('#station-badge .station-text').textContent);
+  check('Offline: the badge still shows the channel', /CH\.\d{3}$/.test(d.querySelector('#station-badge .station-text').textContent), d.querySelector('#station-badge .station-text').textContent);
+  check('Offline: the source badge says STREAM', source() === 'STREAM', source());
   // Branding: I adds the Liquid LSD line; MENU › ABOUT opens and any key closes it; the bumper; the nameplate.
   key('i');
   check('I shows the Liquid LSD line', osd('osd-brand').shown && osd('osd-brand').text.includes('liquid-lsd.greenjon.com'));
@@ -318,9 +365,8 @@ try {
   check('S opens the schedule', !schedEl.hidden && d.getElementById('scheduleBtn').getAttribute('aria-pressed') === 'true');
   schedEl.click();
   check('A click closes the schedule and leaves the TV on', schedEl.hidden && w.LSD.powerState.on && d.getElementById('scheduleBtn').getAttribute('aria-pressed') === 'false');
-  key('m'); downTo('SCHEDULE'); key('Enter');
-  check('MENU › SCHEDULE opens the schedule and closes the menu', !schedEl.hidden && menuEl.hidden);
-  key('Escape');
+  await sleep(1100);
+  check('A scheduled show on air: the source badge says LIVE SHOW', source() === 'LIVE SHOW' && d.getElementById('source-badge').title.includes('Blind Spot Radio'), d.getElementById('source-badge').title);
   key('i');
   check('The OSD names the next show', osd('osd-next').shown && osd('osd-next').text.startsWith("NEXT: Spukkin Faceship's"), JSON.stringify(osd('osd-next')));
   key('i');
@@ -355,6 +401,86 @@ try {
   check('PWR turns the TV off', !w.LSD.powerState.on);
   d.getElementById('tv-body').click();
   check('A click on the TV turns it on again', w.LSD.powerState.on);
+
+  // TV off: the menu, the schedule and the shortcuts all open, and using them leaves it off.
+  d.getElementById('powerSwitch').click();
+  await sleep(100);
+  const shown = (el) => !el.hidden && getComputedStyle(el).display !== 'none';
+  const stillOff = () => !w.LSD.powerState.on;
+  key('m');
+  check('Off: M opens the menu', shown(menuEl) && stillOff());
+  const offRow = (label) => [...menuEl.querySelectorAll('.menu-row')].find((r) => r.textContent.startsWith(label));
+  check('Off: rows that need the picture or the sound are locked and say why',
+    ['TAP SYNC', 'BACKGROUND', 'SKIP THIS CHANNEL', 'AUDIO INPUT'].every((l) => { downTo(l); return menuEl.querySelector('.menu-row.sel').classList.contains('locked') && /TURN THE TV ON/.test(menuEl.querySelector('.menu-hint').textContent); }));
+  check('Off: the source badge is dark', getComputedStyle(d.getElementById('source-badge')).visibility === 'hidden');
+  const offSync = w.LSD.viewerState.syncMs;
+  downTo('SYNC');
+  key('ArrowRight');
+  check('Off: menu settings still change', w.LSD.viewerState.syncMs === offSync + 10 && stillOff());
+  key('ArrowLeft');
+  offRow('SYNC').click();
+  check('Off: clicking a row leaves the TV off', shown(menuEl) && stillOff());
+  d.getElementById('tv-body').click();
+  check('Off: a stray click closes the menu, not powers on', menuEl.hidden && stillOff());
+  d.getElementById('menuBtn').click();
+  check('Off: the MENU button opens it', shown(menuEl) && stillOff());
+  d.getElementById('menuBtn').click();
+  check('Off: the MENU button closes it', menuEl.hidden && stillOff());
+  key('s');
+  check('Off: S opens the schedule', shown(schedEl) && stillOff());
+  schedEl.click();
+  check('Off: a click closes the schedule, TV stays off', schedEl.hidden && stillOff());
+  d.getElementById('scheduleBtn').click();
+  check('Off: the SCHEDULE button opens it', shown(schedEl) && stillOff());
+  key('Escape');
+  key('?');
+  check('Off: ? shows the shortcuts', shown(keysEl) && stillOff());
+  keysEl.click();
+  check('Off: a click closes the shortcuts, TV stays off', keysEl.hidden && stillOff());
+  const mb = d.getElementById('menuBtn').getBoundingClientRect();
+  at(mb.left + mb.width / 2, mb.bottom + 8);
+  check('Off: a click on the MENU label opens the menu', shown(menuEl) && stillOff());
+  key('Escape');
+  const fxb = d.getElementById('fxBtn').getBoundingClientRect();
+  key('m');
+  d.getElementById('powerSwitch').click();
+  check('Power on from the menu closes it', menuEl.hidden && w.LSD.powerState.on);
+  d.getElementById('powerSwitch').click();
+  at(fxb.left + fxb.width / 2, fxb.bottom + 8);
+  check('Off: a click on the FX label still turns the TV on', w.LSD.powerState.on);
+  await sleep(100);
+
+  // Menu wheel: only the value under the cursor changes; anywhere else the wheel is left to scroll the list.
+  key('m'); downTo('SYNC');
+  const wheel = (el) => { const ev = new w.WheelEvent('wheel', { deltaY: -100, bubbles: true, cancelable: true }); el.dispatchEvent(ev); return ev; };
+  const syncRow = () => [...menuEl.querySelectorAll('.menu-row')].find((r) => r.textContent.startsWith('SYNC'));
+  const sync0 = w.LSD.viewerState.syncMs;
+  const overLabel = wheel(syncRow().querySelector('.menu-label'));
+  check('Menu wheel over a label changes nothing and scrolls', w.LSD.viewerState.syncMs === sync0 && !overLabel.defaultPrevented);
+  const latched = wheel(syncRow().querySelector('.menu-value'));
+  check('Menu wheel: a scroll carrying a value under the cursor stays a scroll', w.LSD.viewerState.syncMs === sync0 && !latched.defaultPrevented);
+  await sleep(350);
+  const overValue = wheel(syncRow().querySelector('.menu-value'));
+  check('Menu wheel over a value changes it', w.LSD.viewerState.syncMs === sync0 + 10 && overValue.defaultPrevented, w.LSD.viewerState.syncMs);
+  key('ArrowLeft');
+  const rowsBox = menuEl.querySelector('.menu-rows');
+  rowsBox.style.flex = 'none'; rowsBox.style.height = '40px'; // force a scroll, as in a short window
+  rowsBox.scrollTop = 30;
+  w.LSD.viewerState.menu.refresh();
+  check('A background refresh keeps the rows where they were scrolled', rowsBox.scrollTop === 30, rowsBox.scrollTop);
+  rowsBox.style.flex = ''; rowsBox.style.height = '';
+  key('Escape');
+  // [LIVE!]: the server's title and live flag, read as the Spaz Radio app reads them (a stub stands in for the feed).
+  const realFetch = w.fetch;
+  w.fetch = (u, o) => String(u).endsWith('/playing')
+    ? Promise.resolve(new w.Response(JSON.stringify({ playing: '[LIVE!] Stub Show - real time', listeners: 3, live: 'true' })))
+    : realFetch.call(w, u, o);
+  d.getElementById('powerSwitch').click();
+  await sleep(100);
+  d.getElementById('powerSwitch').click();
+  for (let i = 0; i < 40 && !osd('osd-track').text.includes('Stub Show'); i++) await sleep(100);
+  check('A live show: the track line starts [LIVE!], as in the app', osd('osd-track').text.includes('[LIVE!] Stub Show'), osd('osd-track').text);
+  w.fetch = realFetch;
   // CHAT: the blackboard, on a fake broker and log (?nolive never starts the real room).
   const board = d.getElementById('chalkboard'), chatBtn = d.getElementById('chatBtn');
   const cb = w.LSD.viewerState.chat;
@@ -406,11 +532,6 @@ try {
   check('C opens the board and the LED stops blinking, lit like HOLD', !board.hidden && !chatBtn.classList.contains('unread') && chatBtn.getAttribute('aria-pressed') === 'true');
   chatBtn.click();
   check('The CHAT button closes it', board.hidden);
-  key('m'); downTo('CHAT');
-  check('MENU has a CHAT row', menuEl.querySelector('.menu-row.sel')?.textContent.includes('CHAT') && menuEl.querySelector('.menu-row.sel').textContent.includes('CLOSED'), menuEl.querySelector('.menu-row.sel')?.textContent);
-  key('Enter');
-  check('MENU › CHAT opens the board', !board.hidden);
-  key('Escape');
   cb.chat.leave();
   await sleep(50);
   check('Leaving the page clears our name from the room', !broker.retained.has(`presence/${cb.chat.clientId}`));

@@ -385,7 +385,7 @@ export function insertTape(url, startAt = 0) {
   tape = { url, pos: startAt, paused: false, ready: false, stuck: 0, lastT: 0 };
   releaseMic();
   resetAnalysis();
-  loadTape().catch((err) => console.warn('[dsp] tape did not start:', err.message));
+  if (wantAudio) loadTape().catch((err) => console.warn('[dsp] tape did not start:', err.message)); // TV off: power-on starts it
 }
 
 /** Takes the tape out and goes back to the radio (or stays on the microphone, if it took over). */

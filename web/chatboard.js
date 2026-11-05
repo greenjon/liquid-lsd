@@ -1,7 +1,7 @@
 // chatboard.js
 // The blackboard beside the TV that holds the Spaz Radio chat (chat.js): the room's lines in chalk, who is
 // here, and a line to write on. It is open on a first visit; its X closes it (remembered), and the CHAT
-// button, C or MENU › CHAT bring it back. While it is closed, the CHAT button's LED lights for new lines.
+// button or C brings it back. While it is closed, the CHAT button's LED lights for new lines.
 
 import { linkify, nameHash, MAX_NICK, MAX_TEXT } from './chat.js';
 

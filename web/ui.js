@@ -11,12 +11,12 @@ import { heardBeats, tapOffset } from './sync.js';
 import { createChat } from './chat.js';
 import { createChatboard } from './chatboard.js';
 import { createTapeDeck } from './tapedeck.js';
-import { scheduleState, refreshSchedule, setShows, groupByDay, zoneLabel, nextLine, SCHEDULE_REFRESH_MS, SCHEDULE_STALE_MS } from './schedule.js';
+import { scheduleState, refreshSchedule, setShows, groupByDay, upcoming, parsePlaying, zoneLabel, nextLine, SCHEDULE_REFRESH_MS, SCHEDULE_STALE_MS } from './schedule.js';
 
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v23';
+export const TV_VERSION = 'v24';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -58,6 +58,10 @@ const REACT_MIN = 0.25, REACT_MAX = 2.0, REACT_DEFAULT = 1.0;
 const REACT_KEY = 'lsd.react.agc';
 const STREAM_STATUS_URL = 'https://radio.spaz.org:8060/status-json.xsl';
 const STREAM_MOUNT = '/radio.ogg';
+// What the Spaz Radio app shows: the title with [LIVE!] for a show streamed in real time. A browser can read it only
+// if the server sends a CORS header. Until then the fetch fails, and the title comes from the Icecast status alone.
+const PLAYING_URL = 'https://radio.spaz.org/playing';
+const PLAYING_RETRY_MS = 10 * 60 * 1000; // a failed read waits this long, or for the next power-on
 // THEME: the browser's own bar matches the cabinet (index.html sets a saved light theme before the first paint).
 const THEME_BAR = { dark: '#2a2520', light: '#d6ccb6' };
 
@@ -94,6 +98,8 @@ function unflash(id) {
 const INFO_IDS = ['osd-ch', 'osd-name', 'osd-bg', 'osd-chain', 'osd-track', 'osd-next', 'osd-brand'];
 
 let nowPlaying = '';
+let streamLive = false;  // the server says the show on the stream is live, in real time
+let playingRetryAt = 0;
 function showLook(info = nowShowing(), ms = 4000, brand = false) {
   if (!powerState.on) return;
   if (autopilotState.isLiveBroadcast) {
@@ -242,22 +248,28 @@ export function initUI() {
   const updatePowerTitles = () => {
     tvBody.title = powerState.on
       ? 'Click the power button (PWR) to turn the TV off\nPress ? for keyboard shortcuts'
-      : 'Click the TV to turn it on';
+      : 'Click the TV to turn it on\nPress ? for keyboard shortcuts';
     canvas.title = powerState.on
       ? 'Click for info (press I or INFO to keep it on screen)\nDouble-click for fullscreen (or press S)\nPress ? for keyboard shortcuts'
-      : 'Click the TV to turn it on';
+      : 'Click the TV to turn it on\nPress ? for keyboard shortcuts';
   };
   updatePowerTitles();
+  // The pages over the picture also open with the TV off; pressing power either way clears them.
+  const closePages = () => {
+    menu.hide();
+    schedule.hide();
+    deck?.close();
+    skippedPage.hide();
+    keysPage.hidden = true;
+    about.hidden = true;
+  };
   powerSwitch.addEventListener('click', async () => {
+    closePages();
     if (powerState.on) {
       powerState.on = false;
       updatePowerTitles();
-      viewerState.schedule?.hide();
-      deck?.close();
       deck?.save();
       deck?.refreshLights();
-      document.getElementById('keys').hidden = true;
-      document.getElementById('skipped').hidden = true;
       letScreenSleep();
       updateMediaSession();
       powerState.warmupProgress = 0;
@@ -268,6 +280,7 @@ export function initUI() {
       try { await stopAudio(); } catch (err) { console.error('Audio stop failed:', err); }
     } else {
       powerState.on = true;
+      playingRetryAt = 0;
       updatePowerTitles();
       deck?.refreshLights();
       powerState.warmupProgress = embed ? 1 : 0;  // renderer will advance this (embed: no CRT warm-up)
@@ -303,7 +316,8 @@ export function initUI() {
   // When the TV is off, a click anywhere on it turns it on. When it is on, the cabinet itself does nothing:
   // only the power switch turns it off. A click that just misses a control (on its label, or in the gap
   // beside it) presses the nearest one, within a square of NEAR_MISS px around it; a near-miss on a dial
-  // does nothing (dials are dragged). With the menu open, a stray click only closes the menu.
+  // does nothing (dials are dragged). Off, that holds only for the buttons that work with the TV off.
+  // With the menu open, a stray click only closes the menu.
   const NEAR_MISS = 22;
   const nearTargets = [...document.querySelectorAll('#tv-controls button, #tv-controls .rotary-dial')];
   const nearestControl = (x, y) => {
@@ -317,12 +331,11 @@ export function initUI() {
     return best;
   };
   tvBody.addEventListener('click', (e) => {
-    if (e.target.closest('button, .rotary-dial, .rocker, #tv-menu, #about, #schedule, #skipped, a')) return; // they handle their own clicks
-    if (!powerState.on) { powerSwitch.click(); return; }
+    if (e.target.closest('button, .rotary-dial, .rocker, #tv-menu, #about, #schedule, #keys, #skipped, a')) return; // they handle their own clicks
     if (viewerState.menu?.open) { viewerState.menu.hide(); return; } // a near-miss on the menu closes it, not the TV
-    if (!e.target.closest('#tv-controls')) return; // the picture shows the info; the cabinet is inert
-    const near = nearestControl(e.clientX, e.clientY);
-    if (near?.tagName === 'BUTTON') near.click();
+    const near = e.target.closest('#tv-controls') ? nearestControl(e.clientX, e.clientY) : null;
+    if (!powerState.on && !near?.matches('#menuBtn, #scheduleBtn, #tapesBtn, #chatBtn')) { powerSwitch.click(); return; }
+    if (near?.tagName === 'BUTTON') near.click(); // no control near: the picture shows the info; the cabinet is inert
   });
 
   // --- Volume ---
@@ -461,7 +474,7 @@ export function initUI() {
   const menuBtn = document.getElementById('menuBtn');
   const scheduleBtn = document.getElementById('scheduleBtn');
 
-  // --- Service MENU (menu.js): SYNC, REACT, TIME, Reduced motion, Heavy scenes, Schedule, About ---
+  // --- Service MENU (menu.js): three pages, SCENES, SOUND and TV ---
   viewerState.syncMs = Math.max(SYNC_MIN, Math.min(SYNC_MAX, Number(load('lsd.sync', 0)) || 0));
   viewerState.announce = load('lsd.announce', false) === true;
   viewerState.reducedMode = MODES.includes(load('lsd.reduced', 'auto')) ? load('lsd.reduced', 'auto') : 'auto';
@@ -503,83 +516,83 @@ export function initUI() {
   if (typeof matchMedia === 'function') matchMedia('(prefers-reduced-motion: reduce)').addEventListener?.('change', applyReduced);
   const cycle = (mode, dir) => MODES[(MODES.indexOf(mode) + dir + MODES.length) % MODES.length];
   const onOff = (b) => (b ? 'ON' : 'OFF');
-  const rows = [
-    { label: 'SYNC', help: 'Delay the picture so its beats line up with what you hear (Bluetooth speakers are often 150-250 ms late).', value: () => `${viewerState.syncMs > 0 ? '+' : ''}${viewerState.syncMs} MS`,
-      step: (dir) => {
-        viewerState.syncMs = Math.max(SYNC_MIN, Math.min(SYNC_MAX, viewerState.syncMs + dir * 10));
-        save('lsd.sync', viewerState.syncMs);
+  const pages = [
+    { name: 'SCENES', rows: [
+      { label: 'TIME', locked: live, help: 'How long each scene stays before the next one, in bars of the music.', value: () => timeLabel.textContent,
+        step: (dir) => {
+          const i = Math.round(timeDial.get() * (TIME_STEPS.length - 1));
+          timeDial.set(Math.max(0, Math.min(TIME_STEPS.length - 1, i + dir)) / (TIME_STEPS.length - 1));
+        } },
+      { label: 'AUTO ROLL', locked: live, value: () => (viewerState.autoRoll ? `EVERY ${viewerState.autoRoll} BARS` : 'OFF'),
+        step: (dir) => applyAutoRoll(stepIn(AUTO_ROLL_STEPS, viewerState.autoRoll, dir)),
+        help: 'Rolls a new variation of the scene on air every few bars, like pressing ROLL (R). Best with HOLD on: the scene stays and keeps changing.' },
+      { label: 'FOLLOW MUSIC', locked: live, value: () => onOff(viewerState.follow),
+        step: () => applyFollow(!viewerState.follow),
+        help: 'On: a calm scene comes in for a breakdown, a hard one cuts in on the drop, and the tempo leans the picks. Off: the scenes just take turns.' },
+      { label: 'EFFECTS', locked: live, value: () => (viewerState.effects ? 'AUTO' : 'OFF'),
+        step: () => applyEffects(!viewerState.effects),
+        help: 'Auto: every scene and background gets an FX chain that suits it (FX or E picks another). Off: the scenes play clean.' },
+      { label: 'BACKGROUND', needsPower: true, locked: () => live() || viewerState.bgMode === 'off',
+        value: () => (viewerState.bgMode === 'off' ? 'OFF' : prettyName(nowShowing().backgroundPicked ?? '') || '---'),
+        step: (dir) => stepBackground(dir).then(() => menu.refresh()),
+        help: 'The picture behind the scene, which shows through wherever the scene is dark or see-through: the Spaz Radio photo gallery to start with. ◀ ▶ or B pick another one now.' },
+      { label: 'BG CHANGES', locked: live, value: () => BG_MODE_LABELS[viewerState.bgMode],
+        step: (dir) => applyBgMode(BG_MODES[(BG_MODES.indexOf(viewerState.bgMode) + dir + BG_MODES.length) % BG_MODES.length]),
+        help: 'Hold (the default): the background stays until you change it. With scenes: a new one every two scenes (TIME). Off: no background, just the scene.' },
+      { label: 'SKIP THIS CHANNEL', needsPower: true, locked: live, value: () => (nowShowing().skipped ? 'SKIPPED' : `CH ${String(nowShowing().channel).padStart(3, '0')}`),
+        run: () => skip(),
+        help: 'Skipped channels never come up by themselves (X does this too). Type a channel number to watch one again; X there restores it.' },
+      { label: 'SKIPPED', value: () => { const n = skippedChannels().length; return n ? `${n} CHANNEL${n === 1 ? '' : 'S'}` : 'NONE'; },
+        run: () => { menu.hide(); skippedPage.show(); },
+        help: 'The channels you skipped: pick one to watch it, then X restores it.' },
+    ] },
+    { name: 'SOUND', rows: [
+      { label: 'AUDIO INPUT', needsPower: true, locked: live, value: () => (isMicOn() ? 'MICROPHONE' : deck?.current ? 'TAPE' : 'RADIO'),
+        help: 'What the picture listens to. Radio: the Spaz Radio stream, or the tape if one is in. Microphone: the sound in the room (the browser asks first; it is analysed only, never played back).',
+        step: () => toggleMic() },
+      { label: 'REACT', locked: live, help: 'How strongly the picture moves with the music. Raise it for quiet shows, lower it if it is too busy.', value: () => `${Math.round(viewerState.react * 100)}%`,
+        step: (dir) => reactDial.set(toDial(Math.max(REACT_MIN, Math.min(REACT_MAX, viewerState.react + dir * 0.05)))) },
+      { label: 'SYNC', help: 'Delay the picture so its beats line up with what you hear (Bluetooth speakers are often 150-250 ms late).', value: () => `${viewerState.syncMs > 0 ? '+' : ''}${viewerState.syncMs} MS`,
+        step: (dir) => {
+          viewerState.syncMs = Math.max(SYNC_MIN, Math.min(SYNC_MAX, viewerState.syncMs + dir * 10));
+          save('lsd.sync', viewerState.syncMs);
+        } },
+      { label: 'TAP SYNC', needsPower: true, value: () => 'TAP 8 BEATS', run: () => startTapSync(),
+        help: 'Press Enter, then tap Space or the picture on 8 beats you hear: sets SYNC for you.' },
+    ] },
+    { name: 'TV', rows: [
+      { label: 'FULLSCREEN', value: () => (document.fullscreenElement ? 'ON' : 'OFF'), step: () => toggleFullscreen(), run: () => toggleFullscreen(),
+        help: 'The picture and its on-screen display fill the screen. Double-click the picture or press F to toggle; Esc leaves.' },
+      ...(kiosk ? [] : [{ label: 'THEME', value: () => viewerState.theme.toUpperCase(),
+        step: () => applyTheme(viewerState.theme === 'dark' ? 'light' : 'dark'),
+        help: 'The TV’s cabinet and the room around it: dark (the default) or light. The picture is the same in both.' }]),
+      { label: 'ANNOUNCE SCENES', value: () => onOff(viewerState.announce),
+        step: () => { viewerState.announce = !viewerState.announce; save('lsd.announce', viewerState.announce); },
+        help: 'Show the name of each new scene, its background and its effects when it comes on, and the background when it changes. Off: only when you click the picture (or turn INFO on).' },
+      { label: 'REDUCED MOTION', help: 'Gentler: no flashes, no hard scenes, slower changes. Auto follows your system setting.',
+        value: () => (viewerState.reducedMode === 'auto' ? `AUTO (${onOff(viewerState.reduced)})` : viewerState.reducedMode.toUpperCase()),
+        step: (dir) => { viewerState.reducedMode = cycle(viewerState.reducedMode, dir); save('lsd.reduced', viewerState.reducedMode); applyReduced(); } },
+      { label: 'BIG GPU SCENES', locked: live,
+        help: 'The most demanding 3D fractals and simulations. Auto: on if your graphics card passed a quick test at power-on. On: always (may stutter on laptops and phones). Off: never, for a smoother picture.',
+        value: () => {
+          if (viewerState.heavyMode !== 'auto') return viewerState.heavyMode.toUpperCase();
+          const gpu = window.LSD?.gpu;
+          return gpu?.state === 'done' ? `AUTO (${onOff(gpu.heavy)}, ${gpu.ms.toFixed(0)} MS)` : `AUTO (${onOff(gpu?.heavy)})`;
+        },
+        step: (dir) => { viewerState.heavyMode = cycle(viewerState.heavyMode, dir); save('lsd.heavy', viewerState.heavyMode); applyHeavy(); } },
+      { label: 'RESET', help: 'Put every setting back to its default. Skipped channels stay skipped (SCENES › SKIPPED).', run: () => {
+        viewerState.syncMs = 0; save('lsd.sync', 0);
+        viewerState.reducedMode = 'auto'; save('lsd.reduced', 'auto'); applyReduced();
+        viewerState.heavyMode = 'auto'; save('lsd.heavy', 'auto'); applyHeavy();
+        viewerState.announce = false; save('lsd.announce', false);
+        if (!kiosk) applyTheme('dark');
+        if (!live()) {
+          reactDial.set(toDial(REACT_DEFAULT)); timeDial.set(TIME_STEPS.indexOf(16) / (TIME_STEPS.length - 1));
+          applyAutoRoll(0); applyBgMode('hold'); applyEffects(true); applyFollow(true);
+        }
       } },
-    { label: 'TAP SYNC', value: () => 'TAP 8 BEATS', run: () => startTapSync(),
-      help: 'Press Enter, then tap Space or the picture on 8 beats you hear: sets SYNC for you.' },
-    { label: 'ANNOUNCE SCENES', value: () => onOff(viewerState.announce),
-      step: () => { viewerState.announce = !viewerState.announce; save('lsd.announce', viewerState.announce); },
-      help: 'Show the name of each new scene, its background and its effects when it comes on, and the background when it changes. Off: only when you click the picture (or turn INFO on).' },
-    { label: 'REACT', locked: live, help: 'How strongly the picture moves with the music. Raise it for quiet shows, lower it if it is too busy.', value: () => `${Math.round(viewerState.react * 100)}%`,
-      step: (dir) => reactDial.set(toDial(Math.max(REACT_MIN, Math.min(REACT_MAX, viewerState.react + dir * 0.05)))) },
-    { label: 'TIME', locked: live, help: 'How long each scene stays before the next one, in bars of the music.', value: () => timeLabel.textContent,
-      step: (dir) => {
-        const i = Math.round(timeDial.get() * (TIME_STEPS.length - 1));
-        timeDial.set(Math.max(0, Math.min(TIME_STEPS.length - 1, i + dir)) / (TIME_STEPS.length - 1));
-      } },
-    { label: 'AUTO ROLL', locked: live, value: () => (viewerState.autoRoll ? `EVERY ${viewerState.autoRoll} BARS` : 'OFF'),
-      step: (dir) => applyAutoRoll(stepIn(AUTO_ROLL_STEPS, viewerState.autoRoll, dir)),
-      help: 'Rolls a new variation of the scene on air every few bars, like pressing ROLL (R). Best with HOLD on: the scene stays and keeps changing.' },
-    { label: 'BACKGROUND', locked: () => live() || viewerState.bgMode === 'off',
-      value: () => (viewerState.bgMode === 'off' ? 'OFF' : prettyName(nowShowing().backgroundPicked ?? '') || '---'),
-      step: (dir) => stepBackground(dir).then(() => menu.refresh()),
-      help: 'The picture behind the scene, which shows through wherever the scene is dark or see-through: the Spaz Radio photo gallery to start with. \u25C0 \u25B6 or B pick another one now.' },
-    { label: 'BG CHANGES', locked: live, value: () => BG_MODE_LABELS[viewerState.bgMode],
-      step: (dir) => applyBgMode(BG_MODES[(BG_MODES.indexOf(viewerState.bgMode) + dir + BG_MODES.length) % BG_MODES.length]),
-      help: 'Hold (the default): the background stays until you change it. With scenes: a new one every two scenes (TIME). Off: no background, just the scene.' },
-    { label: 'EFFECTS', locked: live, value: () => (viewerState.effects ? 'AUTO' : 'OFF'),
-      step: () => applyEffects(!viewerState.effects),
-      help: 'Auto: every scene and background gets an FX chain that suits it (FX or F picks another). Off: the scenes play clean.' },
-    { label: 'FOLLOW MUSIC', locked: live, value: () => onOff(viewerState.follow),
-      step: () => applyFollow(!viewerState.follow),
-      help: 'On: a calm scene comes in for a breakdown, a hard one cuts in on the drop, and the tempo leans the picks. Off: the scenes just take turns.' },
-    { label: 'SKIP THIS CHANNEL', locked: live, value: () => (nowShowing().skipped ? 'SKIPPED' : `CH ${String(nowShowing().channel).padStart(3, '0')}`),
-      run: () => skip(),
-      help: 'Skipped channels never come up by themselves (X does this too). Type a channel number to watch one again; X there restores it.' },
-    { label: 'SKIPPED', value: () => { const n = skippedChannels().length; return n ? `${n} CHANNEL${n === 1 ? '' : 'S'}` : 'NONE'; },
-      run: () => { menu.hide(); skippedPage.show(); },
-      help: 'The channels you skipped: pick one to watch it, then X restores it.' },
-    { label: 'REDUCED MOTION', help: 'Gentler: no flashes, no hard scenes, slower changes. Auto follows your system setting.',
-      value: () => (viewerState.reducedMode === 'auto' ? `AUTO (${onOff(viewerState.reduced)})` : viewerState.reducedMode.toUpperCase()),
-      step: (dir) => { viewerState.reducedMode = cycle(viewerState.reducedMode, dir); save('lsd.reduced', viewerState.reducedMode); applyReduced(); } },
-    { label: 'BIG GPU SCENES', locked: live,
-      help: 'The most demanding 3D fractals and simulations. Auto: on if your graphics card passed a quick test at power-on. On: always (may stutter on laptops and phones). Off: never, for a smoother picture.',
-      value: () => {
-        if (viewerState.heavyMode !== 'auto') return viewerState.heavyMode.toUpperCase();
-        const gpu = window.LSD?.gpu;
-        return gpu?.state === 'done' ? `AUTO (${onOff(gpu.heavy)}, ${gpu.ms.toFixed(0)} MS)` : `AUTO (${onOff(gpu?.heavy)})`;
-      },
-      step: (dir) => { viewerState.heavyMode = cycle(viewerState.heavyMode, dir); save('lsd.heavy', viewerState.heavyMode); applyHeavy(); } },
-    ...(kiosk ? [] : [{ label: 'THEME', value: () => viewerState.theme.toUpperCase(),
-      step: () => applyTheme(viewerState.theme === 'dark' ? 'light' : 'dark'),
-      help: 'The TV\u2019s cabinet and the room around it: dark (the default) or light. The picture is the same in both.' }]),
-    { label: 'AUDIO INPUT', locked: live, value: () => (isMicOn() ? 'MICROPHONE' : deck?.current ? 'TAPE' : 'RADIO'),
-      help: 'What the picture listens to. Radio: the Spaz Radio stream, or the tape if one is in. Microphone: the sound in the room (the browser asks first; it is analysed only, never played back).',
-      step: () => toggleMic() },
-    { label: 'FULLSCREEN', value: () => (document.fullscreenElement ? 'ON' : 'OFF'), step: () => toggleFullscreen(), run: () => toggleFullscreen(),
-      help: 'The picture and its on-screen display fill the screen. Double-click the picture or press F to toggle; Esc leaves.' },
-    { label: 'RESET', help: 'Put every setting back to its default. Skipped channels stay skipped (MENU \u203A SKIPPED).', run: () => {
-      viewerState.syncMs = 0; save('lsd.sync', 0);
-      viewerState.reducedMode = 'auto'; save('lsd.reduced', 'auto'); applyReduced();
-      viewerState.heavyMode = 'auto'; save('lsd.heavy', 'auto'); applyHeavy();
-      viewerState.announce = false; save('lsd.announce', false);
-      if (!kiosk) applyTheme('dark');
-      if (!live()) {
-        reactDial.set(toDial(REACT_DEFAULT)); timeDial.set(TIME_STEPS.indexOf(16) / (TIME_STEPS.length - 1));
-        applyAutoRoll(0); applyBgMode('hold'); applyEffects(true); applyFollow(true);
-      }
-    } },
-    ...(kiosk ? [] : [{ label: 'CHAT', help: 'The Spaz Radio chat, on a blackboard beside the TV: the same room as the Spaz Radio app. Press C or the CHAT button any time.',
-      value: () => (chatboard?.open ? 'OPEN' : 'CLOSED'), step: () => chatboard?.toggle(), run: () => chatboard?.toggle() }]),
-    ...(kiosk ? [] : [{ label: 'TAPES', help: 'Shows from the Spaz Radio archive. The picture follows the tape, and the LIVE button takes you back to the radio. Press T or the TAPES button any time.',
-      value: () => (deck?.current ? 'TAPE IN' : 'ARCHIVE'), run: () => { menu.hide(); deck?.open(); } }]),
-    { label: 'SCHEDULE', help: 'Spaz Radio\u2019s upcoming shows, in your local time. Press S or the SCHEDULE button to open it any time.', value: () => 'SPAZ RADIO', run: () => { menu.hide(); schedule.show(); } },
-    { label: 'ABOUT', help: 'About Liquid LSD, the software that makes these visuals.', value: () => 'LIQUID LSD', run: () => { menu.hide(); about.hidden = false; } },
-    { label: 'EXIT', run: () => menu.hide() },
+      { label: 'ABOUT', help: 'About Liquid LSD, the software that makes these visuals.', value: () => 'LIQUID LSD', run: () => { menu.hide(); about.hidden = false; } },
+    ] },
   ];
   /** Listens to the microphone instead of the radio, or back. */
   const toggleMic = control(async () => {
@@ -642,12 +655,17 @@ export function initUI() {
   }
   viewerState.tapSync = () => tapping && tapSync(); // for the headless check
 
-  const menu = createMenu(screen, rows, {
+  const menu = createMenu(screen, pages, {
     version: TV_VERSION,
+    isOn: () => powerState.on,
     onOpen: () => { screen.classList.add('menu-open'); menuBtn.setAttribute('aria-pressed', 'true'); }, // the OSD steps aside
     onClose: () => { screen.classList.remove('menu-open'); menuBtn.setAttribute('aria-pressed', 'false'); },
   });
-  const toggleMenu = () => { if (powerState.on) { schedule.hide(); deck?.close(); menu.toggle(); } };
+  const toggleMenu = () => {
+    const wasOpen = menu.open;
+    closePages();
+    if (!wasOpen) menu.show();
+  };
   menuBtn.addEventListener('click', toggleMenu);
   viewerState.menu = menu;
 
@@ -655,7 +673,6 @@ export function initUI() {
   const schedule = {
     get open() { return !schedulePage.hidden; },
     show() {
-      if (!powerState.on) return;
       menu.hide();
       deck?.close();
       about.hidden = true;
@@ -719,7 +736,6 @@ export function initUI() {
 
   // --- ? : every keyboard shortcut, like ABOUT; any key or click closes it ---
   const showKeys = () => {
-    if (!powerState.on) return;
     menu.hide();
     schedule.hide();
     deck?.close();
@@ -735,7 +751,6 @@ export function initUI() {
   const skippedPage = {
     get open() { return !skippedEl.hidden; },
     show() {
-      if (!powerState.on) return;
       menu.hide(); schedule.hide(); about.hidden = true; keysPage.hidden = true;
       skipSel = 0;
       skippedEl.hidden = false;
@@ -786,6 +801,7 @@ export function initUI() {
       const c = list[i];
       this.hide();
       if (!c) return;
+      if (!powerState.on) powerSwitch.click(); // picked with the TV off: it comes on, on that channel
       if (live()) { message('LIVE \u00B7 CONTROLS LOCKED', 2000); return; }
       lastUserChange = performance.now();
       const r = tuneTo(c.channel);
@@ -829,7 +845,7 @@ export function initUI() {
       reduced: () => viewerState.reducedNow, storage });
     const noLive = new URLSearchParams(location.search).has('nolive');
     if (!noLive) chat.start();
-    document.getElementById('chatBtn').addEventListener('click', () => { chatboard.toggle(); menu.refresh(); });
+    document.getElementById('chatBtn').addEventListener('click', () => chatboard.toggle());
     window.addEventListener('online', () => chat.reconnectNow());
     window.addEventListener('pagehide', () => chat.leave()); // clears our name from the room at once
     window.addEventListener('pageshow', (e) => { if (e.persisted && !noLive) chat.start(); }); // back from the cache
@@ -843,7 +859,7 @@ export function initUI() {
     deck = createTapeDeck({
       page: document.getElementById('tapes'), strip: document.getElementById('tape-strip'),
       button: document.getElementById('tapesBtn'), liveBtn: document.getElementById('liveBtn'), storage,
-      isOn: () => powerState.on, reduced: () => viewerState.reducedNow, stickyStrip: () => viewerState.info,
+      isOn: () => powerState.on, powerOn: () => { if (!powerState.on) powerSwitch.click(); }, reduced: () => viewerState.reducedNow, stickyStrip: () => viewerState.info,
       message,
       onOpen: () => { menu.hide(); schedule.hide(); skippedPage.hide(); about.hidden = true; keysPage.hidden = true; },
       onChange: (show) => {
@@ -870,10 +886,10 @@ export function initUI() {
     // With the menu open these still work: ?, S, I and T close it and do their thing, C toggles the chat.
     if (menu.open && ['?', 'i', 'I', 's', 'S', 't', 'T'].includes(e.key)) menu.hide();
     if (!(menu.open && (e.key === 'c' || e.key === 'C')) && menu.key(e)) { e.preventDefault(); return; }
-    if ((e.key === 'm' || e.key === 'M') && powerState.on) { e.preventDefault(); menu.show(); return; }
-    if ((e.key === 's' || e.key === 'S') && powerState.on) { e.preventDefault(); schedule.show(); return; }
-    if ((e.key === 't' || e.key === 'T') && deck && powerState.on) { e.preventDefault(); deck.open(); return; }
-    if ((e.key === 'c' || e.key === 'C') && chatboard) { e.preventDefault(); chatboard.toggle(); menu.refresh(); return; }
+    if (e.key === 'm' || e.key === 'M') { e.preventDefault(); menu.show(); return; }
+    if (e.key === 's' || e.key === 'S') { e.preventDefault(); schedule.show(); return; }
+    if ((e.key === 't' || e.key === 'T') && deck) { e.preventDefault(); deck.open(); return; }
+    if ((e.key === 'c' || e.key === 'C') && chatboard) { e.preventDefault(); chatboard.toggle(); return; }
     if (e.key === '?') { e.preventDefault(); showKeys(); return; }
     const keys = {
       ArrowRight: next, n: next, N: next,
@@ -972,11 +988,26 @@ export function initUI() {
   }
 
   // --- Autopilot and broadcast events ---
-  // The station badge: the channel on air, three digits so the badge keeps its width (CH.001 .. CH.100).
+  // The source badge: what the TV is listening to. The microphone takes over from a tape, and a tape from the radio.
+  const sourceEl = document.getElementById('source-badge');
+  const updateSource = () => {
+    const scheduled = upcoming(scheduleState.shows, Date.now()).find((s) => s.onAir)?.name;
+    const [text, title] = isMicOn() ? ['MIC', 'Listening to your microphone']
+      : deck?.current ? ['TAPE', `Playing a tape: ${deck.current.title}`]
+      : live() || streamLive || scheduled ? ['LIVE SHOW', `Live on Spaz Radio: ${autopilotState.broadcaster || scheduled || nowPlaying.replace('[LIVE!] ', '') || 'a live show'}`]
+      : ['STREAM', 'Playing the regular Spaz Radio stream'];
+    if (sourceEl.textContent !== text) sourceEl.textContent = text;
+    sourceEl.title = title;
+  };
+  updateSource();
+  setInterval(updateSource, 1000); // a scheduled show starts by the clock, with no event to say so
+  window.addEventListener('lsd-mic', updateSource);
+  // The station badge: the channel, always, three digits so the badge keeps its width (CH.001 .. CH.100).
   const stationText = document.querySelector('#station-badge .station-text');
   const updateBadge = (info = nowShowing()) => {
     const ch = info.channel > 0 ? String(info.channel).padStart(3, '0') : '---';
-    stationText.textContent = deck?.current ? 'SPAZ RADIO \u2022 TAPE' : live() ? 'SPAZ RADIO \u2022 LIVE' : `SPAZ RADIO \u2022 CH.${ch}`;
+    stationText.textContent = `SPAZ RADIO \u2022 CH.${ch}`;
+    updateSource();
   };
   // The first scene on air means the playlist has loaded: drop stored skips for channels it no longer has.
   let skipsPruned = false;
@@ -995,7 +1026,6 @@ export function initUI() {
   window.addEventListener('lsd-broadcast-status', (e) => {
     tvBody.classList.toggle('live', e.detail.live);
     updateBadge();
-    stationText.title = e.detail.live && autopilotState.broadcaster ? `Live: ${autopilotState.broadcaster}` : '';
     for (const id of ['chUp', 'chDown', 'fxBtn', 'rollBtn', 'holdBtn']) document.getElementById(id).setAttribute('aria-disabled', String(e.detail.live));
     if (e.detail.live) {
       setHold(false);
@@ -1099,6 +1129,21 @@ document.addEventListener('visibilitychange', holdScreenAwake);
 // Now playing (Icecast status), refreshed while the TV is on
 // -------------------------------------------------------
 let pollTimer = null;
+/** The server's title, with [LIVE!] when it is live, or '' when it can't be read. */
+async function readPlaying() {
+  if (performance.now() < playingRetryAt) return '';
+  try {
+    const res = await fetch(PLAYING_URL, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { title, live } = parsePlaying(await res.json());
+    streamLive = live;
+    return title;
+  } catch {
+    streamLive = false;
+    playingRetryAt = performance.now() + PLAYING_RETRY_MS;
+    return '';
+  }
+}
 async function pollNowPlaying() {
   if (embed) return;
   clearTimeout(pollTimer);
@@ -1112,7 +1157,7 @@ async function pollNowPlaying() {
     const src = sources.find((s) => String(s.listenurl || '').endsWith(STREAM_MOUNT)) ?? sources[0];
     // The Ogg mount sends artist and title separately; the title alone may be just a date.
     const artist = String(src?.artist ?? ''), name = String(src?.title ?? '');
-    const title = (artist && !name.includes(artist) ? `${artist} - ${name}` : name).replace(/_/g, ' ').trim();
+    const title = await readPlaying() || (artist && !name.includes(artist) ? `${artist} - ${name}` : name).replace(/_/g, ' ').trim();
     if (title && title !== nowPlaying) {
       nowPlaying = title;
       updateMediaSession();

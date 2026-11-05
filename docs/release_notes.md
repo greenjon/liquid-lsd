@@ -12,6 +12,21 @@
 - **Fixed**: the Frequency Band tooltip gave the wrong ranges for Mid and High.
 - The web TV gets the same signals, as of v23. Beat and downbeat detection are unchanged.
 
+### Web TV: Menus With the TV Off, Pages in the Menu, a Source Badge (`web/menu.js`, `web/ui.js`, `web/index.html`, `web/tapedeck.js`, `web/dsp.js`, `web/tv.css`)
+- **MENU, SCHEDULE, TAPES and the `?` shortcuts now open with the TV off**, and using them leaves it off. Settings can be changed before turning it on. TAP SYNC, BACKGROUND, SKIP THIS CHANNEL and AUDIO INPUT need the picture or the sound, so they stay dimmed until then and say why.
+- **Picking a tape with the TV off turns it on and plays the tape.** Picking a channel in MENU › SKIPPED does the same for that channel.
+- **The light theme's badge is now dark text on a light window**, which is easier to read and fits the cabinet.
+- **The mouse wheel only changes a menu value with the cursor directly on it.** Anywhere else it scrolls the list, and a scroll that carries a value under the cursor stays a scroll until it pauses.
+- **Menu rows are easier to follow across**: faint stripes, a brighter stripe under the cursor, and a narrower list.
+- **The badge keeps the channel during a live show too**, with no more `LIVE` in its place. Above it, a new **source badge** says what the TV is listening to: `STREAM`, `LIVE SHOW`, `TAPE` or `MIC`. Hover it for the show's name.
+- **Shows streamed in real time get `[LIVE!]` before their title**, as in the Spaz Radio app, and count as `LIVE SHOW` on the source badge. The title comes from the same `radio.spaz.org/playing` feed the app reads. That feed needs a CORS header before browsers can read it; until then the title appears without `[LIVE!]`.
+- **The menu is now three short pages**: SCENES, SOUND and TV. It opens on the page tabs, on the page you used last: `←` `→` or `Tab` change page, `↓` goes into the rows, and clicking a tab works too.
+- **The help line now always shows**, under the rows. It explains the selected row or the one under the cursor, and replaces the hover tooltips on the rows.
+- **CHAT, TAPES and SCHEDULE left the menu**, since each has its own button and key. **EXIT** gave way to a **✕** at the top right.
+- **Fixed**: the menu jumped back to the selected row whenever a new scene or background came on while it was scrolled.
+- **Fixed**: turning the TV off with the menu open left the menu on the dark screen.
+- The TV's version is now v24.
+
 ### Web TV: A Light Theme, and How Many Mutants Are Watching (`web/tv.css`, `web/ui.js`, `web/index.html`)
 - **New MENU › THEME: dark or light.** Dark is the default. Light is an almond cabinet in a sunlit room, with ivory knobs and buttons, an aluminium nameplate and an oak frame on the chat's blackboard. The choice is remembered in the browser, and RESET puts it back to dark. The picture, its on-screen display and the chat's slate look the same in both.
 - **The dark theme shares the new materials**: a fine grain on the cabinet and a soft pool of light on the wall behind it. Its colours are otherwise unchanged.

@@ -96,3 +96,11 @@ test('a failed fetch keeps the last good list', async () => {
   assert.equal(scheduleState.shows.length, 1);
   assert.equal(scheduleState.failed, false);
 });
+
+test('parsePlaying: the server\'s title and live flag', async () => {
+  const { parsePlaying } = await import('../schedule.js');
+  assert.deepEqual(parsePlaying({ playing: "[LIVE!] Spukkin Faceship&#039;s - bass", live: 'true' }), { title: "[LIVE!] Spukkin Faceship's - bass", live: true });
+  assert.deepEqual(parsePlaying({ playing: 'Show', live: true }), { title: '[LIVE!] Show', live: true });
+  assert.deepEqual(parsePlaying({ playing: 'Rerun', live: 'false' }), { title: 'Rerun', live: false });
+  assert.deepEqual(parsePlaying(null), { title: '', live: false });
+});

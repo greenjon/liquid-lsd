@@ -27,7 +27,7 @@ const iconBtn = (cls, text, title) => {
   return b;
 };
 
-export function createTapeDeck({ page, strip, button, liveBtn, storage = null, isOn = () => true, reduced = () => false, stickyStrip = () => false,
+export function createTapeDeck({ page, strip, button, liveBtn, storage = null, isOn = () => true, powerOn = () => {}, reduced = () => false, stickyStrip = () => false,
   message = () => {}, onOpen = () => {}, onChange = () => {} }) {
   const resume = createResumeStore(storage);
   let current = null;       // the show on the deck
@@ -166,7 +166,7 @@ export function createTapeDeck({ page, strip, button, liveBtn, storage = null, i
   input.addEventListener('input', () => { sel = 0; list.scrollTop = 0; rebuild(); });
 
   function open() {
-    if (!isOn() || isOpen()) return;
+    if (isOpen()) return;
     onOpen();
     page.hidden = false;
     lights();
@@ -266,10 +266,10 @@ export function createTapeDeck({ page, strip, button, liveBtn, storage = null, i
 
   // --- The deck ---
   /** The two lights say where the sound comes from. TAPES: a tape is in, or its list is open. LIVE: the radio is
-   *  playing, or (pulsing red) a live show is on while a tape plays. Both are dark with the TV off. */
+   *  playing, or (pulsing red) a live show is on while a tape plays. With the TV off, only an open list lights TAPES. */
   function lights() {
     const on = isOn();
-    button.setAttribute('aria-pressed', String(on && (isOpen() || !!current)));
+    button.setAttribute('aria-pressed', String(isOpen() || (on && !!current)));
     liveBtn.setAttribute('aria-pressed', String(on && !current && !isMicOn()));
     liveBtn.setAttribute('aria-disabled', String(!current));
     liveBtn.classList.toggle('pulsing', on && !!current && !!airName);
@@ -280,7 +280,7 @@ export function createTapeDeck({ page, strip, button, liveBtn, storage = null, i
   }
   function insert(show, { fromStart = false } = {}) {
     if (!show) return;
-    if (current?.id === show.id) { close(); showStrip(); return; }
+    if (current?.id === show.id) { close(); powerOn(); showStrip(); return; }
     save();
     const startAt = fromStart ? 0 : resume.get(show.id);
     current = show;
@@ -290,6 +290,7 @@ export function createTapeDeck({ page, strip, button, liveBtn, storage = null, i
     if (!reduced()) cvState.glitchUntil = performance.now() + GLITCH_MS; // the picture rolls as the tape goes in
     insertTape(show.url, startAt);
     close();
+    powerOn(); // picked with the TV off: it comes on and starts the tape
     airName = currentAir(); // already on when the tape went in: the viewer chose this, so no announcement
     lights();
     saveIn = SAVE_EVERY_S;
