@@ -44,7 +44,7 @@ class BeatTrackerEngine(
     @Volatile var trackingInertiaBpmPerBeat: Float = 2.0f
     @Volatile var stabilityLockDurationSec: Float = 0.40f
     @Volatile var energySilenceThreshold: Float = 0.0025f
-    @Volatile var tempoEstimationIntervalBlocks: Int = 4
+    @Volatile var tempoEstimationIntervalBlocks: Int = 16
 
     // ── Pre-Allocated FFT Buffers & Lookup Tables (Zero Allocation) ─────────
     private val halfFft = fftSize / 2
@@ -69,6 +69,21 @@ class BeatTrackerEngine(
     private val midHistory = FloatArray(historySize)
     private val highHistory = FloatArray(historySize)
     private val cumulativeScore = FloatArray(scoreBufferSize)
+    private val acTable = FloatArray(historySize / 2 + 1)
+    private val phaseFold = FloatArray(historySize / 2 + 1)
+    private val scoreTable = FloatArray(historySize / 2 + 1)
+    private val candidateDelays = IntArray(METRE_CANDIDATES)
+    private val onsetHistory = FloatArray(historySize)
+    private var acCursor = -1
+    private var acAvailableMax = 0
+    private var acMaxDelay = 0
+    private var acWindow = 0
+    private var prevBassIn = 0f
+    private var prevMidIn = 0f
+    private var prevHighIn = 0f
+    private var meanRiseBass = 0f
+    private var meanRiseMid = 0f
+    private var meanRiseHigh = 0f
 
     private var historyCount = 0
     private var historyIndex = 0
@@ -240,10 +255,18 @@ class BeatTrackerEngine(
         bassHistory.fill(0f)
         midHistory.fill(0f)
         highHistory.fill(0f)
+        onsetHistory.fill(0f)
+        acCursor = -1
         cumulativeScore.fill(0f)
         prevMagSpectrum.fill(0f)
         prevPhase.fill(0f)
         prevPrevPhase.fill(0f)
+        prevBassIn = 0f
+        prevMidIn = 0f
+        prevHighIn = 0f
+        meanRiseBass = 0f
+        meanRiseMid = 0f
+        meanRiseHigh = 0f
     }
 
     /**
@@ -362,108 +385,99 @@ class BeatTrackerEngine(
     }
 
     /**
-     * Estimates tempo using multi-band cross-spectral autocorrelation and harmonic comb filtering over history.
+     * One audio block's share of the tempo estimate. The autocorrelation is spread over [tempoEstimationIntervalBlocks]
+     * blocks, because this runs in the audio callback, whose budget at a 64-frame buffer is under 1.5 ms. The blocks move the
+     * window a little between lags, which does not matter at this length.
      */
-    private fun estimateTempo(fps: Float, dt: Float, minPeriodBlocks: Int, maxPeriodBlocks: Int): Float {
-        val availableMaxDelay = (historyCount - minPeriodBlocks).coerceAtLeast(0).coerceAtMost(maxPeriodBlocks)
-        if (availableMaxDelay < minPeriodBlocks) {
-            return currentBpm
+    private fun stepTempoEstimate(fps: Float, dt: Float, minPeriodBlocks: Int, maxPeriodBlocks: Int) {
+        if (acCursor < 0) {
+            if (historyCount < MIN_HISTORY_SEC * fps) return // two onsets are not a tempo, and a wrong first lock jumps the phase
+            val available = (historyCount - minPeriodBlocks).coerceAtLeast(0).coerceAtMost(maxPeriodBlocks)
+            if (available < minPeriodBlocks) return
+            val window = (historyCount - available).coerceAtMost((4.0f * fps).toInt())
+            if (window <= 10) return
+            acAvailableMax = available
+            acWindow = window
+            // Out past the slowest tempo, so the comb below can see the multiples.
+            acMaxDelay = min(min(maxPeriodBlocks * 2, historySize / 2), historyCount - window).coerceAtLeast(available)
+            acCursor = minPeriodBlocks
         }
-
-        val winLenBlocks = (historyCount - availableMaxDelay).coerceAtMost((4.0f * fps).toInt())
-        if (winLenBlocks <= 10) {
-            return currentBpm
+        // Faster while the history is short and each pass cheap, so a new track locks quickly.
+        val interval = (if (historyCount < STARTUP_SEC * fps) min(4, tempoEstimationIntervalBlocks) else tempoEstimationIntervalBlocks).coerceAtLeast(2)
+        val lagsPerBlock = (acMaxDelay - minPeriodBlocks + 1) / (interval - 1) + 1
+        val invWinLen = 1.0f / acWindow
+        val end = min(acMaxDelay, acCursor + lagsPerBlock - 1)
+        val head = historyIndex - 1 + historySize * 10
+        for (delay in acCursor..end) {
+            var ac = 0.0f
+            for (i in 0 until acWindow) {
+                val idx1 = (head - i) and historyMask
+                val idx2 = (head - i - delay) and historyMask
+                ac += (1.0f - i * invWinLen) * (bassHistory[idx1] * bassHistory[idx2] +
+                    midHistory[idx1] * midHistory[idx2] +
+                    highHistory[idx1] * highHistory[idx2])
+            }
+            acTable[delay] = ac
         }
+        acCursor = end + 1
+        if (acCursor > acMaxDelay) {
+            estimateTempo(fps, dt * interval, minPeriodBlocks)
+            acCursor = -1
+        }
+    }
 
-        // Pre-calculate inverse length for the dynamic linear (Bartlett) window
-        val invWinLen = 1.0f / winLenBlocks.coerceAtLeast(1)
-
-        var maxAc = -1.0f
+    /** The tempo from a finished autocorrelation table: a comb, a preference for usual tempos, then a check of where the accents fall. */
+    private fun estimateTempo(fps: Float, dt: Float, minPeriodBlocks: Int): Float {
+        val availableMaxDelay = acAvailableMax
+        var maxScore = -1.0f
         var rawBestDelay = minPeriodBlocks
         var acSum = 0.0f
-        var delayCount = 0
 
-        // 1. The Main Search Loop
+        // A lag's score is a comb over its multiples: a beat repeats at 2, 3 and 4 beats, while a syncopated gap of 1.5 beats
+        // does not. Then a preference for usual tempos, so a whole bar (which always correlates best) does not win.
         for (delay in minPeriodBlocks..availableMaxDelay) {
-            var ac = 0.0f
-            for (i in 0 until winLenBlocks) {
-                val idx1 = (historyIndex - 1 - i + historySize * 10) and historyMask
-                val idx2 = (historyIndex - 1 - i - delay + historySize * 10) and historyMask
-
-                val weight = 1.0f - (i * invWinLen)
-
-                ac += weight * (bassHistory[idx1] * bassHistory[idx2] +
-                                midHistory[idx1] * midHistory[idx2] +
-                                highHistory[idx1] * highHistory[idx2])
+            acSum += acTable[delay]
+            var comb = 0f
+            var norm = 0f
+            var k = 1
+            while (k <= COMB_MULTIPLES && delay * k <= acMaxDelay) {
+                comb += acTable[delay * k] / k
+                norm += 1f / k
+                k++
             }
-            acSum += ac
-            delayCount++
-
-            val candidateBpm = 60.0f / (delay.toFloat() / fps)
-            val bpmDiff = candidateBpm - 120.0f
-            val gaussianWeight = exp(-(bpmDiff * bpmDiff) / (2.0f * 80.0f * 80.0f))
-            val weightedAc = ac * (0.85f + 0.15f * gaussianWeight)
-
-            if (weightedAc > maxAc) {
-                maxAc = weightedAc
+            val octaves = log2((delay / fps) / PRIOR_PERIOD_SEC) / PRIOR_OCTAVES
+            val score = (comb / norm) * exp(-0.5f * octaves * octaves)
+            scoreTable[delay] = score
+            if (score > maxScore) {
+                maxScore = score
                 rawBestDelay = delay
             }
         }
 
-        val meanAc = acSum / max(1, delayCount)
-        confidence = if (meanAc > 1e-5f) (maxAc / (meanAc * 3.0f)).coerceIn(0.0f, 1.0f) else 0.5f
+        val meanAc = acSum / (availableMaxDelay - minPeriodBlocks + 1)
+        confidence = if (meanAc > 1e-5f) (acTable[rawBestDelay] / (meanAc * 3.0f)).coerceIn(0.0f, 1.0f) else 0.5f
 
-        // 2. Harmonic Unwrapping Loop: Check if half-lag (double tempo) is a valid fundamental beat period
+        val foldBlocks = min(historyCount, (FOLD_SEC * fps).toInt())
+        rawBestDelay = settleMetre(rawBestDelay, fps, minPeriodBlocks, availableMaxDelay, foldBlocks)
+
+        // Harmonic unwrapping: is the half period the real beat?
         var bestDelay = rawBestDelay
         while (bestDelay / 2 >= minPeriodBlocks) {
-            val halfDelay = bestDelay / 2
-            var halfAc = 0.0f
-            var fullAc = 0.0f
-            for (i in 0 until winLenBlocks) {
-                val idx1 = (historyIndex - 1 - i + historySize * 10) and historyMask
-                val idxHalf = (historyIndex - 1 - i - halfDelay + historySize * 10) and historyMask
-                val idxFull = (historyIndex - 1 - i - bestDelay + historySize * 10) and historyMask
-
-                val weight = 1.0f - (i * invWinLen)
-
-                halfAc += weight * (bassHistory[idx1] * bassHistory[idxHalf] + midHistory[idx1] * midHistory[idxHalf] + highHistory[idx1] * highHistory[idxHalf])
-                fullAc += weight * (bassHistory[idx1] * bassHistory[idxFull] + midHistory[idx1] * midHistory[idxFull] + highHistory[idx1] * highHistory[idxFull])
-            }
-            val halfBpm = 60.0f / (halfDelay.toFloat() / fps)
-            if (halfBpm <= 165.0f && fullAc > 1e-5f && (halfAc / fullAc) >= 0.45f) {
-                bestDelay = halfDelay
+            val halfBpm = 60.0f / ((bestDelay / 2).toFloat() / fps)
+            // A backbeat puts an accent on every beat of the half period: take it, unless that is only hats between the beats.
+            if (halfBpm <= 165.0f && foldedStrike(bestDelay / 2f, foldBlocks) >= UNWRAP_STRIKE * foldedStrike(bestDelay.toFloat(), foldBlocks)) {
+                bestDelay /= 2
             } else {
                 break
             }
         }
 
-        var calcBpm = -1.0f
-        if (bestDelay >= minPeriodBlocks && bestDelay <= availableMaxDelay) {
-            // 3. Sub-block parabolic lag interpolation around bestDelay
-            var prevAc = 0.0f
-            var centerAc = 0.0f
-            var nextAc = 0.0f
-
-            val delayPrev = max(minPeriodBlocks, bestDelay - 1)
-            val delayNext = min(availableMaxDelay, bestDelay + 1)
-
-            for (i in 0 until winLenBlocks) {
-                val idx1 = (historyIndex - 1 - i + historySize * 10) and historyMask
-                val idxPrev = (historyIndex - 1 - i - delayPrev + historySize * 10) and historyMask
-                val idxCenter = (historyIndex - 1 - i - bestDelay + historySize * 10) and historyMask
-                val idxNext = (historyIndex - 1 - i - delayNext + historySize * 10) and historyMask
-
-                val weight = 1.0f - (i * invWinLen)
-
-                prevAc += weight * (bassHistory[idx1] * bassHistory[idxPrev] + midHistory[idx1] * midHistory[idxPrev] + highHistory[idx1] * highHistory[idxPrev])
-                centerAc += weight * (bassHistory[idx1] * bassHistory[idxCenter] + midHistory[idx1] * midHistory[idxCenter] + highHistory[idx1] * highHistory[idxCenter])
-                nextAc += weight * (bassHistory[idx1] * bassHistory[idxNext] + midHistory[idx1] * midHistory[idxNext] + highHistory[idx1] * highHistory[idxNext])
-            }
-
-            val deltaLag = interpolateParabolicPeak(prevAc, centerAc, nextAc)
-            val subBlockLag = (bestDelay + deltaLag).coerceAtLeast(1.0f)
-            calcBpm = 60.0f / (subBlockLag / fps)
-        }
+        // Sub-block parabolic lag interpolation around bestDelay
+        val delayPrev = max(minPeriodBlocks, bestDelay - 1)
+        val delayNext = min(availableMaxDelay, bestDelay + 1)
+        val deltaLag = interpolateParabolicPeak(acTable[delayPrev], acTable[bestDelay], acTable[delayNext])
+        val subBlockLag = (bestDelay + deltaLag).coerceAtLeast(1.0f)
+        val calcBpm = 60.0f / (subBlockLag / fps)
 
         val clampedCalcBpm = if (calcBpm > 0.0f) calcBpm.coerceIn(bpmFloor, bpmCeiling) else currentBpm
 
@@ -509,6 +523,83 @@ class BeatTrackerEngine(
         }
 
         return currentBpm
+    }
+
+    /**
+     * How hard the strongest repeating position hits with period [delay]: the onsets folded at that period, the best
+     * position's mean per cycle. On the true beat every cycle lands on an accent; a syncopated gap of 1.5 beats alternates
+     * between an accent and whatever falls on the off-beat, so it scores lower, though its autocorrelation can be as high.
+     */
+    private fun foldedStrike(period: Float, windowBlocks: Int): Float {
+        // The true period is fractional, and half a block of error smears the accents over 8 s: try either side of it.
+        var best = 0f
+        var offset = -FOLD_SEARCH_BLOCKS
+        while (offset <= FOLD_SEARCH_BLOCKS) {
+            best = max(best, foldedStrikeAt(max(1f, period + offset), windowBlocks))
+            offset += FOLD_SEARCH_STEP
+        }
+        return best
+    }
+
+    private fun foldedStrikeAt(period: Float, windowBlocks: Int): Float {
+        val bins = ceil(period).toInt().coerceIn(1, phaseFold.size)
+        phaseFold.fill(0f, 0, bins)
+        val head = historyIndex - 1 + historySize * 10
+        var position = 0f
+        for (i in 0 until windowBlocks) {
+            phaseFold[min(position.toInt(), bins - 1)] += onsetHistory[(head - i) and historyMask]
+            position += 1f
+            if (position >= period) position -= period
+        }
+        var best = 0f
+        for (p in 0 until bins) {
+            val sum = phaseFold[p] + 0.5f * (phaseFold[(p + 1) % bins] + phaseFold[(p + bins - 1) % bins])
+            if (sum > best) best = sum
+        }
+        return best * period / windowBlocks
+    }
+
+    /**
+     * Picks among the comb's strongest lags by where the accents fall. A lag near the tempo already locked, or an octave
+     * of it, gets a bonus: a groove that shifts for a bar should not move the tempo.
+     */
+    private fun settleMetre(delay: Int, fps: Float, minDelay: Int, maxDelay: Int, windowBlocks: Int): Int {
+        // The strongest local peaks of the score.
+        var count = 0
+        for (d in minDelay + 1 until maxDelay) {
+            val score = scoreTable[d]
+            if (score <= scoreTable[d - 1] || score < scoreTable[d + 1]) continue
+            var slot = if (count < METRE_CANDIDATES) count++ else METRE_CANDIDATES - 1
+            if (slot == METRE_CANDIDATES - 1 && count == METRE_CANDIDATES && candidateDelays[slot] != 0 && score <= scoreTable[candidateDelays[slot]]) continue
+            while (slot > 0 && scoreTable[candidateDelays[slot - 1]] < score) {
+                candidateDelays[slot] = candidateDelays[slot - 1]
+                slot--
+            }
+            candidateDelays[slot] = d
+        }
+        var best = delay
+        var bestValue = metreValue(delay, fps, windowBlocks) * METRE_SWITCH_MARGIN
+        for (c in 0 until count) {
+            val d = candidateDelays[c]
+            if (d == delay) continue
+            val value = metreValue(d, fps, windowBlocks)
+            if (value > bestValue) {
+                bestValue = value
+                best = d
+            }
+        }
+        return best
+    }
+
+    private fun metreValue(delay: Int, fps: Float, windowBlocks: Int): Float {
+        val bpm = 60f * fps / delay
+        val octaves = log2((delay / fps) / PRIOR_PERIOD_SEC) / PRIOR_OCTAVES
+        var value = foldedStrike(delay.toFloat(), windowBlocks) * exp(-0.5f * octaves * octaves)
+        if (isLocked) {
+            val ratio = bpm / currentBpm
+            if (abs(ratio - 1f) < 0.04f || abs(ratio - 2f) < 0.08f || abs(ratio - 0.5f) < 0.02f) value *= METRE_STAY_BONUS
+        }
+        return value
     }
 
     /**
@@ -724,9 +815,21 @@ class BeatTrackerEngine(
         val maxPeriodBlocks = (fps * (60.0f / bpmFloor)).toInt().coerceAtMost(historySize / 2)
 
         odfHistory[historyIndex] = odfSample
-        bassHistory[historyIndex] = if (odfSample > 0f) bass else bass * 0.1f
-        midHistory[historyIndex] = mid
-        highHistory[historyIndex] = high
+        // The periodicity is in the onsets, not the levels: a sustained note would otherwise fill every lag alike.
+        val riseBass = max(0f, bass - prevBassIn)
+        val riseMid = max(0f, mid - prevMidIn)
+        val riseHigh = max(0f, high - prevHighIn)
+        // Each band in units of its own usual rise, so a loud kick does not decide alone.
+        meanRiseBass += (riseBass - meanRiseBass) * BAND_MEAN_RATE
+        meanRiseMid += (riseMid - meanRiseMid) * BAND_MEAN_RATE
+        meanRiseHigh += (riseHigh - meanRiseHigh) * BAND_MEAN_RATE
+        bassHistory[historyIndex] = riseBass / (meanRiseBass + 1e-4f)
+        midHistory[historyIndex] = riseMid / (meanRiseMid + 1e-4f)
+        highHistory[historyIndex] = riseHigh / (meanRiseHigh + 1e-4f)
+        onsetHistory[historyIndex] = bassHistory[historyIndex] + midHistory[historyIndex] + highHistory[historyIndex]
+        prevBassIn = bass
+        prevMidIn = mid
+        prevHighIn = high
         historyIndex = (historyIndex + 1) and historyMask
         if (historyCount < historySize) historyCount++
 
@@ -734,6 +837,7 @@ class BeatTrackerEngine(
             isLocked = false
             stableAccumulatedSec = 0.0f
             confidence = 0.0f
+            acCursor = -1
             // Retain flywheel momentum at current tempo without drifting towards fallback 120 BPM
             targetBeatIntervalTau0 = fps * (60.0f / currentBpm)
             cumulativeScore[totalBlocksProcessed.toInt() and scoreBufferMask] = 0.0f
@@ -742,10 +846,7 @@ class BeatTrackerEngine(
         }
 
         // 1. Periodic Two-State Periodicity & Tempo Estimation (Autocorrelation)
-        val interval = tempoEstimationIntervalBlocks.coerceAtLeast(1)
-        if (totalBlocksProcessed % interval.toLong() == 0L) {
-            estimateTempo(fps, dt * interval.toFloat(), minPeriodBlocks, maxPeriodBlocks)
-        }
+        stepTempoEstimate(fps, dt, minPeriodBlocks, maxPeriodBlocks)
 
         // 2. Causal Dynamic Programming Recurrence
         evaluateCausalDynamicProgramming(odfSample, minPeriodBlocks, maxPeriodBlocks)
@@ -834,5 +935,20 @@ class BeatTrackerEngine(
         const val EMA_RETAIN = 0.95f
         /** One-pole EMA update weight applied to the new sample. */
         const val EMA_UPDATE = 0.05f
+        /** The tempo preference: a log-normal around this beat period, this many octaves wide. */
+        const val PRIOR_PERIOD_SEC = 0.5f
+        const val PRIOR_OCTAVES = 1.0f
+        const val COMB_MULTIPLES = 4
+        const val BAND_MEAN_RATE = 0.002f // about 6 s at the tracker's rate
+        /** A relative must hit this much harder to replace the comb's choice. */
+        const val METRE_SWITCH_MARGIN = 1.25f
+        const val UNWRAP_STRIKE = 0.55f
+        const val FOLD_SEC = 8f
+        const val STARTUP_SEC = 5f
+        const val MIN_HISTORY_SEC = 1.5f
+        const val FOLD_SEARCH_BLOCKS = 0.75f
+        const val FOLD_SEARCH_STEP = 0.25f
+        const val METRE_CANDIDATES = 6
+        const val METRE_STAY_BONUS = 1.3f
     }
 }

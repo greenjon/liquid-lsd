@@ -56,22 +56,37 @@ Liquid LSD features a real-time beat tracker and continuous phase generator mode
 - **Principal Phase Normalization**: $\hat{\theta}_t$ is wrapped into $[-\pi, \pi]$ before synthesizing expected complex spectral bins $(\hat{r} \cos \hat{\theta}, \hat{r} \sin \hat{\theta})$, eliminating spurious transient spikes on continuous pitched tones.
 - Suppresses stationary tones while detecting soft pitched attacks and percussive transients.
 
-### 2. Two-State Periodicity & Tempo Estimation
-The engine operates in two distinct states to prevent octave jumps and frequency-doubling artifacts:
-- **State 1: Acquisition (Unlocked)**: Unconstrained candidate lag search across 40–200 BPM ($d \in [d_{\min}, d_{\max}]$).
-- **State 2: Locked Tracking**: Constrains candidate search to a narrow observation window ($\pm 15\%$) around current tempo period $\tau_0$. Clamps maximum tempo adjustment to $\pm 2.0$ BPM/beat human tracking inertia.
+### 2. Tempo Estimation
 
-#### Periodic Decoupled Autocorrelation
-- **Frame Rate Decoupling**: Multi-second autocorrelation and lag candidate evaluations execute periodically every `tempoEstimationIntervalBlocks` (default 4 blocks / ~46 ms, ~21.5 Hz) rather than on every 11.6 ms callback. This eliminates ~37,500 inner loop iterations on skipped frames (75% CPU reduction in beat tracking), preventing audio buffer underruns (XRUNs) without sacrificing tempo tracking responsiveness.
-- **Physical Time-Step Scaling**: Interval time delta $dt_{\text{interval}} = dt \cdot \text{tempoEstimationIntervalBlocks}$ is passed to the tempo estimator to preserve identical physical hysteresis rates and lock duration timing.
+**Fixed input grid.** The tracker counts its input in units of `fftSize` (512) samples to turn lags into tempo, so `BeatHopper.kt` feeds it exactly one call per 512 samples, whatever the audio buffer size, and measures the band levels and rises over the same grid. Before this, one call per buffer read a 128 BPM kick as 200 BPM at 64 frames. The downbeat detector reads the hopper's rises and level too. `AudioEngine.processAudio` is the only caller.
 
-#### Multi-Band Cross-Spectral Autocorrelation
-Maintains zero-allocation circular ring buffers (`bassHistory`, `midHistory`, `highHistory`, `odfHistory`) with dynamic linear (Bartlett) windowing $w(i) = 1 - \frac{i}{W}$ to eliminate abrupt boundary dropouts at history window edges:
-$$\text{AC}(d) = \sum_{i=0}^{W-1} \left(1 - \frac{i}{W}\right) \left[ H_{\text{bass}}[t-i] H_{\text{bass}}[t-i-d] + H_{\text{mid}}[t-i] H_{\text{mid}}[t-i-d] + H_{\text{high}}[t-i] H_{\text{high}}[t-i-d] \right]$$
-- **Dynamic Linear (Bartlett) Windowing**: Applies linearly decaying weights from 1.0 down to 0.0 at the history buffer edge, eliminating periodic 4-second edge dropouts when onsets exit the history window.
-- **Gaussian Human Prior**: Multiplies correlation by Gaussian tempo prior centered at 120 BPM ($\sigma = 80$ BPM).
-- **Harmonic Comb Unwrapping**: Eliminates half-tempo/double-tempo octave traps by evaluating half-lags ($d / 2$). If $\text{AC}(d/2) \ge 0.45 \times \text{AC}(d)$ and $\text{BPM}(d/2) \le 165.0$, the fundamental beat period unwraps to the quarter-note tempo octave.
-- **Sub-Block Parabolic Lag Interpolation**: Fits a 2nd-order parabola across $(d-1, d, d+1)$ to extract sub-block fractional lag offsets $\delta \in [-0.5, 0.5]$, achieving precision within $\pm 0.1$ BPM.
+**Onsets per band.** The history holds each band's half-wave rectified rise in level, divided by the band's own mean rise over about 6 s (`BAND_MEAN_RATE`), so a sustained note does not fill every lag and a loud kick does not decide alone.
+
+**Spread over blocks.** All of this runs in the audio callback, whose budget at a 64-frame buffer is 1.45 ms. `stepTempoEstimate` computes a share of the autocorrelation lags per block, over `tempoEstimationIntervalBlocks` (16, about 186 ms; 4 during the first 5 s of history, when each pass is cheap), then `estimateTempo` finishes in one block. Measured on the dev machine: mean 77 µs per block, p99 about 265 µs, worst about 640 µs. The time delta passed to the stability logic scales with the interval. Nothing is estimated until 1.5 s of history (`MIN_HISTORY_SEC`): two onsets are not a tempo, and a wrong first lock jumps the phase.
+
+**Choosing the beat**, in order:
+$$\text{AC}(d) = \sum_{i=0}^{W-1} \left(1 - \frac{i}{W}\right) \sum_{b} H_b[t-i] H_b[t-i-d]$$
+
+1. **Autocorrelation** over a 4 s Bartlett window, at every lag out to twice the slowest tempo's period.
+2. **Comb and prior.** A lag's score is the mean of $\text{AC}(kd)/k$ for $k = 1..4$, times a log-normal preference one octave wide around a 0.5 s period (120 BPM). A beat repeats at its multiples, while a syncopated gap does not, and the prior stops a whole bar (which always correlates best) from winning.
+3. **Where the accents fall (`settleMetre`).** Autocorrelation alone cannot separate the beat from a 3:2 or 4:3 relative. The six strongest score peaks are each folded over the last 8 s (`foldedStrike`, at the fractional period and a little either side, because half a block of error smears the accents over 8 s), and the strength of the best position is compared. On the true beat every cycle lands on an accent; a 1.5-beat grid alternates between an accent and an off-beat. The comb's own pick needs beating by 25%, and a lag at the locked tempo or an octave of it gets a 30% bonus, so a groove that shifts for a bar does not move the tempo.
+4. **Unwrapping.** The half period replaces the lag while its fold reaches 55% of the full one and it is 165 BPM or under, which turns kick-and-snare half-time into the quarter note. Hats between the beats fall short.
+5. **Sub-block parabolic interpolation** on the autocorrelation peak.
+
+The stability gating and the tracking inertia ($\pm 2.0$ BPM per beat) then apply as before.
+
+**Measured** with `AudioTempoReportTest`, on 313 tracks from a personal library against BPM tags from analysis software (a second opinion, not the truth), and on a 2.4 h liquid drum and bass mix at about 174 BPM with `AudioMixReportTest`:
+
+| | Before | After |
+| :--- | :--- | :--- |
+| Tags: agrees | 65% | 74% |
+| Tags: agrees or an octave off | 72% | 83% |
+| Tags: 3:2 family errors | 12% | 8% |
+| Tags: time locked | 64% | 91% |
+| Mix: on the tempo or an octave off, of all time | 45% | 67% |
+| Mix: exactly 174, of locked time | 17% | 66% |
+
+`TempoSuiteTest` holds grooves of known tempo and the buffer-size checks. Known limit: a groove whose kicks are 1.5 beats apart with equal weight (some jungle) can still read 2:3, and about 15% of the mix's locked time does, at 115-116. The tracker has no sense of the drum kit.
 
 ### 3. Causal Dynamic Programming Recurrence
 Maintains a circular cumulative score ring buffer evaluating causal DP recurrence:

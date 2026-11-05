@@ -155,6 +155,7 @@ class AudioMixReportTest {
         val agc = AudioAgc()
         val v = Array(4) { variants(detBand[it]) }
         val tracker = BeatDetector()
+        val hopper = BeatHopper(tracker)
         val buf = Array(4) { FloatArray(blockFrames) }
         val levelHist = Array(4) { IntArray(1001) }
         val energyBand = Array(4) { IntArray(21) }
@@ -202,9 +203,7 @@ class AudioMixReportTest {
                 sumRms[b] += rms[b].toDouble()
             }
             val dt = frames.toDouble() / sr
-            val onset = max(0f, rms[0] - prevRms[0]) * 2f + max(0f, rms[1] - prevRms[1]) * 0.8f + max(0f, rms[3] - prevRms[3]) * 0.3f
-            prevRms[0] = rms[0]; prevRms[1] = rms[1]; prevRms[2] = rms[2]; prevRms[3] = rms[3]
-            val bpm = tracker.processBlock(amp, rms[0], rms[1], rms[3], sr, frames, onset)
+            val bpm = hopper.process(mono, buf[0], buf[1], buf[3], frames, sr)
             blocks++
             if (tracker.isTempoLocked) { lockedBlocks++; bpms[bpm.toInt().coerceIn(0, 300)]++ }
             agc.update(amp, rms[0], rms[1], rms[3], rms[2], dt)
@@ -278,6 +277,11 @@ class AudioMixReportTest {
             out.append(String.format(Locale.ROOT, "peak %.2f  meanRMS %.3f  crest %.1f  silent %.0fs  bandRMS b/m/hm/h %.3f/%.3f/%.3f/%.3f  breakdowns %d  drops %d\n",
                 c.peakAbs, mean, c.peakAbs / mean, c.silent, c.sumRms[0] / c.blocks, c.sumRms[1] / c.blocks, c.sumRms[2] / c.blocks, c.sumRms[3] / c.blocks, c.breakdowns, c.agc.watch.drops))
             out.append("tempo locked ${c.lockedBlocks * 100 / max(1L, c.blocks)}%  bpm $modes  energy low ${low}% high ${hi}%\n")
+            System.getenv("LSD_TEMPO_TRUTH")?.toDoubleOrNull()?.let { truth ->
+                fun share(ratio: Double): Long = c.bpms.withIndex().filter { kotlin.math.abs(it.index - truth * ratio) <= truth * ratio * 0.04 }.sumOf { it.value.toLong() }
+                val right = share(1.0) + share(0.5) + share(2.0)
+                out.append("tempo vs $truth: on it or an octave off ${right * 100 / max(1L, c.blocks)}% of all time, ${right * 100 / max(1L, c.lockedBlocks)}% of locked; exact ${share(1.0) * 100 / max(1L, c.lockedBlocks)}%, half ${share(0.5) * 100 / max(1L, c.lockedBlocks)}%\n")
+            }
             for (b in 0 until 4) {
                 val h = c.levelHist[b]
                 val pl = { q: Double -> var acc = 0L; val want = (h.sumOf { it.toLong() } * q).toLong(); var r = 1.0; for (i in h.indices) { acc += h[i]; if (acc > want) { r = i / 1000.0; break } }; r }

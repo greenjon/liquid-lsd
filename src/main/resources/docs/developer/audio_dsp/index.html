@@ -1887,8 +1887,8 @@ $$y[n] = b_0 x[n] + b_1 x[n-1] + b_2 x[n-2] - a_1 y[n-1] - a_2 y[n-2]$$</p>
 <h2 id="beat-tracker-engine-beattrackerenginekt">Beat Tracker Engine (<code>BeatTrackerEngine.kt</code>)</h2>
 <p>Beat detection and continuous modulation signal generation are handled by <a href="https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/audio/BeatTrackerEngine.kt"><code>BeatTrackerEngine.kt</code></a> (inspired by BTrack and the Dan Ellis causal dynamic programming model):
 - <strong>Complex Spectral Difference ODF</strong>: 512-point zero-allocation FFT detecting percussive and tonal onsets.
-- <strong>Two-State Multi-Band Autocorrelation</strong>: Unconstrained acquisition (40–200 BPM) vs. locked tracking with harmonic comb unwrapping and $\pm 2.0$ BPM/beat human tracking inertia.
-- <strong>Decoupled Periodic Tempo Estimation</strong>: Autocorrelation search across multi-second history is decoupled from the per-block rate via <code>tempoEstimationIntervalBlocks</code> (default 4 blocks / ~46 ms, ~21.5 Hz), reducing CPU iterations by 75% to prevent real-time XRUNs while preserving instantaneous onset reactivity.
+- <strong>Fixed input grid</strong>: <code>BeatHopper.kt</code> feeds the tracker once per 512 samples whatever the buffer size, so tempo does not depend on the buffer.
+- <strong>Tempo estimation</strong>: autocorrelation of per-band onsets, a comb over each lag's multiples with a tempo preference, then a check of where the accents fall. Spread over about 186 ms of blocks to stay inside the audio callback's budget. See <a href="../beat_sync/#2-tempo-estimation">beat_sync.md</a>.
 - <strong>Causal Dynamic Programming Recurrence</strong>: Evaluates causal DP beat score recurrence on every audio frame using pre-tabulated logarithm tables (<code>logTauTable</code>).
 - <strong>Continuous Phase &amp; Cosine Generator</strong>: Outputs continuous normalized phase $\phi(t) \in [0.0, 1.0)$ and locked cosine modulation signal $\cos(2\pi \phi(t))$ via zero-allocation queries (<code>getPhase</code>, <code>getCosine</code>, <code>getPhaseAndCosine</code>, <code>getPhaseAndCosinePacked</code>).</p>
 <hr />

@@ -862,41 +862,13 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-two-state-periodicity-tempo-estimation" class="md-nav__link">
+  <a href="#2-tempo-estimation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Two-State Periodicity &amp; Tempo Estimation
+        2. Tempo Estimation
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="2. Two-State Periodicity &amp; Tempo Estimation">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#periodic-decoupled-autocorrelation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Periodic Decoupled Autocorrelation
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#multi-band-cross-spectral-autocorrelation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Multi-Band Cross-Spectral Autocorrelation
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
         
@@ -1543,41 +1515,13 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-two-state-periodicity-tempo-estimation" class="md-nav__link">
+  <a href="#2-tempo-estimation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Two-State Periodicity &amp; Tempo Estimation
+        2. Tempo Estimation
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="2. Two-State Periodicity &amp; Tempo Estimation">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#periodic-decoupled-autocorrelation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Periodic Decoupled Autocorrelation
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#multi-band-cross-spectral-autocorrelation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Multi-Band Cross-Spectral Autocorrelation
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
         
@@ -1773,22 +1717,63 @@ Clock Source Selection: ClockSource (MANUAL | AUDIO_TRACKER)
 <li><strong>Principal Phase Normalization</strong>: $\hat{\theta}_t$ is wrapped into $[-\pi, \pi]$ before synthesizing expected complex spectral bins $(\hat{r} \cos \hat{\theta}, \hat{r} \sin \hat{\theta})$, eliminating spurious transient spikes on continuous pitched tones.</li>
 <li>Suppresses stationary tones while detecting soft pitched attacks and percussive transients.</li>
 </ul>
-<h3 id="2-two-state-periodicity-tempo-estimation">2. Two-State Periodicity &amp; Tempo Estimation</h3>
-<p>The engine operates in two distinct states to prevent octave jumps and frequency-doubling artifacts:
-- <strong>State 1: Acquisition (Unlocked)</strong>: Unconstrained candidate lag search across 40–200 BPM ($d \in [d_{\min}, d_{\max}]$).
-- <strong>State 2: Locked Tracking</strong>: Constrains candidate search to a narrow observation window ($\pm 15\%$) around current tempo period $\tau_0$. Clamps maximum tempo adjustment to $\pm 2.0$ BPM/beat human tracking inertia.</p>
-<h4 id="periodic-decoupled-autocorrelation">Periodic Decoupled Autocorrelation</h4>
-<ul>
-<li><strong>Frame Rate Decoupling</strong>: Multi-second autocorrelation and lag candidate evaluations execute periodically every <code>tempoEstimationIntervalBlocks</code> (default 4 blocks / ~46 ms, ~21.5 Hz) rather than on every 11.6 ms callback. This eliminates ~37,500 inner loop iterations on skipped frames (75% CPU reduction in beat tracking), preventing audio buffer underruns (XRUNs) without sacrificing tempo tracking responsiveness.</li>
-<li><strong>Physical Time-Step Scaling</strong>: Interval time delta $dt_{\text{interval}} = dt \cdot \text{tempoEstimationIntervalBlocks}$ is passed to the tempo estimator to preserve identical physical hysteresis rates and lock duration timing.</li>
-</ul>
-<h4 id="multi-band-cross-spectral-autocorrelation">Multi-Band Cross-Spectral Autocorrelation</h4>
-<p>Maintains zero-allocation circular ring buffers (<code>bassHistory</code>, <code>midHistory</code>, <code>highHistory</code>, <code>odfHistory</code>) with dynamic linear (Bartlett) windowing $w(i) = 1 - \frac{i}{W}$ to eliminate abrupt boundary dropouts at history window edges:
-$$\text{AC}(d) = \sum_{i=0}^{W-1} \left(1 - \frac{i}{W}\right) \left[ H_{\text{bass}}[t-i] H_{\text{bass}}[t-i-d] + H_{\text{mid}}[t-i] H_{\text{mid}}[t-i-d] + H_{\text{high}}[t-i] H_{\text{high}}[t-i-d] \right]$$
-- <strong>Dynamic Linear (Bartlett) Windowing</strong>: Applies linearly decaying weights from 1.0 down to 0.0 at the history buffer edge, eliminating periodic 4-second edge dropouts when onsets exit the history window.
-- <strong>Gaussian Human Prior</strong>: Multiplies correlation by Gaussian tempo prior centered at 120 BPM ($\sigma = 80$ BPM).
-- <strong>Harmonic Comb Unwrapping</strong>: Eliminates half-tempo/double-tempo octave traps by evaluating half-lags ($d / 2$). If $\text{AC}(d/2) \ge 0.45 \times \text{AC}(d)$ and $\text{BPM}(d/2) \le 165.0$, the fundamental beat period unwraps to the quarter-note tempo octave.
-- <strong>Sub-Block Parabolic Lag Interpolation</strong>: Fits a 2nd-order parabola across $(d-1, d, d+1)$ to extract sub-block fractional lag offsets $\delta \in [-0.5, 0.5]$, achieving precision within $\pm 0.1$ BPM.</p>
+<h3 id="2-tempo-estimation">2. Tempo Estimation</h3>
+<p><strong>Fixed input grid.</strong> The tracker counts its input in units of <code>fftSize</code> (512) samples to turn lags into tempo, so <code>BeatHopper.kt</code> feeds it exactly one call per 512 samples, whatever the audio buffer size, and measures the band levels and rises over the same grid. Before this, one call per buffer read a 128 BPM kick as 200 BPM at 64 frames. The downbeat detector reads the hopper's rises and level too. <code>AudioEngine.processAudio</code> is the only caller.</p>
+<p><strong>Onsets per band.</strong> The history holds each band's half-wave rectified rise in level, divided by the band's own mean rise over about 6 s (<code>BAND_MEAN_RATE</code>), so a sustained note does not fill every lag and a loud kick does not decide alone.</p>
+<p><strong>Spread over blocks.</strong> All of this runs in the audio callback, whose budget at a 64-frame buffer is 1.45 ms. <code>stepTempoEstimate</code> computes a share of the autocorrelation lags per block, over <code>tempoEstimationIntervalBlocks</code> (16, about 186 ms; 4 during the first 5 s of history, when each pass is cheap), then <code>estimateTempo</code> finishes in one block. Measured on the dev machine: mean 77 µs per block, p99 about 265 µs, worst about 640 µs. The time delta passed to the stability logic scales with the interval. Nothing is estimated until 1.5 s of history (<code>MIN_HISTORY_SEC</code>): two onsets are not a tempo, and a wrong first lock jumps the phase.</p>
+<p><strong>Choosing the beat</strong>, in order:
+$$\text{AC}(d) = \sum_{i=0}^{W-1} \left(1 - \frac{i}{W}\right) \sum_{b} H_b[t-i] H_b[t-i-d]$$</p>
+<ol>
+<li><strong>Autocorrelation</strong> over a 4 s Bartlett window, at every lag out to twice the slowest tempo's period.</li>
+<li><strong>Comb and prior.</strong> A lag's score is the mean of $\text{AC}(kd)/k$ for $k = 1..4$, times a log-normal preference one octave wide around a 0.5 s period (120 BPM). A beat repeats at its multiples, while a syncopated gap does not, and the prior stops a whole bar (which always correlates best) from winning.</li>
+<li><strong>Where the accents fall (<code>settleMetre</code>).</strong> Autocorrelation alone cannot separate the beat from a 3:2 or 4:3 relative. The six strongest score peaks are each folded over the last 8 s (<code>foldedStrike</code>, at the fractional period and a little either side, because half a block of error smears the accents over 8 s), and the strength of the best position is compared. On the true beat every cycle lands on an accent; a 1.5-beat grid alternates between an accent and an off-beat. The comb's own pick needs beating by 25%, and a lag at the locked tempo or an octave of it gets a 30% bonus, so a groove that shifts for a bar does not move the tempo.</li>
+<li><strong>Unwrapping.</strong> The half period replaces the lag while its fold reaches 55% of the full one and it is 165 BPM or under, which turns kick-and-snare half-time into the quarter note. Hats between the beats fall short.</li>
+<li><strong>Sub-block parabolic interpolation</strong> on the autocorrelation peak.</li>
+</ol>
+<p>The stability gating and the tracking inertia ($\pm 2.0$ BPM per beat) then apply as before.</p>
+<p><strong>Measured</strong> with <code>AudioTempoReportTest</code>, on 313 tracks from a personal library against BPM tags from analysis software (a second opinion, not the truth), and on a 2.4 h liquid drum and bass mix at about 174 BPM with <code>AudioMixReportTest</code>:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: left;">Before</th>
+<th style="text-align: left;">After</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Tags: agrees</td>
+<td style="text-align: left;">65%</td>
+<td style="text-align: left;">74%</td>
+</tr>
+<tr>
+<td style="text-align: left;">Tags: agrees or an octave off</td>
+<td style="text-align: left;">72%</td>
+<td style="text-align: left;">83%</td>
+</tr>
+<tr>
+<td style="text-align: left;">Tags: 3:2 family errors</td>
+<td style="text-align: left;">12%</td>
+<td style="text-align: left;">8%</td>
+</tr>
+<tr>
+<td style="text-align: left;">Tags: time locked</td>
+<td style="text-align: left;">64%</td>
+<td style="text-align: left;">91%</td>
+</tr>
+<tr>
+<td style="text-align: left;">Mix: on the tempo or an octave off, of all time</td>
+<td style="text-align: left;">45%</td>
+<td style="text-align: left;">67%</td>
+</tr>
+<tr>
+<td style="text-align: left;">Mix: exactly 174, of locked time</td>
+<td style="text-align: left;">17%</td>
+<td style="text-align: left;">66%</td>
+</tr>
+</tbody>
+</table>
+<p><code>TempoSuiteTest</code> holds grooves of known tempo and the buffer-size checks. Known limit: a groove whose kicks are 1.5 beats apart with equal weight (some jungle) can still read 2:3, and about 15% of the mix's locked time does, at 115-116. The tracker has no sense of the drum kit.</p>
 <h3 id="3-causal-dynamic-programming-recurrence">3. Causal Dynamic Programming Recurrence</h3>
 <p>Maintains a circular cumulative score ring buffer evaluating causal DP recurrence:
 $$\text{Score}(t) = \text{ODF}(t) + \lambda \cdot \max_{\tau \in [\tau_{\min}, \tau_{\max}]} \left{ \text{Score}(t - \tau) - \alpha \cdot \left(\log \frac{\tau}{\tau_0}\right)^2 \right}$$

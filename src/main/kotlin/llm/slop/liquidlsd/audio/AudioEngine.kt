@@ -147,6 +147,7 @@ object AudioEngine {
 
     private val extractor = AmplitudeExtractor()
     val beatDetector = BeatDetector()
+    private val beatHopper = BeatHopper(beatDetector)
     val beatTracker: BeatTrackerEngine get() = beatDetector.engine
     val downbeatDetector = DownbeatDetector()
     val downbeatConfidence: Float get() = downbeatDetector.confidence
@@ -241,12 +242,6 @@ object AudioEngine {
     @Volatile var currentState = SignalState.SILENT
     private var lastSignalTime = System.nanoTime()
 
-    // ── Onset/Flux tracking ──────────────────────────────────────────────────
-    private var prevBass = 0f
-    private var prevMid  = 0f
-    private var prevHigh = 0f
-    private var localOnsetMean = 0f // fast adaptive mean for onset threshold
-
     private fun resetHits() {
         transients.reset()
         hitScaleAmp.reset(); hitScaleBass.reset(); hitScaleMid.reset(); hitScaleHimid.reset(); hitScaleHigh.reset()
@@ -268,8 +263,7 @@ object AudioEngine {
         totalSamplesProcessed = 0L
         totalBeats = 0.0
         phaseSlewBuffer = 0.0
-        prevBass = 0f; prevMid = 0f; prevHigh = 0f
-        localOnsetMean = 0f
+        beatHopper.reset()
         currentState = SignalState.SILENT
         lastSignalTime = 0L
         clockSource = ClockSource.MANUAL
@@ -489,10 +483,7 @@ object AudioEngine {
 
         // Reset onset/flux trackers
         resetHits()
-        prevBass = 0f
-        prevMid  = 0f
-        prevHigh = 0f
-        localOnsetMean = 0f
+        beatHopper.reset()
 
         var jackStarted = false
         if (backendMode != AudioBackendMode.JAVASOUND_ONLY) {
@@ -673,20 +664,8 @@ object AudioEngine {
         val high = extractor.calculateRms(highBuffer, safeFrames)
         val himid = extractor.calculateRms(himidBuffer, safeFrames)
 
-        // 5. The block-to-block rise in level, which the beat and downbeat detectors hear. The audio_flux_* signals come from TransientDetector.
-        val bassFlux = max(0f, bass - prevBass)
-        val midFlux  = max(0f, mid  - prevMid)
-        val highFlux = max(0f, high - prevHigh)
-        val onsetStrength = bassFlux * 2.0f + midFlux * 0.8f + highFlux * 0.3f
-
-        prevBass = bass
-        prevMid  = mid
-        prevHigh = high
-
-        val autoBpm = beatDetector.processBlock(amp, bass, mid, high, sampleRate, safeFrames, onsetStrength)
-
-        // Fast adaptive local mean (τ ≈ 20 callbacks ≈ ~0.5 s) for onset thresholding
-        localOnsetMean = localOnsetMean * BeatTrackerEngine.EMA_RETAIN + onsetStrength * BeatTrackerEngine.EMA_UPDATE
+        // 5. The beat tracker runs on its own fixed grid, so its tempo does not depend on the buffer size.
+        val autoBpm = beatHopper.process(mixedBuffer, lowBuffer, midBuffer, highBuffer, safeFrames, sampleRate)
 
         // 6. Silence gate
         val currentRmsDb = 20f * log10(amp + 1e-6f)
@@ -752,7 +731,7 @@ object AudioEngine {
             if (downbeatMode == DownbeatMode.AUTO && clockSource == ClockSource.AUDIO_TRACKER &&
                 currentState == SignalState.ACTIVE && beatDetector.isTempoLocked
             ) {
-                totalBeats += downbeatDetector.process(totalBeats, deltaBeats, bassFlux, onsetStrength, bass)
+                totalBeats += downbeatDetector.process(totalBeats, deltaBeats, beatHopper.bassFlux, beatHopper.onsetStrength, beatHopper.bass)
             }
             CVRegistry.updateBeatAnchor(totalBeats, effectiveBpm, currentTime + blockDurationNs)
         }

@@ -150,7 +150,7 @@ Three mixes, about 2.7 h: Extra Spectrum "From Saw To Swing" (44.1 kHz), Magical
 
 **Phase 1b, BUILT 2026-11-04 (`HitScale`):** normalise each hit against the band's recent strong hits: `hit / max(ref, agcScale / 3)`, `ref` climbing with a 0.05 s attack and falling with an 8 s decay, frozen while the section watch holds. Attack chosen from 0.0005 / 0.05 / 0.15 / 0.4 s on all genres. First trial with an instant reference: Spread of mean across six sets, current to trial: bass 0.18-0.35 to 0.23-0.31; mid 0.18-0.35 to 0.24-0.32; hi-mid 0.16-0.43 to 0.22-0.32; high 0.19-0.51 to 0.22-0.42. p90 for hi-mid on rock goes 0.58 to 0.87 and drum and bass hits per second in high 0.49 to 0.86. Tests cover a breakdown staying quiet, the drop landing full, and recovery from one huge hit (over 0.4 on the next hit, over 0.7 after 4 s). A later frame-rate check belongs in the browser.
 
-**Separate bug found, not fixed:** the tempo tracker depends on buffer size. Synthetic 128 BPM kick: 200 BPM at 64 frames, 193 at 128, correct at 512 and 1024. The Jezza mix (about 174): at 512 frames 46% of locked time at 86-87, 23% at 115-116 (a 2/3 error); at 1024 frames 174 appears; at 64 frames it wanders. Predates this work (`beatDetector.processBlock` input is unchanged).
+**Tempo tracker, FIXED 2026-11-04 in its own commit (desktop only).** It assumed one call per 512 samples, so tempo depended on the buffer size. A proper fix also needed a better estimator: see `docs/developer/beat_sync.md` for the design and before/after numbers. Evaluated on library BPM tags (about 70% of the sampled library has them, from analysis software) and on the drum and bass mix.
 
 **Coverage gap left:** a quiet line-in or room mic on real audio.
 

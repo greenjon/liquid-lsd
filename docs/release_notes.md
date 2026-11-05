@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Tempo Tracking: Right at Any Buffer Size, and Far Steadier (`audio/BeatHopper.kt`, `audio/BeatTrackerEngine.kt`, `audio/AudioEngine.kt`)
+- **Fixed: the tempo was wrong at low-latency buffer sizes.** At a 64-frame JACK buffer a 128 BPM kick read as 200 BPM, and 193 at 128 frames. Tempo now reads the same at any buffer size.
+- **The tracker now looks at where the accents fall**, not only at what repeats, so it stops locking onto syncopation. Drum and bass that used to read 115 or 87 now mostly reads 174.
+- **It holds on much better.** Checked against BPM tags on 313 tracks across jazz, blues, reggae, rock, techno and more: time locked is up from 64% to 91%, and agreement including octaves is up from 72% to 83%.
+- A new track takes about 2 seconds to lock, since two beats are not enough to judge a tempo.
+- Everything that follows the beat changes with it: beat-synced LFOs and sequencers, the bar count and the downbeat. Tap tempo, Ableton Link and manual BPM work as before. The web TV has its own tracker and isn't affected.
+
 ### Audio: Cleaner Hits, a Hi-Mid Band, Energy per Band (`audio/TransientDetector.kt`, `audio/AudioAgc.kt`, `audio/AudioEngine.kt`, `cv/AudioSignals.kt`, `web/dsp.js`)
 - **Transient modulators now follow drum hits.** The old signal was close to full most of the time on real music, so kicks barely stood out. It now scores each rise against what the band has just been doing, then sizes it against the band's own recent strong hits, so rock's snares and hats and a kick under a long sub use the range as fully as electronic music does. A breakdown still reads quiet. Checked on electronic mixes, drum and bass, dub, rock and jazz: bass-driven transients spend about half as long above 50%, and more separate hits get through.
 - **Every preset and stock response using Transient changes feel**, with no edits needed: more contrast between hits, and less motion on average. If a look feels too calm, raise its range or Audio Response.
