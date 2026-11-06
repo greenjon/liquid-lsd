@@ -149,7 +149,7 @@ object FXBrowserPanel {
 
         if (ImGui.isItemClicked(0)) {
             LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
-            PresetListPanel.clickSelect(selection, asset, rows, target)
+            PresetListPanel.pressSelect(selection, asset, rows, target)
             DockActions.tap(target, asset)
         }
         if (ImGui.isItemClicked(1)) {
@@ -166,6 +166,7 @@ object FXBrowserPanel {
         // into playlists and queues; stock filters have no persisted state, so they use their own
         // payload that only FX slots accept (see FxSlotCell).
         if (ImGui.beginDragDropSource()) {
+            PresetListPanel.dragStarted()
             if (playlistRows != null) {
                 ImGui.setDragDropPayload(PAYLOAD_PLAYLIST_ITEM, playlistRows.indexOfRow(index) as Any)
                 ImGui.textUnformatted(asset.name)
@@ -184,6 +185,7 @@ object FXBrowserPanel {
             }
         }
 
+        PresetListPanel.releaseSelect(selection, asset, rows, target)
         playlistRows?.dropTarget(index)
 
         ImGui.sameLine(0f, 0f)

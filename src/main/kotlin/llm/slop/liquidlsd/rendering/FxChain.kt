@@ -502,15 +502,22 @@ class FxChain(val label: String) {
         if (a == null || b == null || aId == null) return true
         if (a.enabled != b.enabled || a.knobLayout != b.knobLayout) return false
         val links = metaLinks(a)
-        if (links != metaLinks(b)) return false
-        if (!sameParam(a.metaKnob, b.metaKnob, ignoreValue = true)) return false
+        // A file that names no Metaknob link at all (stock chains don't) means the effect's default links, which is what loading it gave.
+        val baseLinks = if (b.metaBindings == null && b.metaBinding == null) defaultLinksFor(a.filterId) ?: links else metaLinks(b)
+        if (links != baseLinks) return false
+        // No saved Metaknob: it loaded at rest, so only something added to it since counts. Its position never does.
+        if (b.metaKnob == null) { if (a.metaKnob?.modulators?.isNotEmpty() == true) return false }
+        else if (!sameParam(a.metaKnob, b.metaKnob, ignoreValue = true)) return false
         // What an enabled Metaknob target drives follows the Metaknob, so only its modulators etc. count (null = Dry/Wet).
         val owned = links.filter { it.enabled }.map { it.targetParamName }.toSet()
         if (!sameParam(a.dryWet, b.dryWet, ignoreValue = null in owned)) return false
         // Parameters on one side only (a shader that gained or lost an input since saving) have nothing to compare against.
         for ((name, p) in a.parameters) {
             val q = b.parameters[name] ?: continue
-            if (!sameParam(p, q, ignoreValue = name in owned)) return false
+            // An older file can hold a value past today's range; loading clamped it, and that isn't an edit.
+            val live = slots.firstOrNull { it?.id == a.filterId }?.parameters?.get(name)
+            val base = if (live == null) q else q.copy(baseValue = q.baseValue.coerceIn(live.minClamp, live.maxClamp))
+            if (!sameParam(p, base, ignoreValue = name in owned)) return false
         }
         return true
     }
@@ -518,9 +525,19 @@ class FxChain(val label: String) {
     /** A slot's Metaknob targets; files from before multi-targets have only the single [FXSlotDto.metaBinding]. */
     private fun metaLinks(dto: FXSlotDto) = dto.metaBindings ?: listOfNotNull(dto.metaBinding)
 
+    /** The Metaknob links the effect [filterId] gets by default, from the slot running it. */
+    private fun defaultLinksFor(filterId: String) = slots.firstOrNull { it?.id == filterId }
+        ?.let { llm.slop.liquidlsd.rendering.isf.ISFAutoBindEngine.resolveDefault(it).metaBindings }
+
+    /** A modulator as far as "changed" goes: its generated id and an all-zero step list (a file may leave both out) mean nothing. */
+    private fun comparable(p: ParameterDto) = p.copy(
+        baseValue = 0f,
+        modulators = p.modulators.map { m -> m.copy(id = null, seqSteps = m.seqSteps.takeUnless { steps -> steps.all { it == 0f } } ?: emptyList()) }
+    )
+
     private fun sameParam(a: ParameterDto?, b: ParameterDto?, ignoreValue: Boolean = false): Boolean {
         if (a == null || b == null) return a == b
-        if (a.copy(baseValue = 0f) != b.copy(baseValue = 0f)) return false
+        if (comparable(a) != comparable(b)) return false
         if (ignoreValue) return true
         val scale = maxOf(1f, kotlin.math.abs(a.baseValue), kotlin.math.abs(b.baseValue))
         return kotlin.math.abs(a.baseValue - b.baseValue) <= DIRTY_TOLERANCE * scale

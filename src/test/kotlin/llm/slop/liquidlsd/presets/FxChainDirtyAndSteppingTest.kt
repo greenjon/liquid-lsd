@@ -29,6 +29,31 @@ class FxChainDirtyAndSteppingTest {
     }
 
     @Test
+    fun fileThatLeavesOutMetaknobAndModulatorIdsIsCleanOnLoad() {
+        val chain = FxChain("Stock")
+        val filter = testFilter("blur")
+        chain.slots[0] = filter
+        filter.metaBindings.clear()
+        filter.metaBindings.addAll(llm.slop.liquidlsd.rendering.isf.ISFAutoBindEngine.resolveBindings(filter))
+        filter.parameters["amount"]!!.modulators.add(llm.slop.liquidlsd.parameters.CvModulator(sourceId = "audio_amp", depth = 0.5f))
+        val live = chain.toFxChainDto("Stock")
+        val slot = live.slots[0]!!
+        // What a stock chain file holds: no Metaknob or its links, and modulators with no id or steps.
+        val fileSlot = slot.copy(metaKnob = null, metaBinding = null, metaBindings = null, parameters = slot.parameters.mapValues { (_, p) ->
+            p.copy(modulators = p.modulators.map { it.copy(id = null, seqSteps = emptyList()) })
+        })
+        chain.baselineDto = live.copy(slots = live.slots.toMutableList().also { it[0] = fileSlot })
+        assertFalse(chain.computeIsDirty(), "A stock chain just loaded is clean")
+
+        filter.parameters["amount"]!!.modulators.first().depth = 0.25f
+        assertTrue(chain.computeIsDirty(), "A changed modulator still counts")
+        filter.parameters["amount"]!!.modulators.first().depth = 0.5f
+        assertFalse(chain.computeIsDirty())
+        filter.metaBindings.clear()
+        assertTrue(chain.computeIsDirty(), "Removing the default Metaknob link still counts")
+    }
+
+    @Test
     fun testDirtyTrackingLoadTweakSaveRevert(@TempDir tempDir: Path) {
         val chain = FxChain("Test Chain")
         val file = tempDir.resolve("my_chain.lsdfxchain").toFile()

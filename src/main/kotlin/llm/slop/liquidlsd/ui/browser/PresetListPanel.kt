@@ -61,6 +61,28 @@ object PresetListPanel {
         if (target != null) selection.setSingle(item) else selection.handleClick(item, rows, io.keyCtrl || io.keySuper, io.keyShift)
     }
 
+    /** The row whose press inside a multi-selection is waiting for its release: a drag takes the whole selection, a plain click narrows it. */
+    private var pendingNarrow: Any? = null
+
+    /** Selection on pressing a row in the FX and Transitions lists. Call with the row just drawn. */
+    internal fun <T : Any> pressSelect(selection: MultiSelectionModel<T>, item: T, rows: List<T>, target: ApplyTarget?) {
+        val io = ImGui.getIO()
+        val plain = !(io.keyCtrl || io.keySuper || io.keyShift)
+        if (target == null && plain && selection.isSelected(item) && selection.count > 1) pendingNarrow = item
+        else clickSelect(selection, item, rows, target)
+    }
+
+    /** Finishes a [pressSelect] that waited: call for every row, after its drag source. */
+    internal fun <T : Any> releaseSelect(selection: MultiSelectionModel<T>, item: T, rows: List<T>, target: ApplyTarget?) {
+        if (pendingNarrow == item && ImGui.isMouseReleased(0)) {
+            pendingNarrow = null
+            clickSelect(selection, item, rows, target)
+        }
+    }
+
+    /** A drag began, so the waiting press keeps the selection. */
+    internal fun dragStarted() { pendingNarrow = null }
+
     /** Tour widget key of a list row: `browser_row_<kind>_<stock id or file name without extension>`. */
     internal fun tourRowKey(kind: BrowseKind, asset: AssetItem): String =
         "browser_row_${kind.name.lowercase()}_" + asset.path.substringAfterLast('/').substringBeforeLast('.')

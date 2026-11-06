@@ -104,7 +104,7 @@ object TransitionBrowserPanel {
 
         if (ImGui.isItemClicked(0)) {
             LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
-            PresetListPanel.clickSelect(selection, asset, rows, target)
+            PresetListPanel.pressSelect(selection, asset, rows, target)
             DockActions.tap(target, asset)
         }
         if (ImGui.isItemClicked(1)) {
@@ -120,6 +120,7 @@ object TransitionBrowserPanel {
         // Drag source: both stock and saved presets resolve to a real file path under ASSET_ITEM,
         // matching whatever drop targets (crossfader track, transition picker) already accept.
         if (ImGui.beginDragDropSource()) {
+            PresetListPanel.dragStarted()
             if (playlistRows != null) {
                 ImGui.setDragDropPayload(PAYLOAD_PLAYLIST_ITEM, playlistRows.indexOfRow(index) as Any)
                 ImGui.textUnformatted(asset.name)
@@ -133,6 +134,7 @@ object TransitionBrowserPanel {
             }
         }
 
+        PresetListPanel.releaseSelect(selection, asset, rows, target)
         playlistRows?.dropTarget(index)
 
         ImGui.sameLine(0f, 0f)
