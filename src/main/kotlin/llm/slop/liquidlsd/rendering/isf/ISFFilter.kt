@@ -399,6 +399,8 @@ class ISFFilter(
      * this shader does not have drives nothing.
      */
     private fun applyMetaKnobBinding() {
+        // A transition has no Metaknob: the Transitions row's knobs drive its inputs, and a link would lock the one it found (Luminous Flash Intensity).
+        if (isTransition) return
         val k = metaKnob.value
         for (i in 0 until cachedParams.size) releaseMetaDrive(cachedParams[i])
         releaseMetaDrive(dryWet)

@@ -55,6 +55,17 @@ class TransitionMacroSyncTest {
     }
 
     @Test
+    fun `a transition input a Metaknob link would pick stays free for its knob`() {
+        val filter = ISFFilter("flash", "flash", ISFHeader(INPUTS = listOf(float("intensity"))), mockk<Shader>(relaxed = true), isTransition = true)
+        filter.metaBindings.addAll(llm.slop.liquidlsd.rendering.isf.ISFAutoBindEngine.resolveBindings(filter))
+        val p = filter.parameters["intensity"]!!
+        p.baseValue = 0.9f
+        filter.update()
+        assertEquals(null, p.metaDrivenBy)
+        assertEquals(0.9f, p.baseValue)
+    }
+
+    @Test
     fun `knob captions are whole readable names`() {
         val (_, bank) = synced(float("GlowIntensity"), float("BurnSpread"))
         assertEquals("GLOW INTENSITY", bank.knobs[1].label)
