@@ -108,6 +108,108 @@ test('the beat clock locks onto the kicks and never runs backward', () => {
   assert.ok(worstMs < 30, `a kick was ${worstMs.toFixed(0)} ms off the beat`);
 });
 
+test('bands decide the tempo while the phase envelope places the beat', () => {
+  // The tempo bands kick at 128; the phase envelope carries the same kicks plus heavy hats between them.
+  const { out, kicks } = track({ seconds: 12, bpm: 128, phase: 0.13, hats: 0.5, seed: 31 });
+  const kickBins = new Set(kicks.map((k) => Math.round(k / HOP)));
+  const r0 = rng(32);
+  const t = new BeatTracker();
+  let r = null;
+  for (const { t: at, v } of out) {
+    const i = Math.round(at / HOP);
+    const kick = kickBins.has(i) ? 1 : 0;
+    t.push(v, at, [kick + 0.02 * r0(), 0.02 * r0(), 0.02 * r0()]);
+    if (i % 25 === 0) r = t.analyse();
+  }
+  assert.ok(Math.abs(r.bpm - 128) < 1.5, `bpm ${r.bpm}`);
+  assert.ok(offBy(r.beatTime, kicks) < 0.025, `beat off by ${offBy(r.beatTime, kicks)} s`);
+});
+
+test('accents settle a syncopated groove on the beat, not its 3:2 relative', () => {
+  // A strong kick every beat, with a weaker hit 1.5 beats after each bar line: the gap correlates but does not repeat.
+  const seconds = 16, bpm = 130, beat = 60 / bpm;
+  const r0 = rng(41);
+  const strong = new Set(), weak = new Set();
+  for (let b = 0; b * beat < seconds; b++) {
+    strong.add(Math.round((0.1 + b * beat) / HOP));
+    if (b % 4 === 0) weak.add(Math.round((0.1 + (b + 1.5) * beat) / HOP));
+  }
+  const t = new BeatTracker();
+  let r = null;
+  for (let i = 0; i < seconds / HOP; i++) {
+    const v = (strong.has(i) ? 1 : 0) + (weak.has(i) ? 0.5 : 0) + 0.03 * r0();
+    t.push(v, i * HOP, [v, 0.03 * r0(), 0.03 * r0()]);
+    if (i % 25 === 0) r = t.analyse();
+  }
+  assert.ok(Math.abs(r.bpm / bpm - 1) < 0.02, `bpm ${r.bpm}`);
+});
+
+test('the clock follows a tempo that holds, while the phase is unsure', () => {
+  const clock = new BeatClock();
+  clock.read(0);
+  let now = 0;
+  for (let i = 0; i < 19; i++) { now += 250; clock.update({ bpm: 140, beatTime: null, confidence: 0 }, now); }
+  assert.equal(clock.bpm, 120, 'followed too soon');
+  now += 250;
+  clock.update({ bpm: 140, beatTime: null, confidence: 0 }, now);
+  assert.equal(clock.locked, false);
+  assert.equal(clock.bpm, 140);
+  // Runs at the new tempo from there on, without moving the count: 5 s at 120, then 1 s at 140.
+  assert.ok(Math.abs(clock.read(6000) - (10 + 140 / 60)) < 1e-6);
+});
+
+test('a tempo that keeps moving, as in talk, neither moves the clock nor locks it', () => {
+  const clock = new BeatClock();
+  clock.read(0);
+  let now = 0;
+  for (let i = 0; i < 40; i++) {
+    now += 250;
+    clock.update({ bpm: 90 + (i % 5) * 15, beatTime: now / 1000 - 0.1, confidence: 1 }, now);
+    clock.read(now);
+  }
+  assert.equal(clock.bpm, 120);
+  assert.equal(clock.locked, false);
+});
+
+test('the clock only jumps to a new phase once it has held for about 2 s', () => {
+  const clock = new BeatClock();
+  const bpm = 120, beat = 0.5;
+  let now = 10000;
+  const feed = (offsetBeats) => {
+    // A steady reading whose beats sit `offsetBeats` after the clock's starting grid.
+    const beatTime = Math.floor((now / 1000 - offsetBeats * beat) / beat) * beat + offsetBeats * beat;
+    clock.update({ bpm, beatTime, confidence: 1 }, now);
+    now += 250;
+  };
+  for (let i = 0; i < 24; i++) feed(0);
+  const phaseOf = () => { const b = clock.fly.predict(now); return b - Math.floor(b); };
+  const settled = phaseOf();
+  const shift = (p) => Math.abs(((p - settled + 1.5) % 1) - 0.5);
+  for (let i = 0; i < 6; i++) feed(0.4);
+  assert.ok(shift(phaseOf()) < 0.02, `moved after 6 readings by ${shift(phaseOf())}`);
+  for (let i = 0; i < 4; i++) feed(0.4);
+  assert.ok(shift(phaseOf()) > 0.3, `still not moved: ${shift(phaseOf())}`);
+});
+
+test('noise without a beat rarely locks the clock', () => {
+  let confident = 0, total = 0;
+  for (let seed = 100; seed < 120; seed++) {
+    const r0 = rng(seed);
+    const t = new BeatTracker();
+    const clock = new BeatClock();
+    for (let i = 0; i < 3000; i++) {
+      const v = r0() * (r0() < 0.08 ? 1 : 0.1);
+      t.push(v, i * HOP, [v, r0() * (r0() < 0.08 ? 1 : 0.1), r0() * (r0() < 0.08 ? 1 : 0.1)]);
+      if (i % 25 === 0) {
+        clock.update(t.analyse(), i * 10);
+        clock.read(i * 10);
+        if (i >= 800) { total++; if (clock.locked) confident++; }
+      }
+    }
+  }
+  assert.ok(confident / total < 0.5, `locked ${((confident / total) * 100).toFixed(0)}% of the time`);
+});
+
 test('the beat clock coasts at 120 BPM with no audio', () => {
   const clock = new BeatClock();
   clock.read(1000);

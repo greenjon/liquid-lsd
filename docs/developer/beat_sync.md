@@ -86,7 +86,7 @@ The stability gating and the tracking inertia ($\pm 2.0$ BPM per beat) then appl
 | Mix: on the tempo or an octave off, of all time | 45% | 67% |
 | Mix: exactly 174, of locked time | 17% | 66% |
 
-`TempoSuiteTest` holds grooves of known tempo and the buffer-size checks. Known limit: a groove whose kicks are 1.5 beats apart with equal weight (some jungle) can still read 2:3, and about 15% of the mix's locked time does, at 115-116. The tracker has no sense of the drum kit.
+`TempoSuiteTest` holds grooves of known tempo and the buffer-size checks. The web TV's standalone tracker uses the same estimator with a few differences; see [Web Subsystem](web_subsystem.md). Known limit: a groove whose kicks are 1.5 beats apart with equal weight (some jungle) can still read 2:3, and about 15% of the mix's locked time does, at 115-116. The tracker has no sense of the drum kit.
 
 ### 3. Causal Dynamic Programming Recurrence
 Maintains a circular cumulative score ring buffer evaluating causal DP recurrence:

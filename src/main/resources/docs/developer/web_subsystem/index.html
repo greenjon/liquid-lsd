@@ -1838,7 +1838,63 @@
 <hr />
 <h2 id="3-beat-clock">3. Beat Clock</h2>
 <p>Every message carries <code>clock: {beats, bpm}</code>, the desktop's synchronised beat count and tempo at the moment of sending. The browser stores it with the local <code>performance.now()</code> at arrival and extrapolates (<code>beats + elapsed * bpm / 60</code>) for every <code>lfo</code>/<code>beatSine</code> modulator and any web-side evaluation, so in live mode it needs no beat detection of its own. Network latency (tens of milliseconds) is not compensated; the once-a-second heartbeat keeps drift from accumulating. Outside a live broadcast the client tracks the radio stream's own beat (below), so beat-synced modulators land on the music's beats there too.</p>
-<p><strong>Standalone beat tracking (<code>web/onset-worklet.js</code>, <code>web/beattrack.js</code>).</strong> An AudioWorklet computes an onset envelope at audio rate, one value per 10 ms (rise in log energy of the bass below 150 Hz, weighted double, plus the full signal), so its timing does not depend on the frame rate. Each value is stamped with the <code>performance.now()</code> time it is <em>heard</em> (<code>AudioContext.getOutputTimestamp</code>), so output latency is compensated. <code>BeatTracker</code> keeps 8 s of envelope and, every 250 ms: estimates the tempo by autocorrelation (70-180 BPM, plus the second harmonic, under a log-Gaussian prior centred on 120 BPM so it does not lock to double or half time; a fast track such as 174 BPM drum and bass is followed at half time, every kick still on a whole or half beat), fine-tunes the period by +-2% to the one whose comb peaks highest, and finds the phase with a comb filter. Confidence is how far the best phase stands above the average, and is zero unless the older and newer halves of the window agree on the grid (random onsets line up across the whole window, a real beat lines up in both halves). Tempo changes need three agreeing estimates. <code>BeatClock</code> turns confident estimates into anchors for a <code>BeatFlywheel</code> (the live-mode flywheel): two readings in a row must agree on the phase, a small backward error is absorbed by coasting and a large one jumps <em>forward</em> to the next beat, so the beat count never runs backward. With no audio or no clear beat it coasts at the last tempo (120 BPM to start). <code>cvState.beatLocked</code> is true while a confident estimate arrived in the last 4 s. Without AudioWorklet support the per-frame onset strength feeds the same tracker. Checks: <code>node --test web/tools/beattrack.test.mjs</code> (synthetic envelopes: tempos, off-beat hats, missing kicks, tempo changes, noise, clock lock) and <code>node web/checks/beat_check.mjs [bpm ...]</code> (a synthetic track through the real worklet in headless Firefox; fails unless every kick lands within 30 ms of a beat).</p>
+<p><strong>Standalone beat tracking (<code>web/onset-worklet.js</code>, <code>web/beattrack.js</code>).</strong> An AudioWorklet computes onsets at audio rate, one set per 10 ms, so their timing does not depend on the frame rate. Each is stamped with the <code>performance.now()</code> time it is <em>heard</em> (<code>AudioContext.getOutputTimestamp</code>), so output latency is compensated. It measures two things, because each does one job better: a <strong>phase envelope</strong> (rise in log energy of the bass below 150 Hz, weighted double, plus the full signal) and three <strong>tempo bands</strong> (rise in RMS level through the same 150 Hz low pass, 1 kHz band pass and 5 kHz high pass as the desktop's <code>BeatTrackerEngine</code>). Tempo alone improved with the bands; using them for phase too lowered the on-beat share on 18 of 43 mixes.</p>
+<p><code>BeatTracker</code> keeps 8 s and, every 250 ms, estimates the tempo the way the desktop does (see <a href="../beat_sync/">Beat Sync</a>): each band in units of its own mean rise, autocorrelation over a 4 s window weighted to the newest, a comb over each lag's first 4 multiples under a log-normal prior one octave wide around 120 BPM (70-180 BPM), a check of where the accents fall among the 6 strongest peaks with a bonus for the tempo already held, and unwrapping to the half period while its accents reach 55%. The unwrap limit is 180 BPM, not the desktop's 165, so drum and bass reads 174. The desktop's tempo inertia is <strong>not</strong> ported: here it fights the fine-tuning below and took agreement with hand readings from 88% to 34%. Without worklet bands (no AudioWorklet support) the per-frame onset strength feeds the same estimator.</p>
+<p>It then fine-tunes the period by +-2% to the one whose comb peaks highest and finds the phase with a comb filter on the phase envelope. Confidence is how far the best phase stands above the average, and is zero unless the older and newer halves of the window agree on the grid.</p>
+<p><code>BeatClock</code> drives a <code>BeatFlywheel</code> (the live-mode flywheel) from those results, in three steps. A tempo must hold within 3% for 20 readings (about 5 s, <code>TEMPO_SETTLE</code>) before the clock follows it or trusts the phase: music holds, talk does not, and without this rule the clock changed speed 14 times a minute on spoken word. Once settled it runs at the tracker's tempo even when the phase is unsure, so a section with no clear beat does not coast at a stale tempo. Confident readings then anchor the phase: two in a row must agree, a small backward error is absorbed by coasting, and a jump (over a quarter beat) must hold for 8 readings (about 2 s, <code>JUMP_CONFIRM</code>) and moves <em>forward</em>, so the beat count never runs backward. While a small backward correction is being absorbed, <code>BeatFlywheel.read</code> runs at 80% of the tempo until the true beat catches up; at full tempo, as the desktop's <code>getSynchronizedTotalBeats</code> still does, the output stays ahead until the next forward correction, which left kicks up to 130 ms off. Live mode gets this too. <code>cvState.beatLocked</code> is true while a confident estimate arrived in the last 4 s.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Offline, real code</th>
+<th style="text-align: right;">Before</th>
+<th style="text-align: right;">After</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Hand readings from Mixxx on one 100 min mix: right or an octave off</td>
+<td style="text-align: right;">45%</td>
+<td style="text-align: right;">89%</td>
+</tr>
+<tr>
+<td style="text-align: left;">596 tracks against BPM tags (a second opinion): with octaves (the desktop: 83%)</td>
+<td style="text-align: right;">61%</td>
+<td style="text-align: right;">81%</td>
+</tr>
+<tr>
+<td style="text-align: left;">43 mixes, 45.5 h: time locked</td>
+<td style="text-align: right;">49%</td>
+<td style="text-align: right;">79%</td>
+</tr>
+<tr>
+<td style="text-align: left;">43 mixes: phase jumps per minute</td>
+<td style="text-align: right;">1.05</td>
+<td style="text-align: right;">0.45</td>
+</tr>
+<tr>
+<td style="text-align: left;">43 mixes: tempo moves over 3% per minute</td>
+<td style="text-align: right;">0.84</td>
+<td style="text-align: right;">0.63</td>
+</tr>
+<tr>
+<td style="text-align: left;">43 mixes: share of onsets on the beat as viewers get it (chance 25%; better on 39, worse on 2)</td>
+<td style="text-align: right;">32.2%</td>
+<td style="text-align: right;">34.0%</td>
+</tr>
+<tr>
+<td style="text-align: left;">8 h of spoken word: time locked</td>
+<td style="text-align: right;">22%</td>
+<td style="text-align: right;">12%</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>analyse()</code> on the dev machine, main thread, four times a second</td>
+<td style="text-align: right;">3.2 ms</td>
+<td style="text-align: right;">5.6 ms</td>
+</tr>
+</tbody>
+</table>
+<p>Known limits: beat placement improves far less than tempo, lock and jumps, and on dense breakbeats the on-beat share stays near chance (a 2.4 h drum and bass mix reads 174 but locks 50% of the time and scores 27%). A new tempo takes about 5 s longer to reach the clock. The tracks and mixes were also used to choose between designs, so these numbers are somewhat optimistic.</p>
+<p>Checks: <code>node --test web/tools/beattrack.test.mjs</code> (synthetic envelopes: tempos, off-beat hats, missing kicks, tempo changes, syncopation, noise, clock lock, settling, jump confirmation); <code>node web/checks/beat_check.mjs [bpm ...]</code> (a synthetic track through the real worklet in headless Firefox; fails unless every kick lands within 30 ms of a beat); and <code>node web/checks/tempo_report.mjs tags|truth|mixes FILE [--web DIR]</code> (a measuring tool: the real code offline over your own music, with <code>--web</code> pointing at a baseline checkout; hand readings for the mix above are in <code>.planning/tempo-truth-magical-bass-8.json</code>).</p>
 <p><strong>The autopilot runs on this clock.</strong> <code>settings.json</code> holds are in bars (<code>fgHoldBars</code> 16, <code>bgHoldBars</code> 32) and fades in beats (<code>fgFadeBeats</code> 4, <code>bgFadeBeats</code> 8). A change starts <code>FadeBeats</code> before the first bar line after the hold and finishes on it, so a new scene arrives on the bar. The next preset (with its chain and transition) is built during the hold, so the change is not delayed by fetching. Bar lines are every 4 beats of the clock's own count; the clock does not know where the music's bar starts (downbeat detection is not done).</p>
 <p><strong>Song sections (<code>web/energy.js</code>).</strong> <code>EnergyWatch</code> follows the low end (0.7 bass + 0.3 amp): a 1.5 s level against a 20 s reference (a running mean while the first 20 s fill). A <em>breakdown</em> is the level under 45% of the reference for 3 s (not during the first 20 s, and not in silence); the reference freezes during it (and while one is being confirmed, <code>holding</code>), so a <em>drop</em> is the level back above 85% of the pre-breakdown reference after at least 4 s (a shorter dip just ends the breakdown, and a calm scene it brought in leaves again at the next bar line). A breakdown longer than 60 s becomes the new normal, and so does the level over 1.6x the reference for 4 s (a louder song): the reference jumps to the 1.5 s level (<code>rebased</code>). The watcher lives inside auto gain (<code>AudioAgc.watch</code> in <code>dsp.js</code>, a port of the desktop <code>audio/SectionWatch.kt</code>), fed the fixed-scale levels; <code>dsp.js</code> publishes <code>cvState.section</code> and <code>cvState.drops</code> (and <code>cvState.energy</code>, the watcher itself, for tuning); on a breakdown the autopilot brings in a scene tagged <code>ambient</code> or <code>build</code> (from either playlist) at the next bar line and builds a <code>hard</code> / <code>bass-gated</code> scene, which cuts in on the drop with a half-beat crossfade through <code>settings.json</code> <code>dropTransition</code> (<code>laser_drop_flash</code>, kept out of the regular <code>transitions</code> rotation). HOLD overrides both. <code>node --test web/tools/energy.test.mjs</code>; <code>ui_check.mjs</code> drives a breakdown and a drop through the real page.</p>
 <hr />
@@ -1854,7 +1910,7 @@ createMediaElementSource() ──► GainNode (Rotary Volume Dial: V²) ──�
      ├─► BiquadFilter (Bandpass 3.2kHz) ─► AnalyserNode ─► RMS (audio_himid, audio_flux_himid)
      ├─► BiquadFilter (Highpass 5kHz)  ─► AnalyserNode ─► RMS (audio_high, audio_flux_high)
      ├─► Broadband AnalyserNode ──────────────────────► RMS (audio_amp, audio_flux_amp)
-     └─► AudioWorklet lsd-onset (10 ms onset envelope) ─► BeatTracker ─► BeatClock
+     └─► AudioWorklet lsd-onset (10 ms onsets) ─► BeatTracker ─► BeatClock
                                                           (tempo, phase)  (totalBeats, bpm, beatLocked)
 </code></pre>
 <p>The <code>audio_*</code> values feed the modulators (<code>evaluator.js</code>) each frame; <code>totalBeats</code> and <code>bpm</code> drive every <code>lfo</code>/<code>seq</code>/<code>beatSine</code> modulator and the autopilot.</p>

@@ -1773,7 +1773,7 @@ $$\text{AC}(d) = \sum_{i=0}^{W-1} \left(1 - \frac{i}{W}\right) \sum_{b} H_b[t-i]
 </tr>
 </tbody>
 </table>
-<p><code>TempoSuiteTest</code> holds grooves of known tempo and the buffer-size checks. Known limit: a groove whose kicks are 1.5 beats apart with equal weight (some jungle) can still read 2:3, and about 15% of the mix's locked time does, at 115-116. The tracker has no sense of the drum kit.</p>
+<p><code>TempoSuiteTest</code> holds grooves of known tempo and the buffer-size checks. The web TV's standalone tracker uses the same estimator with a few differences; see <a href="../web_subsystem/">Web Subsystem</a>. Known limit: a groove whose kicks are 1.5 beats apart with equal weight (some jungle) can still read 2:3, and about 15% of the mix's locked time does, at 115-116. The tracker has no sense of the drum kit.</p>
 <h3 id="3-causal-dynamic-programming-recurrence">3. Causal Dynamic Programming Recurrence</h3>
 <p>Maintains a circular cumulative score ring buffer evaluating causal DP recurrence:
 $$\text{Score}(t) = \text{ODF}(t) + \lambda \cdot \max_{\tau \in [\tau_{\min}, \tau_{\max}]} \left{ \text{Score}(t - \tau) - \alpha \cdot \left(\log \frac{\tau}{\tau_0}\right)^2 \right}$$

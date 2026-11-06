@@ -43,7 +43,7 @@ try {
   };
   const tracker = new BeatTracker(), clock = new BeatClock();
   onset.port.onmessage = ({ data }) => {
-    for (let i = 0; i < data.values.length; i++) tracker.push(data.values[i], toPerf(data.t0 + i * data.hop) / 1000);
+    for (let i = 0; i < data.values.length; i++) tracker.push(data.values[i], toPerf(data.t0 + i * data.hop) / 1000, data.bands?.[i]);
   };
   const T0 = ctx.currentTime + 0.2;
   src.start(T0);

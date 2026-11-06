@@ -27,6 +27,24 @@ test('jittery anchors do not make the phase jump or run backward', () => {
   assert.ok(worst < 0.1, `phase strayed ${worst} beats`);
 });
 
+test('after a small backward correction the output returns to the true beat, never running backward', () => {
+  const f = new BeatFlywheel();
+  f.anchor(0, 120, 0);
+  f.read(1000); // 2 beats
+  for (let t = 1000, i = 0; i < 8; i++) { t += 10; f.anchor(f.predict(t) - 0.2, 120, t); f.read(t); } // each anchor takes back a quarter of 0.2
+  const ahead = f.read(1080) - f.predict(1080);
+  assert.ok(ahead > 0.05, `not ahead: ${ahead}`);
+  let prev = f.read(1080);
+  let last = 1080;
+  for (let t = 1096; t < 4000; t += 16) {
+    const v = f.read(t);
+    assert.ok(v >= prev, `backward at ${t}`);
+    prev = v;
+    last = t;
+  }
+  assert.ok(Math.abs(prev - f.predict(last)) < 1e-6, 'never caught up');
+});
+
 test('a large disagreement snaps, a tempo change takes effect', () => {
   const f = new BeatFlywheel();
   f.anchor(0, 120, 0);

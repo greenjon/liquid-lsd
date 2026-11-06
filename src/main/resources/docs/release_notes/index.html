@@ -1262,6 +1262,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#web-tv-follows-the-beat-far-more-of-the-time-webonset-workletjs-webbeattrackjs-tv-v26" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web TV: Follows the Beat Far More of the Time (web/onset-worklet.js, web/beattrack.js, TV v26)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#tempo-tracking-right-at-any-buffer-size-and-far-steadier-audiobeathopperkt-audiobeattrackerenginekt-audioaudioenginekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7554,6 +7565,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#web-tv-follows-the-beat-far-more-of-the-time-webonset-workletjs-webbeattrackjs-tv-v26" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web TV: Follows the Beat Far More of the Time (web/onset-worklet.js, web/beattrack.js, TV v26)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#tempo-tracking-right-at-any-buffer-size-and-far-steadier-audiobeathopperkt-audiobeattrackerenginekt-audioaudioenginekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -13797,13 +13819,21 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="web-tv-follows-the-beat-far-more-of-the-time-webonset-workletjs-webbeattrackjs-tv-v26">Web TV: Follows the Beat Far More of the Time (<code>web/onset-worklet.js</code>, <code>web/beattrack.js</code>, TV v26)</h3>
+<ul>
+<li><strong>The web TV now finds the tempo the way the desktop does.</strong> Outside a live broadcast, beat-synced motion stays on the music's tempo far more of the time, and the beat light stays on: time locked across 43 DJ mixes is up from 49% to 79%.</li>
+<li><strong>Fast and syncopated music reads properly.</strong> Drum and bass now reads about 174, or sometimes 87, instead of wandering around 115. On a 100-minute mix with many tempo changes, checked by hand in Mixxx, agreement including octaves is up from 45% to 89%.</li>
+<li><strong>Fixed: the beat could sit noticeably ahead of the music</strong> (up to about 130 ms on a test kick) after a small correction, until the next one. It now eases back. This also applies during live broadcasts.</li>
+<li><strong>Fewer visible jumps.</strong> The beat now jumps less than half as often, because a jump has to hold for about 2 seconds first. On speech and ambient shows the clock stays calm rather than chasing a beat that isn't there.</li>
+<li>A new tempo takes about 5 seconds longer to reach the picture. Beat placement itself is only slightly better, so dense breakbeats can still land off the beat.</li>
+</ul>
 <h3 id="tempo-tracking-right-at-any-buffer-size-and-far-steadier-audiobeathopperkt-audiobeattrackerenginekt-audioaudioenginekt">Tempo Tracking: Right at Any Buffer Size, and Far Steadier (<code>audio/BeatHopper.kt</code>, <code>audio/BeatTrackerEngine.kt</code>, <code>audio/AudioEngine.kt</code>)</h3>
 <ul>
 <li><strong>Fixed: the tempo was wrong at low-latency buffer sizes.</strong> At a 64-frame JACK buffer a 128 BPM kick read as 200 BPM, and 193 at 128 frames. Tempo now reads the same at any buffer size.</li>
 <li><strong>The tracker now looks at where the accents fall</strong>, not only at what repeats, so it stops locking onto syncopation. Drum and bass that used to read 115 or 87 now mostly reads 174.</li>
 <li><strong>It holds on much better.</strong> Checked against BPM tags on 313 tracks across jazz, blues, reggae, rock, techno and more: time locked is up from 64% to 91%, and agreement including octaves is up from 72% to 83%.</li>
 <li>A new track takes about 2 seconds to lock, since two beats are not enough to judge a tempo.</li>
-<li>Everything that follows the beat changes with it: beat-synced LFOs and sequencers, the bar count and the downbeat. Tap tempo, Ableton Link and manual BPM work as before. The web TV has its own tracker and isn't affected.</li>
+<li>Everything that follows the beat changes with it: beat-synced LFOs and sequencers, the bar count and the downbeat. Tap tempo, Ableton Link and manual BPM work as before.</li>
 </ul>
 <h3 id="audio-cleaner-hits-a-hi-mid-band-energy-per-band-audiotransientdetectorkt-audioaudioagckt-audioaudioenginekt-cvaudiosignalskt-webdspjs">Audio: Cleaner Hits, a Hi-Mid Band, Energy per Band (<code>audio/TransientDetector.kt</code>, <code>audio/AudioAgc.kt</code>, <code>audio/AudioEngine.kt</code>, <code>cv/AudioSignals.kt</code>, <code>web/dsp.js</code>)</h3>
 <ul>

@@ -1,11 +1,18 @@
 ## [Unreleased]
 
+### Web TV: Follows the Beat Far More of the Time (`web/onset-worklet.js`, `web/beattrack.js`, TV v26)
+- **The web TV now finds the tempo the way the desktop does.** Outside a live broadcast, beat-synced motion stays on the music's tempo far more of the time, and the beat light stays on: time locked across 43 DJ mixes is up from 49% to 79%.
+- **Fast and syncopated music reads properly.** Drum and bass now reads about 174, or sometimes 87, instead of wandering around 115. On a 100-minute mix with many tempo changes, checked by hand in Mixxx, agreement including octaves is up from 45% to 89%.
+- **Fixed: the beat could sit noticeably ahead of the music** (up to about 130 ms on a test kick) after a small correction, until the next one. It now eases back. This also applies during live broadcasts.
+- **Fewer visible jumps.** The beat now jumps less than half as often, because a jump has to hold for about 2 seconds first. On speech and ambient shows the clock stays calm rather than chasing a beat that isn't there.
+- A new tempo takes about 5 seconds longer to reach the picture. Beat placement itself is only slightly better, so dense breakbeats can still land off the beat.
+
 ### Tempo Tracking: Right at Any Buffer Size, and Far Steadier (`audio/BeatHopper.kt`, `audio/BeatTrackerEngine.kt`, `audio/AudioEngine.kt`)
 - **Fixed: the tempo was wrong at low-latency buffer sizes.** At a 64-frame JACK buffer a 128 BPM kick read as 200 BPM, and 193 at 128 frames. Tempo now reads the same at any buffer size.
 - **The tracker now looks at where the accents fall**, not only at what repeats, so it stops locking onto syncopation. Drum and bass that used to read 115 or 87 now mostly reads 174.
 - **It holds on much better.** Checked against BPM tags on 313 tracks across jazz, blues, reggae, rock, techno and more: time locked is up from 64% to 91%, and agreement including octaves is up from 72% to 83%.
 - A new track takes about 2 seconds to lock, since two beats are not enough to judge a tempo.
-- Everything that follows the beat changes with it: beat-synced LFOs and sequencers, the bar count and the downbeat. Tap tempo, Ableton Link and manual BPM work as before. The web TV has its own tracker and isn't affected.
+- Everything that follows the beat changes with it: beat-synced LFOs and sequencers, the bar count and the downbeat. Tap tempo, Ableton Link and manual BPM work as before.
 
 ### Audio: Cleaner Hits, a Hi-Mid Band, Energy per Band (`audio/TransientDetector.kt`, `audio/AudioAgc.kt`, `audio/AudioEngine.kt`, `cv/AudioSignals.kt`, `web/dsp.js`)
 - **Transient modulators now follow drum hits.** The old signal was close to full most of the time on real music, so kicks barely stood out. It now scores each rise against what the band has just been doing, then sizes it against the band's own recent strong hits, so rock's snares and hats and a kick under a long sub use the range as fully as electronic music does. A breakdown still reads quiet. Checked on electronic mixes, drum and bass, dub, rock and jazz: bass-driven transients spend about half as long above 50%, and more separate hits get through.

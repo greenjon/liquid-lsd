@@ -294,9 +294,9 @@ function updateAmplitudes(dt) {
   prevRms.bass = rms.bass; prevRms.mid = rms.mid; prevRms.high = rms.high;
 }
 
-// Standalone beat clock (beattrack.js). The onset worklet's envelope feeds the tracker; every 250 ms its
-// estimate pulls the clock onto the music's beats. With no audio (or no clear beat) the clock coasts at
-// the last tempo, so beat-synced modulators keep running.
+// Standalone beat clock (beattrack.js). The onset worklet feeds the tracker; every 250 ms its estimate sets
+// the clock's tempo and pulls it onto the music's beats. With no audio (or no clear beat) the clock coasts,
+// so beat-synced modulators keep running.
 const tracker = new BeatTracker();
 const beatClock = new BeatClock();
 let onsetFromWorklet = false;
@@ -642,7 +642,7 @@ export async function startAudio() {
       window.dispatchEvent(new CustomEvent('lsd-embed-ready'));
     }
 
-    // Onset envelope at audio rate for the beat tracker. The worklet's output only goes to a muted gain,
+    // Onsets at audio rate for the beat tracker. The worklet's output only goes to a muted gain,
     // which keeps the graph pulling it.
     try {
       await audioCtx.audioWorklet.addModule('onset-worklet.js');
@@ -653,7 +653,7 @@ export async function startAudio() {
       onset.connect(mute);
       mute.connect(audioCtx.destination);
       onset.port.onmessage = ({ data }) => {
-        for (let i = 0; i < data.values.length; i++) tracker.push(data.values[i], ctxToPerfMs(data.t0 + i * data.hop) / 1000);
+        for (let i = 0; i < data.values.length; i++) tracker.push(data.values[i], ctxToPerfMs(data.t0 + i * data.hop) / 1000, data.bands?.[i]);
       };
       onsetFromWorklet = true;
     } catch (err) {
