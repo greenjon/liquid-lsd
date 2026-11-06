@@ -900,6 +900,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#beat-phase-lock-beatphaselockkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Beat Phase Lock (BeatPhaseLock.kt)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#bpm-sources-locking" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1553,6 +1564,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#beat-phase-lock-beatphaselockkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Beat Phase Lock (BeatPhaseLock.kt)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#bpm-sources-locking" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1687,7 +1709,8 @@ Clock Source Selection: ClockSource (MANUAL | AUDIO_TRACKER)
     │   (saved values &quot;MANUAL_TAP&quot; and &quot;ABLETON_LINK&quot; load as MANUAL)
     │
     ├──► AUDIO_TRACKER: JACK / Java Sound Callback (Audio Engine Thread)
-    │       ├─► BeatTrackerEngine.processMultiBand() / processBlock()
+    │       ├─► BeatTrackerEngine.processMultiBand() / processBlock()  (the tempo)
+    │       ├─► BeatPhaseLock.process() / steer()  (where the beat is; the comb runs on its own thread)
     │       └─► CVRegistry.updateBeatAnchor(totalBeats, bpm, nanoTime)
     │
     └──► MANUAL: Internal Manual Flywheel &amp; Tap Tempo Controller
@@ -1697,11 +1720,8 @@ Clock Source Selection: ClockSource (MANUAL | AUDIO_TRACKER)
           │
     Render Thread 0 (Every Frame @ 60Hz–144Hz+)
           │
-          ├─► BeatTrackerEngine.getPhase(t) / getCosine(t) / getPhaseAndCosine(t, out)
-          │       └─► Continuous phase-locked cosine modulation signal: cos(2 * PI * phi)
-          │
           └─► CVRegistry.getSynchronizedTotalBeats()
-                  └─► Sub-millisecond forward clock interpolation
+                  └─► Sub-millisecond forward clock interpolation; a small backward step coasts at 80% of tempo
                           │
                     Evaluators.kt  ← beatPhase, LFO 1/2, Sample &amp; Hold
 </code></pre>
@@ -1779,7 +1799,7 @@ $$\text{AC}(d) = \sum_{i=0}^{W-1} \left(1 - \frac{i}{W}\right) \sum_{b} H_b[t-i]
 $$\text{Score}(t) = \text{ODF}(t) + \lambda \cdot \max_{\tau \in [\tau_{\min}, \tau_{\max}]} \left{ \text{Score}(t - \tau) - \alpha \cdot \left(\log \frac{\tau}{\tau_0}\right)^2 \right}$$
 - <strong>Ultra-Fast Log-Table Optimization</strong>: Pre-calculates $\log(\tau)$ table (<code>logTauTable</code>) and evaluates $\log(\tau_0)$ once per block outside the inner candidate loop, eliminating transcendental <code>Math.log()</code> calls from the real-time audio callback.</p>
 <h3 id="4-continuous-visual-phase-cosine-modulation-signal">4. Continuous Visual Phase &amp; Cosine Modulation Signal</h3>
-<p>Provides zero-allocation primitive queries for visual rendering at arbitrary frame query timestamps:
+<p><strong>Nothing in the app reads this phase.</strong> The beat count comes from <a href="#beat-phase-lock-beatphaselockkt"><code>BeatPhaseLock</code></a>, which scored better against known beats. Provides zero-allocation primitive queries for visual rendering at arbitrary frame query timestamps:
 - <strong>Strictly $C^0$ Continuous Phase Accumulator</strong>: Operates an internal Numerically Controlled Oscillator (NCO) phase accumulator $\phi \in [0.0, 1.0)$.
 - <strong>Smooth 2nd-Order Slew on Beat Anchors</strong>: When beat anchors or DP peak offsets are detected at <code>bestBlock</code>, the absolute phase error between elapsed time since the anchor (<code>idealPhase</code>) and <code>accumulatedPhase</code> is converted into fractional phase error $\epsilon \in [-0.5, 0.5]$ and integrated into a 2nd-order exponential frequency slew ($k_{\text{slew}} = 0.35$). This securely locks phase $\phi = 0.0$ to true beat arrivals and eliminates open-loop drift without discrete phase snapping or visual jitter.
 - <strong>Lock-Free Atomic Seqlock Snapshot</strong>: Synchronizes multi-word phase state (<code>snapTimestampSec</code>, <code>snapPhase</code>, <code>snapFreqHz</code>) across threads using a zero-allocation sequence lock counter (<code>snapSeq</code>). Eliminates torn reads between the real-time JACK audio thread and high-framerate render threads without locks, blocking, or heap allocations:
@@ -1791,6 +1811,48 @@ $$\text{Score}(t) = \text{ODF}(t) + \lambda \cdot \max_{\tau \in [\tau_{\min}, \
   - <code>getPhaseAndCosine(t, outReusedContainer: FloatArray)</code>
   - <code>getPhaseAndCosinePacked(t): Long</code> (packed primitive 64-bit value: high 32 bits = <code>phase.toRawBits()</code>, low 32 bits = <code>cosine.toRawBits()</code>).</p>
 <hr />
+<h2 id="beat-phase-lock-beatphaselockkt">Beat Phase Lock (<code>BeatPhaseLock.kt</code>)</h2>
+<p><code>AudioEngine.totalBeats</code> integrates the tempo, so on its own it lands on the music only by chance, and any tempo error drifts. In tracker mode with Link off, <code>BeatPhaseLock</code> steers it onto the beat. It is the web TV's method (<a href="../web_subsystem/">Web Subsystem</a>).</p>
+<ul>
+<li><strong>Envelope:</strong> every 10 ms, the rise in log energy of the bass below 150 Hz (weighted double) plus the rise of the full signal.</li>
+<li><strong>Reading, every 250 ms, on the <code>beat-phase-lock</code> thread:</strong> a comb at the tracker's tempo, fine-tuned by up to 2%, over the last 8 s. The offset with the most onset energy is the time since the last beat. Confidence is how far that offset stands above the average one, and is zero if the window's older and newer halves disagree. About 0.4 ms per reading on the dev machine. The audio thread only writes the envelope and applies readings, about 4 µs per 512-frame block, with no allocation or waiting.</li>
+<li><strong>What may steer the clock:</strong> the tracker is locked, the tempo has held within 3% for 20 readings (about 5 s), confidence is at least 0.35, and two readings in a row agree within 0.1 beat.</li>
+<li><strong>How it steers:</strong> an error within 0.25 beat is slewed in, a quarter per reading, through <code>phaseSlewBuffer</code>. A larger one must hold for 8 readings (about 2 s), then jumps forward, so the beat count never runs back by more than a slew.</li>
+<li><strong>By hand:</strong> TAP and SNAP call <code>claimPhase()</code>. The lock waits 4 s, then keeps the offset between the music's grid and where the person put the beat. It drops that offset when the tempo moves more than 3% or the grid jumps, because that usually means a new track.</li>
+</ul>
+<p><strong>Link:</strong> the Link timeline is the beat, so the lock does not steer while Link is on. A small backward move in it is absorbed by <code>getSynchronizedTotalBeats</code>, which coasts at 80% of tempo until the true beat catches up. At full tempo the output stayed ahead for good (+120 ms in a simulated hour after a 0.24 beat move).</p>
+<p><strong>Measured</strong> with <code>AudioPhaseReportTest</code>, on 150 tracks with fixed Mixxx beat grids (<code>scripts/mixxx_beat_grids.py</code>), an independent tracker's opinion rather than the truth. Share of clock beats within 70 ms of a Mixxx beat, where about 30% is chance:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: left;">On the beat</th>
+<th style="text-align: left;">Half-way between beats</th>
+<th style="text-align: left;">Tracks 60%+ on the beat</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Integrated tempo only (before)</td>
+<td style="text-align: left;">30.0%</td>
+<td style="text-align: left;">31.4%</td>
+<td style="text-align: left;">9 of 150</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>BeatTrackerEngine.getPhase</code></td>
+<td style="text-align: left;">46.1%</td>
+<td style="text-align: left;">27.4%</td>
+<td style="text-align: left;">53 of 150</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>BeatPhaseLock</code></td>
+<td style="text-align: left;">53.2%</td>
+<td style="text-align: left;">28.6%</td>
+<td style="text-align: left;">65 of 150</td>
+</tr>
+</tbody>
+</table>
+<p>No-beat audio: on six long spoken-word files the lock is on 1.5 to 3.9% of the time and moves the clock at most 0.05 beat per minute, and on beatless ambient tracks it is mostly off. On 43 DJ mixes (45.5 h) it is on 79% of the time, with 0.43 jumps a minute.</p>
 <h2 id="bpm-sources-locking">BPM Sources &amp; Locking</h2>
 <h3 id="1-manual-bpm-lock-isbpmlocked-true">1. Manual BPM Lock (<code>isBpmLocked = true</code>)</h3>
 <p>The default and recommended mode for live performances. <code>AudioEngine.manualBpm</code> drives the flywheel directly. Automated phase realignment nudges and phase slew buffers are strictly bypassed, guaranteeing zero tempo jitter and perfectly smooth cosine / sine modulation.</p>
@@ -1816,7 +1878,8 @@ $$\text{Score}(t) = \text{ODF}(t) + \lambda \cdot \max_{\tau \in [\tau_{\min}, \
   - <strong>Downbeat claim</strong>: the first tap of a run (<code>registerTap(null)</code>) additionally calls <code>barLineBeat</code>, moving the count to the nearest multiple of <code>beatsPerBar</code>, and <code>DownbeatDetector.claimDownbeat()</code>. See <a href="#6-bars-and-downbeats">Bars and Downbeats</a>.
 - <strong>Active Audio Tracking Mode Behavior</strong>:
   - <strong>Dynamic Programming Prior Shift</strong>: Recalculates the causal dynamic programming target interval $\tau_0 = \text{fps} \times (60.0 / \text{BPM})$ and sets <code>stableCandidateBpm</code> to the tapped tempo with <code>isLocked = true</code> and <code>stableAccumulatedSec = stabilityLockDurationSec</code>, immediately locking the autocorrelation search window to the tapped tempo and breaking octave traps (half-time/double-time locks).
-  - <strong>Phase Slew Nudge</strong>: Injects a phase nudge (<code>pendingPhaseNudge = 0.0</code>) into the audio callback's <code>phaseSlewBuffer</code>, smoothly slewing the visual flywheel phase without visual jump discontinuities.</p>
+  - <strong>Phase Slew Nudge</strong>: Injects a phase nudge (<code>pendingPhaseNudge = 0.0</code>) into the audio callback's <code>phaseSlewBuffer</code>, smoothly slewing the visual flywheel phase without visual jump discontinuities.
+  - <strong>Phase lock</strong>: <code>BeatPhaseLock.claimPhase()</code> makes the lock keep this alignment relative to the music's grid. See <a href="#beat-phase-lock-beatphaselockkt">Beat Phase Lock</a>.</p>
 <h3 id="6-bars-and-downbeats">6. Bars and Downbeats</h3>
 <p>The tracker locks the beat <em>phase</em>; it does not know which beat opens the bar. Bars are therefore a property of the beat <strong>count</strong>: the engine keeps <code>totalBeats</code> so that a bar starts on every multiple of <code>CVRegistry.beatsPerBar</code> (2..8, default 4). Every consumer (LFO/sequencer <code>GenUnit.BEAT</code>, <code>ClockKnobFeed</code>, the bar dots, the web serializer) reads that one count, so "where is beat 1" is answered by <em>renumbering</em> the count by a whole number of beats; there is no separate offset to forget to apply. <code>CVRegistry.beatInBar(beats)</code> and <code>barPhase(beats)</code> are the helpers.</p>
 <p>Beat 1 can come from four places:</p>

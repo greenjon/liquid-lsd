@@ -148,6 +148,7 @@ object AudioEngine {
     private val extractor = AmplitudeExtractor()
     val beatDetector = BeatDetector()
     private val beatHopper = BeatHopper(beatDetector)
+    internal val phaseLock = BeatPhaseLock()
     val beatTracker: BeatTrackerEngine get() = beatDetector.engine
     val downbeatDetector = DownbeatDetector()
     val downbeatConfidence: Float get() = downbeatDetector.confidence
@@ -264,6 +265,7 @@ object AudioEngine {
         totalBeats = 0.0
         phaseSlewBuffer = 0.0
         beatHopper.reset()
+        phaseLock.reset()
         currentState = SignalState.SILENT
         lastSignalTime = 0L
         clockSource = ClockSource.MANUAL
@@ -345,6 +347,7 @@ object AudioEngine {
         totalBeats = alignedBeats
         phaseSlewBuffer = 0.0
         beatDetector.pendingPhaseNudge = 0.0
+        phaseLock.claimPhase()
         CVRegistry.alignBeatPhase(alignedBeats, effectiveBpm, timestampNs)
         downbeatDetector.claimDownbeat()
         if (linkEngine.isEnabled) {
@@ -386,6 +389,7 @@ object AudioEngine {
         }
         if (clockSource == ClockSource.AUDIO_TRACKER) {
             beatDetector.pendingPhaseNudge = 0.0
+            phaseLock.claimPhase()
         }
         // The first tap of a run is "the one": count the bar from it. Later taps only keep the beat phase.
         val claimsDownbeat = tappedBpm == null
@@ -484,6 +488,9 @@ object AudioEngine {
         // Reset onset/flux trackers
         resetHits()
         beatHopper.reset()
+        phaseLock.stopWorker()
+        phaseLock.reset()
+        phaseLock.startWorker()
 
         var jackStarted = false
         if (backendMode != AudioBackendMode.JAVASOUND_ONLY) {
@@ -666,6 +673,7 @@ object AudioEngine {
 
         // 5. The beat tracker runs on its own fixed grid, so its tempo does not depend on the buffer size.
         val autoBpm = beatHopper.process(mixedBuffer, lowBuffer, midBuffer, highBuffer, safeFrames, sampleRate)
+        phaseLock.process(mixedBuffer, safeFrames, sampleRate, autoBpm)
 
         // 6. Silence gate
         val currentRmsDb = 20f * log10(amp + 1e-6f)
@@ -732,6 +740,10 @@ object AudioEngine {
                 currentState == SignalState.ACTIVE && beatDetector.isTempoLocked
             ) {
                 totalBeats += downbeatDetector.process(totalBeats, deltaBeats, beatHopper.bassFlux, beatHopper.onsetStrength, beatHopper.bass)
+            }
+            if (clockSource == ClockSource.AUDIO_TRACKER && currentState == SignalState.ACTIVE) {
+                val correction = phaseLock.steer(totalBeats, beatDetector.isTempoLocked)
+                if (kotlin.math.abs(correction) > BeatPhaseLock.JUMP_BEATS) totalBeats += correction else phaseSlewBuffer += correction
             }
             CVRegistry.updateBeatAnchor(totalBeats, effectiveBpm, currentTime + blockDurationNs)
         }
@@ -830,6 +842,7 @@ object AudioEngine {
         jackClient = null
         javaSoundClient?.stop()
         javaSoundClient = null
+        phaseLock.stopWorker()
         CVRegistry.updateBeatAnchor(totalBeats, estimatedBpm, System.nanoTime())
     }
 }

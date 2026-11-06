@@ -1262,6 +1262,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#audio-clock-the-beat-now-lands-on-the-music-audiobeatphaselockkt-audioaudioenginekt-cvcvregistrykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audio Clock: The Beat Now Lands on the Music (audio/BeatPhaseLock.kt, audio/AudioEngine.kt, cv/CVRegistry.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#web-tv-follows-the-beat-far-more-of-the-time-webonset-workletjs-webbeattrackjs-tv-v26" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7565,6 +7576,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#audio-clock-the-beat-now-lands-on-the-music-audiobeatphaselockkt-audioaudioenginekt-cvcvregistrykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audio Clock: The Beat Now Lands on the Music (audio/BeatPhaseLock.kt, audio/AudioEngine.kt, cv/CVRegistry.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#web-tv-follows-the-beat-far-more-of-the-time-webonset-workletjs-webbeattrackjs-tv-v26" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -13819,6 +13841,13 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="audio-clock-the-beat-now-lands-on-the-music-audiobeatphaselockkt-audioaudioenginekt-cvcvregistrykt">Audio Clock: The Beat Now Lands on the Music (<code>audio/BeatPhaseLock.kt</code>, <code>audio/AudioEngine.kt</code>, <code>cv/CVRegistry.kt</code>)</h3>
+<ul>
+<li><strong>Fixed: with the Audio clock, the beat was not lined up with the music.</strong> The app measured the tempo but never where the beats fell, so beat-synced motion landed on the music only by chance unless you pressed TAP or SNAP, and then it slowly drifted away again. It now follows the music's beats. Against the beat grids of 150 tracks analysed in Mixxx, beats within 70 ms of the grid are up from 30% (chance) to 53%.</li>
+<li><strong>TAP and SNAP still have the last word.</strong> If the app settles on the off-beat, tap or SNAP where the beat should be, and it keeps following the music from there until the tempo moves or the track changes.</li>
+<li>On speech and beatless ambient music, the clock is left alone. It takes about 5 seconds at a steady tempo to start following, and a large move to a new beat waits about 2 seconds, then jumps forward.</li>
+<li><strong>Fixed: with Ableton Link, the beat could stay ahead of your Link peers.</strong> After a small backward move in the Link timeline, the output could stay up to a quarter of a beat ahead until something reset it. It now eases back.</li>
+</ul>
 <h3 id="web-tv-follows-the-beat-far-more-of-the-time-webonset-workletjs-webbeattrackjs-tv-v26">Web TV: Follows the Beat Far More of the Time (<code>web/onset-worklet.js</code>, <code>web/beattrack.js</code>, TV v26)</h3>
 <ul>
 <li><strong>The web TV now finds the tempo the way the desktop does.</strong> Outside a live broadcast, beat-synced motion stays on the music's tempo far more of the time, and the beat light stays on: time locked across 43 DJ mixes is up from 49% to 79%.</li>

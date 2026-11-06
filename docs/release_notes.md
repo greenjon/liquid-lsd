@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Audio Clock: The Beat Now Lands on the Music (`audio/BeatPhaseLock.kt`, `audio/AudioEngine.kt`, `cv/CVRegistry.kt`)
+- **Fixed: with the Audio clock, the beat was not lined up with the music.** The app measured the tempo but never where the beats fell, so beat-synced motion landed on the music only by chance unless you pressed TAP or SNAP, and then it slowly drifted away again. It now follows the music's beats. Against the beat grids of 150 tracks analysed in Mixxx, beats within 70 ms of the grid are up from 30% (chance) to 53%.
+- **TAP and SNAP still have the last word.** If the app settles on the off-beat, tap or SNAP where the beat should be, and it keeps following the music from there until the tempo moves or the track changes.
+- On speech and beatless ambient music, the clock is left alone. It takes about 5 seconds at a steady tempo to start following, and a large move to a new beat waits about 2 seconds, then jumps forward.
+- **Fixed: with Ableton Link, the beat could stay ahead of your Link peers.** After a small backward move in the Link timeline, the output could stay up to a quarter of a beat ahead until something reset it. It now eases back.
+
 ### Web TV: Follows the Beat Far More of the Time (`web/onset-worklet.js`, `web/beattrack.js`, TV v26)
 - **The web TV now finds the tempo the way the desktop does.** Outside a live broadcast, beat-synced motion stays on the music's tempo far more of the time, and the beat light stays on: time locked across 43 DJ mixes is up from 49% to 79%.
 - **Fast and syncopated music reads properly.** Drum and bass now reads about 174, or sometimes 87, instead of wandering around 115. On a 100-minute mix with many tempo changes, checked by hand in Mixxx, agreement including octaves is up from 45% to 89%.

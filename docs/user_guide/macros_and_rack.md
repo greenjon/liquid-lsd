@@ -293,7 +293,7 @@ To maximize vertical space in the matrix and keep the knobs comfortably clustere
   - **`[ MAN ]` / `[ AUDIO ]`**: clock source (manual tempo or the audio beat tracker).
   - **`[ LINK n ]`**: the third button of the top line, with the peer count while Ableton Link is on and dim while it is off. Click it to open Tempo & Sync preferences.
   - **BPM readout**: click it to open Tempo & Sync preferences. The **beat dots** under it (one per beat of the bar, 4 by default) show the bar phase; the downbeat is cyan. Hover for the detector's confidence when Downbeat is on Auto.
-  - **`[ TAP ]`**: tap tempo. Right-click for MIDI Learn. In Audio mode it nudges the detected tempo and phase. The first tap of a run also marks beat 1 of the bar.
+  - **`[ TAP ]`**: tap tempo. Right-click for MIDI Learn. In Audio mode it nudges the detected tempo and phase, and the app keeps following the music from where your taps put the beat. The first tap of a run also marks beat 1 of the bar.
   - **`[ SNAP ]`**: makes the beat nearest now beat 1 of the bar, snapping the beat phase and the bar line together. Press it on the one when the bar dots' cyan dot is in the wrong place. Preferences > Tempo & Sync > **Bar & Downbeat** sets the beats per bar and can let the app find beat 1 from the music (Downbeat: Auto); SNAP, or the first tap of a run, overrides it for 16 bars.
   - **Twister clock knob**: knob 13 on a Midi Fighter Twister pulses its LED on the beat (orange on the downbeat), shows the tempo on its ring and taps tempo when pushed. See [Rings and LEDs](performance_controls.md#twister-lights).
   - **`[ - ][ + ]`**: nudge the tempo by 0.5 BPM. The pair takes the space of one button, so MAN, AUDIO, LINK, TAP, SNAP and the pair make a tidy 3 x 2 grid.

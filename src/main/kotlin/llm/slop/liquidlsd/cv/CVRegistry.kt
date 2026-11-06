@@ -20,6 +20,8 @@ object CVRegistry {
     const val MIN_BEATS_PER_BAR = 2
     const val MAX_BEATS_PER_BAR = 8
     const val DEFAULT_BEATS_PER_BAR = 4
+    /** Share of the tempo [getSynchronizedTotalBeats] runs at while it waits for the true beat to catch up. */
+    private const val COAST_RATE = 0.8
 
     /**
      * Beats in a bar. Beat counts are kept so that a bar starts on every multiple of this (the downbeat detector and
@@ -182,12 +184,14 @@ object CVRegistry {
 
         // Ensure strictly monotonic forward progress on the render thread;
         // prevent backward time jitter (< 0.25 beats) caused by asynchronous audio thread anchor updates.
+        // Coast a little slow so the output does get back to the true beat: at full tempo a small backward
+        // step (a Link timeline move, lost samples) would leave it ahead for good.
         val current = lastRenderBeats
         val frameDtSec = kotlin.math.max(0.0, (now - lastRenderTimeNs) / 1_000_000_000.0)
         lastRenderTimeNs = now
 
         val safeBeats = if (synchronized < current && (current - synchronized) < 0.25) {
-            current + frameDtSec * (bpm / 60.0)
+            current + frameDtSec * (bpm / 60.0) * COAST_RATE
         } else {
             synchronized
         }

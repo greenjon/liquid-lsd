@@ -391,4 +391,70 @@ class AudioEngineTest {
         assertEquals(ClockSource.AUDIO_TRACKER, ClockSource.fromString("AUDIO_TRACKER"))
         assertEquals(ClockSource.AUDIO_TRACKER, ClockSource.fromString("UNKNOWN_VALUE"))
     }
+
+    @Test
+    fun `a small backward anchor step is coasted away instead of staying ahead`() {
+        val cv = llm.slop.liquidlsd.cv.CVRegistry
+        val time = llm.slop.liquidlsd.utils.TimeSource
+        try {
+            time.setSimulatedTime(100.0)
+            cv.resetBeatAnchor(0.0, 120f, 100_000_000_000L)
+            var prev = 0.0
+            for (f in 1..7200) { // two minutes at 60 fps; Link moves back 0.1 beat at the half-way point
+                val t = f / 60.0
+                time.setSimulatedTime(100.0 + t)
+                val truth = t * 2.0 - if (f > 3600) 0.1 else 0.0
+                cv.updateBeatAnchor(truth, 120f, ((100.0 + t) * 1e9).toLong())
+                val out = cv.getSynchronizedTotalBeats()
+                assertTrue(out >= prev, "ran backward at frame $f")
+                prev = out
+                if (f > 3700) assertEquals(truth, out, 1e-6)
+            }
+        } finally {
+            time.clearSimulatedTime()
+        }
+    }
+
+    @Test
+    fun `in tracker mode the beat count finds the kicks`() {
+        val cv = llm.slop.liquidlsd.cv.CVRegistry
+        val time = llm.slop.liquidlsd.utils.TimeSource
+        val sr = 44100f
+        val frames = 512
+        val samples = FloatArray(frames)
+        val buffer = java.nio.FloatBuffer.wrap(samples)
+        val startNs = 1_000_000_000L
+        AudioEngine.resetForOfflineFeed(120f, startNs)
+        val source = AudioEngine.clockSource
+        AudioEngine.clockSource = ClockSource.AUDIO_TRACKER
+        AudioEngine.phaseLock.startWorker()
+        try {
+            var n = 0L
+            var blocks = 0
+            var nowNs = startNs
+            while (n < 60 * sr) { // 60 s of audio in about 12 s
+                for (i in 0 until frames) {
+                    val t = (n + i) / sr.toDouble() - 0.17
+                    val since = if (t < 0) -1.0 else t - 0.5 * kotlin.math.floor(t / 0.5)
+                    samples[i] = if (since < 0) 0f else (0.8 * kotlin.math.exp(-since * 25) * kotlin.math.sin(2 * Math.PI * 60 * since)).toFloat()
+                }
+                buffer.rewind()
+                nowNs = startNs + ((n / sr.toDouble()) * 1e9).toLong()
+                AudioEngine.processAudio(buffer, frames, sr, nowNs)
+                n += frames
+                if (++blocks % 86 == 0) Thread.sleep(200)
+            }
+            val endNs = nowNs + (frames / sr.toDouble() * 1e9).toLong()
+            time.setSimulatedTime(endNs / 1e9)
+            val endSec = n / sr.toDouble()
+            val d = cv.getSynchronizedTotalBeats() - (endSec - 0.17) * 2.0
+            val offMs = (d - kotlin.math.round(d)) * 500
+            assertTrue(kotlin.math.abs(offMs) < 40.0, "off the kicks by $offMs ms")
+        } finally {
+            AudioEngine.phaseLock.stopWorker()
+            AudioEngine.clockSource = source
+            time.clearSimulatedTime()
+            AudioEngine.resetForOfflineFeed(120f, 0L)
+        }
+    }
 }
