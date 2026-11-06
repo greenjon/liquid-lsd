@@ -376,9 +376,20 @@ object BrowserPane {
     private fun placeOf(kind: BrowseKind, scope: BrowseScope.Folder): FolderPopups.Place? =
         if (LibraryFolders.rootOf(kind, scope.section) == null) null else FolderPopups.Place(kind, scope.section, scope.folder)
 
-    /** Where the New folder button puts a folder: the selected saved folder, else the kind's one saved section (FX has two, so none). */
+    /**
+     * Where the New folder button puts a folder: the selected saved folder, beside the selected playlist or in the selected playlist
+     * folder, else the kind's one saved section (FX has two, so none).
+     */
     private fun newFolderPlace(kind: BrowseKind): FolderPopups.Place? {
-        (scopeOf(kind) as? BrowseScope.Folder)?.let { placeOf(kind, it) }?.let { return it }
+        when (val scope = scopeOf(kind)) {
+            is BrowseScope.Folder -> placeOf(kind, scope)?.let { return it }
+            is BrowseScope.PlaylistFolder -> return FolderPopups.Place(kind, BrowseSection.PLAYLISTS, scope.folder)
+            is BrowseScope.Playlist -> {
+                val folder = LibraryFolders.rootOf(kind, BrowseSection.PLAYLISTS)?.let { BrowseCatalog.folderOf(java.io.File(scope.path), it) } ?: ""
+                return FolderPopups.Place(kind, BrowseSection.PLAYLISTS, folder)
+            }
+            else -> {}
+        }
         return if (kind == BrowseKind.FX) null else FolderPopups.Place(kind, BrowseSection.SAVED, "")
     }
 

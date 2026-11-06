@@ -270,10 +270,14 @@ object SessionSerializer {
             fun restoreActive(slot: DeckSlot, dto: DeckPresetDto) {
                 // A deck whose source is missing was left empty by applyDto (and reported as unresolved above).
                 if (dto.isEmpty || slot.deck(mixer).isEmpty) PresetManager.clearActive(slot)
-                else PresetManager.setActive(
-                    slot, dto.name,
-                    slot.deck(mixer).toDto(dto.name, dto.tags).copy(presetNotes = dto.presetNotes, paramNotes = dto.paramNotes)
-                )
+                else {
+                    val file = presetFileNamed(dto.name)
+                    PresetManager.setActive(
+                        slot, restoredPresetName(dto.name, slot, file != null),
+                        slot.deck(mixer).toDto(dto.name, dto.tags).copy(presetNotes = dto.presetNotes, paramNotes = dto.paramNotes),
+                        file
+                    )
+                }
             }
             restoreActive(DeckSlot.A, session.deckA)
             restoreActive(DeckSlot.B, session.deckB)
@@ -398,5 +402,19 @@ object SessionSerializer {
         if (initialFile.exists()) {
             DeckOps.request(DeckSlot.A, DeckChange.Preset(initialFile), LoadOrigin.QUEUE)
         }
+    }
+
+    /**
+     * The session saves a deck with no preset under its label ("Deck A"), which is not a preset name to show or save over.
+     * A real preset of that name, which has a file, is left alone.
+     */
+    internal fun restoredPresetName(name: String, slot: DeckSlot, hasFile: Boolean): String? =
+        if (!hasFile && name == "Deck ${slot.name}") null else name
+
+    /** The saved preset called [name], so Save after a restart writes it where it lives; null when there is none, or several. */
+    private fun presetFileNamed(name: String): File? {
+        val root = File(PresetManager.LIBRARY_ROOT, "presets")
+        if (!root.isDirectory) return null
+        return root.walkTopDown().filter { it.isFile && it.name == "$name.lsd" }.take(2).toList().singleOrNull()
     }
 }

@@ -783,10 +783,15 @@ object FileSystemManager {
         }
     }
 
+    /** The delete dialog promised the trash, but this drive refused it (some mounts have no trash): say what really happened. */
+    fun warnDeletedForGood(name: String) {
+        if (trashSupported()) ToastOverlay.show("$name could not go to the trash on this drive, so it was deleted permanently.", 10_000L)
+    }
+
     /**
      * Deletes a file from disk: to the system trash when there is one ([trashSupported]), for good otherwise.
      */
-    fun deleteFile(path: String): Result<Unit> {
+    fun deleteFile(path: String, warnIfPermanent: Boolean = true): Result<Unit> {
         return try {
             val file = File(path)
             if (!file.exists()) {
@@ -794,7 +799,9 @@ object FileSystemManager {
             }
             managedPathViolation(file)?.let { return Result.failure(it) }
             
-            if (moveToTrash(file) || file.delete()) {
+            val trashed = moveToTrash(file)
+            if (trashed || file.delete()) {
+                if (!trashed && warnIfPermanent) warnDeletedForGood(file.name)
                 clearScanCache()
                 logger.info { "Deleted ${file.name}" }
                 Result.success(Unit)

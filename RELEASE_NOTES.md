@@ -1,5 +1,14 @@
 ## [Unreleased]
 
+### Library Decisions and a New Default (`ui/FileSystemManager.kt`, `ui/browser/PlaylistEdit.kt`, `ui/browser/BrowserPane.kt`, `ui/browser/PresetListPanel.kt`, `presets/SessionSerializer.kt`, `ui/AppPreferences.kt`)
+- **Randomization is now on by default.** The dice, range sliders and Clock RAND block show from the first run, since every stock source, effect and transition ships random ranges. It only adds controls: nothing rolls until you ask. A settings file from before this turns it on once; after that, turning it off in Preferences > General sticks. The step sequencer was already on by default.
+- **A delete that can't reach the trash now says so.** Where a drive refuses the trash, the file is still deleted, and a toast tells you it was permanent. The delete dialogs now say "where the drive has one".
+- **FX and transition playlists keep short paths.** Renaming, moving or dragging in a saved item wrote its full path into the playlist, which broke when the library moved to another machine. Playlists written before this keep any full paths they already hold.
+- **The folder button follows a selected playlist.** With a playlist or a playlist folder selected, it now makes the folder among your playlists, not under Saved presets. Clicking the Playlists heading selects nothing, so use its right-click New Folder from there.
+- **No more red `[!]` for a preset that merely uses something switched off.** With randomization off, such a preset now looks normal, with a quiet note in its tooltip. Real warnings (audio, MIDI or the sequencer off) keep the mark.
+- **Fixed: after a restart, a deck playing a stock source read `Deck A · Aurora ribbons`,** and Save wrote a preset called `Deck A`. It now reads as it did before the restart, and Save asks for a name.
+- **Fixed: after a restart, Save on a preset in a subfolder wrote a new copy at the top of `presets/`.** The deck now finds its file again, when exactly one preset has that name.
+
 ### Fixes From an Automated Pass Through the App (`library/sources/`, `ui/SavePresetModal.kt`, `ui/browser/BrowserPane.kt`, `ui/UIManager.kt`, `presets/PresetManager.kt`, `ui/DropdownStyleHelper.kt`, `macro/TransitionMacroSync.kt`, `ui/TooltipHelper.kt`)
 - **Fixed: Gyroid Hyperspace kept flashing black.** The camera flies through the walls, and every time it was inside one the whole frame went black, for up to 0.7 s, with or without music. It now shows what lies beyond the wall. Desktop and web TV (not yet published).
 - **Fixed: Mandelbox opened as a diamond.** It now opens square-on to a face. Saved looks that use Mandelbox appear turned by 45 degrees. Desktop and web TV (not yet published).

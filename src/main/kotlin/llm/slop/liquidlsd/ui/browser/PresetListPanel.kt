@@ -87,7 +87,10 @@ object PresetListPanel {
             val isExternal = asset.type == AssetType.SOURCE_EXTERNAL
             val isStock = asset.type == AssetType.SOURCE_STOCK || isExternal
             val deps = if (isStock) null else (asset.dependencies ?: FileSystemManager.getPresetDependencies(File(asset.path)))
-            val issues = deps?.getIssues(session) ?: emptyList()
+            val allIssues = deps?.getIssues(session) ?: emptyList()
+            // Only a real warning marks the row red; an INFO note waits quietly in the normal tooltip.
+            val issues = allIssues.filter { it.severity == llm.slop.liquidlsd.presets.DependencySeverity.WARNING }
+            val notes = allIssues.filter { it.severity == llm.slop.liquidlsd.presets.DependencySeverity.INFO }
             val hasIssues = issues.isNotEmpty()
 
             // Stock rows leave the icon slot blank (a box there read as a checkbox); saved presets keep the disc.
@@ -174,6 +177,7 @@ object PresetListPanel {
                     showCustomTooltip(asset.path.hashCode(), estimatedHeight = if (thumb != 0) 240f else if (heavy) 150f else 110f) {
                         ImGui.textUnformatted(fullNameTip(asset, nameElided) ?: rowName(asset))
                         ImGui.separator()
+                        for (note in notes) ImGui.textDisabled(note.description)
                         if (heavy) ImGui.textUnformatted("${Icons.GAUGE} $GPU_COST_TIP")
                         if (isStock) llm.slop.liquidlsd.rendering.VisualSourceRegistry.compileErrors[asset.path.removePrefix(STOCK_PATH_PREFIX)]?.let { err ->
                             ImGui.pushStyleColor(ImGuiCol.Text, TangoPalette.u32(TangoPalette.ALERT.normal))

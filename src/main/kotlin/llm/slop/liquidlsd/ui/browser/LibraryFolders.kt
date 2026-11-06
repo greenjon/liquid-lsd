@@ -199,7 +199,10 @@ object LibraryFolders {
         val dir = dirOf(root, folder)
         if (folder.isEmpty() || !dir.isDirectory || !isInside(dir, root)) return Result.failure(IllegalArgumentException("Not a folder of this section"))
         val files = savedFilesUnder(dir)
-        if (!FileSystemManager.moveToTrash(dir)) dir.deleteRecursively()
+        if (!FileSystemManager.moveToTrash(dir)) {
+            dir.deleteRecursively()
+            FileSystemManager.warnDeletedForGood(dir.name)
+        }
         invalidate()
         FileSystemManager.clearScanCache()
         // A partial failure still reports the files that did go, so their references are dropped.

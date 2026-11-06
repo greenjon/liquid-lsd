@@ -102,7 +102,7 @@ object LibraryRefs {
                     PlayQueueManager.removeFileFromQueue(file)
                     BgQueueManager.removeFileFromQueue(file)
                     PresetManager.forgetActive(file)
-                    GardenThumbnails.thumbnailFor(file).takeIf { it.isFile }?.let { FileSystemManager.deleteFile(it.path) }
+                    GardenThumbnails.thumbnailFor(file).takeIf { it.isFile }?.let { FileSystemManager.deleteFile(it.path, warnIfPermanent = false) }
                 }
                 BrowseKind.FX -> {
                     val playlists = tokenPlaylists(kind)

@@ -137,6 +137,7 @@ fun main(args: Array<String>) {
         UITheme.lockCursorOnKnobDrag = false
         UITheme.manualLoadDirtyBehavior = UITheme.ManualLoadDirtyBehavior.DISCARD // a dirty-deck prompt would block the scripted UI
         UITheme.checkUpdatesOnStartup = false
+        UITheme.randomizationEnabled = false // scripts turn it on with their `randomization` step, so existing videos keep their layout
         val script = llm.slop.liquidlsd.tour.TourScript.parse(java.io.File(cliArgs.tourScript!!).readText())
         llm.slop.liquidlsd.utils.DeterministicRandom.seed(script.seed)
         // A script with a soundtrack shows the AUD column; the live audio engine never starts in tour mode.

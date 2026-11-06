@@ -61,10 +61,21 @@ class PreferencesDefaultsTest {
     }
 
     @Test
+    fun `an old settings file's randomization false turns on once, then a choice sticks`() {
+        preferencesFile.writeText("randomizationEnabled=false\n")
+        AppPreferencesStore.loadPreferences()
+        assertTrue(UITheme.randomizationEnabled, "A saved false from before the new default is only the old default")
+
+        preferencesFile.writeText("randomizationEnabled=false\nrandomizationDefaultedOn=true\n")
+        AppPreferencesStore.loadPreferences()
+        assertFalse(UITheme.randomizationEnabled, "Once migrated, turning it off sticks")
+    }
+
+    @Test
     fun testAppPreferencesDefaultValues() {
         val defaultPreferences = AppPreferences()
         assertTrue(defaultPreferences.sequencerEnabled, "Sequencer should be enabled by default")
-        assertFalse(defaultPreferences.randomizationEnabled, "Randomization should be disabled by default")
+        assertTrue(defaultPreferences.randomizationEnabled, "Randomization should be enabled by default")
         assertFalse(defaultPreferences.midiEnabled, "MIDI should be disabled by default")
         assertTrue(defaultPreferences.lockCursorOnKnobDrag, "Lock cursor on knob drag should be enabled by default")
         assertTrue(defaultPreferences.checkUpdatesOnStartup, "Update check on startup should be enabled by default")

@@ -2,6 +2,7 @@ package llm.slop.liquidlsd.ui.browser
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class PlaylistItemsTest {
     private val abc = listOf("a", "b", "c")
@@ -19,6 +20,15 @@ class PlaylistItemsTest {
         assertEquals(listOf("a", "x", "y", "b", "c"), PlaylistItems.insert(abc, listOf("x", "y"), 1))
         assertEquals(listOf("a", "b", "c", "x"), PlaylistItems.insert(abc, listOf("x"), 99))
         assertEquals(listOf("b"), PlaylistItems.remove(abc, listOf(2, 0, 7)))
+    }
+
+    @Test
+    fun `saved files become short tokens relative to their root`() {
+        val roots = listOf(java.io.File("/lib/fx"), java.io.File("/lib/fx_chains"))
+        assertEquals("sub/a.lsdfx", PlaylistItems.shortToken("/lib/fx/sub/a.lsdfx", roots))
+        assertEquals("c.lsdfxchain", PlaylistItems.shortToken("/lib/fx_chains/c.lsdfxchain", roots))
+        assertEquals("/elsewhere/a.lsdfx", PlaylistItems.shortToken("/elsewhere/a.lsdfx", roots))
+        assertTrue(PlaylistItems.tokenNamesFile("sub/a.lsdfx", "/lib/fx/sub/a.lsdfx"))
     }
 
     @Test

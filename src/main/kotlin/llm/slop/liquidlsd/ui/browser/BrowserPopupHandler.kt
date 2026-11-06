@@ -251,7 +251,7 @@ object BrowserPopupHandler {
      */
     /** Whether a delete can be taken back: from the system trash when there is one, never otherwise. */
     private fun drawDeleteUndoNote() {
-        if (FileSystemManager.trashSupported()) ImGui.textDisabled("Deleted files go to the system trash.")
+        if (FileSystemManager.trashSupported()) ImGui.textDisabled("Deleted files go to the system trash, where the drive has one.")
         else ImGui.text("This can't be undone.")
     }
 

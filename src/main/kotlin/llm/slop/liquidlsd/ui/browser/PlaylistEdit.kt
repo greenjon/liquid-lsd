@@ -48,9 +48,26 @@ object PlaylistItems {
         moves.entries.firstOrNull { (old, new) -> tokenNamesFile(token, old) && !tokenNamesFile(token, new) }?.value ?: token
     }
 
-    /** The playlist token for a dragged file path: a stock transition's bundled `.fs` becomes its shader id, anything else is kept. */
+    /** The playlist token for a dragged file path: a stock transition's bundled `.fs` becomes its shader id, a saved file its short path. */
     fun tokenForPayload(kind: BrowseKind, path: String): String =
-        if (kind == BrowseKind.TRANS && path.endsWith(".fs", ignoreCase = true)) File(path).nameWithoutExtension else path
+        if (kind == BrowseKind.TRANS && path.endsWith(".fs", ignoreCase = true)) File(path).nameWithoutExtension
+        else shortToken(path, savedRoots(kind))
+
+    /** [path] relative to the root holding it ("sub/my fx.lsdfx"), so the playlist survives moving the library; unchanged outside them. */
+    fun shortToken(path: String, roots: List<File>): String {
+        val file = File(path).absoluteFile
+        for (root in roots) {
+            val rel = runCatching { file.relativeTo(root.absoluteFile).path }.getOrNull() ?: continue
+            if (rel.isNotEmpty() && !rel.startsWith("..")) return rel.replace('\\', '/')
+        }
+        return path
+    }
+
+    /** The saved roots playlist tokens of [kind] are relative to. */
+    fun savedRoots(kind: BrowseKind): List<File> = when (kind) {
+        BrowseKind.FX -> listOfNotNull(LibraryFolders.rootOf(kind, BrowseSection.SINGLE), LibraryFolders.rootOf(kind, BrowseSection.CHAIN))
+        else -> listOfNotNull(LibraryFolders.rootOf(kind, BrowseSection.SAVED))
+    }
 }
 
 /** What the list needs to edit one playlist file, whatever its storage format. */
@@ -98,7 +115,8 @@ class TokenPlaylistEdit(private val kind: BrowseKind, private val file: File, pr
 
     /** Points items naming moved files at their new paths ([moves]: old absolute path to new); true when something changed. */
     fun relocateFiles(moves: Map<String, String>): Boolean {
-        val updated = PlaylistItems.relocate(items, moves)
+        val roots = PlaylistItems.savedRoots(kind)
+        val updated = PlaylistItems.relocate(items, moves.mapValues { (_, new) -> PlaylistItems.shortToken(new, roots) })
         if (updated == items) return false
         save(updated)
         return true

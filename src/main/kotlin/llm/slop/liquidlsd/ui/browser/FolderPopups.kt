@@ -173,7 +173,7 @@ object FolderPopups {
         ImGui.text("Delete folder '${at.label}' and everything in it?")
         ImGui.text(what + if (deleteImpact.isEmpty()) "" else " They are $deleteImpact.")
         ImGui.textDisabled(
-            if (FileSystemManager.trashSupported()) "The folder goes to the system trash."
+            if (FileSystemManager.trashSupported()) "The folder goes to the system trash, where the drive has one."
             else "This can't be undone."
         )
         error?.let { warn(it) }

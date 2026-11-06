@@ -184,7 +184,10 @@ object AppPreferencesStore {
                     logger.info { "Loaded outputViewEnabled from settings file: ${UITheme.outputViewEnabled}" }
                 }
 
-                val savedRandomization = props.getBoolean("randomizationEnabled")
+                // On by default since the stock sources, effects and transitions all ship random ranges. Settings files written
+                // before that hold a saved `false` that was only the old default, so turn it on once.
+                val randomizationMigrated = props.getBoolean("randomizationDefaultedOn") == true
+                val savedRandomization = if (randomizationMigrated) props.getBoolean("randomizationEnabled") else true
                 if (savedRandomization != null) {
                     UITheme.randomizationEnabled = savedRandomization
                     logger.info { "Loaded randomizationEnabled from settings file: ${UITheme.randomizationEnabled}" }
@@ -392,6 +395,7 @@ object AppPreferencesStore {
             props.setProperty("showAdvancedPreferences", UITheme.showAdvancedPreferences.toString())
             props.setProperty("sequencerEnabled", UITheme.sequencerEnabled.toString())
             props.setProperty("sequencerDefaultedOn", "true")
+            props.setProperty("randomizationDefaultedOn", "true")
             props.setProperty("fxSwapFadeMs", UITheme.fxSwapFadeMs.toString())
             props.setProperty("flameBudgetMs", UITheme.flameBudgetMs.toString())
             props.setProperty("flameQuality", UITheme.flameQuality.name)

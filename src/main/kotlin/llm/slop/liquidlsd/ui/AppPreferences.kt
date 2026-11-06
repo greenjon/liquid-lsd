@@ -30,7 +30,7 @@ data class AppPreferences(
     val audioTrackingInertia: Float = 2.0f,
     val backgroundVideoEnabled: Boolean = false,
     val outputViewEnabled: Boolean = false,
-    val randomizationEnabled: Boolean = false,
+    val randomizationEnabled: Boolean = true,
     /** Shows the Web Broadcast preferences tab (a relay server is something few users run). */
     val showAdvancedPreferences: Boolean = false,
     val fxSwapFadeMs: Int = 150,
