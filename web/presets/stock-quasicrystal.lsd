@@ -182,7 +182,7 @@
   "ColorMethod": {
    "baseValue": 1.0,
    "baseMin": 0.0,
-   "baseMax": 3.0,
+   "baseMax": 2.0,
    "randomizeBase": true,
    "modulators": []
   },

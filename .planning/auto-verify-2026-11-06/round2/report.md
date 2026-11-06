@@ -24,18 +24,24 @@ Bugs found and fixed:
 - Dragging a selection of FX or transitions carried one item.
 - Luminous Flash Intensity knob dead (from the sweep).
 
-Separately: the checklist's "Monitor takes FX" conflicts with the user guide, which says monitors take presets and sources only. The code follows the guide.
+A deck monitor takes presets and sources only, not FX, as the user guide says. Decided 2026-11-06: keep it, may revisit later.
 
 ## Die rolls (`rolls.py`, `results/rolls_report.txt`, `sheets/`)
 
 1010 rolls through the real button: 20 per source, 10 per effect, with music. 118 flagged. Flags come from one frame's brightness and contrast, so they are a place to look. Dynamic Spiral's 13 of 20 are false, it is sparse by design. Noise-only and mostly single-colour rolls (Cyclic CA) are not flagged.
 
-Worth tuning, from sheets and rolled values, ranges not changed:
-- Quasicrystal: 6 of 20 near black, all with Color Method 3.
-- Wave Ripples: 4 of 20 near black, all Surface Type 2.
-- KIFS Storm: 5 of 20 white, at low Scale.
-- Domain Warp: 6 of 20 washed out. Icosa H3: 4 of 20 near black.
-- Anamorphic Streak: 8 of 10 washed out over Quasicrystal.
+Tuned afterwards in `stock_defaults` and re-rolled (flagged black or white; `baseMax` and `baseMin` only, all still selectable by hand):
+
+| Source | Change | Before | After |
+|---|---|---|---|
+| Quasicrystal | Color Method max 3 to 2 | 6 of 20 | 3 of 40 (white, palette 1) |
+| Wave Ripples | Color Method max 3 to 1 | 8 of 40 on Layout max 1 | 1 of 40 |
+| KIFS Storm | Scale min 0.13 to 0.25 | 5 of 20 | 3 of 40 |
+| Domain Warp | Gloss max 0.65 to 0.5 | 6 of 20 | 6 of 40, 5 on palette 1 |
+
+Wave Ripples: the first guess (Layout) was wrong. All 10 Style 2 rolls had under 7% of the frame lit, because its glow exponent is high. Style 3 was fine, but a range can't skip Style 2, so it left the rolls too. A shader change could bring both back.
+
+Tried and reverted: Anamorphic Streak threshold and knee (still 15 of 20 white over Quasicrystal). Left alone: Icosa H3, whose flags are false, it is a small object by design.
 
 Effect rolls also roll the Quasicrystal underneath, so its dark rolls inflate their black counts.
 

@@ -83,7 +83,7 @@
   "Gloss": {
    "baseValue": 0.46667,
    "baseMin": 0.3,
-   "baseMax": 0.65,
+   "baseMax": 0.5,
    "randomizeBase": true,
    "modulators": [
     {

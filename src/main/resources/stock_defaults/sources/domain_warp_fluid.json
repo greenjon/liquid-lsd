@@ -83,7 +83,7 @@
       "note": "Highs glint.",
       "randomizeBase": true,
       "baseMin": 0.3,
-      "baseMax": 0.65,
+      "baseMax": 0.5,
       "modulators": [
         {
           "name": "high shimmer",

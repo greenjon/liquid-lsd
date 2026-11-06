@@ -12,7 +12,7 @@
   },
   "Scale": {
    "baseValue": 0.3333,
-   "baseMin": 0.13,
+   "baseMin": 0.25,
    "baseMax": 0.6,
    "randomizeBase": true,
    "modulators": [

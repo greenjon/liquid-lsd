@@ -10,7 +10,7 @@
     "Scale": {
       "note": "Slow beat-locked breathing of the copies.",
       "randomizeBase": true,
-      "baseMin": 0.13,
+      "baseMin": 0.25,
       "baseMax": 0.6,
       "modulators": [
         {
