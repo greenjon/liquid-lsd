@@ -1,0 +1,5 @@
+Eclipse Temurin Java runtime (release zips only)
+
+The zips include an Eclipse Temurin JRE as a separate program, under the GNU General Public License version 2
+with the Classpath Exception. Its license and notices are in its own folder: jre/<platform>/legal and
+jre/<platform>/NOTICE. Source: https://adoptium.net

@@ -1,0 +1,13 @@
+# Every library the app ships. The build fails if a runtime dependency has no line here, so add one with
+# the dependency: group or group:artifact | name | license | where its source is.
+# Dual-licensed libraries name the license we use. Keep this to what ships: build-only tools don't belong here.
+ch.qos.logback | Logback | EPL-2.0 (Logback is also offered under LGPL-2.1) | https://github.com/qos-ch/logback
+io.github.microutils | kotlin-logging | Apache-2.0 | https://github.com/oshai/kotlin-logging
+io.github.spair | imgui-java | MIT | https://github.com/SpaiR/imgui-java
+net.java.dev.jna | JNA | Apache-2.0 (JNA is also offered under LGPL-2.1+) | https://github.com/java-native-access/jna
+org.jaudiolibs | JNAJack | LGPL-2.1-or-later | https://github.com/jaudiolibs/jnajack
+org.jetbrains | JetBrains Annotations | Apache-2.0 | https://github.com/JetBrains/java-annotations
+org.jetbrains.kotlin | Kotlin standard library | Apache-2.0 | https://github.com/JetBrains/kotlin
+org.jetbrains.kotlinx | kotlinx.coroutines and kotlinx.serialization | Apache-2.0 | https://github.com/Kotlin
+org.lwjgl | LWJGL | BSD-3-Clause | https://github.com/LWJGL/lwjgl3
+org.slf4j | SLF4J | MIT | https://github.com/qos-ch/slf4j

@@ -12,6 +12,11 @@ Contents: 1 Foundations · 2 Rendering and shaders · 3 One path for every chang
 
 # 1. Foundations
 
+## Shipped Libraries Must Be Listed; Build Tools Stay Out of the App (`src/main/notices/`, `build.gradle.kts`)
+- **Decision** (2026-11-06): `thirdPartyNotices` generates `THIRD_PARTY_NOTICES.txt` from the runtime classpath and fails the build on any library missing from `src/main/notices/libraries.txt`, so a new dependency can't ship without its notice. Texts the build can't get from a jar live in `src/main/notices/bundled/`, one file per component, read in filename order.
+- **Build-time tools don't use `implementation`.** `SiteGenerator` is `compileOnly` plus the `siteGeneratorTool` configuration, which took 23 MB and all the LGPL PDF code out of the jar. The class itself stays in `src/main`, but the app never calls it.
+- **Licensing direction:** the audit for any move away from GPL is `.planning/license-audit-2026-11-06.md`.
+
 ## Stack and threading rules
 - **Kotlin/JVM, LWJGL 3 (GLFW + OpenGL 3.3), Dear ImGui via `imgui-java`, JNAJack** for JACK/PipeWire audio. Java Sound (`TargetDataLine`) is the fallback backend on every OS (macOS, Windows, JACK-less Linux). JACK is preferred on Linux for latency and patchbay routing.
 - **Thread 0 owns GLFW and all OpenGL.** Off-thread GL is a driver fault or a segfault. Anything that creates or disposes GL objects from another thread (shader compile after a background scan, filter dispose, preset apply) queues a task that `Main` drains on thread 0 once per frame (`VisualSourceRegistry.processPendingGlTasks`, `DeckOps` / `FxOps` / `TransitionOps` drains). macOS needs `-XstartOnFirstThread` for the same reason.

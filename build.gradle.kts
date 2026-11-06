@@ -1,3 +1,5 @@
+import java.util.zip.ZipFile
+
 import java.io.File
 import java.net.URI
 import java.nio.file.Files
@@ -25,6 +27,8 @@ repositories {
 val lwjglVersion = "3.3.3"
 // imgui-java: 1.92.7.1 (Dear ImGui 1.92, universal macOS arm64/x64). See docs/developer/imgui_upgrade_guide.md.
 val imguiVersion = "1.92.7.1"
+
+val siteGeneratorTool: Configuration by configurations.creating
 
 dependencies {
     // Kotlin
@@ -65,9 +69,19 @@ dependencies {
     implementation("io.github.microutils:kotlin-logging-jvm:3.0.5")
     implementation("ch.qos.logback:logback-classic:1.5.38")
 
-    // Markdown processing for website/docs generator
-    implementation("com.vladsch.flexmark:flexmark-all:0.64.8")
-    implementation("org.yaml:snakeyaml:2.2")
+    // Website/docs generator (tools/SiteGenerator.kt): build time only, so none of it ships in the app.
+    listOf(
+        "com.vladsch.flexmark:flexmark:0.64.8",
+        "com.vladsch.flexmark:flexmark-ext-anchorlink:0.64.8",
+        "com.vladsch.flexmark:flexmark-ext-autolink:0.64.8",
+        "com.vladsch.flexmark:flexmark-ext-gfm-strikethrough:0.64.8",
+        "com.vladsch.flexmark:flexmark-ext-gfm-tasklist:0.64.8",
+        "com.vladsch.flexmark:flexmark-ext-tables:0.64.8",
+        "org.yaml:snakeyaml:2.2"
+    ).forEach {
+        compileOnly(it)
+        siteGeneratorTool(it)
+    }
 
     // Testing
     testImplementation(kotlin("test"))
@@ -375,9 +389,74 @@ val prepareDefaultAssets = tasks.register<PrepareDefaultAssetsTask>("prepareDefa
     outputDir.set(layout.buildDirectory.dir("generated/default_assets"))
 }
 
+// THIRD_PARTY_NOTICES.txt, for the jar and the zips. Fails on a shipped library missing from src/main/notices/libraries.txt.
+val thirdPartyNotices = tasks.register("thirdPartyNotices") {
+    group = "distribution"
+    description = "Generates the third-party license notices from the runtime dependencies and src/main/notices."
+    val artifacts = configurations.runtimeClasspath.get().incoming.artifacts.resolvedArtifacts
+    val noticesDir = layout.projectDirectory.dir("src/main/notices").asFile
+    val fontsDir = layout.projectDirectory.dir("src/main/resources/fonts").asFile
+    val output = layout.buildDirectory.file("generated/notices/THIRD_PARTY_NOTICES.txt")
+    inputs.files(configurations.runtimeClasspath)
+    inputs.dir(noticesDir)
+    inputs.files(fileTree(fontsDir) { include("LICENSE-*.txt") })
+    outputs.file(output)
+    doLast {
+        val table = File(noticesDir, "libraries.txt").readLines()
+            .filter { it.isNotBlank() && !it.startsWith("#") }
+            .associate { line -> line.split("|").map { it.trim() }.let { it[0] to it.drop(1) } }
+        val rule = "=".repeat(78)
+        fun section(title: String, body: String) = "\n$rule\n$title\n$rule\n\n${body.trim()}\n"
+        val modules = artifacts.get().mapNotNull { it.id.componentIdentifier as? org.gradle.api.artifacts.component.ModuleComponentIdentifier }
+        val versions = modules.groupBy { it.group }.mapValues { (_, ids) -> ids.map { it.version }.distinct().sorted() }
+        val missing = modules.map { it.group }.distinct().filter { it !in table } .sorted()
+        if (missing.isNotEmpty()) throw GradleException("Add these shipped libraries to src/main/notices/libraries.txt: $missing")
+
+        // Notices the libraries carry themselves; several ship the same file, so each text appears once.
+        val seen = mutableSetOf<Int>()
+        fun normalized(s: String) = s.replace(Regex("\\s+"), " ").trim()
+        val apache = normalized(File(noticesDir, "licenses/Apache-2.0.txt").readText())
+        val carried = StringBuilder()
+        artifacts.get().sortedBy { it.file.name }.forEach { a ->
+            ZipFile(a.file).use { zip ->
+                zip.entries().asSequence()
+                    .filter { !it.isDirectory && Regex("(?i)META-INF/([^/]*/)?(LICEN[CS]E|NOTICE)[^/]*").matches(it.name) }
+                    .sortedBy { it.name }
+                    .forEach { e ->
+                        val body = zip.getInputStream(e).readBytes().toString(Charsets.UTF_8)
+                        val key = normalized(body)
+                        if (key != apache && key.isNotEmpty() && seen.add(key.hashCode())) carried.append(section("${a.file.name}: ${e.name}", body))
+                    }
+            }
+        }
+
+        val text = StringBuilder()
+        text.append("Third-party notices for Liquid LSD\n\n")
+        text.append("Liquid LSD itself is under the GNU General Public License version 3: see LICENSE.\n")
+        text.append("It includes the software below, under the licenses shown. Each license's full text follows the list.\n")
+        text.append(section("Libraries", table.toSortedMap().entries.filter { (group, _) -> group in versions }.joinToString("\n") { (group, row) ->
+            "${row[0]} ${versions.getValue(group).joinToString(", ")}\n    License: ${row[1]}\n    Source: ${row[2]}"
+        }))
+        File(noticesDir, "bundled").listFiles()!!.sortedBy { it.name }.forEach { f ->
+            val body = f.readText()
+            text.append(section(body.lineSequence().first(), body.substringAfter('\n')))
+        }
+        fontsDir.listFiles()!!.filter { it.name.startsWith("LICENSE-") }.sortedBy { it.name }.forEach { f ->
+            text.append(section("Font: ${f.name.removePrefix("LICENSE-").removeSuffix(".txt")}", f.readText()))
+        }
+        text.append(carried)
+        File(noticesDir, "licenses").listFiles()!!.sortedBy { it.name }.forEach { f ->
+            text.append(section("License text: ${f.name.removeSuffix(".txt")}", f.readText()))
+        }
+        output.get().asFile.apply { parentFile.mkdirs() }.writeText(text.toString())
+    }
+}
+
 tasks.processResources {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
     dependsOn(generateDocs)
+    dependsOn(thirdPartyNotices)
+    from(layout.buildDirectory.dir("generated/notices"))
     dependsOn(prepareDefaultAssets)
     from("library/sources") {
         into("default_sources")
@@ -431,6 +510,8 @@ tasks.processResources {
             val destJar = file("$distDir/lsd-all.jar")
             jarFile.copyTo(destJar, overwrite = true)
             println("Copied shadowJar to ${destJar.absolutePath}")
+            file("LICENSE").copyTo(file("$distDir/LICENSE"), overwrite = true)
+            file("build/generated/notices/THIRD_PARTY_NOTICES.txt").copyTo(file("$distDir/THIRD_PARTY_NOTICES.txt"), overwrite = true)
 
             // Copy library directory (visual sources, presets, midi profiles, playlists)
             val libraryDir = file("library")
@@ -687,6 +768,8 @@ val zipWindows = tasks.register<Zip>("zipWindows") {
         include("run-windows.bat")
         include("icon.ico")
         include("lsd-all.jar")
+        include("LICENSE")
+        include("THIRD_PARTY_NOTICES.txt")
         include("jre/windows-x64/**")
         include("library/**")
     }
@@ -703,6 +786,8 @@ val zipLinux = tasks.register<Zip>("zipLinux") {
         include("liquid-lsd.desktop")
         include("icon.png")
         include("lsd-all.jar")
+        include("LICENSE")
+        include("THIRD_PARTY_NOTICES.txt")
         include("jre/linux-x64/**")
         include("library/**")
     }
@@ -724,6 +809,8 @@ val zipLinuxArm = tasks.register<Zip>("zipLinuxArm") {
         include("liquid-lsd.desktop")
         include("icon.png")
         include("lsd-all.jar")
+        include("LICENSE")
+        include("THIRD_PARTY_NOTICES.txt")
         include("jre/linux-arm64/**")
         include("library/**")
     }
@@ -742,6 +829,8 @@ val zipMacArm = tasks.register<Zip>("zipMacArm") {
     from("build/dist") {
         include("run-mac-arm.command")
         include("lsd-all.jar")
+        include("LICENSE")
+        include("THIRD_PARTY_NOTICES.txt")
         include("jre/macos-aarch64/**")
         include("library/**")
     }
@@ -760,6 +849,8 @@ val zipMacIntel = tasks.register<Zip>("zipMacIntel") {
     from("build/dist") {
         include("run-mac-intel.command")
         include("lsd-all.jar")
+        include("LICENSE")
+        include("THIRD_PARTY_NOTICES.txt")
         include("jre/macos-x64/**")
         include("library/**")
     }
@@ -844,7 +935,7 @@ val buildWebsite = tasks.register<JavaExec>("buildWebsite") {
     group = "documentation"
     description = "Generates the static website and HTML documentation bundle into ./greenjon/ for greenjon.com FTP deployment."
     dependsOn(tasks.named("classes"))
-    classpath = sourceSets["main"].runtimeClasspath
+    classpath = sourceSets["main"].runtimeClasspath + siteGeneratorTool
     mainClass.set("llm.slop.liquidlsd.tools.SiteGenerator")
     args(
         project.projectDir.absolutePath,

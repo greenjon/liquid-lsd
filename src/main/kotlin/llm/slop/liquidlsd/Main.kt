@@ -88,7 +88,8 @@ private fun runSmokeTest(): Int {
             "/shaders/blit.frag",
             "/shaders/blit.vert",
             "/shaders/mixer.frag",
-            "/presets/default.json"
+            "/presets/default.json",
+            "/THIRD_PARTY_NOTICES.txt"
         )
         for (resPath in requiredResources) {
             val stream = object {}.javaClass.getResourceAsStream(resPath)

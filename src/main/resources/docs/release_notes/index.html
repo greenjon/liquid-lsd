@@ -1262,6 +1262,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#licenses-and-a-smaller-download-buildgradlekts-srcmainnotices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Licenses and a Smaller Download (build.gradle.kts, src/main/notices/)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#audio-clock-the-beat-now-lands-on-the-music-audiobeatphaselockkt-audioaudioenginekt-cvcvregistrykt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7576,6 +7587,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#licenses-and-a-smaller-download-buildgradlekts-srcmainnotices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Licenses and a Smaller Download (build.gradle.kts, src/main/notices/)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#audio-clock-the-beat-now-lands-on-the-music-audiobeatphaselockkt-audioaudioenginekt-cvcvregistrykt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -13841,6 +13863,11 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="licenses-and-a-smaller-download-buildgradlekts-srcmainnotices">Licenses and a Smaller Download (<code>build.gradle.kts</code>, <code>src/main/notices/</code>)</h3>
+<ul>
+<li><strong>The app now ships its third-party license notices:</strong> <code>THIRD_PARTY_NOTICES.txt</code> and <code>LICENSE</code> are in every release zip, and the font licenses sit beside the fonts.</li>
+<li><strong>Each download is about 23 MB smaller.</strong> The website generator's Markdown and PDF libraries no longer ship in the app, since it never used them. Nothing changes in how the app behaves.</li>
+</ul>
 <h3 id="audio-clock-the-beat-now-lands-on-the-music-audiobeatphaselockkt-audioaudioenginekt-cvcvregistrykt">Audio Clock: The Beat Now Lands on the Music (<code>audio/BeatPhaseLock.kt</code>, <code>audio/AudioEngine.kt</code>, <code>cv/CVRegistry.kt</code>)</h3>
 <ul>
 <li><strong>Fixed: with the Audio clock, the beat was not lined up with the music.</strong> The app measured the tempo but never where the beats fell, so beat-synced motion landed on the music only by chance unless you pressed TAP or SNAP, and then it slowly drifted away again. It now follows the music's beats. Against the beat grids of 150 tracks analysed in Mixxx, beats within 70 ms of the grid are up from 30% (chance) to 53%.</li>

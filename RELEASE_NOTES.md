@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Licenses and a Smaller Download (`build.gradle.kts`, `src/main/notices/`)
+- **The app now ships its third-party license notices:** `THIRD_PARTY_NOTICES.txt` and `LICENSE` are in every release zip, and the font licenses sit beside the fonts.
+- **Each download is about 23 MB smaller.** The website generator's Markdown and PDF libraries no longer ship in the app, since it never used them. Nothing changes in how the app behaves.
+
 ### Audio Clock: The Beat Now Lands on the Music (`audio/BeatPhaseLock.kt`, `audio/AudioEngine.kt`, `cv/CVRegistry.kt`)
 - **Fixed: with the Audio clock, the beat was not lined up with the music.** The app measured the tempo but never where the beats fell, so beat-synced motion landed on the music only by chance unless you pressed TAP or SNAP, and then it slowly drifted away again. It now follows the music's beats. Against the beat grids of 150 tracks analysed in Mixxx, beats within 70 ms of the grid are up from 30% (chance) to 53%.
 - **TAP and SNAP still have the last word.** If the app settles on the off-beat, tap or SNAP where the beat should be, and it keeps following the music from there until the tempo moves or the track changes.

@@ -1,0 +1,6 @@
+JNAJack: replacing or rebuilding it
+
+JNAJack is Copyright 2012 Neil C Smith, with some methods copyright 2012 Chuck Ritola, under the GNU Lesser
+General Public License version 2.1 or later. Its source is at https://github.com/jaudiolibs/jnajack, and the source
+for version 1.4.0 is on Maven Central. To use a changed copy, swap the org/jaudiolibs classes in lsd-all.jar, or
+rebuild the app from its own source.

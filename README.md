@@ -230,3 +230,5 @@ docs/                    MkDocs documentation sources
 ## License
 
 GNU General Public License v3.0 (GPL-3.0). See [`LICENSE`](LICENSE).
+
+The app includes third-party software under its own licenses. The build writes these into `THIRD_PARTY_NOTICES.txt`, which ships in the jar and the release zips; to add a library, add it to `src/main/notices/libraries.txt`.
