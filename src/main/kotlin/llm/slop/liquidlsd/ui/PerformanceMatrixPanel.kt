@@ -79,6 +79,10 @@ class PerformanceMatrixPanel {
     private val deckControls = PerformanceDeckControls(ctx)
     private val deepEditBay = PerformanceDeepEditBay(ctx)
 
+    /** With the Library maximized this panel isn't drawn, but Ctrl+Z must still work: Library and queue edits offer it there. */
+    fun handleKeysWhileHidden(parametersState: ParametersState, mixer: Mixer) =
+        deepEditBay.handleDeepEditKeys(parametersState, mixer, fullSet = false)
+
     /**
      * The Perform dock's binding while it is bound in place ([ParametersState.boundInPlace]), the same apply-target and row buttons the
      * pair view hosts; a double-click applies and unbinds. Null when the Perform dock is the plain Library.

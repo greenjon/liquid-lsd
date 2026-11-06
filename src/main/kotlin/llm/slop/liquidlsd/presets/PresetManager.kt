@@ -164,9 +164,11 @@ object PresetManager {
         }
     }
 
-    /** Forgets [file] as any deck's save-back file after it was deleted; the deck keeps playing as an unsaved preset. */
+    /** Forgets [file] as any deck's save-back file after it was deleted; the deck keeps playing as an unsaved preset, so Save asks for a name. */
     fun forgetActive(file: File) {
-        for (slot in DeckSlot.entries) if (activeFiles[slot.index]?.absolutePath == file.absolutePath) activeFiles[slot.index] = null
+        for (slot in DeckSlot.entries) {
+            if (activeFiles[slot.index]?.absolutePath == file.absolutePath) setActive(slot, null, cachedDto(slot))
+        }
     }
 
     fun mtime(slot: DeckSlot): Long? = when (slot) {

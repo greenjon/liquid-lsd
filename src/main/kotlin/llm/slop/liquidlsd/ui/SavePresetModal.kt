@@ -78,8 +78,11 @@ object SavePresetModal {
     /** "Folder:" and a dropdown of [root] and its folders; picking one changes [directory] (and the overwrite check). */
     private fun drawFolderCombo(root: File) {
         val current = directory
-        fun labelOf(dir: File): String =
-            if (dir.absoluteFile == root.absoluteFile) "(top level)" else dir.relativeTo(root).path.replace('\\', '/')
+        // A preset dropped in from elsewhere can start outside the root, even on another drive: relativeTo throws there.
+        fun labelOf(dir: File): String = when {
+            dir.absoluteFile == root.absoluteFile -> "(top level)"
+            else -> runCatching { dir.absoluteFile.relativeTo(root.absoluteFile).path }.getOrDefault(dir.path).replace('\\', '/')
+        }
         ImGui.text("Folder:")
         ImGui.pushItemWidth(ImGui.getContentRegionAvailX())
         if (ImGui.beginCombo("##savePresetFolder", labelOf(current))) {
@@ -121,6 +124,7 @@ object SavePresetModal {
 
         ImGui.text("Preset Name:")
         ImGui.pushItemWidth(ImGui.getContentRegionAvailX())
+        ModalKeys.focusOnOpen()
         val nameChanged = ImGui.inputText("##savePresetName", nameBuffer)
         ImGui.popItemWidth()
 
@@ -155,8 +159,9 @@ object SavePresetModal {
 
         val btnLabel = if (showOverwriteWarning) "Overwrite" else confirmButtonLabel
         val btnW = 100f
+        val keyAnswer = ModalKeys.answer()
 
-        if (ButtonChrome.button("$btnLabel##confirmSavePreset", btnW, 0f)) {
+        if (ButtonChrome.button("$btnLabel##confirmSavePreset", btnW, 0f) || keyAnswer == true) {
             if (currentName.isNotEmpty()) {
                 val dir = targetDirectory ?: FileSystemManager.getPresetsRoot()
                 val targetFile = File(dir, "$currentName.$fileExtension")
@@ -183,7 +188,7 @@ object SavePresetModal {
             }
         }
         ImGui.sameLine()
-        if (ButtonChrome.button("Cancel##cancelSavePreset", btnW, 0f)) {
+        if (ButtonChrome.button("Cancel##cancelSavePreset", btnW, 0f) || keyAnswer == false) {
             ImGui.closeCurrentPopup()
         }
 

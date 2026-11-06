@@ -176,9 +176,8 @@ void main() {
     float camDist = bound * (2.1 + 0.7 * cos(phase));
     vec3 rd = normalize(vec3(uv * fov, 1.0));
 
-    // Zero rotation looks straight down a coordinate axis, i.e. at the middle of a face of the box,
-    // rolled 45 degrees about the view axis so that face reads as a square rather than a diamond
-    mat3 rot = rotZ(RotateZ) * rotY(RotateY) * rotX(RotateX) * rotZ(0.78539816);
+    // Zero rotation looks straight down a coordinate axis, i.e. at the middle of a face of the box, which reads as a square
+    mat3 rot = rotZ(RotateZ) * rotY(RotateY) * rotX(RotateX);
     rd = rot * rd;
     // Keep the camera in open space: the path never goes nearer than 1.4 x the estimated extent,
     // and as a safeguard the distance estimate at the camera pushes it outward (a few steps, continuous in camDist).

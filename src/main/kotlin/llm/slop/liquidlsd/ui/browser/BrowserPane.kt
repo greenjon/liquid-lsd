@@ -639,6 +639,12 @@ object BrowserPane {
                 BrowseKind.FX -> FXBrowserPanel.filteredRows = assets
                 BrowseKind.TRANS -> TransitionBrowserPanel.filteredRows = assets
             }
+            // Above the rows: a playlist's rows end in a drop zone filling the list, which would push this out of sight.
+            if (missing > 0) {
+                if (playlistRows != null) drawMissing(mixer, catalog, kind, scope, playlistRows)
+                else ImGui.textDisabled("$missing playlist item(s) not found")
+                ImGui.spacing()
+            }
             if (entries.isEmpty()) {
                 ImGui.textDisabled(
                     when {
@@ -673,11 +679,6 @@ object BrowserPane {
                     BrowseKind.FX -> FXBrowserPanel.drawRows(session, mixer, assets, infoFor, extras, playlistRows, target)
                     BrowseKind.TRANS -> TransitionBrowserPanel.drawRows(session, mixer, assets, infoFor, extras, playlistRows, target)
                 }
-            }
-            if (missing > 0) {
-                ImGui.spacing()
-                if (playlistRows != null) drawMissing(mixer, catalog, kind, scope, playlistRows)
-                else ImGui.textDisabled("$missing playlist item(s) not found")
             }
             // Ctrl/Cmd+A selects every listed row while the list has the keyboard (unless a shortcut claims it); a bound dock stays single.
             val keys = ImGui.getIO()

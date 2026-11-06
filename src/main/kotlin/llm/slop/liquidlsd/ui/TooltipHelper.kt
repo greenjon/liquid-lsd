@@ -597,7 +597,7 @@ inline fun controlTooltip(
     itemTooltip(buildControlTooltip(block), delayMs, allowWhenDisabled)
 }
 
-/** "CC 12" or "Ch 2 CC 12" for a control tooltip's `MIDI:` line; null when [mapping] is null. */
+/** "CC 12" or "Ch 2 CC 12" for a control tooltip's `MIDI:` line; null when [mapping] is null or holds no controller (cc -1). */
 fun midiMappingText(mapping: llm.slop.liquidlsd.midi.MidiControlMapping?): String? =
-    mapping?.let { if (it.channel == 0) "CC ${it.cc}" else "Ch ${it.channel + 1} CC ${it.cc}" }
+    mapping?.takeIf { it.cc >= 0 }?.let { if (it.channel == 0) "CC ${it.cc}" else "Ch ${it.channel + 1} CC ${it.cc}" }
 

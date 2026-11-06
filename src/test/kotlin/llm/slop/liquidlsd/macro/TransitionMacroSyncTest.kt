@@ -55,6 +55,13 @@ class TransitionMacroSyncTest {
     }
 
     @Test
+    fun `knob captions are whole readable names`() {
+        val (_, bank) = synced(float("GlowIntensity"), float("BurnSpread"))
+        assertEquals("GLOW INTENSITY", bank.knobs[1].label)
+        assertEquals("BURN SPREAD", bank.knobs[2].label)
+    }
+
+    @Test
     fun `selects are skipped and spare knobs are blank`() {
         val (_, bank) = synced(select("mode"), float("amount"))
         assertEquals("Mixer/Transition/amount", bank.knobs[1].bindings.single().parameterId)

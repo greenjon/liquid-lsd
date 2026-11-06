@@ -1,5 +1,17 @@
 ## [Unreleased]
 
+### Fixes From an Automated Pass Through the App (`library/sources/`, `ui/SavePresetModal.kt`, `ui/browser/BrowserPane.kt`, `ui/UIManager.kt`, `presets/PresetManager.kt`, `ui/DropdownStyleHelper.kt`, `macro/TransitionMacroSync.kt`, `ui/TooltipHelper.kt`)
+- **Fixed: Gyroid Hyperspace kept flashing black.** The camera flies through the walls, and every time it was inside one the whole frame went black, for up to 0.7 s, with or without music. It now shows what lies beyond the wall. Desktop and web TV (not yet published).
+- **Fixed: Mandelbox opened as a diamond.** It now opens square-on to a face. Saved looks that use Mandelbox appear turned by 45 degrees. Desktop and web TV (not yet published).
+- **Fixed: a crash in Save As.** Saving a preset loaded from a full file path, outside the Library's own paths, closed the app when the Folder dropdown drew.
+- **Fixed: the preset Rename, Clone and Save As dialogs ignored the keyboard.** The name field now has the keyboard when the dialog opens, Enter confirms and Esc cancels, like the other dialogs.
+- **Fixed: Ctrl+Z did nothing with the Library maximized,** even where a toast offered it, such as after clearing a queue.
+- **Fixed: Save after deleting a loaded preset wrote the file back without asking.** The deck now keeps playing as an unsaved preset, and Save asks for a name.
+- **Fixed: a playlist's missing items were out of sight.** The "not found" line with Find, Locate and Remove sat below the list's empty drop area, so it needed scrolling to. It is now above the rows.
+- **Fixed: menus opened near the right edge were cut off** by the window, such as the monitor drag menu at 1280x720. They now open to the left of the pointer.
+- **Fixed: Transitions row knob captions were cut names** such as `BURNSPREAD` and `GLOWINTENS`. They now read like the other rows, `BURN SPREAD` and `GLOW INTENSITY`, with `...` only when too narrow.
+- **Fixed: tooltips could end in `MIDI: CC -1`** on controls with no controller assigned.
+
 ### Licenses and a Smaller Download (`build.gradle.kts`, `src/main/notices/`)
 - **The app now ships its third-party license notices:** `THIRD_PARTY_NOTICES.txt` and `LICENSE` are in every release zip, and the font licenses sit beside the fonts.
 - **Each download is about 23 MB smaller.** The website generator's Markdown and PDF libraries no longer ship in the app, since it never used them. Nothing changes in how the app behaves.

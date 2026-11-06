@@ -119,11 +119,24 @@ void main() {
     float hitDist = -1.0;
     vec3 hitP = vec3(0.0);
 
+    // Flight passes through the walls. A ray starting inside one marches out of it first, so the camera
+    // sees what lies beyond the wall; otherwise it would hit at t = 0, which reads as no hit (a black frame).
+    bool insideWall = mapSDF(ro, SurfaceType, Frequency_, WallThickness_, WireframeMode) < 0.001;
+
     // Sphere tracing
     for (int i = 0; i < 70; i++) {
         vec3 p = ro + rd * t;
         float d = mapSDF(p, SurfaceType, Frequency_, WallThickness_, WireframeMode);
-        
+
+        if (insideWall) {
+            if (d < 0.001) {
+                t += max(-d * 0.75, 0.02);
+                if (t > maxDist) break;
+                continue;
+            }
+            insideWall = false;
+        }
+
         // Accumulate volumetric core glow around minimal surface boundaries
         glow += exp(-abs(d) * 4.0) * (0.015 * CoreGlow_);
 

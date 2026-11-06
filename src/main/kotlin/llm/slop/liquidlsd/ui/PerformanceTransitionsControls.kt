@@ -27,7 +27,7 @@ internal object PerformanceTransitionsControls {
     // Per-frame strings are cached by value (the render path must not allocate).
     private val suffixCache = HashMap<llm.slop.liquidlsd.midi.MidiControlMapping, String>()
     private fun midiSuffix(m: llm.slop.liquidlsd.midi.MidiControlMapping?): String {
-        if (m == null) return ""
+        if (m == null || m.cc < 0) return ""
         return suffixCache.getOrPut(m) { if (m.channel == 0) " [CC ${m.cc}]" else " [Ch ${m.channel + 1} CC ${m.cc}]" }
     }
     private val tipPickerLabel = TipCache()

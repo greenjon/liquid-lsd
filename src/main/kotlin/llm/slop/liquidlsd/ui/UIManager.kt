@@ -617,6 +617,8 @@ class UIManager(
                     }
                 }
                 ImGui.end()
+            } else {
+                currentMixer?.let { performanceMatrixPanel.handleKeysWhileHidden(parametersState, it) }
             }
 
             if (!isEditView) {
