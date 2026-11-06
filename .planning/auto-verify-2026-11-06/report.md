@@ -6,7 +6,7 @@ Results are also written into `.planning/app-checklist.md`, as `auto:` lines und
 
 ## Update: fixes and the Library pass
 
-Fixed, uncommitted, and re-rendered to confirm (`after-fixes/`): Gyroid, Mandelbox, Transitions captions, menus clipped at the right edge, `MIDI: CC -1`. The Library pass found five more, all fixed the same way: a Save As crash on a preset with a full path, preset Rename/Clone/Save As ignoring focus, Enter and Esc, Ctrl+Z dead with the Library maximized, Save after deleting a loaded preset rewriting the file unasked, and a playlist's missing items hidden below the list.
+Fixed and re-rendered to confirm (`after-fixes/`): Gyroid, Mandelbox, Transitions captions, menus clipped at the right edge, `MIDI: CC -1`. The Library pass found five more, all fixed the same way: a Save As crash on a preset with a full path, preset Rename/Clone/Save As ignoring focus, Enter and Esc, Ctrl+Z dead with the Library maximized, Save after deleting a loaded preset rewriting the file unasked, and a playlist's missing items hidden below the list.
 
 The Library pass (`library/`) ran each operation against a fresh copy of the library, through the real UI at 1280x720, then compared files on disk.
 

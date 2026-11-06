@@ -24,7 +24,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [ ] Rename a saved FX single, an FX chain and a transition that are in a playlist and a queue: the playlist and queue rows still play, Favorites/Recent still list it. Rename a preset loaded on Deck A, then Save: it writes the renamed file (no old-name file reappears) and the preset's garden thumbnail is still shown.
   auto: FX single, chain and transition renames work and their playlists follow; preset rename keeps every field but name and tags. Renaming a loaded preset, then Save: no old-name file comes back. Playlists now keep short paths (fixed 2026-11-06). Left for you: queue rows playing, Favorites/Recent, the garden thumbnail.
 - [ ] Delete a preset loaded on a deck: it drops out of Recent/Favorites; Save on that deck asks for a name. Delete an FX chain loaded on Master: Master's chain header no longer offers overwrite.
-  auto: fixed 2026-11-06 (uncommitted): Save wrote the file back without asking; it now asks for a name. Left for you: Recent/Favorites, the Master chain case.
+  auto: fixed 2026-11-06: Save wrote the file back without asking; it now asks for a name. Left for you: Recent/Favorites, the Master chain case.
 - [ ] Folders: folder-plus button and right-click New/Rename/Delete Folder on Saved presets, Saved single FX, Saved chains, Saved transitions (not on stock sections); an empty folder shows in the tree; with FX and no saved section selected the button is greyed with a tooltip.
   auto: New, Rename and Delete Folder on Saved presets, empty folder shows, no menu on stock sections, FX button greyed with its tooltip. Saved FX, chains and transitions not run.
 - [ ] Drag rows (one, and a multi-selection) onto a folder, and use Move to: they move, playlists/queues still play them, a loaded deck still saves back. Moving onto a same-named item asks Keep both / Skip.
@@ -39,12 +39,12 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
   auto: opens with counts; Add Tag on one row writes it to the file. Left for you: multi-selection, Remove, drag onto a tag, Rename/Delete Tag.
 - [ ] Tag a preset loaded on a deck, then Ctrl+S: the new tags survive. Star a saved single FX and a chain: ★ in the list, listed under Favorites; slot ◀ / ▶ still steps stock filters only.
 - [ ] Missing items: move a preset in the file manager, open a playlist that has it: ⚠ row with Find (pick the moved file), Locate..., Remove; Find all fixes the unique ones and the queue/other playlists follow.
-  auto: fixed 2026-11-06 (uncommitted): the ⚠ line sat below the list and needed scrolling to; now above the rows. Remove works. Left for you: Find, Locate, Find all.
+  auto: fixed 2026-11-06: the ⚠ line sat below the list and needed scrolling to; now above the rows. Remove works. Left for you: Find, Locate, Find all.
 - [ ] Playlist folders on all three tabs: New Folder on Playlists, drag a playlist onto a folder (stays selected), rename/delete/nest folders.
   auto: the Playlists right-click menu offers New Folder; with a playlist selected the folder-plus button now makes the folder among playlists (fixed 2026-11-06). The Playlists heading itself isn't selectable. Rest not run.
 - [ ] Enter runs the row's default action on every tab; Delete follows Preferences > Shortcuts (Backspace works too); Alt+click a Sources row previews it on PV.
 - [ ] Rename, Delete, New Playlist and Export dialogs: field focused, Enter confirms, Esc cancels without leaving the Library. Esc that closes a menu doesn't also go back.
-  auto: fixed 2026-11-06 (uncommitted): preset Rename, Clone and Save As ignored focus, Enter and Esc. Now: focused and Enter confirms on all five; Esc cancels Rename and Delete without leaving the Library. Left for you: Esc on New Playlist and Export, Esc closing a menu.
+  auto: fixed 2026-11-06: preset Rename, Clone and Save As ignored focus, Enter and Esc. Now: focused and Enter confirms on all five; Esc cancels Rename and Delete without leaving the Library. Left for you: Esc on New Playlist and Export, Esc closing a menu.
 - [ ] Queues tab: an empty queue says how to fill it, five matching button strips (FX queues' Auto greyed), Export / Clear under each column's ⋮, no dead play button on the FX queues. The controller steps the columns left to right.
   auto: empty text, five strips and no dead play button on the FX queues all seen. Left for you: Export / Clear under the ⋮, the controller.
 - [ ] Queues under the browser (Library maximized, Sources/FX/Transitions tabs): both halves usable at 1280x720; the divider drags, clamps, double-click resets, the ratio and the rows-icon toggle survive a restart; toggle off looks like before; Perform view's Library unchanged.
@@ -53,7 +53,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [ ] Drag to the bottom edge of a long queue (and of the browser list/tree): it scrolls. `Q` / `Shift+Q` and drops flash the receiving queue's border (dark and light theme).
 - [ ] Arrow keys / controller cursor on the split: tree, list, then the five queues; `Q` with the cursor in a queue does nothing.
 - [ ] Queue edits undo: drag-reorder, row-menu Remove and Delete in each of the five queues, then Ctrl+Z: items, playing marker and shuffle order come back; Remove toasts what went. Drag a BG queue item down: it lands where the line was.
-  auto: fixed 2026-11-06 (uncommitted): Ctrl+Z did nothing with the Library maximized. A/B Clear now undoes in both views. Left for you: reorder, Remove, Delete, the other four queues.
+  auto: fixed 2026-11-06: Ctrl+Z did nothing with the Library maximized. A/B Clear now undoes in both views. Left for you: reorder, Remove, Delete, the other four queues.
 - [ ] Macros tab: macro banks and Perform pages are listed; loading one works.
   auto: tab opens with Banks and Pages, and says when nothing is saved. Loading not run.
 - [ ] Transitions view: the Q key queues.
@@ -102,7 +102,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
   auto: readable at 1280x720 in the dark theme. Left for you: switching modes keeps the geometry.
 - [ ] Button chrome / bevel looks fine on every button type.
 - [ ] Knob captions carry whole readable names ("TRACKING JITTER"), "..." only when too narrow.
-  auto: fixed 2026-11-06 (uncommitted). Transitions row now reads `BURN SPREAD`, `GLOW INTEN...` at 1280x720. Other rows not all read.
+  auto: fixed 2026-11-06. Transitions row now reads `BURN SPREAD`, `GLOW INTEN...` at 1280x720. Other rows not all read.
 - [ ] Transitions row: picker and gear on line 1; `[⋮] [Save] [◀] [▶] [A] [B] [AUTO] [time]` in equal cells on line 2; Save turns amber when changed; queue position in the ◀ ▶ tooltips.
   auto: layout right at 1280x720. Left for you: Save turning amber, queue position in the ◀ ▶ tooltips.
 - [x] Transitions at rest (2026-10-27): with the crossfader fully on A (then B), switch through all 8 transitions: the picture does not change at all. Start a slow fade from rest on each: no jump on the first frame of the fade.
@@ -126,7 +126,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
   auto: rows read FX1, FX2, FX3, A SRC over Browse, nothing clipped at 1280x720, Esc leaves in one press. Left for you: Load, → FX3, knob touch retargeting, Master.
 - [ ] Chain view on the Twister (2026-10-27): on A/B, shift + tap a Deck A SRC knob: Chain view opens, all 16 knobs move the four rows (FX1-3, then SRC on 13-16), FX rows in three shades. Right-bottom: Load on, knobs 13-15 glow in the slot colours (dark with nothing highlighted), knob 16's ring is the list position; turning knob 16 moves the list, tapping knob 14 loads the highlighted effect into slot 2 and knobs 5-8 then play it straight away. Right-bottom again: SRC row back. Bank buttons: Deck B's Chain view, Load state kept. Left-top or shift + tap on the SRC row (13-16) leaves. Does the source row at the bottom read OK?
 - [ ] Monitor drag onto another monitor: nine-choice menu (Move / Copy / Swap × Source / FX / Source + FX), each does what it says.
-  auto: clipping fixed 2026-11-06 (uncommitted): all nine rows on screen at 1280x720. The nine actions themselves not run.
+  auto: clipping fixed 2026-11-06: all nine rows on screen at 1280x720. The nine actions themselves not run.
 
 ## 4. Sources (2026-10-22 review)
 
@@ -155,7 +155,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
   auto: one row in Browse, and the log says Skipping for the other.
 - [ ] A shader that reads `iMouse` doesn't follow the cursor.
 - [ ] Queue ◀ ▶ tooltips on the A and B rows name the off-air deck the item goes to. The die's tooltip lists what it randomizes.
-  auto: `MIDI: CC -1` fixed 2026-11-06 (uncommitted). Wording right on the B row, and the die lists what it rolls. A row not read.
+  auto: `MIDI: CC -1` fixed 2026-11-06. Wording right on the B row, and the die lists what it rolls. A row not read.
 - [ ] Old presets and sessions still load (they carry the removed deck feedback and 3D-view values, which are now ignored).
 - [ ] On a packaged install over an older version: unedited bundled shaders are updated, an edited one is kept (log line). Needs a real install to test.
 
@@ -300,7 +300,7 @@ Preferences: randomization on. For each source: pick it fresh from Browse (not a
 
 Open each: renders, animates, parameters do something. Note anything black, flickering or slow.
 
-auto 2026-11-06: all 34 render and animate on the NVIDIA card with music; boxes left open because `parameters do something` is yours. Fixed (uncommitted): **mandelbox** opens square at every Scale tried, but saved looks using it turn 45°. **gyroid_hyperspace** no longer goes black at defaults; passing through a wall is still a hard cut to the view beyond it, so judge that.
+auto 2026-11-06: all 34 render and animate on the NVIDIA card with music; boxes left open because `parameters do something` is yours. Fixed: **mandelbox** opens square at every Scale tried, but saved looks using it turn 45°. **gyroid_hyperspace** no longer goes black at defaults; passing through a wall is still a hard cut to the view beyond it, so judge that.
 
 Heavy: - [ ] mandelbox (opens on a face, square) - [ ] kifs (static and face-on by default, Color Spread gives several colours, Twist/Morph reshape inside without turning the object) - [ ] kifs_storm (2026-11-03, the original KIFS restored): load it with music; it should tumble by itself (Tumble Speed), fill much of the frame, and feel like the old storm of cubes. Roll it a few times (Fold Angles roll the full circle). Check the RTX A2000 frame rate on a frame-filling roll and in a lattice (Repeat Spacing about 0.3, Repeat 3D on, Fly Speed about 0.15). Judge the stock responses (loudness tumble, drop spin, kick push on Fold X, kick glow, breakdown dims the crease neon) and the NEON knob (Trap Glow floods above about half) - [ ] kifs Icosahedral type (2026-11-03): Fractal Type 4; sweep Vertex 0 to 1 (icosahedron, football, icosidodecahedron, truncated dodecahedron, dodecahedron outlines); Vertex 0.2 + Color Mode 1 + Hue Offset 0.08 = copper frames over blue recessed panels; Flight Speed pops at the wrap like the octahedral type; Rand rolls type 4 and Vertex - [ ] mandelbulb - [ ] pseudo_kleinian - [ ] apollonian - [ ] escape_time - [ ] nebula_volume - [ ] reaction_diffusion (pushing Regime / trims never goes black; reseeds) - [ ] fluid_ink - [ ] lenia (Growth Center high then back: recovers)
 

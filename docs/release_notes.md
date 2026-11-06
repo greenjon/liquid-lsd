@@ -10,8 +10,8 @@
 - **Fixed: after a restart, Save on a preset in a subfolder wrote a new copy at the top of `presets/`.** The deck now finds its file again, when exactly one preset has that name.
 
 ### Fixes From an Automated Pass Through the App (`library/sources/`, `ui/SavePresetModal.kt`, `ui/browser/BrowserPane.kt`, `ui/UIManager.kt`, `presets/PresetManager.kt`, `ui/DropdownStyleHelper.kt`, `macro/TransitionMacroSync.kt`, `ui/TooltipHelper.kt`)
-- **Fixed: Gyroid Hyperspace kept flashing black.** The camera flies through the walls, and every time it was inside one the whole frame went black, for up to 0.7 s, with or without music. It now shows what lies beyond the wall. Desktop and web TV (not yet published).
-- **Fixed: Mandelbox opened as a diamond.** It now opens square-on to a face. Saved looks that use Mandelbox appear turned by 45 degrees. Desktop and web TV (not yet published).
+- **Fixed: Gyroid Hyperspace kept flashing black.** The camera flies through the walls, and every time it was inside one the whole frame went black, for up to 0.7 s, with or without music. It now shows what lies beyond the wall. Desktop and web TV (TV v27).
+- **Fixed: Mandelbox opened as a diamond.** It now opens square-on to a face. Saved looks that use Mandelbox appear turned by 45 degrees. Desktop and web TV (TV v27).
 - **Fixed: a crash in Save As.** Saving a preset loaded from a full file path, outside the Library's own paths, closed the app when the Folder dropdown drew.
 - **Fixed: the preset Rename, Clone and Save As dialogs ignored the keyboard.** The name field now has the keyboard when the dialog opens, Enter confirms and Esc cancels, like the other dialogs.
 - **Fixed: Ctrl+Z did nothing with the Library maximized,** even where a toast offered it, such as after clearing a queue.
