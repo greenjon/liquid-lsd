@@ -54,7 +54,7 @@ jobs:
             cp "$dir"/* "src/main/resources/natives/$platform/"
           done
           ls -R src/main/resources/natives
-          test "$(ls -d link-natives/link-native-* | wc -l)" = 5
+          test "$(ls -d link-natives/link-native-* | wc -l)" -eq 5
           rm -rf link-natives
 
       - name: Set up JDK 17

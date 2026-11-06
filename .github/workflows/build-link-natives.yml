@@ -12,7 +12,7 @@ jobs:
     name: link_jni (${{ matrix.platform }})
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         include:
           # The oldest available Linux, so the library runs on older distributions as well.
@@ -46,7 +46,7 @@ jobs:
           mkdir out
           find build-link -maxdepth 2 -type f \( -name 'liblink_jni.so' -o -name 'liblink_jni.dylib' -o -name 'link_jni.dll' \) -exec cp {} out/ \;
           ls -la out
-          test "$(ls out | wc -l)" = 1
+          test "$(ls out | wc -l)" -eq 1
 
       - name: Upload
         uses: actions/upload-artifact@v4
