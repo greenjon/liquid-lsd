@@ -11,147 +11,153 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class AbletonLinkEngineTest {
+    private val session = FakeLinkBackend(bpm = 128.0)
 
     @BeforeTest
     fun setUp() {
+        AudioEngine.clockSource = ClockSource.MANUAL
+        AudioEngine.manualBpm = 120f
         LinkSyncManager.reset()
-        AbletonLinkEngine.init(120.0)
-        AbletonLinkEngine.setEnabled(false)
+        AbletonLinkEngine.installBackend(session)
     }
 
     @AfterTest
     fun tearDown() {
-        LinkSyncManager.reset()
-        AbletonLinkEngine.setEnabled(false)
         AudioEngine.clockSource = ClockSource.MANUAL
-    }
-
-    // --- Ableton Link Engine & Fallback ---
-
-    @Test
-    fun testNoOpBackendFallback() {
-        val backend = NoOpLinkBackend()
-        assertTrue(backend.init(125.0))
-        assertEquals("Disabled / No-Op", backend.name)
-        assertEquals(0, backend.getNumPeers())
-        assertEquals(125.0, backend.getTempo())
-
-        backend.setTempo(130.0)
-        assertEquals(130.0, backend.getTempo())
-
-        val nowUs = System.nanoTime() / 1000
-        val beat1 = backend.getBeatAtTime(nowUs, 4.0)
-        val phase1 = backend.getPhaseAtTime(nowUs, 4.0)
-        assertTrue(beat1 >= 0.0)
-        assertTrue(phase1 in 0.0..4.0)
-
-        backend.close()
+        LinkSyncManager.reset()
+        AbletonLinkEngine.shutdown()
     }
 
     @Test
-    fun testAbletonLinkEngineInitializationAndState() {
-        AbletonLinkEngine.init(120.0)
-        AbletonLinkEngine.quantum = 4.0
-        assertEquals(4.0, AbletonLinkEngine.quantum)
+    fun `a missing library leaves Link off rather than faking a session`() {
+        val noOp = NoOpLinkBackend()
+        assertTrue(noOp.init(125.0))
+        noOp.setEnabled(true)
+        assertFalse(noOp.isEnabled())
+        assertEquals(0, noOp.getNumPeers())
+    }
 
-        AbletonLinkEngine.setEnabled(true)
+    @Test
+    fun `the role comes from the clock source`() {
+        assertEquals(LinkRole.OFF, LinkSyncManager.role)
+        AudioEngine.setLinkEnabled(true)
+        assertEquals(LinkRole.LEAD, LinkSyncManager.role)
+        AudioEngine.clockSource = ClockSource.AUDIO_TRACKER
+        assertEquals(LinkRole.LEAD, LinkSyncManager.role)
+        AudioEngine.clockSource = ClockSource.LINK
+        assertEquals(LinkRole.FOLLOW, LinkSyncManager.role)
+    }
+
+    @Test
+    fun `choosing the LINK source joins the session`() {
+        AudioEngine.clockSource = ClockSource.LINK
         assertTrue(AbletonLinkEngine.isEnabled)
+        assertTrue(session.sessionOn)
+    }
 
-        AbletonLinkEngine.setTempo(128.0)
-        assertEquals(128.0, AbletonLinkEngine.getTempo(), 0.01)
-
-        AbletonLinkEngine.setStartStopSyncEnabled(true)
-        assertTrue(AbletonLinkEngine.isStartStopSyncEnabled())
-
-        AbletonLinkEngine.setEnabled(false)
+    @Test
+    fun `turning Link off leaves the LINK source`() {
+        AudioEngine.clockSource = ClockSource.LINK
+        AudioEngine.setLinkEnabled(false)
+        assertEquals(ClockSource.MANUAL, AudioEngine.clockSource)
         assertFalse(AbletonLinkEngine.isEnabled)
     }
 
     @Test
-    fun testClockSourceTransitions() {
-        // Start in AUDIO_TRACKER mode
+    fun `leaving the LINK source keeps the session, which we then lead`() {
+        AudioEngine.clockSource = ClockSource.LINK
+        AudioEngine.clockSource = ClockSource.MANUAL
+        assertTrue(AbletonLinkEngine.isEnabled)
+        assertEquals(LinkRole.LEAD, LinkSyncManager.role)
+    }
+
+    @Test
+    fun `following runs the clock from the session and writes nothing`() {
+        AudioEngine.clockSource = ClockSource.LINK
+        session.advance(10.0)
+        LinkSyncManager.tick()
+        assertEquals(128.0, AbletonLinkEngine.latestTempo, 1e-9)
+        assertEquals(session.getBeatAtTime(session.nowUs, 4.0), AbletonLinkEngine.latestBeat, 1e-9)
+        assertEquals(session.getBeatAtTime(session.nowUs, 4.0), CVRegistry.getSynchronizedTotalBeats(), 0.05)
+        assertTrue(session.tempoWrites.isEmpty())
+        assertTrue(session.forces.isEmpty())
+    }
+
+    @Test
+    fun `following tracks a peer's tempo change`() {
+        AudioEngine.clockSource = ClockSource.LINK
+        session.peerSetsTempo(90.0)
+        LinkSyncManager.tick()
+        assertEquals(90.0, AbletonLinkEngine.latestTempo, 1e-9)
+        assertEquals(90f, AudioEngine.getEstimatedBpm(), "the BPM readout, with no audio thread running")
+        assertEquals(90f, AudioEngine.manualBpm)
+        assertTrue(session.tempoWrites.isEmpty())
+    }
+
+    @Test
+    fun `an unlocked tracker does not lead`() {
         AudioEngine.clockSource = ClockSource.AUDIO_TRACKER
-        assertEquals(ClockSource.AUDIO_TRACKER, AudioEngine.clockSource)
+        AudioEngine.setLinkEnabled(true)
+        repeat(30) { LinkSyncManager.tick() }
+        assertTrue(session.tempoWrites.isEmpty())
+        assertTrue(session.forces.isEmpty())
+        assertFalse(LinkSyncManager.isPublishing)
+    }
 
-        // Enable Ableton Link in MANUAL mode
-        AudioEngine.clockSource = ClockSource.MANUAL
-        AbletonLinkEngine.setEnabled(true)
-        AbletonLinkEngine.setTempo(124.0)
+    @Test
+    fun `leading by hand sends the manual tempo`() {
+        AudioEngine.setLinkEnabled(true)
+        AudioEngine.setBpmDirectly(133f)
+        LinkSyncManager.tick()
+        assertEquals(133.0, session.bpm, 133.0 * LinkLeader.MAX_NUDGE + 0.01, "the tempo, plus at most the phase nudge")
+        assertTrue(LinkSyncManager.isPublishing)
+        assertEquals(133f, AudioEngine.manualBpm)
+    }
 
-        AbletonLinkEngine.updateClockAnchor(System.nanoTime())
-        val beatsLink = CVRegistry.getSynchronizedTotalBeats()
-        assertTrue(beatsLink >= 0.0)
-
-        // Adjust manual BPM directly
-        AudioEngine.setBpmDirectly(130f)
-        assertEquals(130f, AudioEngine.manualBpm)
-
-        val beatsManual = CVRegistry.getSynchronizedTotalBeats()
-        assertTrue(beatsManual >= 0.0)
-
-        // Test downbeat resync
-        AudioEngine.resyncDownbeat()
-        val beatsResynced = CVRegistry.getSynchronizedTotalBeats()
-        assertTrue(beatsResynced >= 0.0)
-
-        // Test halve and double tempo
+    @Test
+    fun `following, the tempo controls change the session`() {
+        AudioEngine.clockSource = ClockSource.LINK
+        AudioEngine.nudgeTempo(2f)
+        assertEquals(130.0, session.bpm, 0.01)
         AudioEngine.halveTempo()
-        assertEquals(65f, AudioEngine.manualBpm)
+        assertEquals(65.0, session.bpm, 0.01)
         AudioEngine.doubleTempo()
-        assertEquals(130f, AudioEngine.manualBpm)
-
-        // Reset back to default
-        AbletonLinkEngine.setEnabled(false)
-        AudioEngine.clockSource = ClockSource.MANUAL
-    }
-
-    // --- Link Sync Manager Operations ---
-
-    @Test
-    fun testDefaultState() {
-        assertFalse(LinkSyncManager.isLinked)
-        assertEquals(0, LinkSyncManager.peersCount)
+        assertEquals(130.0, session.bpm, 0.01)
     }
 
     @Test
-    fun testIsLinkedWhenEnabled() {
-        AbletonLinkEngine.setEnabled(true)
-        assertTrue(LinkSyncManager.isLinked)
-        assertEquals(AbletonLinkEngine.getTempo(), LinkSyncManager.activeBpm, 0.1)
+    fun `following, SNAP and TAP only ask the session`() {
+        AudioEngine.clockSource = ClockSource.LINK
+        LinkSyncManager.tick()
+        AudioEngine.resyncDownbeat()
+        assertEquals(1, session.requests.size)
+        AudioEngine.registerTap(100f)
+        assertEquals(2, session.requests.size)
+        assertEquals(100.0, session.bpm, 0.01)
+        assertTrue(session.forces.isEmpty())
     }
 
     @Test
-    fun testPublishTempoCommittedWhenEnabled() {
-        AbletonLinkEngine.setEnabled(true)
-
-        // Publish sustained tempo events (4 samples to pass hysteresis filter)
-        repeat(4) {
-            LinkSyncManager.publishTempoCommitted(126.5)
-        }
-        assertEquals(126.5, AbletonLinkEngine.getTempo(), 0.5)
+    fun `leading, SNAP moves the app's own clock and not through a request`() {
+        AudioEngine.setLinkEnabled(true)
+        AudioEngine.resyncDownbeat()
+        assertTrue(session.requests.isEmpty())
     }
 
     @Test
-    fun testPublishTempoCommittedSuppressedWhenDisabled() {
-        AbletonLinkEngine.setEnabled(false)
-        val initialBpm = AbletonLinkEngine.getTempo()
-
-        repeat(4) {
-            LinkSyncManager.publishTempoCommitted(140.0)
-        }
-        assertEquals(initialBpm, AbletonLinkEngine.getTempo(), 0.1)
+    fun `shutdown leaves the session`() {
+        AudioEngine.setLinkEnabled(true)
+        AbletonLinkEngine.shutdown()
+        assertTrue(session.closed)
+        assertFalse(AbletonLinkEngine.isEnabled)
     }
 
     @Test
-    fun testFormattedActiveBpmAndConfidence() {
-        val bpm = LinkSyncManager.activeBpm
+    fun `active tempo reads the app's clock`() {
         val formatted = LinkSyncManager.formattedActiveBpm
         assertTrue(formatted.contains("."))
-        assertEquals(String.format(java.util.Locale.US, "%.1f", bpm), formatted)
-
-        val conf = LinkSyncManager.confidence
-        val confPct = LinkSyncManager.confidencePercent
-        assertTrue(conf in 0.0f..1.0f)
-        assertTrue(confPct in 0..100)
+        assertEquals(String.format(java.util.Locale.US, "%.1f", LinkSyncManager.activeBpm), formatted)
+        assertTrue(LinkSyncManager.confidence in 0.0f..1.0f)
+        assertTrue(LinkSyncManager.confidencePercent in 0..100)
     }
 }

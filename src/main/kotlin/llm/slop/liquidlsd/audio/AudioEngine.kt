@@ -212,8 +212,39 @@ object AudioEngine {
     @Volatile var meterRmsR: Float = 0f
 
     // ── User controls ────────────────────────────────────────────────────────
+    /** Choosing [ClockSource.LINK] joins the session; where Link is unavailable it falls back to MANUAL. */
     @Volatile var clockSource: ClockSource = ClockSource.MANUAL
+        set(value) {
+            if (value == ClockSource.LINK) {
+                val link = llm.slop.liquidlsd.link.AbletonLinkEngine
+                link.setEnabled(true)
+                field = if (link.isEnabled) ClockSource.LINK else ClockSource.MANUAL
+            } else {
+                field = value
+            }
+        }
     @Volatile var manualBpm = 120f
+
+    /** The clock follows the Link session rather than leading it. */
+    private val followsLink: Boolean get() = clockSource == ClockSource.LINK
+
+    /** Turns the Link session on or off. Off also leaves the LINK clock source, which has nothing left to follow. */
+    fun setLinkEnabled(enabled: Boolean) {
+        if (!enabled && followsLink) clockSource = ClockSource.MANUAL
+        llm.slop.liquidlsd.link.AbletonLinkEngine.setEnabled(enabled)
+    }
+
+    /**
+     * Following Link, shows the session's tempo. From the render thread, because with no audio input
+     * the audio thread is not there to do it.
+     */
+    internal fun showLinkTempo(bpm: Float) {
+        estimatedBpm = bpm
+        manualBpm = bpm
+    }
+
+    /** True while the phase lock is steering the beat count onto the music. */
+    val isPhaseLocked: Boolean get() = phaseLock.isLocked
 
     /** Whether the audio tracker also decides which beat opens the bar (OFF: only taps and SNAP set it). */
     @Volatile var downbeatMode: DownbeatMode = DownbeatMode.OFF
@@ -286,11 +317,7 @@ object AudioEngine {
         val clamped = bpm.coerceIn(40.0f, 240.0f)
         estimatedBpm = clamped
         manualBpm = clamped
-        val linkEngine = llm.slop.liquidlsd.link.AbletonLinkEngine
-        if (linkEngine.isEnabled) {
-            linkEngine.setTempo(clamped.toDouble())
-            llm.slop.liquidlsd.link.LinkSyncManager.publishTempoCommitted(clamped.toDouble())
-        }
+        if (followsLink) llm.slop.liquidlsd.link.AbletonLinkEngine.setTempo(clamped.toDouble())
         val currentBeats = if (isActive()) totalBeats else CVRegistry.getSynchronizedTotalBeats()
         if (!isActive()) {
             totalBeats = currentBeats
@@ -302,11 +329,7 @@ object AudioEngine {
      * Nudges the manual tempo by [deltaBpm] (e.g. +0.5 or -0.5).
      */
     fun nudgeTempo(deltaBpm: Float) {
-        val current = if (llm.slop.liquidlsd.link.AbletonLinkEngine.isEnabled) {
-            llm.slop.liquidlsd.link.AbletonLinkEngine.getTempo().toFloat()
-        } else {
-            manualBpm
-        }
+        val current = if (followsLink) llm.slop.liquidlsd.link.AbletonLinkEngine.getTempo().toFloat() else manualBpm
         setBpmDirectly(current + deltaBpm)
     }
 
@@ -314,11 +337,7 @@ object AudioEngine {
      * Halves the current tempo (e.g. 140 -> 70 BPM).
      */
     fun halveTempo() {
-        val current = if (llm.slop.liquidlsd.link.AbletonLinkEngine.isEnabled) {
-            llm.slop.liquidlsd.link.AbletonLinkEngine.getTempo().toFloat()
-        } else {
-            estimatedBpm
-        }
+        val current = if (followsLink) llm.slop.liquidlsd.link.AbletonLinkEngine.getTempo().toFloat() else estimatedBpm
         setBpmDirectly(current * 0.5f)
     }
 
@@ -326,11 +345,7 @@ object AudioEngine {
      * Doubles the current tempo (e.g. 70 -> 140 BPM).
      */
     fun doubleTempo() {
-        val current = if (llm.slop.liquidlsd.link.AbletonLinkEngine.isEnabled) {
-            llm.slop.liquidlsd.link.AbletonLinkEngine.getTempo().toFloat()
-        } else {
-            estimatedBpm
-        }
+        val current = if (followsLink) llm.slop.liquidlsd.link.AbletonLinkEngine.getTempo().toFloat() else estimatedBpm
         setBpmDirectly(current * 2.0f)
     }
 
@@ -338,10 +353,15 @@ object AudioEngine {
      * Declares the beat nearest to now to be beat 1 of the bar: snaps the beat count to a whole beat that is a
      * multiple of [beatsPerBar] (moving it by at most half a bar), zeros phase slew and detector offsets, and
      * protects the answer from the downbeat detector for a while.
+     *
+     * Following Link, the session owns the beat: this moves it only when no peers are connected.
      */
     fun resyncDownbeat(timestampNs: Long = System.nanoTime()) {
+        if (followsLink) {
+            llm.slop.liquidlsd.link.AbletonLinkEngine.requestBeat(barLineBeat(CVRegistry.getSynchronizedTotalBeats()))
+            return
+        }
         val effectiveBpm = estimatedBpm
-        val linkEngine = llm.slop.liquidlsd.link.AbletonLinkEngine
         val currentBeats = if (isActive()) totalBeats else CVRegistry.getSynchronizedTotalBeats()
         val alignedBeats = barLineBeat(currentBeats)
         totalBeats = alignedBeats
@@ -350,9 +370,6 @@ object AudioEngine {
         phaseLock.claimPhase()
         CVRegistry.alignBeatPhase(alignedBeats, effectiveBpm, timestampNs)
         downbeatDetector.claimDownbeat()
-        if (linkEngine.isEnabled) {
-            linkEngine.requestBeatAtTime(alignedBeats)
-        }
     }
 
     /** The whole beat nearest [beats], moved to the closest bar line. */
@@ -365,8 +382,9 @@ object AudioEngine {
 
     /**
      * Registers a VJ tap event.
-     * In manual / Link mode: sets manualBpm and aligns beat phase downbeat.
+     * In manual mode: sets manualBpm and aligns beat phase downbeat.
      * In active tracking mode: nudges beat tracker candidate tempo and smooth phase slew.
+     * Following Link: sets the session tempo; the beat moves only when no peers are connected.
      */
     fun registerTap(tappedBpm: Float?, tapTimestampNs: Long = System.nanoTime()) {
         val effectiveBpm = tappedBpm ?: estimatedBpm
@@ -375,16 +393,10 @@ object AudioEngine {
             estimatedBpm = tappedBpm
             manualBpm = tappedBpm
             beatDetector.nudgeTempo(tappedBpm)
-            if (linkEngine.isEnabled) {
-                linkEngine.setTempo(tappedBpm.toDouble())
-                llm.slop.liquidlsd.link.LinkSyncManager.publishTempoCommitted(tappedBpm.toDouble())
-            }
+            if (followsLink) linkEngine.setTempo(tappedBpm.toDouble())
         }
-        if (linkEngine.isEnabled) {
-            val currentBeats = CVRegistry.getSynchronizedTotalBeats()
-            val alignedBeats = kotlin.math.round(currentBeats)
-            linkEngine.requestBeatAtTime(alignedBeats)
-            CVRegistry.alignBeatPhase(alignedBeats, effectiveBpm, tapTimestampNs)
+        if (followsLink) {
+            linkEngine.requestBeat(kotlin.math.round(CVRegistry.getSynchronizedTotalBeats()))
             return
         }
         if (clockSource == ClockSource.AUDIO_TRACKER) {
@@ -709,17 +721,18 @@ object AudioEngine {
             phaseSlewBuffer = 0.0
         }
 
+        // Link's calls are not realtime-safe, so this reads what the render thread last sampled.
         val linkEngine = llm.slop.liquidlsd.link.AbletonLinkEngine
-        val isLinkActive = linkEngine.isEnabled
+        val isFollowingLink = followsLink
 
         // 8. Determine effective BPM and advance totalBeats
         val effectiveBpm = when {
-            isLinkActive -> linkEngine.getTempo().toFloat()
+            isFollowingLink -> linkEngine.latestTempo.toFloat()
             clockSource == ClockSource.MANUAL -> manualBpm
             else -> autoBpm
         }
         estimatedBpm = effectiveBpm
-        if (isLinkActive) {
+        if (isFollowingLink) {
             manualBpm = effectiveBpm
         }
 
@@ -727,11 +740,9 @@ object AudioEngine {
         val blockDurationNs = (deltaTimeSec * 1_000_000_000.0).toLong()
 
         // 9. Publish to CV Registry and history buffers directly at audio block rate
-        if (isLinkActive) {
-            linkEngine.updateClockAnchor(currentTime + blockDurationNs)
-            if (clockSource == ClockSource.AUDIO_TRACKER && isActive()) {
-                llm.slop.liquidlsd.link.LinkSyncManager.publishTempoCommitted(autoBpm.toDouble())
-            }
+        if (isFollowingLink) {
+            // The render thread sets the anchor from the session. Keep the count close for when this stops.
+            totalBeats = linkEngine.latestBeat
         } else {
             // Flywheel momentum: always advance totalBeats using effective BPM (smooth coasting even through silence)
             val deltaBeats = deltaTimeSec * (effectiveBpm / 60.0)

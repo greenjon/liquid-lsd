@@ -14,8 +14,12 @@ permissions:
   contents: write # Needed to create tags, releases, and upload assets
 
 jobs:
+  link-natives:
+    uses: ./.github/workflows/build-link-natives.yml
+
   build-and-package:
     name: Build & Package Distributions
+    needs: link-natives
     runs-on: ubuntu-latest
     outputs:
       tag_name: ${{ steps.version.outputs.tag_name }}
@@ -209,6 +213,24 @@ jobs:
           unzip -q syphon.zip -d library/natives
           ls library/natives/Syphon.framework/Versions/A
           rm syphon.zip
+
+      - name: Download Ableton Link natives
+        uses: actions/download-artifact@v4
+        with:
+          pattern: link-native-*
+          path: link-natives
+
+      - name: Install Ableton Link natives
+        shell: bash
+        run: |
+          for dir in link-natives/link-native-*; do
+            platform="${dir##*/link-native-}"
+            mkdir -p "src/main/resources/natives/$platform"
+            cp "$dir"/* "src/main/resources/natives/$platform/"
+          done
+          ls -R src/main/resources/natives
+          test "$(ls -d link-natives/link-native-* | wc -l)" = 5
+          rm -rf link-natives
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4

@@ -1,84 +1,47 @@
 package llm.slop.liquidlsd.link
 
 /**
- * Common interface for Ableton Link implementations (Native JNI, Carabiner TCP, No-Op).
+ * What the app needs from an Ableton Link session: [NativeJniLinkBackend], or [NoOpLinkBackend] where the
+ * native library cannot load.
+ *
+ * Every `timeUs` is on [clockMicros], not System.nanoTime: on Linux Link uses CLOCK_MONOTONIC_RAW, which
+ * drifts away from the JVM's clock with uptime and would put us out of phase with our peers.
  */
 interface LinkBackend {
     val name: String
 
-    /**
-     * Initializes the Link backend with an initial BPM.
-     * @return true if initialization succeeded.
-     */
+    /** @return true if initialization succeeded. */
     fun init(initialBpm: Double): Boolean
 
-    /**
-     * Releases backend resources and disconnects from sessions/sockets.
-     */
+    /** Leaves the session and releases native resources. */
     fun close()
 
-    /**
-     * Enables or disables Link network session participation.
-     */
     fun setEnabled(enabled: Boolean)
-
-    /**
-     * Returns true if Link session is active.
-     */
     fun isEnabled(): Boolean
 
-    /**
-     * Returns the number of connected Ableton Link peers on the local network.
-     */
+    /** Other apps in the session, not counting this one. */
     fun getNumPeers(): Int
 
-    /**
-     * Returns the current session tempo in BPM.
-     */
+    /** Link's clock, in microseconds. */
+    fun clockMicros(): Long
+
     fun getTempo(): Double
 
-    /**
-     * Sets the session tempo in BPM, propagating to all connected peers.
-     */
+    /** Sets the session tempo, for every peer. */
     fun setTempo(bpm: Double)
 
-    /**
-     * Returns the beat timeline value at the specified microsecond host timestamp.
-     */
+    /** The beat at [timeUs]. Its phase within [quantum] is shared with the session; its magnitude is ours. */
     fun getBeatAtTime(timeUs: Long, quantum: Double): Double
 
     /**
-     * Returns the phase [0.0, quantum) at the specified microsecond host timestamp.
+     * Puts [beat] at [timeUs]. Alone in a session this moves the timeline at once; with peers it only
+     * picks our beat numbering, at the next time the session's phase matches. It cannot move the session.
      */
-    fun getPhaseAtTime(timeUs: Long, quantum: Double): Double
+    fun requestBeatAtTime(beat: Double, timeUs: Long, quantum: Double)
 
     /**
-     * Returns true if the underlying driver/socket connection is active and connected.
+     * Puts [beat] at [timeUs] for the whole session, whatever the peers are doing. Peers hear this as a
+     * jump, so [LinkLeader] keeps it for large errors that hold.
      */
-    fun isConnected(): Boolean = isEnabled()
-
-    /**
-     * Requests aligning beat phase to targetBeat at timeUs for the given quantum.
-     */
-    fun requestBeatAtTime(beat: Double, timeUs: Long = 0L, quantum: Double = 4.0)
-
-    /**
-     * Enables or disables Start/Stop Transport Synchronization across Link peers.
-     */
-    fun setStartStopSyncEnabled(enabled: Boolean)
-
-    /**
-     * Returns true if Start/Stop sync is enabled.
-     */
-    fun isStartStopSyncEnabled(): Boolean
-
-    /**
-     * Returns true if Link transport state is currently playing.
-     */
-    fun isPlaying(): Boolean
-
-    /**
-     * Sets transport playing state (start/stop) across Link peers.
-     */
-    fun setIsPlaying(isPlaying: Boolean)
+    fun forceBeatAtTime(beat: Double, timeUs: Long, quantum: Double)
 }

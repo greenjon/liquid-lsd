@@ -1,0 +1,57 @@
+name: Build Ableton Link Natives
+
+# Builds link_jni (src/main/cpp/link_jni) on each platform. release.yml and smoke-test.yml call this and
+# put the results in src/main/resources/natives/<platform>/ before packaging; the smoke test then fails on
+# any platform whose library is missing or does not load.
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: link_jni (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          # The oldest available Linux, so the library runs on older distributions as well.
+          - platform: linux-x64
+            os: ubuntu-22.04
+          - platform: linux-arm64
+            os: ubuntu-22.04-arm
+          - platform: macos-arm64
+            os: macos-latest
+          - platform: macos-x64
+            os: macos-15-intel
+          - platform: windows-x64
+            os: windows-latest
+    env:
+      MACOSX_DEPLOYMENT_TARGET: '11.0'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build
+        shell: bash
+        run: |
+          cmake -S src/main/cpp/link_jni -B build-link -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-link --config Release
+          mkdir out
+          find build-link -maxdepth 2 -type f \( -name 'liblink_jni.so' -o -name 'liblink_jni.dylib' -o -name 'link_jni.dll' \) -exec cp {} out/ \;
+          ls -la out
+          test "$(ls out | wc -l)" = 1
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: link-native-${{ matrix.platform }}
+          path: out/*
+          if-no-files-found: error
+          retention-days: 2

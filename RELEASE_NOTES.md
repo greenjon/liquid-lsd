@@ -1,5 +1,14 @@
 ## [Unreleased]
 
+### Ableton Link: Now Works, and You Choose Who Is in Charge (`link/`, `audio/AudioEngine.kt`, `ui/PerformanceClockControls.kt`, `ui/TempoSyncPanel.kt`)
+- **Fixed: Ableton Link did not connect in normal builds.** The Link library was never built or included, so the button could be on with nothing connected. It now ships with the app on every platform.
+- **Follow a session:** the new `[ LINK ]` clock source takes tempo and beat from the other apps, and the beat tracker stops writing to them. Use it when the music comes from a Link app.
+- **Lead a session:** with Link on, `[ AUDIO ]` or `[ MAN ]` makes this app's clock the source of truth, and the button reads `[ LEAD n ]`. Use it when the music has no Link of its own. Small corrections slide in smoothly, a large one is a jump after about 2 seconds, and a tempo another app sets gets put back. Other apps follow any mistake the tracker makes, so don't lead a musician's Live set from `[ AUDIO ]`.
+- **Fixed: the tracker could overwrite the session's tempo with a brief wrong reading.** It now sends nothing until it has locked, and a new tempo must hold for 4 beats.
+- **Fixed: Audio mode lost its beat lock and downbeat detection with Link on.** They now keep running while leading.
+- **Enabling Link starts by following**, so joining can't overwrite a running session's tempo. A session you saved while leading still leads when reopened.
+- **Removed:** Carabiner support, which could not read the real Carabiner's replies, and the Start/Stop Sync checkbox, which had nothing to start or stop.
+
 ### Audio Clock: The Beat Now Lands on the Music (`audio/BeatPhaseLock.kt`, `audio/AudioEngine.kt`, `cv/CVRegistry.kt`)
 - **Fixed: with the Audio clock, the beat was not lined up with the music.** The app measured the tempo but never where the beats fell, so beat-synced motion landed on the music only by chance unless you pressed TAP or SNAP, and then it slowly drifted away again. It now follows the music's beats. Against the beat grids of 150 tracks analysed in Mixxx, beats within 70 ms of the grid are up from 30% (chance) to 53%.
 - **TAP and SNAP still have the last word.** If the app settles on the off-beat, tap or SNAP where the beat should be, and it keeps following the music from there until the tempo moves or the track changes.

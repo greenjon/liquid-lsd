@@ -7,6 +7,8 @@ import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.audio.ClockSource
 import llm.slop.liquidlsd.audio.DownbeatMode
 import llm.slop.liquidlsd.link.AbletonLinkEngine
+import llm.slop.liquidlsd.link.LinkRole
+import llm.slop.liquidlsd.link.LinkSyncManager
 
 /**
  * Clock row (Performance MASTER tab) controls left of the knobs, beside the CLOCK title badge
@@ -35,8 +37,9 @@ internal object PerformanceClockControls {
     private val TAP_COUNTING_INK = TangoPalette.inkFor(TangoPalette.TAP_COUNTING)
 
     private var linkPeers = -1
+    private var linkRole = LinkRole.OFF
     private var linkLabel = "LINK##perf_clock_link"
-    private var linkTip = "Ableton Link is off. Click to open Tempo & Sync preferences."
+    private var linkTip = ""
     private var bpmTenths = Int.MIN_VALUE
     private var bpmLabel = ""
     private var tapCountShown = -1
@@ -90,9 +93,11 @@ internal object PerformanceClockControls {
         // Link: always in its grid cell so the grid stays tidy; dim while Link is off. Click opens Tempo & Sync preferences.
         ImGui.setCursorScreenPos(startX + 2 * step, headerY)
         val linkOn = AbletonLinkEngine.isEnabled
+        val role = LinkSyncManager.role
         val peers = if (linkOn) AbletonLinkEngine.getNumPeers() else -1
         val linkInk = LINK_NO_PEERS_INK
         when {
+            peers > 0 && role == LinkRole.FOLLOW -> ButtonChrome.pushColor(TangoPalette.u32(TangoPalette.ACTIVE_BLUE))
             peers > 0 -> ButtonChrome.pushColor(TangoPalette.u32(TangoPalette.SYNC.normal))
             linkOn -> {
                 ButtonChrome.pushColor(TangoPalette.u32(TangoPalette.LINK_NO_PEERS))
@@ -100,14 +105,31 @@ internal object PerformanceClockControls {
             }
             else -> ButtonChrome.pushColor(TangoPalette.CLOCK_IDLE_BG.u32())
         }
-        if (peers != linkPeers) {
+        if (peers != linkPeers || role != linkRole || linkTip.isEmpty()) {
             linkPeers = peers
-            linkLabel = (if (peers >= 0) "LINK $peers" else "LINK") + "##perf_clock_link"
-            linkTip = if (linkOn) "Ableton Link: $peers peer(s). Click to open Tempo & Sync preferences."
-                      else "Ableton Link is off. Click to open Tempo & Sync preferences."
+            linkRole = role
+            linkLabel = when (role) {
+                LinkRole.OFF -> "LINK"
+                LinkRole.FOLLOW -> "LINK $peers"
+                LinkRole.LEAD -> "LEAD $peers"
+            } + "##perf_clock_link"
+            linkTip = when {
+                !AbletonLinkEngine.isAvailable -> "Ableton Link is not available on this machine: its library could not load."
+                role == LinkRole.FOLLOW -> "Following Ableton Link: tempo and beat come from the session. $peers peer(s).\nClick for Tempo & Sync preferences."
+                role == LinkRole.LEAD -> "Leading Ableton Link: this clock sets the tempo and beat for the session's $peers peer(s).\nClick to follow the session instead. Right-click for Tempo & Sync preferences."
+                else -> "Click to join an Ableton Link session and follow it. Right-click for Tempo & Sync preferences."
+            }
         }
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-            if (ButtonChrome.button(linkLabel, CELL_W, headerH)) PreferencesPanel.open(PreferencesPanel.Category.TEMPO_SYNC)
+            if (ButtonChrome.button(linkLabel, CELL_W, headerH)) {
+                if (role == LinkRole.FOLLOW || !AbletonLinkEngine.isAvailable) {
+                    PreferencesPanel.open(PreferencesPanel.Category.TEMPO_SYNC)
+                } else {
+                    audioEngine.clockSource = ClockSource.LINK
+                    AppPreferencesStore.savePreferences()
+                }
+            }
+            if (ImGui.isItemClicked(imgui.flag.ImGuiMouseButton.Right)) PreferencesPanel.open(PreferencesPanel.Category.TEMPO_SYNC)
         }
         ImGui.popStyleColor(if (peers == 0) 4 else 3)
         itemTooltip(linkTip)

@@ -1499,8 +1499,8 @@ does not publish Linux ARM64 native binaries:
 - <strong>Audio (JACK) &amp; Video (PipeWire)</strong>: linked dynamically via JNA against distro
   packages, which are native on ARM64 distros (Debian, Ubuntu, Fedora, Raspberry Pi OS
   64-bit).
-- <strong>Ableton Link</strong>: if <code>link_jni</code> is unavailable, Liquid LSD falls back to Carabiner
-  TCP sync automatically.</p>
+- <strong>Ableton Link</strong>: <code>link_jni</code> is built from source for each platform, by
+  <code>scripts/build_link_native.sh</code> or in CI. If it cannot load, Link reports itself unavailable.</p>
 <p>So <code>libimgui-java64.so</code> for <code>linux-arm64</code> was the sole hard blocker.</p>
 <hr />
 <h2 id="2-where-the-native-binary-comes-from">2. Where the native binary comes from</h2>
@@ -1554,8 +1554,7 @@ make -j$(nproc)
 <p>Place the resulting <code>liblink_jni.so</code> into:</p>
 <pre><code>src/main/resources/natives/linux-arm64/liblink_jni.so
 </code></pre>
-<p>If omitted, Liquid LSD automatically falls back to Carabiner TCP sync without user
-intervention.</p>
+<p>If omitted, the app runs without Ableton Link and says so in Preferences &gt; Tempo &amp; Sync.</p>
 <hr />
 <h2 id="5-distribution-packaging">5. Distribution packaging</h2>
 <p>Already wired up:

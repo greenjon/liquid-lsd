@@ -127,29 +127,9 @@ object AppPreferencesStore {
                     AudioEngine.downbeatMode = llm.slop.liquidlsd.audio.DownbeatMode.values().firstOrNull { it.name == saved.trim().uppercase() }
                         ?: llm.slop.liquidlsd.audio.DownbeatMode.OFF
                 }
-                props.getBoolean("linkEnabled")?.let {
-                    llm.slop.liquidlsd.link.AbletonLinkEngine.setEnabled(it)
-                }
+                props.getBoolean("linkEnabled")?.let { AudioEngine.setLinkEnabled(it) }
                 props.getProperty("linkQuantum")?.toDoubleOrNull()?.let {
                     llm.slop.liquidlsd.link.AbletonLinkEngine.quantum = it.coerceIn(1.0, 32.0)
-                }
-                props.getBoolean("linkStartStopSync")?.let {
-                    llm.slop.liquidlsd.link.AbletonLinkEngine.setStartStopSyncEnabled(it)
-                }
-                props.getProperty("linkDampingHysteresisBpm")?.toDoubleOrNull()?.let {
-                    llm.slop.liquidlsd.link.LinkSyncManager.signalDamping.hysteresisThresholdBpm = it.coerceIn(0.1, 5.0)
-                }
-                props.getProperty("linkDampingSustainedBeats")?.toIntOrNull()?.let {
-                    llm.slop.liquidlsd.link.LinkSyncManager.signalDamping.sustainedBeatsThreshold = it.coerceIn(1, 16)
-                }
-                props.getProperty("linkDampingPhaseThresholdBeats")?.toDoubleOrNull()?.let {
-                    llm.slop.liquidlsd.link.LinkSyncManager.signalDamping.phaseErrorThresholdBeats = it.coerceIn(0.1, 2.0)
-                }
-                props.getProperty("carabinerHost")?.let {
-                    llm.slop.liquidlsd.link.AbletonLinkEngine.carabinerHost = it
-                }
-                props.getProperty("carabinerPort")?.toIntOrNull()?.let {
-                    llm.slop.liquidlsd.link.AbletonLinkEngine.carabinerPort = it.coerceIn(1024, 65535)
                 }
 
                 val savedBeatTarget = props.getProperty("audioBeatTarget")?.let {
@@ -375,12 +355,6 @@ object AppPreferencesStore {
             props.setProperty("downbeatMode", AudioEngine.downbeatMode.name)
             props.setProperty("linkEnabled", llm.slop.liquidlsd.link.AbletonLinkEngine.isEnabled.toString())
             props.setProperty("linkQuantum", llm.slop.liquidlsd.link.AbletonLinkEngine.quantum.toString())
-            props.setProperty("linkStartStopSync", llm.slop.liquidlsd.link.AbletonLinkEngine.isStartStopSyncEnabled().toString())
-            props.setProperty("linkDampingHysteresisBpm", llm.slop.liquidlsd.link.LinkSyncManager.signalDamping.hysteresisThresholdBpm.toString())
-            props.setProperty("linkDampingSustainedBeats", llm.slop.liquidlsd.link.LinkSyncManager.signalDamping.sustainedBeatsThreshold.toString())
-            props.setProperty("linkDampingPhaseThresholdBeats", llm.slop.liquidlsd.link.LinkSyncManager.signalDamping.phaseErrorThresholdBeats.toString())
-            props.setProperty("carabinerHost", llm.slop.liquidlsd.link.AbletonLinkEngine.carabinerHost)
-            props.setProperty("carabinerPort", llm.slop.liquidlsd.link.AbletonLinkEngine.carabinerPort.toString())
             props.setProperty("audioBeatTarget", AudioEngine.beatDetector.settings.target.name)
             props.setProperty("audioBpmFloor", AudioEngine.beatDetector.settings.bpmSearchFloor.toString())
             props.setProperty("audioBpmCeiling", AudioEngine.beatDetector.settings.bpmSearchCeiling.toString())

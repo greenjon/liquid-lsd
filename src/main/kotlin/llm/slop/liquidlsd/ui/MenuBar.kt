@@ -270,7 +270,8 @@ class MenuBar(
                     if (linkEngine.isEnabled) {
                         val peers = linkEngine.getNumPeers()
                         val peerText = if (peers == 1) "1 peer" else "$peers peers"
-                        val label = "${Icons.ACTIVITY} LINK [$peerText]"
+                        val leading = syncManager.role == llm.slop.liquidlsd.link.LinkRole.LEAD
+                        val label = "${Icons.ACTIVITY} ${if (leading) "LINK LEAD" else "LINK"} [$peerText]"
 
                         if (peers > 0) {
                             val ink = TangoPalette.inkFor(TangoPalette.SYNC.normal, TangoPalette.SYNC.bright)
@@ -293,7 +294,7 @@ class MenuBar(
                         val backendName = linkEngine.getActiveBackendName()
                         val bpmText = syncManager.formattedActiveBpm
                         val confPercent = syncManager.confidencePercent
-                        val linkTip = "Ableton Link Sync: Active\nActive BPM: $bpmText\nPeers: $peers connected\nTracking Confidence: $confPercent%\nBackend: $backendName\nClick to open Tempo & Link deck."
+                        val linkTip = "Ableton Link: ${if (leading) "leading the session" else "following the session"}\nActive BPM: $bpmText\nPeers: $peers connected\nTracking Confidence: $confPercent%\nBackend: $backendName\nClick to open Tempo & Link deck."
                         itemTooltip(linkTip)
                     }
 

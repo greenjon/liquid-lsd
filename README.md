@@ -106,7 +106,7 @@ Liquid LSD is a real-time procedural visual synthesizer and low-latency audio DS
 - **UI Engine**: `imgui-java` 1.92.7.1 (Dear ImGui) with Inter & JetBrains Mono fonts and Lucide icons.
 - **Shader Pipeline**: ISF 2.0 parser & preprocessor, GLSL 330 core shaders.
 - **Audio Subsystem**: JNAJack (JACK/PipeWire) and Java Sound API fallback.
-- **Tempo & Network Sync**: Ableton Link C++ JNI (`liblink_jni`) and Carabiner TCP client interface.
+- **Tempo & Network Sync**: Ableton Link (bundled, through JNI: `link_jni`), following a session or leading it.
 - **Serialization**: `kotlinx.serialization` (JSON) for presets, sessions, transitions, FX chains, and preferences.
 
 ---
@@ -184,7 +184,7 @@ src/main/kotlin/llm/slop/liquidlsd/
   Main.kt                GLFW window lifecycle, CSD titlebar, render loop
   SessionContext.kt      Global application context & state
   audio/                 JACK client, Java Sound fallback, DSP, Beat Tracker, volume control
-  link/                  Ableton Link network sync (Native JNI & Carabiner TCP backends)
+  link/                  Ableton Link session: bundled native library, follow and lead
   broadcast/             WebSocket relay client & WebGL2 TV state serializer
   cv/                    CV registry, BeatClock, evaluator functions, history ring buffers
   export/                Asynchronous GPU PBO video renderer & export studio
@@ -230,3 +230,5 @@ docs/                    MkDocs documentation sources
 ## License
 
 GNU General Public License v3.0 (GPL-3.0). See [`LICENSE`](LICENSE).
+
+Bundles [Ableton Link](https://github.com/Ableton/link) (GPLv2+), built from source by `src/main/cpp/link_jni`.

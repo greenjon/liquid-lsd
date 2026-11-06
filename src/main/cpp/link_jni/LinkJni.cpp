@@ -97,18 +97,6 @@ Java_llm_slop_liquidlsd_link_NativeJniLinkBackend_00024NativeLinkBindings_nGetBe
     return 0.0;
 }
 
-JNI_EXPORT jdouble JNICALL
-Java_llm_slop_liquidlsd_link_NativeJniLinkBackend_00024NativeLinkBindings_nGetPhaseAtTime(
-    JNIEnv* env, jclass clazz, jlong handle, jlong timeUs, jdouble quantum) {
-    if (handle != 0) {
-        auto* link = reinterpret_cast<ableton::Link*>(handle);
-        auto sessionState = link->captureAppSessionState();
-        std::chrono::microseconds time(timeUs);
-        return sessionState.phaseAtTime(time, quantum);
-    }
-    return 0.0;
-}
-
 JNI_EXPORT void JNICALL
 Java_llm_slop_liquidlsd_link_NativeJniLinkBackend_00024NativeLinkBindings_nRequestBeatAtTime(
     JNIEnv* env, jclass clazz, jlong handle, jdouble beat, jlong timeUs, jdouble quantum) {
@@ -122,45 +110,27 @@ Java_llm_slop_liquidlsd_link_NativeJniLinkBackend_00024NativeLinkBindings_nReque
 }
 
 JNI_EXPORT void JNICALL
-Java_llm_slop_liquidlsd_link_NativeJniLinkBackend_00024NativeLinkBindings_nSetStartStopSyncEnabled(
-    JNIEnv* env, jclass clazz, jlong handle, jboolean enabled) {
-    if (handle != 0) {
-        auto* link = reinterpret_cast<ableton::Link*>(handle);
-        link->enableStartStopSync(enabled == JNI_TRUE);
-    }
-}
-
-JNI_EXPORT jboolean JNICALL
-Java_llm_slop_liquidlsd_link_NativeJniLinkBackend_00024NativeLinkBindings_nIsStartStopSyncEnabled(
-    JNIEnv* env, jclass clazz, jlong handle) {
-    if (handle != 0) {
-        auto* link = reinterpret_cast<ableton::Link*>(handle);
-        return link->isStartStopSyncEnabled() ? JNI_TRUE : JNI_FALSE;
-    }
-    return JNI_FALSE;
-}
-
-JNI_EXPORT jboolean JNICALL
-Java_llm_slop_liquidlsd_link_NativeJniLinkBackend_00024NativeLinkBindings_nIsPlaying(
-    JNIEnv* env, jclass clazz, jlong handle) {
-    if (handle != 0) {
-        auto* link = reinterpret_cast<ableton::Link*>(handle);
-        auto sessionState = link->captureAppSessionState();
-        return sessionState.isPlaying() ? JNI_TRUE : JNI_FALSE;
-    }
-    return JNI_FALSE;
-}
-
-JNI_EXPORT void JNICALL
-Java_llm_slop_liquidlsd_link_NativeJniLinkBackend_00024NativeLinkBindings_nSetIsPlaying(
-    JNIEnv* env, jclass clazz, jlong handle, jboolean isPlaying, jlong timeUs) {
+Java_llm_slop_liquidlsd_link_NativeJniLinkBackend_00024NativeLinkBindings_nForceBeatAtTime(
+    JNIEnv* env, jclass clazz, jlong handle, jdouble beat, jlong timeUs, jdouble quantum) {
     if (handle != 0) {
         auto* link = reinterpret_cast<ableton::Link*>(handle);
         auto sessionState = link->captureAppSessionState();
         std::chrono::microseconds time(timeUs);
-        sessionState.setIsPlaying(isPlaying == JNI_TRUE, time);
+        sessionState.forceBeatAtTime(beat, time, quantum);
         link->commitAppSessionState(sessionState);
     }
+}
+
+// Link's own clock. Every time passed to this library must be on this clock, which on Linux is
+// CLOCK_MONOTONIC_RAW and so not the same as Java's System.nanoTime().
+JNI_EXPORT jlong JNICALL
+Java_llm_slop_liquidlsd_link_NativeJniLinkBackend_00024NativeLinkBindings_nClockMicros(
+    JNIEnv* env, jclass clazz, jlong handle) {
+    if (handle != 0) {
+        auto* link = reinterpret_cast<ableton::Link*>(handle);
+        return static_cast<jlong>(link->clock().micros().count());
+    }
+    return 0;
 }
 
 } // extern "C"

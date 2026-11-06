@@ -56,9 +56,9 @@ private fun runSmokeTest(): Int {
     val osArch = System.getProperty("os.arch") ?: "Unknown"
     val jvmVersion = System.getProperty("java.version") ?: "Unknown"
     val jvmVendor = System.getProperty("java.vendor") ?: "Unknown"
-    println("[1/5] Runtime Environment: OS=$osName, Arch=$osArch, JVM=$jvmVersion ($jvmVendor)")
+    println("[1/6] Runtime Environment: OS=$osName, Arch=$osArch, JVM=$jvmVersion ($jvmVendor)")
 
-    print("[2/5] Testing LWJGL native library linkage... ")
+    print("[2/6] Testing LWJGL native library linkage... ")
     try {
         val lwjglVer = org.lwjgl.Version.getVersion()
         println("OK (LWJGL $lwjglVer)")
@@ -69,7 +69,7 @@ private fun runSmokeTest(): Int {
         return 1
     }
 
-    print("[3/5] Testing Dear ImGui native bindings & JNI context... ")
+    print("[3/6] Testing Dear ImGui native bindings & JNI context... ")
     try {
         val context = imgui.ImGui.createContext()
         val imguiVer = imgui.ImGui.getVersion()
@@ -82,7 +82,7 @@ private fun runSmokeTest(): Int {
         return 2
     }
 
-    print("[4/5] Testing classpath resource packaging (shaders/presets)... ")
+    print("[4/6] Testing classpath resource packaging (shaders/presets)... ")
     try {
         val requiredResources = listOf(
             "/shaders/blit.frag",
@@ -103,7 +103,22 @@ private fun runSmokeTest(): Int {
         return 3
     }
 
-    print("[5/5] Testing Audio Engine backend initialization & fallback... ")
+    print("[5/6] Testing bundled Ableton Link native library... ")
+    try {
+        val link = llm.slop.liquidlsd.link.NativeJniLinkBackend()
+        check(link.init(120.0)) { "link_jni did not load for $osName/$osArch" }
+        val beat = link.getBeatAtTime(link.clockMicros(), 4.0)
+        check(!beat.isNaN() && link.getTempo() == 120.0) { "link_jni returned nonsense" }
+        link.close()
+        println("OK")
+    } catch (t: Throwable) {
+        println("FAILED!")
+        System.err.println("CRITICAL: ${t.message}")
+        t.printStackTrace()
+        return 5
+    }
+
+    print("[6/6] Testing Audio Engine backend initialization & fallback... ")
     try {
         val backendName = llm.slop.liquidlsd.audio.AudioEngine.getActiveBackendName()
         println("OK (Initial Backend: $backendName)")
@@ -733,6 +748,7 @@ fun main(args: Array<String>) {
     llm.slop.liquidlsd.midi.MidiMappingManager.controllers.shutdown()
     llm.slop.liquidlsd.audio.MidiJackWatchdog.stop()
     AudioEngine.stop()
+    llm.slop.liquidlsd.link.AbletonLinkEngine.shutdown()
     llm.slop.liquidlsd.midi.MidiEngine.close()
     llm.slop.liquidlsd.osc.OscEngine.stop()
 

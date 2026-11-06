@@ -7,21 +7,11 @@ This document details tempo detection, beat clock flywheel accumulator logic, an
 ## Architecture Overview
 
 ```
-Ableton Link Session Orchestration: LinkSyncManager & AbletonLinkEngine
+Clock Source Selection: ClockSource (MANUAL | AUDIO_TRACKER | LINK)
+    │   (a saved "MANUAL_TAP" loads as MANUAL, "ABLETON_LINK" as LINK)
     │
-    ├──► AbletonLinkEngine.isEnabled == true:
-    │       ├─► Network Link active; updates/synchronizes BPM & beat timeline across Link peers
-    │       └─► Filters audio beat tracking jitter via BeatTrackToLinkDamping (Median + EMA, 0.5 BPM / 4-beat hysteresis, >= 0.5 beat phase error)
-    │       └─► Commits tempo updates and phase alignment directly to AbletonLinkEngine
-    │
-    └──► AbletonLinkEngine.isEnabled == false:
-            └─► Network Link disabled; local clock sources operate independently
-
-Ableton Link on (a separate on/off, not a clock source): AbletonLinkEngine (Native JNI / Carabiner TCP)
-    └─► updateClockAnchor() on Render Thread 0 (CVRegistry.updateAll) → CVRegistry.updateBeatAnchor(linkBeat, linkBpm, nanoTime)
-
-Clock Source Selection: ClockSource (MANUAL | AUDIO_TRACKER)
-    │   (saved values "MANUAL_TAP" and "ABLETON_LINK" load as MANUAL)
+    ├──► LINK: the session is the clock (Render Thread 0: LinkSyncManager.tick)
+    │       └─► AbletonLinkEngine.updateClockAnchor → CVRegistry.updateBeatAnchor(linkBeat, linkBpm, nanoTime)
     │
     ├──► AUDIO_TRACKER: JACK / Java Sound Callback (Audio Engine Thread)
     │       ├─► BeatTrackerEngine.processMultiBand() / processBlock()  (the tempo)
@@ -30,7 +20,9 @@ Clock Source Selection: ClockSource (MANUAL | AUDIO_TRACKER)
     │
     └──► MANUAL: Internal Manual Flywheel & Tap Tempo Controller
             └─► CVRegistry.alignBeatPhase(alignedBeats, manualBpm, nanoTime)
-```
+
+With Link on, MANUAL and AUDIO_TRACKER lead the session (Render Thread 0: LinkSyncManager.tick)
+    └─► LinkLeader: app's beat count and tempo → setTempo / forceBeatAtTime
               │  (@Volatile primitive fields update: zero heap allocation)
               │
         Render Thread 0 (Every Frame @ 60Hz–144Hz+)
@@ -116,7 +108,7 @@ $$\text{Score}(t) = \text{ODF}(t) + \lambda \cdot \max_{\tau \in [\tau_{\min}, \
 - **How it steers:** an error within 0.25 beat is slewed in, a quarter per reading, through `phaseSlewBuffer`. A larger one must hold for 8 readings (about 2 s), then jumps forward, so the beat count never runs back by more than a slew.
 - **By hand:** TAP and SNAP call `claimPhase()`. The lock waits 4 s, then keeps the offset between the music's grid and where the person put the beat. It drops that offset when the tempo moves more than 3% or the grid jumps, because that usually means a new track.
 
-**Link:** the Link timeline is the beat, so the lock does not steer while Link is on. A small backward move in it is absorbed by `getSynchronizedTotalBeats`, which coasts at 80% of tempo until the true beat catches up. At full tempo the output stayed ahead for good (+120 ms in a simulated hour after a 0.24 beat move).
+**Link:** following Link, the session is the beat, so the lock does not steer. Leading, the lock steers as usual and `LinkLeader` carries the result to the session. A small backward move in the session is absorbed by `getSynchronizedTotalBeats`, which coasts at 80% of tempo until the true beat catches up. At full tempo the output stayed ahead for good (+120 ms in a simulated hour after a 0.24 beat move).
 
 **Measured** with `AudioPhaseReportTest`, on 150 tracks with fixed Mixxx beat grids (`scripts/mixxx_beat_grids.py`), an independent tracker's opinion rather than the truth. Share of clock beats within 70 ms of a Mixxx beat, where about 30% is chance:
 
@@ -127,6 +119,35 @@ $$\text{Score}(t) = \text{ODF}(t) + \lambda \cdot \max_{\tau \in [\tau_{\min}, \
 | `BeatPhaseLock` | 53.2% | 28.6% | 65 of 150 |
 
 No-beat audio: on six long spoken-word files the lock is on 1.5 to 3.9% of the time and moves the clock at most 0.05 beat per minute, and on beatless ambient tracks it is mostly off. On 43 DJ mixes (45.5 h) it is on 79% of the time, with 0.43 jumps a minute.
+
+## Ableton Link (`link/`)
+
+The clock source says who is in charge. Link has no leader role of its own: any peer may change the tempo and the last writer wins, and with peers present `requestBeatAtTime` only renumbers our own beats. So following and leading are two different things this app does, not settings of Link.
+
+| Clock source, Link on | Role | Clock runs from | Writes to the session |
+| :--- | :--- | :--- | :--- |
+| `LINK` | Follow | the session | only what the person does: TAP and the BPM controls set the tempo; TAP and SNAP request a beat, which moves it only with no peers |
+| `MANUAL` | Lead | the app | tempo and beat, always |
+| `AUDIO_TRACKER` | Lead | the app, with `BeatPhaseLock` and `DownbeatDetector` running as with Link off | tempo while the tracker is locked and the signal active; beat while `BeatPhaseLock` is also locked |
+
+Choosing `LINK` joins the session, and the Preferences checkbox does the same, so that joining cannot overwrite a running session's tempo by surprise. Turning Link off while on `LINK` moves the clock to `MANUAL`.
+
+**`LinkLeader`** compares the session to the app's clock each frame, on the render thread:
+
+- **Tempo:** sent when it differs by 0.01 BPM. A tracked tempo must move 0.5 BPM and hold for 4 beats first, so tracker wobble and a brief 2:3 reading stay off the network; a hand-set tempo goes at once. Writes are limited to one per 250 ms, or one per second when the session holds a tempo we did not send (another peer writing), so two leaders do not spin.
+- **Beat error below 0.25 beat:** slid out with a tempo offset of error / 8 beats, capped at 2%, with a deadband of 0.01 beat. Peers follow smoothly and stay in step with each other.
+- **Larger error:** `forceBeatAtTime`, once it has held for 2 s and at most every 8 s, because peers hear it as a jump. Alone in a session it is applied at once.
+- **Bars:** the error wraps at the bar when the quantum is whole bars, so a new bar line reaches peers; otherwise at the quantum.
+
+**Threads:** Link's app-side calls take a lock, so the audio thread never calls them. `LinkSyncManager.tick` runs from `CVRegistry.updateAll` and refreshes `latestTempo` and `latestBeat` for the audio thread.
+
+**Clocks:** every time passed to Link comes from `LinkBackend.clockMicros`, the library's own clock. On Linux that is `CLOCK_MONOTONIC_RAW`, which is not the JVM's `System.nanoTime`, and the two drift apart with uptime.
+
+**The library:** `src/main/cpp/link_jni` pins Link by commit (GPLv2+; the app is GPL-3.0). `scripts/build_link_native.sh` builds it for this machine into `src/main/resources/natives/<platform>/`; `.github/workflows/build-link-natives.yml` does it for all five platforms at release, and `--smoke-test` fails if it does not load. If it cannot load on a user's machine, `AbletonLinkEngine.isAvailable` is false, Link cannot be enabled, and the UI says so.
+
+Link finds peers by UDP multicast on port 20808, so a firewall or a network that blocks multicast shows up as 0 peers.
+
+**Tests:** `LinkLeaderTest` and `AbletonLinkEngineTest` run on `FakeLinkBackend`. `LinkNativeSessionTest` runs a real session between two instances of the library over the network, and skips if there is no library or they cannot meet. `scripts/link_peer_check.py` (needs `pip install aalink`) runs the app's clock code against another client in its own process and reports how far apart the two beats are, in milliseconds, while following, leading and correcting.
 
 ## BPM Sources & Locking
 
@@ -169,11 +190,11 @@ Beat 1 can come from four places:
 | Source | How |
 | :--- | :--- |
 | `SNAP` / `resyncDownbeat()` | rounds to a whole beat, then to the nearest multiple of `beatsPerBar` (`barLineBeat`, at most half a bar of movement), zeroes phase slew, calls `claimDownbeat()`. |
-| First tap of a run | `registerTap(null)` does the same; later taps keep the bar line (they only round to whole beats). Link mode returns early: the Link quantum owns the bar. |
+| First tap of a run | `registerTap(null)` does the same; later taps keep the bar line (they only round to whole beats). Following Link returns early: the session owns the bar. |
 | `DownbeatDetector` (Preferences > Tempo & Sync > Downbeat: Auto) | below. |
-| Ableton Link | `AbletonLinkEngine.quantum` is the bar; the setting `setBeatsPerBarAndLinkQuantum` keeps the two equal. The detector is not run under Link. |
+| Ableton Link, following | `AbletonLinkEngine.quantum` is the bar; the setting `setBeatsPerBarAndLinkQuantum` keeps the two equal. The detector is not run. Leading, the rows above decide as usual and the bar goes to the session. |
 
-**`DownbeatDetector`** (audio thread, no allocation) runs from `AudioEngine.processAudio` right after the flywheel advances, only when `downbeatMode == AUTO`, the clock is `AUDIO_TRACKER`, the signal is `ACTIVE` and the tempo is locked:
+**`DownbeatDetector`** (audio thread, no allocation) runs from `AudioEngine.processAudio` right after the flywheel advances, only when `downbeatMode == AUTO`, the clock is `AUDIO_TRACKER` (leading Link or not), the signal is `ACTIVE` and the tempo is locked:
 
 1. Each block is assigned to the beat whose window `[n-0.2, n+0.8)` contains the block's centre. When a beat's window ends it yields three numbers: summed low-band flux, summed overall onset strength and mean low-band level, each divided by its own running average (`EMA_RATE` 0.05), so loudness and genre do not matter.
 2. `feature = 0.45 kick + 0.35 onset + 0.2 level`, plus half of any rise over the previous beat (a new bar's first beat is usually a jump). It is added into `score[n mod beatsPerBar]` with a decay of 0.8 per bar (about the last five bars).

@@ -387,7 +387,8 @@ class AudioEngineTest {
     fun testClockSourceFromString() {
         assertEquals(ClockSource.MANUAL, ClockSource.fromString("MANUAL"))
         assertEquals(ClockSource.MANUAL, ClockSource.fromString("MANUAL_TAP"))
-        assertEquals(ClockSource.MANUAL, ClockSource.fromString("ABLETON_LINK"))
+        assertEquals(ClockSource.LINK, ClockSource.fromString("ABLETON_LINK"))
+        assertEquals(ClockSource.LINK, ClockSource.fromString("LINK"))
         assertEquals(ClockSource.AUDIO_TRACKER, ClockSource.fromString("AUDIO_TRACKER"))
         assertEquals(ClockSource.AUDIO_TRACKER, ClockSource.fromString("UNKNOWN_VALUE"))
     }

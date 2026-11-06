@@ -1262,6 +1262,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#ableton-link-now-works-and-you-choose-who-is-in-charge-link-audioaudioenginekt-uiperformanceclockcontrolskt-uitemposyncpanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ableton Link: Now Works, and You Choose Who Is in Charge (link/, audio/AudioEngine.kt, ui/PerformanceClockControls.kt, ui/TempoSyncPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#audio-clock-the-beat-now-lands-on-the-music-audiobeatphaselockkt-audioaudioenginekt-cvcvregistrykt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7576,6 +7587,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#ableton-link-now-works-and-you-choose-who-is-in-charge-link-audioaudioenginekt-uiperformanceclockcontrolskt-uitemposyncpanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ableton Link: Now Works, and You Choose Who Is in Charge (link/, audio/AudioEngine.kt, ui/PerformanceClockControls.kt, ui/TempoSyncPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#audio-clock-the-beat-now-lands-on-the-music-audiobeatphaselockkt-audioaudioenginekt-cvcvregistrykt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -13841,6 +13863,16 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="ableton-link-now-works-and-you-choose-who-is-in-charge-link-audioaudioenginekt-uiperformanceclockcontrolskt-uitemposyncpanelkt">Ableton Link: Now Works, and You Choose Who Is in Charge (<code>link/</code>, <code>audio/AudioEngine.kt</code>, <code>ui/PerformanceClockControls.kt</code>, <code>ui/TempoSyncPanel.kt</code>)</h3>
+<ul>
+<li><strong>Fixed: Ableton Link did not connect in normal builds.</strong> The Link library was never built or included, so the button could be on with nothing connected. It now ships with the app on every platform.</li>
+<li><strong>Follow a session:</strong> the new <code>[ LINK ]</code> clock source takes tempo and beat from the other apps, and the beat tracker stops writing to them. Use it when the music comes from a Link app.</li>
+<li><strong>Lead a session:</strong> with Link on, <code>[ AUDIO ]</code> or <code>[ MAN ]</code> makes this app's clock the source of truth, and the button reads <code>[ LEAD n ]</code>. Use it when the music has no Link of its own. Small corrections slide in smoothly, a large one is a jump after about 2 seconds, and a tempo another app sets gets put back. Other apps follow any mistake the tracker makes, so don't lead a musician's Live set from <code>[ AUDIO ]</code>.</li>
+<li><strong>Fixed: the tracker could overwrite the session's tempo with a brief wrong reading.</strong> It now sends nothing until it has locked, and a new tempo must hold for 4 beats.</li>
+<li><strong>Fixed: Audio mode lost its beat lock and downbeat detection with Link on.</strong> They now keep running while leading.</li>
+<li><strong>Enabling Link starts by following</strong>, so joining can't overwrite a running session's tempo. A session you saved while leading still leads when reopened.</li>
+<li><strong>Removed:</strong> Carabiner support, which could not read the real Carabiner's replies, and the Start/Stop Sync checkbox, which had nothing to start or stop.</li>
+</ul>
 <h3 id="audio-clock-the-beat-now-lands-on-the-music-audiobeatphaselockkt-audioaudioenginekt-cvcvregistrykt">Audio Clock: The Beat Now Lands on the Music (<code>audio/BeatPhaseLock.kt</code>, <code>audio/AudioEngine.kt</code>, <code>cv/CVRegistry.kt</code>)</h3>
 <ul>
 <li><strong>Fixed: with the Audio clock, the beat was not lined up with the music.</strong> The app measured the tempo but never where the beats fell, so beat-synced motion landed on the music only by chance unless you pressed TAP or SNAP, and then it slowly drifted away again. It now follows the music's beats. Against the beat grids of 150 tracks analysed in Mixxx, beats within 70 ms of the grid are up from 30% (chance) to 53%.</li>

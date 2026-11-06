@@ -24,8 +24,8 @@ Every other dependency already has first-class Linux ARM64 support:
 - **Audio (JACK) & Video (PipeWire)**: linked dynamically via JNA against distro
   packages, which are native on ARM64 distros (Debian, Ubuntu, Fedora, Raspberry Pi OS
   64-bit).
-- **Ableton Link**: if `link_jni` is unavailable, Liquid LSD falls back to Carabiner
-  TCP sync automatically.
+- **Ableton Link**: `link_jni` is built from source for each platform, by
+  `scripts/build_link_native.sh` or in CI. If it cannot load, Link reports itself unavailable.
 
 So `libimgui-java64.so` for `linux-arm64` was the sole hard blocker.
 
@@ -100,8 +100,7 @@ Place the resulting `liblink_jni.so` into:
 ```
 src/main/resources/natives/linux-arm64/liblink_jni.so
 ```
-If omitted, Liquid LSD automatically falls back to Carabiner TCP sync without user
-intervention.
+If omitted, the app runs without Ableton Link and says so in Preferences > Tempo & Sync.
 
 ---
 

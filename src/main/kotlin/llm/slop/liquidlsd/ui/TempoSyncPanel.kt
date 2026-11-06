@@ -221,7 +221,7 @@ object TempoSyncPanel {
                 AppPreferencesStore.savePreferences()
             }
         )
-        itemTooltip("Tempo of the beat clock (40 to 240 BPM). In Audio Tracker mode it shows the detected tempo. With Ableton Link on, setting it sets the Link session tempo too.")
+        itemTooltip("Tempo of the beat clock (40 to 240 BPM). In Audio Tracker mode it shows the detected tempo. Following or leading Ableton Link, setting it sets the session tempo too.")
 
         ImGui.spacing()
 
@@ -254,7 +254,7 @@ object TempoSyncPanel {
             audioEngine.clockSource = ClockSource.MANUAL
             AppPreferencesStore.savePreferences()
         }
-        itemTooltip("Clock is driven directly by the manual BPM slider, tap tempo, or Ableton Link.")
+        itemTooltip("Clock is driven by the BPM slider and tap tempo. With Ableton Link on, it sets the session's tempo and beat.")
 
         ImGui.sameLine(0f, 24f)
 
@@ -263,7 +263,18 @@ object TempoSyncPanel {
             audioEngine.clockSource = ClockSource.AUDIO_TRACKER
             AppPreferencesStore.savePreferences()
         }
-        itemTooltip("Clock tracks real-time rhythmic transients and tempo directly from the incoming audio stream.")
+        itemTooltip("Clock tracks real-time rhythmic transients and tempo directly from the incoming audio stream. With Ableton Link on, it sets the session's tempo and beat while it is sure of them.")
+
+        ImGui.sameLine(0f, 24f)
+
+        val linkAvailable = linkEngine.isAvailable
+        ImGui.beginDisabled(!linkAvailable)
+        if (ImGui.radioButton("Ableton Link##clock_link", currentClock == ClockSource.LINK)) {
+            audioEngine.clockSource = ClockSource.LINK
+            AppPreferencesStore.savePreferences()
+        }
+        ImGui.endDisabled()
+        itemTooltip("Clock follows the Ableton Link session: tempo and beat come from the other apps, and the beat tracker writes nothing. Best when the music is playing from a Link app.")
 
         ImGui.spacing()
 
@@ -393,13 +404,21 @@ object TempoSyncPanel {
         ImGui.separator()
         ImGui.spacing()
 
+        if (!linkEngine.isAvailable) {
+            val c = TangoPalette.ALERT.normal
+            ImGui.pushStyleColor(ImGuiCol.Text, c[0], c[1], c[2], 1.0f)
+            ImGui.textWrapped("${Icons.ALERT} Ableton Link is not available: its library could not load on this machine. The log has the reason.")
+            ImGui.popStyleColor()
+            return
+        }
+
         val linkState = ImBoolean(isLinkEnabled)
         if (ImGui.checkbox("Enable Ableton Link##tempo_link_toggle", linkState)) {
-            val enabled = linkState.get()
-            linkEngine.setEnabled(enabled)
+            // Joining starts by following: leading from here would overwrite the session's tempo with no warning.
+            if (linkState.get()) audioEngine.clockSource = ClockSource.LINK else audioEngine.setLinkEnabled(false)
             AppPreferencesStore.savePreferences()
         }
-        itemTooltip("Synchronize beat timeline, tempo, and downbeat phase across the local network with Ableton Live, Resolume, Traktor, etc.")
+        itemTooltip("Share tempo and beat over the local network with Ableton Live, Resolume, Traktor and other Link apps. Starts by following the session. Then choose Manual or Audio Beat Tracker above to lead it instead.")
 
         if (isLinkEnabled) {
             val peers = linkEngine.getNumPeers()
@@ -436,20 +455,21 @@ object TempoSyncPanel {
                 }
                 if (i < quantums.size - 1) ImGui.sameLine(0f, 12f)
             }
-            itemTooltip("Beat boundary interval for quantum phase alignment.")
+            itemTooltip("How many beats must line up across the session. Whole bars share the bar line with other apps; 1 Beat shares only the beat.")
 
             ImGui.spacing()
-
-            // Transport Sync Checkbox
-            val ssSync = ImBoolean(linkEngine.isStartStopSyncEnabled())
-            if (ImGui.checkbox("Enable Start/Stop Transport Sync##link_transport_sync", ssSync)) {
-                linkEngine.setStartStopSyncEnabled(ssSync.get())
-                AppPreferencesStore.savePreferences()
+            when {
+                currentClock == ClockSource.LINK ->
+                    theme.caption("Following: tempo and beat come from the session. SNAP moves the beat only when no peers are connected, and TAP and the BPM controls change the tempo for everyone. Choose Manual or Audio Beat Tracker above to lead instead.")
+                !LinkSyncManager.isPublishing -> {
+                    val c = TangoPalette.ALERT.normal
+                    theme.captionColored(c[0], c[1], c[2], 1.0f, "Leading, but waiting for the beat tracker to lock. The session is left alone until then.")
+                }
+                currentClock == ClockSource.MANUAL ->
+                    theme.caption("Leading: your BPM and beat set the session, and a tempo change from another app is put back.")
+                else ->
+                    theme.caption("Leading: the tracked tempo and beat set the session, and a tempo change from another app is put back. Choose this when the music has no Link of its own. Other apps will follow any mistake the tracker makes.")
             }
-            itemTooltip("Synchronize play/pause transport commands across connected Ableton Link peers.")
-
-            ImGui.spacing()
-            theme.caption("When Link is active, tempo and downbeats stay phase-aligned with all peers on your local Wi-Fi or Ethernet.")
         }
     }
 
@@ -514,11 +534,6 @@ object TempoSyncPanel {
                 val c = TangoPalette.ALERT.normal
                 ImGui.pushStyleColor(ImGuiCol.Text, c[0], c[1], c[2], 1.0f)
                 ImGui.textWrapped("${Icons.ALERT} Auto downbeat needs the Audio Beat Tracker clock.")
-                ImGui.popStyleColor()
-            } else if (AbletonLinkEngine.isEnabled) {
-                val c = TangoPalette.ALERT.normal
-                ImGui.pushStyleColor(ImGuiCol.Text, c[0], c[1], c[2], 1.0f)
-                ImGui.textWrapped("${Icons.ALERT} Ableton Link is on: its quantum defines the bar, so Auto downbeat is paused.")
                 ImGui.popStyleColor()
             }
         }

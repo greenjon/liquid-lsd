@@ -1,71 +1,38 @@
 package llm.slop.liquidlsd.link
 
 /**
- * Fallback no-op Ableton Link backend when native or network drivers are unavailable or disabled.
+ * Stands in where the native Link library cannot load. [AbletonLinkEngine] will not enable it, so the app
+ * never runs its clock from this and the UI can say Link is unavailable.
  */
 class NoOpLinkBackend : LinkBackend {
-    override val name: String = "Disabled / No-Op"
+    override val name: String = "Unavailable"
 
-    private var active = false
     private var bpm = 120.0
-    private var startStopSync = false
-    private var playing = false
-    private var startTimeUs = System.nanoTime() / 1000
 
     override fun init(initialBpm: Double): Boolean {
         bpm = initialBpm
-        active = true
-        startTimeUs = System.nanoTime() / 1000
         return true
     }
 
-    override fun close() {
-        active = false
-    }
+    override fun close() {}
 
-    override fun setEnabled(enabled: Boolean) {
-        active = enabled
-    }
+    override fun setEnabled(enabled: Boolean) {}
 
-    override fun isEnabled(): Boolean = active
+    override fun isEnabled(): Boolean = false
 
     override fun getNumPeers(): Int = 0
+
+    override fun clockMicros(): Long = System.nanoTime() / 1000
 
     override fun getTempo(): Double = bpm
 
     override fun setTempo(bpm: Double) {
-        this.bpm = bpm.coerceIn(20.0, 300.0)
+        this.bpm = bpm
     }
 
-    override fun getBeatAtTime(timeUs: Long, quantum: Double): Double {
-        val elapsedSec = (timeUs - startTimeUs) / 1_000_000.0
-        return (elapsedSec * (bpm / 60.0)).coerceAtLeast(0.0)
-    }
+    override fun getBeatAtTime(timeUs: Long, quantum: Double): Double = 0.0
 
-    override fun getPhaseAtTime(timeUs: Long, quantum: Double): Double {
-        val beat = getBeatAtTime(timeUs, quantum)
-        val q = quantum.coerceAtLeast(1.0)
-        return beat % q
-    }
+    override fun requestBeatAtTime(beat: Double, timeUs: Long, quantum: Double) {}
 
-    override fun isConnected(): Boolean = false
-
-    override fun requestBeatAtTime(beat: Double, timeUs: Long, quantum: Double) {
-        val nowUs = if (timeUs > 0) timeUs else (System.nanoTime() / 1000)
-        val elapsedBeats = beat.coerceAtLeast(0.0)
-        val elapsedSec = elapsedBeats / (bpm / 60.0)
-        startTimeUs = nowUs - (elapsedSec * 1_000_000.0).toLong()
-    }
-
-    override fun setStartStopSyncEnabled(enabled: Boolean) {
-        startStopSync = enabled
-    }
-
-    override fun isStartStopSyncEnabled(): Boolean = startStopSync
-
-    override fun isPlaying(): Boolean = playing
-
-    override fun setIsPlaying(isPlaying: Boolean) {
-        playing = isPlaying
-    }
+    override fun forceBeatAtTime(beat: Double, timeUs: Long, quantum: Double) {}
 }

@@ -344,6 +344,22 @@ Known remaining literals: dropdown selected text, ParametersRenderer fills and g
 - [ ] Twister: Ctrl-C the app in native mode, the Twister leaves native mode and goes dark; unplug it while playing, the picture doesn't freeze; plug it back in, it comes back.
 - [ ] Tooltips: hover the new ones (System Volume, Master BPM and presets, Library tabs, MIDI mapping columns, Broadcast buttons) and a few converted knob/slider tooltips (what / gestures / MIDI layout). Menus say "MIDI Learn (X)" / "OSC Learn (X)"; MIDI Preferences column says Control; the transition on/off checkbox no longer says Bypass; colours of the menu bar, About, Link button and Clock row group tints look unchanged (dark) and sensible (light).
 
+## 16c. Ableton Link (2026-11-05)
+
+Tested automatically on this Linux machine, between two copies of the Link library and against `aalink` in a separate process (`scripts/link_peer_check.py`). Nothing has been tried in the running app, with a real music app, on a second computer, or on Windows or macOS. Any Link app will do as the peer; Ableton Live has a free trial, and there are free phone apps.
+
+- [ ] With the other app running, click `[ LINK ]` on the Clock row: it reads `LINK 1` in blue within a few seconds.
+- [ ] Change the tempo in the other app: the BPM readout follows, and beat-synced motion stays on the other app's click.
+- [ ] Is the picture ahead of or behind the other app's sound? There is no latency offset yet, so note by how much.
+- [ ] While following, `-`/`+` and TAP change the other app's tempo. SNAP does nothing visible with a peer connected.
+- [ ] Click `[ MAN ]`: it reads `LEAD 1`. The other app takes your BPM, and its bar lines up about 2 seconds later.
+- [ ] Still leading, change the tempo in the other app: it goes back within about a second. Is that behavior right, or annoying?
+- [ ] Click `[ AUDIO ]` with music playing: while the tracker is unlocked the other app is left alone, and Preferences > Tempo & Sync says it is waiting. Once locked, the other app follows. Does the other app's playback sound acceptable through the small corrections?
+- [ ] Untick **Enable Ableton Link** while on `[ LINK ]`: the clock moves to `[ MAN ]` and the button goes dim.
+- [ ] Quit with Link on: the other app's peer count drops at once, not after a timeout.
+- [ ] A second computer on the same network finds the app. If it shows 0 peers, check the firewall (UDP 20808).
+- [ ] Windows and macOS: the app finds the peer, and note any permission prompt.
+
 ## 17. Before release
 
 - [ ] Camera-relative light: Mandelbulb, Mandelbox and KIFS: turn Rotate X/Y/Z (and let Mandelbulb's Flight Speed spin) through a full circle; the lit side stays toward you and no side goes dark. KIFS: try every start face. Icosa H3, Pseudo-Kleinian and Apollonian look as before.

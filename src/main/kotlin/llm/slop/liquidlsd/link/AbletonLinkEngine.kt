@@ -1,12 +1,15 @@
 package llm.slop.liquidlsd.link
 
 import llm.slop.liquidlsd.cv.CVRegistry
+import llm.slop.liquidlsd.utils.TimeSource
 import mu.KotlinLogging
 
 /**
- * Central orchestrator for Ableton Link synchronization.
- * Automatically tries Native JNI backend (`NativeJniLinkBackend`), then Carabiner TCP backend (`CarabinerTcpLinkBackend`),
- * and falls back to `NoOpLinkBackend` if unavailable.
+ * The app's Ableton Link session. Uses the bundled native library, and reports itself unavailable
+ * ([isAvailable]) if that cannot load on this machine.
+ *
+ * Only the render thread and the UI touch the backend, because Link's app-side calls take a lock. The audio
+ * thread reads [latestTempo] and [latestBeat], which [LinkSyncManager.tick] refreshes every frame.
  */
 object AbletonLinkEngine {
     private val logger = KotlinLogging.logger {}
@@ -16,71 +19,67 @@ object AbletonLinkEngine {
 
     @Volatile var quantum: Double = 4.0 // Default 4 beats = 1 bar
 
-    @Volatile var carabinerHost: String = "127.0.0.1"
-    @Volatile var carabinerPort: Int = 17000
+    /** The session tempo at the last [refresh]; safe to read from the audio thread. */
+    @Volatile var latestTempo: Double = 120.0
+        private set
+
+    /** The session beat at the last [refresh]; safe to read from the audio thread. */
+    @Volatile var latestBeat: Double = 0.0
+        private set
 
     private var activeBackend: LinkBackend = NoOpLinkBackend()
     @Volatile private var isInitialized = false
+    @Volatile private var available = false
 
-    /**
-     * Initializes the Link engine with the target initial BPM.
-     */
+    /** False if the native library cannot load here, in which case Link cannot be enabled. */
+    val isAvailable: Boolean
+        get() {
+            if (!isInitialized) init()
+            return available
+        }
+
     @Synchronized
     fun init(initialBpm: Double = 120.0): Boolean {
         if (isInitialized) return true
-
-        // 1. Try Native JNI Backend
-        val jniBackend = NativeJniLinkBackend()
-        if (jniBackend.init(initialBpm)) {
-            activeBackend = jniBackend
-            isInitialized = true
-            logger.info { "AbletonLinkEngine: Initialized with native JNI driver." }
-            return true
+        val native = NativeJniLinkBackend()
+        if (native.init(initialBpm)) {
+            activeBackend = native
+            available = true
+            logger.info { "Ableton Link ready." }
+        } else {
+            activeBackend = NoOpLinkBackend().apply { init(initialBpm) }
+            available = false
         }
-
-        // 2. Try Carabiner TCP Backend
-        val carabinerBackend = CarabinerTcpLinkBackend(carabinerHost, carabinerPort)
-        if (carabinerBackend.init(initialBpm)) {
-            activeBackend = carabinerBackend
-            isInitialized = true
-            logger.info { "AbletonLinkEngine: Initialized with Carabiner TCP driver ($carabinerHost:$carabinerPort)." }
-            return true
-        }
-
-        // 3. Fallback to NoOp
-        activeBackend = NoOpLinkBackend().apply { init(initialBpm) }
         isInitialized = true
-        logger.info { "AbletonLinkEngine: Operating in fallback No-Op mode." }
         return true
     }
 
-    /**
-     * Re-attempts initializing Link backends (e.g. after user changes Carabiner config or native lib path).
-     */
+    /** Runs the engine on [backend] from now on (tests). */
     @Synchronized
-    fun reinitialize(initialBpm: Double = 120.0) {
+    internal fun installBackend(backend: LinkBackend) {
         shutdown()
-        init(initialBpm)
-        if (isEnabled) {
-            activeBackend.setEnabled(true)
-        }
+        activeBackend = backend
+        available = true
+        isInitialized = true
     }
 
     @Synchronized
     fun setEnabled(enabled: Boolean) {
-        isEnabled = enabled
-        if (!isInitialized) {
-            init()
+        if (!isInitialized) init()
+        if (enabled && !available) {
+            logger.warn { "Ableton Link is unavailable on this machine." }
+            return
         }
+        isEnabled = enabled
         activeBackend.setEnabled(enabled)
-        logger.info { "AbletonLinkEngine: Enabled state set to $enabled" }
+        logger.info { "Ableton Link ${if (enabled) "on" else "off"}" }
     }
 
     fun getActiveBackendName(): String = activeBackend.name
 
-    fun isConnected(): Boolean = isEnabled && activeBackend.isConnected()
-
     fun getNumPeers(): Int = if (isEnabled) activeBackend.getNumPeers() else 0
+
+    fun clockMicros(): Long = activeBackend.clockMicros()
 
     fun getTempo(): Double = activeBackend.getTempo()
 
@@ -88,69 +87,48 @@ object AbletonLinkEngine {
         activeBackend.setTempo(bpm)
     }
 
-    fun getBeatAtTime(timeUs: Long): Double = activeBackend.getBeatAtTime(timeUs, quantum)
+    fun getBeatAtTime(timeUs: Long, targetQuantum: Double = quantum): Double = activeBackend.getBeatAtTime(timeUs, targetQuantum)
 
-    fun getBeatAtTime(timeUs: Long, quantum: Double): Double = activeBackend.getBeatAtTime(timeUs, quantum)
-
-    fun getPhaseAtTime(timeUs: Long): Double = activeBackend.getPhaseAtTime(timeUs, quantum)
-
-    /**
-     * Aligns beat phase across Link network session.
-     */
-    fun requestBeatAtTime(beat: Double, timeUs: Long = 0L, targetQuantum: Double = quantum) {
-        activeBackend.requestBeatAtTime(beat, timeUs, targetQuantum)
+    /** Asks for [beat] now. Moves the timeline only when alone in the session. */
+    fun requestBeat(beat: Double) {
+        activeBackend.requestBeatAtTime(beat, activeBackend.clockMicros(), quantum)
     }
 
-    fun isStartStopSyncEnabled(): Boolean = activeBackend.isStartStopSyncEnabled()
+    /** The backend, for [LinkLeader]. */
+    internal val backend: LinkBackend get() = activeBackend
 
-    fun setStartStopSyncEnabled(enabled: Boolean) {
-        activeBackend.setStartStopSyncEnabled(enabled)
-    }
-
-    fun isPlaying(): Boolean = activeBackend.isPlaying()
-
-    fun setIsPlaying(isPlaying: Boolean) {
-        activeBackend.setIsPlaying(isPlaying)
-    }
-
-    /**
-     * Frame/block tick called when ClockSource == ABLETON_LINK.
-     * Synchronizes beat time and tempo directly with CVRegistry.
-     *
-     * Uses a **single** [timeNs] snapshot for both [getTempo] and [getBeatAtTime] queries so that
-     * tempo and beat are always coherent with each other (Link capture-and-commit pattern).
-     * Also drains any log messages deferred from the RT audio path.
-     */
-    fun updateClockAnchor(timeNs: Long = System.nanoTime()) {
+    /** Samples the session on the render thread for the audio thread to read. */
+    fun refresh() {
         if (!isEnabled) return
-        // Drain log messages deposited by the audio-thread damping filter
-        // (this runs on the render/GL thread — safe to log here)
-        llm.slop.liquidlsd.link.LinkSyncManager.signalDamping.drainPendingLog()
+        latestTempo = activeBackend.getTempo()
+        latestBeat = activeBackend.getBeatAtTime(activeBackend.clockMicros(), quantum)
+    }
 
-        val timeUs = timeNs / 1000
-        // Single atomic snapshot: both values derived from the same timeUs to stay phase-coherent
-        val bpm  = activeBackend.getTempo().toFloat()
+    /** Runs the app's clock from the session: the [llm.slop.liquidlsd.audio.ClockSource.LINK] clock source. */
+    fun updateClockAnchor() {
+        if (!isEnabled) return
+        // Read together: the clock, the tempo and the beat should all describe the same instant.
+        val timeNs = TimeSource.getTimeNanos()
+        val timeUs = activeBackend.clockMicros()
+        val bpm = activeBackend.getTempo()
         val beat = activeBackend.getBeatAtTime(timeUs, quantum)
-
-        CVRegistry.updateBeatAnchor(beat, bpm, timeNs)
+        latestTempo = bpm
+        latestBeat = beat
+        CVRegistry.updateBeatAnchor(beat, bpm.toFloat(), timeNs)
     }
 
     /**
-     * Shuts down Link session and releases backend drivers.
-     *
-     * Sets [isEnabled] to `false` **before** closing the backend so that any concurrent
-     * [updateClockAnchor] call on the render/audio thread sees the flag and returns immediately
-     * without touching the (already-destroyed) native handle. This closes the use-after-free
-     * race window described in AUDIT #3.
+     * Leaves the session and frees the backend. [isEnabled] goes false first so a frame that is
+     * mid-update does not reach the freed native handle.
      */
     @Synchronized
     fun shutdown() {
         if (isInitialized) {
-            isEnabled = false          // ← must precede backend destruction
+            isEnabled = false
             activeBackend.close()
             activeBackend = NoOpLinkBackend()
+            available = false
             isInitialized = false
-            logger.info { "AbletonLinkEngine: Shutdown complete." }
         }
     }
 }
