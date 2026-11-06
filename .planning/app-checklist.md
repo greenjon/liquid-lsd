@@ -17,29 +17,45 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [x] Sources, FX and Transitions tabs: list scrolls, search works, typing a letter while the list has the keyboard starts a search (shortcut keys such as `Q` keep their shortcut). !!tooltip on transitions: "add to a/b queue" should be "add to transitions queue" right?
 - [x] Rows: no empty box on stock items, long names end in "..." with the full name on hover, `hyperspace_crash_zoom` reads "Hyperspace crash zoom", heavy shaders show a muted gauge with an explanation on hover.
 - [x] Loaded-where chips: `A`/`B`/`BG`/`PV`/`M` on sources; `A2`/`M1` on effects; a deck playing a saved preset marks the preset row, not the generator; many slots collapse to `×n` with the full list on hover. !!loading the same source to all 4 decks was fine up to A+B+BG  but then when I added PV also, I had 4 colored chips with no text in them. same with effects. no xn, nothing on hover
+  !!auto: reproduced at 1280x720: Bloom in three slots draws three blank bars with no text. Your earlier note stands.
 - [x] Recent folder in Sources, FX and Transitions: last 20 loads, newest first, still there after a restart.
 - [x] Menus match across tabs (right-click works on FX and transition rows too): Rename..., Clone, Delete..., Add to playlist, **Reveal in File Manager**. !!we should make "add to playlist"" open a side menu with the playlists and the subfolders of playlists
 - [x] Deleting a saved effect or transition also removes it from queues and playlists.
 - [ ] Rename a saved FX single, an FX chain and a transition that are in a playlist and a queue: the playlist and queue rows still play, Favorites/Recent still list it. Rename a preset loaded on Deck A, then Save: it writes the renamed file (no old-name file reappears) and the preset's garden thumbnail is still shown.
+  auto: FX single, chain and transition renames work and their playlists follow; preset rename keeps every field but name and tags. Renaming a loaded preset, then Save: no old-name file comes back. Playlists now keep short paths (fixed 2026-11-06). Left for you: queue rows playing, Favorites/Recent, the garden thumbnail.
 - [ ] Delete a preset loaded on a deck: it drops out of Recent/Favorites; Save on that deck asks for a name. Delete an FX chain loaded on Master: Master's chain header no longer offers overwrite.
+  auto: fixed 2026-11-06 (uncommitted): Save wrote the file back without asking; it now asks for a name. Left for you: Recent/Favorites, the Master chain case.
 - [ ] Folders: folder-plus button and right-click New/Rename/Delete Folder on Saved presets, Saved single FX, Saved chains, Saved transitions (not on stock sections); an empty folder shows in the tree; with FX and no saved section selected the button is greyed with a tooltip.
+  auto: New, Rename and Delete Folder on Saved presets, empty folder shows, no menu on stock sections, FX button greyed with its tooltip. Saved FX, chains and transitions not run.
 - [ ] Drag rows (one, and a multi-selection) onto a folder, and use Move to: they move, playlists/queues still play them, a loaded deck still saves back. Moving onto a same-named item asks Keep both / Skip.
+  auto: one row by drag and by Move to: file moves, playlist follows. Same name asks Keep both / Skip / Cancel. Left for you: multi-selection, a loaded deck saving back.
 - [ ] Drag a folder onto another folder and onto its section; renaming a folder you're inside keeps it selected; deleting it selects its parent. Delete Folder shows the item count and the playlists/queues they're in.
-- [ ] Delete (file or folder) lands in the system trash on this desktop (Linux: `gio trash`); the dialog says so.
+  auto: folder onto folder moves it and the playlist follows; Delete Folder shows the item count and the playlist. Left for you: dropping on a section, selection after rename and delete.
+- [x] Delete (file or folder) lands in the system trash on this desktop (Linux: `gio trash`); the dialog says so.
+  auto: on a real disk, file and folder both land in the trash, and the dialog says so. Where the trash refuses (seen on /tmp), the file still goes for good, but now a toast says so and the dialog says "where the drive has one".
 - [ ] Save As (deck, FX slot, chain, transition): the Folder dropdown starts in the loaded item's folder, else the selected tree folder, else top level, and the file lands where it says.
+  auto: deck Save As starts in the loaded preset's folder and the file lands there. FX slot, chain and transition not run.
 - [ ] Tags group (folded at first) on Sources, FX and Transitions: counts right, picking a tag lists its items, stock categories don't show. Add Tag on one row and on a multi-selection (existing-tag buttons fill the field), Remove Tag submenu, drag rows onto a tag, Rename Tag / Delete Tag on a tag row.
+  auto: opens with counts; Add Tag on one row writes it to the file. Left for you: multi-selection, Remove, drag onto a tag, Rename/Delete Tag.
 - [ ] Tag a preset loaded on a deck, then Ctrl+S: the new tags survive. Star a saved single FX and a chain: ★ in the list, listed under Favorites; slot ◀ / ▶ still steps stock filters only.
 - [ ] Missing items: move a preset in the file manager, open a playlist that has it: ⚠ row with Find (pick the moved file), Locate..., Remove; Find all fixes the unique ones and the queue/other playlists follow.
+  auto: fixed 2026-11-06 (uncommitted): the ⚠ line sat below the list and needed scrolling to; now above the rows. Remove works. Left for you: Find, Locate, Find all.
 - [ ] Playlist folders on all three tabs: New Folder on Playlists, drag a playlist onto a folder (stays selected), rename/delete/nest folders.
+  auto: the Playlists right-click menu offers New Folder; with a playlist selected the folder-plus button now makes the folder among playlists (fixed 2026-11-06). The Playlists heading itself isn't selectable. Rest not run.
 - [ ] Enter runs the row's default action on every tab; Delete follows Preferences > Shortcuts (Backspace works too); Alt+click a Sources row previews it on PV.
 - [ ] Rename, Delete, New Playlist and Export dialogs: field focused, Enter confirms, Esc cancels without leaving the Library. Esc that closes a menu doesn't also go back.
+  auto: fixed 2026-11-06 (uncommitted): preset Rename, Clone and Save As ignored focus, Enter and Esc. Now: focused and Enter confirms on all five; Esc cancels Rename and Delete without leaving the Library. Left for you: Esc on New Playlist and Export, Esc closing a menu.
 - [ ] Queues tab: an empty queue says how to fill it, five matching button strips (FX queues' Auto greyed), Export / Clear under each column's ⋮, no dead play button on the FX queues. The controller steps the columns left to right.
+  auto: empty text, five strips and no dead play button on the FX queues all seen. Left for you: Export / Clear under the ⋮, the controller.
 - [ ] Queues under the browser (Library maximized, Sources/FX/Transitions tabs): both halves usable at 1280x720; the divider drags, clamps, double-click resets, the ratio and the rows-icon toggle survive a restart; toggle off looks like before; Perform view's Library unchanged.
 - [ ] Drag a source between two A/B queue items: lands at the line, the playing marker stays on its row. Drag it over the FX queues: dimmed, no drop. Drag a mixed selection: right ones go in, toast counts the skipped. Drag a playlist from the tree into a queue: its items go in at the line.
+  auto: a row dragged into the A/B queue lands; dragged over the FX queue it doesn't. Left for you: the line position, playing marker, mixed selection, playlist drop.
 - [ ] Drag to the bottom edge of a long queue (and of the browser list/tree): it scrolls. `Q` / `Shift+Q` and drops flash the receiving queue's border (dark and light theme).
 - [ ] Arrow keys / controller cursor on the split: tree, list, then the five queues; `Q` with the cursor in a queue does nothing.
 - [ ] Queue edits undo: drag-reorder, row-menu Remove and Delete in each of the five queues, then Ctrl+Z: items, playing marker and shuffle order come back; Remove toasts what went. Drag a BG queue item down: it lands where the line was.
+  auto: fixed 2026-11-06 (uncommitted): Ctrl+Z did nothing with the Library maximized. A/B Clear now undoes in both views. Left for you: reorder, Remove, Delete, the other four queues.
 - [ ] Macros tab: macro banks and Perform pages are listed; loading one works.
+  auto: tab opens with Banks and Pages, and says when nothing is saved. Loading not run.
 - [ ] Transitions view: the Q key queues.
 - [ ] Double-click a preset in the queue: auto-fades and advances. Accept from MIDI/keyboard: same.
 - [ ] Load a single `.lsdfx` into a full chain by double-click, by audition latch, and from the FX queue / FX playlist: one consistent placement rule.
@@ -52,6 +68,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [ ] Save a transition from the Transitions row's Save, from Edit OUT > TRANS and from the Library.
 - [ ] Star an FX in the Library: it's in your favorites, and the slot shortlist arrows land on it.
 - [ ] Multi-select (2026-10-27) in Sources, FX and Transitions: Ctrl+click toggles, Shift+click ranges, Ctrl+A selects all shown rows (not while typing in search). Right-click inside the selection: Add N to queue / playlist, Delete N. `Q`/`Shift+Q` and Delete act on all. Drag several FX or transitions into a playlist and into their queues: all land, in order. A bound list (picking for a slot) stays single-select.
+  auto: Ctrl+A selects all, the menu reads Add 3 / Move 3 / Delete 3, and Delete with the keyboard removes all three and updates playlists. Left for you: Ctrl+click, Shift+click, drags, bound list.
 
 ## 2. Slots bound in place, pair view and Edit
 
@@ -74,30 +91,42 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [ ] Edit side rail reads `MST OUT A B BG PV`, nothing clipped. MST has LEVELS and CTRL; OUT has FX and TRANS and returns to the last one. Gears: MST row → MST > LEVELS, Master FX → OUT > FX, Transitions → OUT > TRANS.
 - [ ] Edit FX tab: one slot open at a time (the first filled slot opens first), collapsed slots show Dry/Wet, the SUPER KNOB & METAKNOBS block folds on its own chevron.
 - [ ] Edit shows readable names ("Cell scale", the shader's LABEL); Properties is never empty when you open a deck or switch tabs; CTRL/TRANS labels in sentence case; the transition selector fits its name; Max isn't cut off in the binding editors.
-- [ ] Ctrl+Z after picking an FX and after picking a transition in Edit.
+- [x] Ctrl+Z after picking an FX and after picking a transition in Edit.
+  auto: both undo through the real picker.
 - [ ] Library loads, queues and macro changes are not undoable (as designed); nothing odd happens.
 - [ ] Edit gear exits (Esc, gear, menu Close Edit, Ctrl+F) keep each row's sub-tab and selected cell. The Edit module survives a restart.
 
 ## 3. Perform rows, Transitions row and Clock row
 
 - [ ] Two-line deck rows with the two-tone SRC/FX badge, readable at 1280x720. Switching modes changes content, never geometry.
+  auto: readable at 1280x720 in the dark theme. Left for you: switching modes keeps the geometry.
 - [ ] Button chrome / bevel looks fine on every button type.
 - [ ] Knob captions carry whole readable names ("TRACKING JITTER"), "..." only when too narrow.
+  auto: fixed 2026-11-06 (uncommitted). Transitions row now reads `BURN SPREAD`, `GLOW INTEN...` at 1280x720. Other rows not all read.
 - [ ] Transitions row: picker and gear on line 1; `[⋮] [Save] [◀] [▶] [A] [B] [AUTO] [time]` in equal cells on line 2; Save turns amber when changed; queue position in the ◀ ▶ tooltips.
-- [ ] Transitions at rest (2026-10-27): with the crossfader fully on A (then B), switch through all 8 transitions: the picture does not change at all. Start a slow fade from rest on each: no jump on the first frame of the fade.
-- [ ] Cyber Datamosh at rest (2026-10-27 fix): select it, push the crossfader fully to B (and let an auto fade land on B): B's colours look normal, no red/blue smear. Same on A. Check on the web TV too if you test it.
-- [ ] MIXER page order: Transitions, Master FX, Master MST, Clock. The crossfader is Transitions knob 1 (and the Mixer panel), not on the MST row. MST pill reads `MST`.
-- [ ] Clock row at 1280 px: tempo grid `MAN AUDIO LINK` over `TAP SNAP [-|+]`, BPM and beat dots beside it, LINK dim while off.
+  auto: layout right at 1280x720. Left for you: Save turning amber, queue position in the ◀ ▶ tooltips.
+- [x] Transitions at rest (2026-10-27): with the crossfader fully on A (then B), switch through all 8 transitions: the picture does not change at all. Start a slow fade from rest on each: no jump on the first frame of the fade.
+  auto: all 8 with music: frame hashes identical to Linear Crossfade on 330 of 330 frames, resting on A and on B. No jump in the first 0.5 s of a 6 s fade.
+- [x] Cyber Datamosh at rest (2026-10-27 fix): select it, push the crossfader fully to B (and let an auto fade land on B): B's colours look normal, no red/blue smear. Same on A. Check on the web TV too if you test it.
+  auto: identical frames fully on A and fully on B, fader set directly. An auto fade landing on B and the web TV not checked.
+- [x] MIXER page order: Transitions, Master FX, Master MST, Clock. The crossfader is Transitions knob 1 (and the Mixer panel), not on the MST row. MST pill reads `MST`.
+  auto: seen at 1280x720.
+- [x] Clock row at 1280 px: tempo grid `MAN AUDIO LINK` over `TAP SNAP [-|+]`, BPM and beat dots beside it, LINK dim while off.
+  auto: seen at 1280x720.
 - [x] Tempo tracking (2026-11-04, clock source Audio): play techno, rock, reggae and drum and bass, and watch the BPM readout. It should lock in about 2 s and hold steady through a track, at the right tempo or an octave off. Try a low JACK buffer (64 or 128) if you can: the tempo should be the same as at 512, with no new xruns. Watch beat-synced LFOs for a jump when a track changes. Downbeat Auto should behave as before.
 - [ ] Bar & Downbeat (2026-10-23, Preferences > Tempo & Sync): Beats per bar 2..8 changes the bar dots (still fit the cell at 8) and the Twister clock knob's orange flash; with Link on it also changes the quantum. SNAP: the cyan dot lands on the beat you pressed on, with a jump of at most half a bar; the first TAP of a run does the same, later taps leave the bar line alone. Downbeat Auto with the Audio Beat Tracker on real dance music: confidence rises over ~4-8 bars, the bar line moves onto the kick/bass accent once and stays; a breakdown does not wander it; SNAP then holds for 16 bars. Note which genres it fails on (flat four-on-the-floor stays undecided by design). Bar-length LFO/sequence jump once when the bar line moves, nothing else.
 - [ ] Clock QUEUE block: `A/B | A/B FX | BG | BG FX | TRN` captions over ◀ ▶ pairs; play/pause on A/B, BG and TRN toggles auto-advance (lit while running); faint group tints show which go together.
+  auto: captions and ◀ ▶ pairs fit. Left for you: play/pause behaviour.
 - [ ] Clock RAND block at the right edge (randomization on): `A B ALL` over `BG PV`; Ctrl+Z undoes.
+  auto: layout right. Left for you: Ctrl+Z after a Clock RAND press.
 - [ ] Every Clock button is also on MST > CTRL; right-click Learn MIDI/OSC works from both. A MIDI CC drives the FX queue steps.
 - [ ] Narrow the window: a block that doesn't fit is left out, nothing overlaps.
 - [ ] FX slot rows (2026-10-27, Chain view part 1): in Preferences > MIDI Controls > Perform Pages make a page of `deck.A.fx1`, `deck.A.fx2`, `deck.A.fx3`, `deck.A.src`. Badges read FX1/FX2/FX3; each row's knob 1 is its slot (name + bypass), knobs 2-4 its parameters, whatever the Deck A FX row's focus. Left block: effect name (click = Browse that slot), `[⋮] [Wet] [◀ Px/y ▶]`; die + FX ON only on the FX1 row. Drop an effect on an FX2 badge: it lands in slot 2. Page arrows page only their own slot; focusing that slot on the FX row opens on the same page. Geometry matches the other rows at 1280x720. On a Twister: the three slot rows are three distinct shades.
 - [ ] Chain view (2026-10-27): ⋮ menu of Deck A's FX row > Chain View: rows read `FX1`, `FX2`, `FX3`, `A SRC` over the Browse list (source row at the bottom since 2026-10-28), same knob size as Perform, nothing clipped at 1280x720. Touch a knob on FX2: the list targets slot 2. **Load** on the Browse header: row 4 becomes the load row (highlighted effect's name, → FX1/→ FX2/→ FX3, LIST); rows 1-3 don't move. Highlight an effect and click → FX3: it loads into slot 3 with the fade, Ctrl+Z undoes it, the list now targets slot 3. Load again brings the SRC row back. Chain toggle and Esc both leave in one press (Esc even with a slot focused on the FX row). Master: Chain View from the Master FX ⋮ menu shows Transitions at the bottom. A page tab click leaves Chain view.
+  auto: rows read FX1, FX2, FX3, A SRC over Browse, nothing clipped at 1280x720, Esc leaves in one press. Left for you: Load, → FX3, knob touch retargeting, Master.
 - [ ] Chain view on the Twister (2026-10-27): on A/B, shift + tap a Deck A SRC knob: Chain view opens, all 16 knobs move the four rows (FX1-3, then SRC on 13-16), FX rows in three shades. Right-bottom: Load on, knobs 13-15 glow in the slot colours (dark with nothing highlighted), knob 16's ring is the list position; turning knob 16 moves the list, tapping knob 14 loads the highlighted effect into slot 2 and knobs 5-8 then play it straight away. Right-bottom again: SRC row back. Bank buttons: Deck B's Chain view, Load state kept. Left-top or shift + tap on the SRC row (13-16) leaves. Does the source row at the bottom read OK?
 - [ ] Monitor drag onto another monitor: nine-choice menu (Move / Copy / Swap × Source / FX / Source + FX), each does what it says.
+  auto: clipping fixed 2026-11-06 (uncommitted): all nine rows on screen at 1280x720. The nine actions themselves not run.
 
 ## 4. Sources (2026-10-22 review)
 
@@ -108,24 +137,32 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [ ] Missing source: rename a user shader that a saved preset uses, Rescan. The preset's row shows ⚠ "... missing" with a tooltip; loading it gives a toast and the deck keeps what it had. A session saved with that source restores the deck empty and lists it under missing items.
 - [ ] Click the stock source of the preset you're playing: its defaults load. Click it again: nothing happens.
 - [ ] SRC tab rows: Gain, **Deck Zoom**, **Deck Rotate**, then the source's own. On Reaction Diffusion / Escape Time the two Zooms are clearly different; 3D sources (KIFS, Gyroid) hide Deck Zoom / Rotate. Tooltips explain them.
+  auto: row order right, and KIFS hides Deck Zoom / Rotate. Left for you: the two Zooms differ, tooltips.
 - [ ] Set Deck Zoom, pick another source: it resets. Load a preset: it keeps its saved framing.
 - [ ] Deck Zoom and Deck Rotate now move Isometric Voxels and Wave Ripples.
 - [ ] MIDI-learn Gain on Deck A, change source several times: the mapping still drives Gain. A mapping saved before (path `Deck A/<Source>/Gain`) still works. MST > LEVELS shows only level faders.
-- [ ] Leak check: load ~30 sources and flame presets in a row on one deck (or run an A/B queue of flames for a while); `GPU buffers` in the title bar stays roughly flat.
+- [x] Leak check: load ~30 sources and flame presets in a row on one deck (or run an A/B queue of flames for a while); `GPU buffers` in the title bar stays roughly flat.
+  auto: 90 loads of 10 heavy sources and 30 flames on Deck A: GPU buffers 25 at start, then moving between 30 and 42 by source, 33 at the end (249 MB). No growth.
 - [ ] Ctrl+Z after a source change brings the old one back (a flame or simulation restarts fresh; expected).
+  auto: Ctrl+Z after a die roll brought the KIFS look back. The source-change case itself not run on its own.
 - [ ] Eject empties the deck and keeps its FX chain; tooltip says so. Empty-deck card in Edit: one **Add Source** button that opens Browse.
+  auto: FX chain kept, tooltip right, empty-deck card has one Add Source button. Left for you: clicking it.
 - [ ] External video deck: Save greyed with a tooltip. Switch the deck to a generator: the stream is released (the sending app's receiver count drops, if it shows one).
 - [ ] Preferences > Shader Locations: Add Folder and Rescan Now with a new `.fs` in it. No crash, the new source appears, its presets load, FX and transitions in use keep working.
-- [ ] A shader with a syntax error: red checkerboard on the deck, ⚠ "failed to compile" in Browse, the first compiler error on hover.
-- [ ] Two user shaders with the same file name: one loads, the log warns about the other.
+- [x] A shader with a syntax error: red checkerboard on the deck, ⚠ "failed to compile" in Browse, the first compiler error on hover.
+  auto: checkerboard, ⚠ in Browse and the compiler error on hover all seen with a broken test shader.
+- [x] Two user shaders with the same file name: one loads, the log warns about the other.
+  auto: one row in Browse, and the log says Skipping for the other.
 - [ ] A shader that reads `iMouse` doesn't follow the cursor.
 - [ ] Queue ◀ ▶ tooltips on the A and B rows name the off-air deck the item goes to. The die's tooltip lists what it randomizes.
+  auto: `MIDI: CC -1` fixed 2026-11-06 (uncommitted). Wording right on the B row, and the die lists what it rolls. A row not read.
 - [ ] Old presets and sessions still load (they carry the removed deck feedback and 3D-view values, which are now ignored).
 - [ ] On a packaged install over an older version: unedited bundled shaders are updated, an edited one is kept (log line). Needs a real install to test.
 
 ## 5. Off-air decks (2026-10-22)
 
 - [ ] Crossfade fully to A: B's monitor runs at half rate; frame time drops with two heavy sources. Fade back: no hitch.
+  auto: B's monitor changed on 60 of 120 frames with the fader on A, and on every frame at centre and on B. Left for you: frame time, no hitch on the way back.
 - [ ] A deck at level 0, and the master at 0: half rate. BG at level 0: half rate.
 - [ ] PV renders at half size and still looks fine in its monitor; send PV out over Spout/Syphon/PipeWire and it goes to full size and full rate.
 - [ ] Preferences > General **Off-air decks at half frame rate** off: everything renders every frame.
@@ -137,6 +174,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [ ] No chain shows the unsaved `•` at launch. It lights for a slot, parameter, Dry/Wet, link or Metaknob-target change, not for turning the Super Knob or a Metaknob.
 - [ ] Revert to Saved undoes parameter tweaks.
 - [ ] One chain menu on the FX row ⋮ and the Edit tab: Focus, Save As, Revert to Saved, Clear All Slots (a new Untitled chain), Copy / Paste Chain. Save As starts in the chain's folder.
+  auto: the FX row ⋮ menu has every item. Left for you: the Edit tab's menu, Save As folder.
 - [ ] Saving over a chain keeps its tags; the chain takes the saved name. A failed save (read-only file) shows a message and stays unsaved.
 - [ ] Ctrl+Z undoes slot drags (swap / Ctrl copy), drops, Paste, Reset Parameters, Clear, Revert, Library loads and the FX browser's right-click "Load to ...".
 - [ ] Slot name tooltip shows the shortlist position (`★ 3/8`, `Blur 4/12`); stepping off a category's end lands in favorites.
@@ -186,6 +224,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 ## 9. Modulators and step sequencer
 
 - [ ] Sequencer is on by default (an old settings file turns it on once).
+  auto: Enable Step Sequencer is on with default preferences. Old settings file not tried.
 - [ ] Bar editor: paint (5% snap, Shift free), scroll to nudge, double-click to type, right/middle-click resets; playing step outlined; 16 per row.
 - [ ] Toolbar: Randomize, Invert, Shift < >, Copy/Paste between sequencers, Fill..., Euclid... (Rotate and preview), Clear. Snap menu. Keyboard editing with the pointer over the bars.
 - [ ] Length 1-32 (odd lengths), Phase, Offset, Step Hold (randomize); Glide Curve greys when nothing glides; output trace and live dot; ghost steps past the length; bars dim when bypassed.
@@ -217,11 +256,17 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 
 Preferences: randomization on. For each source: pick it fresh from Browse (not a saved preset, which keeps its own values), press the deck die 5-10 times, then turn the deck's Rand knob slowly end to end a few times. Judge: does every roll look good, are there duds (blank, mush, too dark, broken), is the variety too timid or too wild? Note per source what to widen, narrow or drop. Ranges are in `src/main/resources/stock_defaults/sources/<id>.json` (`baseMin`/`baseMax`).
 
+- [ ] Randomization is on by default since 2026-11-06 (an old settings file turns it on once; turning it off afterwards sticks). auto: fresh run and unit test confirm; check it suits you.
 - [ ] Mechanics, on any source (KIFS is a good one): a roll moves the four source knobs on screen (and the Twister rings), and turning a knob afterwards picks up from the rolled value without a jump. Stepped values (KIFS Fractal Type, Color Mode) switch once, halfway through a Rand sweep, never flicker through the types in between. Ctrl+Z after a roll brings the previous look and knob positions back (Fractal Flame excepted: its values stay). The Initial Range slider and its dice now show on a knob-driven parameter (open its Properties); dragging the range there works.
+  auto: a die roll and Ctrl+Z through the real buttons work on KIFS. Left for you: knob pickup, stepped values during a Rand sweep.
 - [ ] Second pass (2026-10-27, from your first look): Cyclic CA rolls (every roll alive? a roll restarts from noise and organises within a second or two), Gyroid (slower, wider, more varied), Mandala (recipe changes on a roll), Mandelbox/Mandelbulb brightness, Fractal Flame picked from Browse (was black), Reaction Diffusion (fewer flooded solid-colour rolls). Fluid Ink: a roll changes the colour of new ink only, so the change shows over a few seconds as old ink fades; say if that is too slow.
+  !!auto: contact sheets in .planning/auto-verify-2026-11-06/. Cyclic CA: 2 of 6 rolls still noise with no structure. See report for all duds.
 - [ ] Batch 1: apollonian, aurora_ribbons, celestial_engine, chladni_cymatics, cyclic_ca, domain_warp_fluid, dynamic_spiral, escape_time, fluid_ink, girih_stars. Watch: Cyclic CA with many states and a high threshold may freeze (no spirals); Chladni Invert and Plate Shape full range; Escape Time Julia angle full circle (some constants are mostly empty).
+  auto: rolls on sheet rolls-1 and rolls-2. Flagged: Domain Warp 1 of 6 washed out, Cyclic CA above. Taste judgement is yours.
 - [ ] Batch 2: glitch_blocks, gyroid_hyperspace, halftone_matrix, hyperbolic_tiling, hyper_slice, icosa_h3, isometric_voxels, kali_set, kifs, lenia. Watch: Hyperbolic P/Q (the shader raises Q when the pair is not hyperbolic, so some rolls repeat); Lenia blobs dying out (kick reseeds them); Hyper Slice and Icosa camera angles.
+  !!auto: rolls on sheets. Flagged: KIFS 1 of 6 a tiny speck, Icosa H3 small and almost the same on every roll, Gyroid 1 of 6 washed out.
 - [ ] Batch 3: mandelbox, mandelbulb, metaballs, nebula_volume, pseudo_kleinian, quasicrystal, reaction_diffusion, thin_film, tunnel_scenes, video_feedback, voronoi_cells, wave_ripples. Watch: Mandelbox stays in the positive-scale family (crossing zero jumps); Reaction Diffusion regimes that blank out; Video Feedback whiteout or blackout from decay/zoom; Tunnel side counts.
+  !!auto: rolls on sheets. Wave Ripples: 3 of 6 rolls read nearly black in the first run. In a second run with other rolls, 1 of 6 stayed black for 7 s. Quasicrystal: 1 whiteout and 1 near black of 6.
 - [ ] Effects (2026-10-27): load one effect into a deck's FX slot from the FX tab (or a stock FX chain: they carry the ranges and responses now; delete old library copies first), turn its Metaknob up so it shows, press the deck die 5-10 times. The source and the effect both change; the Metaknob never moves; Ctrl+Z puts the effect's values back too. Batch 1: 3d_elevation, anamorphic_streak, bloom, color_levels, directional_blur, faceted_glass, feedback, fluid_smear, gradient_map, halftone. Batch 2: kaleidoscope, luma_displace, mirror_sphere, neon_edge, pinch_bulge, pixelate, polar_tunnel, radial_blur. Batch 3: retro_crt, rgb_split, thermal_scanner, vhs_glitch, video_strobe, vortex_swirl, wave_displace. Watch: Bloom and Fluid Smear rolls look alike (too timid?); Feedback and Fluid Smear over several seconds after a roll (no smear-out or freeze); 3D Elevation never shrinks to a speck; Video Strobe's Flash Mode includes White Flash (is that OK as a roll?); Wave Displace tight ripples at high frequency. Turn the deck's Rand knob end to end: effects fade with the source, modes switch once halfway. Rand All also rolls the Master FX slots.
 - [ ] Transitions (2026-10-27): for each of the 8 (MIXER page), press the transition die a few times, then fade A to B by hand. Each roll looks different mid-fade (Film Burn tint, Luminous Flash colour, Kinetic Zoom strength, Linear Crossfade curve); fully on A or B the picture never shows the transition. The TRANS knobs 2-4 move with the roll; the die no longer touches inputs without a range. Rand All rolls the transition as well (a jump, not a fade). The stock transition presets roll the same ranges (delete old library copies or Restore Factory Presets first).
 
@@ -229,10 +274,13 @@ Preferences: randomization on. For each source: pick it fresh from Browse (not a
 
 - [ ] Deck-tile level faders: dragging doesn't snap back with a bound knob (the knob follows); the handle shows the fader's own value, the bar the live level.
 - [ ] Output > Output Monitor: Automatic and a named monitor; the output reopens on the chosen screen (try Wayland + projector).
-- [ ] New version available: menu-bar download icon instead of a startup popup.
+- [x] New version available: menu-bar download icon instead of a startup popup.
+  auto: fresh real run: green download icon in the menu bar, no popup.
 - [ ] During Video Export (offline render), controller knobs and MIDI queue steps still work.
-- [ ] Kill the app (`kill -9`) after changing things: preferences and session from the last minute come back.
-- [ ] Web Broadcast tab hidden until Show Advanced Preferences (or already configured).
+- [x] Kill the app (`kill -9`) after changing things: preferences and session from the last minute come back.
+  auto: real app, kill -9 about a minute after the changes: source and FX ON state came back, badge and Library chip right (badge fixed 2026-11-06).
+- [x] Web Broadcast tab hidden until Show Advanced Preferences (or already configured).
+  auto: not in the Preferences list with default settings. Turning on Advanced not tried.
 - [ ] A Shadertoy-style shader reading `audioFFT` / `iChannel0` row 0 reacts to audio.
 
 ## 11. Discrete parameters and units
@@ -242,13 +290,17 @@ Preferences: randomization on. For each source: pick it fresh from Browse (not a
 
 ## 12. Flame source
 
-- [ ] Garden stock (158 curated) loads, no black frames.
+- [x] Garden stock (158 curated) loads, no black frames.
+  auto: all 158 loaded with music on the NVIDIA card. No black frames (darkest frame anywhere 6.3 of 255) and none blown out. 4 barely move: curated-0127, 0262, 0308, 0374.
 - [ ] Unit/Smooth change: several flames, no popping or wrong scale. `pre_blur` flames look right.
-- [ ] Black is transparent: a flame on A over BG shows BG through the dark parts.
+- [x] Black is transparent: a flame on A over BG shows BG through the dark parts.
+  auto: BG shows through the dark parts (mean change 73) and bright parts barely change (3).
 
 ## 13. Generators
 
 Open each: renders, animates, parameters do something. Note anything black, flickering or slow.
+
+auto 2026-11-06: all 34 render and animate on the NVIDIA card with music; boxes left open because `parameters do something` is yours. Fixed (uncommitted): **mandelbox** opens square at every Scale tried, but saved looks using it turn 45°. **gyroid_hyperspace** no longer goes black at defaults; passing through a wall is still a hard cut to the view beyond it, so judge that.
 
 Heavy: - [ ] mandelbox (opens on a face, square) - [ ] kifs (static and face-on by default, Color Spread gives several colours, Twist/Morph reshape inside without turning the object) - [ ] kifs_storm (2026-11-03, the original KIFS restored): load it with music; it should tumble by itself (Tumble Speed), fill much of the frame, and feel like the old storm of cubes. Roll it a few times (Fold Angles roll the full circle). Check the RTX A2000 frame rate on a frame-filling roll and in a lattice (Repeat Spacing about 0.3, Repeat 3D on, Fly Speed about 0.15). Judge the stock responses (loudness tumble, drop spin, kick push on Fold X, kick glow, breakdown dims the crease neon) and the NEON knob (Trap Glow floods above about half) - [ ] kifs Icosahedral type (2026-11-03): Fractal Type 4; sweep Vertex 0 to 1 (icosahedron, football, icosidodecahedron, truncated dodecahedron, dodecahedron outlines); Vertex 0.2 + Color Mode 1 + Hue Offset 0.08 = copper frames over blue recessed panels; Flight Speed pops at the wrap like the octahedral type; Rand rolls type 4 and Vertex - [ ] mandelbulb - [ ] pseudo_kleinian - [ ] apollonian - [ ] escape_time - [ ] nebula_volume - [ ] reaction_diffusion (pushing Regime / trims never goes black; reseeds) - [ ] fluid_ink - [ ] lenia (Growth Center high then back: recovers)
 
@@ -257,7 +309,9 @@ Light wave 1: - [ ] quasicrystal - [ ] thin_film - [ ] tunnel_scenes - [ ] video
 Light wave 2: - [ ] cyclic_ca - [ ] metaballs - [ ] wave_ripples - [ ] aurora_ribbons - [ ] isometric_voxels - [ ] halftone_matrix - [ ] kali_set - [ ] girih_stars - [ ] glitch_blocks - [ ] voronoi_cells
 
 - [ ] Speeds never jump (2026-10-23): after the app has run 15+ minutes, sweep each source's speed knob (Speed, Flight/Morph/Wave/Orbit/Drift Speed...) fast, and put an LFO or audio on one. The motion speeds up and slows down, never jumps or stutters. Also Dynamic Spiral Shear and Wave Amp, Harmonograph Detune, and the Wave Displace, Luma Displace, Fluid Smear, Gradient Map cycle and Video Strobe rate effects. A freshly loaded source looks as before.
+  auto: 33 sources, first speed knob swept fast after 15 simulated minutes, no music: no jumps except a 0.1 s blip on Quasicrystal Spin Speed, cause not found. Gyroid's spikes are its black frames, Glitch Blocks steps by design. Left for you: LFO/audio on a speed, the FX rates.
 - [ ] Frame time on the integrated GPU is acceptable (notes in `.planning/light-sources-notes`).
+  auto: ms per frame on the Intel GPU, 1080p with readback, resolution about 5 ms: light sources 11-28. Nebula 133, Apollonian, Pseudo-Kleinian and Hyper Slice 89, KIFS 78, Mandelbox 67, Mandelbulb 50, KIFS Storm, Lenia, Reaction Diffusion and Icosa H3 39. Acceptable is your call.
 - [ ] Every-ISF binding audit (v1.0 scope): a sample of filters, every parameter binds to a knob.
 - [ ] Spectrogram and Scope (2026-11-01), with music playing: Spectrogram in all four Layouts, Mirror, each Palette; notes and kicks readable; Scroll Speed sweeps smoothly with no jump; a quiet input needs Gain, a loud one doesn't burn to solid colour at the defaults. Scope: all four Traces; a held synth note stands still on Wave Line; trails zoom/turn/warp, the kick punches them out; no spokes at the centre of Spectrum Ring. Both: the die rolls varied looks; frame time fine on the integrated GPU.
 - [ ] Spectrogram full axis (2026-11-01, desktop + web TV v9 CH 128): on bass-heavy music the Ring lights most of the way round, not just 11-to-1 o'clock; Tilt 0 brings back the bass-only look, Tilt 1 leans to the highs; Log Scale 0.8 gives the bass real room; no hot speckle at the top; at defaults loud music doesn't burn to solid colour and a -20 dBFS track still shows something; frame time still fine on the integrated GPU (8 taps per pixel now).
@@ -286,12 +340,15 @@ Light wave 2: - [ ] cyclic_ca - [ ] metaballs - [ ] wave_ripples - [ ] aurora_ri
 Known remaining literals: dropdown selected text, ParametersRenderer fills and grey border, grey button triple in PropertiesPanel / AudioModulatorSection / ParametersTabs / ModulatorHeaderRow, MenuBar, MacroBindingEditor mini-slider, TempoSyncPanel, scope and meter text, UIThemeStyler neutrals, die button/fader in MixerPanel vs DeckControlPanel, `CvTheme`, slider literals.
 
 - [ ] Switch to Light. Walk every view (Perform, Edit, Library, pair views, bound lists).
+  !!auto: walked at 1280x720, shots in .planning/auto-verify-2026-11-06/. Unreadable: `128.0 BPM` and the fade time (dark on dark), FX link and power buttons (plain coloured squares, no icon). Low contrast: chain names (amber on grey), slot names (white on grey), CLK badge, MAN/AUDIO/LINK.
 - [ ] New since the last pass: the badge's dimmed source text, the amber ⚠ lines in Browse tooltips, Clock row group tints, Library deck chips, the amber pickup link button, the empty-deck card, `Wet 40%` / dimmed chain names, button bevels.
 - [ ] The breathing bound-slot pill behind the Library / Edit header name: label readable, pill visible.
 - [ ] Note unreadable text, invisible borders, hover/press overlays.
 - [ ] Dark theme unchanged after switching back.
 
 ## 16. Web client (if you test it)
+
+auto 2026-11-06, headless Firefox, local web/ (TV v26, same version as live): ui_check 175 of 176, tape_check 78 of 78, shader_check 70 of 70; beat_check and embed_check ended ok, with no failure in the lines read. That covers the logic of keys, MENU, power-off pages, theme, listeners, schedule, chat with a fake room, reduced motion, breakdown and drop cuts, and tapes. The one failure is the check's own assumption: run just after midnight, its on-air fixture started the day before, so the first heading is not TODAY. render_check did not finish in 280 or 300 s, so it gives no result. Still yours: looks, real radio, phones, Safari, install, real chat.
 
 - [ ] Preset pack (125 presets, 35 FX chains; the raymarched fractals should stay fluid on a laptop and a phone) loads and looks like the app; every web source now has a groove, hard and ambient look (2026-10-23).
 - [ ] Spectrogram and Scope on the web TV (2026-11-01, local server, not yet published): with the radio playing (and once with the microphone), both move with the music like on the desktop; the spectrum isn't much hotter or dimmer than the desktop's on the same track; no console errors; a phone (Android WebView via ?embed too) shows them. Their scenes get suitable chains (Scope is `sparse`, Spectrogram `fullframe`).
@@ -316,6 +373,7 @@ Known remaining literals: dropdown selected text, ParametersRenderer fills and g
 - [ ] Branding: nameplate opens the site in a new tab (and doesn't power the TV off); ident at first power-on; ABOUT's QR code scans to liquid-lsd.greenjon.com; paste https://spaz.org/tv/ into a chat app and see the preview.
 - [ ] Web TV theme and listener count (2026-11-04, v22): MENU › THEME flips dark/light at once and survives a reload with no dark flash; light is comfortable to look at with the knobs, lit LEDs (LIVE, HOLD, CHAT) and blackboard all easy to read, on a phone too; Add to Home Screen / browser bar colour follows. Under the badge, `N mutants watching TV.` matches the count in the Spaz Radio app and updates within 30 seconds (`1 mutant` when alone; blank at zero).
 - [ ] Viewer controls on a real browser and a phone: CH up/down, FX, HOLD, TIME, REACT, swipe, long-press, keyboard; OSD readable; fullscreen keeps the OSD.
+  auto: button row fits at 1280x720 and 412 px wide. Real phone, swipe and long-press are yours.
 - [x] SCHEDULE (2026-10-31, after publishing; TV v4): the button, `G` and MENU › SCHEDULE open Spaz Radio's upcoming shows in your local time zone (header says e.g. TIMES IN PDT), the show playing now marked ON AIR, matching the Spaz Radio app's Schedule tab. Any key or a tap closes it; it scrolls with a finger on a phone without closing. The track line on screen is followed by NEXT: <show> · <time>. Fullscreen: the schedule fills the picture too.
   !!works in a new tab; a plain reload of an open tab kept the old code (button did nothing). Phone scroll not checked yet.
 - [ ] Reload after a publish (2026-10-31, TV v5): with the TV open in a tab, after the next publish that changes code, one or two plain reloads show the new version in the MENU title (the first visit after v5 installs the fixed service worker).
@@ -339,19 +397,23 @@ Known remaining literals: dropdown selected text, ParametersRenderer fills and g
 - [ ] Copy / Move / Swap a deck "Source + FX" onto another deck: the target's FX row, Chain view and Twister knobs show the new effects and drive them; the chain dips like a chain load; a saved chain still says Save (not Save As). After a Move the source deck's chain is "Untitled".
 - [ ] Macros tab: Apply to / Save from offer only Decks A/B/BG/PV and Master; the Transitions row's K1 still mirrors the crossfader.
 - [ ] Clear each queue (A/B, BG, both FX queues, Transition), drop files onto one, add a playlist from its right-click menu: Ctrl+Z undoes each (the Clear toast says so).
-- [ ] Rename a preset and edit its tags: the file keeps everything else (open it in a text editor).
+  auto: A/B Clear undoes, in both views. Left for you: the other four, file drops, adding a playlist.
+- [x] Rename a preset and edit its tags: the file keeps everything else (open it in a text editor).
+  auto: only `name` and `tags` differ afterwards.
 - [ ] Fractal Flame with Pool or Breed: no hitch at morph boundaries; Keep and Import Flame don't hitch, and the import toast gives the real count. Put a macro on the variation choice: the combo greys out. Editor tabs look right in both themes; Skip's tooltip says Skip.
 - [ ] Twister: Ctrl-C the app in native mode, the Twister leaves native mode and goes dark; unplug it while playing, the picture doesn't freeze; plug it back in, it comes back.
 - [ ] Tooltips: hover the new ones (System Volume, Master BPM and presets, Library tabs, MIDI mapping columns, Broadcast buttons) and a few converted knob/slider tooltips (what / gestures / MIDI layout). Menus say "MIDI Learn (X)" / "OSC Learn (X)"; MIDI Preferences column says Control; the transition on/off checkbox no longer says Bypass; colours of the menu bar, About, Link button and Clock row group tints look unchanged (dark) and sensible (light).
 
 ## 17. Before release
 
-- [ ] Camera-relative light: Mandelbulb, Mandelbox and KIFS: turn Rotate X/Y/Z (and let Mandelbulb's Flight Speed spin) through a full circle; the lit side stays toward you and no side goes dark. KIFS: try every start face. Icosa H3, Pseudo-Kleinian and Apollonian look as before.
+- [x] Camera-relative light: Mandelbulb, Mandelbox and KIFS: turn Rotate X/Y/Z (and let Mandelbulb's Flight Speed spin) through a full circle; the lit side stays toward you and no side goes dark. KIFS: try every start face. Icosa H3, Pseudo-Kleinian and Apollonian look as before.
+  auto: Mandelbulb, Mandelbox and KIFS through a full turn on each axis: no frame below half the median brightness. Every KIFS start face and the look of Icosa H3, Pseudo-Kleinian and Apollonian not checked.
 - [x] `ARCHITECTURE.md` refreshed (verified against the code 2026-10-29).
 - [ ] Walkthrough videos re-rendered where `scripts/tour_staleness.py` says (much of the UI they show changed).
 - [ ] Website deployed (last item).
 - [ ] MIDI phase 5 slice 1 (separate agent): Controller Profiles section, copy / delete / reload, validation problems, "Learned mappings" retitle.
-- [ ] Black-is-transparent sources (30 generators + Renderer separate-alpha blend): put Video Feedback and a few others (Kali Set, Lenia, Fluid Ink, Hyper Slice) on a deck over a coloured BG deck; dark areas should show the BG, bright areas cover it; Chladni / Dynamic Spiral / Icosa H3 should look as before (alpha now linear, not squared).
+- [x] Black-is-transparent sources (30 generators + Renderer separate-alpha blend): put Video Feedback and a few others (Kali Set, Lenia, Fluid Ink, Hyper Slice) on a deck over a coloured BG deck; dark areas should show the BG, bright areas cover it; Chladni / Dynamic Spiral / Icosa H3 should look as before (alpha now linear, not squared).
+  auto: BG shows through Video Feedback, Lenia, Fluid Ink, Hyper Slice, Icosa H3 and partly Chladni. Dynamic Spiral stays opaque black, by its shader. Kali Set has no dark areas to test. `as before` could not be compared.
 
 ---
 
