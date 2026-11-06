@@ -1,0 +1,13 @@
+fx/3d_elevation separation: works when mode3D@0.33, mode3D@0.67, mode3D@1.00
+fx/wave_displace centerX: works when rippleMode@1.00
+fx/wave_displace centerY: works when rippleMode@1.00
+src/celestial_engine PulseWave: works when Symmetries@0.00, Symmetries@1.00, RingDensity@0.00, RingDensity@1.00, PhaseTwist@0.00, PhaseTwist@1.00, FlowerFold@0.00, FlowerFold@1.00
+src/chladni_cymatics HueOffset: works when PaletteMode@0.67
+src/icosa_h3 SpikePhase: works when SpikeMode@1.00
+src/icosa_h3 SpikeSharpness: works when SpikeMode@1.00
+src/icosa_h3 BlockerSize: works when SpikeMode@1.00
+src/kifs Vertex: works when SurfaceType@1.00
+src/kifs_storm Repeat3D: works when RepeatSpacing@1.00
+src/kifs_storm NormalFrequency: works when NormalColoring@1.00
+src/scope RingSize: works when Mode@0.33, Mode@1.00
+src/tunnel_scenes Symmetries: works when SurfaceType@1.00

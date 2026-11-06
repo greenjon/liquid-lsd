@@ -1,0 +1,188 @@
+  PASS multi_ctrl: Ctrl+click then Q queues the two rows
+  PASS multi_shift: Shift+click ranges
+  PASS multi_shiftq: Shift+Q queues both in BG
+  PASS multi_drag: dragging a preset selection queues all, in order
+  PASS multi_fx: dragging an FX selection queues all
+  PASS multi_trans: dragging a transition selection queues all
+  PASS drag_line: dropped at the line between rows 1 and 2
+  PASS fxq_refuse: source refused by FX queue
+  PASS playlist_drop: playlist dropped puts its items in
+  PASS undo_AB_reorder: AB filled
+  PASS undo_AB_reorder: AB reorder changed it
+  PASS undo_AB_reorder: AB reorder puts row 3 first
+  PASS undo_AB_reorder: AB reorder undone
+  PASS undo_AB_remove: AB filled
+  PASS undo_AB_remove: AB remove changed it
+  PASS undo_AB_remove: AB remove undone
+  PASS undo_AB_delete: AB filled
+  PASS undo_AB_delete: AB delete changed it
+  PASS undo_AB_delete: AB delete undone
+  PASS undo_AB_clear: AB filled
+  PASS undo_AB_clear: AB clear changed it
+  PASS undo_AB_clear: AB clear undone
+  PASS undo_FX_AB_reorder: FX_AB filled
+  PASS undo_FX_AB_reorder: FX_AB reorder changed it
+  PASS undo_FX_AB_reorder: FX_AB reorder puts row 3 first
+  PASS undo_FX_AB_reorder: FX_AB reorder undone
+  PASS undo_FX_AB_remove: FX_AB filled
+  PASS undo_FX_AB_remove: FX_AB remove changed it
+  PASS undo_FX_AB_remove: FX_AB remove undone
+  PASS undo_FX_AB_delete: FX_AB filled
+  PASS undo_FX_AB_delete: FX_AB delete changed it
+  PASS undo_FX_AB_delete: FX_AB delete undone
+  PASS undo_FX_AB_clear: FX_AB filled
+  PASS undo_FX_AB_clear: FX_AB clear changed it
+  PASS undo_FX_AB_clear: FX_AB clear undone
+  PASS undo_BG_reorder: BG filled
+  PASS undo_BG_reorder: BG reorder changed it
+  PASS undo_BG_reorder: BG reorder puts row 3 first
+  PASS undo_BG_reorder: BG reorder undone
+  PASS undo_BG_remove: BG filled
+  PASS undo_BG_remove: BG remove changed it
+  PASS undo_BG_remove: BG remove undone
+  PASS undo_BG_delete: BG filled
+  PASS undo_BG_delete: BG delete changed it
+  PASS undo_BG_delete: BG delete undone
+  PASS undo_BG_clear: BG filled
+  PASS undo_BG_clear: BG clear changed it
+  PASS undo_BG_clear: BG clear undone
+  PASS undo_FX_BG_reorder: FX_BG filled
+  PASS undo_FX_BG_reorder: FX_BG reorder changed it
+  PASS undo_FX_BG_reorder: FX_BG reorder puts row 3 first
+  PASS undo_FX_BG_reorder: FX_BG reorder undone
+  PASS undo_FX_BG_remove: FX_BG filled
+  PASS undo_FX_BG_remove: FX_BG remove changed it
+  PASS undo_FX_BG_remove: FX_BG remove undone
+  PASS undo_FX_BG_delete: FX_BG filled
+  PASS undo_FX_BG_delete: FX_BG delete changed it
+  PASS undo_FX_BG_delete: FX_BG delete undone
+  PASS undo_FX_BG_clear: FX_BG filled
+  PASS undo_FX_BG_clear: FX_BG clear changed it
+  PASS undo_FX_BG_clear: FX_BG clear undone
+  PASS undo_TRANS_reorder: TRANS filled
+  PASS undo_TRANS_reorder: TRANS reorder changed it
+  PASS undo_TRANS_reorder: TRANS reorder puts row 3 first
+  PASS undo_TRANS_reorder: TRANS reorder undone
+  PASS undo_TRANS_remove: TRANS filled
+  PASS undo_TRANS_remove: TRANS remove changed it
+  PASS undo_TRANS_remove: TRANS remove undone
+  PASS undo_TRANS_delete: TRANS filled
+  PASS undo_TRANS_delete: TRANS delete changed it
+  PASS undo_TRANS_delete: TRANS delete undone
+  PASS undo_TRANS_clear: TRANS filled
+  PASS undo_TRANS_clear: TRANS clear changed it
+  PASS undo_TRANS_clear: TRANS clear undone
+  PASS bg_item_down: BG item dragged down lands at the line
+  PASS dbl_queue: double-click moved the queue position
+  PASS dbl_queue: item loaded on a deck
+  PASS dbl_queue: crossfader moved
+  PASS trans_q: Q queues in Transitions
+  PASS enter_src: Enter loads on a deck
+  PASS enter_fx: Enter applies an effect
+  PASS enter_trans: Enter applies a transition
+  PASS alt_click: Alt+click previews on PV
+  PASS delete_key: Delete + Esc keeps, Backspace + Enter deletes
+  PASS esc_newplaylist: Esc on New Playlist stays in the Library
+  PASS esc_export: Esc on Export stays in the Library
+  PASS esc_menu: Esc closes a menu without going back
+  PASS tag_multi: tag on both, not on the third
+  PASS tag_remove: Remove Tag submenu removes it
+  PASS tag_rename: Rename Tag on every item
+  PASS tag_delete: Delete Tag on every item
+  PASS tag_drag: row dragged onto a tag gets it
+  PASS tag_loaded_save: tag survives Ctrl+S of the loaded preset
+  PASS missing_findall: Find all repoints the moved item
+  PASS drop_preset: deck badge takes a preset
+  PASS drop_stock: deck badge takes a stock source
+  PASS drop_chain: deck FX badge takes a chain
+  PASS drop_single_full: full chain: saved FX dropped on the badge tells you
+  PASS drop_single_vacant: saved FX takes the first vacant slot
+  PASS drop_slot: slot takes a stock effect, in slot 2
+  PASS drop_monitor_chain: deck monitor refuses FX (presets and sources only, as the guide says)
+  PASS last_click: preset then source in a blink: last wins
+  PASS fx_failed_load: failed FX load shows a toast
+  PASS trans_failed_load: failed transition load shows a toast
+  PASS prompt_esc: deck is dirty first
+  PASS prompt_esc: Esc cancels: same preset
+  PASS prompt_enter: Enter saved the old preset
+  PASS prompt_enter: and loaded the new one
+  PASS chain_clean_launch: A chain clean at launch
+  PASS chain_clean_launch: B chain clean at launch
+  PASS chain_clean_launch: BG chain clean at launch
+  PASS chain_clean_launch: PV chain clean at launch
+  PASS chain_clean_launch: M chain clean at launch
+  PASS chain_clean_launch_fresh: A chain clean at launch, fresh install
+  PASS chain_clean_launch_fresh: B chain clean at launch, fresh install
+  PASS chain_clean_launch_fresh: BG chain clean at launch, fresh install
+  PASS chain_clean_launch_fresh: PV chain clean at launch, fresh install
+  PASS chain_clean_launch_fresh: M chain clean at launch, fresh install
+  PASS chain_param_dirty_revert: param tweak marks dirty
+  PASS chain_param_dirty_revert: Revert to Saved cleans
+  PASS chain_super_not_dirty: turning the Super Knob is not a change
+  PASS chain_clear_undo: Clear All empties slots
+  PASS chain_clear_undo: Ctrl+Z brings them back
+  PASS chain_copy_paste_undo: Paste copies onto B
+  PASS chain_copy_paste_undo: Ctrl+Z undoes Paste
+  PASS slot_swap_undo: slot drag swaps
+  PASS slot_swap_undo: Ctrl+Z undoes the swap
+  PASS slot_ctrl_copy_undo: Ctrl+drag copies
+  PASS slot_ctrl_copy_undo: Ctrl+Z undoes the copy
+  PASS chain_saveas: Save As writes the file
+  PASS chain_saveas: chain takes the name
+  PASS chain_save_keeps_tags: saving over a chain keeps tags
+  PASS chain_save_keeps_tags: clean afterwards
+  PASS chain_save_readonly: failed save shows a message
+  PASS chain_save_readonly: and stays unsaved
+  PASS eject_keeps_chain: Eject empties the deck and keeps its chain
+  PASS bind_src_apply_undo: bound list: a click applies
+  PASS bind_src_apply_undo: Ctrl+Z undoes
+  PASS bind_fx_apply_undo: bound slot: a click applies to it
+  PASS bind_fx_apply_undo: Ctrl+Z undoes
+  PASS bind_esc_no_apply: Esc stops without applying
+  PASS mon_Move_Source: Move Source: target source
+  PASS mon_Move_Source: Move Source: origin source
+  PASS mon_Move_Source: Move Source: target FX
+  PASS mon_Move_Source: Move Source: origin FX
+  PASS mon_Move_FX: Move FX: target source
+  PASS mon_Move_FX: Move FX: origin source
+  PASS mon_Move_FX: Move FX: target FX
+  PASS mon_Move_FX: Move FX: origin FX
+  PASS mon_Move_FX: after a Move the origin chain is Untitled
+  PASS mon_Move_Source_FX: Move Source + FX: target source
+  PASS mon_Move_Source_FX: Move Source + FX: origin source
+  PASS mon_Move_Source_FX: Move Source + FX: target FX
+  PASS mon_Move_Source_FX: Move Source + FX: origin FX
+  PASS mon_Move_Source_FX: after a Move the origin chain is Untitled
+  PASS mon_Copy_Source: Copy Source: target source
+  PASS mon_Copy_Source: Copy Source: origin source
+  PASS mon_Copy_Source: Copy Source: target FX
+  PASS mon_Copy_Source: Copy Source: origin FX
+  PASS mon_Copy_FX: Copy FX: target source
+  PASS mon_Copy_FX: Copy FX: origin source
+  PASS mon_Copy_FX: Copy FX: target FX
+  PASS mon_Copy_FX: Copy FX: origin FX
+  PASS mon_Copy_Source_FX: Copy Source + FX: target source
+  PASS mon_Copy_Source_FX: Copy Source + FX: origin source
+  PASS mon_Copy_Source_FX: Copy Source + FX: target FX
+  PASS mon_Copy_Source_FX: Copy Source + FX: origin FX
+  PASS mon_Swap_Source: Swap Source: target source
+  PASS mon_Swap_Source: Swap Source: origin source
+  PASS mon_Swap_Source: Swap Source: target FX
+  PASS mon_Swap_Source: Swap Source: origin FX
+  PASS mon_Swap_FX: Swap FX: target source
+  PASS mon_Swap_FX: Swap FX: origin source
+  PASS mon_Swap_FX: Swap FX: target FX
+  PASS mon_Swap_FX: Swap FX: origin FX
+  PASS mon_Swap_Source_FX: Swap Source + FX: target source
+  PASS mon_Swap_Source_FX: Swap Source + FX: origin source
+  PASS mon_Swap_Source_FX: Swap Source + FX: target FX
+  PASS mon_Swap_Source_FX: Swap Source + FX: origin FX
+  PASS trans_save_as: transition Save As writes the file
+  PASS deck_save_folder: Save writes back into the subfolder
+  PASS deck_save_folder: no new copy at the top
+  PASS deck_save_folder: clean afterwards
+  PASS eject_undo_source: Ctrl+Z after a source change brings the old one back
+  PASS undo_chain_load: chain loaded
+  PASS undo_chain_load: Ctrl+Z undoes a Library chain load
+  PASS trans_flash_knob: knob sets Luminous Flash Intensity
+  PASS trans_linear_still_fades: crossfader still moves

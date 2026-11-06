@@ -13919,6 +13919,9 @@
 </ul>
 <h3 id="fixes-from-an-automated-pass-through-the-app-librarysources-uisavepresetmodalkt-uibrowserbrowserpanekt-uiuimanagerkt-presetspresetmanagerkt-uidropdownstylehelperkt-macrotransitionmacrosynckt-uitooltiphelperkt">Fixes From an Automated Pass Through the App (<code>library/sources/</code>, <code>ui/SavePresetModal.kt</code>, <code>ui/browser/BrowserPane.kt</code>, <code>ui/UIManager.kt</code>, <code>presets/PresetManager.kt</code>, <code>ui/DropdownStyleHelper.kt</code>, <code>macro/TransitionMacroSync.kt</code>, <code>ui/TooltipHelper.kt</code>)</h3>
 <ul>
+<li><strong>Fixed: every FX chain showed as unsaved at launch.</strong> The amber Save and the <code>•</code> were lit on all five chains as soon as the app opened, on a fresh install too. Chains now start clean, and a real change still marks them.</li>
+<li><strong>Fixed: dragging a selection of FX or transitions carried only one.</strong> Pressing a row in the selection cut it down to that row before the drag began. A plain click still narrows it to that row.</li>
+<li><strong>Fixed: Luminous Flash's Intensity knob did nothing.</strong> A Metaknob link meant for effects held it in place. Transitions have no Metaknob now, so all their knobs work.</li>
 <li><strong>Fixed: Gyroid Hyperspace kept flashing black.</strong> The camera flies through the walls, and every time it was inside one the whole frame went black, for up to 0.7 s, with or without music. It now shows what lies beyond the wall. Desktop and web TV (TV v27).</li>
 <li><strong>Fixed: Mandelbox opened as a diamond.</strong> It now opens square-on to a face. Saved looks that use Mandelbox appear turned by 45 degrees. Desktop and web TV (TV v27).</li>
 <li><strong>Fixed: a crash in Save As.</strong> Saving a preset loaded from a full file path, outside the Library's own paths, closed the app when the Folder dropdown drew.</li>

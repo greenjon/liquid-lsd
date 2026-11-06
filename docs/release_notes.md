@@ -10,6 +10,9 @@
 - **Fixed: after a restart, Save on a preset in a subfolder wrote a new copy at the top of `presets/`.** The deck now finds its file again, when exactly one preset has that name.
 
 ### Fixes From an Automated Pass Through the App (`library/sources/`, `ui/SavePresetModal.kt`, `ui/browser/BrowserPane.kt`, `ui/UIManager.kt`, `presets/PresetManager.kt`, `ui/DropdownStyleHelper.kt`, `macro/TransitionMacroSync.kt`, `ui/TooltipHelper.kt`)
+- **Fixed: every FX chain showed as unsaved at launch.** The amber Save and the `•` were lit on all five chains as soon as the app opened, on a fresh install too. Chains now start clean, and a real change still marks them.
+- **Fixed: dragging a selection of FX or transitions carried only one.** Pressing a row in the selection cut it down to that row before the drag began. A plain click still narrows it to that row.
+- **Fixed: Luminous Flash's Intensity knob did nothing.** A Metaknob link meant for effects held it in place. Transitions have no Metaknob now, so all their knobs work.
 - **Fixed: Gyroid Hyperspace kept flashing black.** The camera flies through the walls, and every time it was inside one the whole frame went black, for up to 0.7 s, with or without music. It now shows what lies beyond the wall. Desktop and web TV (TV v27).
 - **Fixed: Mandelbox opened as a diamond.** It now opens square-on to a face. Saved looks that use Mandelbox appear turned by 45 degrees. Desktop and web TV (TV v27).
 - **Fixed: a crash in Save As.** Saving a preset loaded from a full file path, outside the Library's own paths, closed the app when the Folder dropdown drew.

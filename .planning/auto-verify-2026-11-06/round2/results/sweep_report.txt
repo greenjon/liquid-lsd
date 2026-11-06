@@ -1,0 +1,32 @@
+717 parameters, 1544 value windows, 72 units
+not deterministic: []
+
+BINDING FAILED (knob did not set the value):
+  trans/luminous_flash ['intensity want 0 got 0.5']
+
+NO EFFECT at any value, at default settings of everything else: 39
+  fx/3d_elevation ['separation']
+  fx/wave_displace ['centerX', 'centerY']
+  src/celestial_engine ['PulseWave']
+  src/chladni_cymatics ['HueOffset']
+  src/cyclic_ca ['Density']
+  src/fluid_ink ['HueOffset']
+  src/fractal_flame ['Mutation', 'XF V1 A', 'XF V1 B', 'XF V1 C', 'XF V1 D', 'XF V2 Id', 'XF V2 A', 'XF V2 B', 'XF V2 C', 'XF V2 D', 'XF V3 Id', 'XF V3 A', 'XF V3 B', 'XF V3 C', 'XF V3 D', 'XF V4 Id', 'XF V4 A', 'XF V4 B', 'XF V4 C', 'XF V4 D']
+  src/icosa_h3 ['SpikePhase', 'SpikeSharpness', 'BlockerSize']
+  src/kifs ['Vertex']
+  src/kifs_storm ['Repeat3D', 'NormalFrequency']
+  src/lenia ['SeedDensity']
+  src/scope ['RingSize']
+  src/tunnel_scenes ['Symmetries']
+  trans/luminous_flash ['intensity', 'colorTemp', 'spread']
+
+FAINT: 2
+  src/fluid_ink ['Swirl 0.17']
+  src/icosa_h3 ['Morph 0.24']
+
+ONE VALUE IDENTICAL to default, others work (often a stepped mode): 5
+  src/glitch_blocks ['Quality=1']
+  src/hyperbolic_tiling ['Q=3']
+  src/metaballs ['Quality=0']
+  src/quasicrystal ['Quality=1']
+  trans/linear_crossfade ['curveMode=1']

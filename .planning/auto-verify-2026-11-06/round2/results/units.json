@@ -1,0 +1,9736 @@
+{
+"src/apollonian": [
+{
+"name": "CellSize",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "InversionRadius",
+"min": 0.0,
+"max": 1.0,
+"d": 0.57,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "InversionStrength",
+"min": 0.0,
+"max": 1.0,
+"d": 0.6,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Twist",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "CoreSize",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "FlightSpeed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "ColorMode",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "HueOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.7,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.6,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Zoom",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "RotateX",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "RotateY",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": false
+},
+{
+"name": "RotateZ",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "Quality",
+"min": 0.0,
+"max": 1.0,
+"d": 0.08,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"src/aurora_ribbons": [
+{
+"name": "Ribbons",
+"min": 3.0,
+"max": 6.0,
+"d": 4.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "CurtainHeight",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "WaveAmp",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "WaveSpeed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Shimmer",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "SkyDarkness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.6,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "PaletteMode",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "SurfaceType",
+"min": 0.0,
+"max": 2.0,
+"d": 1.0,
+"steps": 3,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Detail",
+"min": 1.0,
+"max": 4.0,
+"d": 2.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "HueShift",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.65,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"src/celestial_engine": [
+{
+"name": "Symmetries",
+"min": 3.0,
+"max": 24.0,
+"d": 6.0,
+"steps": 22,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "RingDensity",
+"min": 0.0,
+"max": 1.0,
+"d": 0.26316,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "PhaseTwist",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "MoireStrength",
+"min": 0.0,
+"max": 1.0,
+"d": 0.6,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "FlowerFold",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "PulseWave",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Speed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.15,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "LineWidth",
+"min": 0.0,
+"max": 1.0,
+"d": 0.31579,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Glow",
+"min": 0.0,
+"max": 1.0,
+"d": 0.34211,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "ColorMode",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "HueOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "HueSweep",
+"min": 0.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Scale",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+}
+],
+"src/chladni_cymatics": [
+{
+"name": "FrequencyM",
+"min": 1.0,
+"max": 16.0,
+"d": 3.0,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "FrequencyN",
+"min": 1.0,
+"max": 16.0,
+"d": 5.0,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "FrequencyL",
+"min": 0.0,
+"max": 12.0,
+"d": 2.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "PlateShape",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "NodeSharpness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.26667,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "SandAccumulation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.7,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "VibrationSpeed",
+"min": 0.0,
+"max": 1.0,
+"d": 0.15,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "InvertMode",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Glow",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "PaletteMode",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "HueOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Scale",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+}
+],
+"src/cyclic_ca": [
+{
+"name": "States",
+"min": 0.0,
+"max": 1.0,
+"d": 0.1,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Threshold",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Neighborhood",
+"min": 0.0,
+"max": 2.0,
+"d": 0.0,
+"steps": 3,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Speed",
+"min": 0.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Density",
+"min": 0.0,
+"max": 1.0,
+"d": 1.0,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": false
+},
+{
+"name": "Reseed",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "PaletteMode",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "HueOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Quality",
+"min": 0.0,
+"max": 1.0,
+"d": 0.6,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"src/domain_warp_fluid": [
+{
+"name": "WarpStrength",
+"min": 0.0,
+"max": 1.0,
+"d": 0.375,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Swirl",
+"min": -1.0,
+"max": 1.0,
+"d": 0.33333,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Viscosity",
+"min": 0.0,
+"max": 1.0,
+"d": 0.21053,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Speed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.175,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Detail",
+"min": 1.0,
+"max": 5.0,
+"d": 4.0,
+"steps": 5,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Gloss",
+"min": 0.0,
+"max": 1.0,
+"d": 0.46667,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "PaletteMode",
+"min": 0.0,
+"max": 4.0,
+"d": 0.0,
+"steps": 5,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "HueOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "HueCycleSpeed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.1,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Zoom",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+}
+],
+"src/dynamic_spiral": [
+{
+"name": "MaxPoints",
+"min": 100.0,
+"max": 2000.0,
+"d": 500.0,
+"steps": 39,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Scale",
+"min": 0.0,
+"max": 1.0,
+"d": 0.47368,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Damping",
+"min": 0.0,
+"max": 1.0,
+"d": 0.1984,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "WaveFreq",
+"min": 0.0,
+"max": 1.0,
+"d": 0.19192,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "WaveAmp",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Shear",
+"min": -1.0,
+"max": 1.0,
+"d": 0.2,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Speed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "DotSize",
+"min": 0.0,
+"max": 1.0,
+"d": 0.18367,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Glow",
+"min": 0.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "HueOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "HueSweep",
+"min": 0.0,
+"max": 1.0,
+"d": 0.09091,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+}
+],
+"src/escape_time": [
+{
+"name": "FractalType",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "JuliaRadius",
+"min": 0.0,
+"max": 1.0,
+"d": 0.65,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "JuliaAngle",
+"min": -1.0,
+"max": 1.0,
+"d": 0.1,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Power",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": false
+},
+{
+"name": "MorphSpeed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.15,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Detail",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Zoom",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "CenterX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "CenterY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Rotation",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "ColorMode",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "ColorCycle",
+"min": 0.0,
+"max": 1.0,
+"d": 0.35,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "TrapGlow",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "HueOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.85,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"src/fluid_ink": [
+{
+"name": "Emitters",
+"min": 0.0,
+"max": 1.0,
+"d": 0.75,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Force",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Swirl",
+"min": 0.0,
+"max": 1.0,
+"d": 0.7,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Turbulence",
+"min": 0.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Viscosity",
+"min": 0.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "DyeFade",
+"min": 0.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Projection",
+"min": 0.0,
+"max": 1.0,
+"d": 1.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "SimSpeed",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "ColorMode",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "HueOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.85,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"src/fractal_flame": [
+{
+"name": "Zoom",
+"min": 0.0,
+"max": 1.0,
+"d": 0.41330314,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Magnify",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": false
+},
+{
+"name": "Rotation",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": false
+},
+{
+"name": "FlipY",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": 2,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "CenterX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "CenterY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Exposure",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5752575,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Gamma",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Vibrancy",
+"min": 0.0,
+"max": 1.0,
+"d": 0.7,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Toe",
+"min": 0.0,
+"max": 1.0,
+"d": 0.14,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Decay",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Sharpness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.33333334,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Softness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.22222222,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Smooth",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Palette",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Mutation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": false
+},
+{
+"name": "Spin",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": true,
+"rand": false
+},
+{
+"name": "Breathe",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Warp",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": false
+},
+{
+"name": "Drift",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "X1 Weight",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 Color",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 ColorSpeed",
+"min": 0.0,
+"max": 1.0,
+"d": 0.6,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 PreRot",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.35,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 PreScaleX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.16250002,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 PreScaleY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.16250002,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 PreShear",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 PreX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.044999957,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 PreY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.00999999,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 PostRot",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 PostScaleX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 PostScaleY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 PostShear",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 PostX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 PostY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 V1 Id",
+"min": 0.0,
+"max": 100.0,
+"d": 1.0,
+"steps": 101,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 V1 Weight",
+"min": -1.0,
+"max": 1.0,
+"d": 0.17499995,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 V1 A",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 V1 B",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 V1 C",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 V1 D",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 V2 Id",
+"min": 0.0,
+"max": 100.0,
+"d": 3.0,
+"steps": 101,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 V2 Weight",
+"min": -1.0,
+"max": 1.0,
+"d": 0.125,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 V2 A",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 V2 B",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 V2 C",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 V2 D",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 V3 Id",
+"min": 0.0,
+"max": 100.0,
+"d": 0.0,
+"steps": 101,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 V3 Weight",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 V3 A",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 V3 B",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 V3 C",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 V3 D",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 V4 Id",
+"min": 0.0,
+"max": 100.0,
+"d": 0.0,
+"steps": 101,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 V4 Weight",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 V4 A",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 V4 B",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 V4 C",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X1 V4 D",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 Weight",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 Color",
+"min": 0.0,
+"max": 1.0,
+"d": 0.45,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 ColorSpeed",
+"min": 0.0,
+"max": 1.0,
+"d": 0.6,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 PreRot",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": -1.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 PreScaleX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.14999998,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 PreScaleY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.14999998,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 PreShear",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 PreX",
+"min": -1.0,
+"max": 1.0,
+"d": -0.035000026,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 PreY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.03999996,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 PostRot",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 PostScaleX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 PostScaleY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 PostShear",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 PostX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 PostY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 V1 Id",
+"min": 0.0,
+"max": 100.0,
+"d": 2.0,
+"steps": 101,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 V1 Weight",
+"min": -1.0,
+"max": 1.0,
+"d": 0.087499976,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 V1 A",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 V1 B",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 V1 C",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 V1 D",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 V2 Id",
+"min": 0.0,
+"max": 100.0,
+"d": 0.0,
+"steps": 101,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 V2 Weight",
+"min": -1.0,
+"max": 1.0,
+"d": 0.16250002,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 V2 A",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 V2 B",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 V2 C",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 V2 D",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 V3 Id",
+"min": 0.0,
+"max": 100.0,
+"d": 0.0,
+"steps": 101,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 V3 Weight",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 V3 A",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 V3 B",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 V3 C",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 V3 D",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 V4 Id",
+"min": 0.0,
+"max": 100.0,
+"d": 0.0,
+"steps": 101,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 V4 Weight",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 V4 A",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 V4 B",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 V4 C",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X2 V4 D",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 Weight",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 Color",
+"min": 0.0,
+"max": 1.0,
+"d": 1.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 ColorSpeed",
+"min": 0.0,
+"max": 1.0,
+"d": 0.6,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 PreRot",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 2.1,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 PreScaleX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.13750005,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 PreScaleY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.125,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 PreShear",
+"min": -1.0,
+"max": 1.0,
+"d": 0.049999952,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 PreX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 PreY",
+"min": -1.0,
+"max": 1.0,
+"d": -0.055000007,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 PostRot",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 PostScaleX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 PostScaleY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 PostShear",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 PostX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 PostY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 V1 Id",
+"min": 0.0,
+"max": 100.0,
+"d": 4.0,
+"steps": 101,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 V1 Weight",
+"min": -1.0,
+"max": 1.0,
+"d": 0.100000024,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 V1 A",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 V1 B",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 V1 C",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 V1 D",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 V2 Id",
+"min": 0.0,
+"max": 100.0,
+"d": 1.0,
+"steps": 101,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 V2 Weight",
+"min": -1.0,
+"max": 1.0,
+"d": 0.14999998,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 V2 A",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 V2 B",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 V2 C",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 V2 D",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 V3 Id",
+"min": 0.0,
+"max": 100.0,
+"d": 0.0,
+"steps": 101,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 V3 Weight",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 V3 A",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 V3 B",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 V3 C",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 V3 D",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 V4 Id",
+"min": 0.0,
+"max": 100.0,
+"d": 0.0,
+"steps": 101,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 V4 Weight",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 V4 A",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 V4 B",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 V4 C",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X3 V4 D",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 Weight",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 Color",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 ColorSpeed",
+"min": 0.0,
+"max": 1.0,
+"d": 0.6,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 PreRot",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 PreScaleX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.14999998,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 PreScaleY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.14999998,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 PreShear",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 PreX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 PreY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 PostRot",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 PostScaleX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 PostScaleY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 PostShear",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 PostX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 PostY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 V1 Id",
+"min": 0.0,
+"max": 100.0,
+"d": 0.0,
+"steps": 101,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 V1 Weight",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 V1 A",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 V1 B",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 V1 C",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 V1 D",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 V2 Id",
+"min": 0.0,
+"max": 100.0,
+"d": 0.0,
+"steps": 101,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 V2 Weight",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 V2 A",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 V2 B",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 V2 C",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 V2 D",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 V3 Id",
+"min": 0.0,
+"max": 100.0,
+"d": 0.0,
+"steps": 101,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 V3 Weight",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 V3 A",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 V3 B",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 V3 C",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 V3 D",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 V4 Id",
+"min": 0.0,
+"max": 100.0,
+"d": 0.0,
+"steps": 101,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 V4 Weight",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 V4 A",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 V4 B",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 V4 C",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X4 V4 D",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 Weight",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 Color",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 ColorSpeed",
+"min": 0.0,
+"max": 1.0,
+"d": 0.6,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 PreRot",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 PreScaleX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.14999998,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 PreScaleY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.14999998,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 PreShear",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 PreX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 PreY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 PostRot",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 PostScaleX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 PostScaleY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 PostShear",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 PostX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 PostY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 V1 Id",
+"min": 0.0,
+"max": 100.0,
+"d": 0.0,
+"steps": 101,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 V1 Weight",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 V1 A",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 V1 B",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 V1 C",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 V1 D",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 V2 Id",
+"min": 0.0,
+"max": 100.0,
+"d": 0.0,
+"steps": 101,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 V2 Weight",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 V2 A",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 V2 B",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 V2 C",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 V2 D",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 V3 Id",
+"min": 0.0,
+"max": 100.0,
+"d": 0.0,
+"steps": 101,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 V3 Weight",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 V3 A",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 V3 B",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 V3 C",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 V3 D",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 V4 Id",
+"min": 0.0,
+"max": 100.0,
+"d": 0.0,
+"steps": 101,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 V4 Weight",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 V4 A",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 V4 B",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 V4 C",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X5 V4 D",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 Weight",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 Color",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 ColorSpeed",
+"min": 0.0,
+"max": 1.0,
+"d": 0.6,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 PreRot",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 PreScaleX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.14999998,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 PreScaleY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.14999998,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 PreShear",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 PreX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 PreY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 PostRot",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 PostScaleX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 PostScaleY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 PostShear",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 PostX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 PostY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 V1 Id",
+"min": 0.0,
+"max": 100.0,
+"d": 0.0,
+"steps": 101,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 V1 Weight",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 V1 A",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 V1 B",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 V1 C",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 V1 D",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 V2 Id",
+"min": 0.0,
+"max": 100.0,
+"d": 0.0,
+"steps": 101,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 V2 Weight",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 V2 A",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 V2 B",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 V2 C",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 V2 D",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 V3 Id",
+"min": 0.0,
+"max": 100.0,
+"d": 0.0,
+"steps": 101,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 V3 Weight",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 V3 A",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 V3 B",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 V3 C",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 V3 D",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 V4 Id",
+"min": 0.0,
+"max": 100.0,
+"d": 0.0,
+"steps": 101,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 V4 Weight",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 V4 A",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 V4 B",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 V4 C",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "X6 V4 D",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF PreRot",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF PreScaleX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF PreScaleY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF PreShear",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF PreX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF PreY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF PostRot",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF PostScaleX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF PostScaleY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF PostShear",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF PostX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF PostY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF V1 Id",
+"min": 0.0,
+"max": 100.0,
+"d": 0.0,
+"steps": 101,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF V1 Weight",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF V1 A",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF V1 B",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF V1 C",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF V1 D",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF V2 Id",
+"min": 0.0,
+"max": 100.0,
+"d": 0.0,
+"steps": 101,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF V2 Weight",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF V2 A",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF V2 B",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF V2 C",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF V2 D",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF V3 Id",
+"min": 0.0,
+"max": 100.0,
+"d": 0.0,
+"steps": 101,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF V3 Weight",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF V3 A",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF V3 B",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF V3 C",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF V3 D",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF V4 Id",
+"min": 0.0,
+"max": 100.0,
+"d": 0.0,
+"steps": 101,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF V4 Weight",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF V4 A",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF V4 B",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF V4 C",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "XF V4 D",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+}
+],
+"src/girih_stars": [
+{
+"name": "Symmetries",
+"min": 4.0,
+"max": 8.0,
+"d": 8.0,
+"steps": 3,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "SurfaceType",
+"min": 0.0,
+"max": 2.0,
+"d": 0.0,
+"steps": 3,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "PaletteMode",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "TileScale",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Angle",
+"min": 0.0,
+"max": 1.0,
+"d": 0.55,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Sweep",
+"min": 0.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Speed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "LineWidth",
+"min": 0.0,
+"max": 1.0,
+"d": 0.35,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Interlace",
+"min": 0.0,
+"max": 1.0,
+"d": 0.8,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Glow",
+"min": 0.0,
+"max": 1.0,
+"d": 0.35,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Quality",
+"min": 0.0,
+"max": 1.0,
+"d": 0.6,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "HueOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"src/glitch_blocks": [
+{
+"name": "SurfaceType",
+"min": 0.0,
+"max": 3.0,
+"d": 1.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "PaletteMode",
+"min": 0.0,
+"max": 3.0,
+"d": 3.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Intensity",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "BlockSize",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Rate",
+"min": 0.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Tear",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Split",
+"min": 0.0,
+"max": 1.0,
+"d": 0.35,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Crush",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Quality",
+"min": 0.0,
+"max": 1.0,
+"d": 0.7,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "HueOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"src/gyroid_hyperspace": [
+{
+"name": "SurfaceType",
+"min": 0.0,
+"max": 2.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "WallThickness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.29487,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Frequency",
+"min": 0.0,
+"max": 1.0,
+"d": 0.33333,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "FlightSpeed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "WireframeMode",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "CoreGlow",
+"min": 0.0,
+"max": 1.0,
+"d": 0.26667,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "ColorMode",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "HueOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.85,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Zoom",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "RotateX",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "RotateY",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": false
+},
+{
+"name": "RotateZ",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+}
+],
+"src/halftone_matrix": [
+{
+"name": "SurfaceType",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "ColorMethod",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "PaletteMode",
+"min": 0.0,
+"max": 3.0,
+"d": 1.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Density",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Sharpness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.6,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "PatternSpeed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "PatternScale",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "GridRotation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.1,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Contrast",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "HueShift",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.7,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Detail",
+"min": 1.0,
+"max": 3.0,
+"d": 2.0,
+"steps": 3,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"src/hyper_slice": [
+{
+"name": "SliceOffset",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "RotateXW",
+"min": -3.14159,
+"max": 3.14159,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": true,
+"rand": true
+},
+{
+"name": "RotateYW",
+"min": -3.14159,
+"max": 3.14159,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "RotateZW",
+"min": -3.14159,
+"max": 3.14159,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "RotateX",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "RotateY",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "RotateZ",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "Morph",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "SupportH",
+"min": 0.0,
+"max": 1.0,
+"d": 0.36667,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "ColorMethod",
+"min": 0.0,
+"max": 2.0,
+"d": 0.0,
+"steps": 3,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "HueOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.85,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.55,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Opacity",
+"min": 0.0,
+"max": 1.0,
+"d": 0.77778,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "EdgeThickness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.16667,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "EdgeBrightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Glow",
+"min": 0.0,
+"max": 1.0,
+"d": 0.33333,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Zoom",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": false
+}
+],
+"src/hyperbolic_tiling": [
+{
+"name": "P",
+"min": 3.0,
+"max": 10.0,
+"d": 5.0,
+"steps": 8,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Q",
+"min": 3.0,
+"max": 10.0,
+"d": 4.0,
+"steps": 8,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Quality",
+"min": 0.0,
+"max": 1.0,
+"d": 0.8,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Speed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Drift",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Spin",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "EdgeWidth",
+"min": 0.0,
+"max": 1.0,
+"d": 0.35,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Glow",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Subdivision",
+"min": 0.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "ColorMode",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Outside",
+"min": 0.0,
+"max": 2.0,
+"d": 0.0,
+"steps": 3,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "HueOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.58,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.75,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"src/icosa_h3": [
+{
+"name": "Morph",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "StellationBoost",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "SpikeMode",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "SpikePhase",
+"min": -3.14159,
+"max": 3.14159,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "SpikeSharpness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.6,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "BlockerSize",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "SupportH",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "ColorMode",
+"min": 0.0,
+"max": 4.0,
+"d": 0.0,
+"steps": 5,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "HueOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "HueAnimSpeed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.85,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.475,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Opacity",
+"min": 0.0,
+"max": 1.0,
+"d": 0.75,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "EdgeThickness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.16667,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "EdgeBrightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.6,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "RimGlow",
+"min": 0.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Zoom",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": false
+},
+{
+"name": "RotateX",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "RotateY",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": false
+},
+{
+"name": "RotateZ",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+}
+],
+"src/isometric_voxels": [
+{
+"name": "SurfaceType",
+"min": 0.0,
+"max": 2.0,
+"d": 0.0,
+"steps": 3,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "CellSize",
+"min": 0.0,
+"max": 1.0,
+"d": 0.45,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "MaxHeight",
+"min": 0.0,
+"max": 1.0,
+"d": 0.6,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Speed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Frequency",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Gap",
+"min": 0.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Contrast",
+"min": 0.0,
+"max": 1.0,
+"d": 0.6,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "PaletteMode",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Quality",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "HueOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.85,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"src/kali_set": [
+{
+"name": "OrbitRadius",
+"min": 0.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Speed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Iterations",
+"min": 0.0,
+"max": 1.0,
+"d": 0.6,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Quality",
+"min": 0.0,
+"max": 1.0,
+"d": 1.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Twist",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "SurfaceType",
+"min": 0.0,
+"max": 3.0,
+"d": 3.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "TrapScale",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Zoom",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Drift",
+"min": 0.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "ColorMode",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "PaletteMode",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "HueOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.8,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"src/kifs": [
+{
+"name": "SurfaceType",
+"min": 0.0,
+"max": 4.0,
+"d": 0.0,
+"steps": 5,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Vertex",
+"min": 0.0,
+"max": 1.0,
+"d": 0.2,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Scale",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Offset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "TwistX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.1,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "TwistY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.15,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "TwistZ",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "MorphSpeed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "FlightSpeed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Glow",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "ColorMode",
+"min": 0.0,
+"max": 4.0,
+"d": 0.0,
+"steps": 5,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "ColorSpread",
+"min": 0.0,
+"max": 1.0,
+"d": 1.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "HueOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.58,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 1.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 1.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Quality",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Zoom",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "RotateX",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "RotateY",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": false
+},
+{
+"name": "RotateZ",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+}
+],
+"src/kifs_storm": [
+{
+"name": "Iterations",
+"min": 1.0,
+"max": 8.0,
+"d": 5.0,
+"steps": 8,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Scale",
+"min": 0.0,
+"max": 1.0,
+"d": 0.3333,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "FoldX",
+"min": 0.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "FoldY",
+"min": 0.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "FoldZ",
+"min": 0.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "FoldAngleX",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "FoldAngleY",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "FoldAngleZ",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "TumbleSpeed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.15,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "ShapeMorph",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Smoothness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Zoom",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "RepeatSpacing",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Repeat3D",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": 2,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "FlySpeed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "ColorShift",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Glow",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "TrapMode",
+"min": 0.0,
+"max": 4.0,
+"d": 0.0,
+"steps": 5,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "TrapGlow",
+"min": 0.0,
+"max": 1.0,
+"d": 0.15,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "NormalColoring",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "NormalFrequency",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "RotateX",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": false
+},
+{
+"name": "RotateY",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": false
+},
+{
+"name": "RotateZ",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": false
+}
+],
+"src/lenia": [
+{
+"name": "GrowthCenter",
+"min": 0.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "GrowthWidth",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Radius",
+"min": 0.0,
+"max": 1.0,
+"d": 0.6,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "SimSpeed",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "SeedDensity",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Reseed",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Relief",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "ColorMode",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "HueOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.8,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Zoom",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"src/mandala": [
+{
+"name": "Lobes",
+"min": 3.0,
+"max": 26.0,
+"d": 4.0,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Recipe Select",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "L1",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "L2",
+"min": 0.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "L3",
+"min": 0.0,
+"max": 1.0,
+"d": 0.2,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "L4",
+"min": 0.0,
+"max": 1.0,
+"d": 0.1,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Thickness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Hue Offset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": false
+},
+{
+"name": "Hue Sweep",
+"min": 0.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Depth",
+"min": 0.0,
+"max": 1.0,
+"d": 0.35,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+}
+],
+"src/mandelbox": [
+{
+"name": "Scale",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "FoldLimit",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "MinRadius",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "MaxRadius",
+"min": 0.0,
+"max": 1.0,
+"d": 0.33333,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Quality",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "FlightSpeed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Glow",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "ColorMode",
+"min": 0.0,
+"max": 4.0,
+"d": 0.0,
+"steps": 5,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "HueOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.75,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Zoom",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "RotateX",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "RotateY",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": false
+},
+{
+"name": "RotateZ",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+}
+],
+"src/mandelbulb": [
+{
+"name": "Power",
+"min": 0.0,
+"max": 1.0,
+"d": 0.42857,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "PowerSwing",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "JuliaMix",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Bailout",
+"min": 0.0,
+"max": 1.0,
+"d": 0.33333,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Quality",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "FlightSpeed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Glow",
+"min": 0.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "ColorMode",
+"min": 0.0,
+"max": 4.0,
+"d": 0.0,
+"steps": 5,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "HueOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.8,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Zoom",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "RotateX",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "RotateY",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": false
+},
+{
+"name": "RotateZ",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+}
+],
+"src/metaballs": [
+{
+"name": "MaxPoints",
+"min": 4.0,
+"max": 12.0,
+"d": 7.0,
+"steps": 9,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "ColorMethod",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "PaletteMode",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "BallSize",
+"min": 0.0,
+"max": 1.0,
+"d": 0.6,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "SizeVariance",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "OrbitSpeed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "OrbitSpread",
+"min": 0.0,
+"max": 1.0,
+"d": 0.6,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Merge",
+"min": 0.0,
+"max": 1.0,
+"d": 0.6,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Softness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Quality",
+"min": 0.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "HueOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.85,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"src/nebula_volume": [
+{
+"name": "Density",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Coverage",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Scale",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Turbulence",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Detail",
+"min": 1.0,
+"max": 5.0,
+"d": 2.0,
+"steps": 5,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Quality",
+"min": 0.0,
+"max": 1.0,
+"d": 0.15,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Glow",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Lighting",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "FlightSpeed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Drift",
+"min": -1.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "ColorMode",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "HueOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.75,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Zoom",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "RotateX",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "RotateY",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": false
+},
+{
+"name": "RotateZ",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+}
+],
+"src/pseudo_kleinian": [
+{
+"name": "SlabSize",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "InversionRadius",
+"min": 0.0,
+"max": 1.0,
+"d": 0.64,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "InversionStrength",
+"min": 0.0,
+"max": 1.0,
+"d": 0.6,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "OffsetX",
+"min": -1.0,
+"max": 1.0,
+"d": 0.2,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "OffsetY",
+"min": -1.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "OffsetZ",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "CoreSize",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": false
+},
+{
+"name": "FlightSpeed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "ColorMode",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "HueOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.7,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.6,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Zoom",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "RotateX",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "RotateY",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": false
+},
+{
+"name": "RotateZ",
+"min": -3.1415927,
+"max": 3.1415927,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "Quality",
+"min": 0.0,
+"max": 1.0,
+"d": 0.33,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"src/quasicrystal": [
+{
+"name": "Symmetries",
+"min": 5.0,
+"max": 8.0,
+"d": 7.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "ColorMethod",
+"min": 0.0,
+"max": 3.0,
+"d": 1.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "PaletteMode",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Frequency",
+"min": 0.0,
+"max": 1.0,
+"d": 0.35,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Bands",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Sharpness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.6,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Rotation",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "SpinSpeed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.1,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "DriftSpeed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Quality",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "HueOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.85,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"src/reaction_diffusion": [
+{
+"name": "Regime",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Feed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Kill",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Diffusion",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "SimSpeed",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": false
+},
+{
+"name": "Reseed",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Relief",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "ColorMode",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "HueOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.8,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Zoom",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"src/scope": [
+{
+"name": "Mode",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Amplitude",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Smoothing",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Thickness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.2,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "RingSize",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Zoom",
+"min": -1.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Rotation",
+"min": -1.0,
+"max": 1.0,
+"d": 0.15,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Warp",
+"min": 0.0,
+"max": 1.0,
+"d": 0.2,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Decay",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "HueSpeed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.2,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "HueOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"src/spectrogram": [
+{
+"name": "Layout",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Mirror",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": 2,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "PaletteMode",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "ScrollSpeed",
+"min": 0.0,
+"max": 1.0,
+"d": 0.35,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "LogScale",
+"min": 0.0,
+"max": 1.0,
+"d": 0.8,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Range",
+"min": 0.0,
+"max": 1.0,
+"d": 0.75,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Tilt",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Floor",
+"min": 0.0,
+"max": 1.0,
+"d": 0.45,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Gain",
+"min": 0.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Fade",
+"min": 0.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "HueOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"src/thin_film": [
+{
+"name": "FlowSpeed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Scale",
+"min": 0.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "FilmThickness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.35,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "ThicknessRange",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Contrast",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Turbulence",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Sheen",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Detail",
+"min": 1.0,
+"max": 4.0,
+"d": 2.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "HueShift",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.75,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"src/tunnel_scenes": [
+{
+"name": "SurfaceType",
+"min": 0.0,
+"max": 2.0,
+"d": 0.0,
+"steps": 3,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Symmetries",
+"min": 3.0,
+"max": 12.0,
+"d": 6.0,
+"steps": 10,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Speed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.35,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Twist",
+"min": -1.0,
+"max": 1.0,
+"d": 0.15,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Glow",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Fog",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "LineWidth",
+"min": 0.0,
+"max": 1.0,
+"d": 0.35,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Sway",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Quality",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "HueOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.85,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"src/video_feedback": [
+{
+"name": "Zoom",
+"min": -1.0,
+"max": 1.0,
+"d": 0.45,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Rotation",
+"min": -1.0,
+"max": 1.0,
+"d": 0.35,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "HueShift",
+"min": -1.0,
+"max": 1.0,
+"d": 0.2,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Decay",
+"min": 0.0,
+"max": 1.0,
+"d": 0.15,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "SeedShape",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "SeedSize",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Drift",
+"min": 0.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Quality",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"src/voronoi_cells": [
+{
+"name": "ColorMethod",
+"min": 0.0,
+"max": 3.0,
+"d": 1.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "SurfaceType",
+"min": 0.0,
+"max": 2.0,
+"d": 0.0,
+"steps": 3,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "PaletteMode",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "CellScale",
+"min": 0.0,
+"max": 1.0,
+"d": 0.35,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Jitter",
+"min": 0.0,
+"max": 1.0,
+"d": 0.8,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Speed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "EdgeWidth",
+"min": 0.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "EdgeGlow",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "HueOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.75,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "Detail",
+"min": 1.0,
+"max": 3.0,
+"d": 2.0,
+"steps": 3,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"src/wave_ripples": [
+{
+"name": "Symmetries",
+"min": 2.0,
+"max": 8.0,
+"d": 4.0,
+"steps": 7,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Wavelength",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "WaveSpeed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "OrbitSpeed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "Falloff",
+"min": 0.0,
+"max": 1.0,
+"d": 0.35,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "SurfaceType",
+"min": 0.0,
+"max": 2.0,
+"d": 0.0,
+"steps": 3,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "ColorMethod",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "PaletteMode",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Contrast",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Detail",
+"min": 1.0,
+"max": 4.0,
+"d": 2.0,
+"steps": 4,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "HueShift",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.75,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "Brightness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"fx/3d_elevation": [
+{
+"name": "mode3D",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "pitch",
+"min": -3.14159,
+"max": 3.14159,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": true,
+"rand": true
+},
+{
+"name": "yaw",
+"min": -3.14159,
+"max": 3.14159,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": true,
+"rand": true
+},
+{
+"name": "roll",
+"min": -3.14159,
+"max": 3.14159,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+},
+{
+"name": "zoom",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "separation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.33333,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "perspective",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "depthDim",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "blendMode",
+"min": 0.0,
+"max": 1.0,
+"d": 1.0,
+"steps": 2,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "roundness",
+"min": 0.0,
+"max": 1.0,
+"d": 1.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+}
+],
+"fx/anamorphic_streak": [
+{
+"name": "streakIntensity",
+"min": 0.0,
+"max": 1.0,
+"d": 0.33333,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "streakLength",
+"min": 0.0,
+"max": 1.0,
+"d": 0.47368,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "threshold",
+"min": 0.0,
+"max": 1.0,
+"d": 0.65,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "knee",
+"min": 0.0,
+"max": 1.0,
+"d": 0.38776,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "colorMode",
+"min": 0.0,
+"max": 2.0,
+"d": 0.0,
+"steps": 3,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "crossFlare",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+}
+],
+"fx/bloom": [
+{
+"name": "bloomIntensity",
+"min": 0.0,
+"max": 1.0,
+"d": 0.26667,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "threshold",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "blurAmount",
+"min": 0.0,
+"max": 1.0,
+"d": 0.31034,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+}
+],
+"fx/color_levels": [
+{
+"name": "brightness",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": false
+},
+{
+"name": "contrast",
+"min": 0.0,
+"max": 1.0,
+"d": 0.33333,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "saturation",
+"min": 0.0,
+"max": 1.0,
+"d": 0.33333,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "gamma",
+"min": 0.0,
+"max": 1.0,
+"d": 0.28571,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "warmth",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "tint",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "filmicTone",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+}
+],
+"fx/directional_blur": [
+{
+"name": "blurAmount",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "angle",
+"min": -3.14159,
+"max": 3.14159,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": true,
+"rand": true
+},
+{
+"name": "decay",
+"min": 0.0,
+"max": 1.0,
+"d": 0.9,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "bidirectional",
+"min": 0.0,
+"max": 1.0,
+"d": 1.0,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "exposure",
+"min": 0.0,
+"max": 1.0,
+"d": 0.44444,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"fx/faceted_glass": [
+{
+"name": "facetScale",
+"min": 0.0,
+"max": 1.0,
+"d": 0.26316,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "refraction",
+"min": 0.0,
+"max": 1.0,
+"d": 0.45,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "dispersion",
+"min": 0.0,
+"max": 1.0,
+"d": 0.35,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "bevelStrength",
+"min": 0.0,
+"max": 1.0,
+"d": 0.6,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "facetTilt",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+}
+],
+"fx/feedback": [
+{
+"name": "fbDecay",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "fbGain",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": false
+},
+{
+"name": "fbZoom",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "fbRotate",
+"min": -3.14159,
+"max": 3.14159,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": true,
+"rand": true
+},
+{
+"name": "fbHueShift",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "fbBlur",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "fbChroma",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "fbMode",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": 2,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "fbKaleido",
+"min": 1.0,
+"max": 12.0,
+"d": 1.0,
+"steps": 12,
+"angle": false,
+"driver": false,
+"rand": true
+}
+],
+"fx/fluid_smear": [
+{
+"name": "smearAmount",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "curlScale",
+"min": 0.0,
+"max": 1.0,
+"d": 0.17949,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "flowSpeed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "decay",
+"min": 0.0,
+"max": 1.0,
+"d": 0.8,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": false
+},
+{
+"name": "gravity",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+}
+],
+"fx/gradient_map": [
+{
+"name": "mixAmount",
+"min": 0.0,
+"max": 1.0,
+"d": 1.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "palette",
+"min": 0.0,
+"max": 6.0,
+"d": 0.0,
+"steps": 7,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "cycleSpeed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "cycleOffset",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "hueShift",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"fx/halftone": [
+{
+"name": "dotScale",
+"min": 0.0,
+"max": 1.0,
+"d": 0.27586,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "screenAngle",
+"min": -3.14159,
+"max": 3.14159,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": true,
+"rand": true
+},
+{
+"name": "mode",
+"min": 0.0,
+"max": 2.0,
+"d": 0.0,
+"steps": 3,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "smoothness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.16667,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "paperTint",
+"min": 0.0,
+"max": 1.0,
+"d": 0.12,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "mixRatio",
+"min": 0.0,
+"max": 1.0,
+"d": 1.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"fx/invert": [
+{
+"name": "invertIntensity",
+"min": 0.0,
+"max": 1.0,
+"d": 1.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"fx/kaleidoscope": [
+{
+"name": "segments",
+"min": 2.0,
+"max": 24.0,
+"d": 6.0,
+"steps": 23,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "rotation",
+"min": -3.14159,
+"max": 3.14159,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": false
+},
+{
+"name": "zoom",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "centerX",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "centerY",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "originOffset",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+}
+],
+"fx/luma_displace": [
+{
+"name": "refractAmount",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "smoothness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.2,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "chromaDispersion",
+"min": 0.0,
+"max": 1.0,
+"d": 0.2,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "flowSpeed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+}
+],
+"fx/luma_key": [
+{
+"name": "threshold",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "softness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.1,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": false
+}
+],
+"fx/mirror_sphere": [
+{
+"name": "sphereRadius",
+"min": 0.0,
+"max": 1.0,
+"d": 0.45,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "centerX",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "centerY",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "fresnelGlow",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "chromaFringe",
+"min": 0.0,
+"max": 1.0,
+"d": 0.2,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "backgroundMix",
+"min": 0.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+}
+],
+"fx/neon_edge": [
+{
+"name": "edgeStrength",
+"min": 0.0,
+"max": 1.0,
+"d": 0.2,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "threshold",
+"min": 0.0,
+"max": 1.0,
+"d": 0.1,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "glowSpread",
+"min": 0.0,
+"max": 1.0,
+"d": 0.22222,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "palette",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "backgroundBlend",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+}
+],
+"fx/pinch_bulge": [
+{
+"name": "amount",
+"min": -1.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "radius",
+"min": 0.0,
+"max": 1.0,
+"d": 0.31034,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "centerX",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "centerY",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+}
+],
+"fx/pixelate": [
+{
+"name": "pixelSize",
+"min": 1.0,
+"max": 128.0,
+"d": 1.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "latticeMode",
+"min": 0.0,
+"max": 2.0,
+"d": 0.0,
+"steps": 3,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "colorDepth",
+"min": 0.0,
+"max": 32.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+}
+],
+"fx/polar_tunnel": [
+{
+"name": "depth",
+"min": 0.0,
+"max": 1.0,
+"d": 0.18367,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "twist",
+"min": -3.14159,
+"max": 3.14159,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": true,
+"rand": true
+},
+{
+"name": "centerX",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "centerY",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "zoom",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "symmetry",
+"min": 1.0,
+"max": 8.0,
+"d": 1.0,
+"steps": 8,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "depthFog",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+}
+],
+"fx/radial_blur": [
+{
+"name": "blurAmount",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "centerX",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "centerY",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "decay",
+"min": 0.0,
+"max": 1.0,
+"d": 0.9,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "exposure",
+"min": 0.0,
+"max": 1.0,
+"d": 0.375,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"fx/retro_crt": [
+{
+"name": "scanlineIntensity",
+"min": 0.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "scanlineCount",
+"min": 50.0,
+"max": 800.0,
+"d": 300.0,
+"steps": 76,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "curvature",
+"min": 0.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "phosphorMask",
+"min": 0.0,
+"max": 1.0,
+"d": 0.25,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "vignette",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "brightnessBoost",
+"min": 0.0,
+"max": 1.0,
+"d": 0.33333,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"fx/rgb_split": [
+{
+"name": "amount",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "angle",
+"min": -3.14159,
+"max": 3.14159,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": true,
+"rand": true
+},
+{
+"name": "radialMode",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": 2,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "dispersionMode",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": 2,
+"angle": false,
+"driver": true,
+"rand": true
+}
+],
+"fx/thermal_scanner": [
+{
+"name": "intensity",
+"min": 0.0,
+"max": 1.0,
+"d": 1.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "mode",
+"min": 0.0,
+"max": 2.0,
+"d": 0.0,
+"steps": 3,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "thermalBloom",
+"min": 0.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "sensorGrain",
+"min": 0.0,
+"max": 1.0,
+"d": 0.2,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "vignette",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+}
+],
+"fx/vhs_glitch": [
+{
+"name": "trackingJitter",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "headSwitching",
+"min": 0.0,
+"max": 1.0,
+"d": 0.6,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "ycDelay",
+"min": 0.0,
+"max": 1.0,
+"d": 0.35,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "rfDropouts",
+"min": 0.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "tapeNoise",
+"min": 0.0,
+"max": 1.0,
+"d": 0.35,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "mixRatio",
+"min": 0.0,
+"max": 1.0,
+"d": 1.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+}
+],
+"fx/video_strobe": [
+{
+"name": "rate",
+"min": 0.0,
+"max": 30.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "freezeHold",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": false
+},
+{
+"name": "strobeMode",
+"min": 0.0,
+"max": 3.0,
+"d": 0.0,
+"steps": 4,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "dutyCycle",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+}
+],
+"fx/vortex_swirl": [
+{
+"name": "twist",
+"min": -1.0,
+"max": 1.0,
+"d": 0.26667,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "radius",
+"min": 0.0,
+"max": 1.0,
+"d": 0.3125,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "dispersion",
+"min": 0.0,
+"max": 1.0,
+"d": 0.35,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "spiralArms",
+"min": 0.0,
+"max": 12.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "centerX",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "centerY",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+}
+],
+"fx/wave_displace": [
+{
+"name": "amplitude",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "frequency",
+"min": 0.0,
+"max": 1.0,
+"d": 0.19192,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "speed",
+"min": -1.0,
+"max": 1.0,
+"d": 0.2,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "rippleMode",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": 2,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "centerX",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "centerY",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": true
+},
+{
+"name": "phaseOffset",
+"min": -3.14159,
+"max": 3.14159,
+"d": 0.0,
+"steps": null,
+"angle": true,
+"driver": false,
+"rand": true
+}
+],
+"trans/cyber_datamosh": [
+{
+"name": "progress",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "blockiness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.35714,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "rgbSplit",
+"min": 0.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "packetLoss",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+}
+],
+"trans/film_burn": [
+{
+"name": "progress",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "burnSpread",
+"min": 0.0,
+"max": 1.0,
+"d": 0.35714,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "glowIntensity",
+"min": 0.0,
+"max": 1.0,
+"d": 0.6,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "tintMode",
+"min": 0.0,
+"max": 2.0,
+"d": 0.0,
+"steps": 3,
+"angle": false,
+"driver": false,
+"rand": true
+}
+],
+"trans/kinetic_zoom": [
+{
+"name": "progress",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "zoomFactor",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "motionBlur",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "chromatic",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+}
+],
+"trans/linear_crossfade": [
+{
+"name": "progress",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "curveMode",
+"min": 0.0,
+"max": 2.0,
+"d": 0.0,
+"steps": 3,
+"angle": false,
+"driver": false,
+"rand": true
+}
+],
+"trans/liquid_displacement": [
+{
+"name": "progress",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "warpStrength",
+"min": 0.0,
+"max": 1.0,
+"d": 0.35,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "viscosity",
+"min": 0.0,
+"max": 1.0,
+"d": 0.28,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "chromaticDispersion",
+"min": 0.0,
+"max": 1.0,
+"d": 0.3,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+}
+],
+"trans/luminous_flash": [
+{
+"name": "progress",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "intensity",
+"min": 0.0,
+"max": 1.0,
+"d": 0.5,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": false
+},
+{
+"name": "colorTemp",
+"min": -1.0,
+"max": 1.0,
+"d": 0.1,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "spread",
+"min": 0.0,
+"max": 1.0,
+"d": 0.33333,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+}
+],
+"trans/noise_dissolve": [
+{
+"name": "progress",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "noiseScale",
+"min": 0.0,
+"max": 1.0,
+"d": 0.22222,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "softness",
+"min": 0.0,
+"max": 1.0,
+"d": 0.35897,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "chromaShift",
+"min": 0.0,
+"max": 1.0,
+"d": 0.2,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+}
+],
+"trans/vortex_swirl": [
+{
+"name": "progress",
+"min": 0.0,
+"max": 1.0,
+"d": 0.0,
+"steps": null,
+"angle": false,
+"driver": false,
+"rand": false
+},
+{
+"name": "rotations",
+"min": 0.0,
+"max": 1.0,
+"d": 0.33333,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "radius",
+"min": 0.0,
+"max": 1.0,
+"d": 0.375,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+},
+{
+"name": "chromatic",
+"min": 0.0,
+"max": 1.0,
+"d": 0.4,
+"steps": null,
+"angle": false,
+"driver": true,
+"rand": true
+}
+]
+}

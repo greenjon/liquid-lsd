@@ -1,0 +1,1 @@
+{"unit": "fx/invert", "noise_frames": 0, "frames": 48, "problems": [], "win": [{"param": "invertIntensity", "knob": 0, "value": 0.0, "default": 1.0, "steps": null, "start": 0.5, "driver": false, "hash_diff": 19, "noise": 0, "n": 19, "mean": 98.498, "noise_mean": 0.0, "big": 99.66, "base": 0.0, "want": 0.0}]}
