@@ -28,8 +28,6 @@ val lwjglVersion = "3.3.3"
 // imgui-java: 1.92.7.1 (Dear ImGui 1.92, universal macOS arm64/x64). See docs/developer/imgui_upgrade_guide.md.
 val imguiVersion = "1.92.7.1"
 
-val siteGeneratorTool: Configuration by configurations.creating
-
 dependencies {
     // Kotlin
     implementation(kotlin("stdlib"))
@@ -68,20 +66,6 @@ dependencies {
     // Logging
     implementation("io.github.microutils:kotlin-logging-jvm:3.0.5")
     implementation("ch.qos.logback:logback-classic:1.5.38")
-
-    // Website/docs generator (tools/SiteGenerator.kt): build time only, so none of it ships in the app.
-    listOf(
-        "com.vladsch.flexmark:flexmark:0.64.8",
-        "com.vladsch.flexmark:flexmark-ext-anchorlink:0.64.8",
-        "com.vladsch.flexmark:flexmark-ext-autolink:0.64.8",
-        "com.vladsch.flexmark:flexmark-ext-gfm-strikethrough:0.64.8",
-        "com.vladsch.flexmark:flexmark-ext-gfm-tasklist:0.64.8",
-        "com.vladsch.flexmark:flexmark-ext-tables:0.64.8",
-        "org.yaml:snakeyaml:2.2"
-    ).forEach {
-        compileOnly(it)
-        siteGeneratorTool(it)
-    }
 
     // Testing
     testImplementation(kotlin("test"))
@@ -931,24 +915,3 @@ val syncWeb = tasks.register<Exec>("syncWeb") {
     commandLine("python3", "scripts/sync_web.py", "--apply")
 }
 
-val buildWebsite = tasks.register<JavaExec>("buildWebsite") {
-    group = "documentation"
-    description = "Generates the static website and HTML documentation bundle into ./greenjon/ for greenjon.com FTP deployment."
-    dependsOn(tasks.named("classes"))
-    classpath = sourceSets["main"].runtimeClasspath + siteGeneratorTool
-    mainClass.set("llm.slop.liquidlsd.tools.SiteGenerator")
-    args(
-        project.projectDir.absolutePath,
-        project.file("greenjon").absolutePath,
-        project.version.toString(),
-        "https://github.com/greenjon/liquid-lsd"
-    )
-    inputs.files(fileTree("docs"), fileTree("website"), "mkdocs.yml", "RELEASE_NOTES.md")
-    outputs.dir("greenjon")
-}
-
-val exportGreenjon = tasks.register("exportGreenjon") {
-    group = "distribution"
-    description = "Assembles and exports the complete greenjon.com website bundle into ./greenjon/."
-    dependsOn(buildWebsite)
-}

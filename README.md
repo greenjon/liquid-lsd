@@ -165,15 +165,9 @@ Per-platform distribution ZIP tasks are available in `build.gradle.kts` (`zipLin
 
 ---
 
-## Website & Documentation Export
+## Website
 
-Generate the complete static website, responsive HTML documentation, and offline documentation ZIP bundle into `./greenjon/` ready for web deployment:
-
-```bash
-./gradlew buildWebsite
-```
-
-This compiles guides from `docs/` and `RELEASE_NOTES.md` into `./greenjon/docs/`, creates `greenjon/docs.zip`, and updates `greenjon/index.html`.
+`scripts/build_website.py` builds the website into `./greenjon/`, including the user guide (with MkDocs) and the tour pages. `scripts/publish_site.sh` builds it and publishes it to https://liquid-lsd.greenjon.com. See `docs/developer/tour_renderer.md`.
 
 ---
 

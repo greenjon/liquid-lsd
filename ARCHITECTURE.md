@@ -273,9 +273,9 @@ Deeper: `docs/developer/web_subsystem.md`.
 
 ## 14. Build, test, release
 
-- Gradle Kotlin DSL (`build.gradle.kts`): Kotlin 2.3.0, JVM toolchain 17, LWJGL 3.3.3, imgui-java 1.92.7.1, JNAJack 1.4.0, JNA 5.19.1, kotlinx.serialization/coroutines. `./gradlew run | compileKotlin | test | checkWebSync | syncWeb | packageZips | buildWebsite`. CLI (`cli/CliArgs`): `--version`, `--help`, `--smoke-test`, `--screenshot-ui`, `--screenshot-after-frames`, `--window`, `--no-audio`, `--ui-lab`, and the tour renderer's `--tour=<script>`, `--tour-out=`, `--tour-hidden`, `--tour-dump=`, `--tour-draft`, `--tour-fps=`, `--tour-scale=`, `--tour-encoder=`, `--tour-hashes`, `--tour-no-hashes` (`tour/`: `TourRunner`, `TourScript`, `PipelineDiagram`, `WidgetRegistry`; `docs/developer/tour_renderer.md`). Flame tools: `./gradlew curateFlames | flameStats | compareVariation`.
+- Gradle Kotlin DSL (`build.gradle.kts`): Kotlin 2.3.0, JVM toolchain 17, LWJGL 3.3.3, imgui-java 1.92.7.1, JNAJack 1.4.0, JNA 5.19.1, kotlinx.serialization/coroutines. `./gradlew run | compileKotlin | test | checkWebSync | syncWeb | packageZips`. CLI (`cli/CliArgs`): `--version`, `--help`, `--smoke-test`, `--screenshot-ui`, `--screenshot-after-frames`, `--window`, `--no-audio`, `--ui-lab`, and the tour renderer's `--tour=<script>`, `--tour-out=`, `--tour-hidden`, `--tour-dump=`, `--tour-draft`, `--tour-fps=`, `--tour-scale=`, `--tour-encoder=`, `--tour-hashes`, `--tour-no-hashes` (`tour/`: `TourRunner`, `TourScript`, `PipelineDiagram`, `WidgetRegistry`; `docs/developer/tour_renderer.md`). Flame tools: `./gradlew curateFlames | flameStats | compareVariation`.
 - Tests: `src/test/kotlin/llm/slop/liquidlsd/` (214 files) mirror the packages; `architecture/LayerDependencyTest` is the layering guard.
-- CI/release/platforms: `.github/workflows/release.yml`, `smoke-test.yml`; DECISIONS §11. Docs site: `tools/SiteGenerator` (`buildWebsite`). Self-update check: `update/` (`UpdateChecker`, `SemVer`, `AppVersion`).
+- CI/release/platforms: `.github/workflows/release.yml`, `smoke-test.yml`; DECISIONS §11. Docs site: `scripts/build_website.py`, `scripts/publish_site.sh`. Self-update check: `update/` (`UpdateChecker`, `SemVer`, `AppVersion`).
 
 ## Unverified
 
