@@ -267,7 +267,22 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
         val deck = deckLabel?.let { ctx.deckForLabel(mixer, it) }
         if (deck != null && deck.isEmpty) {
             if (ownsKeyboard) handleDeepEditKeys(parametersState, mixer, fullSet = false)
-            DeckSourcePicker.drawLaunchpad(session, deckLabel, deck, parametersState, mixer, ctx.deckPresetController)
+            // The rail stays, or an empty deck is a dead end: Back is the only way out.
+            val railW = ParametersTabs.calculateLeftTabsWidth(session)
+            ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.WindowPadding, 0f, 0f)
+            if (ImGui.beginChild("##rack_deep_side_tabs_$moduleId", railW, 0f, false)) {
+                ParametersTabs.drawPerformanceDeepEditSideTabs(session, parametersState, mixer, topOffset = ParameterGridHeaders.calculateHeaderHeight(session)) { target ->
+                    parametersState.activeTopTab = target
+                    openRailSection(parametersState, target)
+                }
+            }
+            ImGui.endChild()
+            ImGui.popStyleVar()
+            ImGui.sameLine(0f, DEEP_EDIT_GAP)
+            if (ImGui.beginChild("##launchpad_host_$moduleId", 0f, 0f, false)) {
+                DeckSourcePicker.drawLaunchpad(session, deckLabel, deck, parametersState, mixer, ctx.deckPresetController)
+            }
+            ImGui.endChild()
             return
         }
 
@@ -310,13 +325,7 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
                 llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection(targetSection, parametersState.getActiveSubTab(targetSection))
                 nextTopTab = targetSection
                 parametersState.activeTopTab = targetSection
-                when (targetSection) {
-                    "Mixer" -> parametersState.openParams(MacroEngine.MASTER)
-                    "Deck A" -> parametersState.openParams(MacroEngine.DECK_A)
-                    "Deck B" -> parametersState.openParams(MacroEngine.DECK_B)
-                    "Deck BG" -> parametersState.openParams(MacroEngine.DECK_BG)
-                    "Deck PV" -> parametersState.openParams(MacroEngine.DECK_PV)
-                }
+                openRailSection(parametersState, targetSection)
             }
         }
         ImGui.endChild()
@@ -382,5 +391,16 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
         val savedModule = parametersState.deepEditModuleForTopTab(savedTopTab)
         val savedIsOpen = savedModule != null && parametersState.disclosureFor(savedModule) != ParametersState.DisclosureLevel.COLLAPSED
         parametersState.activeTopTab = if (nextTopTab == moduleTopTab && savedIsOpen) savedTopTab else nextTopTab
+    }
+}
+
+/** A click on the Edit side rail: opens that section's module. */
+private fun openRailSection(state: ParametersState, section: String) {
+    when (section) {
+        "Mixer" -> state.openParams(MacroEngine.MASTER)
+        "Deck A" -> state.openParams(MacroEngine.DECK_A)
+        "Deck B" -> state.openParams(MacroEngine.DECK_B)
+        "Deck BG" -> state.openParams(MacroEngine.DECK_BG)
+        "Deck PV" -> state.openParams(MacroEngine.DECK_PV)
     }
 }

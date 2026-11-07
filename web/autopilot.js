@@ -440,6 +440,7 @@ function pickLine(tags) {
 }
 
 let calmForBreakdown = false;  // the scene on air (or queued) was brought in by a breakdown
+let calmWaiting = false;       // ...and is queued, not yet fading in: a fade already running must not push it back 16 bars
 function followSections(beats, { section = 'normal', drops = 0 }) {
   if (section !== lastSection) {
     lastSection = section;
@@ -450,6 +451,7 @@ function followSections(beats, { section = 'normal', drops = 0 }) {
         prepareForeground(calm);
         fgSwitchAt = nextSwitchBeat(beats, 0, autopilotSettings.fgFadeBeats);
         calmForBreakdown = true;
+        calmWaiting = true;
       }
       const hard = pickLine(DROP_TAGS);
       dropLook = null;
@@ -532,6 +534,7 @@ function announceBackground() {
 let fgFadeLen = 4;          // beats this crossfade takes
 function startForegroundCrossfade(beats, fadeBeats = autopilotSettings.fgFadeBeats) {
   finishRoll();
+  calmWaiting = false;
   fgFadeLen = reducedMotion ? fadeBeats * 2 : fadeBeats;
   const { line, deck, transition } = fgNext;
   fgNext = null;
@@ -559,7 +562,7 @@ function finishForegroundCrossfade(beats) {
   autopilotState.mixer.balance = fgFadeTargetBalance;
   fgTransitionState = 'hold';
   fgHoldStart = beats;
-  fgSwitchAt = nextSwitchBeat(beats, autopilotSettings.fgHoldBars, autopilotSettings.fgFadeBeats);
+  fgSwitchAt = nextSwitchBeat(beats, calmWaiting ? 0 : autopilotSettings.fgHoldBars, autopilotSettings.fgFadeBeats);
   planAutoRoll(beats);
 }
 

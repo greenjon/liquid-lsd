@@ -76,3 +76,12 @@ tours/web-cache/
 /gallery-curate/
 /web/gallery/
 /web/gallery.json
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+/tests/web/.cache/

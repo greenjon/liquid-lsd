@@ -52,6 +52,8 @@ object QueueKnobs {
 
     private var lastTouched: Queue? = null
     private var lastTouchedSession = -1
+    /** Where the touched knob left its queue. The browser's cursor knob clears the queue's own cursor (there is one cursor per view), and picking the item to insert is what that knob is for. */
+    private var insertAnchor = -1
 
     /** The queue whose knob was touched last in browse session [session] and still fits the current tab, or null. */
     fun lastTouched(session: Int): Queue? =
@@ -61,9 +63,11 @@ object QueueKnobs {
     internal fun reset() {
         lastTouched = null
         lastTouchedSession = -1
+        insertAnchor = -1
     }
 
     private fun touch(queue: Queue, session: Int) {
+        if (queue != lastTouched || session != lastTouchedSession) insertAnchor = -1
         lastTouched = queue
         lastTouchedSession = session
     }
@@ -94,6 +98,7 @@ object QueueKnobs {
             held -> QueueOps.move(queue, cursor, cursor + steps, state)
             else -> QueueOps.setCursor(queue, (cursor + steps).coerceIn(0, size - 1))
         }
+        insertAnchor = QueueOps.cursor(queue)
         LibraryPanel.shouldScrollToSelection = true
         return true
     }
@@ -106,19 +111,21 @@ object QueueKnobs {
         val cursor = QueueOps.cursor(queue)
         if (cursor < 0) return true
         if (shifted) QueueOps.remove(queue, listOf(cursor), app.parametersState) else QueueOps.play(queue, cursor, app, mixer)
+        insertAnchor = QueueOps.cursor(queue)
         return true
     }
 
     /**
-     * The cursor knob's shift + tap: [files] go after the cursor of the queue knob touched last in [session] (no cursor: after the
-     * playing row, else the end); with none touched, the end of the tab's A-side queue. Files of another kind are dropped. Returns
+     * The cursor knob's shift + tap: [files] go after the row the queue knob touched last in [session] left (none: after the
+     * playing row, else the end), and a next insert goes after them; with none touched, the end of the tab's A-side queue. Files of another kind are dropped. Returns
      * false when no queue knob was touched, so the caller can fall back to its plain enqueue.
      */
     fun insertFromBrowser(files: List<File>, session: Int, state: ParametersState?): Boolean {
         val queue = lastTouched(session) ?: return false
         val fitting = files.filter { QueueDrop.fits(queue, it) }.flatMap { QueueDrop.expandForQueue(queue, it) }
-        val anchor = QueueOps.cursor(queue).takeIf { it >= 0 } ?: playing(queue).takeIf { it >= 0 } ?: QueueOps.items(queue).lastIndex
-        QueueOps.insertAfter(queue, anchor, fitting, state)
+        val anchor = QueueOps.cursor(queue).takeIf { it >= 0 } ?: insertAnchor.takeIf { it in QueueOps.items(queue).indices }
+            ?: playing(queue).takeIf { it >= 0 } ?: QueueOps.items(queue).lastIndex
+        insertAnchor = anchor + QueueOps.insertAfter(queue, anchor, fitting, state)
         return true
     }
 }

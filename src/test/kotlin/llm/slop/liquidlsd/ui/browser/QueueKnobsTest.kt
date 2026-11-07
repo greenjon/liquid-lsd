@@ -112,6 +112,19 @@ class QueueKnobsTest {
     }
 
     @Test
+    fun `picking the item with the browser knob clears the queue's cursor, and the insert still follows the queue knob's row`() {
+        fill(Queue.AB, "a", "b", "c")
+        QueueKnobs.turn(a, 1, held = false, session = 1, state = state)
+        assertEquals(0, QueueOps.cursor(Queue.AB))
+        QueueOps.setCursor(Queue.AB, -1)
+        assertTrue(QueueKnobs.insertFromBrowser(listOf(File("/l/x.lsd")), session = 1, state = state))
+        assertEquals(listOf("a", "x", "b", "c"), names(Queue.AB))
+        QueueOps.setCursor(Queue.AB, -1)
+        QueueKnobs.insertFromBrowser(listOf(File("/l/y.lsd")), session = 1, state = state)
+        assertEquals(listOf("a", "x", "y", "b", "c"), names(Queue.AB), "a second one goes after the first")
+    }
+
+    @Test
     fun `the knobs are dead without the split`() {
         fill(Queue.AB, "a")
         UITheme.libraryQueueSplit = false

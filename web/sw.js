@@ -11,6 +11,7 @@ const SHELL = [
   'settings.json', 'catalog.json', 'mandala_recipes.json', 'playlists/default.lsdplay', 'playlists/default_bg.lsdplay',
   'shaders/blit.vert', 'shaders/blit.frag', 'shaders/mandala.vert', 'shaders/mandala.frag', 'shaders/mixer.frag',
   'shaders/crt_post.frag',
+  'audiotex.js', 'sync.js', 'embed.js', 'embedmode.js', 'menu.js', 'schedule.js',
   'tapes.js', 'tapedeck.js', 'mqtt.js', 'chat.js', 'chatboard.js', 'fonts/caveat-latin.woff2', 'fonts/caveat-latin-ext.woff2',
 ];
 
@@ -40,5 +41,6 @@ self.addEventListener('fetch', (e) => {
   e.respondWith(req.then((res) => {
     if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(e.request, copy)); }
     return res;
-  }).catch(() => caches.match(e.request).then((hit) => hit || Response.error())));
+    // An address with options (?kiosk) is still the same page offline.
+  }).catch(() => caches.match(e.request, { ignoreSearch: e.request.mode === 'navigate' }).then((hit) => hit || Response.error())));
 });

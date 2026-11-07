@@ -1262,6 +1262,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#fixes-from-scripted-checks-simulated-twister-browser-tests-music-webrendererjs-webautopilotjs-webswjs-webtvcss-uibrowserqueueknobskt-uiseqsectionkt-uiperformancedeepeditbaykt-presetsdeckopskt-testsweb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixes From Scripted Checks: Simulated Twister, Browser Tests, Music (web/renderer.js, web/autopilot.js, web/sw.js, web/tv.css, ui/browser/QueueKnobs.kt, ui/SeqSection.kt, ui/PerformanceDeepEditBay.kt, presets/DeckOps.kt, tests/web/)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#library-decisions-and-a-new-default-uifilesystemmanagerkt-uibrowserplaylisteditkt-uibrowserbrowserpanekt-uibrowserpresetlistpanelkt-presetssessionserializerkt-uiapppreferenceskt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7609,6 +7620,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#fixes-from-scripted-checks-simulated-twister-browser-tests-music-webrendererjs-webautopilotjs-webswjs-webtvcss-uibrowserqueueknobskt-uiseqsectionkt-uiperformancedeepeditbaykt-presetsdeckopskt-testsweb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixes From Scripted Checks: Simulated Twister, Browser Tests, Music (web/renderer.js, web/autopilot.js, web/sw.js, web/tv.css, ui/browser/QueueKnobs.kt, ui/SeqSection.kt, ui/PerformanceDeepEditBay.kt, presets/DeckOps.kt, tests/web/)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#library-decisions-and-a-new-default-uifilesystemmanagerkt-uibrowserplaylisteditkt-uibrowserbrowserpanekt-uibrowserpresetlistpanelkt-presetssessionserializerkt-uiapppreferenceskt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -13907,6 +13929,18 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="fixes-from-scripted-checks-simulated-twister-browser-tests-music-webrendererjs-webautopilotjs-webswjs-webtvcss-uibrowserqueueknobskt-uiseqsectionkt-uiperformancedeepeditbaykt-presetsdeckopskt-testsweb">Fixes From Scripted Checks: Simulated Twister, Browser Tests, Music (<code>web/renderer.js</code>, <code>web/autopilot.js</code>, <code>web/sw.js</code>, <code>web/tv.css</code>, <code>ui/browser/QueueKnobs.kt</code>, <code>ui/SeqSection.kt</code>, <code>ui/PerformanceDeepEditBay.kt</code>, <code>presets/DeckOps.kt</code>, <code>tests/web/</code>)</h3>
+<ul>
+<li><strong>Fixed: on the web TV, the GPU test passed every machine in Chromium browsers,</strong> so Intel laptops got the heavy scenes meant for fast GPUs. It timed a call that doesn't wait for the GPU. It now does: the RTX A2000 measures 4 ms and an Intel UHD 61 ms against a limit of 12 ms, so slower machines keep the light scenes (TV v29).</li>
+<li><strong>Fixed: a web TV breakdown could miss its calm look.</strong> If the breakdown began during a scene change, the calm scene waited out a full 16 bars, usually past the drop. It now fades in at the next bar line (TV v29).</li>
+<li><strong>Fixed: the installed web TV could fail to open offline.</strong> After a single visit, six code files were missing from its cache, and an address with options such as <code>?kiosk</code> never opened offline (TV v29).</li>
+<li><strong>Fixed: <code>?kiosk</code> kept showing the pointer over the picture.</strong> It now hides after 3 s (TV v29).</li>
+<li><strong>Fixed: the sequencer toolbar never wrapped.</strong> At 1280x720, Clear was cut to a sliver you couldn't click, and the Snap menu was off the edge entirely. They now move to a second line.</li>
+<li><strong>Fixed: Twister, Shift + tap on knob 16 ignored the row chosen with knobs 14 and 15.</strong> Turning knob 16 to pick the item cleared that row, so the item went in after the playing row or at the end, and a second one landed before the first. Items now go in after the chosen row, in order.</li>
+<li><strong>Fixed: Edit on an empty deck had no side rail,</strong> so Back was the only way out. The rail now stays.</li>
+<li><strong>A damaged preset file now says so.</strong> Loading one did nothing visible; a toast now says it can't be loaded, and the deck keeps what it had.</li>
+<li><strong>New <code>tests/web</code>: a Playwright suite for the web TV.</strong> It runs on a local server with a fake radio that plays synthesized music with known beats and can drop out, and nothing reaches the real radio or chat. <code>npx playwright test</code>; long measurements with <code>LONG=1</code>.</li>
+</ul>
 <h3 id="library-decisions-and-a-new-default-uifilesystemmanagerkt-uibrowserplaylisteditkt-uibrowserbrowserpanekt-uibrowserpresetlistpanelkt-presetssessionserializerkt-uiapppreferenceskt">Library Decisions and a New Default (<code>ui/FileSystemManager.kt</code>, <code>ui/browser/PlaylistEdit.kt</code>, <code>ui/browser/BrowserPane.kt</code>, <code>ui/browser/PresetListPanel.kt</code>, <code>presets/SessionSerializer.kt</code>, <code>ui/AppPreferences.kt</code>)</h3>
 <ul>
 <li><strong>Randomization is now on by default.</strong> The dice, range sliders and Clock RAND block show from the first run, since every stock source, effect and transition ships random ranges. It only adds controls: nothing rolls until you ask. A settings file from before this turns it on once; after that, turning it off in Preferences &gt; General sticks. The step sequencer was already on by default.</li>

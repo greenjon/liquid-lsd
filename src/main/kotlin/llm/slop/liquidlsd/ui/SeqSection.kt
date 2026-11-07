@@ -263,7 +263,10 @@ object SeqSection {
         var first = true
 
         fun place(w: Float) {
-            if (!first && ImGui.getContentRegionAvailX() >= w + gap) ImGui.sameLine(0f, gap)
+            // After an item the cursor is back at the line start, so what's left on this line comes from the last item's right edge.
+            // Asking for the room left there always said yes, which clipped Clear to a sliver at 1280x720.
+            val lineRight = ImGui.getCursorScreenPosX() + ImGui.getContentRegionAvailX()
+            if (!first && ImGui.getItemRectMaxX() + gap + w + ImGui.getStyle().scrollbarSize <= lineRight) ImGui.sameLine(0f, gap)
             first = false
         }
         fun button(label: String, tip: String): Boolean {

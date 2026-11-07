@@ -285,7 +285,7 @@ async function init() {
     const input = prog?.header.INPUTS.find((i) => i.NAME === name || i.LABEL === name);
     return (input && paramSpec(input)?.steps > 1) || false;
   });
-  // GPU probe, once, at the first power-on: render the heaviest source a few times with gl.finish() and let
+  // GPU probe, once, at the first power-on: render the heaviest source a few times and wait for the GPU and let
   // the heavy sources (settings.json heavySources) into the rotation only if it is fast enough. Integrated
   // GPUs and phones keep the light scenes; discrete GPUs, Apple Silicon and fast integrated chips get all.
   // ?heavy=1 / ?heavy=0 overrides it. The result is window.LSD.gpu.
@@ -311,14 +311,22 @@ async function init() {
     const pipe = new DeckPipeline(ctx, probe.width, probe.height);
     const deck = { source: probe.source, params: {} };
     const frame = (i) => ({ time: 10 + i / 60, dt: 1 / 60, index: i });
+    // Reading a pixel waits for the GPU. gl.finish() doesn't, in Chromium: it returned in 0.3 ms on an Intel iGPU and a Pixel 7a alike.
+    const finish = () => {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, pipe.clean.fbo); // the target itself: the driver only has to finish what it reads
+      const type = gl.getParameter(gl.IMPLEMENTATION_COLOR_READ_TYPE);
+      const px = type === gl.UNSIGNED_BYTE ? new Uint8Array(4) : type === gl.FLOAT ? new Float32Array(4) : new Uint16Array(4);
+      gl.readPixels(0, 0, 1, 1, gl.getParameter(gl.IMPLEMENTATION_COLOR_READ_FORMAT), type, px);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    };
     pipe.renderSource(deck, frame(0)); pipe.renderSource(deck, frame(1)); // warm up
-    gl.finish();
+    finish();
     // Up to 4 timed frames; a slow GPU is obvious after one, so it stops there (the probe stays ~100 ms).
     let total = 0, n = 0;
     while (n < 4 && !(n > 0 && total / n > 2 * probe.maxMs)) {
       const t0 = performance.now();
       pipe.renderSource(deck, frame(2 + n));
-      gl.finish();
+      finish();
       total += performance.now() - t0;
       n++;
     }

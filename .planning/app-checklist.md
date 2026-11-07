@@ -81,23 +81,30 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 ## 2. Slots bound in place, pair view and Edit
 
 - [ ] With the rows on the current page, click a source name, a chain name, an FX slot and the transition name: nothing moves, the slot is outlined, the Library's tab line shows its name, buttons and ✕, the list border takes the row's colour.
+  auto: source, chain and FX slot bind in place with nothing moving. Left for you: outline, tab line and border colour.
 - [ ] Breathing (2026-10-28): the bound slot's outline (source badge, chain name, FX slot, transition name) breathes slowly and never vanishes; the Library tab-line name and the Edit view header sit in a row-coloured pill breathing in step with it. Easy to spot on a busy screen, not mistakable for the amber OSC-learn pulse, not annoying over a long browse. Paused binding: grey, no pill.
 - [ ] In a bound list: a click applies (Ctrl+Z undoes), a double-click applies and returns to the plain Library; Esc, ✕ or clicking the slot again stops without applying; changing page stops.
-  auto: a click applies on a source and an FX slot, Ctrl+Z undoes, Esc stops without applying. Left for you: double-click, ✕, clicking the slot again, changing page.
+  auto: a click applies, Ctrl+Z undoes, Esc stops, a double-click applies and returns to the plain Library, clicking the slot again stops without applying, changing page stops. Left for you: ✕.
 - [ ] Deck monitors, the main output monitor and the Master `M` badge bind their default half (a deck's source, the Master FX chain).
-- [ ] Space or maximizing the Library pauses the binding; Esc or Space again resumes.
+  auto: a deck monitor binds its source, the `M` badge the Master FX chain. Left for you: the main output monitor.
+- [x] Space or maximizing the Library pauses the binding; Esc or Space again resumes.
+  auto: Space maximizes, Space again and Esc come back still bound.
 - [ ] The pair view opens only for rows off the page (e.g. the BG monitor from the A/B page, or a Twister send to such a deck).
+  auto: the BG monitor from the A/B page opens the pair; on-page rows bind in place. Left for you: a real Twister send.
 - [ ] Pairs: each deck's SRC + FX; the Master pair is Transitions + Master FX and browses the Master FX chain until you touch the transition. MST + Clock pair only in Edit (Browse greyed with a tooltip).
 - [ ] Pair view and Edit share one header line: Back, `Browse | Params`, target and its buttons, queue next-up; switching moves nothing. On the Transitions pair, Params opens the transition editor.
-- [ ] Trying sources on a deck with unsaved changes asks once while it stays bound; Ctrl+Z still undoes each load.
+- [x] Trying sources on a deck with unsaved changes asks once while it stays bound; Ctrl+Z still undoes each load.
+  auto: asks once, Enter answers, the next source doesn't ask, Ctrl+Z undoes each load.
 - [ ] Saved presets, effects and transitions show as applied (row tint) in a bound list.
 - [ ] Touching a controller knob doesn't pull the browser off the Queues or Macros tab unless it moves the binding.
 - [ ] Learn inside a pair view drops to the 4-row layout (accepted for now). Learn finishes, state sane.
-- [ ] Page tabs close the pair view. Esc leaves it and drops the dock selection.
+- [x] Page tabs close the pair view. Esc leaves it and drops the dock selection.
+  auto: both.
 - [ ] Scope, search and cursor memory are kept per kind (FX, then Sources, then back to FX).
 - [ ] Badge, slot and monitor tooltips say the list below applies and a second click stops.
 - [ ] Edit shows the open unit's pair of rows (deck SRC + FX; OUT: Transitions + Master FX; MST: MST + Clock). Switching SRC/FX doesn't redraw the rows. The lit gear marks the editor's row; the other row's gear moves the editor; the lit gear closes Edit.
 - [ ] Edit side rail reads `MST OUT A B BG PV`, nothing clipped. MST has LEVELS and CTRL; OUT has FX and TRANS and returns to the last one. Gears: MST row → MST > LEVELS, Master FX → OUT > FX, Transitions → OUT > TRANS.
+  auto: fixed 2026-11-06: an empty deck had no rail at all. All six buttons click. Left for you: labels and gears.
 - [ ] Edit FX tab: one slot open at a time (the first filled slot opens first), collapsed slots show Dry/Wet, the SUPER KNOB & METAKNOBS block folds on its own chevron.
 - [ ] Edit shows readable names ("Cell scale", the shader's LABEL); Properties is never empty when you open a deck or switch tabs; CTRL/TRANS labels in sentence case; the transition selector fits its name; Max isn't cut off in the binding editors.
 - [x] Ctrl+Z after picking an FX and after picking a transition in Edit.
@@ -166,13 +173,15 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [ ] A shader that reads `iMouse` doesn't follow the cursor.
 - [ ] Queue ◀ ▶ tooltips on the A and B rows name the off-air deck the item goes to. The die's tooltip lists what it randomizes.
   auto: `MIDI: CC -1` fixed 2026-11-06. Wording right on the B row, and the die lists what it rolls. A row not read.
-- [ ] Old presets and sessions still load (they carry the removed deck feedback and 3D-view values, which are now ignored).
+- [x] Old presets and sessions still load (they carry the removed deck feedback and 3D-view values, which are now ignored).
+  auto: 27 desktop presets from two points in git history load, and a session with the removed deck feedback and 3D-view values restores in a real run.
 - [ ] On a packaged install over an older version: unedited bundled shaders are updated, an edited one is kept (log line). Needs a real install to test.
+  auto: at startup, an older shipped KIFS shader is replaced and an edited Mandelbulb kept. Not a real install.
 
 ## 5. Off-air decks (2026-10-22)
 
 - [ ] Crossfade fully to A: B's monitor runs at half rate; frame time drops with two heavy sources. Fade back: no hitch.
-  auto: B's monitor changed on 60 of 120 frames with the fader on A, and on every frame at centre and on B. Left for you: frame time, no hitch on the way back.
+  auto: B's monitor changed on 60 of 120 frames with the fader on A, and every frame at centre and on B. Frame time, Nebula on A and Apollonian on B: 31-34 ms on A, 35-42 ms at centre, 39 ms on A with half rate off, with another run going. Left for you: no hitch on the way back.
 - [ ] A deck at level 0, and the master at 0: half rate. BG at level 0: half rate.
 - [ ] PV renders at half size and still looks fine in its monitor; send PV out over Spout/Syphon/PipeWire and it goes to full size and full rate.
 - [ ] Preferences > General **Off-air decks at half frame rate** off: everything renders every frame.
@@ -190,11 +199,13 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [x] Saving over a chain keeps its tags; the chain takes the saved name. A failed save (read-only file) shows a message and stays unsaved.
   auto: tags kept, chain takes the saved name, a read-only file shows a message and stays unsaved.
 - [ ] Ctrl+Z undoes slot drags (swap / Ctrl copy), drops, Paste, Reset Parameters, Clear, Revert, Library loads and the FX browser's right-click "Load to ...".
-  auto: swap, Ctrl copy, Paste, Clear and a Library chain load all undo. Left for you: Reset Parameters, Revert, the FX browser's Load to.
+  auto: swap, Ctrl copy, Paste, Clear, a Library chain load and Revert all undo. Left for you: Reset Parameters, the FX browser's Load to.
 - [ ] Slot name tooltip shows the shortlist position (`★ 3/8`, `Blur 4/12`); stepping off a category's end lands in favorites.
-- [ ] A plain mouse wheel over a slot scrolls; Ctrl + wheel steps the effect.
+- [x] A plain mouse wheel over a slot scrolls; Ctrl + wheel steps the effect.
+  auto: the wheel leaves the effect, Ctrl + wheel steps it.
 - [ ] Middle-click: Super Knob does nothing; a focused parameter's knob goes to its default.
-- [ ] A chain at Chain Dry/Wet below 100% shows `Wet 40%` in its name; at 0% the name is dimmed.
+- [x] A chain at Chain Dry/Wet below 100% shows `Wet 40%` in its name; at 0% the name is dimmed.
+  auto: seen, `Wet 40%` and dimmed at 0%.
 - [ ] Feedback / trail effects don't flash an old frame when a slot comes back from bypass, 0% wet or FX off.
 - [ ] Eject leaves the deck's FX chain untouched; Clear with FX refreshes the FX row's knobs.
   auto: Eject keeps the chain. Left for you: Clear with FX refreshing the knobs.
@@ -206,14 +217,17 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 
 - [ ] A linked slot's knob 2-4 moves its Metaknob (not dead); in Focus Mode a linked slot's knob 1 works.
 - [ ] Preferences: **Super Knob response** Relative (default): linked slots at 20% and 90% both rise, stay apart, reach 100% / 0% together. Pickup: a slot waits for the Super Knob, amber link button with both values in its tooltip.
+  auto: Relative: 20% and 90% both rise, stay apart, reach 100% and 0% together. Pickup: each waits until the knob reaches it. Left for you: amber link button and its tooltip.
 - [ ] Moving a linked Metaknob by hand (Edit row, MIDI, editing a target) isn't yanked back by the Super Knob.
+  auto: a Metaknob set directly isn't yanked back. Left for you: Edit row, MIDI, editing a target.
 - [ ] Default FX chain linking is Linked / Unlinked (an old Auto setting reads Linked).
 - [ ] Metaknob editor: add targets, try each zone (Full, First Half, Second Half, Triangle, Bipolar), Invert Direction and each curve; Remove Target. A parameter's row menu in Edit has one **Metaknob Target** check. *Replace all links* is gone.
 - [ ] Remove every target: the knob reads `NO TARGET` (slot tooltip explains), and it's still empty after save and reload (not Dry/Wet).
 - [ ] A target naming a missing parameter shows `(missing)` and drives nothing.
 - [ ] A Metaknob on Dry/Wet owns it: the focus header's Wet slider moves the Metaknob; macro/MIDI/OSC writes are suspended.
 - [ ] Focus from Edit's SUPER KNOB & METAKNOBS block focuses the chain everywhere; the block shows knobs 2-4, page arrows and Group Mode.
-- [ ] Swap effects between slots: each slot keeps its own link setting.
+- [x] Swap effects between slots: each slot keeps its own link setting.
+  auto: each slot keeps its link setting.
 - [ ] Tap on the Super Knob's switch does nothing; Shift + tap is Chain Link.
 - [ ] Rate / speed / decay parameters respond exponentially on focus knobs 2-4; turning focus on doesn't change a value. ⟲ and the Twister tap land on the default.
 - [ ] A Metaknob with several targets starts where they're closest to their defaults when a slot loads or resets.
@@ -242,6 +256,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
   auto: Enable Step Sequencer is on with default preferences. Old settings file not tried.
 - [ ] Bar editor: paint (5% snap, Shift free), scroll to nudge, double-click to type, right/middle-click resets; playing step outlined; 16 per row.
 - [ ] Toolbar: Randomize, Invert, Shift < >, Copy/Paste between sequencers, Fill..., Euclid... (Rotate and preview), Clear. Snap menu. Keyboard editing with the pointer over the bars.
+  auto: fixed 2026-11-06: the toolbar never wrapped, so Clear was clipped and Snap off the edge at 1280x720. Randomize, Invert, Shift, Copy, Paste and Clear click, Ctrl+Z undoes. Left for you: Fill, Euclid, Snap, keyboard.
 - [ ] Length 1-32 (odd lengths), Phase, Offset, Step Hold (randomize); Glide Curve greys when nothing glides; output trace and live dot; ghost steps past the length; bars dim when bypassed.
 - [ ] Auto toggle: randomization re-rolls the pattern, morph slides between patterns.
 - [ ] Changing Clock Unit converts the step duration.
@@ -251,8 +266,11 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 ## 9b. Audio response (2026-10-25)
 
 - [ ] Preferences > Audio Hardware (reworked 2026-10-28): no Auto Gain checkbox or Headroom slider any more; auto gain is always on. Feed quiet and loud music: the "Auto gain amp/bass/mid/high" readout under Audio Response adapts within a few seconds, and silence does not boost noise. Input Gain is now **Input Trim**, under Channel Routing; turning it down does not calm the picture for long. Turn the input (or Input Trim) right down with music playing: the Sync State goes SILENT and an amber "Input too quiet for beat detection" line appears; it should not appear with nothing playing. If you had changed AGC Headroom before, Audio Response was adjusted once so the picture moves as before.
+  auto: measured with -20 dB and silence: silence stays at zero, and music after silence levels in at once. Left for you: the readout, Input Trim, the amber line.
 - [ ] Breakdowns and drops (2026-10-28, auto gain against a long-term level frozen in breakdowns): play a track with a clear breakdown (low end drops out for 15 s or more). Bass-driven motion goes calm within a few seconds and stays calm the whole breakdown (watch the Bass scope: it used to climb back within ~12 s); mids may stay lively. The drop hits as hard as before the breakdown. Steady music should move about as much as before this change. Swap to a much quieter track: it reads quiet for up to a minute, then normal; a much louder one is normal within ~5 s. Pause the music a few seconds and restart at a different level: it levels in at once.
+  auto: on synthesized music, bass 0.47 in the groove, 0.06 within 3 s of the breakdown and steady to its end (30 s), peak 1.0 before and after the drop. 20 dB quieter reads quiet for about 60 s, then normal. Real music not measured.
 - [ ] Section modulators (2026-10-28): on a parameter's Audio tab, the detection mode has a third button, **Section**, with a Signal combo (Energy, the four band energies, Drop) and no Response Profile. (The three buttons fit at 1280x720: confirmed 2026-10-28.) **Energy**: give a visible parameter a wide range. During steady music it rests mid-range (nothing moves for the first ~20 s), sinks toward Min soon after a breakdown starts and stays there until the drop, and rises when a louder song comes in. **Drop**: on a track with a breakdown of 4 s or more, the parameter jumps to Max at the drop and falls back over 4 bars. Judge whether the hit lands on the beat the bass came back on, or visibly late or early. First test (one song, 107 bpm, before the 2026-10-28 fix) was 2-3 beats late; drops are now called about half a second after the bass returns, so expect at most about a beat late. The Sections line under the auto gain readout shows the state, the level against usual, the 3 s breakdown timer and the drop count. A breakdown that sits around half the usual level (the Skrillex test) is too mild to count, by design for now. The Preferences > Audio Hardware scopes show both under the band scopes. Changing Audio Response must not change either. Copy/paste an Audio cell holding a section modulator keeps it.
+  auto: Drop is called 0.57 s after the bass returns, about 1.2 beats at 128 BPM, both times, with no false drops in the groove. Energy sits near 0 and reaches -1 in the breakdown. Audio Response doesn't change either. Left for you: how it looks.
 - [x] Transient hits (2026-11-04, replaces the old flux signal under the same IDs): play sustained-bass music, then four-on-the-floor, on a few stock sources with kick responses. Also try rock and jazz: snares and hats should read about as strongly as on electronic music (hit sizing, TV v25). Hits should look punchier and less jittery. A held bass note should not pump anything Transient-driven, while a kick on top of it should. **Every stock Transient response changes here, with less motion on average: about 40-50% in the bass and less in the higher bands**: note any look that now feels too calm. At a low JACK buffer (64 or 128) kicks should look the same as at 512.
 - [x] Hi-Mid band (2026-11-04): on a parameter's Audio tab, Frequency Band lists Hi-Mid (Crack), in Continuous and Transient. A snare or a bright vocal moves it more than the kick does. Its tooltip gives about 2-5 kHz. The Audio Hardware scopes show Hi-Mid Band and Crack Hits, and the panel still fits at 1280x720 with the extra rows.
 - [x] Band energy (2026-11-04): in Section mode, Signal lists Bass, Mid, Hi-Mid and High Energy. Each needs about 20 s of music. Hats coming in lifts High Energy alone, and the bass leaving drops Bass Energy alone. An empty band sits mid-range. Four new scopes show them in Audio Hardware. Save and reload a preset that uses one.
@@ -262,6 +280,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [ ] Stock section responses (2026-10-28): every stock source now runs one Energy and one Drop modulator (named "breakdown ..." and "drop ..." in the parameter's list; the full set is in RELEASE_NOTES.md). Play a track with a clear breakdown and drop on a few sources of each kind and judge by eye: does the breakdown look read as the music receding (colour drains on most fractals; Isometric Voxels flattens, Thin Film calms, Nebula thins, Tunnel fogs, Mandelbox pulls back) without looking broken, and is the drop hit big enough to notice but not ugly (fly-through surges, punch-ins, Celestial shockwave, Escape Time lurch, Glitch crush)? Specific risks: Reaction-Diffusion's Regime moves in a breakdown, so the pattern may re-form as another species (wanted) or keep re-forming in normal playing (not wanted); Chladni's Frequency N drifts a little during normal playing; Kali Set's Iterations (cost) rise slightly in loud passages; Cyclic CA, Lenia and Reaction-Diffusion reseed once on the drop (Lenia no longer reseeds on hard kicks). Fluid Ink: the ink clears in a breakdown and is stirred on the drop. During steady music, nothing about any source should look different from before.
 - [ ] Effect drop hits (2026-10-28): with a stock FX chain on a stock source, play into a drop. Bloom, Anamorphic Streak, Radial Blur (The Drop Weapon chain), Kaleidoscope, Pinch/Bulge and Vortex Swirl hit on the drop together with the source's own hit: judge whether the pile-up reads as one big moment or as mush, and which of the six should go back to bypassed. With an effect's main knob at zero it stays off on the drop. In a breakdown, Bloom spreads wider and Fluid Smear melts further. Switch on a bypassed one (RGB Split "drop split", VHS Glitch "drop tape wreck") and check it is worth having.
 - [ ] Audio Response slider (2026-10-27, replaces Reactivity; 0-200%, saved): at 0% nothing follows the music (LFOs and beat-synced motion keep going), 100% as tuned, 200% livelier with loud passages pinned at the top; a modulator you add yourself follows it too; beat detection/BPM unaffected; the band meters show the scaled signals.
+  !!auto: 0% zeroes the band signals and 200% lifts bass from 0.47 to 0.69, BPM unchanged. But Energy and Drop run at 0% as designed, so stock looks still move in sections. Decide if 0% should mean nothing moves.
 - [ ] Fractal Flame recipe (2026-10-27): load the source on a deck with music; Breathe pulses on bass, Warp follows mids, Spin sways over 32 beats, Magnify pushes on the kick, Exposure flashes (check it does not wash out or blink), Brightness lifts. Run a morph (Rand/die) and a Garden preset: the responses should not fight the morph; note that a preset with its own saved parameters replaces the recipe. Mandala recipe (2026-10-27): L1 amplitude jiggle, L2 8-beat sine, L3 16-beat sample-and-hold with 50% hold, L4 6-beat ramp; Hue Offset 1-beat cycle (check it is a smooth cycle, not strobing); Recipe Select every 32 beats, Lobes every 256 (4..~15). Judge the L depths. Batch 4 source recipes (2026-10-27: celestial_engine, chladni_cymatics, escape_time, girih_stars, gyroid_hyperspace, hyper_slice, isometric_voxels, quasicrystal, thin_film): same judging. Chladni's FrequencyM slides a fraction of a mode (check it stays a clean pattern); Hyper Slice SliceOffset sweep. Batch 3 (2026-10-26: reaction_diffusion, lenia, cyclic_ca, nebula_volume): on the sims check that the active responses never kill the pattern (reaction_diffusion Feed breathing, lenia over several minutes), and try the bypassed Reseed (drop) alternates: one reseed per hard kick, none at low Audio Response. Batch 2 (2026-10-26: mandelbulb, mandelbox, kifs, pseudo_kleinian, hyperbolic_tiling, icosa_h3): same judging as batch 1. Batch 1 (apollonian, dynamic_spiral, tunnel_scenes, kali_set, aurora_ribbons, domain_warp_fluid, voronoi_cells, wave_ripples, glitch_blocks, metaballs, halftone_matrix, video_feedback): load each on a deck with music. Judge by eye: is the active response tasteful, are depths too high or low, do the bypassed alternates (AUD/LFO cells) turn on cleanly and look good? Note changes per source.
 - [ ] FX responses, batch 1 (2026-10-27: bloom, color_levels, retro_crt, luma_displace, fluid_smear, wave_displace, mirror_sphere, kaleidoscope, feedback, gradient_map, faceted_glass, rgb_split). The starter chains do NOT carry them (chains store their own slot parameters), so add each effect to an empty slot from the FX Library, with music. With the Metaknob at zero nothing should move (Luma Displace, Fluid Smear, Wave Displace, Feedback, RGB Split load at zero); turn it up and the hits should grow with it (MUL on the Metaknob input: Bloom, Luma Displace, Wave Displace, Mirror Sphere, Faceted Glass, RGB Split). Watch for: Feedback kick push (trails jump outward; too much?), Fluid Smear flow quickening when loud (gentle enough?), Gradient Map cycling only when loud (stops in quiet passages: good or odd?), Color Levels saturation swell and Retro CRT kick flare on the Master chain (too busy for a master grade?), Kaleidoscope kick zoom. Try the bypassed alternates (AUD/LFO cells). Also: Save as Default on one of them, reload it (yours wins), Remove Saved Default (shipped response back); the Vortex Swirl transition shows its own transition response (Rotations on bass), never the effect's.
 - [ ] FX responses, batch 2 (2026-10-27: 3d_elevation, anamorphic_streak, directional_blur, halftone, invert, luma_key, neon_edge, pinch_bulge, pixelate, polar_tunnel, radial_blur, thermal_scanner, vhs_glitch, video_strobe, vortex_swirl). Same method and Metaknob-at-zero check as batch 1. Watch for: Pixelate (kick makes 2-pixel blocks even at size 1, the off position: acceptable or bypass it?), Radial Blur and VHS kick hits (too violent?), Pinch/Bulge bass bulge in both directions, Polar Tunnel kick push (and its wrap seam now sits at the bottom instead of the left: check the tunnel looks balanced left to right; same for Kaleidoscope and Feedback Kaleido at 3 or 5 segments, and Chladni Cymatics with Plate Shape at Circular: no seam on the left), Thermal edge heat. Invert, Luma Key and Video Strobe have only bypassed responses: switch each on once and decide whether one should run by default. After both batches are approved: rebuild all stock FX chains so they carry the responses (agreed 2026-10-27).
@@ -338,20 +357,35 @@ Light wave 2: - [x] cyclic_ca - [x] metaballs - [x] wave_ripples - [x] aurora_ri
 ## 14. Twister hardware
 
 - [ ] Clock knob (13): beat-pulse LED, tempo ring, push to tap.
+  auto (simulated Twister): LED pulses, ring shows tempo, push taps. Left for you: on hardware.
 - [ ] Perform pages: banks cycle ab / bgpv / mixer, wrap works, LEDs follow. MIXER bank: knobs 1-4 Transitions, 9-12 Master MST.
+  auto (simulated): ab, bgpv, mixer, wrap, `B3 0n 7F` sent, lights change; MIXER knob 1 crossfader, 9 MST. Left for you: on hardware.
 - [ ] Native mode (`midi-fighter-twister-xt`) on a FRESH profile (delete the old saved one first). Ring styles, RGB LEDs.
+  auto (simulated): SysEx in, rings per kind, SysEx out at exit, in again on replug. Left for you: the XT firmware, looks.
 - [ ] Pickup blink: Super Knob response Pickup, a waiting slot's LED strobes amber/dark until picked up (stock firmware also dims the ring).
+  auto (simulated): a waiting slot's LED changes repeatedly. Left for you: on hardware.
 - [ ] Bank press in the pair view walks A, B, BG, PV, Master. Knob 13 send / quick switch is the Master pair.
+  auto (simulated): walks A, B, BG, PV, Master, A. Left for you: knob 13 quick switch.
 - [ ] Bound slot or pair view: knob 16 is the cursor (tap applies, Shift + tap queues), knobs 1-8 live; touching one moves the binding; Shift + tap on a send knob moves it to that deck. Right-middle steps the tab, right-bottom the panes (Shift + right-bottom clears the slot).
+  auto (simulated): tap applies, Shift + tap queues, knobs 1-8 live, Shift + tap on a send moves the binding. Left for you: right-bottom panes, clearing the slot.
 - [ ] Library send-to-deck knobs: in Library FULL a send only loads. Shift + tap on a send knob (9-13) switches pair without sending, not intermittent.
+  auto (simulated): a send only loads, the view stays; in the pair view Shift + tap switches without sending. Left for you: intermittence on hardware.
 - [ ] Library view (queues under the browser), Sources tab: knob 14 moves the A/B queue highlight (first turn lands on the playing item), knob 15 the BG queue's; both columns outlined mint/rose; rings show the place. Hold + turn carries an item, releasing doesn't play it. Tap plays it now; Shift + tap removes (toast, Ctrl+Z). FX tab: the FX queues; Transitions: knob 15 dark. Hide the queues: both dark.
+  auto (simulated): knob 14 highlight, hold + turn carries without playing, Shift + tap removes with a toast. Left for you: knob 15, FX and Transitions tabs, outlines, rings.
 - [ ] Shift + tap knob 16 after turning knob 14 to the playing item: the item plays next; a second one goes after it. Without touching a queue knob: end of the A/B queue. A playlist under the tree cursor goes in whole.
+  auto (simulated): fixed 2026-11-06: turning knob 16 cleared knob 14's row, and a second item landed before the first. Now in order. Left for you: a whole playlist.
 - [ ] Knobs 1-8 in the Library view play Deck PV (label on the tab line); send to Deck A with knob 9: they move to A and light in A's colours; knob 13 send: Master's rows.
+  auto (simulated): a send moves them to that deck, PV after a PV send. Left for you: the label, Master's rows.
 - [ ] Auto-preview: Shift + tap knob 12, knob 12 blinks; scroll Sources and stop: PV loads after ~0.4 s, not while scrolling. Watch the output while scrolling past heavy (gauge) sources and Flames on the laptop iGPU: stutter? Tweak PV with knobs 1-8, scroll on: it pauses with a message instead of a prompt. Leave the Library: it's off.
-- [ ] Controller FX tap with nothing bound applies to the live deck (first vacant slot, last when full; Shift + tap queues).
+  auto (simulated): PV loads once the cursor stops. Left for you: the blink, stutter on the iGPU, the paused message.
+- [x] Controller FX tap with nothing bound applies to the live deck (first vacant slot, last when full; Shift + tap queues).
+  auto (simulated): first vacant slot, then the next; Shift + tap on a saved effect queues.
 - [ ] Link All on the Twister; Chain Link: bank change via `B3 0n 7F`.
+  auto (simulated): chain link toggles and restores. Left for you: hardware.
 - [ ] MIDI input now applies before the frame renders (2026-10-23): knob turns feel at least as tight as before; bank switch, browse cursor (no skipped or lost steps on entering/leaving browse), the unsaved-deck prompt answered from the Twister. Minimise the window and turn knobs: LEDs follow, and on restore nothing replays in a burst.
+  auto (simulated): the unsaved-deck prompt answers from the buttons. Left for you: feel, minimising.
 - [ ] The controller's knob layout is now cached between frames (2026-10-23): right after each of these, the Twister knobs drive the rows now on screen, not the old ones: change page, open and close Edit, switch a row between SRC and FX in Edit, enter and leave a pair view, focus an FX slot, and load a chain with fewer slots filled.
+  auto (simulated): knobs follow page change, Edit open and close, pair enter and leave. Left for you: FX focus, a chain with fewer slots.
 
 ## 15. Light theme (take notes, do not guess; you decide the fixes)
 
@@ -369,32 +403,49 @@ Known remaining literals: dropdown selected text, ParametersRenderer fills and g
 auto 2026-11-06, headless Firefox, local web/ (TV v26, same version as live): ui_check 175 of 176, tape_check 78 of 78, shader_check 70 of 70; beat_check and embed_check ended ok, with no failure in the lines read. That covers the logic of keys, MENU, power-off pages, theme, listeners, schedule, chat with a fake room, reduced motion, breakdown and drop cuts, and tapes. The one failure is the check's own assumption: run just after midnight, its on-air fixture started the day before, so the first heading is not TODAY. render_check did not finish in 280 or 300 s, so it gives no result. Still yours: looks, real radio, phones, Safari, install, real chat.
 
 - [ ] Preset pack (125 presets, 35 FX chains; the raymarched fractals should stay fluid on a laptop and a phone) loads and looks like the app; every web source now has a groove, hard and ambient look (2026-10-23).
+  auto: all 132 channels on the NVIDIA, no console errors, 60 fps. CH 34 web-build-drop-spiral read nearly black (0.4 of 255) on the moment sampled; CH 17, 18, 23, 27 are sparse and dark. Left for you: looks.
 - [ ] Spectrogram and Scope on the web TV (2026-11-01, local server, not yet published): with the radio playing (and once with the microphone), both move with the music like on the desktop; the spectrum isn't much hotter or dimmer than the desktop's on the same track; no console errors; a phone (Android WebView via ?embed too) shows them. Their scenes get suitable chains (Scope is `sparse`, Spectrogram `fullframe`).
+  auto: microphone input works and the badge says MIC on a fake device; both channels render without errors. Left for you: how they look against the desktop.
 - [ ] Leave the web TV running 20+ minutes: the picture no longer jitters (speeds are now integrated, so even a modulated speed is smooth).
+  auto: 25 min, NVIDIA, 50 scene changes: 60 fps, DOM nodes and listeners flat, no errors, JS heap 4.3 to 4.9 MB, GL textures move with the scene (29-52) with no trend, compiled programs level off at 62. This measures leaks and frame pacing, not picture jitter, which is yours.
 - [ ] Mandala recipe roll (2026-11-01, TV v12): tune through the mandala scenes (web-bass/bloom/groove/hard/build-drop-mandala, stock-mandala) several times: each comes on with a different shape, often 3-lobed, and holds it for the whole scene (arms, thickness, colour still move); web-mandala-lace and -heart look as before.
 - [ ] Viewer controls v13 (2026-11-01, local server, unpublished): ROLL (`D`) on a few scenes: values glide in over about a bar and land on the beat, stepped ones (colour modes, petal counts) change once on the bar line; Lenia / Reaction Diffusion don't break on a roll. Tune through ~20 curated scenes: each still looks like itself, none blank or blown out. MENU › AUTO ROLL 4 bars with HOLD on: keeps rolling. `B` and MENU › BACKGROUND change the background (visible on scenes with dark areas); BG CHANGES HOLD keeps it, OFF fades it out and back on fades one in. MENU › EFFECTS OFF: no FX, `F` says EFFECTS OFF, back to AUTO brings chains back. FOLLOW MUSIC OFF: no drop cut. `X` skips and moves on, `X` again undoes; MENU › SKIPPED lists, picking one tunes there, `X` restores; reload keeps skips; digits `0`-`9` tune. ROLL button fits the cabinet at 1280x720 and on a phone; the 21-row MENU scrolls with the arrows.
-- [ ] Full-frame looks (Cyclic CA, Kali Set, Voronoi, Ripples, Quasicrystal...) never get trail or bloom chains, and don't wash out.
+- [x] Full-frame looks (Cyclic CA, Kali Set, Voronoi, Ripples, Quasicrystal...) never get trail or bloom chains, and don't wash out.
+  auto: 53 fullframe channels, none on a trail or bloom chain. Brightest: CH 12 and 16, mean 226-230 of 255.
 - [ ] Cyclic CA hard look reseeds on the biggest bass hits and recovers within a few seconds.
 - [ ] Drop strobe chain flashes negative once per loud bass hit (no random strobe).
 - [ ] With the radio playing, beat pulses land on the kicks within a few seconds of power-on and stay there through track changes.
+  auto: synthesized music: holds a steady offset after about 100 s: -70 ms at 128 BPM, +110 ms at 174. Wanders up to ±130 ms in the first 90 s. Real radio not tried.
 - [ ] Looks change on the beat, about every 16 bars; the background about every 32.
-- [ ] GPU tier: on the NVIDIA (or a Mac) `LSD.gpu` in the console says heavy on and Mandelbulb/Nebula looks appear; on the Intel GPU they never do.
+  auto: fades end on a bar line, every 17 bars (16 held, 1 fading), at 128, 170 and 174 BPM. Background not measured: it defaults to the held gallery.
+- [x] GPU tier: on the NVIDIA (or a Mac) `LSD.gpu` in the console says heavy on and Mandelbulb/Nebula looks appear; on the Intel GPU they never do.
+  auto: fixed 2026-11-06: Chromium passed every GPU, with the probe reading 0.3 ms. Now NVIDIA 4.4 ms heavy on, Intel 61 ms heavy off. Firefox picks the Intel GPU here and its readout wasn't checked.
 - [ ] Leave the TV on for 15 min on a laptop and a phone: the screen never dims or locks; after power off it sleeps normally.
+  auto: wake lock taken at power on and released at power off. Left for you: real phone and laptop.
 - [ ] Phone lock screen: shows the show and the look; play/pause powers the TV (on a tape it pauses the tape); next/previous change the look. Laptop media keys do the same.
+  auto: play/pause powers, next and previous change the look, metadata set. Left for you: a real lock screen, tapes.
 - [ ] Install the TV from Chrome/Edge (desktop) and Add to Home Screen on a phone: it opens fullscreen with the icon; with the network off it still opens (no signal).
-- [ ] `?kiosk` on a spare screen: picture only, turns on by itself (or asks for a click for sound), pointer hides.
+  auto: Chromium finds it installable. Fixed 2026-11-06: one visit left six code files uncached, so it wouldn't open offline; now it does, with NO SIGNAL. Left for you: real install, phone.
+- [x] `?kiosk` on a spare screen: picture only, turns on by itself (or asks for a click for sound), pointer hides.
+  auto: picture only, turns on by itself, with autoplay blocked sound starts on the first click. Fixed 2026-11-06: the pointer stayed visible over the picture.
 - [ ] MENU on a laptop and a phone: readable, every row changes with arrows and taps, Esc closes, settings survive a reload.
+  auto: fits at seven sizes from 360x640 to 1920x1080, no sideways scroll. Phone label font is 10 px. CH buttons are 28x20, small for a finger. Left for you: readability.
 - [ ] With Bluetooth headphones/speaker: TAP SYNC lands near their delay (150-250 ms) and the pulses line up with the kicks afterwards.
-- [ ] Turn on your OS's reduce-motion setting: MENU shows Reduced motion AUTO (ON), no hard looks or flashes appear, changes are slow.
+- [x] Turn on your OS's reduce-motion setting: MENU shows Reduced motion AUTO (ON), no hard looks or flashes appear, changes are slow.
+  auto: MENU shows AUTO (ON), no hard scene in 30 changes, on a real media-query emulation.
 - [ ] A slow show (hip-hop, dub) mostly brings calm/groove looks; a fast one (techno, drum and bass) mostly hard/kick looks, but not only those.
+  !!auto: 174 BPM brings mostly kick and hard looks. An 85 BPM synthesized track was read as 170 and got hard looks too. Real slow shows not tried.
 - [ ] Set Preferences › Web Broadcast › Broadcaster name, go live: the web TV shows the LIVE title card with the name; clear the name mid-broadcast: the next viewer joining sees just LIVE.
+  auto, faked relay: title card with the name, cleared name, controls locked, back to autopilot, reconnect in 5 s. Left for you: a real broadcast.
 - [ ] Branding: nameplate opens the site in a new tab (and doesn't power the TV off); ident at first power-on; ABOUT's QR code scans to liquid-lsd.greenjon.com; paste https://spaz.org/tv/ into a chat app and see the preview.
 - [ ] Web TV theme and listener count (2026-11-04, v22): MENU › THEME flips dark/light at once and survives a reload with no dark flash; light is comfortable to look at with the knobs, lit LEDs (LIVE, HOLD, CHAT) and blackboard all easy to read, on a phone too; Add to Home Screen / browser bar colour follows. Under the badge, `N mutants watching TV.` matches the count in the Spaz Radio app and updates within 30 seconds (`1 mutant` when alone; blank at zero).
+  auto: no dark flash on reload, the bar colour follows. Cabinet text contrast: light only `by greenjon` at 4.45:1; dark: `LIQUID LSD` nameplate 1.73:1 (raised lettering), `by greenjon` 3.1:1. Left for you: real count, phone.
 - [ ] Viewer controls on a real browser and a phone: CH up/down, FX, HOLD, TIME, REACT, swipe, long-press, keyboard; OSD readable; fullscreen keeps the OSD.
-  auto: button row fits at 1280x720 and 412 px wide. Real phone, swipe and long-press are yours.
+  auto: swipe and long-press work on an emulated touch screen, button row fits at 7 sizes. Left for you: a real phone.
 - [x] SCHEDULE (2026-10-31, after publishing; TV v4): the button, `G` and MENU › SCHEDULE open Spaz Radio's upcoming shows in your local time zone (header says e.g. TIMES IN PDT), the show playing now marked ON AIR, matching the Spaz Radio app's Schedule tab. Any key or a tap closes it; it scrolls with a finger on a phone without closing. The track line on screen is followed by NEXT: <show> · <time>. Fullscreen: the schedule fills the picture too.
   !!works in a new tab; a plain reload of an open tab kept the old code (button did nothing). Phone scroll not checked yet.
-- [ ] Reload after a publish (2026-10-31, TV v5): with the TV open in a tab, after the next publish that changes code, one or two plain reloads show the new version in the MENU title (the first visit after v5 installs the fixed service worker).
+- [x] Reload after a publish (2026-10-31, TV v5): with the TV open in a tab, after the next publish that changes code, one or two plain reloads show the new version in the MENU title (the first visit after v5 installs the fixed service worker).
+  auto: after a simulated publish, the first plain reload shows the new version.
 - [ ] Web TV beat tracking (2026-11-05, TV v26, after publishing): on the radio, the beat light should stay lit most of the time on music and beat-synced motion should sit on the music. Try drum and bass and something with tempo changes. Watch for visible speed changes when the tempo moves and for the beat jumping. It takes about 5 seconds to settle on a new tempo. On a talk show the light should mostly stay off and motion should stay calm. A phone should not stutter: the estimate costs nearly twice as much now.
 - [ ] Audio clock beat lock (2026-11-05, clock source Audio, Link off): play a steady track with clear kicks and watch something beat-synced, or the beat dots. After about 10 s it should sit on the kicks and stay there through the track, without needing TAP or SNAP. Press SNAP on an off-beat: after a few seconds it should keep that off-beat. Play speech: the clock should stay calm. With Downbeat: Auto, beat 1 may now behave differently.
 - [ ] Web TV with the power off (2026-11-04, TV v24, after publishing): with the TV off, MENU, SCHEDULE, TAPES and `?` open and leave it off; picking a tape turns it on and plays, with sound on the first click after a fresh page load. In the menu, the wheel over a label scrolls, the wheel directly on a value changes it, and the stripes make rows easier to follow. The badge always shows the channel, and in the light theme it reads as dark text on a light window. The source badge above it follows STREAM, LIVE SHOW, TAPE and MIC (the mic needs a real browser). The menu's three pages read well, with the help line always visible, on a phone too.
@@ -402,8 +453,10 @@ auto 2026-11-06, headless Firefox, local web/ (TV v26, same version as live): ui
 - [ ] TAPES (2026-11-03, TV v20, after publishing), on desktop and a phone, **and iPhone Safari** (Ogg playback and seeking there are unproven): LIVE is lit on the radio, TAPES while a tape is in or the list is open; `T` or the button opens the archive; search; RANDOM TAPE; ON THIS DAY; play a show: the badge says TAPE and the picture follows the show; drag the waveform, `,` `.` `<` `>`, `K`; reload and RESUME returns to your place; power off and on keeps the tape; LIVE/`L` goes back to the radio; lock-screen seek works. During a real broadcast or scheduled show: the tape plays on, LIVE pulses red, `LIVE NOW` comes up once, and going back shows the broadcast's picture. The chat board shows the tape note. The button row still fits at 1280x720 and on a phone.
 - [ ] CHAT blackboard (2026-10-31, after publishing; TV v6), at 1280x720 and on a phone in portrait: the board is open on a first visit beside the TV (under it on the phone), with the recent conversation and "N here: …" matching the Spaz Radio app; the X closes it and the TV grows back; a reload keeps it closed; CHAT / `C` / MENU › CHAT bring it back. Write a name, then post one line (with the user's OK, it's the real room): it shows on the phone app with a time, and the phone's reply shows on the board within a second or two, name in its chalk colour, yours in yellow. Typing `n`, `m`, `c` or Space on the board doesn't touch the TV. Close the board, have someone post: the CHAT light blinks. Close the tab: your name leaves the phone's online list. Wi-Fi off for a minute while someone posts, back on: "offline · reconnecting…", then the missed line appears once. Fullscreen shows no chat. Caveat 700 legible on the slate (else try Caveat Brush).
 - [ ] While broadcasting from the desktop, the web TV shows LIVE and its controls are locked. The desktop uses the rotated relay token (Preferences > Web Broadcast); a wrong token shows [LIVE ERR].
-- [ ] Pull the network while the TV plays: snow and NO SIGNAL within a few seconds; plug it back: the radio and the picture come back within ~10 s.
-- [ ] On a track with a breakdown and drop, a calm look arrives in the breakdown and a hard look cuts in on the drop (not on every quiet moment).
+- [x] Pull the network while the TV plays: snow and NO SIGNAL within a few seconds; plug it back: the radio and the picture come back within ~10 s.
+  auto: local fake radio, stalled and dropped, Chromium, stalled on Firefox: NO SIGNAL in 4.4-5.4 s, back in 0.1-9.7 s, no errors. Real radio not tried.
+- [x] On a track with a breakdown and drop, a calm look arrives in the breakdown and a hard look cuts in on the drop (not on every quiet moment).
+  auto: synthesized track. Calm look 1 s after the breakdown is detected, hard look 0.7 s after the drop. Fixed 2026-11-06: a breakdown starting during a fade lost its calm look.
 - [ ] Auto gain on the web TV (2026-10-28): REACT starts at 100% (range 25-200%). The picture should move about as much on a quiet show as on a loud one, and a lot more than before on quiet shows (a 90 s sample of the stream measured bass about 5x livelier than the old 200% default). Judge whether 100% is right for the radio or too busy, especially the `web-*` looks. Breakdowns still bring calm looks and drops still cut (they use the real level); pulling the network still gives snow. Reduced motion caps REACT at 60%.
 - [ ] Web breakdowns (2026-10-28): in a radio breakdown the picture's bass motion goes calm and stays calm, and the calm look the autopilot brings in is not undone by the gain climbing back; the drop still cuts to a hard look. `LSD.cvState.energy` in the console shows the watcher (`section`, `holding`, `short`, `long`).
 - [ ] Web section modulators (2026-10-28): the stock presets (every `stock-*.lsd` now uses `audio_energy` and `audio_drop`) breathe out in a radio breakdown and hit on the drop as on the desktop. With SYNC set, the drop hit is delayed with the sound. With reduced motion, the drop hit is softer.
@@ -421,6 +474,7 @@ auto 2026-11-06, headless Firefox, local web/ (TV v26, same version as live): ui
   auto: only `name` and `tags` differ afterwards.
 - [ ] Fractal Flame with Pool or Breed: no hitch at morph boundaries; Keep and Import Flame don't hitch, and the import toast gives the real count. Put a macro on the variation choice: the combo greys out. Editor tabs look right in both themes; Skip's tooltip says Skip.
 - [ ] Twister: Ctrl-C the app in native mode, the Twister leaves native mode and goes dark; unplug it while playing, the picture doesn't freeze; plug it back in, it comes back.
+  auto (simulated): nothing sent while unplugged, app keeps running, lights rewritten and native mode re-entered on replug. Left for you: Ctrl-C, hardware.
 - [ ] Tooltips: hover the new ones (System Volume, Master BPM and presets, Library tabs, MIDI mapping columns, Broadcast buttons) and a few converted knob/slider tooltips (what / gestures / MIDI layout). Menus say "MIDI Learn (X)" / "OSC Learn (X)"; MIDI Preferences column says Control; the transition on/off checkbox no longer says Bypass; colours of the menu bar, About, Link button and Clock row group tints look unchanged (dark) and sensible (light).
 
 ## 17. Before release

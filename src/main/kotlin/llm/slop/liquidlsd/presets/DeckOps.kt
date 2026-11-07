@@ -188,6 +188,7 @@ object DeckOps {
             } catch (e: Exception) {
                 logger.error(e) { "Failed to load deck preset from ${file.absolutePath}" }
                 PresetManager.deckStatus[slot.index].set(PresetIOStatus(PresetIOState.ERROR, e.message ?: "Unknown error"))
+                ToastOverlay.show("Can't load '${file.nameWithoutExtension}': the file is damaged or isn't a deck preset. ${slot.label} keeps what it had.")
                 onResult?.invoke(false)
             } finally {
                 llm.slop.liquidlsd.audio.AudioEngine.presetIOInFlight.compareAndSet(true, false)

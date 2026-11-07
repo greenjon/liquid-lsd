@@ -1,5 +1,16 @@
 ## [Unreleased]
 
+### Fixes From Scripted Checks: Simulated Twister, Browser Tests, Music (`web/renderer.js`, `web/autopilot.js`, `web/sw.js`, `web/tv.css`, `ui/browser/QueueKnobs.kt`, `ui/SeqSection.kt`, `ui/PerformanceDeepEditBay.kt`, `presets/DeckOps.kt`, `tests/web/`)
+- **Fixed: on the web TV, the GPU test passed every machine in Chromium browsers,** so Intel laptops got the heavy scenes meant for fast GPUs. It timed a call that doesn't wait for the GPU. It now does: the RTX A2000 measures 4 ms and an Intel UHD 61 ms against a limit of 12 ms, so slower machines keep the light scenes (TV v29).
+- **Fixed: a web TV breakdown could miss its calm look.** If the breakdown began during a scene change, the calm scene waited out a full 16 bars, usually past the drop. It now fades in at the next bar line (TV v29).
+- **Fixed: the installed web TV could fail to open offline.** After a single visit, six code files were missing from its cache, and an address with options such as `?kiosk` never opened offline (TV v29).
+- **Fixed: `?kiosk` kept showing the pointer over the picture.** It now hides after 3 s (TV v29).
+- **Fixed: the sequencer toolbar never wrapped.** At 1280x720, Clear was cut to a sliver you couldn't click, and the Snap menu was off the edge entirely. They now move to a second line.
+- **Fixed: Twister, Shift + tap on knob 16 ignored the row chosen with knobs 14 and 15.** Turning knob 16 to pick the item cleared that row, so the item went in after the playing row or at the end, and a second one landed before the first. Items now go in after the chosen row, in order.
+- **Fixed: Edit on an empty deck had no side rail,** so Back was the only way out. The rail now stays.
+- **A damaged preset file now says so.** Loading one did nothing visible; a toast now says it can't be loaded, and the deck keeps what it had.
+- **New `tests/web`: a Playwright suite for the web TV.** It runs on a local server with a fake radio that plays synthesized music with known beats and can drop out, and nothing reaches the real radio or chat. `npx playwright test`; long measurements with `LONG=1`.
+
 ### Library Decisions and a New Default (`ui/FileSystemManager.kt`, `ui/browser/PlaylistEdit.kt`, `ui/browser/BrowserPane.kt`, `ui/browser/PresetListPanel.kt`, `presets/SessionSerializer.kt`, `ui/AppPreferences.kt`)
 - **Randomization is now on by default.** The dice, range sliders and Clock RAND block show from the first run, since every stock source, effect and transition ships random ranges. It only adds controls: nothing rolls until you ask. A settings file from before this turns it on once; after that, turning it off in Preferences > General sticks. The step sequencer was already on by default.
 - **A delete that can't reach the trash now says so.** Where a drive refuses the trash, the file is still deleted, and a toast tells you it was permanent. The delete dialogs now say "where the drive has one".
