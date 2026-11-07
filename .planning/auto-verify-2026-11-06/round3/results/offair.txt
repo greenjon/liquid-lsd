@@ -1,0 +1,5 @@
+centre: avg 35.25 ms, max 229.6 ms
+on_A: avg 31.15 ms, max 233.3 ms
+on_A_every_frame: avg 39.36 ms, max 219.5 ms
+centre2: avg 41.75 ms, max 219.8 ms
+on_A2: avg 33.70 ms, max 225.5 ms

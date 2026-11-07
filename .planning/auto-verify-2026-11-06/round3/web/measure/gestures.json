@@ -1,0 +1,14 @@
+{
+ "n0": "web-kifs-groove",
+ "n1": "web-kifs-hard",
+ "n2": "web-kifs-groove",
+ "held0": false,
+ "held1": true,
+ "on": true,
+ "open0": [
+  "schedule",
+  "sc-list",
+  "scheduleBtn"
+ ],
+ "errors": []
+}

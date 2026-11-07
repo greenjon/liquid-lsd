@@ -1,0 +1,31 @@
+{
+  "name": "liquid-lsd",
+  "version": "1.0.0",
+  "description": "Liquid LSD is an open-source, real-time procedural visual synthesizer and VJ performance workstation. It renders multi-deck parametric mandala and shader visuals, processes audio feeds and generated CV modulators into visual parameters, and provides a low-latency, tactile performance interface built with Kotlin/JVM, OpenGL 3.3, and Dear ImGui.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/greenjon/liquid-lsd.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/greenjon/liquid-lsd/issues"
+  },
+  "homepage": "https://github.com/greenjon/liquid-lsd#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.65.0",
+    "@types/node": "^26.6.6"
+  },
+  "dependencies": {
+    "playwright": "^1.65.0",
+    "playwright-core": "^1.65.0",
+    "undici-types": "^8.9.0"
+  }
+}

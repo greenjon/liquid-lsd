@@ -1,0 +1,23 @@
+{
+ "gl": "Apple GPU",
+ "heardAfterS": 0.004,
+ "audio": {
+  "err": null,
+  "t": 12.048253967,
+  "paused": false,
+  "ready": 3,
+  "ogg": "probably"
+ },
+ "pic": {
+  "mean": 110.67896412037038,
+  "sd": 58.03200440373571
+ },
+ "menu": 8,
+ "n0": "web-voronoi-hard",
+ "n1": "web-ripples-groove",
+ "bpm": 120,
+ "errors": [
+  "console: Origin http://127.0.0.1:8765 is not allowed by Access-Control-Allow-Origin. Status code: 200",
+  "pageerror: /radio.spaz.org/playing due to access control checks."
+ ]
+}

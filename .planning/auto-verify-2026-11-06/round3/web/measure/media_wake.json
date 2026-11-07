@@ -1,0 +1,20 @@
+{
+ "n0": "web-tunnel-synthwave",
+ "n1": "web-tunnel-truchet",
+ "n2": "web-tunnel-synthwave",
+ "awakeOn": {
+  "req": 1,
+  "rel": 0,
+  "awake": true
+ },
+ "awakeOff": {
+  "req": 1,
+  "rel": 1,
+  "awake": false
+ },
+ "meta": {
+  "t": "Spaz Radio",
+  "a": "Spaz Radio",
+  "al": "Liquid LSD · TUNNEL SYNTHWAVE"
+ }
+}

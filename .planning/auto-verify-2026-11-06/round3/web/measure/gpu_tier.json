@@ -1,0 +1,18 @@
+{
+ "nvidia": {
+  "gpu": {
+   "state": "done",
+   "ms": 4.4500000000116415,
+   "heavy": true
+  },
+  "renderer": "ANGLE (NVIDIA Corporation, NVIDIA RTX A2000 Laptop GPU/PCIe/SSE2, OpenGL ES 3.2)"
+ },
+ "intel": {
+  "gpu": {
+   "state": "done",
+   "ms": 61.0999999998603,
+   "heavy": false
+  },
+  "renderer": "ANGLE (Intel, Mesa Intel(R) UHD Graphics (TGL GT1), OpenGL ES 3.2)"
+ }
+}

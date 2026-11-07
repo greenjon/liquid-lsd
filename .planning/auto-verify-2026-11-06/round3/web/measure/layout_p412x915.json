@@ -1,0 +1,35 @@
+{
+ "res": [
+  {
+   "label": "tv",
+   "sw": 412,
+   "iw": 412,
+   "sh": 1062,
+   "ih": 915,
+   "offscreen": [],
+   "smallTargets": [
+    "chUp:28x20",
+    "chDown:28x20"
+   ],
+   "clipped": []
+  },
+  {
+   "label": "menu",
+   "menu": [
+    16,
+    30,
+    383,
+    236
+   ],
+   "screen": [
+    16,
+    30,
+    383,
+    236
+   ],
+   "font": 10,
+   "rows": 8
+  }
+ ],
+ "errors": []
+}

@@ -1,0 +1,46 @@
+== resp100: 7350 frames
+groove 40-70 s: bass mean 0.465 peak 1.0 kick flux mean 0.16 energy -0.0 bpm 128.0
+breakdown 75-105: 75s=0.062 78s=0.056 81s=0.074 87s=0.068 93s=0.056 102s=0.068 energy end -1.0 bass energy end -1.0 bpm 128.0
+  drop at 105: audio_drop above half at 105.567 late by 0.57 s; peak 0.85 bass peak after 1.0 before 1.0
+breakdown 165-187.5: 165s=0.062 168s=0.056 171s=0.074 177s=0.069 183s=0.056 184s=0.069 energy end -1.0 bass energy end -1.0 bpm 128.0
+  drop at 187.5: audio_drop above half at 188.067 late by 0.57 s; peak 0.85 bass peak after 1.0 before 1.0
+false drops in groove (audio_drop peak 30-70 s): 0.0
+== resp0: 7350 frames
+groove 40-70 s: bass mean 0.0 peak 0.0 kick flux mean 0.0 energy -0.0 bpm 128.0
+breakdown 75-105: 75s=0.000 78s=0.000 81s=0.000 87s=0.000 93s=0.000 102s=0.000 energy end -1.0 bass energy end -1.0 bpm 128.0
+  drop at 105: audio_drop above half at 105.567 late by 0.57 s; peak 0.85 bass peak after 0.0 before 0.0
+breakdown 165-187.5: 165s=0.000 168s=0.000 171s=0.000 177s=0.000 183s=0.000 184s=0.000 energy end -1.0 bass energy end -1.0 bpm 128.0
+  drop at 187.5: audio_drop above half at 188.067 late by 0.57 s; peak 0.85 bass peak after 0.0 before 0.0
+false drops in groove (audio_drop peak 30-70 s): 0.0
+== resp200: 7350 frames
+groove 40-70 s: bass mean 0.691 peak 1.0 kick flux mean 0.212 energy -0.0 bpm 128.0
+breakdown 75-105: 75s=0.123 78s=0.112 81s=0.147 87s=0.137 93s=0.112 102s=0.137 energy end -1.0 bass energy end -1.0 bpm 128.0
+  drop at 105: audio_drop above half at 105.567 late by 0.57 s; peak 0.85 bass peak after 1.0 before 1.0
+breakdown 165-187.5: 165s=0.124 168s=0.113 171s=0.148 177s=0.138 183s=0.113 184s=0.138 energy end -1.0 bass energy end -1.0 bpm 128.0
+  drop at 187.5: audio_drop above half at 188.067 late by 0.57 s; peak 0.85 bass peak after 1.0 before 1.0
+false drops in groove (audio_drop peak 30-70 s): 0.0
+== levels: 0-50 full, 50-90 -20 dB, 90-105 silence, 105-150 -6 dB
+30-50: bass 0.471 peak 1.000 amp 0.547 energy -0.00
+50-55: bass 0.055 peak 0.457 amp 0.071 energy -0.86
+55-60: bass 0.053 peak 0.152 amp 0.070 energy -1.00
+60-70: bass 0.054 peak 0.152 amp 0.071 energy -1.00
+80-90: bass 0.053 peak 0.153 amp 0.069 energy -1.00
+90-94: bass 0.000 peak 0.000 amp 0.000 energy -0.51
+100-105: bass 0.000 peak 0.000 amp 0.000 energy +0.00
+105-108: bass 0.432 peak 1.000 amp 0.495 energy +0.00
+108-113: bass 0.449 peak 1.000 amp 0.531 energy +0.00
+120-150: bass 0.466 peak 1.000 amp 0.542 energy -0.00
+== levels: 0-50 full, 50-130 -20 dB, 130-145 silence, 145-190 -6 dB
+30-50: bass 0.471 peak 1.000 amp 0.547 energy -0.00
+50-55: bass 0.055 peak 0.457 amp 0.071 energy -0.86
+55-60: bass 0.053 peak 0.152 amp 0.070 energy -1.00
+60-70: bass 0.054 peak 0.152 amp 0.071 energy -1.00
+80-90: bass 0.053 peak 0.153 amp 0.069 energy -1.00
+100-110: bass 0.054 peak 0.153 amp 0.072 energy -1.00
+110-120: bass 0.203 peak 0.951 amp 0.230 energy -0.46
+120-130: bass 0.334 peak 0.951 amp 0.366 energy +0.00
+130-134: bass 0.002 peak 0.283 amp 0.002 energy +0.00
+140-145: bass 0.000 peak 0.000 amp 0.000 energy +0.00
+145-148: bass 0.489 peak 1.000 amp 0.572 energy +0.00
+148-153: bass 0.464 peak 1.000 amp 0.534 energy +0.00
+160-190: bass 0.468 peak 1.000 amp 0.544 energy +0.00

@@ -1,0 +1,29 @@
+{
+ "low": [
+  {
+   "t": "LIQUID LSD",
+   "id": "np-name",
+   "px": 12.8,
+   "ratio": 1.73
+  },
+  {
+   "t": "by greenjon",
+   "id": "np-by",
+   "px": 8.8,
+   "ratio": 3.1
+  },
+  {
+   "t": "▲",
+   "id": "chUp",
+   "px": 8.8,
+   "ratio": 4.17
+  },
+  {
+   "t": "▼",
+   "id": "chDown",
+   "px": 8.8,
+   "ratio": 4.17
+  }
+ ],
+ "checked": 24
+}

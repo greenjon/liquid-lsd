@@ -1,0 +1,11 @@
+{
+ "errors": [],
+ "installability": [],
+ "name": "Liquid LSD — Spaz Radio TV",
+ "display": "fullscreen",
+ "icons": [
+  "192x192",
+  "512x512"
+ ],
+ "start": "./"
+}

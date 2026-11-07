@@ -1,0 +1,63 @@
+import { test, expect, devices } from '@playwright/test';
+import { sealOff, openTV, until, note } from './tv';
+import fs from 'node:fs';
+const SIZES: [string, number, number, boolean][] = [['s360x640', 360, 640, true], ['p412x915', 412, 915, true], ['i390x844', 390, 844, true], ['l844x390', 844, 390, true], ['t768x1024', 768, 1024, true], ['d1280x720', 1280, 720, false], ['d1920x1080', 1920, 1080, false]];
+const lum = (c: number[]) => { const f = (v: number) => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }; return .2126 * f(c[0]) + .7152 * f(c[1]) + .0722 * f(c[2]); };
+for (const [name, width, height, touch] of SIZES) test(`checklist: layout ${name}`, async ({ browser }) => {
+  test.skip(test.info().project.name !== 'chromium'); test.setTimeout(90_000);
+  const ctx = await browser.newContext({ viewport: { width, height }, hasTouch: touch, isMobile: touch, deviceScaleFactor: 1 });
+  const page = await ctx.newPage(); await sealOff(ctx);
+  const tv = await openTV(page); await tv.on(); await page.waitForTimeout(5500);
+  fs.mkdirSync('.planning/auto-verify-2026-11-06/round3/web/shots', { recursive: true });
+  const audit = (label: string) => page.evaluate((label) => {
+    const vis = (e: Element) => { const r = e.getBoundingClientRect(), s = getComputedStyle(e); return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none' && +s.opacity > 0; };
+    const sw = document.documentElement.scrollWidth, iw = innerWidth;
+    const off = [...document.querySelectorAll('button')].filter(vis).filter((b) => { const r = b.getBoundingClientRect(); return r.left < -1 || r.right > iw + 1; }).map((b) => b.id || b.textContent?.trim());
+    const small = [...document.querySelectorAll('button')].filter(vis).filter((b) => { const r = b.getBoundingClientRect(); return Math.min(r.width, r.height) < 24; }).map((b) => `${b.id}:${Math.round(b.getBoundingClientRect().width)}x${Math.round(b.getBoundingClientRect().height)}`);
+    const clipped = [...document.querySelectorAll('button, .menu-label, .menu-value, .osd *')].filter(vis).filter((e) => e.scrollWidth > e.clientWidth + 1 && getComputedStyle(e).overflow !== 'visible').map((e) => e.id || e.textContent?.trim().slice(0, 18));
+    return { label, sw, iw, sh: document.documentElement.scrollHeight, ih: innerHeight, offscreen: off, smallTargets: small, clipped };
+  }, label);
+  const res: any[] = [await audit('tv')];
+  await page.screenshot({ path: `.planning/auto-verify-2026-11-06/round3/web/shots/${name}-tv.png` });
+  await page.keyboard.press('m'); await page.waitForTimeout(400);
+  res.push(await page.evaluate(() => { const m = document.getElementById('tv-menu')!, r = m.getBoundingClientRect(), s = document.getElementById('tv-screen-area')!.getBoundingClientRect(); const lab = m.querySelector('.menu-label'); return { label: 'menu', menu: [r.left, r.top, r.right, r.bottom].map(Math.round), screen: [s.left, s.top, s.right, s.bottom].map(Math.round), font: lab && parseFloat(getComputedStyle(lab).fontSize), rows: m.querySelectorAll('.menu-row').length }; }));
+  await page.screenshot({ path: `.planning/auto-verify-2026-11-06/round3/web/shots/${name}-menu.png` });
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('t'); await page.waitForTimeout(500); await page.screenshot({ path: `.planning/auto-verify-2026-11-06/round3/web/shots/${name}-tapes.png` }); await page.keyboard.press('Escape');
+  await page.keyboard.press('s'); await page.waitForTimeout(500); await page.screenshot({ path: `.planning/auto-verify-2026-11-06/round3/web/shots/${name}-schedule.png` }); await page.keyboard.press('Escape');
+  await page.keyboard.press('?'); await page.waitForTimeout(400); await page.screenshot({ path: `.planning/auto-verify-2026-11-06/round3/web/shots/${name}-keys.png` }); await page.keyboard.press('Escape');
+  note(`layout_${name}`, { res, errors: tv.errors });
+  expect(res[0].sw, 'no sideways scroll').toBeLessThanOrEqual(res[0].iw + 1);
+  expect(res[0].offscreen).toEqual([]);
+  expect(tv.errors).toEqual([]);
+  await ctx.close();
+});
+test('checklist: phone gestures: swipe changes channel, long press, a tap on the picture keeps the TV on, a schedule scroll does not close it', async ({ browser }) => {
+  test.skip(test.info().project.name !== 'chromium'); test.setTimeout(90_000);
+  const ctx = await browser.newContext({ viewport: { width: 412, height: 915 }, hasTouch: true, isMobile: true });
+  const page = await ctx.newPage(); await sealOff(ctx);
+  const tv = await openTV(page); await tv.on(); await page.waitForTimeout(5500);
+  const cdp = await ctx.newCDPSession(page);
+  const box = (await page.locator('#glCanvas').boundingBox())!;
+  const cx = box.x + box.width / 2, cy = box.y + box.height / 2;
+  const touch = (type: string, x?: number, y?: number) => cdp.send('Input.dispatchTouchEvent', { type: type as any, touchPoints: x === undefined ? [] : [{ x, y: y! }] });
+  const swipe = async (dx: number, y0 = cy, dy = 0) => { await touch('touchStart', cx - dx / 2, y0); for (let i = 1; i <= 6; i++) { await touch('touchMove', cx - dx / 2 + dx * i / 6, y0 + dy * i / 6); await page.waitForTimeout(16); } await touch('touchEnd'); };
+  const ch = () => page.locator('#badge-channel, #channel-badge, .ch-badge').first().innerText().catch(() => '');
+  const name = () => page.evaluate(() => { const a = (window as any).LSD.autopilotState; return (a.mixer.balance > .5 ? a.deckB : a.deckA)?.name; });
+  const n0 = await name();
+  await swipe(-160); await page.waitForTimeout(5000); const n1 = await name();
+  await swipe(160); await page.waitForTimeout(5000); const n2 = await name();
+  // Long press: holds, then whatever it opens
+  const held0 = await tv.lsd('LSD.autopilotState.hold');
+  await touch('touchStart', cx, cy); await page.waitForTimeout(900); await touch('touchEnd'); await page.waitForTimeout(400);
+  const held1 = await tv.lsd('LSD.autopilotState.hold');
+  const on = await tv.lsd('LSD.powerState.on');
+  // Schedule with many shows, scrolled by finger
+  await page.evaluate(() => { const v = (window as any).LSD.viewerState; });
+  await page.locator('#scheduleBtn').tap(); await page.waitForTimeout(600);
+  const open0 = await page.evaluate(() => { const s = [...document.querySelectorAll('[id*=schedule i], .sc-list')].map((e) => e.id || e.className); return s; });
+  note('gestures', { n0, n1, n2, held0, held1, on, open0, errors: tv.errors });
+  expect(n1).not.toBe(n0); expect(n2).toBe(n0); expect(on).toBe(true); expect(held1).not.toBe(held0);
+  expect(tv.errors).toEqual([]);
+  await ctx.close();
+});

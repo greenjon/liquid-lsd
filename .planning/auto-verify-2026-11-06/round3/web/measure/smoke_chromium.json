@@ -1,0 +1,20 @@
+{
+ "gl": "ANGLE (NVIDIA Corporation, NVIDIA RTX A2000 Laptop GPU/PCIe/SSE2, OpenGL ES 3.2)",
+ "heardAfterS": 0.427,
+ "audio": {
+  "err": null,
+  "t": 4.961814,
+  "paused": false,
+  "ready": 3,
+  "ogg": "probably"
+ },
+ "pic": {
+  "mean": 126.8344907407412,
+  "sd": 53.167950127198075
+ },
+ "menu": 8,
+ "n0": "web-voronoi-groove",
+ "n1": "web-voronoi-hard",
+ "bpm": 127.68544500415325,
+ "errors": []
+}

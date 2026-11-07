@@ -1,0 +1,15 @@
+{
+ "body": {
+  "kiosk": true,
+  "cabinet": "flex/0"
+ },
+ "idle": {
+  "idle": true,
+  "cursor": "none"
+ },
+ "pic": {
+  "mean": 75.58174189814811,
+  "sd": 40.86871780797993
+ },
+ "errors": []
+}

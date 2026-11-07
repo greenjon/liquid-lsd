@@ -1,0 +1,22 @@
+{
+ "row": "REDUCED MOTION\n◀\nAUTO (ON)\n▶",
+ "reducedNow": true,
+ "hard": 0,
+ "n": 30,
+ "chains": [
+  "web-vortex",
+  "web-ink",
+  "web-halftone-beat",
+  "web-cyberpunk",
+  "web-prism",
+  "web-vhs",
+  "web-build-drop",
+  "web-motion",
+  "web-bloom",
+  "web-flir",
+  "web-warmth",
+  "web-kaleido",
+  "web-elevation",
+  "web-trails"
+ ]
+}

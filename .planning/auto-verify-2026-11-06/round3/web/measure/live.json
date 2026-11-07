@@ -1,0 +1,17 @@
+{
+ "disabled": true,
+ "card": 0.013,
+ "badge": "LIVE SHOW",
+ "live0": true,
+ "name0": "metaballs",
+ "locked": {
+  "source": "metaballs",
+  "hold": false
+ },
+ "cleared": "",
+ "off": 0.003,
+ "after": "web-mid-marble",
+ "reconnectS": 5.137,
+ "conns": 2,
+ "errors": []
+}

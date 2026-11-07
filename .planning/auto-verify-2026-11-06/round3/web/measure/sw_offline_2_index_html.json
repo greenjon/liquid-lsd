@@ -1,0 +1,27 @@
+{
+ "loaded": true,
+ "onOk": true,
+ "noSignalAfterS": 2.491,
+ "failed": [
+  "/fxchains/web-bitcrush.lsdfxchain",
+  "/fxchains/web-trails-drift.lsdfxchain",
+  "/fxchains/web-mirror.lsdfxchain",
+  "/fxchains/web-bloom.lsdfxchain",
+  "/content/transitions/cosmic_singularity.lsdtrans",
+  "/shaders/celestial_engine.frag",
+  "/shaders/fx/kaleidoscope.fs",
+  "/shaders/fx/feedback.fs",
+  "/shaders/fluid_ink.frag",
+  "/shaders/transitions/linear_crossfade.fs",
+  "/gallery/Chisel-Tip-WolframAlpha--plot_cos__y_3_x_3______2__cos__x__135797531______x______8____Contour_plot____2016_06_17_22_54.jpg",
+  "/gallery/IMG_5188.jpg",
+  "/gallery/IMG_0922.jpg",
+  "/gallery/fonever_meta_1.jpg",
+  "/gallery/e11693572d791295b6141559d6d51796.jpg",
+  "/gallery/172c3dfb2a2dcd0691b58d1ced0be618.jpg",
+  "/gallery/65678a2589d2a2b7.jpg",
+  "/gallery/-_-.jpg"
+ ],
+ "cachedFiles": 232,
+ "missingFromShell": 0
+}

@@ -1,0 +1,75 @@
+  FAIL tw_after_knob14: after turning knob 14, shift + tap knob 16 inserts after its cursor, not at the end   [(['tt_alpha', 'tt_beta'], (['tt_alpha', 'tt_beta'], -1, 0), ['tt_alpha', 'tt_beta', 'tt_gamma'])]
+  FAIL tw_after_knob14: a second one goes after it   [(['tt_alpha', 'tt_beta', 'tt_gamma'], ['tt_alpha', 'tt_beta', 'tt_gamma', 'tt_inside'])]
+  PASS tw_after_knob14: after turning knob 14, shift + tap knob 16 inserts after its cursor, not at the end
+  FAIL tw_after_knob14: a second one goes after it   [(['tt_alpha', 'tt_gamma', 'tt_beta'], ['tt_alpha', 'tt_inside', 'tt_gamma', 'tt_beta'])]
+  FAIL tw_after_knob14: after turning knob 14, shift + tap knob 16 inserts after its cursor, not at the end   [(['tt_alpha', 'tt_beta'], (['tt_alpha', 'tt_beta'], -1, 0), (['tt_alpha', 'tt_beta'], 0, 0), (['tt_alpha', 'tt_beta'], 0, 0), (['tt_alpha', 'tt_beta'], 0, -1), ['tt_alpha', 'tt_gamma', 'tt_beta'])]
+  FAIL tw_after_knob14: a second one goes after it   [(['tt_alpha', 'tt_gamma', 'tt_beta'], ['tt_alpha', 'tt_gamma', 'tt_inside', 'tt_beta'])]
+  PASS tw_insert_middle: nothing playing: inserts after knob 14's row, even after knob 16 moved
+  PASS tw_insert_middle: and the next one after that
+  PASS bind_dbl: a double-click applies
+  PASS bind_dbl: and returns to the plain Library
+  PASS bind_again: first click binds
+  PASS bind_again: a second click stops, nothing applied
+  PASS bind_page: changing page stops the binding
+  PASS bind_nomove: source badge binds in place, no pair view
+  PASS bind_nomove: chain name binds in place
+  PASS bind_nomove: FX slot binds in place
+  FAIL bind_mon: deck monitor binds the deck source   [pair=null chain=null live=PV dock=null]
+  PASS bind_mon: Master badge binds or pairs the Master FX chain
+  FAIL pair_off_page: the BG monitor from the A/B page opens the pair view   [pair=null chain=null live=PV dock=null]
+  PASS pair_off_page: a page tab closes the pair view
+  PASS pair_off_page: Esc leaves it and drops the dock selection
+  PASS dirty_asks_once: trying a source on an unsaved deck waits for the prompt
+  PASS dirty_asks_once: Enter answers it and the source loads
+  PASS dirty_asks_once: the next source does not ask again
+  PASS dirty_asks_once: Ctrl+Z still undoes each load
+  FAIL edit_rail: all six rail buttons are on screen and click   [["TOUR_WARN Tour t=1.6: open_params: unknown module 'deckA_src' (e.g. deckA, deckA_fx, master)", "22:16:24.164 [main] WARN  llm.slop.liquidlsd.tour.TourRunner - Tour t=2.85: target 'edit_side_B' not registered (known: 456 widgets)", "TOUR_WARN Tour t=2.85: target 'edit_side_B' not registered (known:]
+  PASS fx_wheel: a plain wheel over a slot leaves the effect
+  PASS fx_wheel: Ctrl + wheel steps the effect
+  PASS fx_reset_undo: menu item reached
+  PASS fx_revert_undo: Revert to Saved brings the saved Dry/Wet back
+  PASS fx_revert_undo: Ctrl+Z undoes the revert
+
+  PASS fx_swap_links: swapping effects: each slot keeps its own link setting
+  PASS fx_swap_links: and the effects did swap
+  PASS super_relative: Relative: both rise, staying apart
+  PASS super_relative: Relative: reach 100% together
+  PASS super_relative: Relative: reach 0% together
+  FAIL super_pickup: Pickup: both wait at first   [['false', 'true']]
+  FAIL super_pickup: Pickup: slot at 20% is not moved until the knob reaches it   [[0.1, 0.9]]
+  PASS super_pickup: Pickup: past 20% it follows, the 90% slot still waits
+  PASS super_pickup: Pickup: past 90% both follow
+  PASS super_hand: a Metaknob moved by hand is not yanked back
+  PASS tw_after_knob14: after turning knob 14, shift + tap knob 16 inserts after its cursor, not at the end
+  PASS tw_after_knob14: a second one goes after it
+  PASS bind_mon: deck monitor binds the deck source
+  PASS bind_mon: Master badge binds or pairs the Master FX chain
+  PASS pair_off_page: the BG monitor from the A/B page opens the pair view
+  PASS pair_off_page: a page tab closes the pair view
+  PASS pair_off_page: Esc leaves it and drops the dock selection
+  FAIL edit_rail: all six rail buttons are on screen and click   [["TOUR_WARN Tour t=4.87: target 'edit_side_PV' is not on screen now (last drawn earlier; wrong page or view?)", "TOUR_WARN Tour t=5.88: target 'edit_side_OUT' is not on screen now (last drawn earlier; wrong page or view?)", "TOUR_WARN Tour t=6.89: target 'edit_side_MST' is not on screen now (last dr]
+  PASS fx_reset_undo: menu item reached
+  PASS fx_revert_undo: Revert to Saved brings the saved Dry/Wet back
+  PASS fx_revert_undo: Ctrl+Z undoes the revert
+  PASS super_pickup: Pickup: both wait at first
+  PASS super_pickup: Pickup: slot at 20% is not moved until the knob reaches it
+  PASS super_pickup: Pickup: past 20% it follows, the 90% slot still waits
+  PASS super_pickup: Pickup: past 90% both follow
+  FAIL space_pause: Space keeps the binding held (paused)   [pair=null chain=null live=PV dock=null]
+  PASS space_pause: Esc from maximized comes back still bound
+  PASS edit_rail: all six rail buttons are on screen and click
+  PASS space_pause: Space pauses (Library maximized), Space again resumes the binding
+  PASS space_pause: Esc from maximized comes back still bound
+  PASS up_shaders: an unedited older shipped shader is replaced (kifs/kifs.fs)
+  PASS up_shaders: an edited one is kept (mandelbulb/mandelbulb.fs)
+  PASS up_shaders: and the edited one loads
+  PASS up_old_presets: 14 presets from old versions load: 14
+  FAIL up_old_presets: no exceptions in the log   [["kotlinx.serialization.json.internal.JsonDecodingException: Unexpected JSON token at offset 86: Expected start of the object '{', but had '3' instead at path: $.parameters", '\tat kotlinx.serialization.json.internal.JsonExceptionsKt.JsonDecodingException(JsonExceptions.kt:24)', '\tat kotlinx.serial]
+  PASS up_old_presets: 27 presets from old versions load: 27
+  PASS up_old_presets: no exceptions in the log
+  PASS bad_preset_toast: a damaged preset shows a toast
+  PASS bad_preset_toast: and the deck keeps what it had
+  PASS seq_toolbar: every toolbar button is on screen and clicks
+
+  PASS seq_toolbar: every toolbar button is on screen and clicks
+  PASS seq_toolbar: every toolbar button is on screen and clicks

@@ -1,0 +1,20 @@
+{
+ "gl": "Intel(R) HD Graphics, or similar",
+ "heardAfterS": 0.009,
+ "audio": {
+  "err": null,
+  "t": 6.221791,
+  "paused": false,
+  "ready": 4,
+  "ogg": "probably"
+ },
+ "pic": {
+  "mean": 128.44299768518525,
+  "sd": 54.150401147258755
+ },
+ "menu": 8,
+ "n0": "web-film-groove",
+ "n1": "web-film-mid",
+ "bpm": 129.5808558601112,
+ "errors": []
+}

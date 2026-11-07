@@ -1,0 +1,13 @@
+{
+ "mic": {
+  "peak": 1,
+  "badge": "MIC",
+  "amp": 0,
+  "noSignal": false
+ },
+ "radio": {
+  "badge": "STREAM",
+  "amp": 0.2103970194499988
+ },
+ "errors": []
+}
