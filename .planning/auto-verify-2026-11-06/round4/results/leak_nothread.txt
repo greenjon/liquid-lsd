@@ -1,0 +1,10 @@
+opts --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g
+2 min rss 1887 | dev=1367 anon=339 nvidia=67 file=32 [heap]=1 [vvar]=0 | GC(13) Major Collection (Proactive) 618M(30%)->76M(4%) 0.100s
+4 min rss 1891 | dev=1367 anon=343 nvidia=67 file=32 [heap]=1 [vvar]=0 | GC(34) Major Collection (Proactive) 402M(20%)->88M(4%) 0.088s
+6 min rss 1896 | dev=1367 anon=347 nvidia=67 file=32 [heap]=1 [vvar]=0 | GC(56) Major Collection (Proactive) 420M(21%)->76M(4%) 0.093s
+8 min rss 1914 | dev=1367 anon=365 nvidia=67 file=32 [heap]=1 [vvar]=0 | GC(79) Major Collection (Proactive) 438M(21%)->72M(4%) 0.091s
+10 min rss 1914 | dev=1367 anon=365 nvidia=67 file=32 [heap]=1 [vvar]=0 | GC(101) Major Collection (Proactive) 426M(21%)->80M(4%) 0.106s
+12 min rss 1709 | dev=1161 anon=365 nvidia=67 file=32 [heap]=1 [vvar]=0 | GC(124) Major Collection (Proactive) 402M(20%)->78M(4%) 0.093s
+14 min rss 1513 | dev=905 anon=425 nvidia=67 file=32 [heap]=1 [vvar]=0 | GC(145) Major Collection (Proactive) 494M(24%)->78M(4%) 0.109s
+16 min rss 1514 | dev=905 anon=425 nvidia=67 file=32 [heap]=1 [vvar]=0 | GC(166) Major Collection (Proactive) 436M(21%)->80M(4%) 0.087s
+stopped: time

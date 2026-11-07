@@ -1,0 +1,22 @@
+opts -XX:NativeMemoryTracking=summary
+2 min rss 1081 | anon=860 nvidia=85 file=33 dev=0 [heap]=0 [vvar]=0 | GC(18) Pause Young (Normal) (G1 Evacuation Pause) 350M->30M(552M) 2.392ms
+4 min rss 1117 | anon=896 nvidia=85 file=33 dev=0 [heap]=0 [vvar]=0 | GC(32) Pause Young (Normal) (G1 Evacuation Pause) 351M->31M(552M) 1.240ms
+6 min rss 1147 | anon=922 nvidia=85 file=33 [heap]=4 dev=0 [vvar]=0 | GC(45) Pause Young (Normal) (G1 Evacuation Pause) 359M->31M(552M) 1.543ms
+8 min rss 923 | anon=696 nvidia=85 file=33 [heap]=4 dev=0 [vvar]=0 | GC(85) Pause Young (Normal) (G1 Evacuation Pause) 111M->31M(152M) 1.642ms
+10 min rss 944 | anon=716 nvidia=85 file=33 [heap]=4 dev=0 [vvar]=0 | GC(131) Pause Young (Normal) (G1 Evacuation Pause) 118M->31M(152M) 1.678ms
+12 min rss 919 | anon=693 nvidia=85 file=33 [heap]=4 dev=0 [vvar]=0 | GC(191) Pause Young (Normal) (G1 Evacuation Pause) 109M->29M(152M) 1.438ms
+14 min rss 950 | anon=724 nvidia=85 file=33 [heap]=4 dev=0 [vvar]=0 | GC(251) Pause Young (Normal) (G1 Evacuation Pause) 111M->31M(152M) 1.739ms
+16 min rss 1015 | anon=789 nvidia=85 file=33 [heap]=4 dev=0 [vvar]=0 | GC(309) Pause Young (Normal) (G1 Evacuation Pause) 113M->33M(152M) 1.333ms
+18 min rss 985 | anon=765 nvidia=81 file=33 [heap]=4 dev=0 [vvar]=0 | GC(369) Pause Young (Normal) (G1 Evacuation Pause) 115M->35M(152M) 1.245ms
+20 min rss 1014 | anon=794 nvidia=81 file=33 [heap]=4 dev=0 [vvar]=0 | GC(420) Pause Young (Normal) (G1 Evacuation Pause) 118M->37M(152M) 1.273ms
+22 min rss 1086 | anon=857 nvidia=85 file=33 [heap]=4 dev=0 [vvar]=0 | GC(468) Pause Young (Normal) (G1 Evacuation Pause) 117M->38M(152M) 1.279ms
+24 min rss 1096 | anon=875 nvidia=81 file=33 [heap]=4 dev=0 [vvar]=0 | GC(515) Pause Young (Normal) (G1 Evacuation Pause) 117M->38M(152M) 1.458ms
+26 min rss 1118 | anon=889 nvidia=85 file=33 [heap]=4 dev=0 [vvar]=0 | GC(571) Pause Young (Normal) (G1 Evacuation Pause) 118M->38M(152M) 0.878ms
+28 min rss 1146 | anon=917 nvidia=85 file=33 [heap]=4 dev=0 [vvar]=0 | GC(614) Pause Young (Normal) (G1 Evacuation Pause) 119M->39M(152M) 1.027ms
+30 min rss 1161 | anon=932 nvidia=85 file=33 [heap]=4 dev=0 [vvar]=0 | GC(653) Pause Young (Normal) (G1 Evacuation Pause) 119M->39M(152M) 2.148ms
+32 min rss 1128 | anon=908 nvidia=81 file=33 [heap]=4 dev=0 [vvar]=0 | GC(691) Pause Young (Normal) (G1 Evacuation Pause) 127M->40M(152M) 1.702ms
+34 min rss 1156 | anon=927 nvidia=85 file=33 [heap]=4 dev=0 [vvar]=0 | GC(737) Pause Young (Normal) (G1 Evacuation Pause) 118M->38M(152M) 1.897ms
+36 min rss 1177 | anon=939 nvidia=89 file=33 [heap]=4 dev=0 [vvar]=0 | GC(780) Pause Young (Normal) (G1 Evacuation Pause) 118M->38M(152M) 1.117ms
+38 min rss 1231 | anon=1000 nvidia=85 file=33 [heap]=4 dev=0 [vvar]=0 | GC(815) Pause Young (Normal) (G1 Evacuation Pause) 120M->40M(152M) 2.102ms
+40 min rss 1244 | anon=1014 nvidia=85 file=33 [heap]=4 dev=0 [vvar]=0 | GC(853) Pause Young (Normal) (G1 Evacuation Pause) 119M->39M(152M) 5.192ms
+stopped: time

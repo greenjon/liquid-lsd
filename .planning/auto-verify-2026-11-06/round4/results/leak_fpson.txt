@@ -1,0 +1,8 @@
+opts --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g
+2 min rss 2222 | dev=1662 anon=377 nvidia=67 file=32 [heap]=0 [vvar]=0 | GC(10) Major Collection (Proactive) 500M(24%)->76M(4%) 0.086s
+4 min rss 2262 | dev=1662 anon=415 nvidia=67 file=32 [heap]=0 [vvar]=0 | GC(37) Major Collection (Proactive) 390M(19%)->90M(4%) 0.073s
+6 min rss 2295 | dev=1662 anon=449 nvidia=67 file=32 [heap]=0 [vvar]=0 | GC(66) Major Collection (Proactive) 342M(17%)->78M(4%) 0.070s
+8 min rss 2344 | dev=1662 anon=497 nvidia=67 file=32 [heap]=0 [vvar]=0 | GC(95) Major Collection (Proactive) 370M(18%)->84M(4%) 0.073s
+10 min rss 2375 | dev=1662 anon=527 nvidia=67 file=32 [heap]=0 [vvar]=0 | GC(124) Major Collection (Proactive) 330M(16%)->76M(4%) 0.075s
+12 min rss 2190 | dev=1441 anon=562 nvidia=67 file=32 [heap]=0 [vvar]=0 | GC(153) Major Collection (Proactive) 344M(17%)->78M(4%) 0.070s
+stopped: time

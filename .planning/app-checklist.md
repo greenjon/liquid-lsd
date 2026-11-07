@@ -159,6 +159,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [ ] Deck Zoom and Deck Rotate now move Isometric Voxels and Wave Ripples.
 - [ ] MIDI-learn Gain on Deck A, change source several times: the mapping still drives Gain. A mapping saved before (path `Deck A/<Source>/Gain`) still works. MST > LEVELS shows only level faders.
 - [x] Leak check: load ~30 sources and flame presets in a row on one deck (or run an A/B queue of flames for a while); `GPU buffers` in the title bar stays roughly flat.
+- [ ] Linux, NVIDIA: run the app for an hour on your normal desktop; memory in a system monitor should stop climbing, and the frame rate should be the same as before. auto: 8 hours under Xvfb grew 900 MB to 5.8 GB, driver threaded optimizations; launchers now turn them off, flat over 40 min in a test run (not the launcher itself, not a real screen).
   auto: 90 loads of 10 heavy sources and 30 flames on Deck A: GPU buffers 25 at start, then moving between 30 and 42 by source, 33 at the end (249 MB). No growth.
 - [x] Ctrl+Z after a source change brings the old one back (a flame or simulation restarts fresh; expected).
   auto: brings the old source back, after a die roll too.

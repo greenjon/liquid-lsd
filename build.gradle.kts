@@ -149,6 +149,10 @@ tasks.withType<JavaExec> {
 
 // Render on the NVIDIA GPU (PRIME offload) when running from Gradle on Linux. Skip with -PnoNvidia.
 tasks.named<JavaExec>("run") {
+    // NVIDIA's threaded optimizations held on to about 20 MB of memory a minute under X11. Same as the Linux launchers.
+    if (System.getProperty("os.name").lowercase().contains("linux") && System.getenv("__GL_THREADED_OPTIMIZATIONS") == null) {
+        environment("__GL_THREADED_OPTIMIZATIONS", "0")
+    }
     if (System.getProperty("os.name").lowercase().contains("linux") && !project.hasProperty("noNvidia")) {
         environment("__NV_PRIME_RENDER_OFFLOAD", "1")
         environment("__GLX_VENDOR_LIBRARY_NAME", "nvidia")
@@ -625,6 +629,8 @@ tasks.processResources {
             #!/bin/bash
             SCRIPT_DIR="$(cd "$(dirname "${'$'}{BASH_SOURCE[0]}")" && pwd)"
             cd "${'$'}SCRIPT_DIR"
+            # NVIDIA's threaded optimizations held on to about 20 MB of memory a minute under X11.
+            export __GL_THREADED_OPTIMIZATIONS="${'$'}{__GL_THREADED_OPTIMIZATIONS:-0}"
 
             if [ -f "jre/linux-x64/bin/java" ]; then
                 chmod +x "jre/linux-x64/bin/java"
@@ -641,6 +647,8 @@ tasks.processResources {
             #!/bin/bash
             SCRIPT_DIR="$(cd "$(dirname "${'$'}{BASH_SOURCE[0]}")" && pwd)"
             cd "${'$'}SCRIPT_DIR"
+            # NVIDIA's threaded optimizations held on to about 20 MB of memory a minute under X11.
+            export __GL_THREADED_OPTIMIZATIONS="${'$'}{__GL_THREADED_OPTIMIZATIONS:-0}"
 
             if [ -f "jre/linux-arm64/bin/java" ]; then
                 chmod +x "jre/linux-arm64/bin/java"

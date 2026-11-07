@@ -1262,10 +1262,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#fixes-from-scripted-checks-round-2-undo-menus-upgrades-uiperformancedeepeditbaykt-uiparametersrendererkt-uidropdownstylehelperkt-buildgradlekts" class="md-nav__link">
+  <a href="#fixes-from-scripted-checks-round-2-undo-menus-upgrades-memory-uiperformancedeepeditbaykt-uiparametersrendererkt-uidropdownstylehelperkt-buildgradlekts" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Fixes From Scripted Checks, Round 2: Undo, Menus, Upgrades (ui/PerformanceDeepEditBay.kt, ui/ParametersRenderer.kt, ui/DropdownStyleHelper.kt, build.gradle.kts)
+        Fixes From Scripted Checks, Round 2: Undo, Menus, Upgrades, Memory (ui/PerformanceDeepEditBay.kt, ui/ParametersRenderer.kt, ui/DropdownStyleHelper.kt, build.gradle.kts)
       
     </span>
   </a>
@@ -7631,10 +7631,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#fixes-from-scripted-checks-round-2-undo-menus-upgrades-uiperformancedeepeditbaykt-uiparametersrendererkt-uidropdownstylehelperkt-buildgradlekts" class="md-nav__link">
+  <a href="#fixes-from-scripted-checks-round-2-undo-menus-upgrades-memory-uiperformancedeepeditbaykt-uiparametersrendererkt-uidropdownstylehelperkt-buildgradlekts" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Fixes From Scripted Checks, Round 2: Undo, Menus, Upgrades (ui/PerformanceDeepEditBay.kt, ui/ParametersRenderer.kt, ui/DropdownStyleHelper.kt, build.gradle.kts)
+        Fixes From Scripted Checks, Round 2: Undo, Menus, Upgrades, Memory (ui/PerformanceDeepEditBay.kt, ui/ParametersRenderer.kt, ui/DropdownStyleHelper.kt, build.gradle.kts)
       
     </span>
   </a>
@@ -13951,12 +13951,13 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
-<h3 id="fixes-from-scripted-checks-round-2-undo-menus-upgrades-uiperformancedeepeditbaykt-uiparametersrendererkt-uidropdownstylehelperkt-buildgradlekts">Fixes From Scripted Checks, Round 2: Undo, Menus, Upgrades (<code>ui/PerformanceDeepEditBay.kt</code>, <code>ui/ParametersRenderer.kt</code>, <code>ui/DropdownStyleHelper.kt</code>, <code>build.gradle.kts</code>)</h3>
+<h3 id="fixes-from-scripted-checks-round-2-undo-menus-upgrades-memory-uiperformancedeepeditbaykt-uiparametersrendererkt-uidropdownstylehelperkt-buildgradlekts">Fixes From Scripted Checks, Round 2: Undo, Menus, Upgrades, Memory (<code>ui/PerformanceDeepEditBay.kt</code>, <code>ui/ParametersRenderer.kt</code>, <code>ui/DropdownStyleHelper.kt</code>, <code>build.gradle.kts</code>)</h3>
 <ul>
 <li><strong>Fixed: one Ctrl+Z undid two steps in the pair view and Chain view.</strong> Two loads in a row went back together, and the second press found nothing.</li>
 <li><strong>Fixed: Reset Parameter to Default couldn't be undone.</strong> Ctrl+Z brought back the modulators but not the value or its random range.</li>
 <li><strong>Fixed: right-click menus near the bottom of the window were cut off.</strong> At 1280x720 the Edit row menu lost its last items, Metaknob Target among them, on lower rows. Menus near the top or bottom edge now open away from it.</li>
 <li><strong>Fixed: unzipping a new version over an old one overwrote shaders you had edited.</strong> The zip carried a copy of the bundled sources. They now come only from the app itself, which keeps edited files. <code>Getting Started</code> now says how to upgrade.</li>
+<li><strong>Fixed: on Linux with an NVIDIA card, memory grew all the time the app ran.</strong> It held on to about 20 MB more each minute under X11, whatever was on screen, and reached 5.8 GB after 8 hours. The cause is the driver's threaded optimizations, so the Linux launchers now turn them off. To turn them back on, set <code>__GL_THREADED_OPTIMIZATIONS=1</code> before starting the app.</li>
 </ul>
 <h3 id="fixes-from-scripted-checks-simulated-twister-browser-tests-music-webrendererjs-webautopilotjs-webswjs-webtvcss-uibrowserqueueknobskt-uiseqsectionkt-uiperformancedeepeditbaykt-presetsdeckopskt-testsweb">Fixes From Scripted Checks: Simulated Twister, Browser Tests, Music (<code>web/renderer.js</code>, <code>web/autopilot.js</code>, <code>web/sw.js</code>, <code>web/tv.css</code>, <code>ui/browser/QueueKnobs.kt</code>, <code>ui/SeqSection.kt</code>, <code>ui/PerformanceDeepEditBay.kt</code>, <code>presets/DeckOps.kt</code>, <code>tests/web/</code>)</h3>
 <ul>
