@@ -389,7 +389,7 @@ object PropertiesPanel {
                             val b = info.binding
                             if (b.targetType != llm.slop.liquidlsd.macro.MacroTargetType.MODULATOR_PROPERTY) continue
                             ImGui.pushID("macro_bind_${info.control.id}_${b.propertyName}")
-                            session.uiTheme.caption("${if (b.enabled) Icons.LOCK else Icons.UNLOCK} [${b.propertyName}] ${if (b.enabled) "controlled by" else "released from"} ${info.controlName} [${info.badgeLabel}]")
+                            session.uiTheme.caption("${if (b.enabled) Icons.LOCK else Icons.UNLOCK} [${llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.formatPropertyLabel(-1, b.propertyName).removePrefix("Mod ")}] ${if (b.enabled) "controlled by" else "released from"} ${info.controlName} [${info.badgeLabel}]")
                             itemTooltip("This modulator property is continuously updated by a macro knob. Uncheck the target to release it.")
                             if (llm.slop.liquidlsd.macro.TransitionMacroSync.isSyncOwned(info.bankKey)) {
                                 session.uiTheme.caption(llm.slop.liquidlsd.macro.TransitionMacroSync.ownerNote(info.bankKey))

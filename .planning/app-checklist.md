@@ -216,7 +216,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 
 ## 7. Super Knob and Metaknobs
 
-- [ ] A linked slot's knob 2-4 moves its Metaknob (not dead); in Focus Mode a linked slot's knob 1 works.
+- [ ] A linked slot's knob 2-4 moves its Metaknob (not dead); in Focus Mode a linked slot's knob 1 works. auto (round 5): dragging a linked slot's Perform knob moves its Metaknob. Focus Mode knob 1 not tried.
 - [ ] Preferences: **Super Knob response** Relative (default): linked slots at 20% and 90% both rise, stay apart, reach 100% / 0% together. Pickup: a slot waits for the Super Knob, amber link button with both values in its tooltip.
   auto: Relative: 20% and 90% both rise, stay apart, reach 100% and 0% together. Pickup: each waits until the knob reaches it. Left for you: amber link button and its tooltip.
 - [ ] Moving a linked Metaknob by hand (Edit row, MIDI, editing a target) isn't yanked back by the Super Knob.
@@ -226,7 +226,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
   auto: Add Target, ± Invert and the trash work, and the row menu's one Metaknob Target check toggles (fixed 2026-11-07: menus on lower rows were cut off, hiding it). Left for you: each zone and curve.
 - [ ] Remove every target: the knob reads `NO TARGET` (slot tooltip explains), and it's still empty after save and reload (not Dry/Wet).
   !!auto: removing the last target works and the editor reads `Metaknob targets (0)`, but the knob keeps the effect's name. `NO TARGET` was removed from the code 2026-10-22 and the slot tooltip explains instead, so this item is out of date. Saving and reloading not run.
-- [ ] A target naming a missing parameter shows `(missing)` and drives nothing.
+- [ ] A target naming a missing parameter shows `(missing)` and drives nothing. auto (round 5): a chain naming a missing target loads, Edit shows `no_such_param (missing)`, moving the Metaknob doesn't crash.
 - [ ] A Metaknob on Dry/Wet owns it: the focus header's Wet slider moves the Metaknob; macro/MIDI/OSC writes are suspended.
 - [ ] Focus from Edit's SUPER KNOB & METAKNOBS block focuses the chain everywhere; the block shows knobs 2-4, page arrows and Group Mode.
 - [x] Swap effects between slots: each slot keeps its own link setting.
@@ -234,25 +234,25 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [ ] Tap on the Super Knob's switch does nothing; Shift + tap is Chain Link.
 - [ ] Rate / speed / decay parameters respond exponentially on focus knobs 2-4; turning focus on doesn't change a value. ⟲ and the Twister tap land on the default.
 - [ ] A Metaknob with several targets starts where they're closest to their defaults when a slot loads or resets.
-- [ ] Save an FX slot and a chain, reload: targets, zones and knob order restored. Knob layout right on Perform and in the pair view.
-- [ ] ISF auto-bind: load a few filters; Super Knob and Metaknob do something sensible.
+- [ ] Save an FX slot and a chain, reload: targets, zones and knob order restored. Knob layout right on Perform and in the pair view. auto (round 5): added a target, inverted one, saved the chain, loaded another, reloaded: targets, ranges and invert are the same. Knob order and the Perform layout are yours.
+- [ ] ISF auto-bind: load a few filters; Super Knob and Metaknob do something sensible. auto (round 5): ten filters loaded one by one each got at least one Metaknob target. "Sensible" is yours.
 - [ ] *Remove Saved Default for (effect)* and *Save as Default* explain what they do.
 
 ## 8. Macros, learn and locks
 
 - [ ] Arm macro Learn, OSC Learn and MIDI Learn at once; Esc cancels all three. MIDI Learn on a parameter, and Learn into a controller profile command, still capture the next control you move (MIDI handling moved earlier in the frame, 2026-10-23).
   auto: OSC Learn arms from the row menu and Esc cancels it. Left for you: macro and MIDI Learn at once, capture from a real control.
-- [ ] A MIDI/OSC mapping made before a knob binding is suspended while the knob drives the target, flagged in both tables.
-- [ ] Range sliders lock when `lfoMin/lfoMax` is bound; Randomize min/max inputs too.
-- [ ] Knob- or Metaknob-driven Value: dragging, scrolling or typing in Initial Range moves the knob (through its curve), other targets follow; a Metaknob on a macro knob passes it up. Lobes, Recipe, Max Points and the grid Value cell stay locked.
+- [ ] A MIDI/OSC mapping made before a knob binding is suspended while the knob drives the target, flagged in both tables. auto (round 5): MIDI mapping does nothing while a macro knob drives the parameter, the reason names the knob, and it works again once the binding goes. Left for you: the caption in the MIDI table (it is further down Preferences than the script scrolled), and OSC.
+- [ ] Range sliders lock when `lfoMin/lfoMax` is bound; Randomize min/max inputs too. auto (round 5): with LFO Min bound to a knob, dragging its handle and typing into its box leave it alone. The lock caption showed `[lfoMin]`; now `Min` (also in the popup and Perform strip).
+- [ ] Knob- or Metaknob-driven Value: dragging, scrolling or typing in Initial Range moves the knob (through its curve), other targets follow; a Metaknob on a macro knob passes it up. Lobes, Recipe, Max Points and the grid Value cell stay locked. auto (round 5): dragging Initial Range on a knob-driven value moves the knob, and the value follows it.
 - [ ] Metaknob-driven rows show the cyan bar, tint, `[K1]` badge and "Linked to its Metaknob" caption; Randomize off.
-- [ ] FX-bank bindings are read-only in Properties and slider popups.
+- [ ] FX-bank bindings are read-only in Properties and slider popups. auto (round 5): screenshot shows "Driven by the FX chain; edit the slot's Metaknob targets instead" and no range editor.
 - [ ] Select a knob by clicking a parameter, then click the knob: one selection.
-- [ ] Bound Min/Max labels and Beat Division labels open the popup.
-- [ ] Type a value into a knob with curve, invert and zone set: the result respects them.
-- [ ] Macro-bank import onto another deck: paths remap, `Mixer/...` stays.
+- [ ] Bound Min/Max labels and Beat Division labels open the popup. auto (round 5): the bound Min label opens the binding popup. Beat Division label not reached (row below the fold), yours.
+- [ ] Type a value into a knob with curve, invert and zone set: the result respects them. auto (round 5): typing 20 into a knob with Exponential, Invert and First Half gives 20%, and turning the knob to the same spot gives the same value.
+- [ ] Macro-bank import onto another deck: paths remap, `Mixer/...` stays. auto (round 5): Save bank from Deck A, Apply to Deck B: deck paths become `Deck B/...`, `Mixer/crossfade` stays.
 - [ ] Click a chip on a MASTER knob bound to a deck parameter: selects sensibly.
-- [ ] Reorder or delete a modulator: bindings stay on the right one.
+- [ ] Reorder or delete a modulator: bindings stay on the right one. auto (round 5): deleting the LFO leaves a knob bound to the audio modulator's Depth on that modulator. Reorder not tried.
 
 ## 9. Modulators and step sequencer
 

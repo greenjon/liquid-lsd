@@ -274,7 +274,7 @@ internal object PerformanceMacroStrip {
 
     private fun targetLabel(binding: MacroBinding): String =
         if (binding.targetType == MacroTargetType.PARAM_BASE_VALUE) binding.parameterId
-        else "${binding.parameterId} [${binding.propertyName}]"
+        else "${binding.parameterId} [${llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.formatPropertyLabel(-1, binding.propertyName).removePrefix("Mod ")}]"
     private fun openRename(control: MacroControl) {
         renameBuf.set(control.label)
         ImGui.openPopup(RENAME_POPUP)

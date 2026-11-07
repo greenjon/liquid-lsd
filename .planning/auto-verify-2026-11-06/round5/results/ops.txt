@@ -1,0 +1,40 @@
+
+  PASS s8_midi_suspended: a MIDI mapping on a macro-driven parameter is suspended
+  PASS s8_midi_suspended: its reason names the knob
+  FAIL s8_midi_suspended: it resumes when the binding goes   [(0.3, 'null')]
+  PASS s8_range_lock: dragging a bound LFO Min handle leaves it to the knob
+  PASS s8_range_lock: typing into a bound Min box leaves it to the knob
+  FAIL s8_initial_range_moves_knob: dragging Initial Range on a knob-driven value moves the knob   [(0.3, 0.3)]
+  PASS s8_initial_range_moves_knob: and the value follows the knob
+  FAIL s8_typed_knob_curve: typing a knob value lands where turning it there does   [('0.84', '0.20000005', '0.447,0.500,0.350,0.000')]
+  PASS s8_delete_modulator: deleting another modulator removes it
+  PASS s8_delete_modulator: the binding still drives the first modulator
+
+  PASS s7_row_knob_moves_meta: a linked slot's row knob moves its Metaknob
+  PASS s7_missing_target: a chain with a missing target loads and keeps it
+
+  PASS s7_autobind: every loaded filter gets at least one Metaknob target
+  PASS s8_initial_range_moves_knob: dragging Initial Range on a knob-driven value moves the knob
+  PASS s8_initial_range_moves_knob: and the value follows the knob
+  PASS s8_typed_knob_curve: typing 20 into a knob with curve, invert and zone sets the value to 20%
+
+
+
+  PASS tw_s8_midi_suspended: a MIDI mapping on a macro-driven parameter is suspended
+  PASS tw_s8_midi_suspended: its reason names the knob
+  PASS tw_s8_midi_suspended: it resumes when the binding goes
+
+
+
+
+
+
+
+
+  FAIL s8_bank_import: Apply to Deck B remaps deck paths   [Deck]
+  FAIL s8_bank_import: Mixer paths stay   [Deck]
+  PASS s8_bank_import: Apply to Deck B remaps deck paths
+  FAIL s8_bank_import: Mixer paths stay   [Deck B/Mandala/Lobes:null:;Deck B/Mandala/Thickness:null:;Deck B/Mandala/Depth:null:;Deck B/Mandala/Hue Offset:null:]
+  PASS s8_bank_import: Apply to Deck B remaps deck paths
+  PASS s8_bank_import: Mixer paths stay
+  PASS s7_save_reload: a saved chain reloads with the same Metaknob targets, zones and invert

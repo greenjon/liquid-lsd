@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Fixes From Scripted Checks, Round 3: Macros and Learn (`ui/PropertiesPanel.kt`, `ui/MacroBindingEditor.kt`, `ui/PerformanceMacroStrip.kt`)
+- **Fixed: a knob locking an LFO bound showed its internal name.** Properties read `[lfoMin] controlled by THICK [K2]`, and the binding popup and Perform strip did the same. They now say `Min`, `Speed` and so on.
+
 ### Fixes From Scripted Checks, Round 2: Undo, Menus, Upgrades, Memory (`ui/PerformanceDeepEditBay.kt`, `ui/ParametersRenderer.kt`, `ui/DropdownStyleHelper.kt`, `build.gradle.kts`)
 - **Fixed: one Ctrl+Z undid two steps in the pair view and Chain view.** Two loads in a row went back together, and the second press found nothing.
 - **Fixed: Reset Parameter to Default couldn't be undone.** Ctrl+Z brought back the modulators but not the value or its random range.
