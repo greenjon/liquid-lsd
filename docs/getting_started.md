@@ -39,6 +39,8 @@ Download the archive for your platform, unzip it, and launch:
   
   Optional: run `./install-desktop.sh` to add Liquid LSD to your desktop app menu.
 
+**Upgrading:** unzip the new version over the old folder. Your library lives in that folder, so your saved presets, chains, playlists and settings stay. Bundled shaders you haven't edited update themselves at the next launch, and edited ones are kept. The few presets the download ships are replaced if you saved over them under the same name.
+
 > **Building from source?** See the [README](https://github.com/greenjon/liquid-lsd) for Gradle build instructions.
 
 ---

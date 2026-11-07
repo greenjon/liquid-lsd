@@ -502,6 +502,9 @@ tasks.processResources {
             if (libraryDir.exists()) {
                 val destLib = file("$distDir/library")
                 libraryDir.copyRecursively(destLib, overwrite = true)
+                // The bundled sources ship in the jar: the first run copies them out, and a later version only replaces files nobody
+                // edited. A copy in the zip would overwrite edited shaders the moment a new version is unzipped over an old one.
+                File(destLib, "sources").deleteRecursively()
                 println("Copied library to ${destLib.absolutePath}")
             }
             val defPresets = file("defaults/presets")

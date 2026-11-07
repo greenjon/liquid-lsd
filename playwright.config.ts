@@ -13,7 +13,7 @@ export default defineConfig({
   workers: 3,
   timeout: 120_000,
   reporter: [['list']],
-  grepInvert: process.env.LONG ? undefined : /@long/,
+  grepInvert: process.env.LONG ? undefined : /@long|@radio/,
   use: { baseURL: 'http://127.0.0.1:8765', trace: 'off' },
   webServer: { command: 'node tests/web/server.mjs', url: 'http://127.0.0.1:8765/index.html', reuseExistingServer: true, stdout: 'ignore' },
   projects: [
