@@ -1,0 +1,8 @@
+{
+ "gpu": {
+  "state": "done",
+  "ms": 5.25,
+  "heavy": true
+ },
+ "renderer": "NVIDIA GeForce 8800 GTX, or similar"
+}

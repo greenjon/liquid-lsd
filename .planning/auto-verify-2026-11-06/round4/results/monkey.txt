@@ -1,0 +1,136 @@
+seed 100: actions 570, rc 0, done True, 152 s, fbo 32->29, exits 0, warns 12, findings 4
+    23:55:28.523 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.DeckOps - Failed to load deck preset from /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/pre
+    23:55:29.840 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.DeckOps - Failed to load deck preset from /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/pre
+    23:55:32.773 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.DeckOps - Failed to load deck preset from /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/pre
+    kotlinx.serialization.json.internal.JsonDecodingException: Unexpected JSON token at offset 27704: Expected quotation mark '"', but had ' ' instead at path: $.parameters
+seed 101: actions 573, rc 0, done True, 173 s, fbo 30->30, exits 0, warns 9, findings 4
+    23:57:37.527 [PresetManager-IO] ERROR l.s.liquidlsd.presets.TransitionOps - Failed to load transition preset /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/t
+    23:57:54.613 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.FxOps - Could not load FX chain zz_trunc.lsdfxchain
+    java.util.concurrent.CompletionException: kotlinx.serialization.json.internal.JsonDecodingException: Expected end of the object '}', but had 'EOF' instead at pa
+    kotlinx.serialization.json.internal.JsonDecodingException: Unexpected JSON token at offset 410: Expected quotation mark '"', but had 'EOF' instead at path: $.slot.parameters['ro
+seed 102: actions 548, rc 0, done True, 128 s, fbo 25->38, exits 0, warns 5, findings 0
+seed 103: actions 520, rc 0, done True, 146 s, fbo 40->41, exits 0, warns 4, findings 9
+    00:02:30.087 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.DeckOps - Failed to load deck preset from /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/pre
+    00:04:23.619 [PresetManager-IO] ERROR l.s.liquidlsd.presets.TransitionOps - Failed to load transition preset /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/t
+    00:04:23.842 [PresetManager-IO] ERROR l.s.liquidlsd.presets.TransitionOps - Failed to load transition preset /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/t
+    00:04:24.503 [PresetManager-IO] ERROR l.s.liquidlsd.presets.TransitionOps - Failed to load transition preset /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/t
+    00:04:26.852 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.DeckOps - Failed to load deck preset from /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/pre
+    00:04:28.668 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.DeckOps - Failed to load deck preset from /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/pre
+    00:04:32.190 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.DeckOps - Failed to load deck preset from /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/pre
+    java.io.FileNotFoundException: /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/transitions/cosmic_singularity.lsdtrans
+    kotlinx.serialization.json.internal.JsonDecodingException: Unexpected JSON token at offset 27704: Expected quotation mark '"', but had ' ' instead at path: $.parameters
+seed 104: actions 501, rc 0, done True, 157 s, fbo 32->30, exits 0, warns 8, findings 2
+    00:05:23.830 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.FxOps - Could not load FX chain zz_trunc.lsdfxchain
+    java.util.concurrent.CompletionException: kotlinx.serialization.json.internal.JsonDecodingException: Expected end of the object '}', but had 'EOF' instead at pa
+seed 105: actions 580, rc 0, done True, 152 s, fbo 32->39, exits 0, warns 8, findings 5
+    00:08:41.123 [PresetManager-IO] ERROR l.s.liquidlsd.presets.TransitionOps - Failed to load transition preset /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/t
+    00:08:49.094 [PresetManager-IO] ERROR l.s.liquidlsd.presets.TransitionOps - Failed to load transition preset /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/t
+    00:08:50.632 [PresetManager-IO] ERROR l.s.liquidlsd.presets.TransitionOps - Failed to load transition preset /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/t
+    00:09:19.712 [PresetManager-IO] ERROR l.s.liquidlsd.presets.TransitionOps - Failed to load transition preset /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/t
+    kotlinx.serialization.json.internal.JsonDecodingException: Unexpected JSON token at offset 410: Expected quotation mark '"', but had 'EOF' instead at path: $.slot.parameters['ro
+seed 106: actions 528, rc 0, done True, 152 s, fbo 42->32, exits 0, warns 3, findings 3
+    00:11:03.424 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.DeckOps - Failed to load deck preset from /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/pre
+    00:11:04.710 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.DeckOps - Failed to load deck preset from /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/pre
+    kotlinx.serialization.json.internal.JsonDecodingException: Unexpected JSON token at offset 27704: Expected quotation mark '"', but had ' ' instead at path: $.parameters
+seed 107: actions 569, rc 0, done True, 135 s, fbo 31->27, exits 0, warns 8, findings 4
+    00:12:40.920 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.FxOps - Could not load FX chain zz_trunc.lsdfxchain
+    00:13:59.628 [PresetManager-IO] ERROR l.s.liquidlsd.presets.TransitionOps - Failed to load transition preset /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/t
+    java.util.concurrent.CompletionException: kotlinx.serialization.json.internal.JsonDecodingException: Expected end of the object '}', but had 'EOF' instead at pa
+    kotlinx.serialization.json.internal.JsonDecodingException: Unexpected JSON token at offset 410: Expected quotation mark '"', but had 'EOF' instead at path: $.slot.parameters['ro
+seed 108: actions 575, rc 0, done True, 152 s, fbo 37->48, exits 0, warns 7, findings 0
+seed 109: actions 557, rc 0, done True, 135 s, fbo 28->34, exits 0, warns 8, findings 2
+    00:19:13.399 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.FxOps - Could not load FX chain zz_trunc.lsdfxchain
+    java.util.concurrent.CompletionException: kotlinx.serialization.json.internal.JsonDecodingException: Expected end of the object '}', but had 'EOF' instead at pa
+seed 110: actions 505, rc 0, done True, 123 s, fbo 33->32, exits 0, warns 6, findings 7
+    00:19:31.747 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.DeckOps - Failed to load deck preset from /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/pre
+    00:19:36.803 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.DeckOps - Failed to load deck preset from /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/pre
+    00:21:19.073 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.FxOps - Could not load FX chain zz_trunc.lsdfxchain
+    00:21:19.694 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.FxOps - Could not load FX chain zz_trunc.lsdfxchain
+    java.util.concurrent.CompletionException: kotlinx.serialization.json.internal.JsonDecodingException: Expected end of the object '}', but had 'EOF' instead at pa
+    kotlinx.serialization.json.internal.JsonDecodingException: Unexpected JSON token at offset 27704: Expected quotation mark '"', but had ' ' instead at path: $.parameters
+    kotlinx.serialization.json.internal.JsonDecodingException: Unexpected JSON token at offset 286: Failed to parse type 'float' for input 'x' at path: $.globalAlpha.baseValue
+seed 111: actions 570, rc 0, done True, 128 s, fbo 27->50, exits 0, warns 11, findings 9
+    00:22:07.958 [PresetManager-IO] ERROR l.s.liquidlsd.presets.TransitionOps - Failed to load transition preset /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/t
+    00:22:09.497 [PresetManager-IO] ERROR l.s.liquidlsd.presets.TransitionOps - Failed to load transition preset /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/t
+    00:22:15.034 [PresetManager-IO] ERROR l.s.liquidlsd.presets.TransitionOps - Failed to load transition preset /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/t
+    00:22:19.357 [PresetManager-IO] ERROR l.s.liquidlsd.presets.TransitionOps - Failed to load transition preset /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/t
+    00:22:26.241 [PresetManager-IO] ERROR l.s.liquidlsd.presets.TransitionOps - Failed to load transition preset /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/t
+    kotlinx.serialization.json.internal.JsonDecodingException: Expected start of the object '{', but had 'EOF' instead at path: $
+    kotlinx.serialization.json.internal.JsonDecodingException: Unexpected JSON token at offset 0: Expected start of the object '{', but had '[' instead at path: $
+    kotlinx.serialization.json.internal.JsonDecodingException: Unexpected JSON token at offset 0: Expected start of the object '{', but had '�' instead at path: $
+    kotlinx.serialization.json.internal.JsonDecodingException: Unexpected JSON token at offset 410: Expected quotation mark '"', but had 'EOF' instead at path: $.slot.parameters['ro
+seed 112: actions 549, rc 0, done True, 129 s, fbo 30->29, exits 0, warns 13, findings 4
+    00:24:08.868 [PresetManager-IO] ERROR l.s.liquidlsd.presets.TransitionOps - Failed to load transition preset /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/t
+    00:24:09.579 [PresetManager-IO] ERROR l.s.liquidlsd.presets.TransitionOps - Failed to load transition preset /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/t
+    00:24:11.613 [PresetManager-IO] ERROR l.s.liquidlsd.presets.TransitionOps - Failed to load transition preset /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/t
+    kotlinx.serialization.json.internal.JsonDecodingException: Unexpected JSON token at offset 410: Expected quotation mark '"', but had 'EOF' instead at path: $.slot.parameters['ro
+seed 113: actions 613, rc 0, done True, 169 s, fbo 44->43, exits 0, warns 4, findings 13
+    00:26:22.538 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.FxOps - Could not load FX chain zz_array.lsdfxchain
+    00:26:29.895 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.FxOps - Could not load FX chain zz_trunc.lsdfxchain
+    00:26:33.857 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.FxOps - Could not load FX chain zz_trunc.lsdfxchain
+    00:26:36.444 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.FxOps - Could not load FX chain zz_trunc.lsdfxchain
+    00:27:56.881 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.FxOps - Could not load FX chain zz_mut0.lsdfxchain
+    00:28:02.966 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.FxOps - Could not load FX chain zz_trunc.lsdfxchain
+    00:28:22.328 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.FxOps - Could not load FX chain zz_mut1.lsdfxchain
+    00:28:26.770 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.FxOps - Could not load FX chain zz_mut2.lsdfxchain
+    java.util.concurrent.CompletionException: kotlinx.serialization.MissingFieldException: Field 'baseMax' is required for type with serial name 'llm.slop.liquidlsd
+    java.util.concurrent.CompletionException: kotlinx.serialization.json.internal.JsonDecodingException: Expected end of the object '}', but had 'EOF' instead at pa
+    java.util.concurrent.CompletionException: kotlinx.serialization.json.internal.JsonDecodingException: Unexpected JSON token at offset 0: Expected start of the ob
+    java.util.concurrent.CompletionException: kotlinx.serialization.json.internal.JsonDecodingException: Unexpected JSON token at offset 342: Expected start of the 
+seed 114: actions 578, rc 0, done True, 122 s, fbo 25->32, exits 0, warns 9, findings 2
+    00:29:54.000 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.FxOps - Could not load FX chain zz_trunc.lsdfxchain
+    java.util.concurrent.CompletionException: kotlinx.serialization.json.internal.JsonDecodingException: Expected end of the object '}', but had 'EOF' instead at pa
+seed 115: actions 591, rc 0, done True, 145 s, fbo 27->35, exits 0, warns 6, findings 4
+    00:31:46.293 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.FxOps - Could not load FX chain zz_trunc.lsdfxchain
+    00:32:22.046 [main] ERROR llm.slop.liquidlsd.presets.FxOps - Could not load FX preset zz_mut3.lsdfx
+    java.util.concurrent.CompletionException: kotlinx.serialization.json.internal.JsonDecodingException: Expected end of the object '}', but had 'EOF' instead at pa
+    java.util.concurrent.CompletionException: kotlinx.serialization.json.internal.JsonDecodingException: Unexpected JSON token at offset 202: Expected start of the 
+seed 116: actions 550, rc 0, done True, 146 s, fbo 40->37, exits 0, warns 7, findings 0
+seed 117: actions 563, rc 0, done True, 142 s, fbo 31->36, exits 0, warns 12, findings 5
+    00:36:07.923 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.DeckOps - Failed to load deck preset from /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/pre
+    00:36:20.981 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.DeckOps - Failed to load deck preset from /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/pre
+    00:36:25.696 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.DeckOps - Failed to load deck preset from /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/pre
+    00:36:38.128 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.DeckOps - Failed to load deck preset from /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/pre
+    kotlinx.serialization.json.internal.JsonDecodingException: Unexpected JSON token at offset 27704: Expected quotation mark '"', but had ' ' instead at path: $.parameters
+seed 118: actions 558, rc 0, done True, 150 s, fbo 44->43, exits 0, warns 12, findings 0
+seed 119: actions 501, rc 0, done True, 133 s, fbo 25->30, exits 0, warns 7, findings 5
+    00:42:02.202 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.FxOps - Could not load FX chain zz_mut1.lsdfxchain
+    00:42:03.518 [main] ERROR llm.slop.liquidlsd.presets.FxOps - Could not load FX preset zz_empty.lsdfx
+    00:42:05.348 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.FxOps - Could not load FX chain zz_mut1.lsdfxchain
+    java.util.concurrent.CompletionException: kotlinx.serialization.MissingFieldException: Field 'baseMax' is required for type with serial name 'llm.slop.liquidlsd
+    java.util.concurrent.CompletionException: kotlinx.serialization.json.internal.JsonDecodingException: Expected start of the object '{', but had 'EOF' instead at 
+seed 120: actions 599, rc 0, done True, 137 s, fbo 35->47, exits 0, warns 6, findings 11
+    00:43:10.842 [PresetManager-IO] ERROR l.s.liquidlsd.presets.TransitionOps - Failed to load transition preset /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/t
+    00:43:12.896 [PresetManager-IO] ERROR l.s.liquidlsd.presets.TransitionOps - Failed to load transition preset /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/t
+    00:43:17.492 [PresetManager-IO] ERROR l.s.liquidlsd.presets.TransitionOps - Failed to load transition preset /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/t
+    00:43:19.071 [PresetManager-IO] ERROR l.s.liquidlsd.presets.TransitionOps - Failed to load transition preset /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/t
+    00:43:36.963 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.DeckOps - Failed to load deck preset from /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/pre
+    00:43:38.210 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.DeckOps - Failed to load deck preset from /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/pre
+    00:43:51.578 [main] ERROR llm.slop.liquidlsd.presets.FxOps - Could not load FX preset zz_array.lsdfx
+    java.io.FileNotFoundException: /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/transitions/fuzz/zz_trunc.lsdtrans
+    java.util.concurrent.CompletionException: kotlinx.serialization.json.internal.JsonDecodingException: Unexpected JSON token at offset 0: Expected start of the ob
+    kotlinx.serialization.json.internal.JsonDecodingException: Unexpected JSON token at offset 27704: Expected quotation mark '"', but had ' ' instead at path: $.parameters
+    kotlinx.serialization.json.internal.JsonDecodingException: Unexpected JSON token at offset 410: Expected quotation mark '"', but had 'EOF' instead at path: $.slot.parameters['ro
+seed 121: actions 552, rc 0, done True, 151 s, fbo 32->28, exits 0, warns 8, findings 2
+    00:46:16.628 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.FxOps - Could not load FX chain zz_trunc.lsdfxchain
+    java.util.concurrent.CompletionException: kotlinx.serialization.json.internal.JsonDecodingException: Expected end of the object '}', but had 'EOF' instead at pa
+seed 122: actions 560, rc 0, done True, 136 s, fbo 32->34, exits 0, warns 9, findings 2
+    00:49:06.342 [PresetManager-IO] ERROR llm.slop.liquidlsd.presets.FxOps - Could not load FX chain zz_array.lsdfxchain
+    java.util.concurrent.CompletionException: kotlinx.serialization.json.internal.JsonDecodingException: Unexpected JSON token at offset 0: Expected start of the ob
+seed 123: actions 556, rc 0, done True, 147 s, fbo 27->32, exits 0, warns 5, findings 0
+seed 124: actions 582, rc 0, done True, 141 s, fbo 33->33, exits 0, warns 6, findings 2
+    00:53:04.503 [PresetManager-IO] ERROR l.s.liquidlsd.presets.TransitionOps - Failed to load transition preset /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/t
+    kotlinx.serialization.json.internal.JsonDecodingException: Expected start of the object '{', but had 'EOF' instead at path: $
+seed 125: actions 569, rc 0, done True, 133 s, fbo 34->44, exits 0, warns 7, findings 0
+seed 126: actions 557, rc 0, done True, 146 s, fbo 27->31, exits 0, warns 5, findings 0
+seed 127: actions 541, rc 0, done True, 162 s, fbo 32->34, exits 0, warns 11, findings 6
+    01:01:19.393 [PresetManager-IO] ERROR l.s.liquidlsd.presets.TransitionOps - Failed to load transition preset /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/t
+    01:01:21.802 [PresetManager-IO] ERROR l.s.liquidlsd.presets.TransitionOps - Failed to load transition preset /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/t
+    01:01:23.993 [PresetManager-IO] ERROR l.s.liquidlsd.presets.TransitionOps - Failed to load transition preset /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/t
+    01:01:25.666 [PresetManager-IO] ERROR l.s.liquidlsd.presets.TransitionOps - Failed to load transition preset /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/t
+    01:01:29.114 [PresetManager-IO] ERROR l.s.liquidlsd.presets.TransitionOps - Failed to load transition preset /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/t
+    kotlinx.serialization.json.internal.JsonDecodingException: Unexpected JSON token at offset 410: Expected quotation mark '"', but had 'EOF' instead at path: $.slot.parameters['ro
+seed 128: actions 563, rc 0, done True, 157 s, fbo 34->46, exits 0, warns 8, findings 0
+seed 129: actions 513, rc 0, done True, 144 s, fbo 33->34, exits 0, warns 7, findings 2
+    01:06:38.172 [PresetManager-IO] ERROR l.s.liquidlsd.presets.TransitionOps - Failed to load transition preset /home/gj/projects/liquid-lsd/tests/web/.cache/app/w/mk/cwd/library/t
+    kotlinx.serialization.json.internal.JsonDecodingException: Unexpected JSON token at offset 0: Expected start of the object '{', but had '[' instead at path: $

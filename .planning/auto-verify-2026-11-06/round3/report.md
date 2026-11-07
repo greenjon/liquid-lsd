@@ -27,7 +27,7 @@ Everything ran from `e59bef8` on branch `fixes/app-verify-round3`. App cases run
 
 ## Measurements
 
-- **Desktop audio, 128 BPM**: bass 0.47 in the groove, 0.06 within 3 s of each breakdown and steady to its end. Drop called 0.57 s after the bass returns (1.2 beats), both times, no false drops. Audio Response 0/100/200%: bass 0 / 0.47 / 0.69, BPM 128 throughout, Energy and Drop unchanged. 20 dB down reads quiet about 60 s, then normal; music after silence levels in at once.
+- **Desktop audio, 128 BPM**: bass 0.47 in the groove, 0.06 within 3 s of each breakdown and steady to its end. Drop called 0.57 s after the bass returns (1.2 beats), both times, no false drops. Audio Response 0/100/200%: bass 0 / 0.47 / 0.69, Energy and Drop unchanged. (The offline feed reports the script's clock, 128, so this says nothing about BPM. Corrected in round 4.) 20 dB down reads quiet about 60 s, then normal; music after silence levels in at once.
 - **Off-air frame time**, Nebula and Apollonian, with another run going: fader on A 31-34 ms, centre 35-42 ms, on A with half rate off 39 ms.
 - **Desktop long run**: simulated hour, a new preset every 30 s (120 loads): GPU buffers 33-36, 249-273 MB, no trend; JVM heap 360-554 MB, sawtooth, too short to rule out slow growth. Real-time hours not run.
 - **Web beat phase**: steady after about 100 s: -70 ms at 128 BPM, +110 ms at 174, measured against the audio element's clock. BPM reads 127.7 at 128 and 174.0 at 174.
