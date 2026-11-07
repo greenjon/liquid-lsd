@@ -1,0 +1,39 @@
+  PASS meta_add_remove: Add Target adds the parameter
+  FAIL meta_remove_all: the trash removes the last target   [bloomIntensity:0.0:1.0:false:true]
+  FAIL meta_row_menu: one Metaknob Target check in the row menu toggles the target   [bloomIntensity:0.0:1.0:false:true]
+  PASS meta_invert: ± toggles Invert Direction
+  PASS learn_esc: OSC Learn arms
+  PASS learn_esc: Esc cancels it
+  PASS reset_param_undo: Reset Parameter to Default resets
+  PASS reset_param_undo: Ctrl+Z brings it back
+  PASS chain_load_mouse: Chain View opens from the menu
+  PASS chain_load_mouse: Load turns the load row on
+  FAIL chain_load_mouse: the row's FX3 button loads the highlighted effect into slot 3   [[Bloom, Fluid smear, Bloom]]
+  PASS chain_load_mouse: Ctrl+Z undoes it
+  PASS chain_load_mouse: Esc leaves Chain view
+  PASS fx_reset_slot_undo: Reset Parameters resets the Metaknob
+  PASS fx_reset_slot_undo: Ctrl+Z undoes it
+
+  PASS meta_remove_all: the trash removes the last target
+  PASS chain_load_mouse: Chain View opens from the menu
+  PASS chain_load_mouse: Load turns the load row on
+  FAIL chain_load_mouse: the row's FX3 button loads the highlighted effect into slot 3   [[Bloom, Fluid smear, Bloom]]
+  PASS chain_load_mouse: Ctrl+Z undoes it
+  PASS chain_load_mouse: Esc leaves Chain view
+  PASS meta_row_menu: one Metaknob Target check in the row menu toggles the target
+  PASS chain_load_mouse: Chain View opens from the menu
+  PASS chain_load_mouse: Load turns the load row on
+  PASS chain_load_mouse: the row's FX3 button loads the highlighted effect into slot 3
+  FAIL chain_load_mouse: Ctrl+Z undoes it   [('[Kaleidoscope, Fluid smear, Bloom]', '[Bloom, Fluid smear, Bloom]')]
+  PASS chain_load_mouse: Esc leaves Chain view
+  FAIL chain_undo_steps: one Ctrl+Z per load   [['[Bloom, Fluid smear, Bloom]', '[Kaleidoscope, Fluid smear, Bloom]', '[Kaleidoscope, Fluid smear, Kaleidoscope]', '[Bloom, Fluid smear, Bloom]', '[Bloom, Fluid smear, Bloom]']]
+  PASS chain_undo_steps: one Ctrl+Z per load
+  PASS pair_undo_steps: pair view: one Ctrl+Z per load
+  PASS seq_undo_steps: Randomize changes the steps
+  PASS seq_undo_steps: Ctrl+Z undoes it
+  PASS seq_undo_steps: Invert changes, Ctrl+Z undoes
+  PASS meta_no_target_reload: no targets stays no targets on screen
+  PASS seq_euclid_apply: Euclid Apply writes a pattern and Ctrl+Z undoes it
+  PASS seq_paint: dragging paints the bars, and one Ctrl+Z undoes the whole drag
+  FAIL tw_discrete: a stepped parameter (KIFS Fractal Type) reads as discrete   [M]
+  FAIL tw_discrete: a controller knob steps it cleanly: few distinct values, never backwards   [[0.008, 0.016, 0.024, 0.031, 0.039, 0.047, 0.055, 0.063, 0.071, 0.079, 0.087, 0.094]]

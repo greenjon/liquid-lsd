@@ -37,13 +37,23 @@ fun pushOpenDropdownPadding() {
     // boxes recompute their own position every frame once opened at least once, so this is a
     // no-op for them and they keep their normal anchored-under-the-box placement.
     // An explicit position skips ImGui's own keep-on-screen placement, so near the right edge the menu opens
-    // to the left of the cursor; its width isn't known yet, so this goes by the room left.
-    val pivotX = if (ImGui.getIO().displaySizeX - ImGui.getMousePosX() < POPUP_RIGHT_ROOM) 1f else 0f
-    ImGui.setNextWindowPos(ImGui.getMousePosX(), ImGui.getMousePosY(), ImGuiCond.Appearing, pivotX, 0.5f)
+    // to the left of the cursor, and near the top or bottom it opens away from the edge; its size isn't known
+    // yet, so this goes by the room left.
+    val io = ImGui.getIO()
+    val pivotX = if (io.displaySizeX - ImGui.getMousePosX() < POPUP_RIGHT_ROOM) 1f else 0f
+    val pivotY = when {
+        io.displaySizeY - ImGui.getMousePosY() < POPUP_HALF_HEIGHT -> 1f
+        ImGui.getMousePosY() < POPUP_HALF_HEIGHT -> 0f
+        else -> 0.5f
+    }
+    ImGui.setNextWindowPos(ImGui.getMousePosX(), ImGui.getMousePosY(), ImGuiCond.Appearing, pivotX, pivotY)
 }
 
 /** Pixels needed right of the cursor for a free-floating menu to open that way (wider than the app's context menus). */
 private const val POPUP_RIGHT_ROOM = 320f
+
+/** Half the height of the tallest context menus; closer to the top or bottom edge than this, a menu opens away from it. */
+private const val POPUP_HALF_HEIGHT = 210f
 
 /** Pop the 3 style vars pushed above, after the begin*()-guarded block, regardless of whether it was open. */
 fun popOpenDropdownPadding() {

@@ -278,7 +278,11 @@ object ParametersRenderer {
                 }
             }
             if (ImGui.menuItem("Reset Parameter to Default")) {
-                onPushUndo()
+                // The plain undo step only holds modulators, and a reset also drops the value and its randomize range.
+                val base = param.baseValue; val lo = param.baseMin; val hi = param.baseMax; val rand = param.randomizeBase
+                ParametersUndo.pushUndoState(state, mixer) {
+                    param.baseValue = base; param.baseMin = lo; param.baseMax = hi; param.randomizeBase = rand
+                }
                 param.reset()
             }
             if (ImGui.menuItem("Clear all CVs")) {

@@ -1,0 +1,17 @@
+opts --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g
+2 min rss 1563 | anon=791 dev=583 file=94 [heap]=42 [vvar]=0 [vvar_vclock]=0 | GC(4) Major Collection (Proactive) 348M(17%)->110M(5%) 0.129s
+4 min rss 1587 | anon=857 dev=583 file=94 [heap]=0 [vvar]=0 [vvar_vclock]=0 | GC(9) Major Collection (Proactive) 314M(15%)->110M(5%) 0.117s
+6 min rss 1550 | anon=797 dev=583 file=94 [heap]=21 [vvar]=0 [vvar_vclock]=0 | GC(14) Major Collection (Proactive) 286M(14%)->76M(4%) 0.122s
+8 min rss 1593 | anon=797 dev=583 file=94 [heap]=63 [vvar]=0 [vvar_vclock]=0 | GC(19) Major Collection (Proactive) 278M(14%)->76M(4%) 0.098s
+10 min rss 1588 | anon=798 dev=583 file=94 [heap]=58 [vvar]=0 [vvar_vclock]=0 | GC(23) Major Collection (Proactive) 282M(14%)->78M(4%) 0.093s
+12 min rss 1522 | anon=802 dev=552 file=94 [heap]=21 [vvar]=0 [vvar_vclock]=0 | GC(27) Major Collection (Proactive) 290M(14%)->84M(4%) 0.120s
+14 min rss 1555 | anon=822 dev=522 file=94 [heap]=63 [vvar]=0 [vvar_vclock]=0 | GC(32) Major Collection (Proactive) 286M(14%)->76M(4%) 0.123s
+16 min rss 1552 | anon=811 dev=519 file=94 [heap]=73 [vvar]=0 [vvar_vclock]=0 | GC(38) Major Collection (Proactive) 294M(14%)->82M(4%) 0.106s
+18 min rss 1543 | anon=811 dev=509 file=94 [heap]=73 [vvar]=0 [vvar_vclock]=0 | GC(45) Major Collection (Proactive) 282M(14%)->76M(4%) 0.088s
+20 min rss 1506 | anon=811 dev=509 file=94 [heap]=37 [vvar]=0 [vvar_vclock]=0 | GC(50) Major Collection (Proactive) 294M(14%)->86M(4%) 0.123s
+22 min rss 1517 | anon=859 dev=509 file=94 [heap]=0 [vvar]=0 [vvar_vclock]=0 | GC(56) Major Collection (Proactive) 282M(14%)->84M(4%) 0.098s
+24 min rss 1533 | anon=838 dev=509 file=94 [heap]=37 [vvar]=0 [vvar_vclock]=0 | GC(61) Major Collection (Proactive) 288M(14%)->84M(4%) 0.139s
+26 min rss 1565 | anon=905 dev=509 file=94 [heap]=0 [vvar]=0 [vvar_vclock]=0 | GC(65) Major Collection (Proactive) 284M(14%)->82M(4%) 0.096s
+28 min rss 1576 | anon=838 dev=509 file=94 [heap]=79 [vvar]=0 [vvar_vclock]=0 | GC(69) Major Collection (Proactive) 332M(16%)->98M(5%) 0.109s
+30 min rss 1576 | anon=838 dev=509 file=94 [heap]=79 [vvar]=0 [vvar_vclock]=0 | GC(71) Major Collection (Proactive) 294M(14%)->116M(6%) 0.483s
+stopped: time

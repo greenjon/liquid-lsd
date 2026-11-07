@@ -149,6 +149,10 @@ tasks.withType<JavaExec> {
 
 // Render on the NVIDIA GPU (PRIME offload) when running from Gradle on Linux. Skip with -PnoNvidia.
 tasks.named<JavaExec>("run") {
+    // NVIDIA's threaded optimizations held on to about 20 MB of memory a minute under X11. Same as the Linux launchers.
+    if (System.getProperty("os.name").lowercase().contains("linux") && System.getenv("__GL_THREADED_OPTIMIZATIONS") == null) {
+        environment("__GL_THREADED_OPTIMIZATIONS", "0")
+    }
     if (System.getProperty("os.name").lowercase().contains("linux") && !project.hasProperty("noNvidia")) {
         environment("__NV_PRIME_RENDER_OFFLOAD", "1")
         environment("__GLX_VENDOR_LIBRARY_NAME", "nvidia")
@@ -502,6 +506,9 @@ tasks.processResources {
             if (libraryDir.exists()) {
                 val destLib = file("$distDir/library")
                 libraryDir.copyRecursively(destLib, overwrite = true)
+                // The bundled sources ship in the jar: the first run copies them out, and a later version only replaces files nobody
+                // edited. A copy in the zip would overwrite edited shaders the moment a new version is unzipped over an old one.
+                File(destLib, "sources").deleteRecursively()
                 println("Copied library to ${destLib.absolutePath}")
             }
             val defPresets = file("defaults/presets")
@@ -622,6 +629,8 @@ tasks.processResources {
             #!/bin/bash
             SCRIPT_DIR="$(cd "$(dirname "${'$'}{BASH_SOURCE[0]}")" && pwd)"
             cd "${'$'}SCRIPT_DIR"
+            # NVIDIA's threaded optimizations held on to about 20 MB of memory a minute under X11.
+            export __GL_THREADED_OPTIMIZATIONS="${'$'}{__GL_THREADED_OPTIMIZATIONS:-0}"
 
             if [ -f "jre/linux-x64/bin/java" ]; then
                 chmod +x "jre/linux-x64/bin/java"
@@ -638,6 +647,8 @@ tasks.processResources {
             #!/bin/bash
             SCRIPT_DIR="$(cd "$(dirname "${'$'}{BASH_SOURCE[0]}")" && pwd)"
             cd "${'$'}SCRIPT_DIR"
+            # NVIDIA's threaded optimizations held on to about 20 MB of memory a minute under X11.
+            export __GL_THREADED_OPTIMIZATIONS="${'$'}{__GL_THREADED_OPTIMIZATIONS:-0}"
 
             if [ -f "jre/linux-arm64/bin/java" ]; then
                 chmod +x "jre/linux-arm64/bin/java"

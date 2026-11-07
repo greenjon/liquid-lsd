@@ -158,8 +158,7 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
         val tag = parametersState.focusedPair ?: return
         val pair = PerfRows.pairFor(tag) ?: return
         if (ImGui.beginChild("##pair_bay_area", 0f, bayH, true)) {
-            // Browse picks push undo steps, and no Params editor is drawn here to run the keys.
-            handleDeepEditKeys(parametersState, mixer, fullSet = false)
+            // No key handling here: beginFrame already runs undo when no Params editor owns the keys. Running it here too made one Ctrl+Z undo two steps.
             val binding = browseBay.pairBinding(session, mixer, parametersState, pair)
             // Before the header, so its chip already shows the tab a new target opens on.
             binding?.let { BrowserDock.syncTab(it, parametersState.dockSelectionEpoch) }

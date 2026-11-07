@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Fixes From Scripted Checks, Round 2: Undo, Menus, Upgrades, Memory (`ui/PerformanceDeepEditBay.kt`, `ui/ParametersRenderer.kt`, `ui/DropdownStyleHelper.kt`, `build.gradle.kts`)
+- **Fixed: one Ctrl+Z undid two steps in the pair view and Chain view.** Two loads in a row went back together, and the second press found nothing.
+- **Fixed: Reset Parameter to Default couldn't be undone.** Ctrl+Z brought back the modulators but not the value or its random range.
+- **Fixed: right-click menus near the bottom of the window were cut off.** At 1280x720 the Edit row menu lost its last items, Metaknob Target among them, on lower rows. Menus near the top or bottom edge now open away from it.
+- **Fixed: unzipping a new version over an old one overwrote shaders you had edited.** The zip carried a copy of the bundled sources. They now come only from the app itself, which keeps edited files. `Getting Started` now says how to upgrade.
+- **Fixed: on Linux with an NVIDIA card, memory grew all the time the app ran.** It held on to about 20 MB more each minute under X11, whatever was on screen, and reached 5.8 GB after 8 hours. The cause is the driver's threaded optimizations, so the Linux launchers now turn them off. To turn them back on, set `__GL_THREADED_OPTIMIZATIONS=1` before starting the app.
+
 ### Fixes From Scripted Checks: Simulated Twister, Browser Tests, Music (`web/renderer.js`, `web/autopilot.js`, `web/sw.js`, `web/tv.css`, `ui/browser/QueueKnobs.kt`, `ui/SeqSection.kt`, `ui/PerformanceDeepEditBay.kt`, `presets/DeckOps.kt`, `tests/web/`)
 - **Fixed: on the web TV, the GPU test passed every machine in Chromium browsers,** so Intel laptops got the heavy scenes meant for fast GPUs. It timed a call that doesn't wait for the GPU. It now does: the RTX A2000 measures 4 ms and an Intel UHD 61 ms against a limit of 12 ms, so slower machines keep the light scenes (TV v29).
 - **Fixed: a web TV breakdown could miss its calm look.** If the breakdown began during a scene change, the calm scene waited out a full 16 bars, usually past the drop. It now fades in at the next bar line (TV v29).

@@ -1,0 +1,12 @@
+opts --enable-native-access=ALL-UNNAMED -ea -XX:+UseZGC -XX:MaxGCPauseMillis=2 -Xms512m -Xmx2g
+2 min rss 748 | dev=310 anon=232 file=53 nvidia=52 [heap]=0 [vvar]=0 | GC(0) Major Collection (Warmup) 206M(10%)->54M(3%) 0.043s
+4 min rss 762 | dev=323 anon=232 file=53 nvidia=52 [heap]=0 [vvar]=0 | GC(0) Major Collection (Warmup) 206M(10%)->54M(3%) 0.043s
+6 min rss 776 | dev=337 anon=232 file=53 nvidia=52 [heap]=0 [vvar]=0 | GC(0) Major Collection (Warmup) 206M(10%)->54M(3%) 0.043s
+8 min rss 791 | dev=351 anon=233 file=53 nvidia=52 [heap]=0 [vvar]=0 | GC(0) Major Collection (Warmup) 206M(10%)->54M(3%) 0.043s
+10 min rss 804 | dev=364 anon=233 file=53 nvidia=52 [heap]=0 [vvar]=0 | GC(0) Major Collection (Warmup) 206M(10%)->54M(3%) 0.043s
+12 min rss 831 | dev=380 anon=243 file=53 nvidia=52 [heap]=0 [vvar]=0 | GC(1) Major Collection (Warmup) 410M(20%)->88M(4%) 0.068s
+14 min rss 837 | dev=386 anon=243 file=53 nvidia=52 [heap]=0 [vvar]=0 | GC(1) Major Collection (Warmup) 410M(20%)->88M(4%) 0.068s
+16 min rss 837 | dev=386 anon=243 file=53 nvidia=52 [heap]=0 [vvar]=0 | GC(1) Major Collection (Warmup) 410M(20%)->88M(4%) 0.068s
+18 min rss 838 | dev=387 anon=244 file=53 nvidia=52 [heap]=0 [vvar]=0 | GC(1) Major Collection (Warmup) 410M(20%)->88M(4%) 0.068s
+20 min rss 839 | dev=387 anon=244 file=53 nvidia=52 [heap]=0 [vvar]=0 | GC(1) Major Collection (Warmup) 410M(20%)->88M(4%) 0.068s
+stopped: time
