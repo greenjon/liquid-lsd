@@ -36,11 +36,11 @@ Everything ran from `e59bef8` on branch `fixes/app-verify-round3`. App cases run
 - **Web network loss**: NO SIGNAL in 4.4-5.4 s, back in 0.1-9.7 s.
 - **Web 25-minute soak**: 60 fps, nodes 843 and listeners 130 flat, heap 4.3 to 4.9 MB, textures 29-52 by scene, programs level off at 62, no errors.
 
-## Decisions for the user
+## Decisions (2026-11-06)
 
-- Audio Response 0%: band signals go to zero, but Energy and Drop run by design, so stock looks still move in sections. The checklist says both things.
-- An 85 BPM synthesized track is read as 170, so it gets fast-music looks. Real slow shows not tried.
-- CH 34 `web-build-drop-spiral` was nearly black on the moment sampled.
+- Audio Response 0% keeps Energy and Drop running: kept, tooltip and guide reworded.
+- An 85 BPM synthesized track reads as 170: the user sees no problem so far and will watch real slow shows.
+- CH 34 `web-build-drop-spiral` nearly black on one sample: fine.
 
 ## Limits
 

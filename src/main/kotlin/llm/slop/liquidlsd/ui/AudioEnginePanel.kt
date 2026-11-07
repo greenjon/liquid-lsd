@@ -340,7 +340,7 @@ object AudioEnginePanel {
                     AppPreferencesStore.savePreferences()
                 }
             )
-            itemTooltip("How strongly everything that follows the music moves: scales the Amp, Bass, Mid, High and Flux signals that every audio modulator reads. 0% = nothing follows the music, 100% = as tuned, 200% = twice as much (loud passages hit the top sooner). Auto gain keeps this the same at any input level. Beat detection, LFOs and the beat clock are not affected.")
+            itemTooltip("How strongly the picture follows the music moment to moment: scales the Amp, Bass, Mid, High and Flux signals that audio modulators read. 0% = these stop moving, 100% = as tuned, 200% = twice as much (loud passages hit the top sooner). Auto gain keeps this the same at any input level. Section signals (Energy and Drop) are not scaled, so at 0% breakdowns and drops still change the stock looks. Beat detection, LFOs and the beat clock are not affected either.")
             val agc = audioEngine.agc
             theme.caption("Auto gain  amp %.1fx  bass %.1fx  mid %.1fx  high %.1fx".format(
                 agc.boost(AudioAgc.AMP), agc.boost(AudioAgc.BASS), agc.boost(AudioAgc.MID), agc.boost(AudioAgc.HIGH)))
