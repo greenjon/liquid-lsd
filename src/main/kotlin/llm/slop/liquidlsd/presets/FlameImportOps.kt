@@ -52,7 +52,7 @@ object FlameImportOps {
             var target = File(folder, "$stem.lsd")
             while (target.exists()) target = File(folder, "$stem-${++n}.lsd")
             val dto = FlameImporter.toPresetDto(flame, target.nameWithoutExtension)
-            target.writeText(PresetManager.json.encodeToString(dto))
+            llm.slop.liquidlsd.utils.AtomicFile.write(target, PresetManager.json.encodeToString(dto))
             files += target
             notes += flame.notes.map { "${flame.name}: $it" }
         }

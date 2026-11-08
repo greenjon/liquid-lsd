@@ -12,7 +12,22 @@ import java.util.concurrent.CompletableFuture
 object PresetRepository {
     private val logger = KotlinLogging.logger {}
 
-    fun saveDeckPresetAsync(file: File, deck: Deck, name: String, tags: List<String> = emptyList(), deckIndex: Int = -1) {
+    /** Logs a failed save and tells the user why ("No space left on device", "the file is read-only"). */
+    private fun saveFailed(what: String, file: File, e: Exception) {
+        logger.error(e) { "Failed to save $what to ${file.absolutePath}" }
+        llm.slop.liquidlsd.ui.ToastOverlay.show("Could not save $what ${file.name}: ${failureReason(e)}", 8000L)
+    }
+
+    /** The short reason for a failed file write, without the path the exception repeats. */
+    internal fun failureReason(e: Exception): String = when (e) {
+        is java.nio.file.AccessDeniedException -> if (e.reason == "file is read-only") "the file is read-only" else "permission denied"
+        is java.nio.file.FileSystemException -> e.reason ?: "see log"
+        is java.io.FileNotFoundException -> e.message?.substringAfterLast(" (", "")?.removeSuffix(")")?.ifBlank { null } ?: "see log"
+        else -> e.message?.ifBlank { null } ?: "see log"
+    }
+
+    /** [onFailed] runs on the IO thread after a failed write (the message is already shown). */
+    fun saveDeckPresetAsync(file: File, deck: Deck, name: String, tags: List<String> = emptyList(), deckIndex: Int = -1, onFailed: (() -> Unit)? = null) {
         if (deck.source is llm.slop.liquidlsd.rendering.ExternalVideoSource) {
             logger.warn { "Refusing to save deck preset: source is an external video stream (${deck.source.displayName})" }
             return
@@ -42,7 +57,8 @@ object PresetRepository {
                 logger.info { "Saving deck preset to ${file.absolutePath} in background..." }
                 val content = PresetManager.json.encodeToString(dto)
                 file.parentFile?.mkdirs()
-                file.writeText(content)
+                llm.slop.liquidlsd.utils.AtomicFile.write(file, content)
+                llm.slop.liquidlsd.ui.FileSystemManager.clearScanCache() // the Library shows the new file at once
                 when (deckIndex) {
                     0 -> PresetManager.activePresetMtimeA = file.lastModified().takeIf { it > 0L }
                     1 -> PresetManager.activePresetMtimeB = file.lastModified().takeIf { it > 0L }
@@ -54,7 +70,8 @@ object PresetRepository {
                     PresetManager.deckStatus[deckIndex].set(PresetIOStatus(PresetIOState.IDLE))
                 }
             } catch (e: Exception) {
-                logger.error(e) { "Failed to save deck preset to ${file.absolutePath}" }
+                saveFailed("preset", file, e)
+                onFailed?.invoke()
                 if (deckIndex in 0..3) {
                     PresetManager.deckStatus[deckIndex].set(PresetIOStatus(PresetIOState.ERROR, e.message ?: "Unknown error"))
                 }
@@ -74,10 +91,11 @@ object PresetRepository {
                 logger.info { "Saving FX preset to ${file.absolutePath}..." }
                 val dto = FXPresetDto(name = name, tags = tags, slot = slotDto)
                 file.parentFile?.mkdirs()
-                file.writeText(PresetManager.json.encodeToString(dto))
+                llm.slop.liquidlsd.utils.AtomicFile.write(file, PresetManager.json.encodeToString(dto))
+                llm.slop.liquidlsd.ui.FileSystemManager.clearScanCache() // the Library shows the new file at once
                 logger.info { "FX preset saved successfully to ${file.name}" }
             } catch (e: Exception) {
-                logger.error(e) { "Failed to save FX preset to ${file.absolutePath}" }
+                saveFailed("FX preset", file, e)
             }
         }, PresetManager.presetIoExecutor)
     }
@@ -97,12 +115,12 @@ object PresetRepository {
                 logger.info { "Saving FX chain to ${file.absolutePath}..." }
                 val dto = chainDto.copy(name = name, tags = tags)
                 file.parentFile?.mkdirs()
-                file.writeText(PresetManager.json.encodeToString(dto))
+                llm.slop.liquidlsd.utils.AtomicFile.write(file, PresetManager.json.encodeToString(dto))
+                llm.slop.liquidlsd.ui.FileSystemManager.clearScanCache() // the Library shows the new file at once
                 logger.info { "FX chain saved successfully to ${file.name}" }
                 true
             } catch (e: Exception) {
-                logger.error(e) { "Failed to save FX chain to ${file.absolutePath}" }
-                llm.slop.liquidlsd.ui.ToastOverlay.show("Could not save FX chain ${file.name} (see log)")
+                saveFailed("FX chain", file, e)
                 false
             }
         }, PresetManager.presetIoExecutor)
@@ -121,10 +139,11 @@ object PresetRepository {
                 logger.info { "Saving Transition preset to ${file.absolutePath}..." }
                 val dto = TransitionPresetDto(name = name, tags = tags, slot = slotDto)
                 file.parentFile?.mkdirs()
-                file.writeText(PresetManager.json.encodeToString(dto))
+                llm.slop.liquidlsd.utils.AtomicFile.write(file, PresetManager.json.encodeToString(dto))
+                llm.slop.liquidlsd.ui.FileSystemManager.clearScanCache() // the Library shows the new file at once
                 logger.info { "Transition preset saved successfully to ${file.name}" }
             } catch (e: Exception) {
-                logger.error(e) { "Failed to save Transition preset to ${file.absolutePath}" }
+                saveFailed("transition", file, e)
             }
         }, PresetManager.presetIoExecutor)
     }
@@ -134,10 +153,11 @@ object PresetRepository {
             try {
                 logger.info { "Saving Transition playlist to ${file.absolutePath}..." }
                 file.parentFile?.mkdirs()
-                file.writeText(PresetManager.json.encodeToString(playlist))
+                llm.slop.liquidlsd.utils.AtomicFile.write(file, PresetManager.json.encodeToString(playlist))
+                llm.slop.liquidlsd.ui.FileSystemManager.clearScanCache() // the Library shows the new file at once
                 logger.info { "Transition playlist saved successfully to ${file.name}" }
             } catch (e: Exception) {
-                logger.error(e) { "Failed to save Transition playlist to ${file.absolutePath}" }
+                saveFailed("transition playlist", file, e)
             }
         }, PresetManager.presetIoExecutor)
     }
@@ -155,10 +175,11 @@ object PresetRepository {
             try {
                 logger.info { "Saving FX playlist to ${file.absolutePath}..." }
                 file.parentFile?.mkdirs()
-                file.writeText(PresetManager.json.encodeToString(playlist))
+                llm.slop.liquidlsd.utils.AtomicFile.write(file, PresetManager.json.encodeToString(playlist))
+                llm.slop.liquidlsd.ui.FileSystemManager.clearScanCache() // the Library shows the new file at once
                 logger.info { "FX playlist saved successfully to ${file.name}" }
             } catch (e: Exception) {
-                logger.error(e) { "Failed to save FX playlist to ${file.absolutePath}" }
+                saveFailed("FX playlist", file, e)
             }
         }, PresetManager.presetIoExecutor)
     }

@@ -132,7 +132,7 @@ object BrowserPopupHandler {
                 val content = file.readText()
                 val dto = json.decodeFromString<DeckPresetDto>(content)
                 val updated = dto.copy(name = cleanName, tags = newTags)
-                targetFile.writeText(json.encodeToString(DeckPresetDto.serializer(), updated))
+                llm.slop.liquidlsd.utils.AtomicFile.write(targetFile, json.encodeToString(DeckPresetDto.serializer(), updated))
                 FileSystemManager.clearScanCache()
                 LibraryPanel.refreshAssets()
                 onDuplicateSuccess?.invoke(targetFile.absolutePath)
@@ -168,7 +168,7 @@ object BrowserPopupHandler {
                 put("name", JsonPrimitive(newName))
                 put("tags", JsonArray(newTags.map(::JsonPrimitive)))
             })
-            llm.slop.liquidlsd.control.UserJsonFiles.writeAtomic(file, json.encodeToString(JsonObject.serializer(), updated))
+            llm.slop.liquidlsd.utils.AtomicFile.write(file, json.encodeToString(JsonObject.serializer(), updated))
         } catch (e: Exception) {
             logger.error(e) { "Failed to update preset file metadata for ${file.name}" }
         }
@@ -202,9 +202,10 @@ object BrowserPopupHandler {
             ImGui.text("Rename $typeStr to:")
             ModalKeys.focusOnOpen()
             ImGui.inputText("##renameAssetInput", renameBuffer)
+            val nameOk = llm.slop.liquidlsd.ui.NameCheck.ok(renameBuffer.get())
             val keyAnswer = ModalKeys.answer()
             
-            if (ButtonChrome.button("Rename", 120f, 0f) || keyAnswer == true) {
+            if ((ButtonChrome.button("Rename", 120f, 0f) || keyAnswer == true) && nameOk) {
                 val newName = renameBuffer.get().trim()
                 if (newName.isNotBlank()) {
                     FileSystemManager.renameFile(target.path, newName).onSuccess { newPath ->
@@ -351,8 +352,9 @@ object BrowserPopupHandler {
             ImGui.separator()
             ModalKeys.focusOnOpen()
             ImGui.inputText("Name", newPlaylistNameBuffer)
+            val nameOk = llm.slop.liquidlsd.ui.NameCheck.ok(newPlaylistNameBuffer.get())
             val keyAnswer = ModalKeys.answer()
-            if (ButtonChrome.button("Create", 120f, 0f) || keyAnswer == true) {
+            if ((ButtonChrome.button("Create", 120f, 0f) || keyAnswer == true) && nameOk) {
                 val name = newPlaylistNameBuffer.get().trim()
                 if (name.isNotBlank()) {
                     if (isTransMode) {
@@ -361,7 +363,7 @@ object BrowserPopupHandler {
                         if (FileSystemManager.isManagedAssetPath(file)) {
                             val dto = TransitionPlaylistDto(name = name)
                             file.parentFile?.mkdirs()
-                            file.writeText(json.encodeToString(TransitionPlaylistDto.serializer(), dto))
+                            llm.slop.liquidlsd.utils.AtomicFile.write(file, json.encodeToString(TransitionPlaylistDto.serializer(), dto))
                             LibraryPanel.selectedTransitionPlaylistFile = file
                             LibraryPanel.refreshAssets()
                         } else {
@@ -373,7 +375,7 @@ object BrowserPopupHandler {
                         if (FileSystemManager.isManagedAssetPath(file)) {
                             val dto = FXPlaylistDto(name = name)
                             file.parentFile?.mkdirs()
-                            file.writeText(json.encodeToString(FXPlaylistDto.serializer(), dto))
+                            llm.slop.liquidlsd.utils.AtomicFile.write(file, json.encodeToString(FXPlaylistDto.serializer(), dto))
                             LibraryPanel.selectedFxPlaylistFile = file
                             LibraryPanel.refreshAssets()
                         } else {
@@ -403,8 +405,9 @@ object BrowserPopupHandler {
             ImGui.separator()
             ModalKeys.focusOnOpen()
             ImGui.inputText("Playlist Name", exportQueueNameBuffer)
+            val nameOk = llm.slop.liquidlsd.ui.NameCheck.ok(exportQueueNameBuffer.get())
             val keyAnswer = ModalKeys.answer()
-            if (ButtonChrome.button("Export", 120f, 0f) || keyAnswer == true) {
+            if ((ButtonChrome.button("Export", 120f, 0f) || keyAnswer == true) && nameOk) {
                 val name = exportQueueNameBuffer.get().trim()
                 if (name.isNotBlank()) {
                     PlaylistManager.createPlaylist(name, FileSystemManager.getPlaylistsRoot()).onSuccess { playlist ->
@@ -432,8 +435,9 @@ object BrowserPopupHandler {
             ImGui.separator()
             ModalKeys.focusOnOpen()
             ImGui.inputText("Playlist Name", exportBgQueueNameBuffer)
+            val nameOk = llm.slop.liquidlsd.ui.NameCheck.ok(exportBgQueueNameBuffer.get())
             val keyAnswer = ModalKeys.answer()
-            if (ButtonChrome.button("Export", 120f, 0f) || keyAnswer == true) {
+            if ((ButtonChrome.button("Export", 120f, 0f) || keyAnswer == true) && nameOk) {
                 val name = exportBgQueueNameBuffer.get().trim()
                 if (name.isNotBlank()) {
                     PlaylistManager.createPlaylist(name, FileSystemManager.getPlaylistsRoot()).onSuccess { playlist ->
@@ -461,8 +465,9 @@ object BrowserPopupHandler {
             ImGui.separator()
             ModalKeys.focusOnOpen()
             ImGui.inputText("Playlist Name", exportTransQueueNameBuffer)
+            val nameOk = llm.slop.liquidlsd.ui.NameCheck.ok(exportTransQueueNameBuffer.get())
             val keyAnswer = ModalKeys.answer()
-            if (ButtonChrome.button("Export", 120f, 0f) || keyAnswer == true) {
+            if ((ButtonChrome.button("Export", 120f, 0f) || keyAnswer == true) && nameOk) {
                 val name = exportTransQueueNameBuffer.get().trim()
                 if (name.isNotBlank()) {
                     val root = FileSystemManager.getTransitionPlaylistsRoot()
@@ -471,7 +476,7 @@ object BrowserPopupHandler {
                         val itemsList = TransitionQueueManager.queue.map { it.absolutePath }
                         val dto = TransitionPlaylistDto(name = name, items = itemsList)
                         file.parentFile?.mkdirs()
-                        file.writeText(json.encodeToString(TransitionPlaylistDto.serializer(), dto))
+                        llm.slop.liquidlsd.utils.AtomicFile.write(file, json.encodeToString(TransitionPlaylistDto.serializer(), dto))
                         LibraryPanel.selectedTransitionPlaylistFile = file
                         LibraryPanel.refreshAssets()
                     } else {
@@ -496,8 +501,9 @@ object BrowserPopupHandler {
             ImGui.separator()
             ModalKeys.focusOnOpen()
             ImGui.inputText("Playlist Name", exportFxQueueNameBuffer)
+            val nameOk = llm.slop.liquidlsd.ui.NameCheck.ok(exportFxQueueNameBuffer.get())
             val keyAnswer = ModalKeys.answer()
-            if (ButtonChrome.button("Export", 120f, 0f) || keyAnswer == true) {
+            if ((ButtonChrome.button("Export", 120f, 0f) || keyAnswer == true) && nameOk) {
                 val name = exportFxQueueNameBuffer.get().trim()
                 if (name.isNotBlank()) {
                     val root = FileSystemManager.getFxPlaylistsRoot()
@@ -506,7 +512,7 @@ object BrowserPopupHandler {
                         val itemsList = FXQueueManager.queue.map { it.absolutePath }
                         val dto = FXPlaylistDto(name = name, items = itemsList)
                         file.parentFile?.mkdirs()
-                        file.writeText(json.encodeToString(FXPlaylistDto.serializer(), dto))
+                        llm.slop.liquidlsd.utils.AtomicFile.write(file, json.encodeToString(FXPlaylistDto.serializer(), dto))
                         LibraryPanel.selectedFxPlaylistFile = file
                         LibraryPanel.refreshAssets()
                     } else {
@@ -531,8 +537,9 @@ object BrowserPopupHandler {
             ImGui.separator()
             ModalKeys.focusOnOpen()
             ImGui.inputText("Playlist Name", exportFxBgQueueNameBuffer)
+            val nameOk = llm.slop.liquidlsd.ui.NameCheck.ok(exportFxBgQueueNameBuffer.get())
             val keyAnswer = ModalKeys.answer()
-            if (ButtonChrome.button("Export", 120f, 0f) || keyAnswer == true) {
+            if ((ButtonChrome.button("Export", 120f, 0f) || keyAnswer == true) && nameOk) {
                 val name = exportFxBgQueueNameBuffer.get().trim()
                 if (name.isNotBlank()) {
                     val root = FileSystemManager.getFxPlaylistsRoot()
@@ -541,7 +548,7 @@ object BrowserPopupHandler {
                         val itemsList = FXBgQueueManager.queue.map { it.absolutePath }
                         val dto = FXPlaylistDto(name = name, items = itemsList)
                         file.parentFile?.mkdirs()
-                        file.writeText(json.encodeToString(FXPlaylistDto.serializer(), dto))
+                        llm.slop.liquidlsd.utils.AtomicFile.write(file, json.encodeToString(FXPlaylistDto.serializer(), dto))
                         LibraryPanel.selectedFxPlaylistFile = file
                         LibraryPanel.refreshAssets()
                     } else {

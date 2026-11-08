@@ -60,8 +60,13 @@ class JackClient(
         }, 1, 1, TimeUnit.SECONDS)
     }
 
+    /** Set from JACK's shutdown callback when the server goes away (PipeWire restarted, jackd stopped). */
+    @Volatile
+    private var serverGone = false
+
+    /** False once the server has gone away, so the watchdog reconnects instead of keeping a dead client. */
     val isConnected: Boolean
-        get() = client != null
+        get() = client != null && !serverGone
 
     /**
      * Initializes and activates the JACK client.
@@ -69,6 +74,7 @@ class JackClient(
     fun start(): Boolean {
         try {
         lastStartFailure = null
+        serverGone = false
         lastStartFailureMessage = null
             logger.info { "Starting JACK Audio client..." }
             val jack = Jack.getInstance()
@@ -109,6 +115,9 @@ class JackClient(
                 }
                 true
             }
+
+            // Only a flag here: the callback runs on a JACK thread while the server is going away.
+            client!!.onShutdown { serverGone = true }
 
             // Activate audio thread
             client!!.activate()
@@ -189,7 +198,10 @@ class JackClient(
         val c = client
         val pL = inputPortL
         val pR = inputPortR
-        if (c != null) {
+        if (c != null && serverGone) {
+            // The server is gone: disconnecting, deactivating or closing would talk to a dead connection.
+            logger.info { "JACK server went away; dropping the client" }
+        } else if (c != null) {
             try {
                 logger.info { "Stopping JACK client..." }
                 val jack = Jack.getInstance()

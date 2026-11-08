@@ -86,7 +86,9 @@ object FxSlotCell {
         val h = HEIGHT
 
         val bgAlpha = if (fx == null) 0.25f else 0.45f
-        dl.addRectFilled(x, y, x + w, y + h, TangoPalette.u32(TangoPalette.FX_CELL_BG_RGB, bgAlpha), 4f)
+        // Light theme: a light surface (a dark wash over white came out mid-grey under grey text).
+        val cellBg = if (TangoPalette.isLightTheme) ImGui.getColorU32(ImGuiCol.FrameBg) else TangoPalette.u32(TangoPalette.FX_CELL_BG_RGB, bgAlpha)
+        dl.addRectFilled(x, y, x + w, y + h, cellBg, 4f)
 
         // -- ◀ (hover only) -----------------------------------------------------------------
         // The arrows only appear while the mouse is over the cell, so the name gets the full width.
@@ -161,8 +163,8 @@ object FxSlotCell {
             val textCol = when {
                 fx == null -> TangoPalette.FX_SLOT_NAME_EMPTY.u32()
                 !fx.enabled -> TangoPalette.FX_SLOT_NAME_OFF.u32()
-                isThisSlotFocused -> TangoPalette.u32(TangoPalette.SYNC.bright)
-                nameHovered -> TangoPalette.WHITE.u32()
+                isThisSlotFocused -> TangoPalette.FX_SLOT_NAME_FOCUS.u32()
+                nameHovered -> TangoPalette.FX_SLOT_NAME_HOVER.u32()
                 else -> TangoPalette.FX_SLOT_NAME.u32()
             }
             dl.addText(nameX + (nameW - tw) / 2f, TextFit.centeredY(y, h, ImGui.getTextLineHeight()), textCol, shown)

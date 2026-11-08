@@ -210,6 +210,16 @@ jobs:
           ls library/natives/Syphon.framework/Versions/A
           rm syphon.zip
 
+      - name: Download Spout library (Windows)
+        # SpoutLibrary.dll 2.007.017 (MD build), the version SpoutApi's vtable slots were checked against. Pinned by hash.
+        run: |
+          mkdir -p library/natives
+          curl -fL "https://github.com/leadedge/Spout2/releases/download/2.007.017/Spout-SDK-binaries_2-007-017_1.zip" -o spout.zip
+          echo "695f20e3505fa0da51b2eb959af359f5d9e2c914bb9676e9118d19f6a5424bf4  spout.zip" | sha256sum -c -
+          unzip -q -j spout.zip "Spout-SDK-binaries/Libs_2-007-017/MD/bin/SpoutLibrary.dll" -d library/natives
+          ls -l library/natives/SpoutLibrary.dll
+          rm spout.zip
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:

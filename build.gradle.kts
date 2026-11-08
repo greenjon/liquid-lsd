@@ -631,6 +631,12 @@ tasks.processResources {
             cd "${'$'}SCRIPT_DIR"
             # NVIDIA's threaded optimizations held on to about 20 MB of memory a minute under X11.
             export __GL_THREADED_OPTIMIZATIONS="${'$'}{__GL_THREADED_OPTIMIZATIONS:-0}"
+            # Java writes file names in the locale's charset: under LANG=C a preset named "Café" would be saved as "Caf?".
+            if [ "${'$'}(locale charmap 2>/dev/null)" != "UTF-8" ]; then
+                for l in C.UTF-8 C.utf8 en_US.UTF-8 en_US.utf8; do
+                    if locale -a 2>/dev/null | grep -qx "${'$'}l"; then export LC_ALL="${'$'}l"; break; fi
+                done
+            fi
 
             if [ -f "jre/linux-x64/bin/java" ]; then
                 chmod +x "jre/linux-x64/bin/java"
@@ -649,6 +655,12 @@ tasks.processResources {
             cd "${'$'}SCRIPT_DIR"
             # NVIDIA's threaded optimizations held on to about 20 MB of memory a minute under X11.
             export __GL_THREADED_OPTIMIZATIONS="${'$'}{__GL_THREADED_OPTIMIZATIONS:-0}"
+            # Java writes file names in the locale's charset: under LANG=C a preset named "Café" would be saved as "Caf?".
+            if [ "${'$'}(locale charmap 2>/dev/null)" != "UTF-8" ]; then
+                for l in C.UTF-8 C.utf8 en_US.UTF-8 en_US.utf8; do
+                    if locale -a 2>/dev/null | grep -qx "${'$'}l"; then export LC_ALL="${'$'}l"; break; fi
+                done
+            fi
 
             if [ -f "jre/linux-arm64/bin/java" ]; then
                 chmod +x "jre/linux-arm64/bin/java"
@@ -666,8 +678,9 @@ tasks.processResources {
             SCRIPT_DIR="$(cd "$(dirname "${'$'}{BASH_SOURCE[0]}")" && pwd)"
             cd "${'$'}SCRIPT_DIR"
 
-            # Remove quarantine attribute from bundled JRE if present (macOS Gatekeeper)
-            xattr -dr com.apple.quarantine jre 2>/dev/null || true
+            # Remove the download quarantine from the whole folder (macOS Gatekeeper): the bundled JRE, and the
+            # Syphon framework in library/natives, which won't load while quarantined.
+            xattr -dr com.apple.quarantine . 2>/dev/null || true
 
             JAVA_BIN=""
             if [ -f "jre/macos-aarch64/Contents/Home/bin/java" ]; then
@@ -692,8 +705,9 @@ tasks.processResources {
             SCRIPT_DIR="$(cd "$(dirname "${'$'}{BASH_SOURCE[0]}")" && pwd)"
             cd "${'$'}SCRIPT_DIR"
 
-            # Remove quarantine attribute from bundled JRE if present (macOS Gatekeeper)
-            xattr -dr com.apple.quarantine jre 2>/dev/null || true
+            # Remove the download quarantine from the whole folder (macOS Gatekeeper): the bundled JRE, and the
+            # Syphon framework in library/natives, which won't load while quarantined.
+            xattr -dr com.apple.quarantine . 2>/dev/null || true
 
             JAVA_BIN=""
             if [ -f "jre/macos-x64/Contents/Home/bin/java" ]; then
@@ -736,7 +750,7 @@ tasks.processResources {
             Exec="${'$'}SCRIPT_DIR/run-linux.sh" %F
             Icon=liquid-lsd
             Terminal=false
-            Categories=AudioVideo;Graphics;Audio;
+            Categories=AudioVideo;Video;
             StartupNotify=true
             StartupWMClass=liquid-lsd
             DESKTOP_EOF

@@ -30,7 +30,7 @@ Comment=Libre Shader Decks - Real-time audio-reactive graphics workstation
 Exec=$EXEC_CMD
 Icon=liquid-lsd
 Terminal=false
-Categories=AudioVideo;Graphics;Audio;
+Categories=AudioVideo;Video;
 StartupNotify=true
 StartupWMClass=liquid-lsd
 DESKTOP_EOF

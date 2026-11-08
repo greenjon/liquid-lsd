@@ -1,0 +1,7 @@
+v0.9.164 92 MB
+v0.9.165 91 MB
+layout ['LICENSE', 'THIRD_PARTY_NOTICES.txt', 'icon.png', 'install-desktop.sh', 'jre', 'library', 'liquid-lsd.desktop', 'lsd-all.jar', 'run-linux.sh'] launcher run-linux.sh
+first run: exceptions 0 library at ['install/liquid-lsd-linux-x64/library']
+second run: exceptions 0 errors 0 fatal False
+edited shader kept: True | my preset kept: True | session file kept: False was there: False
+bundled files changed by the upgrade: 0 of 35

@@ -1525,15 +1525,17 @@
 <ul>
 <li><strong>Windows:</strong> Spout2</li>
 <li><strong>macOS:</strong> Syphon</li>
-<li><strong>Linux:</strong> PipeWire (DMA-BUF GPU sharing, with a memory fallback if the GPU doesn't support it)</li>
+<li><strong>Linux:</strong> PipeWire. Each shared feed is a video source node named after the stream (<code>LiquidLSD-MASTER</code> by default), sending RGBA frames through shared memory at the stream's size.</li>
 </ul>
-<p><strong>On Linux with OBS:</strong> Add a <strong>PipeWire Screen Capture</strong> source and select the Liquid LSD video node. Use <code>qpwgraph</code> or <code>Helvum</code> to inspect and route video nodes.</p>
+<p><strong>On Linux:</strong> any app that reads PipeWire video nodes can take the feed. With GStreamer, for example: <code>gst-launch-1.0 pipewiresrc target-object=LiquidLSD-MASTER ! videoconvert ! autovideosink</code>. Use <code>qpwgraph</code> or <code>Helvum</code> to see and route video nodes. OBS's PipeWire sources go through the desktop's screen and camera portals, which may not list an app's video node; this hasn't been tested yet. Changing the output size reconnects the stream, so readers may need to reconnect too.</p>
 <p><strong>Status:</strong> Check the <strong>Preferences → Video &amp; Display</strong> panel for a live status indicator next to each shared feed showing which sharing method is active and whether it's working.</p>
 <hr />
 <h2 id="recording-your-set-rec">Recording Your Set (REC)</h2>
+<p><strong>Needs FFmpeg.</strong> Recording and Render Video (Offline) hand the frames to <a href="https://ffmpeg.org/">FFmpeg</a>, which has to be installed and on your PATH. Without it the app says so when you press Record. To install: on Linux, your package manager (<code>sudo dnf install ffmpeg</code>, <code>sudo apt install ffmpeg</code>); on macOS, <code>brew install ffmpeg</code>; on Windows, <code>winget install Gyan.FFmpeg</code>, then restart the app.</p>
 <p>Press <strong><code>Ctrl+R</code></strong> (or go to <strong>Output → Record Output</strong>) to start recording. A red <code>REC mm:ss</code> badge appears on the title bar while recording is active, along with a dropped-frame counter.</p>
-<p>Press the same shortcut again, or click <strong>Stop Recording</strong>, to finish. The output file lands in the <code>recordings/</code> folder as an MP4, named with the date and time (e.g. <code>liquid_lsd_2026-09-01_20-15-00.mp4</code>).</p>
-<p><strong>What you get:</strong> H.264 video at your current render resolution and frame rate, with synchronized audio from your input. On capable hardware, NVENC, QuickSync, or VAAPI hardware encoding is used automatically.</p>
+<p>Press the same shortcut again, or choose <strong>Record Output</strong> again, to finish. The file is an MP4 named with the date and time (e.g. <code>liquid_lsd_20260901_201500.mp4</code>), saved in the recording folder set in Preferences, or else your Videos folder (<code>~/Videos/liquid-lsd</code> on Linux and Windows, <code>~/Movies/liquid-lsd</code> on macOS).</p>
+<p>After you stop, the sound is added to the file in the background while you keep playing: the output monitor shows <code>SAVING...</code> and Record Output waits until it's done. For an hour-long set that takes a few minutes. If you quit meanwhile, the app finishes the file before it closes. Should adding the sound ever fail, the video is saved as usual and the sound stays next to it as a <code>.wav</code> file.</p>
+<p><strong>What you get:</strong> H.264 video at your render resolution and the recording frame rate from Preferences, with synchronized audio from your input. If the app renders slower than that rate, frames are repeated so the video still runs in real time with the sound. On capable hardware, NVENC, QuickSync, or VAAPI hardware encoding is used automatically.</p>
 <p>You can also map the <code>REC</code> toggle to a MIDI controller button so you never have to touch the keyboard during a performance.</p>
 <hr />
 <h2 id="offline-render-studio">Offline Render Studio</h2>

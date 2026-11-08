@@ -76,9 +76,9 @@ object ParametersTabs {
             val isActive = state.activeTopTab == fullTab &&
                 (fullTab != "Mixer" || ParametersState.isMstSubTab(state.activeMixerSubTab) == (shortLabel == "MST"))
             val activeCol = getDeckColor(fullTab, 1f)
-            val bgCol = if (isActive) activeCol else ImGui.colorConvertFloat4ToU32(0.12f, 0.12f, 0.12f, 1f)
-            val hoverCol = if (isActive) activeCol else ImGui.colorConvertFloat4ToU32(0.22f, 0.22f, 0.22f, 1f)
-            val activeClickCol = if (isActive) activeCol else ImGui.colorConvertFloat4ToU32(0.32f, 0.32f, 0.32f, 1f)
+            val bgCol = if (isActive) activeCol else TangoPalette.TAB_IDLE.u32()
+            val hoverCol = if (isActive) activeCol else TangoPalette.TAB_IDLE_HOVER.u32()
+            val activeClickCol = if (isActive) activeCol else TangoPalette.TAB_IDLE_PRESS.u32()
 
             val pMinX = ImGui.getCursorScreenPosX()
             val pMinY = ImGui.getCursorScreenPosY()
@@ -120,7 +120,7 @@ object ParametersTabs {
                 val ink = TangoPalette.inkFor(getDeckColorRGB(fullTab))
                 ImGui.colorConvertFloat4ToU32(ink[0], ink[1], ink[2], 1f)
             } else {
-                ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.8f)
+                ImGui.getColorU32(imgui.flag.ImGuiCol.Text, 0.8f)   // the theme's text on the theme's idle surface
             }
             session.uiTheme.withFont(UITheme.FontLevel.H3) {
                 dl.addText(textX, textY, textCol, shortLabel)
@@ -206,9 +206,9 @@ object ParametersTabs {
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
                     pushedTabInk = true
                 } else {
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f))
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.35f, 0.35f, 0.35f, 1f))
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        TangoPalette.TAB_IDLE.u32())
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, TangoPalette.TAB_IDLE_HOVER.u32())
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  TangoPalette.TAB_IDLE_PRESS.u32())
                 }
 
                 val tw = ImGui.calcTextSize(tab).x

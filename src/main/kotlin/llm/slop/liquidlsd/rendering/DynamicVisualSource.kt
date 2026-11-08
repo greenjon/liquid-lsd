@@ -64,7 +64,7 @@ open class DynamicVisualSource(
     override val displayName: String = displayName.ifBlank { id }
 
     /** Per-source clock for the TIMEDELTA / FRAMEINDEX uniforms set by [Renderer] (shared state gave decks 2-4 a zero delta). */
-    @JvmField var renderLastTime: Float = 0f
+    @JvmField var renderLastTime: Double = 0.0
     @JvmField var renderFrameIndex: Int = 0
 
     var fb1: FBO? = null

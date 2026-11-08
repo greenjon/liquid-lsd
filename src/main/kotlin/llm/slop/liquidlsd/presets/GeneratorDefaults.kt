@@ -266,7 +266,7 @@ object GeneratorDefaults {
 
         try {
             if (!storageDir.exists()) storageDir.mkdirs()
-            File(storageDir, "$sourceId.json").writeText(json.encodeToString(dto))
+            llm.slop.liquidlsd.utils.AtomicFile.write(File(storageDir, "$sourceId.json"), json.encodeToString(dto))
             logger.info { "Saved generator default for $sourceId to ${storageDir.path}" }
         } catch (e: Exception) {
             logger.error(e) { "Failed to save generator default for $sourceId" }

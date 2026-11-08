@@ -56,8 +56,14 @@ object RealtimeRecorder {
 
     // Bounded video frame queue to cap memory usage (~10 frames buffer)
     private const val QUEUE_CAPACITY = 10
-    private var frameQueue: ArrayBlockingQueue<ByteBuffer>? = null
-    private val bufferPool = mutableListOf<ByteBuffer>()
+    private var frameQueue: ArrayBlockingQueue<Frame>? = null
+    private val bufferPool = mutableListOf<Frame>()
+
+    /** A pooled frame buffer and when it was captured, so the writer can place it in time. */
+    private class Frame(val buf: ByteBuffer) { @Volatile var capturedNanos = 0L }
+
+    /** Start of the recording on [System.nanoTime]'s clock: frame N of the file belongs at N / fps seconds after it. */
+    @Volatile private var startNanos = 0L
 
     // Audio block pre-allocated pool for zero-allocation, lock-free audio callback tapping
     class AudioBlock(val buffer: FloatArray = FloatArray(8192)) {
@@ -165,6 +171,11 @@ object RealtimeRecorder {
         includeAudio: Boolean = true
     ): Boolean {
         if (isRecording) return true
+        // The last recording is still being written out; its buffers and temp files are in use.
+        if (isFinishing) {
+            logger.warn { "Not starting a recording: the last one is still being saved." }
+            return false
+        }
 
         logger.info { "Starting live recording to ${outputFile.name} (${width}x${height} @ ${fps}fps, audio: $includeAudio)..." }
         outputFile.parentFile?.mkdirs()
@@ -193,8 +204,11 @@ object RealtimeRecorder {
         val pipe = FFmpegProcessPipe(config)
         if (!pipe.start()) {
             logger.error { "Failed to start FFmpeg process for live recording." }
+            lastStartError = if (!AudioDecoder.isFFmpegAvailable()) FFMPEG_MISSING
+                else "Could not start recording: ffmpeg failed (${pipe.getRecentErrorLines(2).ifBlank { "see log" }})"
             return false
         }
+        lastStartError = null
 
         pboPipeline = PboReadbackPipeline(width, height)
         ffmpegPipe = pipe
@@ -207,19 +221,32 @@ object RealtimeRecorder {
         val bufferSize = width * height * 4
         bufferPool.clear()
         for (i in 0 until (QUEUE_CAPACITY + 2)) {
-            bufferPool.add(MemoryUtil.memAlloc(bufferSize))
+            bufferPool.add(Frame(MemoryUtil.memAlloc(bufferSize)))
         }
+        startNanos = System.nanoTime()
 
-        val queue = ArrayBlockingQueue<ByteBuffer>(QUEUE_CAPACITY)
+        val queue = ArrayBlockingQueue<Frame>(QUEUE_CAPACITY)
         frameQueue = queue
         isWorkerRunning.set(true)
 
         videoWorkerThread = Thread({
             logger.info { "RealtimeRecorder video worker thread started." }
+            // The file is constant-rate at [fps] while the app renders at whatever rate it manages. Each captured
+            // frame is written as many times as the clock says (or skipped), so the video keeps real time and stays
+            // in step with the audio, which is recorded as it plays.
+            val frameNanos = 1_000_000_000.0 / fps
+            val maxRepeats = fps * 5L   // a long stall still keeps sync, without writing minutes of copies at once
+            var written = 0L
             while (isWorkerRunning.get() || queue.isNotEmpty()) {
                 val frame = queue.poll(50, TimeUnit.MILLISECONDS) ?: continue
                 try {
-                    pipe.pushFrame(frame)
+                    val due = ((frame.capturedNanos - startNanos) / frameNanos).toLong() + 1
+                    val copies = if (written == 0L) 1L else (due - written).coerceIn(0L, maxRepeats)
+                    for (i in 0 until copies) {
+                        frame.buf.position(0)
+                        pipe.pushFrame(frame.buf)
+                    }
+                    written += copies
                 } finally {
                     synchronized(bufferPool) {
                         bufferPool.add(frame)
@@ -352,47 +379,66 @@ object RealtimeRecorder {
         totalFramesCount++
 
         // Obtain a free buffer from pool
-        var targetBuffer: ByteBuffer? = null
+        var target: Frame? = null
         synchronized(bufferPool) {
             if (bufferPool.isNotEmpty()) {
-                targetBuffer = bufferPool.removeAt(bufferPool.size - 1)
+                target = bufferPool.removeAt(bufferPool.size - 1)
             }
         }
-
-        if (targetBuffer == null) {
+        val frame = target ?: run {
             // Queue is congested: drop frame
             droppedFramesCount++
             return
         }
 
-        targetBuffer.clear()
-        val readResult = pbo.readFrameAsync(fboId, targetBuffer)
+        frame.buf.clear()
+        val readResult = pbo.readFrameAsync(fboId, frame.buf)
         if (readResult == null) {
             // Warmup frame: return buffer to pool
             synchronized(bufferPool) {
-                bufferPool.add(targetBuffer)
+                bufferPool.add(frame)
             }
             return
         }
 
-        targetBuffer.position(0)
-        targetBuffer.limit(pbo.bufferSizeBytes)
+        frame.buf.position(0)
+        frame.buf.limit(pbo.bufferSizeBytes)
+        frame.capturedNanos = System.nanoTime()
 
-        if (!queue.offer(targetBuffer)) {
+        if (!queue.offer(frame)) {
             // Queue is full: drop frame and return buffer to pool
             droppedFramesCount++
             synchronized(bufferPool) {
-                bufferPool.add(targetBuffer)
+                bufferPool.add(frame)
             }
         }
     }
 
+    /** Why the last [startRecording] failed, for the message the UI shows; null after a good start. */
+    @Volatile
+    var lastStartError: String? = null
+        private set
+
+    const val FFMPEG_MISSING = "Recording needs ffmpeg, which isn't installed (see Output & Recording in the guide)"
+
+    /** True while a stopped recording is still being written out (encoder flush, audio mux). */
+    @Volatile
+    var isFinishing = false
+        private set
+
+    private var finishThread: Thread? = null
+
     /**
-     * Stops live recording, flushes all pending frames to disk, and cleans up resources.
+     * Stops live recording. Only the GL readback is torn down here (it must be, on the GL thread); flushing the
+     * encoder and muxing the audio, which takes minutes for a long set, run on a background thread so the output
+     * never freezes ([isFinishing] meanwhile). [waitForFinish] blocks until the file is complete (app exit).
      */
     @Synchronized
-    fun stopRecording(): Boolean {
-        if (!isRecording && ffmpegPipe == null && pboPipeline == null) return true
+    fun stopRecording(waitForFinish: Boolean = false): Boolean {
+        if (!isRecording && ffmpegPipe == null && pboPipeline == null) {
+            if (waitForFinish) awaitFinish()
+            return true
+        }
         logger.info { "Stopping live recording. Total frames: $totalFramesCount, Dropped: $droppedFramesCount (${"%.2f".format(droppedPercentage)}%)" }
 
         isRecording = false
@@ -400,36 +446,69 @@ object RealtimeRecorder {
         isRecordingAudio = false
         isWorkerRunning.set(false)
 
-        videoWorkerThread?.join(4000)
-        videoWorkerThread = null
-
-        audioWorkerThread?.join(4000)
-        audioWorkerThread = null
-        resetAudioPool()
-
-        val videoSuccess = ffmpegPipe?.finish(waitForExit = true) ?: true
-        ffmpegPipe = null
-
         pboPipeline?.dispose()
         pboPipeline = null
 
-        synchronized(bufferPool) {
-            for (buf in bufferPool) {
-                MemoryUtil.memFree(buf)
-            }
-            bufferPool.clear()
-        }
-        frameQueue = null
-
+        val videoWorker = videoWorkerThread
+        val audioWorker = audioWorkerThread
+        val pipe = ffmpegPipe
         val tempVid = tempVideoFile
         val tempAud = tempAudioFile
         val finalOut = finalDestinationFile
+        val seconds = (System.nanoTime() - startNanos) / 1_000_000_000L
+        videoWorkerThread = null
+        audioWorkerThread = null
+        ffmpegPipe = null
+        frameQueue = null
+        tempVideoFile = null
+        tempAudioFile = null
+        finalDestinationFile = null
+
+        isFinishing = true
+        val t = Thread({
+            try {
+                finish(videoWorker, audioWorker, pipe, wasRecordingAudio, tempVid, tempAud, finalOut, seconds)
+            } catch (e: Throwable) {
+                logger.error(e) { "Finishing the recording failed" }
+            } finally {
+                isFinishing = false
+            }
+        }, "RealtimeRecorder-Finish")
+        finishThread = t
+        t.start()
+        if (waitForFinish) awaitFinish()
+        return true
+    }
+
+    /** Waits for a stopped recording to be written out. */
+    fun awaitFinish(timeoutMs: Long = 0) {
+        finishThread?.join(timeoutMs)
+    }
+
+    private fun finish(
+        videoWorker: Thread?, audioWorker: Thread?, pipe: FFmpegProcessPipe?, wasRecordingAudio: Boolean,
+        tempVid: File?, tempAud: File?, finalOut: File?, seconds: Long
+    ) {
+        // The workers drain what's queued, then end; the audio worker writes the WAV header last.
+        videoWorker?.join(60_000)
+        audioWorker?.join(60_000)
+        resetAudioPool()
+        val videoSuccess = pipe?.finish(waitForExit = true) ?: true
+        synchronized(bufferPool) {
+            // A worker still stuck in a write holds one of these: leaking them beats freeing memory in use.
+            if (videoWorker?.isAlive != true) for (f in bufferPool) MemoryUtil.memFree(f.buf)
+            else logger.warn { "Video worker still running after 60 s; leaving its frame buffers allocated" }
+            bufferPool.clear()
+        }
 
         if (wasRecordingAudio && tempVid != null && tempAud != null && finalOut != null && tempVid.exists() && tempAud.exists() && tempAud.length() > 44) {
             logger.info { "Muxing live audio (${tempAud.name}) and video (${tempVid.name}) to ${finalOut.name}..." }
+            // Encoding the audio takes a while for a long set (minutes for an hour): allow for it, and never treat a
+            // mux that is still running as failed (that used to drop the audio and leave ffmpeg writing the file).
+            val limitSec = 120L + seconds
             val muxSuccess = try {
                 val cmd = listOf(
-                    "ffmpeg", "-y",
+                    "ffmpeg", "-y", "-nostdin", "-nostats", "-loglevel", "error",
                     "-i", tempVid.absolutePath,
                     "-i", tempAud.absolutePath,
                     "-c:v", "copy",
@@ -438,11 +517,14 @@ object RealtimeRecorder {
                     "-shortest",
                     finalOut.absolutePath
                 )
-                val pb = ProcessBuilder(cmd)
-                pb.redirectErrorStream(true)
-                val proc = pb.start()
-                val exited = proc.waitFor(15, TimeUnit.SECONDS)
-                exited && proc.exitValue() == 0
+                // Output goes nowhere: an unread pipe fills up and stalls ffmpeg.
+                val proc = ProcessBuilder(cmd).redirectErrorStream(true).redirectOutput(ProcessBuilder.Redirect.DISCARD).start()
+                if (proc.waitFor(limitSec, TimeUnit.SECONDS)) proc.exitValue() == 0
+                else {
+                    logger.error { "Muxing took over $limitSec s; stopped it" }
+                    proc.destroyForcibly().waitFor(10, TimeUnit.SECONDS)
+                    false
+                }
             } catch (e: Exception) {
                 logger.error(e) { "Failed to mux audio into live recording: ${e.message}" }
                 false
@@ -453,20 +535,16 @@ object RealtimeRecorder {
                 tempVid.delete()
                 tempAud.delete()
             } else {
-                logger.warn { "Muxing failed; falling back to raw video file." }
+                // Keep both halves rather than lose the audio.
+                logger.warn { "Muxing failed; keeping the video as ${finalOut.name} and the audio as ${tempAud.name}." }
+                finalOut.delete()
                 tempVid.renameTo(finalOut)
-                tempAud.delete()
             }
         } else if (tempVid != null && finalOut != null && tempVid != finalOut && tempVid.exists()) {
             tempVid.renameTo(finalOut)
             tempAud?.delete()
         }
-
-        tempVideoFile = null
-        tempAudioFile = null
-        finalDestinationFile = null
-
-        return videoSuccess
+        logger.info { "Recording saved: ${finalOut?.absolutePath} (encoder ok: $videoSuccess)" }
     }
 
     private fun writeWavHeader(raf: RandomAccessFile, sampleRate: Int, channels: Int, bitsPerSample: Int, totalAudioBytes: Long) {

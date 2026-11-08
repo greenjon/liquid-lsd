@@ -56,10 +56,12 @@ object FileSystemManager {
     }
     private val pendingScanFutures = ConcurrentHashMap<String, ScheduledFuture<*>>()
 
-    /** Drops every cached listing and preset-meta entry; called after any successful mutation. */
+    /**
+     * Drops every cached listing; called after any successful mutation. The per-file meta cache stays: each entry is
+     * checked against the file's modification time, and re-reading thousands of presets after every save would stall.
+     */
     internal fun clearScanCache() {
         scanCache.clear()
-        presetMetaCache.clear()
     }
 
     internal fun getPresetMeta(file: File): Pair<List<String>, llm.slop.liquidlsd.presets.PresetDependencies> {
@@ -129,13 +131,40 @@ object FileSystemManager {
         if (!root.exists() || !root.isDirectory) return emptyList()
 
         val cacheKey = "ALL_PRESETS_ROOT_${root.canonicalPath}"
-        val signature = getRecursiveDirectorySignature(root)
-        val now = System.currentTimeMillis()
         val cached = scanCache[cacheKey]
-        if (cached != null && cached.signature == signature) {
+        // The Library asks for this every frame. Walking the folder to see whether anything changed costs about 30 ms
+        // per frame at 10,000 presets, so a listing in hand is returned as is and re-checked in the background every
+        // few seconds. Changes the app makes clear the cache ([clearScanCache]) and show at once.
+        if (cached != null && !synchronousScans) {
+            if (System.currentTimeMillis() - cached.cachedAtMs > SCAN_CACHE_TTL_MS) revalidateAllPresets(root, cacheKey)
             return cached.items
         }
+        val signature = getRecursiveDirectorySignature(root)
+        if (cached != null && cached.signature == signature) return cached.items
+        return buildAllPresets(root, cacheKey, signature)
+    }
 
+    private val revalidating = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
+
+    /** Re-checks the presets folder off the render thread; rescans there if it changed. One check at a time. */
+    private fun revalidateAllPresets(root: File, cacheKey: String) {
+        if (!revalidating.add(cacheKey)) return
+        executor.execute {
+            try {
+                val signature = getRecursiveDirectorySignature(root)
+                val current = scanCache[cacheKey]
+                if (current != null && current.signature == signature) scanCache[cacheKey] = current.copy(cachedAtMs = System.currentTimeMillis())
+                else buildAllPresets(root, cacheKey, signature)
+            } catch (e: Exception) {
+                logger.warn(e) { "Background preset scan failed" }
+            } finally {
+                revalidating.remove(cacheKey)
+            }
+        }
+    }
+
+    private fun buildAllPresets(root: File, cacheKey: String, signature: String): List<AssetItem> {
+        val now = System.currentTimeMillis()
         val items = root.walkTopDown()
             .filter { it.isFile }
             .filter { file ->

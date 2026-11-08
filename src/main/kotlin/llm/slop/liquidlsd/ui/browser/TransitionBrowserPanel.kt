@@ -239,7 +239,7 @@ object TransitionBrowserPanel {
         try {
             val dto = json.decodeFromString<TransitionPlaylistDto>(playlistFile.readText())
             val updated = dto.copy(items = dto.items + tokens)
-            playlistFile.writeText(json.encodeToString(TransitionPlaylistDto.serializer(), updated))
+            llm.slop.liquidlsd.utils.AtomicFile.write(playlistFile, json.encodeToString(TransitionPlaylistDto.serializer(), updated))
             LibraryPanel.refreshAssets()
         } catch (e: Exception) {
             logger.error(e) { "Failed to append $tokens to transition playlist ${playlistFile.name}" }

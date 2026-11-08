@@ -437,11 +437,42 @@ object AudioEngine {
         }
 
         if (forceRefresh || cachedInputDevices.isEmpty() || cachedInputDevices.firstOrNull()?.id == "jack_default") {
-            val devices = JavaSoundClient.getAvailableInputDevices(forceRefresh)
-            cachedInputDevices = devices
-            cachedDeviceNames = devices.map { it.name }.toTypedArray()
+            // Java Sound's device probe is native and can stall (a busy or half-gone device): never on the render
+            // thread. "System Default" is always valid, so it stands in until the scan lands.
+            if (cachedInputDevices.isEmpty() || cachedInputDevices.first().id == "jack_default") setDeviceCache(DEFAULT_ONLY)
+            scanInputDevicesAsync(forceRefresh)
         }
         return cachedInputDevices
+    }
+
+    private val DEFAULT_ONLY = listOf(AudioInputDevice("default", "System Default", "Default system capture device", isDefault = true))
+    private val deviceScan = java.util.concurrent.atomic.AtomicReference<Thread?>(null)
+
+    /** True while the background Java Sound device scan runs (Preferences shows "Scanning..."). */
+    val isScanningDevices: Boolean get() = deviceScan.get() != null
+
+    private fun setDeviceCache(devices: List<AudioInputDevice>) {
+        cachedInputDevices = devices
+        cachedDeviceNames = devices.map { it.name }.toTypedArray()
+    }
+
+    private fun scanInputDevicesAsync(forceRefresh: Boolean) {
+        val t = Thread({
+            try {
+                setDeviceCache(JavaSoundClient.getAvailableInputDevices(forceRefresh))
+            } catch (e: Throwable) {
+                logger.warn(e) { "Audio input device scan failed; only System Default is listed" }
+            } finally {
+                deviceScan.set(null)
+            }
+        }, "AudioDeviceScan").apply { isDaemon = true }
+        if (deviceScan.compareAndSet(null, t)) t.start()
+    }
+
+    /** Waits up to [timeoutMs] for a running device scan; true when none is running afterwards. For tests. */
+    fun awaitDeviceScan(timeoutMs: Long = 10_000): Boolean {
+        deviceScan.get()?.join(timeoutMs)
+        return !isScanningDevices
     }
 
     fun getAvailableDeviceNames(): Array<String> {
@@ -513,7 +544,10 @@ object AudioEngine {
                     JackStartFailure.CONNECTION_FAILED -> "server connection failed"
                     null -> "startup failed"
                 }
-                logger.warn { "Automatic JACK reconnect disabled until manual retry; $reason." }
+                logger.warn {
+                    if (automaticReconnectEnabled) "JACK not started ($reason); the watchdog will retry."
+                    else "Automatic JACK reconnect disabled until manual retry; $reason."
+                }
             }
         }
 

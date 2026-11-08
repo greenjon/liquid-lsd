@@ -120,7 +120,7 @@ object MacroBankSerializer {
     fun exportToFile(file: File, bank: MacroBank) {
         file.parentFile?.mkdirs()
         val content = json.encodeToString(bank)
-        file.writeText(content)
+        llm.slop.liquidlsd.utils.AtomicFile.write(file, content)
         logger.info { "Exported MacroBank to ${file.absolutePath}" }
     }
 

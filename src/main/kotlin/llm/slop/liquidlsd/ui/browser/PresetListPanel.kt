@@ -37,6 +37,13 @@ import java.io.File
 object PresetListPanel {
     private val logger = KotlinLogging.logger {}
 
+    /** Lists longer than this draw only the rows in view ([drawRows]). */
+    private const val CLIP_MIN_ROWS = 400
+    private val rowClipper by lazy { imgui.ImGuiListClipper() }
+    /** The row whose menu was open last frame (kept drawn while clipped), and the one seen this frame. */
+    private var menuRow: Int? = null
+    private var menuRowThisFrame: Int? = null
+
     /** Stock generators carry no persisted parameters, so they only support "Load to
      *  Deck" -- never "Add to Playlist"/"Add to A/B Queue" (those are reserved for
      *  saved presets, which have reproducible state). */
@@ -103,7 +110,8 @@ object PresetListPanel {
         target: ApplyTarget? = null
     ) {
         val loaded = LoadedMarks.snapshot(mixer, session.presetManager)
-        filtered.forEachIndexed { index, asset ->
+        // One row; the same code whether or not the list is clipped.
+        fun drawRow(index: Int, asset: AssetItem) {
             ImGui.pushID(index)
 
             val isExternal = asset.type == AssetType.SOURCE_EXTERNAL
@@ -264,6 +272,7 @@ object PresetListPanel {
             // Context menu (triggered by right-click or more button)
             pushOpenDropdownPadding()
             if (ImGui.beginPopup(popupId)) {
+                menuRowThisFrame = index
                 pushOpenDropdownFont()
                 BrowserPane.applyMenuItem(target, asset)
                 if (contextExtras != null) {
@@ -352,7 +361,24 @@ object PresetListPanel {
             popOpenDropdownPadding()
 
             ImGui.popID()
-                }
+        }
+
+        // A long list (thousands of flames) only draws the rows in view: drawing every row cost about 0.1 s a frame at
+        // 10,000 rows. Short lists and playlists (drop zones between rows) are drawn whole, as before.
+        if (playlistRows != null || filtered.size <= CLIP_MIN_ROWS) {
+            filtered.forEachIndexed { i, a -> drawRow(i, a) }
+        } else {
+            val clipper = rowClipper
+            clipper.begin(filtered.size)
+            // Rows drawn even off screen: the selection (keyboard focus and scroll-to follow it) and a row whose menu is open.
+            // (The row under keyboard navigation is kept by the clipper itself.)
+            filtered.forEachIndexed { i, a -> if (selection.isSelected(a)) clipper.includeItemByIndex(i) }
+            menuRow?.takeIf { it < filtered.size }?.let { clipper.includeItemByIndex(it) }
+            while (clipper.step()) for (i in clipper.displayStart until clipper.displayEnd) drawRow(i, filtered[i])
+            clipper.end()
+        }
+        menuRow = menuRowThisFrame
+        menuRowThisFrame = null
         playlistRows?.finish()
     }
 

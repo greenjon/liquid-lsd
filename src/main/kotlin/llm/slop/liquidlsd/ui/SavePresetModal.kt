@@ -133,6 +133,7 @@ object SavePresetModal {
             showOverwriteWarning = false
             lastCheckedName = currentName
         }
+        val nameOk = NameCheck.ok(currentName)
 
         folderRoot?.let { root ->
             ImGui.spacing()
@@ -162,7 +163,7 @@ object SavePresetModal {
         val keyAnswer = ModalKeys.answer()
 
         if (ButtonChrome.button("$btnLabel##confirmSavePreset", btnW, 0f) || keyAnswer == true) {
-            if (currentName.isNotEmpty()) {
+            if (nameOk) {
                 val dir = targetDirectory ?: FileSystemManager.getPresetsRoot()
                 val targetFile = File(dir, "$currentName.$fileExtension")
 

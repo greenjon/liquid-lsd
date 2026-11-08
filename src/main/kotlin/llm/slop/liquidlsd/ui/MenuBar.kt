@@ -140,21 +140,24 @@ class MenuBar(
                             ImGui.endMenu()
                         }
 
-                        if (ImGui.menuItem("Record Output (REC)", "Ctrl+R", isRec)) {
+                        if (!isRec && llm.slop.liquidlsd.export.RealtimeRecorder.isFinishing) {
+                            ImGui.menuItem("Saving last recording...", "", false, false)
+                            itemTooltip("The last recording is still being written (the audio takes a while for a long set). Record is back when it's done.", allowWhenDisabled = true)
+                        } else if (ImGui.menuItem("Record Output (REC)", "Ctrl+R", isRec)) {
                             if (isRec) {
                                 llm.slop.liquidlsd.export.RealtimeRecorder.stopRecording()
                             } else {
                                 val dateStr = java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(java.util.Date())
                                 val recDir = session.uiTheme.getDefaultVideosDirectory()
                                 val outFile = java.io.File(recDir, "liquid_lsd_$dateStr.mp4")
-                                llm.slop.liquidlsd.export.RealtimeRecorder.startRecording(
+                                if (!llm.slop.liquidlsd.export.RealtimeRecorder.startRecording(
                                     outputFile = outFile,
                                     width = mixer.width,
                                     height = mixer.height,
                                     fps = session.uiTheme.recordingFps,
                                     bitrateMbps = session.uiTheme.recordingBitrateMbps,
                                     includeAudio = session.uiTheme.recordingIncludeAudio
-                                )
+                                )) ToastOverlay.show(if (llm.slop.liquidlsd.export.RealtimeRecorder.isFinishing) "Still saving the last recording" else llm.slop.liquidlsd.export.RealtimeRecorder.lastStartError ?: "Could not start recording (see log)")
                             }
                         }
                         itemTooltip("Toggle live master output recording.")

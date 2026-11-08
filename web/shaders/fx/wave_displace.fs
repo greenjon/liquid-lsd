@@ -112,7 +112,7 @@ void main() {
         if (r > 0.0001) {
             float wave = sin(r * frequency_ * 6.28318 - timePhase);
             // Attenuate slightly toward outer boundaries for natural pool ripple falloff
-            float falloff = smoothstep(1.5, 0.0, r);
+            float falloff = (1.0 - smoothstep(0.0, 1.5, r));
             vec2 dir = p / r;
             dir.x /= aspect;
             offset = dir * (wave * amplitude_ * falloff);

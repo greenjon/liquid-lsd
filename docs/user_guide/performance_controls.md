@@ -162,7 +162,7 @@ for how they work and where to edit them.
     - Duration is customizable in Preferences (`FX Swap Fade (ms)`, 0–1000 ms, default 150 ms; 0 = immediate hard cut).
   - **Knob Labeling**:
     - Knob 1 controls the chain's `SUPER` knob. Middle-clicking it does nothing (centring it would move every linked slot at once).
-    - Knobs 2–4 display `META`, while the effect name itself is clearly displayed in the slot cell below. A slot whose Metaknob has no targets shows `NO TARGET`, since turning that knob does nothing; add a target on the slot's Edit tab.
+    - Knobs 2–4 display `META`, while the effect name itself is clearly displayed in the slot cell below. A slot whose Metaknob has no targets keeps its effect name; its tooltip says the knob does nothing until you add a target on the slot's Edit tab.
   - **Focus Mode (Traktor / Mixxx style)**:
     - **Entering Focus Mode**:
       - Click any slot pill (`[1]`, `[2]`, or `[3]`) in the FX row header.
@@ -456,6 +456,8 @@ You can map OSC controls either in-situ from the UI or manually from Preferences
 
 3. **TouchOSC XY Pads & Multi-Argument Vectors**:
    - Multi-argument messages (e.g. `/2/xy`) are automatically unpacked into per-axis sub-addresses (`/2/xy/0` for X, `/2/xy/1` for Y). Learning from an XY pad maps the active axis.
+
+4. **Argument types**: floats (`f`), ints (`i`), doubles (`d`) and 64-bit ints (`h`) all drive values; strings, booleans, timetags, colours and MIDI arguments are read but don't move anything. A message stops at a type the app doesn't know.
 
 ### Fine-Tuning & Shaping
 

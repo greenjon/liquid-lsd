@@ -1,0 +1,8 @@
+cyber_datamosh             diff  15.64 (max  22.30)  motion 20.42 vs 17.64 at 0%  corr +0.28  brightness  67.8
+film_burn                  diff  11.16 (max  13.68)  motion  1.01 vs  0.32 at 0%  corr +0.85  brightness  52.1
+kinetic_zoom               diff  14.41 (max  19.54)  motion  2.93 vs  0.69 at 0%  corr +0.78  brightness  46.3
+linear_crossfade           diff  13.91 (max  17.49)  motion  1.67 vs  0.72 at 0%  corr +0.86  brightness  56.3
+liquid_displacement        diff  19.15 (max  23.74)  motion  3.64 vs  1.72 at 0%  corr +0.83  brightness  56.6
+luminous_flash             diff  14.32 (max  18.24)  motion  1.81 vs  0.76 at 0%  corr +0.85  brightness  56.8
+noise_dissolve             diff  10.57 (max  12.74)  motion  0.79 vs  0.24 at 0%  corr +0.76  brightness  53.0
+vortex_swirl               diff  28.94 (max  36.93)  motion  5.90 vs  0.60 at 0%  corr +0.72  brightness  58.1

@@ -117,7 +117,12 @@ class BrowseCatalog(
      * The folder tree, flattened depth-first. Sections and the Playlists header are always present so the tree does not jump around.
      * With [accepts] (a hosting target's filter) the counts only include rows the list would show.
      */
-    fun tree(accepts: ((BrowseEntry) -> Boolean)? = null): List<BrowseNode> {
+    fun tree(accepts: ((BrowseEntry) -> Boolean)? = null): List<BrowseNode> = if (accepts == null) fullTree else buildTree(accepts)
+
+    /** The catalog never changes (a new one is built when its inputs do), so the unfiltered tree is built once. */
+    private val fullTree: List<BrowseNode> by lazy { buildTree(null) }
+
+    private fun buildTree(accepts: ((BrowseEntry) -> Boolean)?): List<BrowseNode> {
         val shown = if (accepts == null) entries else entries.filter(accepts)
         val nodes = mutableListOf<BrowseNode>()
         nodes += BrowseNode(BrowseScope.All, "All", 0, shown.size)
@@ -249,16 +254,22 @@ class BrowseCatalog(
     }
 
     private fun folderNodes(section: BrowseSection, inSection: List<BrowseEntry>): List<BrowseNode> {
-        val folders = (inSection.map { it.folder } + folders[section].orEmpty()).filter { it.isNotEmpty() }
-            .flatMap { path -> path.split('/').runningReduce { acc, seg -> "$acc/$seg" } }
+        // One pass: each entry counts towards its folder and every folder above it (what [inFolder] matches).
+        val counts = HashMap<String, Int>()
+        val prefixesOf = HashMap<String, List<String>>()
+        fun prefixes(path: String) = prefixesOf.getOrPut(path) { path.split('/').runningReduce { acc, seg -> "$acc/$seg" } }
+        for (e in inSection) if (e.folder.isNotEmpty()) for (p in prefixes(e.folder)) counts[p] = (counts[p] ?: 0) + 1
+        val folders = (inSection.asSequence().map { it.folder }.filter { it.isNotEmpty() }.distinct() + folders[section].orEmpty().asSequence().filter { it.isNotEmpty() })
+            .flatMap { prefixes(it).asSequence() }
             .distinct()
             .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it })
+            .toList()
         return folders.map { f ->
             BrowseNode(
                 BrowseScope.Folder(section, f),
                 f.substringAfterLast('/'),
                 f.count { it == '/' } + 1,
-                inSection.count { inFolder(it.folder, f) }
+                counts[f] ?: 0
             )
         }
     }

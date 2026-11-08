@@ -69,13 +69,14 @@ object FxShortlist {
             favorites.addAll(json.decodeFromString(listSerializer, file.readText()))
         } catch (e: Exception) {
             logger.warn(e) { "Could not read FX shortlist ${file.path}; starting empty" }
+            llm.slop.liquidlsd.utils.AtomicFile.keepUnreadable(file, "the FX shortlist")
         }
     }
 
     private fun save() {
         try {
             file.parentFile?.mkdirs()
-            file.writeText(json.encodeToString(listSerializer, favorites))
+            llm.slop.liquidlsd.utils.AtomicFile.write(file, json.encodeToString(listSerializer, favorites))
         } catch (e: Exception) {
             logger.error(e) { "Could not save FX shortlist ${file.path}" }
         }

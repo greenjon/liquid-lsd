@@ -1,0 +1,13 @@
+{
+ "nameplate": {
+  "href": "https://liquid-lsd.greenjon.com/",
+  "target": "_blank",
+  "rel": "noopener"
+ },
+ "newTab": "chrome-error://chromewebdata/",
+ "stillOn": true,
+ "qr": {
+  "label": "QR code for liquid-lsd.greenjon.com",
+  "box": "0 0 37 37"
+ }
+}

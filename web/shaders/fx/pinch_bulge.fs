@@ -76,7 +76,7 @@ void main() {
         // Normalized distance within lens [0..1]
         float t = r / safeRad;
         // Cubic Hermite smoothstep guarantees zero tangent at border, eliminating circular edge creases
-        float falloff = smoothstep(1.0, 0.0, t);
+        float falloff = (1.0 - smoothstep(0.0, 1.0, t));
 
         float factor;
         if (amount >= 0.0) {

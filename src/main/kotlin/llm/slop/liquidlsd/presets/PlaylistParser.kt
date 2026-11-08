@@ -27,7 +27,9 @@ object PlaylistParser {
 
     fun parseFile(file: File): List<String> = parseItems(file.readText())
 
-    fun resolveItem(name: String, presetRoots: List<File> = defaultRoots): File? {
+    fun resolveItem(rawName: String, presetRoots: List<File> = defaultRoots): File? {
+        // A playlist written on Windows separates folders with backslashes, which are plain characters elsewhere.
+        val name = if (File.separatorChar == '/') rawName.replace('\\', '/') else rawName
         // The bare name wins over any extension variant; for each spelling, as given before under the roots.
         val spellings = listOf(name) + presetExtensions.map { if (name.endsWith(it, ignoreCase = true)) name else name + it }
         for (spelling in spellings.distinct()) {

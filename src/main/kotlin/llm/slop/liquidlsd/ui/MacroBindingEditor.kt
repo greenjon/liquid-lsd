@@ -72,7 +72,7 @@ object MacroBindingEditor {
     ) {
         noteTargetRange(info.binding, lo, hi, logarithmic)
         if (!ImGui.beginPopup(popupId)) return
-        session.uiTheme.caption("${Icons.LOCK} ${info.controlName} [${info.badgeLabel}] -> ${info.binding.propertyName.ifEmpty { "base value" }}")
+        session.uiTheme.caption("${Icons.LOCK} ${info.controlName} [${info.badgeLabel}] -> ${info.binding.propertyName.ifEmpty { null }?.let { llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.formatPropertyLabel(-1, it).removePrefix("Mod ") } ?: "base value"}")
         if (llm.slop.liquidlsd.macro.TransitionMacroSync.isSyncOwned(info.bankKey)) {
             // FxMacroSync / TransitionMacroSync rewrite these bindings from the model, so an edit here would be lost on the next sync.
             session.uiTheme.caption(llm.slop.liquidlsd.macro.TransitionMacroSync.ownerNote(info.bankKey))

@@ -206,7 +206,7 @@ object ISFAutoBindEngine {
         )
         try {
             if (!overridesDir.exists()) overridesDir.mkdirs()
-            File(overridesDir, "$hash.json").writeText(json.encodeToString(FxDefaultDto.serializer(), dto))
+            llm.slop.liquidlsd.utils.AtomicFile.write(File(overridesDir, "$hash.json"), json.encodeToString(FxDefaultDto.serializer(), dto))
             overrideCache[hash] = dto
             logger.info { "Saved ISF filter default for ${filter.displayName} (hash: $hash)" }
         } catch (e: Exception) {

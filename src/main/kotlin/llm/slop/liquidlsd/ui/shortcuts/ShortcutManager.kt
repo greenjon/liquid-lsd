@@ -205,7 +205,7 @@ object ShortcutManager {
                 sb.append("\n")
             }
             sb.append("}\n")
-            configFile.writeText(sb.toString())
+            llm.slop.liquidlsd.utils.AtomicFile.write(configFile, sb.toString())
         } catch (e: Exception) {
             logger.warning("Failed to save keybindings to ${configFile.absolutePath}: ${e.message}")
         }

@@ -118,6 +118,7 @@ object OscMappingManager {
                 logger.info { "Loaded OSC mapping profile: $safeProfileName" }
             } catch (e: Exception) {
                 logger.error(e) { "Failed to load OSC profile: $safeProfileName" }
+                llm.slop.liquidlsd.utils.AtomicFile.keepUnreadable(file, "OSC profile ${file.name}")
             }
         } else {
             activeProfile = OscMappingProfile(safeProfileName)
@@ -130,7 +131,7 @@ object OscMappingManager {
     fun saveActiveProfile() {
         val file = oscProfileFile(oscDir, activeProfileName)
         try {
-            file.writeText(json.encodeToString(activeProfile))
+            llm.slop.liquidlsd.utils.AtomicFile.write(file, json.encodeToString(activeProfile))
             logger.info { "Saved OSC mapping profile: $activeProfileName" }
         } catch (e: Exception) {
             logger.error(e) { "Failed to save OSC profile: $activeProfileName" }

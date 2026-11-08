@@ -128,7 +128,7 @@ class TokenPlaylistEdit(private val kind: BrowseKind, private val file: File, pr
                 BrowseKind.FX -> json.encodeToString(FXPlaylistDto.serializer(), json.decodeFromString<FXPlaylistDto>(file.readText()).copy(items = updated))
                 else -> json.encodeToString(TransitionPlaylistDto.serializer(), json.decodeFromString<TransitionPlaylistDto>(file.readText()).copy(items = updated))
             }
-            file.writeText(text)
+            llm.slop.liquidlsd.utils.AtomicFile.write(file, text)
             items = updated
             LibraryPanel.refreshAssets()
         } catch (e: Exception) {

@@ -84,6 +84,18 @@ Because the audio processing loop runs at sub-millisecond hardware intervals (~5
 
 ---
 
+## Saving Files
+
+Every file the user owns (presets, chains, transitions, playlists, the session, MIDI/OSC mappings, macro banks, controller profiles, shortcuts, favourites, notes) is written with `utils/AtomicFile.write`: a hidden temp file beside the target, then a move into place. A full disk or a crash mid-write leaves the old file as it was. A target the user made read-only is refused rather than replaced. Use it for any new user file; a plain `File.writeText` empties the old file before writing the new one. When a user file can't be parsed, call `AtomicFile.keepUnreadable` before falling back: it keeps the file as `<name>.unreadable` and posts a `utils/UserNotice`, which the UI shows as a toast (code outside `ui/` can post one). `PresetRepository` save failures go to the log and to a toast with the short reason (`failureReason`). Names typed for new files pass `LibraryFolders.nameProblem` (shown live by `ui/NameCheck`), which also rejects names Windows can't save.
+
+---
+
+## Library Listings and Large Libraries
+
+The Library asks for its listings every frame. `FileSystemManager.scanAllPresets` returns the cached listing and re-checks the presets folder (a walk of every file) on the scanner thread at most every 2 s; `clearScanCache` (called after every change the app makes, including saves in `PresetRepository`) makes the next call rescan at once. Tour renders set `synchronousScans` and keep the old check-every-call behaviour for determinism. `BrowseCatalog.tree()` is built once per catalog (a catalog is rebuilt whenever its inputs change), and `PresetListPanel.drawRows` uses an `ImGuiListClipper` for lists over 400 rows, keeping selected rows and a row with an open menu drawn. Measured with 10,000 presets: 150 ms a frame before, 7 ms after.
+
+---
+
 ## Notes System Persistence Architecture
 
 Liquid LSD integrates a three-tier notes persistence model managed by `NotesManager.kt`:
@@ -103,11 +115,12 @@ Liquid LSD integrates a three-tier notes persistence model managed by `NotesMana
 Liquid LSD provides low-latency, zero-copy (or DMA-BUF/MemFD) live video sharing to external VJ software (Resolume Arena, OBS Studio, TouchDesigner, MadMapper):
 
 - **Platform Drivers**:
-  - **Windows**: Spout2 sender/receiver via native `SpoutLibrary.dll` JNA bindings. Reusable buffer pools prevent per-frame byte/int array allocations, and sender name strings are clamped to 255 bytes.
-  - **macOS**: Syphon client/server via Objective-C runtime JNA bridge (`Syphon.framework`). Named `NSSize`/`NSRect` structures use 64-bit `Double` coordinates for ARM64/Apple Silicon LP64 ABI compliance with pre-allocated size query buffers.
-  - **Linux**: PipeWire 0.3 video bridge.
+  - **Windows**: Spout2 2.007.017 through `SpoutApi`. SpoutLibrary.dll exports only `GetSpout()`, a C++ object; every call goes through its vtable with the object as the first argument. Slots follow MSVC's layout (overloads grouped at the first one, last declared first), checked against the DLL's own vtable; `SpoutApiTest` checks dispatch with a fake object. A new DLL needs the slots checked again. `SpoutLibrary.dll` is not in git (`library/*` is ignored); `release.yml` and `smoke-test.yml` download the SDK binaries zip from the Spout2 release, check its SHA-256 and take `Libs_2-007-017/MD/bin/SpoutLibrary.dll`, as they do for the Syphon framework. Notice: `src/main/notices/bundled/51-spout.txt`. Senders invert (GL bottom-up to Spout's top-down) as the SDK does by default; receivers follow the 2.007 loop (receive, and reallocate on `IsUpdated`).
+  - **macOS**: Syphon through `SyphonBridge`: `objc_msgSend` invoked with fixed signatures (variadic calls are wrong on Apple Silicon) and NSRect/NSSize by value; servers and clients are created on the current CGL context with `initWithName:context:options:` / `initWithServerDescription:context:options:newFrameHandler:`; received frames are GL_TEXTURE_RECTANGLE, blitted into an own 2D texture before the SyphonImage is released. Description keys are read from the framework's exported constants. The release build ships the universal framework from the `syphon-natives` tag.
+  - **Linux**: PipeWire 0.3 video bridge (`rendering/pipewire/`).
 
-### PipeWire Thread Decoupling & Lock-Free Frame Handoff
-To maintain the project's strict real-time constraint preventing `pw_thread_loop_lock` or socket blocking on Thread 0:
-- **Output Path (`PipeWireBridge`)**: Thread 0 deposits a newly rendered `ByteBuffer` into `pendingFrame` (`AtomicReference<ByteBuffer?>`) via `publishFrameBuffer()`. An asynchronous background worker (`Dispatchers.IO`) polls at up to 120Hz and drains the frame into PipeWire via `drainPendingFrame()`, copying pixels into the resolved `spa_buffer` memory without ever acquiring locks on the GL thread.
-- **Ingest Path (`PipeWireReceiverImpl`)**: Buffers dequeued from `pw_stream_dequeue_buffer()` are processed using a reusable `SpaData` instance (`bindMemory(datasPtr)`), and pixel data is uploaded to OpenGL using direct native memory addresses (`Pointer.nativeValue(dataPtr)`), completely eliminating per-frame wrapper heap allocations on Thread 0.
+### PipeWire Video (format negotiation and frame handoff)
+- **Formats (`SpaPod`)**: the SPA pod builder is header-only C, so `SpaPod` writes the few pods a raw video stream needs by hand (EnumFormat, Buffers) and parses the agreed Format. Constants come from PipeWire 1.6's headers; `SpaPodTest` checks the layout. Field offsets in `pw_buffer`/`spa_buffer`/`spa_data`/`spa_chunk` are in `SpaBufferLayout`.
+- **Output (`PipeWireBridge`)**: a `Video/Source` stream with `PW_STREAM_FLAG_DRIVER`, offering RGBA at the stream size. `param_changed(Format)` answers with a Buffers param (size, stride). Thread 0 deposits the latest PBO readback in `pendingFrame` (no lock, no copy); a `Dispatchers.IO` worker copies it, rows flipped into top-to-bottom order, into a dequeued buffer, sets the chunk, queues it and calls `pw_stream_trigger_process`, with the thread loop locked. `LinuxTextureBridge` attaches the endpoint's texture to its own read FBO (reading FBO 0 would capture the window) and reconnects when the size changes.
+- **Ingest (`PipeWireReceiverImpl`)**: offers RGBA/BGRA/RGBx/BGRx/YUY2/GRAY8 at any size and rate (PipeWire doesn't convert video formats). YUY2 is uploaded packed (one RGBA texel per two pixels) and converted BT.601 limited-range to RGBA in a one-pass shader into its own FBO, with the caller's framebuffer, program, viewport and blend restored; GRAY8 is an R8 texture swizzled to grey, learns the agreed size and order in `param_changed`, takes the newest queued buffer on Thread 0 and uploads it row by row into mirrored positions (video rows run top to bottom), with alpha forced opaque for x formats. `target.object` is the node name `ExternalVideoDiscovery` mapped from the label in the browser; nodes sharing a description get ` (2)`, ` (3)` labels.
+- **Lab check**: `.planning/auto-verify-2026-11-06/round5/` runs the app against a private PipeWire with GStreamer on both ends.

@@ -56,120 +56,63 @@ object ExternalVideoDiscovery {
         }
     }
 
+    /** Label shown in the browser -> PipeWire `node.name`, which is what `target.object` matches. */
+    private val pipeWireTargets = java.util.concurrent.ConcurrentHashMap<String, String>()
+
+    /** The `node.name` to connect to for a label from [fetchPipeWireStreams] (the label itself if unknown). */
+    fun pipeWireTarget(label: String): String = pipeWireTargets[label] ?: label
+
+    /**
+     * Video sources other apps publish on PipeWire (`Video/Source` devices and `Stream/Output/Video` streams),
+     * labelled by description, else node name. Our own receiver (a consumer) is left out.
+     */
     fun fetchPipeWireStreams(): List<String> {
-        val results = mutableSetOf<String>()
+        val results = linkedSetOf<String>()
         try {
-            val process = ProcessBuilder("pw-dump", "Node")
-                .redirectError(ProcessBuilder.Redirect.DISCARD)
-                .start()
+            val process = ProcessBuilder("pw-dump").redirectError(ProcessBuilder.Redirect.DISCARD).start()
             val output = process.inputStream.bufferedReader().use { it.readText() }
             process.waitFor()
-
-            if (output.isNotBlank()) {
-                val nodeBlocks = output.split("{\n    \"id\":", "{\n  \"id\":")
-                for (block in nodeBlocks) {
-                    val isVideo = block.contains("\"media.class\": \"Video") ||
-                            block.contains("\"media.class\": \"Stream/Output/Video") ||
-                            block.contains("\"mediaType\": \"video\"") ||
-                            block.contains("\"media.type\": \"Video\"")
-                    if (isVideo) {
-                        val descMatch = Regex("\"node.description\": \"([^\"]+)\"").find(block)
-                        val nameMatch = Regex("\"node.name\": \"([^\"]+)\"").find(block)
-                        val name = descMatch?.groupValues?.get(1) ?: nameMatch?.groupValues?.get(1)
-                        if (!name.isNullOrBlank()) {
-                            results.add(name)
-                        }
-                    }
-                }
+            val root = kotlinx.serialization.json.Json.parseToJsonElement(output)
+            for (obj in root as? kotlinx.serialization.json.JsonArray ?: return emptyList()) {
+                val o = obj as? kotlinx.serialization.json.JsonObject ?: continue
+                if ((o["type"] as? kotlinx.serialization.json.JsonPrimitive)?.content?.endsWith("Node") != true) continue
+                val props = ((o["info"] as? kotlinx.serialization.json.JsonObject)?.get("props") as? kotlinx.serialization.json.JsonObject) ?: continue
+                fun prop(k: String) = (props[k] as? kotlinx.serialization.json.JsonPrimitive)?.content
+                val mediaClass = prop("media.class") ?: continue
+                if (mediaClass != "Video/Source" && mediaClass != "Stream/Output/Video") continue
+                val name = prop("node.name") ?: continue
+                val base = prop("node.description")?.takeIf { it.isNotBlank() } ?: name
+                // Two nodes can share a description (a webcam and its IR sensor both say "HP HD Camera"): number the rest.
+                var label = base; var n = 2
+                while (label in results) label = "$base ($n)".also { n++ }
+                pipeWireTargets[label] = name
+                results.add(label)
             }
         } catch (e: Throwable) {
-            // Silently fall back
+            logger.debug { "PipeWire stream discovery failed: ${e.message}" }
         }
-
-        if (results.isEmpty()) {
-            try {
-                val process = ProcessBuilder("pw-cli", "list-objects", "Node")
-                    .redirectError(ProcessBuilder.Redirect.DISCARD)
-                    .start()
-                val output = process.inputStream.bufferedReader().use { it.readText() }
-                process.waitFor()
-
-                var currentName = ""
-                var isVideoNode = false
-
-                for (line in output.lines()) {
-                    val trimmed = line.trim()
-                    if (trimmed.startsWith("id ")) {
-                        if (isVideoNode && currentName.isNotBlank()) {
-                            results.add(currentName)
-                        }
-                        currentName = ""
-                        isVideoNode = false
-                    }
-                    if (trimmed.contains("media.class = \"Video") || trimmed.contains("media.type = \"Video")) {
-                        isVideoNode = true
-                    }
-                    if (trimmed.startsWith("node.description =")) {
-                        val desc = trimmed.substringAfter("node.description =").trim('"', ' ', '\t')
-                        if (desc.isNotBlank()) currentName = desc
-                    } else if (trimmed.startsWith("node.name =") && currentName.isBlank()) {
-                        val n = trimmed.substringAfter("node.name =").trim('"', ' ', '\t')
-                        if (n.isNotBlank()) currentName = n
-                    }
-                }
-                if (isVideoNode && currentName.isNotBlank()) {
-                    results.add(currentName)
-                }
-            } catch (e: Throwable) {
-                // Ignore
-            }
-        }
-
         return results.toList()
     }
 
-    private var cachedSpoutLib: SpoutLibrary? = null
-    private var spoutLoadFailed = false
+    /** One SpoutLibrary object kept for the sender list (no GL needed for it). */
+    private var spoutLister: SpoutApi? = null
     private val spoutNameBuffer = ByteArray(256)
-    private var lastSpoutSenderCount = -1
-    private var cachedSpoutList: List<String> = emptyList()
 
     private fun fetchSpoutServers(): List<String> {
-        if (spoutLoadFailed) return emptyList()
-        val lib = cachedSpoutLib ?: try {
-            com.sun.jna.Native.load("SpoutLibrary", SpoutLibrary::class.java).also { cachedSpoutLib = it }
-        } catch (e: Throwable) {
-            spoutLoadFailed = true
-            return emptyList()
-        }
-
+        val api = spoutLister ?: SpoutApi.create()?.also { spoutLister = it } ?: return emptyList()
         return try {
-            val ptr = lib.CreateSpout()
-            if (com.sun.jna.Pointer.nativeValue(ptr) == 0L) return emptyList()
-            try {
-                val count = lib.GetSenderCount(ptr)
-                if (count == 0) {
-                    lastSpoutSenderCount = 0
-                    cachedSpoutList = emptyList()
-                    return emptyList()
+            val results = mutableListOf<String>()
+            for (i in 0 until api.senderCount()) {
+                spoutNameBuffer.fill(0)
+                if (api.sender(i, spoutNameBuffer)) {
+                    val end = spoutNameBuffer.indexOf(0).let { if (it < 0) spoutNameBuffer.size else it }
+                    val name = String(spoutNameBuffer, 0, end, Charsets.UTF_8)
+                    if (name.isNotBlank()) results.add(name)
                 }
-                val results = mutableListOf<String>()
-                for (i in 0 until count) {
-                    spoutNameBuffer.fill(0)
-                    if (lib.GetSender(ptr, i, spoutNameBuffer, 256)) {
-                        val name = String(spoutNameBuffer).trimEnd('\u0000')
-                        if (name.isNotBlank()) {
-                            results.add(name)
-                        }
-                    }
-                }
-                lastSpoutSenderCount = count
-                cachedSpoutList = results
-                results
-            } finally {
-                lib.ReleaseSpout(ptr)
             }
+            results
         } catch (e: Throwable) {
+            logger.debug { "Spout sender list failed: ${e.message}" }
             emptyList()
         }
     }

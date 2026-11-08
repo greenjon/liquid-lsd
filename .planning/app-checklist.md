@@ -136,7 +136,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [ ] Clock RAND block at the right edge (randomization on): `A B ALL` over `BG PV`; Ctrl+Z undoes.
   auto: layout right. Left for you: Ctrl+Z after a Clock RAND press.
 - [ ] Every Clock button is also on MST > CTRL; right-click Learn MIDI/OSC works from both. A MIDI CC drives the FX queue steps.
-- [ ] Narrow the window: a block that doesn't fit is left out, nothing overlaps.
+- [ ] Narrow the window: a block that doesn't fit is left out, nothing overlaps. auto (round 5): at 1100 px the Clock row keeps everything; at 900 and 700 the QUEUE block drops out; no exceptions at any width. Below 1280 the FX row's small icons and captions crowd (below the supported size).
 - [ ] FX slot rows (2026-10-27, Chain view part 1): in Preferences > MIDI Controls > Perform Pages make a page of `deck.A.fx1`, `deck.A.fx2`, `deck.A.fx3`, `deck.A.src`. Badges read FX1/FX2/FX3; each row's knob 1 is its slot (name + bypass), knobs 2-4 its parameters, whatever the Deck A FX row's focus. Left block: effect name (click = Browse that slot), `[⋮] [Wet] [◀ Px/y ▶]`; die + FX ON only on the FX1 row. Drop an effect on an FX2 badge: it lands in slot 2. Page arrows page only their own slot; focusing that slot on the FX row opens on the same page. Geometry matches the other rows at 1280x720. On a Twister: the three slot rows are three distinct shades.
 - [ ] Chain view (2026-10-27): ⋮ menu of Deck A's FX row > Chain View: rows read `FX1`, `FX2`, `FX3`, `A SRC` over the Browse list (source row at the bottom since 2026-10-28), same knob size as Perform, nothing clipped at 1280x720. Touch a knob on FX2: the list targets slot 2. **Load** on the Browse header: row 4 becomes the load row (highlighted effect's name, → FX1/→ FX2/→ FX3, LIST); rows 1-3 don't move. Highlight an effect and click → FX3: it loads into slot 3 with the fade, Ctrl+Z undoes it, the list now targets slot 3. Load again brings the SRC row back. Chain toggle and Esc both leave in one press (Esc even with a slot focused on the FX row). Master: Chain View from the Master FX ⋮ menu shows Transitions at the bottom. A page tab click leaves Chain view.
   auto: rows read FX1, FX2, FX3, A SRC, nothing clipped at 1280x720. Chain View from the menu, Load, → FX3, Ctrl+Z and Esc all work with the mouse. A plain click on a list row also applies to the targeted slot. Left for you: knob touch retargeting, Master.
@@ -155,7 +155,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [ ] Click the stock source of the preset you're playing: its defaults load. Click it again: nothing happens.
 - [ ] SRC tab rows: Gain, **Deck Zoom**, **Deck Rotate**, then the source's own. On Reaction Diffusion / Escape Time the two Zooms are clearly different; 3D sources (KIFS, Gyroid) hide Deck Zoom / Rotate. Tooltips explain them.
   auto: row order right, and KIFS hides Deck Zoom / Rotate. Left for you: the two Zooms differ, tooltips.
-- [ ] Set Deck Zoom, pick another source: it resets. Load a preset: it keeps its saved framing.
+- [ ] Set Deck Zoom, pick another source: it resets. Load a preset: it keeps its saved framing. auto (round 5): set to 2.4 with Initial Range, picking Voronoi Cells put it back to 1.0, loading a preset gave its saved 2.036.
 - [ ] Deck Zoom and Deck Rotate now move Isometric Voxels and Wave Ripples.
 - [ ] MIDI-learn Gain on Deck A, change source several times: the mapping still drives Gain. A mapping saved before (path `Deck A/<Source>/Gain`) still works. MST > LEVELS shows only level faders.
 - [x] Leak check: load ~30 sources and flame presets in a row on one deck (or run an A/B queue of flames for a while); `GPU buffers` in the title bar stays roughly flat.
@@ -176,7 +176,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
   auto: `MIDI: CC -1` fixed 2026-11-06. Wording right on the B row, and the die lists what it rolls. A row not read.
 - [x] Old presets and sessions still load (they carry the removed deck feedback and 3D-view values, which are now ignored).
   auto: 27 desktop presets from two points in git history load, and a session with the removed deck feedback and 3D-view values restores in a real run.
-- [ ] On a packaged install over an older version: unedited bundled shaders are updated, an edited one is kept (log line). Needs a real install to test.
+- [ ] On a packaged install over an older version: unedited bundled shaders are updated, an edited one is kept (log line). Needs a real install to test. auto (round 5): real release zips, v0.9.165 unzipped over v0.9.164 with an edited shader: edited shader kept, preset kept, no exceptions. A fresh v0.9.165 in a folder with spaces and accents builds all 37 bundled sources on first run.
   auto: real Linux zips, v0.9.162 then v0.9.164 unzipped over it: runs clean, your preset stays. Fixed 2026-11-07: the zip's own copy overwrote an edited shader. The fix only takes effect from the next release's zip; not retested on a built zip.
 
 ## 5. Off-air decks (2026-10-22)
@@ -185,12 +185,15 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
   auto: B's monitor changed on 60 of 120 frames with the fader on A, and every frame at centre and on B. Frame time, Nebula on A and Apollonian on B: 31-34 ms on A, 35-42 ms at centre, 39 ms on A with half rate off, with another run going. Left for you: no hitch on the way back.
 - [ ] A deck at level 0, and the master at 0: half rate. BG at level 0: half rate.
 - [ ] PV renders at half size and still looks fine in its monitor; send PV out over Spout/Syphon/PipeWire and it goes to full size and full rate.
+- [ ] Linux, PipeWire video (rewritten 2026-11-07): turn on Master in Preferences > Video & Display > Live Video Sharing and read it in OBS (try Video Capture Device (PipeWire) and Screen Capture) or `gst-launch-1.0 pipewiresrc target-object=LiquidLSD-MASTER ! videoconvert ! autovideosink`; and load a camera or another app's stream from External video. auto: both directions verified with GStreamer in a private PipeWire (RGB, YUY2 and GRAY8 in), picture upright; the laptop's webcam (YUY2) shows live on a deck (one-off test with permission, 2026-11-07). OBS untested.
+- [ ] Windows, Spout (rewritten 2026-11-08, never run): share Master and read it in Resolume / OBS's Spout plugin, right way up; load another app's Spout sender from External video. If it crashes, the vtable slots in `SpoutApi` are the suspect.
+- [ ] macOS (Intel and Apple Silicon), Syphon (rewritten 2026-11-08, never run): share Master and read it in Syphon Simple Client / Resolume; load another app's Syphon server from External video. Also on macOS: leave the app open 30 minutes with a Syphon client connected and check Activity Monitor: memory should stay flat (autorelease pools added 2026-11-08).
 - [ ] Preferences > General **Off-air decks at half frame rate** off: everything renders every frame.
 - [ ] A simulation (Reaction Diffusion, Lenia) cued off-air runs at half speed, then normal speed on air. Decide whether that's acceptable.
 
 ## 6. FX chains (2026-10-22 review)
 
-- [ ] `FX ON` (lit = on) instead of BYPASS; its state survives a restart.
+- [ ] `FX ON` (lit = on) instead of BYPASS; its state survives a restart. auto (round 5): turned Deck A's FX ON off in the real app, File > Exit (confirm dialog), relaunched: still off, Deck B still on.
 - [ ] No chain shows the unsaved `•` at launch. It lights for a slot, parameter, Dry/Wet, link or Metaknob-target change, not for turning the Super Knob or a Metaknob.
   auto: fixed 2026-11-06: every chain showed unsaved at launch, on a fresh install too. Now clean on both, a parameter change marks it, the Super Knob doesn't. Left for you: slot, link and target changes, Metaknob moves.
 - [x] Revert to Saved undoes parameter tweaks.
@@ -216,7 +219,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 
 ## 7. Super Knob and Metaknobs
 
-- [ ] A linked slot's knob 2-4 moves its Metaknob (not dead); in Focus Mode a linked slot's knob 1 works.
+- [ ] A linked slot's knob 2-4 moves its Metaknob (not dead); in Focus Mode a linked slot's knob 1 works. auto (round 5): dragging a linked slot's Perform knob moves its Metaknob. Focus Mode knob 1 not tried.
 - [ ] Preferences: **Super Knob response** Relative (default): linked slots at 20% and 90% both rise, stay apart, reach 100% / 0% together. Pickup: a slot waits for the Super Knob, amber link button with both values in its tooltip.
   auto: Relative: 20% and 90% both rise, stay apart, reach 100% and 0% together. Pickup: each waits until the knob reaches it. Left for you: amber link button and its tooltip.
 - [ ] Moving a linked Metaknob by hand (Edit row, MIDI, editing a target) isn't yanked back by the Super Knob.
@@ -226,7 +229,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
   auto: Add Target, ± Invert and the trash work, and the row menu's one Metaknob Target check toggles (fixed 2026-11-07: menus on lower rows were cut off, hiding it). Left for you: each zone and curve.
 - [ ] Remove every target: the knob reads `NO TARGET` (slot tooltip explains), and it's still empty after save and reload (not Dry/Wet).
   !!auto: removing the last target works and the editor reads `Metaknob targets (0)`, but the knob keeps the effect's name. `NO TARGET` was removed from the code 2026-10-22 and the slot tooltip explains instead, so this item is out of date. Saving and reloading not run.
-- [ ] A target naming a missing parameter shows `(missing)` and drives nothing.
+- [ ] A target naming a missing parameter shows `(missing)` and drives nothing. auto (round 5): a chain naming a missing target loads, Edit shows `no_such_param (missing)`, moving the Metaknob doesn't crash.
 - [ ] A Metaknob on Dry/Wet owns it: the focus header's Wet slider moves the Metaknob; macro/MIDI/OSC writes are suspended.
 - [ ] Focus from Edit's SUPER KNOB & METAKNOBS block focuses the chain everywhere; the block shows knobs 2-4, page arrows and Group Mode.
 - [x] Swap effects between slots: each slot keeps its own link setting.
@@ -234,25 +237,33 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [ ] Tap on the Super Knob's switch does nothing; Shift + tap is Chain Link.
 - [ ] Rate / speed / decay parameters respond exponentially on focus knobs 2-4; turning focus on doesn't change a value. ⟲ and the Twister tap land on the default.
 - [ ] A Metaknob with several targets starts where they're closest to their defaults when a slot loads or resets.
-- [ ] Save an FX slot and a chain, reload: targets, zones and knob order restored. Knob layout right on Perform and in the pair view.
-- [ ] ISF auto-bind: load a few filters; Super Knob and Metaknob do something sensible.
+- [ ] Save an FX slot and a chain, reload: targets, zones and knob order restored. Knob layout right on Perform and in the pair view. auto (round 5): added a target, inverted one, saved the chain, loaded another, reloaded: targets, ranges and invert are the same. Knob order and the Perform layout are yours.
+- [ ] ISF auto-bind: load a few filters; Super Knob and Metaknob do something sensible. auto (round 5): ten filters loaded one by one each got at least one Metaknob target. "Sensible" is yours.
 - [ ] *Remove Saved Default for (effect)* and *Save as Default* explain what they do.
 
 ## 8. Macros, learn and locks
 
 - [ ] Arm macro Learn, OSC Learn and MIDI Learn at once; Esc cancels all three. MIDI Learn on a parameter, and Learn into a controller profile command, still capture the next control you move (MIDI handling moved earlier in the frame, 2026-10-23).
   auto: OSC Learn arms from the row menu and Esc cancels it. Left for you: macro and MIDI Learn at once, capture from a real control.
-- [ ] A MIDI/OSC mapping made before a knob binding is suspended while the knob drives the target, flagged in both tables.
-- [ ] Range sliders lock when `lfoMin/lfoMax` is bound; Randomize min/max inputs too.
-- [ ] Knob- or Metaknob-driven Value: dragging, scrolling or typing in Initial Range moves the knob (through its curve), other targets follow; a Metaknob on a macro knob passes it up. Lobes, Recipe, Max Points and the grid Value cell stay locked.
+- [ ] A MIDI/OSC mapping made before a knob binding is suspended while the knob drives the target, flagged in both tables. auto (round 5): MIDI mapping does nothing while a macro knob drives the parameter, the reason names the knob, and it works again once the binding goes. Left for you: the caption in the MIDI table (it is further down Preferences than the script scrolled), and OSC.
+- [ ] OSC from your own surface (TouchOSC or similar) moves the mapped control; a sender that uses doubles now works too (fixed 2026-11-08). auto (round 5): UDP into the real app moved the crossfader for float, double, 64-bit int, bundle and XY-axis messages; garbage packets and a 20,000-packet flood did no harm. Left for you: a real phone or tablet over Wi-Fi.
+- [ ] Save As / Rename / New Playlist with a name like `AC/DC` or `CON`: the dialog says why under the field and won't save; fix the name and it saves. Accented names (`Café`) save and show correctly (fixed 2026-11-08). auto (round 5): all three dialogs, 7 checks; a full disk keeps the old preset and shows `Could not save ...: No space left on device`. Left for you: a look at the message in the light theme.
+- [ ] Windows or macOS (Java Sound): Preferences > Audio opens at once; the device menu fills in after "Scanning for devices..." and Refresh rescans without a stutter in the output (fixed 2026-11-08: the scan could freeze the app). auto (round 5): two frozen crash-test runs replayed fine after the fix.
+- [ ] Break your MIDI profile by hand (delete a closing brace in `library/midi/default.json`) and start the app: a message says it was kept as `default.json.unreadable`; fix the copy and rename it back (added 2026-11-08). auto (round 5): 33 damaged-file starts all came up; copies and message checked.
+- [ ] Record a long set (20 minutes or more, with audio), stop: the output keeps moving, the monitor shows `SAVING...` for a while, and the file has sound all the way through (fixed 2026-11-08: anything over a few minutes lost its sound). auto (round 5): 5-minute lab recording, video 298.93 s + audio 298.92 s, no freeze.
+- [ ] With a big library (import a few thousand flames), the Library scrolls smoothly and the output stays at full rate (fixed 2026-11-08). auto (round 5): 10,000 presets, 7 ms a frame (was 150 ms); keys, menus and outside changes checked.
+- [ ] Render Video (Offline) with a long mix (1-2 hours): it renders (fixed 2026-11-08: two hours ran out of memory). auto (round 5): a 2-hour track decodes in 2.5 s with the shipped memory setting.
+- [ ] Windows and macOS: is FFmpeg there? If not, Record says it needs FFmpeg; after `winget install Gyan.FFmpeg` / `brew install ffmpeg` and a restart, Record works (added 2026-11-08). Consider bundling FFmpeg in the release zips (licensing: LGPL builds only).
+- [ ] Range sliders lock when `lfoMin/lfoMax` is bound; Randomize min/max inputs too. auto (round 5): with LFO Min bound to a knob, dragging its handle and typing into its box leave it alone. The lock caption showed `[lfoMin]`; now `Min` (also in the popup and Perform strip).
+- [ ] Knob- or Metaknob-driven Value: dragging, scrolling or typing in Initial Range moves the knob (through its curve), other targets follow; a Metaknob on a macro knob passes it up. Lobes, Recipe, Max Points and the grid Value cell stay locked. auto (round 5): dragging Initial Range on a knob-driven value moves the knob, and the value follows it.
 - [ ] Metaknob-driven rows show the cyan bar, tint, `[K1]` badge and "Linked to its Metaknob" caption; Randomize off.
-- [ ] FX-bank bindings are read-only in Properties and slider popups.
+- [ ] FX-bank bindings are read-only in Properties and slider popups. auto (round 5): screenshot shows "Driven by the FX chain; edit the slot's Metaknob targets instead" and no range editor.
 - [ ] Select a knob by clicking a parameter, then click the knob: one selection.
-- [ ] Bound Min/Max labels and Beat Division labels open the popup.
-- [ ] Type a value into a knob with curve, invert and zone set: the result respects them.
-- [ ] Macro-bank import onto another deck: paths remap, `Mixer/...` stays.
+- [ ] Bound Min/Max labels and Beat Division labels open the popup. auto (round 5): the bound Min label opens the binding popup. Beat Division label not reached (row below the fold), yours.
+- [ ] Type a value into a knob with curve, invert and zone set: the result respects them. auto (round 5): typing 20 into a knob with Exponential, Invert and First Half gives 20%, and turning the knob to the same spot gives the same value.
+- [ ] Macro-bank import onto another deck: paths remap, `Mixer/...` stays. auto (round 5): Save bank from Deck A, Apply to Deck B: deck paths become `Deck B/...`, `Mixer/crossfade` stays.
 - [ ] Click a chip on a MASTER knob bound to a deck parameter: selects sensibly.
-- [ ] Reorder or delete a modulator: bindings stay on the right one.
+- [ ] Reorder or delete a modulator: bindings stay on the right one. auto (round 5): deleting the LFO leaves a knob bound to the audio modulator's Depth on that modulator. Reorder not tried.
 
 ## 9. Modulators and step sequencer
 
@@ -262,9 +273,9 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
   auto: a drag paints, and one Ctrl+Z undoes the whole drag. Left for you: scroll, double-click, Shift, the outline.
 - [ ] Toolbar: Randomize, Invert, Shift < >, Copy/Paste between sequencers, Fill..., Euclid... (Rotate and preview), Clear. Snap menu. Keyboard editing with the pointer over the bars.
   auto: fixed 2026-11-06: the toolbar never wrapped, so Clear was clipped and Snap off the edge at 1280x720. Randomize, Invert, Shift, Copy, Paste, Clear and Euclid's Apply work, Ctrl+Z undoes. Left for you: Fill, Snap, Euclid's Rotate, keyboard.
-- [ ] Length 1-32 (odd lengths), Phase, Offset, Step Hold (randomize); Glide Curve greys when nothing glides; output trace and live dot; ghost steps past the length; bars dim when bypassed.
+- [ ] Length 1-32 (odd lengths), Phase, Offset, Step Hold (randomize); Glide Curve greys when nothing glides; output trace and live dot; ghost steps past the length; bars dim when bypassed. auto (round 5): typing 7 into Length gives 7 steps. Phase, Offset, Step Hold, Glide Curve and the trace are yours.
 - [ ] Auto toggle: randomization re-rolls the pattern, morph slides between patterns.
-- [ ] Changing Clock Unit converts the step duration.
+- [ ] Changing Clock Unit converts the step duration. auto (round 5): 1 beat at 128 BPM became 0.469 s in TIME, then 14 frames in FRAME (at the running frame rate).
 - [ ] After the app has run 15+ minutes: sweep a Time-clocked LFO's period (and a sequencer's Time interval) by hand and from a macro. It speeds up or slows down, never jumps. A preset morph between two different LFO periods glides too (2026-10-23).
 - [ ] Ctrl+Z undoes sequencer, LFO, Audio and MIDI CC edits (one step per drag).
   auto: sequencer and LFO edits undo one step at a time. Fixed 2026-11-07: one Ctrl+Z undid two steps in the pair view and Chain view, and Reset Parameter to Default couldn't be undone. Left for you: Audio, MIDI CC.
@@ -315,10 +326,10 @@ Preferences: randomization on. For each source: pick it fresh from Browse (not a
 ## 10. Mixer, output and app
 
 - [ ] Deck-tile level faders: dragging doesn't snap back with a bound knob (the knob follows); the handle shows the fader's own value, the bar the live level.
-- [ ] Output > Output Monitor: Automatic and a named monitor; the output reopens on the chosen screen (try Wayland + projector).
+- [ ] Output > Output Monitor: Automatic and a named monitor; the output reopens on the chosen screen (try Wayland + projector). auto (round 5): Output > Secondary Output Window opens a second window showing the master output, right way up (single virtual screen; monitor choice and projector are yours).
 - [x] New version available: menu-bar download icon instead of a startup popup.
   auto: fresh real run: green download icon in the menu bar, no popup.
-- [ ] During Video Export (offline render), controller knobs and MIDI queue steps still work.
+- [ ] During Video Export (offline render), controller knobs and MIDI queue steps still work. auto (round 5): Record Output and Render Video (Offline) both work in the real app (1080p H.264 with audio; offline 8.000 s for 8 s of audio at about 30 fps). Recording was time-compressed below 60 fps (fixed). Knobs and MIDI during an export not tried.
 - [x] Kill the app (`kill -9`) after changing things: preferences and session from the last minute come back.
   auto: real app, kill -9 about a minute after the changes: source and FX ON state came back, badge and Library chip right (badge fixed 2026-11-06).
 - [x] Web Broadcast tab hidden until Show Advanced Preferences (or already configured).
@@ -397,7 +408,7 @@ Light wave 2: - [x] cyclic_ca - [x] metaballs - [x] wave_ripples - [x] aurora_ri
 
 Known remaining literals: dropdown selected text, ParametersRenderer fills and grey border, grey button triple in PropertiesPanel / AudioModulatorSection / ParametersTabs / ModulatorHeaderRow, MenuBar, MacroBindingEditor mini-slider, TempoSyncPanel, scope and meter text, UIThemeStyler neutrals, die button/fader in MixerPanel vs DeckControlPanel, `CvTheme`, slider literals.
 
-- [ ] Switch to Light. Walk every view (Perform, Edit, Library, pair views, bound lists).
+- [ ] Switch to Light. Walk every view (Perform, Edit, Library, pair views, bound lists). fixed (round 5, 2026-11-07): unselected tabs, Edit rail, Clock row BPM / AUDIO / LINK, fade time, FX slot names, driven-row labels, scope dropdown, value bar track; before/after frames in `.planning/auto-verify-2026-11-06/round4/results/contrast/` and `round5/results/contrast/`. Still noted, not changed: knob value cells in Edit, Library tab strip (about 1.9:1), muted LFO labels (disabled on purpose).
   !!auto: 13 views measured, in `.planning/auto-verify-2026-11-06/round4/results/contrast.txt` with frames beside it. Unreadable or nearly: Edit's sub-tabs and Value/LFO/SEQ tabs (dark on dark), the value plot (dark panel), `128.0 BPM` and fade time, FX link and power buttons. Low: cyan linked row labels (about 1.7:1), FX slot captions (2.1:1), sequencer toolbar (1.8:1), Library tabs (1.9:1). You decide the fixes.
 - [ ] New since the last pass: the badge's dimmed source text, the amber ⚠ lines in Browse tooltips, Clock row group tints, Library deck chips, the amber pickup link button, the empty-deck card, `Wet 40%` / dimmed chain names, button bevels.
 - [ ] The breathing bound-slot pill behind the Library / Edit header name: label readable, pill visible.
@@ -441,7 +452,7 @@ auto 2026-11-06, headless Firefox, local web/ (TV v26, same version as live): ui
   auto: MENU shows AUTO (ON), no hard scene in 30 changes, on a real media-query emulation.
 - [ ] A slow show (hip-hop, dub) mostly brings calm/groove looks; a fast one (techno, drum and bass) mostly hard/kick looks, but not only those.
   !!auto: 39 of your tracks that Mixxx reads under 95 BPM: only 18% read at that tempo and 79% with octaves, so most read double. Those get fast-music looks. 110-135 BPM reads 97-100% exact. Your call whether to tune it; you said it looks fine so far.
-- [ ] Set Preferences › Web Broadcast › Broadcaster name, go live: the web TV shows the LIVE title card with the name; clear the name mid-broadcast: the next viewer joining sees just LIVE.
+- [ ] Set Preferences › Web Broadcast › Broadcaster name, go live: the web TV shows the LIVE title card with the name; clear the name mid-broadcast: the next viewer joining sees just LIVE. auto (round 5): a name set in the preferences file reaches the web TV title card ("Overnight Test").
   auto, faked relay: title card with the name, cleared name, controls locked, back to autopilot, reconnect in 5 s. Left for you: a real broadcast.
 - [ ] Branding: nameplate opens the site in a new tab (and doesn't power the TV off); ident at first power-on; ABOUT's QR code scans to liquid-lsd.greenjon.com; paste https://spaz.org/tv/ into a chat app and see the preview.
 - [ ] Web TV theme and listener count (2026-11-04, v22): MENU › THEME flips dark/light at once and survives a reload with no dark flash; light is comfortable to look at with the knobs, lit LEDs (LIVE, HOLD, CHAT) and blackboard all easy to read, on a phone too; Add to Home Screen / browser bar colour follows. Under the badge, `N mutants watching TV.` matches the count in the Spaz Radio app and updates within 30 seconds (`1 mutant` when alone; blank at zero).
@@ -460,7 +471,7 @@ auto 2026-11-06, headless Firefox, local web/ (TV v26, same version as live): ui
 - [ ] Web TV keys (2026-11-03, TV v21, after publishing): `R` rolls, `J` jumps to a random channel, `E` next FX, `F` fullscreen, `S` schedule, `U` mutes and restores the volume; `Space` holds with no tape in and pauses a tape. The `?` page reads well in its two grouped columns at your usual window size and in fullscreen.
 - [ ] TAPES (2026-11-03, TV v20, after publishing), on desktop and a phone, **and iPhone Safari** (Ogg playback and seeking there are unproven): LIVE is lit on the radio, TAPES while a tape is in or the list is open; `T` or the button opens the archive; search; RANDOM TAPE; ON THIS DAY; play a show: the badge says TAPE and the picture follows the show; drag the waveform, `,` `.` `<` `>`, `K`; reload and RESUME returns to your place; power off and on keeps the tape; LIVE/`L` goes back to the radio; lock-screen seek works. During a real broadcast or scheduled show: the tape plays on, LIVE pulses red, `LIVE NOW` comes up once, and going back shows the broadcast's picture. The chat board shows the tape note. The button row still fits at 1280x720 and on a phone.
 - [ ] CHAT blackboard (2026-10-31, after publishing; TV v6), at 1280x720 and on a phone in portrait: the board is open on a first visit beside the TV (under it on the phone), with the recent conversation and "N here: …" matching the Spaz Radio app; the X closes it and the TV grows back; a reload keeps it closed; CHAT / `C` / MENU › CHAT bring it back. Write a name, then post one line (with the user's OK, it's the real room): it shows on the phone app with a time, and the phone's reply shows on the board within a second or two, name in its chalk colour, yours in yellow. Typing `n`, `m`, `c` or Space on the board doesn't touch the TV. Close the board, have someone post: the CHAT light blinks. Close the tab: your name leaves the phone's online list. Wi-Fi off for a minute while someone posts, back on: "offline · reconnecting…", then the missed line appears once. Fullscreen shows no chat. Caveat 700 legible on the slate (else try Caveat Brush).
-- [ ] While broadcasting from the desktop, the web TV shows LIVE and its controls are locked. The desktop uses the rotated relay token (Preferences > Web Broadcast); a wrong token shows [LIVE ERR].
+- [ ] While broadcasting from the desktop, the web TV shows LIVE and its controls are locked. The desktop uses the rotated relay token (Preferences > Web Broadcast); a wrong token shows [LIVE ERR]. auto (round 5): the real desktop app broadcast to a local stand-in relay (private network namespace): it connects as broadcaster with its key, sends state_full v2 and about 15 deltas/s; replayed into the web TV (`tests/web/broadcast_replay.spec.ts`): LIVE, LIVE SHOW badge, broadcaster name, the desktop's deck, crossfader and master FX, real picture, no errors. Relay killed for 10 s mid-broadcast: the app retried and was back with a full state 5 s after it returned. Left for you: the real relay at spaz.org and the rotated relay token.
 - [x] Pull the network while the TV plays: snow and NO SIGNAL within a few seconds; plug it back: the radio and the picture come back within ~10 s.
   auto: local fake radio, stalled and dropped, Chromium, stalled on Firefox: NO SIGNAL in 4.4-5.4 s, back in 0.1-9.7 s, no errors. Real radio not tried.
 - [x] On a track with a breakdown and drop, a calm look arrives in the breakdown and a hard look cuts in on the drop (not on every quiet moment).

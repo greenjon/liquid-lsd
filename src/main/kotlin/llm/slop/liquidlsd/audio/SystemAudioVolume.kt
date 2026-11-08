@@ -61,7 +61,8 @@ object SystemAudioVolume {
             var process: Process? = null
             try {
                 val pb = when (os) {
-                    OS.LINUX -> ProcessBuilder("wpctl", "set-volume", "@DEFAULT_AUDIO_SOURCE@", "%.2f".format(volume))
+                    // wpctl wants a dot decimal whatever the system locale (a German system would format 0,50).
+                    OS.LINUX -> ProcessBuilder("wpctl", "set-volume", "@DEFAULT_AUDIO_SOURCE@", String.format(java.util.Locale.ROOT, "%.2f", volume))
                     OS.MAC -> {
                         val pct = (volume * 100).toInt()
                         ProcessBuilder("osascript", "-e", "set volume input volume $pct")

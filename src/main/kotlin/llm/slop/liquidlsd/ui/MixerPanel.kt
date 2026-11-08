@@ -86,6 +86,12 @@ class MixerPanel(
             dlMaster.addRectFilled(badgeX - 4f, badgeY - 2f, badgeX + 94f, badgeY + 20f, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, 0.75f), 4f)
             dlMaster.addCircleFilled(badgeX + 6f, badgeY + 9f, 4f, ImGui.colorConvertFloat4ToU32(1f, 0.15f, 0.15f, pulse))
             dlMaster.addText(badgeX + 16f, badgeY + 1f, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f), recText)
+        } else if (llm.slop.liquidlsd.export.RealtimeRecorder.isFinishing) {
+            // A stopped recording is still being written (the audio mux takes minutes for a long set).
+            val badgeX = imgScreenX + availW - 100f
+            val badgeY = imgScreenY + 8f
+            dlMaster.addRectFilled(badgeX - 4f, badgeY - 2f, badgeX + 94f, badgeY + 20f, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, 0.75f), 4f)
+            dlMaster.addText(badgeX + 4f, badgeY + 1f, ImGui.colorConvertFloat4ToU32(1f, 0.8f, 0.3f, 1f), "SAVING...")
         }
 
         // --- Master Output Overlays: [M] Badge, [🎲 ALL], and Vertical Master Level Fader ---

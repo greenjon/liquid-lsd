@@ -115,7 +115,7 @@ object BrowseRecents {
     private fun save(store: Store) {
         try {
             store.file.parentFile?.mkdirs()
-            store.file.writeText(json.encodeToString(listSerializer, store.keys))
+            llm.slop.liquidlsd.utils.AtomicFile.write(store.file, json.encodeToString(listSerializer, store.keys))
         } catch (e: Exception) {
             logger.error(e) { "Could not save recent items ${store.file.path}" }
         }

@@ -147,7 +147,7 @@ internal object PerformanceClockControls {
             bpmLabel = "${"%.1f".format(tenths / 10.0)} BPM##perf_clock_bpm"
         }
         session.uiTheme.withFont(UITheme.FontLevel.H3) {
-            ButtonChrome.pushColor(TangoPalette.PILL_BG.u32())
+            ButtonChrome.pushColor(TangoPalette.CLOCK_READOUT_BG.u32())
             if (ButtonChrome.button(bpmLabel, BPM_W, headerH)) PreferencesPanel.open(PreferencesPanel.Category.TEMPO_SYNC)
             ImGui.popStyleColor(3)
         }

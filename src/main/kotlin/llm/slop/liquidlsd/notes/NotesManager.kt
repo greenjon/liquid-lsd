@@ -49,6 +49,7 @@ object NotesManager {
             logger.info { "Loaded ${sourceNotes.size} source notes from ${sourceNotesFile.path}" }
         } catch (e: Exception) {
             logger.error(e) { "Failed to load source-notes.json" }
+            llm.slop.liquidlsd.utils.AtomicFile.keepUnreadable(sourceNotesFile, "your source notes")
         }
         sourceNotesLoaded = true
     }
@@ -69,7 +70,7 @@ object NotesManager {
 
     private fun saveSourceNotes() {
         try {
-            sourceNotesFile.writeText(json.encodeToString(sourceNotes.toMap()))
+            llm.slop.liquidlsd.utils.AtomicFile.write(sourceNotesFile, json.encodeToString(sourceNotes.toMap()))
         } catch (e: Exception) {
             logger.error(e) { "Failed to save source-notes.json" }
         }

@@ -135,4 +135,39 @@ class OscCodecTest {
         }
         assertTrue(threw)
     }
+
+    /** A message built by hand the way other OSC senders write it: address, type tag, then each argument's bytes. */
+    private fun packet(address: String, tags: String, write: (java.nio.ByteBuffer) -> Unit): ByteArray {
+        val buf = java.nio.ByteBuffer.allocate(256).order(java.nio.ByteOrder.BIG_ENDIAN)
+        fun str(s: String) { val b = s.toByteArray(); buf.put(b); repeat(((b.size + 4) / 4) * 4 - b.size) { buf.put(0) } }
+        str(address); str(tags); write(buf)
+        return buf.array().copyOf(buf.position())
+    }
+
+    @Test
+    fun testDecodeDoubleAndInt64AsFloats() {
+        // Max, SuperCollider and several Python senders write doubles; some write 64-bit ints.
+        val decoded = OscCodec.decode(packet("/fader", ",dhf") { it.putDouble(0.25); it.putLong(3L); it.putFloat(0.5f) })
+        assertIs<OscMessage>(decoded)
+        assertEquals(listOf<Any>(0.25f, 3f, 0.5f), decoded.args)
+    }
+
+    @Test
+    fun testDecodeSkipsPayloadOfNonNumericTagsKeepingLaterArgsAligned() {
+        val decoded = OscCodec.decode(packet("/x", ",tcrmSf") {
+            it.putLong(1L); it.putInt('A'.code); it.putInt(-1); it.putInt(0x00903C7F)
+            it.put("sym".toByteArray()); it.put(0); it.putFloat(0.75f)
+        })
+        assertIs<OscMessage>(decoded)
+        assertEquals(0.75f, decoded.args.last() as Float, absoluteTolerance = 1e-6f)
+        assertEquals("A", decoded.args[1])
+        assertEquals("sym", decoded.args[4])
+    }
+
+    @Test
+    fun testDecodeStopsAtAnUnknownTagInsteadOfMisreadingTheRest() {
+        val decoded = OscCodec.decode(packet("/x", ",fqf") { it.putFloat(0.1f); it.putInt(7); it.putFloat(0.9f) })
+        assertIs<OscMessage>(decoded)
+        assertEquals(listOf<Any>(0.1f), decoded.args)
+    }
 }

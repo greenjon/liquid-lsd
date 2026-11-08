@@ -373,7 +373,7 @@ object FXBrowserPanel {
         try {
             val dto = json.decodeFromString<FXPlaylistDto>(playlistFile.readText())
             val updated = dto.copy(items = dto.items + fxPaths)
-            playlistFile.writeText(json.encodeToString(FXPlaylistDto.serializer(), updated))
+            llm.slop.liquidlsd.utils.AtomicFile.write(playlistFile, json.encodeToString(FXPlaylistDto.serializer(), updated))
             LibraryPanel.refreshAssets()
         } catch (e: Exception) {
             logger.error(e) { "Failed to append $fxPaths to FX playlist ${playlistFile.name}" }

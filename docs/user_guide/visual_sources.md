@@ -18,7 +18,7 @@ Besides generating its own video, a deck can show live video from another app or
 
 - **Windows:** Spout senders
 - **macOS:** Syphon servers
-- **Linux:** PipeWire video streams
+- **Linux:** PipeWire video streams: other apps' video source nodes and cameras, at any size, in RGBA, BGRA, RGBx, BGRx, YUY2 (what most webcams send) or GRAY8 (IR cameras). Two sources with the same name (a laptop's webcam and its IR sensor) are listed as `Name` and `Name (2)`.
 
 Every stream running right now is listed in Browse under **External video** (see [Presets & Library](presets_and_library.md)). The list refreshes every couple of seconds, so a stream appears shortly after its app starts sending and disappears when it stops. Load one like any other source. A live stream has a single **Gain** parameter in place of a generator's parameter list, and the deck's FX chain, levels and transitions work on it exactly as they do on a generator.
 

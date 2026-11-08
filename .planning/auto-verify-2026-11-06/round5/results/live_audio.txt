@@ -1,0 +1,12 @@
+labrun2.py plan2, private PipeWire, Audio clock, desktop test build, 2026-11-07. Numbers only.
+part                          live bpm [range]   tempo moves   bass   energy  drops>0.5
+synth 128                      127.9 [128-128]   0            0.36   -0.23   0
+synth 174                      139.1 [139-140]   0            0.36   -0.02   0
+synth 85                       170.3 [170-170]   0            0.32   -0.11   0
+real, Mixxx 129                129.0 [117-132]   2            0.48   +0.07   4
+real, Mixxx 122                122.2 [122-122]   0            0.49   -0.00   4
+real, Mixxx 135                133.7 [89-139]    10           0.51   -0.02   0
+real, Mixxx 75                 100.5 [100-152]   2            0.43   -0.21   0
+synth 128 after PW restart     127.9 [128-128]   0            0.48   -0.00   0
+Offline desktop tracker (AudioTempoReportTest) on the synth files: 128 -> 128, 174 -> 70, 85 -> 85.
+The phase steadiness column of lab_report.py is not trustworthy (beatPhase sampled twice a second) and is left out.

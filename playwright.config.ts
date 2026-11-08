@@ -8,6 +8,8 @@ const launchOptions = { args: chromeArgs, env: { ...process.env, ...nvidia } as 
 
 export default defineConfig({
   testDir: './tests/web',
+  // The app test harness keeps a git worktree under tests/web/.cache, which has its own copy of these specs.
+  testIgnore: ['**/.cache/**'],
   outputDir: 'test-results/pw',
   fullyParallel: false,
   workers: 3,

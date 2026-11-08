@@ -35,9 +35,9 @@ The sharing method depends on your platform:
 
 - **Windows:** Spout2
 - **macOS:** Syphon
-- **Linux:** PipeWire (DMA-BUF GPU sharing, with a memory fallback if the GPU doesn't support it)
+- **Linux:** PipeWire. Each shared feed is a video source node named after the stream (`LiquidLSD-MASTER` by default), sending RGBA frames through shared memory at the stream's size.
 
-**On Linux with OBS:** Add a **PipeWire Screen Capture** source and select the Liquid LSD video node. Use `qpwgraph` or `Helvum` to inspect and route video nodes.
+**On Linux:** any app that reads PipeWire video nodes can take the feed. With GStreamer, for example: `gst-launch-1.0 pipewiresrc target-object=LiquidLSD-MASTER ! videoconvert ! autovideosink`. Use `qpwgraph` or `Helvum` to see and route video nodes. OBS's PipeWire sources go through the desktop's screen and camera portals, which may not list an app's video node; this hasn't been tested yet. Changing the output size reconnects the stream, so readers may need to reconnect too.
 
 **Status:** Check the **Preferences → Video & Display** panel for a live status indicator next to each shared feed showing which sharing method is active and whether it's working.
 
@@ -45,11 +45,15 @@ The sharing method depends on your platform:
 
 ## Recording Your Set (REC)
 
+**Needs FFmpeg.** Recording and Render Video (Offline) hand the frames to [FFmpeg](https://ffmpeg.org/), which has to be installed and on your PATH. Without it the app says so when you press Record. To install: on Linux, your package manager (`sudo dnf install ffmpeg`, `sudo apt install ffmpeg`); on macOS, `brew install ffmpeg`; on Windows, `winget install Gyan.FFmpeg`, then restart the app.
+
 Press **`Ctrl+R`** (or go to **Output → Record Output**) to start recording. A red `REC mm:ss` badge appears on the title bar while recording is active, along with a dropped-frame counter.
 
-Press the same shortcut again, or click **Stop Recording**, to finish. The output file lands in the `recordings/` folder as an MP4, named with the date and time (e.g. `liquid_lsd_2026-09-01_20-15-00.mp4`).
+Press the same shortcut again, or choose **Record Output** again, to finish. The file is an MP4 named with the date and time (e.g. `liquid_lsd_20260901_201500.mp4`), saved in the recording folder set in Preferences, or else your Videos folder (`~/Videos/liquid-lsd` on Linux and Windows, `~/Movies/liquid-lsd` on macOS).
 
-**What you get:** H.264 video at your current render resolution and frame rate, with synchronized audio from your input. On capable hardware, NVENC, QuickSync, or VAAPI hardware encoding is used automatically.
+After you stop, the sound is added to the file in the background while you keep playing: the output monitor shows `SAVING...` and Record Output waits until it's done. For an hour-long set that takes a few minutes. If you quit meanwhile, the app finishes the file before it closes. Should adding the sound ever fail, the video is saved as usual and the sound stays next to it as a `.wav` file.
+
+**What you get:** H.264 video at your render resolution and the recording frame rate from Preferences, with synchronized audio from your input. If the app renders slower than that rate, frames are repeated so the video still runs in real time with the sound. On capable hardware, NVENC, QuickSync, or VAAPI hardware encoding is used automatically.
 
 You can also map the `REC` toggle to a MIDI controller button so you never have to touch the keyboard during a performance.
 
