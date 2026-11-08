@@ -457,6 +457,8 @@ You can map OSC controls either in-situ from the UI or manually from Preferences
 3. **TouchOSC XY Pads & Multi-Argument Vectors**:
    - Multi-argument messages (e.g. `/2/xy`) are automatically unpacked into per-axis sub-addresses (`/2/xy/0` for X, `/2/xy/1` for Y). Learning from an XY pad maps the active axis.
 
+4. **Argument types**: floats (`f`), ints (`i`), doubles (`d`) and 64-bit ints (`h`) all drive values; strings, booleans, timetags, colours and MIDI arguments are read but don't move anything. A message stops at a type the app doesn't know.
+
 ### Fine-Tuning & Shaping
 
 The **Address Mappings** table in the OSC Controls tab offers comprehensive per-control shaping:

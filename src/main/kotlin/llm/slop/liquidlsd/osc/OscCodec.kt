@@ -159,11 +159,19 @@ object OscCodec {
         } else {
             val typeTag = readString(buffer)
             val args = mutableListOf<Any>()
-            for (i in 1 until typeTag.length) {
+            tags@ for (i in 1 until typeTag.length) {
                 when (typeTag[i]) {
                     'f' -> args.add(buffer.float)
                     'i' -> args.add(buffer.int)
-                    's' -> args.add(readString(buffer))
+                    // Doubles and 64-bit ints (Max, SuperCollider, several Python senders) drive parameters like floats.
+                    'd' -> args.add(buffer.double.toFloat())
+                    'h' -> args.add(buffer.long.toFloat())
+                    's', 'S' -> args.add(readString(buffer))
+                    'c' -> args.add(buffer.int.toChar().toString())
+                    // Timetag, RGBA colour and MIDI message: read past them so later arguments stay aligned. They are
+                    // kept as raw bytes, which no mapping treats as a value.
+                    't' -> args.add(ByteArray(8).also { buffer.get(it) })
+                    'r', 'm' -> args.add(ByteArray(4).also { buffer.get(it) })
                     'b' -> {
                         val blobLen = buffer.int
                         require(blobLen in 0..buffer.remaining()) { "Malformed OSC blob length: $blobLen" }
@@ -175,7 +183,9 @@ object OscCodec {
                     }
                     'T' -> args.add(true)
                     'F' -> args.add(false)
-                    else -> { /* unsupported/unknown type tag char: skip, no payload bytes assumed */ }
+                    'N', 'I', '[', ']' -> { /* nil, impulse and array brackets carry no bytes */ }
+                    // An unknown tag's size is unknown, so anything after it would be read from the wrong place: stop.
+                    else -> break@tags
                 }
             }
             OscMessage(first, args)
