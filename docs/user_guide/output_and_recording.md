@@ -45,6 +45,8 @@ The sharing method depends on your platform:
 
 ## Recording Your Set (REC)
 
+**Needs FFmpeg.** Recording and Render Video (Offline) hand the frames to [FFmpeg](https://ffmpeg.org/), which has to be installed and on your PATH. Without it the app says so when you press Record. To install: on Linux, your package manager (`sudo dnf install ffmpeg`, `sudo apt install ffmpeg`); on macOS, `brew install ffmpeg`; on Windows, `winget install Gyan.FFmpeg`, then restart the app.
+
 Press **`Ctrl+R`** (or go to **Output → Record Output**) to start recording. A red `REC mm:ss` badge appears on the title bar while recording is active, along with a dropped-frame counter.
 
 Press the same shortcut again, or choose **Record Output** again, to finish. The file is an MP4 named with the date and time (e.g. `liquid_lsd_20260901_201500.mp4`), saved in the recording folder set in Preferences, or else your Videos folder (`~/Videos/liquid-lsd` on Linux and Windows, `~/Movies/liquid-lsd` on macOS).

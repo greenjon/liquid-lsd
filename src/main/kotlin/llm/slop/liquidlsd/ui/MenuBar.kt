@@ -157,7 +157,7 @@ class MenuBar(
                                     fps = session.uiTheme.recordingFps,
                                     bitrateMbps = session.uiTheme.recordingBitrateMbps,
                                     includeAudio = session.uiTheme.recordingIncludeAudio
-                                )) ToastOverlay.show(if (llm.slop.liquidlsd.export.RealtimeRecorder.isFinishing) "Still saving the last recording" else "Could not start recording (see log)")
+                                )) ToastOverlay.show(if (llm.slop.liquidlsd.export.RealtimeRecorder.isFinishing) "Still saving the last recording" else llm.slop.liquidlsd.export.RealtimeRecorder.lastStartError ?: "Could not start recording (see log)")
                             }
                         }
                         itemTooltip("Toggle live master output recording.")

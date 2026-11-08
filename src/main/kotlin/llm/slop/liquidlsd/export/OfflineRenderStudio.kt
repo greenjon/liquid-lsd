@@ -102,7 +102,8 @@ object OfflineRenderStudio {
         if (!pipe.start()) {
             mixer.resize(origMixerW, origMixerH)
             val err = pipe.getRecentErrorLines(4)
-            statusMessage = "Failed to launch FFmpeg: ${if (err.isNotBlank()) err else "encoder/process error"}"
+            statusMessage = if (!AudioDecoder.isFFmpegAvailable()) "Rendering needs ffmpeg, which isn't installed (see Output & Recording in the guide)"
+                else "Failed to launch FFmpeg: ${if (err.isNotBlank()) err else "encoder/process error"}"
             isSuccess = false
             return false
         }

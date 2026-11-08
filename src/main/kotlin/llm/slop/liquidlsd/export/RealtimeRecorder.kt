@@ -204,8 +204,11 @@ object RealtimeRecorder {
         val pipe = FFmpegProcessPipe(config)
         if (!pipe.start()) {
             logger.error { "Failed to start FFmpeg process for live recording." }
+            lastStartError = if (!AudioDecoder.isFFmpegAvailable()) FFMPEG_MISSING
+                else "Could not start recording: ffmpeg failed (${pipe.getRecentErrorLines(2).ifBlank { "see log" }})"
             return false
         }
+        lastStartError = null
 
         pboPipeline = PboReadbackPipeline(width, height)
         ffmpegPipe = pipe
@@ -410,6 +413,13 @@ object RealtimeRecorder {
             }
         }
     }
+
+    /** Why the last [startRecording] failed, for the message the UI shows; null after a good start. */
+    @Volatile
+    var lastStartError: String? = null
+        private set
+
+    const val FFMPEG_MISSING = "Recording needs ffmpeg, which isn't installed (see Output & Recording in the guide)"
 
     /** True while a stopped recording is still being written out (encoder flush, audio mux). */
     @Volatile

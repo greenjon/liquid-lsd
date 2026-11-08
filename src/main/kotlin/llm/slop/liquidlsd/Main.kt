@@ -464,7 +464,7 @@ fun main(args: Array<String>) {
                         fps = UITheme.recordingFps,
                         bitrateMbps = UITheme.recordingBitrateMbps,
                         includeAudio = UITheme.recordingIncludeAudio
-                    )) llm.slop.liquidlsd.ui.ToastOverlay.show(if (llm.slop.liquidlsd.export.RealtimeRecorder.isFinishing) "Still saving the last recording" else "Could not start recording (see log)")
+                    )) llm.slop.liquidlsd.ui.ToastOverlay.show(if (llm.slop.liquidlsd.export.RealtimeRecorder.isFinishing) "Still saving the last recording" else llm.slop.liquidlsd.export.RealtimeRecorder.lastStartError ?: "Could not start recording (see log)")
                 }
             } else if (isFullscreenKey) {
                 uiManager.windowFrameController.toggleFullscreen()
