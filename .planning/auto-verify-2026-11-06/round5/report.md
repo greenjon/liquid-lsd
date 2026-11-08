@@ -56,3 +56,16 @@ Each stock source, effect and transition rendered twice over the same 20 s with 
 - Sources: most respond clearly (correlation with bass +0.5 to +0.86). Weak or none: `fluid_ink` (no difference), `scope` and `spectrogram` (they draw the audio directly, so Audio Response doesn't apply), `lenia`, `reaction_diffusion`, `kifs`, `cyclic_ca`, `glitch_blocks`, `wave_ripples`, `video_feedback` (weak, under +0.4), `icosa_h3` and `dynamic_spiral` (tiny differences).
 - Effects at their load defaults: 13 of 27 change nothing at all (identical to no effect: Color Levels, Directional Blur, Feedback, Fluid Smear, Luma Displace, Pinch/Bulge, Pixelate, Radial Blur, RGB Split, Video Strobe, Wave Displace, Faceted Glass, Bloom very nearly). With the Metaknob at 60% 11 of them come alive and track the bass; Pinch/Bulge and Faceted Glass still change nothing visible at 60% on Voronoi Cells.
 - Transitions held at 50%: all 8 respond (+0.64 to +0.83); Cyber Datamosh moves even at 0%.
+
+## Text and layout sweep
+
+- Stale terms in UI strings and the guide (Reactivity, NO TARGET, Auto Gain checkbox, Headroom, BYPASS, FX1/FX2 banks, MULTI, Classic view, DMA-BUF, Column 3): the guide still said a target-less Metaknob shows `NO TARGET` (removed 2026-10-22) and the glossary called the chain switch "Bypass"; both fixed. UI strings were clean.
+- Layout (`layout.py`, `results/layout.txt`): 13 views at 1280x720 and 1920x1080, every on-screen widget rectangle compared. No two widgets overlap without one holding the other. The only flags are list rows scrolled below the browser's visible area (registered but clipped), not real. A 1100-pixel window gives no data for most views (below the supported 1280x720).
+
+## Web leftovers (`tests/web/round5.spec.ts`, `web/`)
+
+Chromium and Firefox, local server, nothing leaves the machine: every key changes what it should (R, J, E, U, arrows, H, I, =, -, N, P, M, S, T, ?, F, C); MENU, SCHEDULE, TAPES and ? open and close with the TV off and leave it off; the nameplate opens the site in a new tab and leaves the TV on; the ABOUT QR names the site (not decoded, no decoder here); the chat blackboard fits beside the TV at 1280x720 and below it on a phone, no sideways scroll, socket blocked. While the chat box has focus, keys type into it, by design.
+
+## Twister
+
+Round 3's simulated Twister already covers section 14; its results are on the checklist. What's left needs the hardware.

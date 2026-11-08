@@ -1,0 +1,71 @@
+== 1280x720 perform: 206 widgets, 0 flagged
+== 1280x720 mixer: 215 widgets, 0 flagged
+== 1280x720 library: 121 widgets, 2 flagged
+   overlap 69%: browser_row_src_fractal_flame (218, 422, 744, 451) / btn_▶ (729, 427, 749, 453)
+   overlap 69%: browser_row_src_fractal_flame (218, 422, 744, 451) / btnid_transQueueNext (729, 427, 749, 453)
+== 1280x720 library_fx: 114 widgets, 2 flagged
+   overlap 87%: btn_▶ (729, 427, 749, 453) / browser_row_fx_halftone (218, 422, 748, 451)
+   overlap 87%: browser_row_fx_halftone (218, 422, 748, 451) / btnid_transQueueNext (729, 427, 749, 453)
+== 1280x720 queues: 204 widgets, 0 flagged
+== 1280x720 pair_bg: 165 widgets, 0 flagged
+== 1280x720 bound: 206 widgets, 0 flagged
+== 1280x720 edit_src: 244 widgets, 0 flagged
+== 1280x720 edit_fx: 176 widgets, 0 flagged
+== 1280x720 edit_lfo: 218 widgets, 0 flagged
+== 1280x720 edit_seq: 238 widgets, 0 flagged
+== 1280x720 edit_mst: 139 widgets, 0 flagged
+== 1280x720 edit_trans: 184 widgets, 0 flagged
+== 1920x1080 perform: 218 widgets, 0 flagged
+== 1920x1080 mixer: 227 widgets, 0 flagged
+== 1920x1080 library: 132 widgets, 19 flagged
+   overlap 73%: btnid_fxBgQueueRepeat (679, 607, 699, 633) / browser_row_src_hyperbolic_tiling (268, 614, 942, 643)
+   overlap 69%: btnid_fxQueueRepeat (267, 607, 287, 633) / browser_row_src_hyperbolic_tiling (268, 614, 942, 643)
+   overlap 73%: btn_◀ (831, 607, 851, 633) / browser_row_src_hyperbolic_tiling (268, 614, 942, 643)
+   overlap 73%: btn_▶ (885, 607, 905, 633) / browser_row_src_hyperbolic_tiling (268, 614, 942, 643)
+   overlap 73%: browser_row_src_hyperbolic_tiling (268, 614, 942, 643) / btnid_bgQueueShuffle (527, 607, 547, 633)
+   overlap 73%: browser_row_src_hyperbolic_tiling (268, 614, 942, 643) / btn_ (858, 607, 878, 633)
+   overlap 73%: browser_row_src_hyperbolic_tiling (268, 614, 942, 643) / btnid_bgQueueAuto (446, 607, 466, 633)
+   overlap 73%: browser_row_src_hyperbolic_tiling (268, 614, 942, 643) / btnid_transQueueNext (885, 607, 905, 633)
+   overlap 73%: browser_row_src_hyperbolic_tiling (268, 614, 942, 643) / btn_ (912, 607, 932, 633)
+   overlap 73%: browser_row_src_hyperbolic_tiling (268, 614, 942, 643) / btnid_bgQueuePrev (419, 607, 439, 633)
+   overlap 73%: browser_row_src_hyperbolic_tiling (268, 614, 942, 643) / btnid_fxQueueShuffle (294, 607, 314, 633)
+   overlap 73%: browser_row_src_hyperbolic_tiling (268, 614, 942, 643) / btnid_transQueueAuto (858, 607, 878, 633)
+   overlap 73%: browser_row_src_hyperbolic_tiling (268, 614, 942, 643) / btnid_bgQueueRepeat (500, 607, 520, 633)
+   overlap 73%: browser_row_src_hyperbolic_tiling (268, 614, 942, 643) / btnid_transQueuePrev (831, 607, 851, 633)
+   overlap 73%: browser_row_src_hyperbolic_tiling (268, 614, 942, 643) / btnid_fxBgQueueNext (652, 607, 672, 633)
+   overlap 73%: browser_row_src_hyperbolic_tiling (268, 614, 942, 643) / btnid_bgQueueNext (473, 607, 493, 633)
+   overlap 73%: browser_row_src_hyperbolic_tiling (268, 614, 942, 643) / btnid_transQueueRepeat (912, 607, 932, 633)
+   overlap 73%: browser_row_src_hyperbolic_tiling (268, 614, 942, 643) / btnid_fxBgQueueShuffle (706, 607, 726, 633)
+   overlap 73%: browser_row_src_hyperbolic_tiling (268, 614, 942, 643) / btnid_fxBgQueuePrev (625, 607, 645, 633)
+== 1920x1080 library_fx: 125 widgets, 22 flagged
+   overlap 25%: b: (939, 607, 959, 633) / browser_row_fx_neon_edge (268, 614, 946, 643)
+   overlap 73%: btnid_fxBgQueueRepeat (679, 607, 699, 633) / browser_row_fx_neon_edge (268, 614, 946, 643)
+   overlap 69%: btnid_fxQueueRepeat (267, 607, 287, 633) / browser_row_fx_neon_edge (268, 614, 946, 643)
+   overlap 73%: btn_◀ (831, 607, 851, 633) / browser_row_fx_neon_edge (268, 614, 946, 643)
+   overlap 73%: btn_▶ (885, 607, 905, 633) / browser_row_fx_neon_edge (268, 614, 946, 643)
+   overlap 73%: btnid_bgQueueShuffle (527, 607, 547, 633) / browser_row_fx_neon_edge (268, 614, 946, 643)
+   overlap 25%: btnid_transQueueShuffle (939, 607, 959, 633) / browser_row_fx_neon_edge (268, 614, 946, 643)
+   overlap 73%: btn_ (858, 607, 878, 633) / browser_row_fx_neon_edge (268, 614, 946, 643)
+   overlap 73%: btnid_bgQueueAuto (446, 607, 466, 633) / browser_row_fx_neon_edge (268, 614, 946, 643)
+   overlap 25%: btn_ (939, 607, 959, 633) / browser_row_fx_neon_edge (268, 614, 946, 643)
+   overlap 73%: btnid_transQueueNext (885, 607, 905, 633) / browser_row_fx_neon_edge (268, 614, 946, 643)
+   overlap 73%: btn_ (912, 607, 932, 633) / browser_row_fx_neon_edge (268, 614, 946, 643)
+   overlap 73%: btnid_bgQueuePrev (419, 607, 439, 633) / browser_row_fx_neon_edge (268, 614, 946, 643)
+   overlap 73%: btnid_fxQueueShuffle (294, 607, 314, 633) / browser_row_fx_neon_edge (268, 614, 946, 643)
+   overlap 73%: btnid_transQueueAuto (858, 607, 878, 633) / browser_row_fx_neon_edge (268, 614, 946, 643)
+   overlap 73%: btnid_bgQueueRepeat (500, 607, 520, 633) / browser_row_fx_neon_edge (268, 614, 946, 643)
+   overlap 73%: btnid_transQueuePrev (831, 607, 851, 633) / browser_row_fx_neon_edge (268, 614, 946, 643)
+   overlap 73%: btnid_fxBgQueueNext (652, 607, 672, 633) / browser_row_fx_neon_edge (268, 614, 946, 643)
+   overlap 73%: browser_row_fx_neon_edge (268, 614, 946, 643) / btnid_bgQueueNext (473, 607, 493, 633)
+   overlap 73%: browser_row_fx_neon_edge (268, 614, 946, 643) / btnid_transQueueRepeat (912, 607, 932, 633)
+   overlap 73%: browser_row_fx_neon_edge (268, 614, 946, 643) / btnid_fxBgQueueShuffle (706, 607, 726, 633)
+   overlap 73%: browser_row_fx_neon_edge (268, 614, 946, 643) / btnid_fxBgQueuePrev (625, 607, 645, 633)
+== 1920x1080 queues: 204 widgets, 0 flagged
+== 1920x1080 pair_bg: 218 widgets, 0 flagged
+== 1920x1080 bound: 218 widgets, 0 flagged
+== 1920x1080 edit_src: 244 widgets, 0 flagged
+== 1920x1080 edit_fx: 186 widgets, 0 flagged
+== 1920x1080 edit_lfo: 218 widgets, 0 flagged
+== 1920x1080 edit_seq: 250 widgets, 0 flagged
+== 1920x1080 edit_mst: 139 widgets, 0 flagged
+== 1920x1080 edit_trans: 206 widgets, 0 flagged
