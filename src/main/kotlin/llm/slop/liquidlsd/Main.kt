@@ -457,14 +457,14 @@ fun main(args: Array<String>) {
                     val dateStr = java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(java.util.Date())
                     val recDir = UITheme.getDefaultVideosDirectory()
                     val outFile = java.io.File(recDir, "liquid_lsd_$dateStr.mp4")
-                    llm.slop.liquidlsd.export.RealtimeRecorder.startRecording(
+                    if (!llm.slop.liquidlsd.export.RealtimeRecorder.startRecording(
                         outputFile = outFile,
                         width = mixer.width,
                         height = mixer.height,
                         fps = UITheme.recordingFps,
                         bitrateMbps = UITheme.recordingBitrateMbps,
                         includeAudio = UITheme.recordingIncludeAudio
-                    )
+                    )) llm.slop.liquidlsd.ui.ToastOverlay.show(if (llm.slop.liquidlsd.export.RealtimeRecorder.isFinishing) "Still saving the last recording" else "Could not start recording (see log)")
                 }
             } else if (isFullscreenKey) {
                 uiManager.windowFrameController.toggleFullscreen()
@@ -761,7 +761,7 @@ fun main(args: Array<String>) {
     tour?.finish()
     AppPreferencesStore.savePreferences()
     llm.slop.liquidlsd.broadcast.BroadcastEngine.shutdown()
-    llm.slop.liquidlsd.export.RealtimeRecorder.stopRecording()
+    llm.slop.liquidlsd.export.RealtimeRecorder.stopRecording(waitForFinish = true) // a long set takes a while to mux; the file must be complete
     llm.slop.liquidlsd.rendering.TextureStreamerManager.shutdown()
     if (tour == null) SessionSerializer.saveSession(mixer)
     // Leave controller native mode while the MIDI ports are still up (waits for the SysEx to go out);

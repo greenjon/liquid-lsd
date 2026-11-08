@@ -49,6 +49,8 @@ Press **`Ctrl+R`** (or go to **Output → Record Output**) to start recording. A
 
 Press the same shortcut again, or choose **Record Output** again, to finish. The file is an MP4 named with the date and time (e.g. `liquid_lsd_20260901_201500.mp4`), saved in the recording folder set in Preferences, or else your Videos folder (`~/Videos/liquid-lsd` on Linux and Windows, `~/Movies/liquid-lsd` on macOS).
 
+After you stop, the sound is added to the file in the background while you keep playing: the output monitor shows `SAVING...` and Record Output waits until it's done. For an hour-long set that takes a few minutes. If you quit meanwhile, the app finishes the file before it closes. Should adding the sound ever fail, the video is saved as usual and the sound stays next to it as a `.wav` file.
+
 **What you get:** H.264 video at your render resolution and the recording frame rate from Preferences, with synchronized audio from your input. If the app renders slower than that rate, frames are repeated so the video still runs in real time with the sound. On capable hardware, NVENC, QuickSync, or VAAPI hardware encoding is used automatically.
 
 You can also map the `REC` toggle to a MIDI controller button so you never have to touch the keyboard during a performance.
