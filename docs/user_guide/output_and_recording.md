@@ -47,9 +47,9 @@ The sharing method depends on your platform:
 
 Press **`Ctrl+R`** (or go to **Output → Record Output**) to start recording. A red `REC mm:ss` badge appears on the title bar while recording is active, along with a dropped-frame counter.
 
-Press the same shortcut again, or click **Stop Recording**, to finish. The output file lands in the `recordings/` folder as an MP4, named with the date and time (e.g. `liquid_lsd_2026-09-01_20-15-00.mp4`).
+Press the same shortcut again, or choose **Record Output** again, to finish. The file is an MP4 named with the date and time (e.g. `liquid_lsd_20260901_201500.mp4`), saved in the recording folder set in Preferences, or else your Videos folder (`~/Videos/liquid-lsd` on Linux and Windows, `~/Movies/liquid-lsd` on macOS).
 
-**What you get:** H.264 video at your current render resolution and frame rate, with synchronized audio from your input. On capable hardware, NVENC, QuickSync, or VAAPI hardware encoding is used automatically.
+**What you get:** H.264 video at your render resolution and the recording frame rate from Preferences, with synchronized audio from your input. If the app renders slower than that rate, frames are repeated so the video still runs in real time with the sound. On capable hardware, NVENC, QuickSync, or VAAPI hardware encoding is used automatically.
 
 You can also map the `REC` toggle to a MIDI controller button so you never have to touch the keyboard during a performance.
 

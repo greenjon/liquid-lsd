@@ -56,8 +56,14 @@ object RealtimeRecorder {
 
     // Bounded video frame queue to cap memory usage (~10 frames buffer)
     private const val QUEUE_CAPACITY = 10
-    private var frameQueue: ArrayBlockingQueue<ByteBuffer>? = null
-    private val bufferPool = mutableListOf<ByteBuffer>()
+    private var frameQueue: ArrayBlockingQueue<Frame>? = null
+    private val bufferPool = mutableListOf<Frame>()
+
+    /** A pooled frame buffer and when it was captured, so the writer can place it in time. */
+    private class Frame(val buf: ByteBuffer) { @Volatile var capturedNanos = 0L }
+
+    /** Start of the recording on [System.nanoTime]'s clock: frame N of the file belongs at N / fps seconds after it. */
+    @Volatile private var startNanos = 0L
 
     // Audio block pre-allocated pool for zero-allocation, lock-free audio callback tapping
     class AudioBlock(val buffer: FloatArray = FloatArray(8192)) {
@@ -207,19 +213,32 @@ object RealtimeRecorder {
         val bufferSize = width * height * 4
         bufferPool.clear()
         for (i in 0 until (QUEUE_CAPACITY + 2)) {
-            bufferPool.add(MemoryUtil.memAlloc(bufferSize))
+            bufferPool.add(Frame(MemoryUtil.memAlloc(bufferSize)))
         }
+        startNanos = System.nanoTime()
 
-        val queue = ArrayBlockingQueue<ByteBuffer>(QUEUE_CAPACITY)
+        val queue = ArrayBlockingQueue<Frame>(QUEUE_CAPACITY)
         frameQueue = queue
         isWorkerRunning.set(true)
 
         videoWorkerThread = Thread({
             logger.info { "RealtimeRecorder video worker thread started." }
+            // The file is constant-rate at [fps] while the app renders at whatever rate it manages. Each captured
+            // frame is written as many times as the clock says (or skipped), so the video keeps real time and stays
+            // in step with the audio, which is recorded as it plays.
+            val frameNanos = 1_000_000_000.0 / fps
+            val maxRepeats = fps * 5L   // a long stall still keeps sync, without writing minutes of copies at once
+            var written = 0L
             while (isWorkerRunning.get() || queue.isNotEmpty()) {
                 val frame = queue.poll(50, TimeUnit.MILLISECONDS) ?: continue
                 try {
-                    pipe.pushFrame(frame)
+                    val due = ((frame.capturedNanos - startNanos) / frameNanos).toLong() + 1
+                    val copies = if (written == 0L) 1L else (due - written).coerceIn(0L, maxRepeats)
+                    for (i in 0 until copies) {
+                        frame.buf.position(0)
+                        pipe.pushFrame(frame.buf)
+                    }
+                    written += copies
                 } finally {
                     synchronized(bufferPool) {
                         bufferPool.add(frame)
@@ -352,37 +371,37 @@ object RealtimeRecorder {
         totalFramesCount++
 
         // Obtain a free buffer from pool
-        var targetBuffer: ByteBuffer? = null
+        var target: Frame? = null
         synchronized(bufferPool) {
             if (bufferPool.isNotEmpty()) {
-                targetBuffer = bufferPool.removeAt(bufferPool.size - 1)
+                target = bufferPool.removeAt(bufferPool.size - 1)
             }
         }
-
-        if (targetBuffer == null) {
+        val frame = target ?: run {
             // Queue is congested: drop frame
             droppedFramesCount++
             return
         }
 
-        targetBuffer.clear()
-        val readResult = pbo.readFrameAsync(fboId, targetBuffer)
+        frame.buf.clear()
+        val readResult = pbo.readFrameAsync(fboId, frame.buf)
         if (readResult == null) {
             // Warmup frame: return buffer to pool
             synchronized(bufferPool) {
-                bufferPool.add(targetBuffer)
+                bufferPool.add(frame)
             }
             return
         }
 
-        targetBuffer.position(0)
-        targetBuffer.limit(pbo.bufferSizeBytes)
+        frame.buf.position(0)
+        frame.buf.limit(pbo.bufferSizeBytes)
+        frame.capturedNanos = System.nanoTime()
 
-        if (!queue.offer(targetBuffer)) {
+        if (!queue.offer(frame)) {
             // Queue is full: drop frame and return buffer to pool
             droppedFramesCount++
             synchronized(bufferPool) {
-                bufferPool.add(targetBuffer)
+                bufferPool.add(frame)
             }
         }
     }
@@ -414,8 +433,8 @@ object RealtimeRecorder {
         pboPipeline = null
 
         synchronized(bufferPool) {
-            for (buf in bufferPool) {
-                MemoryUtil.memFree(buf)
+            for (f in bufferPool) {
+                MemoryUtil.memFree(f.buf)
             }
             bufferPool.clear()
         }

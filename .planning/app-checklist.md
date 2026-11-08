@@ -136,7 +136,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [ ] Clock RAND block at the right edge (randomization on): `A B ALL` over `BG PV`; Ctrl+Z undoes.
   auto: layout right. Left for you: Ctrl+Z after a Clock RAND press.
 - [ ] Every Clock button is also on MST > CTRL; right-click Learn MIDI/OSC works from both. A MIDI CC drives the FX queue steps.
-- [ ] Narrow the window: a block that doesn't fit is left out, nothing overlaps.
+- [ ] Narrow the window: a block that doesn't fit is left out, nothing overlaps. auto (round 5): at 1100 px the Clock row keeps everything; at 900 and 700 the QUEUE block drops out; no exceptions at any width. Below 1280 the FX row's small icons and captions crowd (below the supported size).
 - [ ] FX slot rows (2026-10-27, Chain view part 1): in Preferences > MIDI Controls > Perform Pages make a page of `deck.A.fx1`, `deck.A.fx2`, `deck.A.fx3`, `deck.A.src`. Badges read FX1/FX2/FX3; each row's knob 1 is its slot (name + bypass), knobs 2-4 its parameters, whatever the Deck A FX row's focus. Left block: effect name (click = Browse that slot), `[⋮] [Wet] [◀ Px/y ▶]`; die + FX ON only on the FX1 row. Drop an effect on an FX2 badge: it lands in slot 2. Page arrows page only their own slot; focusing that slot on the FX row opens on the same page. Geometry matches the other rows at 1280x720. On a Twister: the three slot rows are three distinct shades.
 - [ ] Chain view (2026-10-27): ⋮ menu of Deck A's FX row > Chain View: rows read `FX1`, `FX2`, `FX3`, `A SRC` over the Browse list (source row at the bottom since 2026-10-28), same knob size as Perform, nothing clipped at 1280x720. Touch a knob on FX2: the list targets slot 2. **Load** on the Browse header: row 4 becomes the load row (highlighted effect's name, → FX1/→ FX2/→ FX3, LIST); rows 1-3 don't move. Highlight an effect and click → FX3: it loads into slot 3 with the fade, Ctrl+Z undoes it, the list now targets slot 3. Load again brings the SRC row back. Chain toggle and Esc both leave in one press (Esc even with a slot focused on the FX row). Master: Chain View from the Master FX ⋮ menu shows Transitions at the bottom. A page tab click leaves Chain view.
   auto: rows read FX1, FX2, FX3, A SRC, nothing clipped at 1280x720. Chain View from the menu, Load, → FX3, Ctrl+Z and Esc all work with the mouse. A plain click on a list row also applies to the targeted slot. Left for you: knob touch retargeting, Master.
@@ -193,7 +193,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 
 ## 6. FX chains (2026-10-22 review)
 
-- [ ] `FX ON` (lit = on) instead of BYPASS; its state survives a restart.
+- [ ] `FX ON` (lit = on) instead of BYPASS; its state survives a restart. auto (round 5): turned Deck A's FX ON off in the real app, File > Exit (confirm dialog), relaunched: still off, Deck B still on.
 - [ ] No chain shows the unsaved `•` at launch. It lights for a slot, parameter, Dry/Wet, link or Metaknob-target change, not for turning the Super Knob or a Metaknob.
   auto: fixed 2026-11-06: every chain showed unsaved at launch, on a fresh install too. Now clean on both, a parameter change marks it, the Super Knob doesn't. Left for you: slot, link and target changes, Metaknob moves.
 - [x] Revert to Saved undoes parameter tweaks.
@@ -321,7 +321,7 @@ Preferences: randomization on. For each source: pick it fresh from Browse (not a
 - [ ] Output > Output Monitor: Automatic and a named monitor; the output reopens on the chosen screen (try Wayland + projector).
 - [x] New version available: menu-bar download icon instead of a startup popup.
   auto: fresh real run: green download icon in the menu bar, no popup.
-- [ ] During Video Export (offline render), controller knobs and MIDI queue steps still work.
+- [ ] During Video Export (offline render), controller knobs and MIDI queue steps still work. auto (round 5): Record Output and Render Video (Offline) both work in the real app (1080p H.264 with audio; offline 8.000 s for 8 s of audio at about 30 fps). Recording was time-compressed below 60 fps (fixed). Knobs and MIDI during an export not tried.
 - [x] Kill the app (`kill -9`) after changing things: preferences and session from the last minute come back.
   auto: real app, kill -9 about a minute after the changes: source and FX ON state came back, badge and Library chip right (badge fixed 2026-11-06).
 - [x] Web Broadcast tab hidden until Show Advanced Preferences (or already configured).
