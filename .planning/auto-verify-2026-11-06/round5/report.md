@@ -82,6 +82,7 @@ Round 3's simulated Twister already covers section 14; its results are on the ch
 - **Recordings ran fast below 60 fps.** One frame per render into a 60 fps file: 11 s at 30 fps became 5 s, ahead of the audio. Frames now carry their capture time and are repeated or skipped to the file's rate: 9.88 s video, 9.89 s audio for a 10 s recording at 30 fps. The guide's save folder and file name were wrong too.
 - **Reversed `smoothstep` edges** (undefined GLSL) in five shaders, desktop, bundled library and web copies; renders identical before and after (Pinch/Bulge within rounding). Web copies need a publish to go live.
 - Esc closes the offline render dialog.
+- **OSC doubles and 64-bit ints were dropped** (`osc/OscCodec.kt`, 8f79753): only `f`/`i` were read, and any other type was skipped without reading its bytes, so later arguments came from the wrong place. `d`/`h` now drive values, `t`/`c`/`r`/`m`/`S` are read past, an unknown tag ends the message.
 
 ### Checked, fine
 - Every stock source, effect and transition compiles on Mesa (Intel and llvmpipe): no errors. Warnings are the harmless `GL_EXT_gpu_shader4 : enable` and Mesa's per-function "used uninitialized" on globals set in `main()` (false positives).
@@ -90,3 +91,5 @@ Round 3's simulated Twister already covers section 14; its results are on the ch
 - OSC suspension uses the same check as MIDI (covered).
 - `AbletonLinkEngineTest` fails only because the local `liblink_jni.so` (gitignored, built 2026-11-05, likely from the link-follow-lead work) predates the current JNI source; `main` doesn't ship the library. Not touched.
 - evdev touch backend: struct sizes and ioctl numbers match the kernel headers.
+- **Broadcast, end to end** (`relay.py`, `tests/web/broadcast_replay.spec.ts`): the real app inside a private network namespace broadcast to a local relay (1074 messages, about 15/s); replayed into the web TV in Chromium it showed LIVE, the name, both decks, the crossfader, the FX chain and a picture. Relay killed for 10 s mid-show: the app retried every few seconds and was back with a fresh full state 5 s after the relay returned.
+- **OSC, end to end** (`oscsend.py`): UDP into the real app, crossfader read back through the broadcast. Float, double, 64-bit int, a bundle and an XY pair's Y axis all moved it exactly; 200 random packets, a truncated message, an unknown tag and a bundle with a bad length changed nothing; 20,000 packets in 0.05 s didn't hurt, and the next move after them landed.
