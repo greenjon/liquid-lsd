@@ -151,6 +151,10 @@ private fun runSmokeTest(): Int {
 }
 
 fun main(args: Array<String>) {
+    // The UI is English and some formatted numbers go to other programs (wpctl, ffmpeg): format numbers with a dot
+    // decimal whatever the system locale, so a German system doesn't show "128,0 BPM" next to "0.5" or send "0,50".
+    // Dates, file dialogs and the rest keep the system locale. Revisit with localization (v1.1).
+    java.util.Locale.setDefault(java.util.Locale.Category.FORMAT, java.util.Locale.ROOT)
     llm.slop.liquidlsd.utils.NativeLibraryLoader.prepareImGuiNatives()
 
     val cliArgs = llm.slop.liquidlsd.cli.CliArgs.parse(args)
