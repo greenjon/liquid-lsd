@@ -196,7 +196,7 @@ void main() {
     vec3 cell = floor(sd);
     float star = step(0.985, hash13(cell));
     vec3 sf = fract(sd) - 0.5;
-    float core = star * smoothstep(0.35, 0.0, length(sf));
+    float core = star * (1.0 - smoothstep(0.0, 0.35, length(sf)));
     vec3 bg = vec3(0.008, 0.008, 0.02) + core * mix(vec3(0.7, 0.8, 1.0), vec3(1.0, 0.85, 0.6), hash13(cell + 5.0)) * Brightness_;
 
     vec3 col = acc + bg * trans;

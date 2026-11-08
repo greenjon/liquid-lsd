@@ -79,7 +79,7 @@ void main() {
 
     // Boundary damping: plate borders have damping falloff
     float boundDist = mix(max(abs(p.x), abs(p.y)) * 2.0, length(p) * 2.0, PlateShape);
-    float borderMask = smoothstep(1.8, 1.5, boundDist);
+    float borderMask = (1.0 - smoothstep(1.5, 1.8, boundDist));
 
     // Distance to nodal line (|w| == 0)
     float nodeDist = abs(w);

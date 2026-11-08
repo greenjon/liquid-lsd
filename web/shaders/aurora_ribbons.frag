@@ -152,7 +152,7 @@ vec3 skyScene(float x, float y, float yh, int surf, int nRib, int oct, int pm, v
         vec2 jit = vec2(h2, h3) * 0.6 + 0.2;
         float dist = length(fract(cell) - jit);
         float tw = 0.65 + 0.35 * sin(TAU_ * fract(TIME * (0.1 + 0.2 * h2) + h3));
-        float star = smoothstep(0.22, 0.0, dist) * tw * (0.3 + 0.7 * (h - 0.97) / 0.03);
+        float star = (1.0 - smoothstep(0.0, 0.22, dist)) * tw * (0.3 + 0.7 * (h - 0.97) / 0.03);
         col += vec3(0.9, 0.95, 1.0) * star * (1.0 - clamp(lum * 3.0, 0.0, 1.0));
     }
 
