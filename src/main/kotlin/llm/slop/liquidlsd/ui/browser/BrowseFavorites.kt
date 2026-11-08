@@ -94,6 +94,7 @@ object BrowseFavorites {
                 store.keys.addAll(json.decodeFromString(listSerializer, store.file.readText()))
             } catch (e: Exception) {
                 logger.warn(e) { "Could not read favorites ${store.file.path}; starting empty" }
+                llm.slop.liquidlsd.utils.AtomicFile.keepUnreadable(store.file, "favorites ${store.file.name}")
             }
         }
         return store

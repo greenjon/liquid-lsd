@@ -118,6 +118,7 @@ object OscMappingManager {
                 logger.info { "Loaded OSC mapping profile: $safeProfileName" }
             } catch (e: Exception) {
                 logger.error(e) { "Failed to load OSC profile: $safeProfileName" }
+                llm.slop.liquidlsd.utils.AtomicFile.keepUnreadable(file, "OSC profile ${file.name}")
             }
         } else {
             activeProfile = OscMappingProfile(safeProfileName)

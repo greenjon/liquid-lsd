@@ -13,6 +13,24 @@ object AtomicFile {
      * truncated file: the old one stays until the new one is complete. A [target] made read-only is refused (a move would
      * replace it), as a plain write would.
      */
+    /**
+     * Keeps a copy of a user file that couldn't be read as `<name>.unreadable` beside it (no loader picks that up), and
+     * tells the user, before the app falls back to defaults and later saves over the original. Empty files aren't kept.
+     * Returns the copy, or null.
+     */
+    fun keepUnreadable(file: File, what: String = file.name): File? = try {
+        if (!file.isFile || file.length() == 0L) null
+        else {
+            var copy = File(file.absoluteFile.parentFile, file.name + ".unreadable")
+            if (copy.exists()) copy = File(file.absoluteFile.parentFile, file.name + ".unreadable-" + System.currentTimeMillis())
+            Files.copy(file.toPath(), copy.toPath())
+            UserNotice.post("Couldn't read $what; kept it as ${copy.name} and started without it")
+            copy
+        }
+    } catch (e: Exception) {
+        null
+    }
+
     fun write(target: File, text: String) {
         if (target.exists() && !target.canWrite()) throw AccessDeniedException(target.path, null, "file is read-only")
         val dir = target.absoluteFile.parentFile

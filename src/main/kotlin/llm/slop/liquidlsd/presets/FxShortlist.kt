@@ -69,6 +69,7 @@ object FxShortlist {
             favorites.addAll(json.decodeFromString(listSerializer, file.readText()))
         } catch (e: Exception) {
             logger.warn(e) { "Could not read FX shortlist ${file.path}; starting empty" }
+            llm.slop.liquidlsd.utils.AtomicFile.keepUnreadable(file, "the FX shortlist")
         }
     }
 

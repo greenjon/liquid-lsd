@@ -294,6 +294,7 @@ object SessionSerializer {
             logger.info { "Successfully loaded session state from ${sessionFile.name} (unresolved items: ${allUnresolved.size})" }
         } catch (e: Exception) {
             logger.error(e) { "Failed to load session state, falling back to empty" }
+            llm.slop.liquidlsd.utils.AtomicFile.keepUnreadable(File(PresetManager.LIBRARY_ROOT, "last_session.json"), "the last session")
             startEmpty(mixer)
         }
     }

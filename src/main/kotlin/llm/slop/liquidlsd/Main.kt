@@ -408,7 +408,8 @@ fun main(args: Array<String>) {
         AudioEngine.start()
     }
 
-    // Start background watchdogs for MIDI and JACK
+    // Start background watchdogs for MIDI and JACK. With --no-audio the watchdog must not start the audio engine either.
+    if (cliArgs.noAudio) llm.slop.liquidlsd.audio.MidiJackWatchdog.isJackReconnectActive = false
     if (tour == null) llm.slop.liquidlsd.audio.MidiJackWatchdog.start()
 
     // Auto-detect and open secondary window on startup ONLY if an external monitor is found

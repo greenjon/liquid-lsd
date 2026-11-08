@@ -179,6 +179,7 @@ object ISFDirectoryManager {
             currentSources = mergedList
         } catch (e: Exception) {
             logger.error(e) { "Failed to parse ISF directory settings from ${configFile.path}; restoring platform defaults." }
+            llm.slop.liquidlsd.utils.AtomicFile.keepUnreadable(configFile, "the shader folder list ${configFile.name}")
             currentSources = platformDefaults.toMutableList()
             saveSettings()
         }

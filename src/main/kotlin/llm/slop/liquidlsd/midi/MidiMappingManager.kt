@@ -156,6 +156,7 @@ object MidiMappingManager {
                 logger.info { "Loaded MIDI mapping profile: $safeProfileName" }
             } catch (e: Exception) {
                 logger.error(e) { "Failed to load MIDI profile: $safeProfileName" }
+                llm.slop.liquidlsd.utils.AtomicFile.keepUnreadable(file, "MIDI profile ${file.name}")
             }
         } else {
             // Create default empty profile

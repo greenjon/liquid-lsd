@@ -383,6 +383,8 @@ class UIManager(
         // running with no visible indicator anywhere on screen.
         OscLearnStatusOverlay.draw(displayWidth, displayHeight)
         currentMixer?.let { MacroUndoTracker.update(session.parametersState, it, ImGui.isMouseDown(0)) }
+        // Messages from loaders and other non-UI code, one at a time.
+        if (ToastOverlay.active() == null) llm.slop.liquidlsd.utils.UserNotice.poll()?.let { ToastOverlay.show(it, 8000L) }
         ToastOverlay.draw(displayWidth, displayHeight, llm.slop.liquidlsd.macro.MacroLearnState.getActiveStatus())
 
         handleKnobCursorLocking()
