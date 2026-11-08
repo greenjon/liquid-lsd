@@ -195,9 +195,10 @@ class SyphonReceiverImpl : TextureReceiver {
 }
 
 /**
- * Reads a PipeWire video stream (another app's `Video/Source`) into a GL texture. It offers raw RGBA, BGRA,
- * RGBx and BGRx at any size; PipeWire converts other formats for it. The agreed size and pixel order come from
- * `param_changed`, and each frame is uploaded with its own stride.
+ * Reads a PipeWire video stream (another app's `Video/Source`, or a camera) into a GL texture. It offers raw
+ * RGBA, BGRA, RGBx, BGRx, YUY2 (what most webcams send) and GRAY8 (IR cameras) at any size and rate; PipeWire
+ * doesn't convert video, so a source must send one of these. The agreed size and format come from
+ * `param_changed`, and each frame is uploaded with its own stride. YUY2 goes through a small conversion pass.
  */
 class PipeWireReceiverImpl : TextureReceiver {
     override val isSupported: Boolean
@@ -264,7 +265,7 @@ class PipeWireReceiverImpl : TextureReceiver {
                 hook = com.sun.jna.Memory(64).also { it.clear() }
                 lib.pw_stream_add_listener(stream!!, hook!!, ev, null)
 
-                val formats = intArrayOf(SpaPod.VIDEO_FORMAT_RGBA, SpaPod.VIDEO_FORMAT_BGRA, SpaPod.VIDEO_FORMAT_RGBX, SpaPod.VIDEO_FORMAT_BGRX)
+                val formats = intArrayOf(SpaPod.VIDEO_FORMAT_RGBA, SpaPod.VIDEO_FORMAT_BGRA, SpaPod.VIDEO_FORMAT_RGBX, SpaPod.VIDEO_FORMAT_BGRX, SpaPod.VIDEO_FORMAT_YUY2, SpaPod.VIDEO_FORMAT_GRAY8)
                 val format = SpaPod.videoFormat(SpaPod.PARAM_ENUM_FORMAT, formats, intArrayOf(1920, 1080), intArrayOf(1, 1), intArrayOf(8192, 8192), anyRate = true)
                 val flags = PipeWireLibrary.PW_STREAM_FLAG_AUTOCONNECT or PipeWireLibrary.PW_STREAM_FLAG_MAP_BUFFERS
                 val res = lib.pw_stream_connect(stream!!, PipeWireLibrary.PW_DIRECTION_INPUT, -1, flags, arrayOf(format.memory), 1)
@@ -292,7 +293,7 @@ class PipeWireReceiverImpl : TextureReceiver {
         if (id != SpaPod.PARAM_FORMAT || param == null) return
         val info = SpaPod.parseVideoFormat(param) ?: return
         agreed = info
-        val stride = info.width * 4
+        val stride = info.width * SpaPod.bytesPerPixel(info.format)
         pw?.pw_stream_update_params(stream ?: return, arrayOf(SpaPod.buffers(stride * info.height, stride).memory), 1)
         logger.info { "PipeWire receiver format agreed: ${info.width}x${info.height} (SPA video format ${info.format})" }
     }
@@ -322,9 +323,10 @@ class PipeWireReceiverImpl : TextureReceiver {
                 val base = data?.let { SpaBufferLayout.mapped(it) }
                 val chunk = data?.let { SpaBufferLayout.chunk(it) }
                 if (base != null && chunk != null && SpaBufferLayout.chunkSize(chunk) > 0) {
-                    val stride = SpaBufferLayout.chunkStride(chunk).let { if (it > 0) it else info.width * 4 }
+                    val rowBytes = info.width * SpaPod.bytesPerPixel(info.format)
+                    val stride = SpaBufferLayout.chunkStride(chunk).let { if (it > 0) it else rowBytes }
                     val offset = SpaBufferLayout.chunkOffset(chunk).toLong() % SpaBufferLayout.maxSize(data).coerceAtLeast(1)
-                    if (stride * (info.height - 1) + info.width * 4 <= SpaBufferLayout.maxSize(data) - offset) {
+                    if (stride.toLong() * (info.height - 1) + rowBytes <= SpaBufferLayout.maxSize(data) - offset) {
                         upload(info, Pointer.nativeValue(base) + offset, stride)
                     }
                 }
@@ -338,27 +340,92 @@ class PipeWireReceiverImpl : TextureReceiver {
         return localTextureId
     }
 
+    // YUY2: the packed frame (one RGBA texel = Y0 U Y1 V, half the width) and the converted RGBA picture.
+    private var packedTex = 0
+    private var yuvFbo: FBO? = null
+    private var yuvShader: Shader? = null
+
     private fun upload(info: SpaPod.VideoInfo, address: Long, stride: Int) {
-        if (localTextureId == 0 || texW != info.width || texH != info.height || texFormat != info.format) {
-            if (localTextureId == 0) localTextureId = glGenTextures()
-            glBindTexture(GL_TEXTURE_2D, localTextureId)
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, info.width, info.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0L)
-            // RGBx / BGRx carry no alpha: read it as opaque.
-            val noAlpha = info.format == SpaPod.VIDEO_FORMAT_RGBX || info.format == SpaPod.VIDEO_FORMAT_BGRX
+        val w = info.width; val h = info.height
+        val yuy2 = info.format == SpaPod.VIDEO_FORMAT_YUY2
+        val gray = info.format == SpaPod.VIDEO_FORMAT_GRAY8
+        val texW = if (yuy2) (w + 1) / 2 else w
+        if (!yuy2 && yuvFbo != null) { yuvFbo?.dispose(); yuvFbo = null; localTextureId = 0 }  // left YUY2: drop the converted picture
+        val target = if (yuy2) { if (packedTex == 0) packedTex = glGenTextures(); packedTex } else {
+            if (localTextureId == 0) localTextureId = glGenTextures(); localTextureId
+        }
+        glBindTexture(GL_TEXTURE_2D, target)
+        if (this.texW != w || this.texH != h || texFormat != info.format) {
+            val filter = if (yuy2) GL_NEAREST else GL_LINEAR
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter)
+            if (gray) {
+                glTexImage2D(GL_TEXTURE_2D, 0, org.lwjgl.opengl.GL30.GL_R8, w, h, 0, GL_RED, GL_UNSIGNED_BYTE, 0L)
+                for (c in intArrayOf(org.lwjgl.opengl.GL33.GL_TEXTURE_SWIZZLE_G, org.lwjgl.opengl.GL33.GL_TEXTURE_SWIZZLE_B)) glTexParameteri(GL_TEXTURE_2D, c, GL_RED)
+            } else {
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texW, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0L)
+            }
+            // RGBx / BGRx / GRAY8 carry no alpha: read it as opaque.
+            val noAlpha = info.format == SpaPod.VIDEO_FORMAT_RGBX || info.format == SpaPod.VIDEO_FORMAT_BGRX || gray
             glTexParameteri(GL_TEXTURE_2D, org.lwjgl.opengl.GL33.GL_TEXTURE_SWIZZLE_A, if (noAlpha) org.lwjgl.opengl.GL11.GL_ONE else GL_ALPHA)
-            texW = info.width; texH = info.height; texFormat = info.format
-        } else {
-            glBindTexture(GL_TEXTURE_2D, localTextureId)
+            if (yuy2) {
+                yuvFbo?.dispose(); yuvFbo = FBO(w, h)
+                if (localTextureId != 0) { glDeleteTextures(localTextureId); localTextureId = 0 }
+            }
+            this.texW = w; this.texH = h; texFormat = info.format
         }
         val bgr = info.format == SpaPod.VIDEO_FORMAT_BGRA || info.format == SpaPod.VIDEO_FORMAT_BGRX
+        val glFormat = when { gray -> GL_RED; bgr -> org.lwjgl.opengl.GL12.GL_BGRA; else -> GL_RGBA }
+        org.lwjgl.opengl.GL11.glPixelStorei(org.lwjgl.opengl.GL11.GL_UNPACK_ALIGNMENT, 1)
         // Video rows run top to bottom, GL textures bottom to top: upload each row into its mirrored place.
-        val glFormat = if (bgr) org.lwjgl.opengl.GL12.GL_BGRA else GL_RGBA
-        for (row in 0 until info.height) {
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, info.height - 1 - row, info.width, 1, glFormat, GL_UNSIGNED_BYTE, address + row.toLong() * stride)
+        for (row in 0 until h) {
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, h - 1 - row, texW, 1, glFormat, GL_UNSIGNED_BYTE, address + row.toLong() * stride)
         }
+        org.lwjgl.opengl.GL11.glPixelStorei(org.lwjgl.opengl.GL11.GL_UNPACK_ALIGNMENT, 4)
         glBindTexture(GL_TEXTURE_2D, 0)
+        if (yuy2) convertYuy2(w, h)
+    }
+
+    /** Packed YUY2 -> RGBA (BT.601, limited range, as webcams send it) into [yuvFbo], restoring the caller's GL state. */
+    private fun convertYuy2(w: Int, h: Int) {
+        val fbo = yuvFbo ?: return
+        val shader = yuvShader ?: Shader(YUY2_VERT, YUY2_FRAG).also { yuvShader = it }
+        val prevFbo = glGetInteger(org.lwjgl.opengl.GL30.GL_FRAMEBUFFER_BINDING)
+        val prevProgram = glGetInteger(org.lwjgl.opengl.GL20.GL_CURRENT_PROGRAM)
+        val vp = IntArray(4).also { glGetIntegerv(GL_VIEWPORT, it) }
+        val blend = glIsEnabled(GL_BLEND)
+        org.lwjgl.opengl.GL30.glBindFramebuffer(org.lwjgl.opengl.GL30.GL_FRAMEBUFFER, fbo.framebufferId)
+        glViewport(0, 0, w, h)
+        glDisable(GL_BLEND)
+        shader.bind()
+        org.lwjgl.opengl.GL13.glActiveTexture(org.lwjgl.opengl.GL13.GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, packedTex)
+        shader.setUniform("uPacked", 0)
+        Geometry.drawFullscreenQuad()
+        glBindTexture(GL_TEXTURE_2D, 0)
+        org.lwjgl.opengl.GL30.glBindFramebuffer(org.lwjgl.opengl.GL30.GL_FRAMEBUFFER, prevFbo)
+        org.lwjgl.opengl.GL20.glUseProgram(prevProgram)
+        glViewport(vp[0], vp[1], vp[2], vp[3])
+        if (blend) glEnable(GL_BLEND)
+        localTextureId = fbo.texture
+    }
+
+    private companion object {
+        const val YUY2_VERT = """#version 330 core
+layout(location = 0) in vec2 aPosition;
+void main() { gl_Position = vec4(aPosition, 0.0, 1.0); }
+"""
+        const val YUY2_FRAG = """#version 330 core
+uniform sampler2D uPacked;
+out vec4 o;
+void main() {
+    ivec2 p = ivec2(gl_FragCoord.xy);
+    vec4 t = texelFetch(uPacked, ivec2(p.x / 2, p.y), 0);   // Y0 U Y1 V
+    float y = ((p.x & 1) == 0 ? t.r : t.b) - 16.0 / 255.0;
+    float u = t.g - 0.5, v = t.a - 0.5;
+    o = vec4(clamp(vec3(1.164 * y + 1.596 * v, 1.164 * y - 0.392 * u - 0.813 * v, 1.164 * y + 2.017 * u), 0.0, 1.0), 1.0);
+}
+"""
     }
 
     override fun stop() {
@@ -411,10 +478,13 @@ class PipeWireReceiverImpl : TextureReceiver {
             threadLoop = null
         }
 
+        if (yuvFbo != null) { yuvFbo?.dispose(); yuvFbo = null; localTextureId = 0 }
         if (localTextureId != 0) {
             glDeleteTextures(localTextureId)
             localTextureId = 0
         }
+        if (packedTex != 0) { glDeleteTextures(packedTex); packedTex = 0 }
+        yuvShader?.dispose(); yuvShader = null
 
         active = false
         agreed = null

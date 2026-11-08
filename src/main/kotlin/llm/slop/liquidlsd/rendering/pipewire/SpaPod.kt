@@ -48,10 +48,15 @@ object SpaPod {
     private const val BUFFERS_STRIDE = 4
     private const val BUFFERS_DATA_TYPE = 6
 
+    const val VIDEO_FORMAT_YUY2 = 4
     const val VIDEO_FORMAT_RGBX = 7
     const val VIDEO_FORMAT_BGRX = 8
     const val VIDEO_FORMAT_RGBA = 11
     const val VIDEO_FORMAT_BGRA = 12
+    const val VIDEO_FORMAT_GRAY8 = 25
+
+    /** Bytes per pixel of the formats the app reads and writes. */
+    fun bytesPerPixel(format: Int): Int = when (format) { VIDEO_FORMAT_YUY2 -> 2; VIDEO_FORMAT_GRAY8 -> 1; else -> 4 }
 
     private const val DATA_MEM_PTR = 1
     private const val DATA_MEM_FD = 2

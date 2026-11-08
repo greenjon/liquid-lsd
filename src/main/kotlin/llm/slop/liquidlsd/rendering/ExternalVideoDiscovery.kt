@@ -81,7 +81,10 @@ object ExternalVideoDiscovery {
                 val mediaClass = prop("media.class") ?: continue
                 if (mediaClass != "Video/Source" && mediaClass != "Stream/Output/Video") continue
                 val name = prop("node.name") ?: continue
-                val label = prop("node.description")?.takeIf { it.isNotBlank() } ?: name
+                val base = prop("node.description")?.takeIf { it.isNotBlank() } ?: name
+                // Two nodes can share a description (a webcam and its IR sensor both say "HP HD Camera"): number the rest.
+                var label = base; var n = 2
+                while (label in results) label = "$base ($n)".also { n++ }
                 pipeWireTargets[label] = name
                 results.add(label)
             }
