@@ -59,3 +59,65 @@
   PASS s9_clock_unit: BEAT to TIME keeps the step length (1 beat at 128 BPM = 0.469 s)
   PASS s9_clock_unit: TIME to FRAME converts at the frame rate (0.469 s = 14 frames at the tour's 30 fps)
   PASS s9_clock_unit: Length takes an odd value (7)
+  PASS n_trans_bad_then_good: nothing written for AC/DC
+  PASS n_trans_bad_then_good: nothing written for CON
+  PASS n_trans_bad_then_good: accented name saved as typed
+  PASS n_trans_bad_then_good: nothing written for AC/DC
+  PASS n_trans_bad_then_good: nothing written for CON
+  PASS n_trans_bad_then_good: accented name saved as typed
+  PASS n_trans_bad_then_good: nothing written for AC/DC
+  PASS n_trans_bad_then_good: nothing written for CON
+  PASS n_trans_bad_then_good: accented name saved as typed
+  PASS n_rename_bad_then_good: renamed to the accented name
+  PASS n_rename_bad_then_good: nothing made for a/b or NUL.x
+  PASS n_playlist_bad_then_good: playlist made with the accented name
+  PASS n_playlist_bad_then_good: nothing made for set:1
+  PASS n_tmpfs_save_ok: saves fine with room (control)
+  PASS n_tmpfs_save_ok: no temp files left
+  PASS n_full_disk_save: preset untouched on a full disk
+  PASS n_full_disk_save: still valid JSON
+  PASS n_full_disk_save: no temp files left
+  PASS n_full_disk_save: the failure is logged
+  PASS n_full_disk_save: preset untouched on a full disk
+  PASS n_full_disk_save: still valid JSON
+  PASS n_full_disk_save: no temp files left
+  PASS n_full_disk_save: the failure is logged
+  PASS chain_save_readonly: failed save shows a message
+  PASS chain_save_readonly: and stays unsaved
+  FAIL n_big_keys: keyboard walks 40 rows down a clipped list and Enter loads that row   [src=EMPTY file=null dirty=false fx=[Luma displace, Fluid smear, Bloom]]
+  FAIL n_big_menu: a row far down the clipped list opens its menu and loads   [src=EMPTY file=null dirty=false fx=[Luma displace, Fluid smear, Bloom]]
+  PASS n_small_keys: control (unclipped): Enter after 40 downs
+  PASS n_big_menu: a row far down the clipped list opens its menu and loads
+  FAIL n_big_keys: keyboard walks 40 rows down a clipped list: row 40 drawn, row 0 not, only rows in view drawn   [(9, ['browser_row_src_flame_00000'], ['browser_row_src_flame_00040'])]
+  PASS n_big_keys: keyboard walks 40 rows down a clipped list: row 40 drawn with the rows in view (plus the selected row 0), not all 10,000
+  PASS multi_ctrl: Ctrl+click then Q queues the two rows
+  PASS multi_shift: Shift+click ranges
+  PASS multi_drag: dragging a preset selection queues all, in order
+  PASS playlist_drop: playlist dropped puts its items in
+  PASS enter_src: Enter loads on a deck
+  PASS alt_click: Alt+click previews on PV
+  PASS delete_key: Delete + Esc keeps, Backspace + Enter deletes
+  PASS esc_menu: Esc closes a menu without going back
+  PASS tag_rename: Rename Tag on every item
+  PASS tag_drag: row dragged onto a tag gets it
+  PASS missing_findall: Find all repoints the moved item
+  PASS drop_preset: deck badge takes a preset
+  PASS last_click: preset then source in a blink: last wins
+  PASS deck_save_folder: Save writes back into the subfolder
+  PASS deck_save_folder: no new copy at the top
+  PASS deck_save_folder: clean afterwards
+  PASS trans_save_as: transition Save As writes the file
+  PASS chain_saveas: Save As writes the file
+  PASS chain_saveas: chain takes the name
+  PASS n_down_enter: Down then Enter loads the next row
+  PASS n_downs_5_12: 5 downs then Enter loads flame_00005
+  PASS n_downs_40_30: 40 downs then Enter loads flame_00040
+  PASS n_big_downs_enter: clipped list (10,000 rows): 40 downs then Enter loads flame_00040
+  PASS n_tmpfs_save_ok: and the deck shows saved (control)
+  PASS n_tmpfs_save_ok: saves fine with room (control)
+  PASS n_tmpfs_save_ok: no temp files left
+  PASS n_full_disk_save: preset untouched on a full disk
+  PASS n_full_disk_save: still valid JSON
+  PASS n_full_disk_save: no temp files left
+  PASS n_full_disk_save: the deck still shows unsaved changes after the failed save
+  PASS n_full_disk_save: the failure is logged

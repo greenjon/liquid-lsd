@@ -4,7 +4,7 @@
   "target": "_blank",
   "rel": "noopener"
  },
- "newTab": "",
+ "newTab": "chrome-error://chromewebdata/",
  "stillOn": true,
  "qr": {
   "label": "QR code for liquid-lsd.greenjon.com",
