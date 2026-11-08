@@ -59,61 +59,51 @@ object AudioDecoder {
         }
     }
 
+    /**
+     * Decodes through a temp file so the samples are read once into an array of the exact size. Collecting them in
+     * chunks and copying needed twice the memory: a two-hour mix (1.3 GB of samples) ran out of the 2 GB heap.
+     */
     private fun decodeWithFFmpeg(file: File, targetSampleRate: Float): DecodedAudio {
-        val pb = ProcessBuilder(
-            "ffmpeg",
-            "-v", "error",
-            "-i", file.absolutePath,
-            "-f", "f32le",
-            "-ac", "1", // Downmix to mono for CV/DSP analysis
-            "-ar", targetSampleRate.toInt().toString(),
-            "-"
-        )
-        pb.redirectError(ProcessBuilder.Redirect.DISCARD)
+        val tmp = File.createTempFile("lsd-decode-", ".f32")
+        try {
+            val pb = ProcessBuilder(
+                "ffmpeg", "-nostdin",
+                "-v", "error",
+                "-y",
+                "-i", file.absolutePath,
+                "-f", "f32le",
+                "-ac", "1", // Downmix to mono for CV/DSP analysis
+                "-ar", targetSampleRate.toInt().toString(),
+                tmp.absolutePath
+            )
+            pb.redirectError(ProcessBuilder.Redirect.DISCARD)
+            pb.redirectOutput(ProcessBuilder.Redirect.DISCARD)
+            pb.start().waitFor()
 
-        val process = pb.start()
-        val stream = BufferedInputStream(process.inputStream, 65536)
-
-        val byteBuffer = ByteArray(65536)
-        val floatList = mutableListOf<FloatArray>()
-        var totalFloats = 0
-
-        val bb = ByteBuffer.allocate(65536).order(ByteOrder.LITTLE_ENDIAN)
-
-        while (true) {
-            var bytesRead = 0
-            while (bytesRead < byteBuffer.size) {
-                val r = stream.read(byteBuffer, bytesRead, byteBuffer.size - bytesRead)
-                if (r <= 0) break
-                bytesRead += r
+            val count = tmp.length() / 4
+            require(count <= Int.MAX_VALUE) { "${file.name} is too long to analyse (${count / targetSampleRate / 3600} h)" }
+            val fullSamples = FloatArray(count.toInt())
+            java.nio.channels.FileChannel.open(tmp.toPath()).use { ch ->
+                val bb = ByteBuffer.allocateDirect(1 shl 20).order(ByteOrder.LITTLE_ENDIAN)
+                var offset = 0
+                while (offset < fullSamples.size) {
+                    val r = ch.read(bb)
+                    bb.flip()
+                    val n = minOf(bb.remaining() / 4, fullSamples.size - offset)
+                    bb.asFloatBuffer().get(fullSamples, offset, n)
+                    bb.position(bb.position() + n * 4)
+                    bb.compact()
+                    offset += n
+                    if (r < 0) break
+                }
             }
-            if (bytesRead == 0) break
 
-            val floatsInChunk = bytesRead / 4
-            if (floatsInChunk > 0) {
-                bb.clear()
-                bb.put(byteBuffer, 0, floatsInChunk * 4)
-                bb.flip()
-                val chunk = FloatArray(floatsInChunk)
-                bb.asFloatBuffer().get(chunk)
-                floatList.add(chunk)
-                totalFloats += floatsInChunk
-            }
-            if (bytesRead < byteBuffer.size) break
+            val duration = fullSamples.size / targetSampleRate
+            logger.info { "Decoded ${file.name} with FFmpeg: ${fullSamples.size} samples, duration: ${"%.2f".format(duration)}s" }
+            return DecodedAudio(fullSamples, targetSampleRate, 1, duration)
+        } finally {
+            tmp.delete()
         }
-
-        process.waitFor()
-
-        val fullSamples = FloatArray(totalFloats)
-        var offset = 0
-        for (chunk in floatList) {
-            System.arraycopy(chunk, 0, fullSamples, offset, chunk.size)
-            offset += chunk.size
-        }
-
-        val duration = totalFloats / targetSampleRate
-        logger.info { "Decoded ${file.name} with FFmpeg: $totalFloats samples, duration: ${"%.2f".format(duration)}s" }
-        return DecodedAudio(fullSamples, targetSampleRate, 1, duration)
     }
 
     private fun decodeWithJavaSound(file: File): DecodedAudio {

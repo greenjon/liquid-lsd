@@ -84,6 +84,12 @@ object OfflineRenderStudio {
             statusMessage = "Audio decode failed: ${e.message}"
             isSuccess = false
             return false
+        } catch (e: OutOfMemoryError) {
+            // One big sample array that didn't fit (about 0.6 GB per hour): nothing else was allocated, so carry on.
+            logger.error { "Audio file too long to analyse in memory: ${config.audioFile.name}" }
+            statusMessage = "This audio is too long to render in one go (not enough memory). Split it into parts of about 2 hours."
+            isSuccess = false
+            return false
         }
 
         val frames = (decoded.durationSeconds * config.fps).toInt().coerceAtLeast(1)
