@@ -53,6 +53,35 @@ class LibraryRefsTest {
     }
 
     @Test
+    fun `entries written on Windows still move and the new entry uses forward slashes`(@TempDir dir: File) {
+        val presets = File(dir, "presets").apply { mkdirs() }
+        val playlists = File(dir, "playlists").apply { mkdirs() }
+        val a = File(presets, "garden/a.lsd")
+        val list = File(playlists, "set.lsdplay")
+        list.writeText("garden\\a.lsd\nkeep.lsd\n")
+        PlaylistManager.updatePresetPathsInAllPlaylists(
+            mapOf(a.absolutePath to File(presets, "garden/curated/a.lsd").absolutePath),
+            presetsRoot = presets, playlistsRoot = playlists
+        )
+        assertEquals(listOf("garden/curated/a.lsd", "keep.lsd"), list.readLines())
+    }
+
+    @Test
+    fun `a sibling folder sharing the root's name prefix is not inside it`(@TempDir dir: File) {
+        val presets = File(dir, "presets").apply { mkdirs() }
+        val playlists = File(dir, "playlists").apply { mkdirs() }
+        val outside = File(dir, "presets2/x.lsd")
+        val list = File(playlists, "set.lsdplay")
+        list.writeText("${outside.absolutePath}\n")
+        PlaylistManager.updatePresetPathsInAllPlaylists(
+            mapOf(outside.absolutePath to File(dir, "presets2/y.lsd").absolutePath),
+            presetsRoot = presets, playlistsRoot = playlists
+        )
+        // Before the fix this became "../presets2/y.lsd" (relative to the wrong root).
+        assertEquals(listOf(File(dir, "presets2/y.lsd").absolutePath), list.readLines())
+    }
+
+    @Test
     fun `queues swap moved files in place`() {
         val queue = CopyOnWriteArrayList(listOf(File("/q/a.lsd"), File("/q/b.lsd"), File("/q/a.lsd")))
         LibraryRefs.relocateQueue(queue, mapOf(File("/q/a.lsd").absolutePath to File("/q/x/a.lsd").absolutePath))

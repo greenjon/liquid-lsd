@@ -28,6 +28,14 @@ class PlaylistParserTest {
     }
 
     @Test
+    fun windowsSeparatorsResolveEverywhere() {
+        // A playlist saved on Windows lists subfolder entries with backslashes.
+        val file = File(root, "garden/curated/delta.lsd").apply { parentFile.mkdirs(); writeText("{}"); deleteOnExit() }
+        assertEquals(file, PlaylistParser.resolveItem("garden\\curated\\delta.lsd", listOf(root)))
+        assertEquals(file, PlaylistParser.resolveItem("garden\\curated\\delta", listOf(root)))
+    }
+
+    @Test
     fun bareNameGetsExtension() {
         val file = preset("alpha.lsd")
         assertEquals(file, PlaylistParser.resolveItem("alpha", listOf(root)))

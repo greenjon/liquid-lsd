@@ -10,6 +10,9 @@ import java.time.LocalDateTime
  */
 object PlaylistManager {
     private val logger = KotlinLogging.logger {}
+
+    /** Entries are written with `/`, which every system reads; a playlist made on Windows may still hold `\\`. */
+    internal fun portable(path: String): String = path.replace('\\', '/')
     
     /**
      * Represents a playlist in memory.
@@ -161,8 +164,8 @@ object PlaylistManager {
             val relativePath = try {
                 val file = File(presetPath)
                 val root = FileSystemManager.getPresetsRoot().canonicalFile
-                if (file.canonicalPath.startsWith(root.path)) {
-                    file.canonicalFile.relativeTo(root).path
+                if (file.canonicalFile.toPath().startsWith(root.toPath())) {
+                    portable(file.canonicalFile.relativeTo(root).path)
                 } else {
                     presetPath
                 }
@@ -269,8 +272,8 @@ object PlaylistManager {
             
             val relativePath = try {
                 val root = FileSystemManager.getPresetsRoot().canonicalFile
-                if (file.canonicalPath.startsWith(root.path)) {
-                    file.canonicalFile.relativeTo(root).path
+                if (file.canonicalFile.toPath().startsWith(root.toPath())) {
+                    portable(file.canonicalFile.relativeTo(root).path)
                 } else {
                     newPath
                 }
@@ -310,14 +313,14 @@ object PlaylistManager {
 
         fun toRelative(abs: String): String? = try {
             val f = File(abs).canonicalFile
-            if (f.path.startsWith(root.path)) f.relativeTo(root).path else null
+            if (f.toPath().startsWith(root.toPath())) portable(f.relativeTo(root).path) else null
         } catch (e: Exception) { null }
 
         // Every form an old path might appear as inside a playlist file, mapped to what replaces it
         val replacements = HashMap<String, String>()
         for ((oldAbs, newAbs) in moves) {
             val newRel = toRelative(newAbs) ?: newAbs
-            replacements[oldAbs] = newRel
+            replacements[portable(oldAbs)] = newRel
             toRelative(oldAbs)?.let { replacements[it] = newRel }
         }
 
@@ -327,7 +330,7 @@ object PlaylistManager {
                 val lines = playlistFile.readLines()
                 var changed = false
                 val updated = lines.map { line ->
-                    replacements[line.trim()]?.also { changed = true } ?: line
+                    replacements[portable(line.trim())]?.also { changed = true } ?: line
                 }
                 if (changed) {
                     llm.slop.liquidlsd.utils.AtomicFile.write(playlistFile, updated.joinToString("\n") + "\n")
@@ -346,11 +349,11 @@ object PlaylistManager {
 
         fun toRelative(abs: String): String? = try {
             val f = File(abs).canonicalFile
-            if (f.path.startsWith(presetsRoot.path)) f.relativeTo(presetsRoot).path else null
+            if (f.toPath().startsWith(presetsRoot.toPath())) portable(f.relativeTo(presetsRoot).path) else null
         } catch (e: Exception) { null }
 
         val relPath = toRelative(presetAbsPath)
-        val candidates = listOfNotNull(presetAbsPath, relPath).toSet()
+        val candidates = listOfNotNull(portable(presetAbsPath), relPath).toSet()
 
         playlistsRoot.walkTopDown()
             .filter { it.isFile && it.extension == "lsdplay" }
@@ -358,7 +361,7 @@ object PlaylistManager {
                 val lines = playlistFile.readLines()
                 var changed = false
                 val updated = lines.filter { line ->
-                    if (line.trim() in candidates) {
+                    if (portable(line.trim()) in candidates) {
                         changed = true
                         false
                     } else {
