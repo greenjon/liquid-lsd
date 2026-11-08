@@ -1,0 +1,26 @@
+[
+ {
+  "panel": "menu",
+  "open": true,
+  "closed": true,
+  "stillOff": true
+ },
+ {
+  "panel": "schedule",
+  "open": true,
+  "closed": true,
+  "stillOff": true
+ },
+ {
+  "panel": "tapes",
+  "open": true,
+  "closed": true,
+  "stillOff": true
+ },
+ {
+  "panel": "keys",
+  "open": true,
+  "closed": true,
+  "stillOff": true
+ }
+]

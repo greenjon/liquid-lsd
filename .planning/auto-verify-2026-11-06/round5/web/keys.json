@@ -1,0 +1,292 @@
+[
+ {
+  "key": "r",
+  "want": [
+   "vars",
+   "msg"
+  ],
+  "changed": [
+   "msg",
+   "vars"
+  ],
+  "ok": true
+ },
+ {
+  "key": "j",
+  "want": [
+   "ch",
+   "scene"
+  ],
+  "changed": [
+   "ch",
+   "chain"
+  ],
+  "ok": true
+ },
+ {
+  "key": "e",
+  "want": [
+   "chain",
+   "msg"
+  ],
+  "changed": [
+   "chain"
+  ],
+  "ok": true
+ },
+ {
+  "key": "u",
+  "want": [
+   "media",
+   "msg"
+  ],
+  "changed": [
+   "msg"
+  ],
+  "ok": true
+ },
+ {
+  "key": "u",
+  "want": [
+   "media",
+   "msg"
+  ],
+  "changed": [
+   "msg"
+  ],
+  "ok": true
+ },
+ {
+  "key": "ArrowUp",
+  "want": [
+   "media",
+   "msg"
+  ],
+  "changed": [
+   "msg"
+  ],
+  "ok": true
+ },
+ {
+  "key": "ArrowDown",
+  "want": [
+   "media",
+   "msg"
+  ],
+  "changed": [
+   "msg"
+  ],
+  "ok": true
+ },
+ {
+  "key": "h",
+  "want": [
+   "hold"
+  ],
+  "changed": [
+   "msg",
+   "hold"
+  ],
+  "ok": true
+ },
+ {
+  "key": "h",
+  "want": [
+   "hold"
+  ],
+  "changed": [
+   "msg",
+   "hold"
+  ],
+  "ok": true
+ },
+ {
+  "key": "i",
+  "want": [
+   "info"
+  ],
+  "changed": [
+   "info"
+  ],
+  "ok": true
+ },
+ {
+  "key": "i",
+  "want": [
+   "info"
+  ],
+  "changed": [
+   "info"
+  ],
+  "ok": true
+ },
+ {
+  "key": "=",
+  "want": [
+   "react",
+   "msg"
+  ],
+  "changed": [
+   "msg",
+   "react"
+  ],
+  "ok": true
+ },
+ {
+  "key": "-",
+  "want": [
+   "react",
+   "msg"
+  ],
+  "changed": [
+   "msg",
+   "react"
+  ],
+  "ok": true
+ },
+ {
+  "key": "n",
+  "want": [
+   "ch",
+   "scene"
+  ],
+  "changed": [
+   "ch",
+   "scene",
+   "chain",
+   "vars"
+  ],
+  "ok": true
+ },
+ {
+  "key": "p",
+  "want": [
+   "ch",
+   "scene"
+  ],
+  "changed": [
+   "ch"
+  ],
+  "ok": true
+ },
+ {
+  "key": "m",
+  "want": [
+   "menu"
+  ],
+  "changed": [
+   "menu"
+  ],
+  "ok": true
+ },
+ {
+  "key": "Escape",
+  "want": [
+   "menu"
+  ],
+  "changed": [
+   "menu"
+  ],
+  "ok": true
+ },
+ {
+  "key": "s",
+  "want": [
+   "schedule"
+  ],
+  "changed": [
+   "schedule"
+  ],
+  "ok": true
+ },
+ {
+  "key": "Escape",
+  "want": [
+   "schedule"
+  ],
+  "changed": [
+   "schedule"
+  ],
+  "ok": true
+ },
+ {
+  "key": "t",
+  "want": [
+   "tapes"
+  ],
+  "changed": [
+   "tapes"
+  ],
+  "ok": true
+ },
+ {
+  "key": "Escape",
+  "want": [
+   "tapes"
+  ],
+  "changed": [
+   "tapes"
+  ],
+  "ok": true
+ },
+ {
+  "key": "?",
+  "want": [
+   "keys"
+  ],
+  "changed": [
+   "keys"
+  ],
+  "ok": true
+ },
+ {
+  "key": "Escape",
+  "want": [
+   "keys"
+  ],
+  "changed": [
+   "keys"
+  ],
+  "ok": true
+ },
+ {
+  "key": "f",
+  "want": [
+   "fullscreen"
+  ],
+  "changed": [
+   "fullscreen"
+  ],
+  "ok": true
+ },
+ {
+  "key": "f",
+  "want": [
+   "fullscreen"
+  ],
+  "changed": [
+   "fullscreen"
+  ],
+  "ok": true
+ },
+ {
+  "key": "c",
+  "want": [
+   "chat"
+  ],
+  "changed": [
+   "chat"
+  ],
+  "ok": true
+ },
+ {
+  "key": "c",
+  "want": [
+   "chat"
+  ],
+  "changed": [
+   "chat"
+  ],
+  "ok": true
+ }
+]

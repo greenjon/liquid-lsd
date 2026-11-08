@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """respond.py <work dir> <kind> [ids...]: does the music move the picture? Each item renders the same 20 s twice, Audio
-Response 100% and 0%, with the synth 128 BPM track. The difference between the two renders is what the band responses add
+Response 100% and 0%, with the synth 128 BPM track. Only the main output monitor is measured (the tour renders the whole window). The difference between the two renders is what the band responses add
 (section signals keep running at 0% by design, so they cancel out). kind: src | fx | trans. results/respond_<kind>.txt."""
 import json,os,subprocess,sys,shutil
 import numpy as np
@@ -29,7 +29,7 @@ def render(item,resp):
     p=subprocess.run([BIN,f'--tour={js}',f'--tour-out={mp4}','--no-audio','--tour-hidden','--tour-fps=30','--tour-scale=0.25','--tour-encoder=nvenc','--tour-no-hashes'],cwd=CWD,env=ENV,capture_output=True,text=True)
     cv=[[float(x) for x in l.split()[1:]] for l in p.stdout.splitlines() if l.startswith('TOUR_CV')]
     warn=[l for l in p.stdout.splitlines() if 'TOUR_WARN' in l][:2]
-    raw=subprocess.run(['ffmpeg','-v','error','-i',mp4,'-vf',f'scale={W}:{Hh}','-pix_fmt','gray','-f','rawvideo','-'],capture_output=True).stdout
+    raw=subprocess.run(['ffmpeg','-v','error','-i',mp4,'-vf',f'crop=iw*0.276:ih*0.300:iw*0.694:ih*0.053,scale={W}:{Hh}','-pix_fmt','gray','-f','rawvideo','-'],capture_output=True).stdout
     fr=np.frombuffer(raw,np.uint8).reshape(-1,Hh,W).astype(np.float32); os.remove(mp4)
     return fr,np.array(cv),warn
 out=open(f'{H}/results/respond_{kind}.txt','a')
