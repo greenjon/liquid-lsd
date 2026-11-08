@@ -170,7 +170,7 @@ object MidiMappingManager {
         val file = midiProfileFile(midiDir, activeProfileName)
         try {
             val content = json.encodeToString(activeProfile)
-            file.writeText(content)
+            llm.slop.liquidlsd.utils.AtomicFile.write(file, content)
             logger.info { "Saved MIDI mapping profile: $activeProfileName" }
         } catch (e: Exception) {
             logger.error(e) { "Failed to save MIDI profile: $activeProfileName" }

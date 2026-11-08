@@ -106,7 +106,7 @@ object PlaylistManager {
                 }
             }
             
-            file.writeText(content)
+            llm.slop.liquidlsd.utils.AtomicFile.write(file, content)
             playlist.markClean()
             
             logger.info { "Saved playlist: ${playlist.name} with ${playlist.presets.size} presets" }
@@ -330,7 +330,7 @@ object PlaylistManager {
                     replacements[line.trim()]?.also { changed = true } ?: line
                 }
                 if (changed) {
-                    playlistFile.writeText(updated.joinToString("\n") + "\n")
+                    llm.slop.liquidlsd.utils.AtomicFile.write(playlistFile, updated.joinToString("\n") + "\n")
                     logger.info { "Updated ${moves.size} preset path(s) in playlist ${playlistFile.name}" }
                 }
             }
@@ -366,7 +366,7 @@ object PlaylistManager {
                     }
                 }
                 if (changed) {
-                    playlistFile.writeText(updated.joinToString("\n") + "\n")
+                    llm.slop.liquidlsd.utils.AtomicFile.write(playlistFile, updated.joinToString("\n") + "\n")
                     logger.info { "Removed deleted preset reference $presetAbsPath from playlist ${playlistFile.name}" }
                 }
             }

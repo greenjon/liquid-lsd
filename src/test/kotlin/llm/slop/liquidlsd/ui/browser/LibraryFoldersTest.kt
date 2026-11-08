@@ -24,6 +24,17 @@ class LibraryFoldersTest {
     }
 
     @Test
+    fun `names that Windows can't save are rejected everywhere`() {
+        // Accents, CJK and emoji are fine file names on every platform.
+        assertNull(LibraryFolders.nameProblem("Café Ñandú 日本 🌀"))
+        assertNull(LibraryFolders.nameProblem("console"))
+        assertNull(LibraryFolders.nameProblem("COM10"))
+        for (bad in listOf("CON", "nul", "Aux.backup", "com1", "LPT9", "trailing.", "tab\there")) {
+            assertNotNull(LibraryFolders.nameProblem(bad), bad)
+        }
+    }
+
+    @Test
     fun `new folders are listed even when empty, hidden folders are not`(@TempDir root: File) {
         assertTrue(LibraryFolders.createFolder(root, "", "garden").isSuccess)
         assertTrue(LibraryFolders.createFolder(root, "garden", "moss").isSuccess)

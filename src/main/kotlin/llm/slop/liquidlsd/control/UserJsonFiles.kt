@@ -2,9 +2,6 @@ package llm.slop.liquidlsd.control
 
 import mu.KotlinLogging
 import java.io.File
-import java.nio.file.AtomicMoveNotSupportedException
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
 
 /** File-IO shared by the user-file stores (controller profiles, Perform pages): safe scan and atomic write. */
 internal object UserJsonFiles {
@@ -62,20 +59,6 @@ internal object UserJsonFiles {
         if (version > current) "written by a newer build (schema version $version, this build reads $current): loaded best-effort, unknown fields are ignored, and it will not be overwritten by Save"
         else null
 
-    /** Writes [text] to a temp file beside [target] then moves it into place, so a crash never leaves a truncated file. */
-    fun writeAtomic(target: File, text: String) {
-        val dir = target.absoluteFile.parentFile
-        dir.mkdirs()
-        val tmp = File.createTempFile(".${target.name}.", ".tmp", dir)
-        try {
-            tmp.writeText(text)
-            try {
-                Files.move(tmp.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE)
-            } catch (e: AtomicMoveNotSupportedException) {
-                Files.move(tmp.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING)
-            }
-        } finally {
-            tmp.delete() // no-op after a successful move
-        }
-    }
+    /** See [llm.slop.liquidlsd.utils.AtomicFile.write]. */
+    fun writeAtomic(target: File, text: String) = llm.slop.liquidlsd.utils.AtomicFile.write(target, text)
 }

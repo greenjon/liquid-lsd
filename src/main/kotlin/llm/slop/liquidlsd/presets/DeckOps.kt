@@ -177,7 +177,7 @@ object DeckOps {
                 val (dto, wasMigrated) = PresetMigrator.sanitizePresetDto(rawDto.copy(name = file.nameWithoutExtension))
                 if (wasMigrated && file.canWrite()) {
                     try {
-                        file.writeText(PresetManager.json.encodeToString(dto))
+                        llm.slop.liquidlsd.utils.AtomicFile.write(file, PresetManager.json.encodeToString(dto))
                         logger.info { "Auto-healed and migrated preset '${file.name}' to latest schema" }
                     } catch (e: Exception) {
                         logger.warn(e) { "Could not auto-save migrated preset '${file.name}'" }

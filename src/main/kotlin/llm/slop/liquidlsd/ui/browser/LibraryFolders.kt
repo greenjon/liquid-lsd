@@ -88,13 +88,22 @@ object LibraryFolders {
         return root
     }
 
-    /** Why [name] can't be a folder or file name, or null when it can. */
-    fun nameProblem(name: String): String? = when {
-        name.isBlank() -> "Enter a name."
-        name.startsWith(".") -> "Names can't start with a dot."
-        name.any { it in "/\\:*?\"<>|" } -> "Names can't contain / \\ : * ? \" < > |"
-        else -> null
+    /** Why [name] (trimmed, as every caller saves it) can't be a file or folder name, or null when it can. */
+    fun nameProblem(name: String): String? {
+        val n = name.trim()
+        return when {
+            n.isEmpty() -> "Enter a name."
+            n.startsWith(".") -> "Names can't start with a dot."
+            n.any { it in "/\\:*?\"<>|" } -> "Names can't contain / \\ : * ? \" < > |"
+            n.any { it < ' ' } -> "Names can't contain tabs or line breaks."
+            // Windows can't save these, and a library is meant to move between systems.
+            n.endsWith(".") -> "Names can't end with a dot."
+            n.substringBefore('.').trim().uppercase() in WINDOWS_RESERVED -> "'${n.substringBefore('.').trim()}' is reserved on Windows."
+            else -> null
+        }
     }
+
+    private val WINDOWS_RESERVED = setOf("CON", "PRN", "AUX", "NUL") + (1..9).flatMap { listOf("COM$it", "LPT$it") }
 
     /** True when [file] is [dir] or lies below it, with `..` and links resolved. */
     fun isInside(file: File, dir: File): Boolean = file.canonicalFile.toPath().startsWith(dir.canonicalFile.toPath())

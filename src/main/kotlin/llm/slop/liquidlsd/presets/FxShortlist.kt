@@ -75,7 +75,7 @@ object FxShortlist {
     private fun save() {
         try {
             file.parentFile?.mkdirs()
-            file.writeText(json.encodeToString(listSerializer, favorites))
+            llm.slop.liquidlsd.utils.AtomicFile.write(file, json.encodeToString(listSerializer, favorites))
         } catch (e: Exception) {
             logger.error(e) { "Could not save FX shortlist ${file.path}" }
         }

@@ -94,7 +94,7 @@ object SessionSerializer {
             )
             
             val content = PresetManager.json.encodeToString(session)
-            sessionFile.writeText(content)
+            llm.slop.liquidlsd.utils.AtomicFile.write(sessionFile, content)
             logger.info { "Successfully saved session state to ${sessionFile.name}" }
         } catch (e: Exception) {
             logger.error(e) { "Failed to save session state" }

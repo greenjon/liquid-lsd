@@ -130,7 +130,7 @@ object OscMappingManager {
     fun saveActiveProfile() {
         val file = oscProfileFile(oscDir, activeProfileName)
         try {
-            file.writeText(json.encodeToString(activeProfile))
+            llm.slop.liquidlsd.utils.AtomicFile.write(file, json.encodeToString(activeProfile))
             logger.info { "Saved OSC mapping profile: $activeProfileName" }
         } catch (e: Exception) {
             logger.error(e) { "Failed to save OSC profile: $activeProfileName" }

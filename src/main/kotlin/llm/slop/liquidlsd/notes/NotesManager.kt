@@ -69,7 +69,7 @@ object NotesManager {
 
     private fun saveSourceNotes() {
         try {
-            sourceNotesFile.writeText(json.encodeToString(sourceNotes.toMap()))
+            llm.slop.liquidlsd.utils.AtomicFile.write(sourceNotesFile, json.encodeToString(sourceNotes.toMap()))
         } catch (e: Exception) {
             logger.error(e) { "Failed to save source-notes.json" }
         }

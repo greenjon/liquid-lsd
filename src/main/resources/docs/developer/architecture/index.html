@@ -850,6 +850,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#saving-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Saving Files
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#notes-system-persistence-architecture" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1510,6 +1521,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#saving-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Saving Files
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#notes-system-persistence-architecture" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1642,6 +1664,9 @@
 <li><strong><code>@Volatile</code> Flags</strong>: Thread-safe single-scalar flags (<code>isBpmLocked</code>, <code>manualBpm</code>, <code>inputGain</code>) accessed across threads without lock overhead.</li>
 <li><strong>Concurrent Queues</strong>: <code>ConcurrentLinkedQueue</code>s carry finished deck, FX and transition loads (<code>DeckOps</code>, <code>FxOps</code>, <code>TransitionOps</code>, drained at the start of the render phase), incoming MIDI events (<code>MidiEngine</code>, capped, drained by <code>UIManager.processInput</code> before the render phase), and incoming OSC messages decoded on the dedicated UDP receiver thread (<code>OscEngine.inboundQueue</code>), all drained on Thread 0 once per frame.</li>
 </ul>
+<hr />
+<h2 id="saving-files">Saving Files</h2>
+<p>Every file the user owns (presets, chains, transitions, playlists, the session, MIDI/OSC mappings, macro banks, controller profiles, shortcuts, favourites, notes) is written with <code>utils/AtomicFile.write</code>: a hidden temp file beside the target, then a move into place. A full disk or a crash mid-write leaves the old file as it was. A target the user made read-only is refused rather than replaced. Use it for any new user file; a plain <code>File.writeText</code> empties the old file before writing the new one. <code>PresetRepository</code> save failures go to the log and to a toast with the short reason (<code>failureReason</code>). Names typed for new files pass <code>LibraryFolders.nameProblem</code> (shown live by <code>ui/NameCheck</code>), which also rejects names Windows can't save.</p>
 <hr />
 <h2 id="notes-system-persistence-architecture">Notes System Persistence Architecture</h2>
 <p>Liquid LSD integrates a three-tier notes persistence model managed by <code>NotesManager.kt</code>:</p>

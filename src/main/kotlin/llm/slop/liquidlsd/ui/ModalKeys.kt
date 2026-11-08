@@ -32,10 +32,17 @@ object ModalKeys {
     /** Whether a modal that answers Esc was on screen this frame or the last. */
     fun ownsEscape(): Boolean = ImGui.getFrameCount() - escOwnerFrame <= 1
 
-    /** Call right before the modal's text field: gives it the keyboard on the modal's first frame. */
+    /** Set when Enter was refused (a name that can't be saved): the field takes the keyboard again next frame. */
+    private var refocus = false
+
+    /** Call right before the modal's text field: gives it the keyboard on the modal's first frame, or after [refocusField]. */
     fun focusOnOpen() {
-        if (ImGui.isWindowAppearing()) ImGui.setKeyboardFocusHere()
+        if (ImGui.isWindowAppearing() || refocus) ImGui.setKeyboardFocusHere()
+        refocus = false
     }
+
+    /** Enter left the text field but the modal refused it: put the keyboard back so the next keys edit the name. */
+    fun refocusField() { refocus = true }
 
     /** True on the frame Enter (or keypad Enter) is pressed. */
     fun confirmPressed(): Boolean {

@@ -17,6 +17,7 @@ Presets are the core unit of work in Liquid LSD. A preset captures the complete 
 - **`Ctrl+S`** — Saves the active deck's preset to disk immediately. If the deck doesn't have a saved file yet, it opens a **Save As** dialog instead.
 - **`Shift+Ctrl+S`** — Always opens the Save As dialog, even for already-saved presets. The suggested name gets `_copy` appended so you don't accidentally overwrite the original.
 - **Which folder** — The Save As dialog has a **Folder** dropdown. It starts in the folder of the preset the deck was loaded from, so a variation lands next to its original. For a deck with no saved file, it starts in the folder selected in the Library tree, or else at the top level. Saving FX, chains and transitions works the same way.
+- **Names** — A name becomes the file's name, so it can't contain `/ \ : * ? " < > |`, start with a dot, end with a dot, or be one of the names Windows reserves (`CON`, `NUL`, `COM1` and the like). The dialog says what's wrong under the field and won't save until it's fixed. Accents and other letters are fine. The same rule covers Rename, New Playlist, Export as playlist and folder names.
 
 When you modify a loaded preset, a `*` appears next to the deck name to show there are unsaved changes. A generator you picked without loading a preset is tracked the same way: tweak it and the deck shows `*`. Editing a knob's label or its targets counts as a change; turning a knob does not.
 

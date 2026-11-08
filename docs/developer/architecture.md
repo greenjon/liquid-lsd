@@ -84,6 +84,12 @@ Because the audio processing loop runs at sub-millisecond hardware intervals (~5
 
 ---
 
+## Saving Files
+
+Every file the user owns (presets, chains, transitions, playlists, the session, MIDI/OSC mappings, macro banks, controller profiles, shortcuts, favourites, notes) is written with `utils/AtomicFile.write`: a hidden temp file beside the target, then a move into place. A full disk or a crash mid-write leaves the old file as it was. A target the user made read-only is refused rather than replaced. Use it for any new user file; a plain `File.writeText` empties the old file before writing the new one. `PresetRepository` save failures go to the log and to a toast with the short reason (`failureReason`). Names typed for new files pass `LibraryFolders.nameProblem` (shown live by `ui/NameCheck`), which also rejects names Windows can't save.
+
+---
+
 ## Notes System Persistence Architecture
 
 Liquid LSD integrates a three-tier notes persistence model managed by `NotesManager.kt`:

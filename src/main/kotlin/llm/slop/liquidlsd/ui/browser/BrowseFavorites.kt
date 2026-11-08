@@ -102,7 +102,7 @@ object BrowseFavorites {
     private fun save(store: Store) {
         try {
             store.file.parentFile?.mkdirs()
-            store.file.writeText(json.encodeToString(listSerializer, store.keys.toList()))
+            llm.slop.liquidlsd.utils.AtomicFile.write(store.file, json.encodeToString(listSerializer, store.keys.toList()))
         } catch (e: Exception) {
             logger.error(e) { "Could not save favorites ${store.file.path}" }
         }

@@ -198,7 +198,7 @@ object ISFDirectoryManager {
             }
             val settingsContainer = ISFDirectorySettings(sources = currentSources)
             val serialized = json.encodeToString(ISFDirectorySettings.serializer(), settingsContainer)
-            configFile.writeText(serialized)
+            llm.slop.liquidlsd.utils.AtomicFile.write(configFile, serialized)
         } catch (e: Exception) {
             logger.error(e) { "Failed to save ISF directory settings to ${configFile.path}" }
         }
