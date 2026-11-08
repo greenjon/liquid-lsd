@@ -51,11 +51,12 @@ Verified end to end: GStreamer SMPTE bars (BGRx 640x360 30 fps) → app receiver
 
 ## Picture response (`respond.py`, `results/respond_*.txt`)
 
-Each stock source, effect and transition rendered twice over the same 20 s with the synth 128 track, Audio Response 100% and 0%; the difference is what the band responses add, correlated against bass changes.
+Each stock source, effect and transition rendered twice over the same 20 s with the synth 128 track, Audio Response 100% and 0%. Only the main output monitor is measured; a first run measured the whole window, so knob rings moving with the music counted, and those numbers are kept in `results/respond_uncropped/` only for the record. The figure is what the band responses add, and how closely that follows bass changes. It cannot see an effect that warps geometry the same way with and without audio.
 
-- Sources: most respond clearly (correlation with bass +0.5 to +0.86). Weak or none: `fluid_ink` (no difference), `scope` and `spectrogram` (they draw the audio directly, so Audio Response doesn't apply), `lenia`, `reaction_diffusion`, `kifs`, `cyclic_ca`, `glitch_blocks`, `wave_ripples`, `video_feedback` (weak, under +0.4), `icosa_h3` and `dynamic_spiral` (tiny differences).
-- Effects at their load defaults: 13 of 27 change nothing at all (identical to no effect: Color Levels, Directional Blur, Feedback, Fluid Smear, Luma Displace, Pinch/Bulge, Pixelate, Radial Blur, RGB Split, Video Strobe, Wave Displace, Faceted Glass, Bloom very nearly). With the Metaknob at 60% 11 of them come alive and track the bass; Pinch/Bulge and Faceted Glass still change nothing visible at 60% on Voronoi Cells.
-- Transitions held at 50%: all 8 respond (+0.64 to +0.83); Cyber Datamosh moves even at 0%.
+- Sources: most clearly follow the bass (+0.5 to +0.86). Weak: Cyclic CA (+0.19), Glitch Blocks (+0.27), Video Feedback (+0.18), Wave Ripples (+0.28), KIFS (+0.06), Lenia (+0.09), Dynamic Spiral, Mandelbulb, Kali Set and Gyroid (under +0.4). None: Fluid Ink (0.85 difference). Scope and Spectrogram draw the audio themselves, so Audio Response doesn't change them.
+- Effects at their load defaults: 13 leave the picture exactly as no effect does (amount 0 by design). At Metaknob 60% all of them change it and follow the bass, except Video Strobe (strobes on its own clock, -0.01). Pinch/Bulge measured the same as no effect even at 60%, but a direct frame comparison shows a clear bulge (centre difference 64, edges 4): the measure can't see it, the effect is fine.
+- Transitions held at 50%: all 8 respond, most from +0.72 to +0.86; Cyber Datamosh moves a lot on its own (+0.28).
+- Side finding: five bundled shaders use `smoothstep` with the edges reversed (Pinch/Bulge, Wave Displace, Chladni Cymatics, Nebula Volume, Aurora Ribbons, and their web copies). GLSL leaves that undefined; NVIDIA gives the expected result, so they work here. Not changed; worth a look if they misbehave on another GPU.
 
 ## Text and layout sweep
 
