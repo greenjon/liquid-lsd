@@ -34,6 +34,27 @@ object AtomicFile {
         null
     }
 
+    /**
+     * The swap. On Windows a virus scanner or the search indexer can hold the new file for a moment ("used by another
+     * process"), so a failed move is retried a few times before giving up.
+     */
+    private fun moveIntoPlace(tmp: File, target: File) {
+        var attempt = 0
+        while (true) {
+            try {
+                try {
+                    Files.move(tmp.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE)
+                } catch (e: AtomicMoveNotSupportedException) {
+                    Files.move(tmp.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING)
+                }
+                return
+            } catch (e: java.nio.file.FileSystemException) {
+                if (e is AtomicMoveNotSupportedException || ++attempt > 4) throw e
+                Thread.sleep(40)
+            }
+        }
+    }
+
     fun write(target: File, text: String) {
         if (target.exists() && !target.canWrite()) throw AccessDeniedException(target.path, null, "file is read-only")
         val dir = target.absoluteFile.parentFile
@@ -51,11 +72,7 @@ object AtomicFile {
             } catch (e: java.io.IOException) {
                 // Not ours to change (another owner): the private default stays.
             }
-            try {
-                Files.move(tmp.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE)
-            } catch (e: AtomicMoveNotSupportedException) {
-                Files.move(tmp.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING)
-            }
+            moveIntoPlace(tmp, target)
         } finally {
             tmp.delete() // no-op after a successful move
         }
