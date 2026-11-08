@@ -1,6 +1,7 @@
 ## [Unreleased]
 
-### Fixes From Scripted Checks, Round 3: Macros and Learn (`ui/PropertiesPanel.kt`, `ui/MacroBindingEditor.kt`, `ui/PerformanceMacroStrip.kt`)
+### Fixes From Scripted Checks, Round 3: Macros, Learn and Audio (`ui/PropertiesPanel.kt`, `ui/MacroBindingEditor.kt`, `ui/PerformanceMacroStrip.kt`, `audio/JackClient.kt`, `audio/AudioEngine.kt`)
+- **Fixed: when PipeWire or JACK restarted while the app ran, its audio stayed dead.** The app never noticed the server going away, so it didn't reconnect. It now notices and reconnects on its own within a few seconds; you may need to reconnect its inputs in your patchbay if your session manager doesn't. The log also no longer claims reconnecting is turned off after an ordinary failed attempt.
 - **Fixed: a knob locking an LFO bound showed its internal name.** Properties read `[lfoMin] controlled by THICK [K2]`, and the binding popup and Perform strip did the same. They now say `Min`, `Speed` and so on.
 
 ### Fixes From Scripted Checks, Round 2: Undo, Menus, Upgrades, Memory (`ui/PerformanceDeepEditBay.kt`, `ui/ParametersRenderer.kt`, `ui/DropdownStyleHelper.kt`, `build.gradle.kts`)

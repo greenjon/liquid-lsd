@@ -513,7 +513,10 @@ object AudioEngine {
                     JackStartFailure.CONNECTION_FAILED -> "server connection failed"
                     null -> "startup failed"
                 }
-                logger.warn { "Automatic JACK reconnect disabled until manual retry; $reason." }
+                logger.warn {
+                    if (automaticReconnectEnabled) "JACK not started ($reason); the watchdog will retry."
+                    else "Automatic JACK reconnect disabled until manual retry; $reason."
+                }
             }
         }
 

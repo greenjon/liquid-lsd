@@ -32,3 +32,12 @@ hooks='''            // macro_bind: bank in `deck` (deckA, master...), knob in `
 '''
 s=s.replace(a,hooks+a)
 open(p,'w').write(s)
+# Live readout for real-time runs: LSD_LIVE_PROBE=1 prints the audio signals and tempo twice a second.
+p='src/main/kotlin/llm/slop/liquidlsd/Main.kt'; s=open(p).read()
+a='''            CVRegistry.updateAll()
+'''; assert s.count(a)==1
+s=s.replace(a,a+'''                if (System.getenv("LSD_LIVE_PROBE") != null) { val nowP = System.nanoTime(); if (nowP - liveProbeLast > 500_000_000L) { liveProbeLast = nowP; val g = { n: String -> llm.slop.liquidlsd.cv.CVRegistry.get(n) }
+                    println("LIVE_CV %.1f bass=%.3f amp=%.3f flux=%.3f energy=%.3f drop=%.3f bpm=%.1f phase=%.3f".format(java.util.Locale.ROOT, nowP / 1e9, g("audio_bass"), g("audio_amp"), g("audio_flux_bass"), g("audio_energy"), g("audio_drop"), llm.slop.liquidlsd.audio.AudioEngine.getEstimatedBpm(), g("beatPhase"))) } }
+''')
+s=s.replace('\nfun main(','\n@Volatile var liveProbeLast = 0L\n\nfun main(',1)
+open(p,'w').write(s)
