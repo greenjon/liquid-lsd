@@ -212,10 +212,14 @@ object AudioEnginePanel {
                 }
                 itemTooltip("Select the audio input capture device.")
                 ImGui.sameLine()
+                val scanning = audioEngine.isScanningDevices
+                if (scanning) ImGui.beginDisabled()
                 if (ButtonChrome.button("${Icons.REFRESH}##refreshDevices")) {
                     audioEngine.refreshInputDevices()
                 }
-                itemTooltip("Rescan for newly connected audio input hardware.")
+                if (scanning) ImGui.endDisabled()
+                itemTooltip(if (scanning) "Scanning for audio input devices..." else "Rescan for newly connected audio input hardware.", allowWhenDisabled = true)
+                if (scanning) ImGui.textDisabled("Scanning for devices...")
             }
 
             ImGui.spacing()

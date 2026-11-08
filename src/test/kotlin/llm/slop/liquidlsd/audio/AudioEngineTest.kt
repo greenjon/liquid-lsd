@@ -91,6 +91,8 @@ class AudioEngineTest {
 
     @Test
     fun testAudioDeviceCaching() {
+        AudioEngine.getAvailableInputDevices()
+        assertTrue(AudioEngine.awaitDeviceScan(), "the device scan finishes in the background")
         val devices1 = AudioEngine.getAvailableInputDevices()
         val devices2 = AudioEngine.getAvailableInputDevices()
         assertTrue(devices1 === devices2, "Subsequent calls should return cached device list instance")
@@ -100,8 +102,23 @@ class AudioEngineTest {
         assertTrue(names.size == devices1.size)
 
         AudioEngine.refreshInputDevices()
+        AudioEngine.awaitDeviceScan()
         val devices3 = AudioEngine.getAvailableInputDevices()
         assertTrue(devices3.isNotEmpty())
+    }
+
+    @Test
+    fun testDeviceListIsImmediateAndNeverBlocks() {
+        AudioEngine.backendMode = AudioEngine.AudioBackendMode.JAVASOUND_ONLY
+        try {
+            val t0 = System.nanoTime()
+            val devices = AudioEngine.getAvailableInputDevices(forceRefresh = true)
+            assertTrue(System.nanoTime() - t0 < 200_000_000L, "the call returns at once; the scan runs on its own thread")
+            assertTrue(devices.any { it.isDefault }, "System Default is always listed")
+            AudioEngine.awaitDeviceScan()
+        } finally {
+            AudioEngine.backendMode = AudioEngine.AudioBackendMode.AUTO
+        }
     }
 
     @Test
