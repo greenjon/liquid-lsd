@@ -26,7 +26,8 @@ object PresetRepository {
         else -> e.message?.ifBlank { null } ?: "see log"
     }
 
-    fun saveDeckPresetAsync(file: File, deck: Deck, name: String, tags: List<String> = emptyList(), deckIndex: Int = -1) {
+    /** [onFailed] runs on the IO thread after a failed write (the message is already shown). */
+    fun saveDeckPresetAsync(file: File, deck: Deck, name: String, tags: List<String> = emptyList(), deckIndex: Int = -1, onFailed: (() -> Unit)? = null) {
         if (deck.source is llm.slop.liquidlsd.rendering.ExternalVideoSource) {
             logger.warn { "Refusing to save deck preset: source is an external video stream (${deck.source.displayName})" }
             return
@@ -70,6 +71,7 @@ object PresetRepository {
                 }
             } catch (e: Exception) {
                 saveFailed("preset", file, e)
+                onFailed?.invoke()
                 if (deckIndex in 0..3) {
                     PresetManager.deckStatus[deckIndex].set(PresetIOStatus(PresetIOState.ERROR, e.message ?: "Unknown error"))
                 }

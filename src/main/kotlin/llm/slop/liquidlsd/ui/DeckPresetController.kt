@@ -33,9 +33,16 @@ class DeckPresetController(
         val dto = deck.toDto(cleanName, resolvedTags)
         val file = dir?.let { File(it, "$cleanName.lsd") }
             ?: slot?.let { session.presetManager.saveFileFor(it, cleanName) } ?: File("library/presets/$cleanName.lsd")
+        // What the deck was before, so a failed write can put it back: it must not look saved when nothing was.
+        val before = slot?.let { Triple(session.presetManager.activePreset(it), session.presetManager.cachedDto(it), session.presetManager.activeFile(it)) }
         slot?.let { session.presetManager.setActive(it, cleanName, dto, file) }
         val deckIndex = slot?.index ?: -1
-        session.presetRepository.saveDeckPresetAsync(file, deck, cleanName, resolvedTags, deckIndex)
+        session.presetRepository.saveDeckPresetAsync(file, deck, cleanName, resolvedTags, deckIndex, onFailed = {
+            if (slot != null && before != null) llm.slop.liquidlsd.rendering.VisualSourceRegistry.runOnGlThread {
+                // Only if nothing has changed the deck since (another load or save).
+                if (session.presetManager.cachedDto(slot) === dto) session.presetManager.setActive(slot, before.first, before.second, before.third)
+            }
+        })
     }
 
     fun handleUtilityAction(mixer: Mixer, mode: Int, scope: DeckScope, from: Deck, to: Deck) {

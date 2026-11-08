@@ -46,7 +46,7 @@ def tmpfs_presets(lib,fill):
     open(lib+'/../alpha.sha','w').write(hashlib.sha1(open(p+'/tt_alpha.lsd','rb').read()).hexdigest())
     if fill: subprocess.run(['dd','if=/dev/zero',f'of={p}/zz_fill','bs=4k'],stderr=subprocess.DEVNULL)
 def save_case(b):
-    b.st('load_preset',deck='A',target='library/presets/tt_alpha.lsd'); b.t+=.9; b.st('set_param',deck='A',param='L1',value=.77); b.t+=.4; b.click('perf_src_save_A'); b.t+=1.2; b.shot('saved'); return b
+    b.st('load_preset',deck='A',target='library/presets/tt_alpha.lsd'); b.t+=.9; b.st('set_param',deck='A',param='L1',value=.77); b.t+=.4; b.click('perf_src_save_A'); b.t+=1.2; b.shot('saved'); b.state('a',.3); return b
 @case
 def n_full_disk_save():
     return save_case(B())
@@ -58,6 +58,7 @@ def _(r):
     r.check('still valid JSON',bool(r.js('presets/tt_alpha.lsd')))
     r.check('no temp files left',not [x for x in os.listdir(p) if x.endswith('.tmp')],os.listdir(p))
     log=open(os.path.normpath(r.lib+'/../../out/c_n_full_disk_save.log'),errors='replace').read()
+    r.check('the deck still shows unsaved changes after the failed save','dirty=true' in r.st['a'].get('A',''),r.st['a'].get('A','')[:80])
     r.check('the failure is logged','No space left' in log,[l for l in log.splitlines() if 'tt_alpha' in l and ('ERROR' in l or 'WARN' in l)][:2])
 @case
 def n_tmpfs_save_ok():
@@ -65,6 +66,7 @@ def n_tmpfs_save_ok():
 SETUP['n_tmpfs_save_ok']=lambda lib: tmpfs_presets(lib,False)
 @chk('n_tmpfs_save_ok')
 def _(r):
+    r.check('and the deck shows saved (control)','dirty=false' in r.st['a'].get('A',''),r.st['a'].get('A','')[:80])
     r.check('saves fine with room (control)',abs(r.js('presets/tt_alpha.lsd')['parameters']['L1']['baseValue']-.77)<1e-3)
     r.check('no temp files left',not [x for x in os.listdir(r.lib+'/presets') if x.endswith('.tmp')])
 # ---- 10,000 presets: the clipped Library list still navigates, scrolls and opens row menus
