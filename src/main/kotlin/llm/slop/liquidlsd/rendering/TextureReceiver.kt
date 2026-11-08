@@ -2,7 +2,10 @@ package llm.slop.liquidlsd.rendering
 
 import com.sun.jna.Pointer
 import llm.slop.liquidlsd.rendering.pipewire.PipeWireLibrary
-import llm.slop.liquidlsd.rendering.pipewire.SpaData
+import llm.slop.liquidlsd.rendering.pipewire.PwParamChanged
+import llm.slop.liquidlsd.rendering.pipewire.PwStreamEvents
+import llm.slop.liquidlsd.rendering.pipewire.SpaBufferLayout
+import llm.slop.liquidlsd.rendering.pipewire.SpaPod
 import mu.KotlinLogging
 import org.lwjgl.opengl.GL11.*
 import llm.slop.liquidlsd.rendering.FBO
@@ -191,6 +194,11 @@ class SyphonReceiverImpl : TextureReceiver {
     }
 }
 
+/**
+ * Reads a PipeWire video stream (another app's `Video/Source`) into a GL texture. It offers raw RGBA, BGRA,
+ * RGBx and BGRx at any size; PipeWire converts other formats for it. The agreed size and pixel order come from
+ * `param_changed`, and each frame is uploaded with its own stride.
+ */
 class PipeWireReceiverImpl : TextureReceiver {
     override val isSupported: Boolean
         get() = System.getProperty("os.name").lowercase().contains("linux") && PipeWireLibrary.load() != null
@@ -203,12 +211,21 @@ class PipeWireReceiverImpl : TextureReceiver {
 
     private var active = false
     private var localTextureId = 0
-    private val reusableSpaData = SpaData()
+    private var texW = 0
+    private var texH = 0
+    private var texFormat = 0
 
-    override var currentWidth = 1920
-        private set
-    override var currentHeight = 1080
-        private set
+    // PipeWire keeps pointers to these: they live as long as the stream.
+    private var events: PwStreamEvents? = null
+    private var hook: com.sun.jna.Memory? = null
+
+    /** Set on the PipeWire thread when the format is agreed: width, height, SPA video format. */
+    @Volatile private var agreed: SpaPod.VideoInfo? = null
+
+    override val currentWidth: Int
+        get() = agreed?.width ?: 1920
+    override val currentHeight: Int
+        get() = agreed?.height ?: 1080
 
     override fun start(serverName: String): Boolean {
         val lib = pw ?: return false
@@ -221,64 +238,46 @@ class PipeWireReceiverImpl : TextureReceiver {
             }
 
             lib.pw_thread_loop_lock(threadLoop!!)
+            try {
+                val loopPtr = lib.pw_thread_loop_get_loop(threadLoop!!) ?: return false
+                context = lib.pw_context_new(loopPtr, null, 0) ?: return false
+                core = lib.pw_context_connect(context!!, null, 0) ?: return false
 
-            val loopPtr = lib.pw_thread_loop_get_loop(threadLoop!!) ?: run {
-                lib.pw_thread_loop_unlock(threadLoop!!)
-                stop()
-                return false
-            }
-
-            context = lib.pw_context_new(loopPtr, null, 0) ?: run {
-                lib.pw_thread_loop_unlock(threadLoop!!)
-                stop()
-                return false
-            }
-
-            core = lib.pw_context_connect(context!!, null, 0) ?: run {
-                lib.pw_thread_loop_unlock(threadLoop!!)
-                stop()
-                return false
-            }
-
-            val props = lib.pw_properties_new(null, null)
-            if (props != null) {
-                lib.pw_properties_set(props, "media.type", "Video")
-                lib.pw_properties_set(props, "media.category", "Capture")
-                lib.pw_properties_set(props, "node.name", "LiquidLSD-Receiver")
-                lib.pw_properties_set(props, "node.description", "Liquid LSD PipeWire Receiver")
-                if (serverName.isNotBlank()) {
-                    lib.pw_properties_set(props, "target.object", serverName)
+                val props = lib.pw_properties_new(null, null)
+                if (props != null) {
+                    lib.pw_properties_set(props, "media.type", "Video")
+                    lib.pw_properties_set(props, "media.category", "Capture")
+                    lib.pw_properties_set(props, "media.role", "Production")
+                    lib.pw_properties_set(props, "node.name", "LiquidLSD-Receiver")
+                    lib.pw_properties_set(props, "node.description", "Liquid LSD PipeWire Receiver")
+                    if (serverName.isNotBlank()) {
+                        lib.pw_properties_set(props, "target.object", ExternalVideoDiscovery.pipeWireTarget(serverName))
+                    }
                 }
-            }
 
-            stream = lib.pw_stream_new(core!!, "LiquidLSD-VideoIngest", props) ?: run {
+                stream = lib.pw_stream_new(core!!, "LiquidLSD-VideoIngest", props) ?: return false
+
+                val ev = PwStreamEvents()
+                ev.param_changed = PwParamChanged { _, id, param -> onParamChanged(id, param) }
+                ev.write()
+                events = ev
+                hook = com.sun.jna.Memory(64).also { it.clear() }
+                lib.pw_stream_add_listener(stream!!, hook!!, ev, null)
+
+                val formats = intArrayOf(SpaPod.VIDEO_FORMAT_RGBA, SpaPod.VIDEO_FORMAT_BGRA, SpaPod.VIDEO_FORMAT_RGBX, SpaPod.VIDEO_FORMAT_BGRX)
+                val format = SpaPod.videoFormat(SpaPod.PARAM_ENUM_FORMAT, formats, intArrayOf(1920, 1080), intArrayOf(1, 1), intArrayOf(8192, 8192), anyRate = true)
+                val flags = PipeWireLibrary.PW_STREAM_FLAG_AUTOCONNECT or PipeWireLibrary.PW_STREAM_FLAG_MAP_BUFFERS
+                val res = lib.pw_stream_connect(stream!!, PipeWireLibrary.PW_DIRECTION_INPUT, -1, flags, arrayOf(format.memory), 1)
+                if (res < 0) {
+                    logger.warn { "Failed to connect PipeWire receiver stream for target '$serverName' (code: $res)" }
+                    return false
+                }
+                active = true
+            } finally {
                 lib.pw_thread_loop_unlock(threadLoop!!)
-                stop()
-                return false
+                if (!active) stop()
             }
-
-            val flags = PipeWireLibrary.PW_STREAM_FLAG_AUTOCONNECT or
-                    PipeWireLibrary.PW_STREAM_FLAG_MAP_BUFFERS or
-                    PipeWireLibrary.PW_STREAM_FLAG_ALLOC_BUFFERS
-
-            val res = lib.pw_stream_connect(
-                stream!!,
-                PipeWireLibrary.PW_DIRECTION_INPUT,
-                -1, // PW_ID_ANY
-                flags,
-                null,
-                0
-            )
-
-            lib.pw_thread_loop_unlock(threadLoop!!)
-
-            if (res < 0) {
-                logger.warn { "Failed to connect PipeWire receiver stream for target '$serverName' (code: $res)" }
-                stop()
-                return false
-            }
-
-            active = true
+            if (!active) return false
             logger.info { "Connected PipeWire Receiver to stream/target: $serverName" }
             return true
         } catch (e: Throwable) {
@@ -288,60 +287,78 @@ class PipeWireReceiverImpl : TextureReceiver {
         }
     }
 
+    /** On the PipeWire thread: note the agreed format and say how big each buffer is. */
+    private fun onParamChanged(id: Int, param: Pointer?) {
+        if (id != SpaPod.PARAM_FORMAT || param == null) return
+        val info = SpaPod.parseVideoFormat(param) ?: return
+        agreed = info
+        val stride = info.width * 4
+        pw?.pw_stream_update_params(stream ?: return, arrayOf(SpaPod.buffers(stride * info.height, stride).memory), 1)
+        logger.info { "PipeWire receiver format agreed: ${info.width}x${info.height} (SPA video format ${info.format})" }
+    }
+
     override fun update(): Int {
         val lib = pw
-        if (!active || stream == null || threadLoop == null || lib == null) return 0
-
-        var textureToReturn = localTextureId
+        val loop = threadLoop
+        if (!active || stream == null || loop == null || lib == null) return localTextureId
+        val info = agreed ?: return localTextureId
 
         try {
-            // pw_stream_dequeue_buffer / pw_stream_queue_buffer are safe to call from the consumer
-            // thread (GL thread here) without holding pw_thread_loop_lock.  The loop lock is only
-            // required when modifying stream topology (connect/disconnect), which we do in start().
-            val pwBufPtr = lib.pw_stream_dequeue_buffer(stream!!)
-            if (pwBufPtr != null) {
-                try {
-                    val spaBufPtr = pwBufPtr.getPointer(0)
-                    if (spaBufPtr != null) {
-                        val datasPtr = spaBufPtr.getPointer(8)
-                        if (datasPtr != null) {
-                            reusableSpaData.bindMemory(datasPtr)
-                            reusableSpaData.read()
-
-                            val dataPtr = reusableSpaData.data
-                            val dataSize = reusableSpaData.datasize.coerceAtLeast(reusableSpaData.maxsize)
-
-                            if (dataPtr != null && dataSize > 0) {
-                                if (localTextureId == 0) {
-                                    localTextureId = glGenTextures()
-                                    glBindTexture(GL_TEXTURE_2D, localTextureId)
-                                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-                                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-                                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, currentWidth, currentHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0L)
-                                    glBindTexture(GL_TEXTURE_2D, 0)
-                                }
-
-                                val dataAddress = Pointer.nativeValue(dataPtr)
-                                glBindTexture(GL_TEXTURE_2D, localTextureId)
-                                if (dataSize >= currentWidth * currentHeight * 4) {
-                                    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, currentWidth, currentHeight, GL_RGBA, GL_UNSIGNED_BYTE, dataAddress)
-                                } else {
-                                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, currentWidth, currentHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, dataAddress)
-                                }
-                                glBindTexture(GL_TEXTURE_2D, 0)
-                                textureToReturn = localTextureId
-                            }
-                        }
-                    }
-                } finally {
-                    lib.pw_stream_queue_buffer(stream!!, pwBufPtr)
+            // Take the newest waiting frame; give older ones straight back.
+            var newest: Pointer? = null
+            lib.pw_thread_loop_lock(loop)
+            try {
+                while (true) {
+                    val b = lib.pw_stream_dequeue_buffer(stream!!) ?: break
+                    newest?.let { lib.pw_stream_queue_buffer(stream!!, it) }
+                    newest = b
                 }
+            } finally {
+                lib.pw_thread_loop_unlock(loop)
+            }
+            val pwBuf = newest ?: return localTextureId
+            try {
+                val data = SpaBufferLayout.firstData(pwBuf)
+                val base = data?.let { SpaBufferLayout.mapped(it) }
+                val chunk = data?.let { SpaBufferLayout.chunk(it) }
+                if (base != null && chunk != null && SpaBufferLayout.chunkSize(chunk) > 0) {
+                    val stride = SpaBufferLayout.chunkStride(chunk).let { if (it > 0) it else info.width * 4 }
+                    val offset = SpaBufferLayout.chunkOffset(chunk).toLong() % SpaBufferLayout.maxSize(data).coerceAtLeast(1)
+                    if (stride * (info.height - 1) + info.width * 4 <= SpaBufferLayout.maxSize(data) - offset) {
+                        upload(info, Pointer.nativeValue(base) + offset, stride)
+                    }
+                }
+            } finally {
+                lib.pw_thread_loop_lock(loop)
+                try { lib.pw_stream_queue_buffer(stream!!, pwBuf) } finally { lib.pw_thread_loop_unlock(loop) }
             }
         } catch (e: Throwable) {
             logger.debug { "Error receiving PipeWire buffer: ${e.message}" }
         }
+        return localTextureId
+    }
 
-        return textureToReturn
+    private fun upload(info: SpaPod.VideoInfo, address: Long, stride: Int) {
+        if (localTextureId == 0 || texW != info.width || texH != info.height || texFormat != info.format) {
+            if (localTextureId == 0) localTextureId = glGenTextures()
+            glBindTexture(GL_TEXTURE_2D, localTextureId)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, info.width, info.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0L)
+            // RGBx / BGRx carry no alpha: read it as opaque.
+            val noAlpha = info.format == SpaPod.VIDEO_FORMAT_RGBX || info.format == SpaPod.VIDEO_FORMAT_BGRX
+            glTexParameteri(GL_TEXTURE_2D, org.lwjgl.opengl.GL33.GL_TEXTURE_SWIZZLE_A, if (noAlpha) org.lwjgl.opengl.GL11.GL_ONE else GL_ALPHA)
+            texW = info.width; texH = info.height; texFormat = info.format
+        } else {
+            glBindTexture(GL_TEXTURE_2D, localTextureId)
+        }
+        val bgr = info.format == SpaPod.VIDEO_FORMAT_BGRA || info.format == SpaPod.VIDEO_FORMAT_BGRX
+        // Video rows run top to bottom, GL textures bottom to top: upload each row into its mirrored place.
+        val glFormat = if (bgr) org.lwjgl.opengl.GL12.GL_BGRA else GL_RGBA
+        for (row in 0 until info.height) {
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, info.height - 1 - row, info.width, 1, glFormat, GL_UNSIGNED_BYTE, address + row.toLong() * stride)
+        }
+        glBindTexture(GL_TEXTURE_2D, 0)
     }
 
     override fun stop() {
@@ -400,6 +417,10 @@ class PipeWireReceiverImpl : TextureReceiver {
         }
 
         active = false
+        agreed = null
+        events = null
+        hook = null
+        texW = 0; texH = 0; texFormat = 0
         logger.info { "Stopped PipeWire Receiver" }
     }
 }

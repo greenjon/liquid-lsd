@@ -410,6 +410,13 @@ class LinuxTextureBridge(override val identifier: String) : TextureStreamer {
 
     override fun update(textureId: Int, width: Int, height: Int) {
         if (!active || !bridge.isConnected) return
+        // A PipeWire format has one fixed size: a new output size means a new stream.
+        if (width != bridge.width || height != bridge.height) {
+            logger.info { "PipeWire stream '$identifier' size ${bridge.width}x${bridge.height} -> ${width}x$height: reconnecting" }
+            bridge.stopServer()
+            active = bridge.createServer(identifier, width, height)
+            if (!active) return
+        }
 
         var pipeline = pboPipeline
         if (pipeline == null || pipeline.width != width || pipeline.height != height) {
@@ -418,11 +425,17 @@ class LinuxTextureBridge(override val identifier: String) : TextureStreamer {
             pboPipeline = pipeline
         }
 
-        val frameBuffer = pipeline.readFrameAsync(0)
+        // Read the texture we were given, not the window: attach it to our own framebuffer first.
+        if (readFbo == 0) readFbo = org.lwjgl.opengl.GL30.glGenFramebuffers()
+        org.lwjgl.opengl.GL30.glBindFramebuffer(org.lwjgl.opengl.GL30.GL_FRAMEBUFFER, readFbo)
+        org.lwjgl.opengl.GL30.glFramebufferTexture2D(org.lwjgl.opengl.GL30.GL_FRAMEBUFFER, org.lwjgl.opengl.GL30.GL_COLOR_ATTACHMENT0, org.lwjgl.opengl.GL11.GL_TEXTURE_2D, textureId, 0)
+        val frameBuffer = pipeline.readFrameAsync(readFbo)
         if (frameBuffer != null) {
             bridge.publishFrameBuffer(frameBuffer, width, height)
         }
     }
+
+    private var readFbo = 0
 
     override fun stop() {
         if (active) {
@@ -431,14 +444,15 @@ class LinuxTextureBridge(override val identifier: String) : TextureStreamer {
             pboPipeline?.dispose()
             pboPipeline = null
             active = false
+            if (readFbo != 0) { org.lwjgl.opengl.GL30.glDeleteFramebuffers(readFbo); readFbo = 0 }
         }
     }
 
     fun getDriverStatus(): String = when {
         !bridge.isAvailable -> "PipeWire Unavailable"
         !active -> "Disabled"
-        bridge.isDmaBufSupported -> "PipeWire 0.3 (DMA-BUF Active)"
-        else -> "PipeWire 0.3 (MemFd Fallback)"
+        !bridge.isNegotiated -> "PipeWire (waiting for a reader)"
+        else -> "PipeWire (shared memory)"
     }
 }
 

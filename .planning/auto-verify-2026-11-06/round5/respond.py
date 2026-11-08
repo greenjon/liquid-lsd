@@ -16,7 +16,9 @@ def steps(item,resp):
     elif kind=='fx':
         s.append(dict(t=.1,action='load_source',deck='A',target='voronoi_cells'))
         s.append(dict(t=.15,action='fx_chain_enable',deck='A',value=1.0))
-        for k in range(3): s.append(dict(t=.2+k*.01,action='fx_filter',deck='A',slot=k,target=(item if k==0 else '')))
+        fx,_,meta=item.partition('@')
+        for k in range(3): s.append(dict(t=.2+k*.01,action='fx_filter',deck='A',slot=k,target=(fx if k==0 and fx!='none' else '')))
+        if meta: s.append(dict(t=.4,action='meta_knob',deck='A',slot=0,value=float(meta)))
     else:
         s+= [dict(t=.1,action='load_source',deck='A',target='voronoi_cells'),dict(t=.12,action='load_source',deck='B',target='aurora_ribbons'),
              dict(t=.15,action='transition',target=item),dict(t=.2,action='crossfade',value=.5)]

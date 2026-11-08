@@ -1525,9 +1525,9 @@
 <ul>
 <li><strong>Windows:</strong> Spout2</li>
 <li><strong>macOS:</strong> Syphon</li>
-<li><strong>Linux:</strong> PipeWire (DMA-BUF GPU sharing, with a memory fallback if the GPU doesn't support it)</li>
+<li><strong>Linux:</strong> PipeWire. Each shared feed is a video source node named after the stream (<code>LiquidLSD-MASTER</code> by default), sending RGBA frames through shared memory at the stream's size.</li>
 </ul>
-<p><strong>On Linux with OBS:</strong> Add a <strong>PipeWire Screen Capture</strong> source and select the Liquid LSD video node. Use <code>qpwgraph</code> or <code>Helvum</code> to inspect and route video nodes.</p>
+<p><strong>On Linux:</strong> any app that reads PipeWire video nodes can take the feed. With GStreamer, for example: <code>gst-launch-1.0 pipewiresrc target-object=LiquidLSD-MASTER ! videoconvert ! autovideosink</code>. Use <code>qpwgraph</code> or <code>Helvum</code> to see and route video nodes. OBS's PipeWire sources go through the desktop's screen and camera portals, which may not list an app's video node; this hasn't been tested yet. Changing the output size reconnects the stream, so readers may need to reconnect too.</p>
 <p><strong>Status:</strong> Check the <strong>Preferences → Video &amp; Display</strong> panel for a live status indicator next to each shared feed showing which sharing method is active and whether it's working.</p>
 <hr />
 <h2 id="recording-your-set-rec">Recording Your Set (REC)</h2>

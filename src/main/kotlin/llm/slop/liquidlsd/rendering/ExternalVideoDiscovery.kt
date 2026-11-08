@@ -56,75 +56,38 @@ object ExternalVideoDiscovery {
         }
     }
 
+    /** Label shown in the browser -> PipeWire `node.name`, which is what `target.object` matches. */
+    private val pipeWireTargets = java.util.concurrent.ConcurrentHashMap<String, String>()
+
+    /** The `node.name` to connect to for a label from [fetchPipeWireStreams] (the label itself if unknown). */
+    fun pipeWireTarget(label: String): String = pipeWireTargets[label] ?: label
+
+    /**
+     * Video sources other apps publish on PipeWire (`Video/Source` devices and `Stream/Output/Video` streams),
+     * labelled by description, else node name. Our own receiver (a consumer) is left out.
+     */
     fun fetchPipeWireStreams(): List<String> {
-        val results = mutableSetOf<String>()
+        val results = linkedSetOf<String>()
         try {
-            val process = ProcessBuilder("pw-dump", "Node")
-                .redirectError(ProcessBuilder.Redirect.DISCARD)
-                .start()
+            val process = ProcessBuilder("pw-dump").redirectError(ProcessBuilder.Redirect.DISCARD).start()
             val output = process.inputStream.bufferedReader().use { it.readText() }
             process.waitFor()
-
-            if (output.isNotBlank()) {
-                val nodeBlocks = output.split("{\n    \"id\":", "{\n  \"id\":")
-                for (block in nodeBlocks) {
-                    val isVideo = block.contains("\"media.class\": \"Video") ||
-                            block.contains("\"media.class\": \"Stream/Output/Video") ||
-                            block.contains("\"mediaType\": \"video\"") ||
-                            block.contains("\"media.type\": \"Video\"")
-                    if (isVideo) {
-                        val descMatch = Regex("\"node.description\": \"([^\"]+)\"").find(block)
-                        val nameMatch = Regex("\"node.name\": \"([^\"]+)\"").find(block)
-                        val name = descMatch?.groupValues?.get(1) ?: nameMatch?.groupValues?.get(1)
-                        if (!name.isNullOrBlank()) {
-                            results.add(name)
-                        }
-                    }
-                }
+            val root = kotlinx.serialization.json.Json.parseToJsonElement(output)
+            for (obj in root as? kotlinx.serialization.json.JsonArray ?: return emptyList()) {
+                val o = obj as? kotlinx.serialization.json.JsonObject ?: continue
+                if ((o["type"] as? kotlinx.serialization.json.JsonPrimitive)?.content?.endsWith("Node") != true) continue
+                val props = ((o["info"] as? kotlinx.serialization.json.JsonObject)?.get("props") as? kotlinx.serialization.json.JsonObject) ?: continue
+                fun prop(k: String) = (props[k] as? kotlinx.serialization.json.JsonPrimitive)?.content
+                val mediaClass = prop("media.class") ?: continue
+                if (mediaClass != "Video/Source" && mediaClass != "Stream/Output/Video") continue
+                val name = prop("node.name") ?: continue
+                val label = prop("node.description")?.takeIf { it.isNotBlank() } ?: name
+                pipeWireTargets[label] = name
+                results.add(label)
             }
         } catch (e: Throwable) {
-            // Silently fall back
+            logger.debug { "PipeWire stream discovery failed: ${e.message}" }
         }
-
-        if (results.isEmpty()) {
-            try {
-                val process = ProcessBuilder("pw-cli", "list-objects", "Node")
-                    .redirectError(ProcessBuilder.Redirect.DISCARD)
-                    .start()
-                val output = process.inputStream.bufferedReader().use { it.readText() }
-                process.waitFor()
-
-                var currentName = ""
-                var isVideoNode = false
-
-                for (line in output.lines()) {
-                    val trimmed = line.trim()
-                    if (trimmed.startsWith("id ")) {
-                        if (isVideoNode && currentName.isNotBlank()) {
-                            results.add(currentName)
-                        }
-                        currentName = ""
-                        isVideoNode = false
-                    }
-                    if (trimmed.contains("media.class = \"Video") || trimmed.contains("media.type = \"Video")) {
-                        isVideoNode = true
-                    }
-                    if (trimmed.startsWith("node.description =")) {
-                        val desc = trimmed.substringAfter("node.description =").trim('"', ' ', '\t')
-                        if (desc.isNotBlank()) currentName = desc
-                    } else if (trimmed.startsWith("node.name =") && currentName.isBlank()) {
-                        val n = trimmed.substringAfter("node.name =").trim('"', ' ', '\t')
-                        if (n.isNotBlank()) currentName = n
-                    }
-                }
-                if (isVideoNode && currentName.isNotBlank()) {
-                    results.add(currentName)
-                }
-            } catch (e: Throwable) {
-                // Ignore
-            }
-        }
-
         return results.toList()
     }
 

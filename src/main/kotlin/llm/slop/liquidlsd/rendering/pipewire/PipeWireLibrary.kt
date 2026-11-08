@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.rendering.pipewire
 
+import com.sun.jna.Callback
 import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.Pointer
@@ -37,23 +38,21 @@ interface PipeWireLibrary : Library {
     fun pw_stream_destroy(stream: Pointer)
     fun pw_stream_dequeue_buffer(stream: Pointer): Pointer?
     fun pw_stream_queue_buffer(stream: Pointer, buffer: Pointer): Int
+    fun pw_stream_add_listener(stream: Pointer, listener: Pointer, events: PwStreamEvents, data: Pointer?)
+    fun pw_stream_update_params(stream: Pointer, params: Array<Pointer>, n_params: Int): Int
+    fun pw_stream_trigger_process(stream: Pointer): Int
 
     companion object {
         const val PW_DIRECTION_INPUT = 0
         const val PW_DIRECTION_OUTPUT = 1
 
+        // pipewire/stream.h (1.6): enum pw_stream_flags
         const val PW_STREAM_FLAG_NONE = 0
         const val PW_STREAM_FLAG_AUTOCONNECT = (1 shl 0)
-        const val PW_STREAM_FLAG_MAP_BUFFERS = (1 shl 3)
-        const val PW_STREAM_FLAG_ALLOC_BUFFERS = (1 shl 5)
+        const val PW_STREAM_FLAG_MAP_BUFFERS = (1 shl 2)
+        const val PW_STREAM_FLAG_DRIVER = (1 shl 3)
 
-        const val SPA_MEDIA_TYPE_video = 2
-        const val SPA_MEDIA_SUBTYPE_raw = 1
-        const val SPA_VIDEO_FORMAT_RGBA = 11
-        const val SPA_VIDEO_FORMAT_BGRA = 12
-
-        const val SPA_DATA_MemFd = 2
-        const val SPA_DATA_DmaBuf = 3
+        const val PW_VERSION_STREAM_EVENTS = 2
 
         private var instance: PipeWireLibrary? = null
         private var isLoaded = false
@@ -84,37 +83,58 @@ interface PipeWireLibrary : Library {
     }
 }
 
-/**
- * SPA Data Buffer mapping structure
- */
-@Structure.FieldOrder("type", "flags", "fd", "mapoffset", "maxsize", "datasize", "data", "chunk")
-open class SpaData : Structure {
-    constructor() : super()
-    constructor(p: Pointer?) : super(p)
+/** `void (*param_changed)(void *data, uint32_t id, const struct spa_pod *param)` */
+fun interface PwParamChanged : Callback {
+    fun invoke(data: Pointer?, id: Int, param: Pointer?)
+}
 
-    @JvmField var type: Int = 0
-    @JvmField var flags: Int = 0
-    @JvmField var fd: Long = -1
-    @JvmField var mapoffset: Int = 0
-    @JvmField var maxsize: Int = 0
-    @JvmField var datasize: Int = 0
-    @JvmField var data: Pointer? = null
-    @JvmField var chunk: Pointer? = null
-
-    fun bindMemory(p: Pointer) {
-        useMemory(p)
-    }
+/** `void (*process)(void *data)` */
+fun interface PwProcess : Callback {
+    fun invoke(data: Pointer?)
 }
 
 /**
- * PipeWire Buffer wrapper structure
+ * `struct pw_stream_events` (version 2). Unused callbacks stay null. Keep the instance referenced for the
+ * stream's whole life: PipeWire holds a pointer to it.
  */
-@Structure.FieldOrder("id", "datasize", "datas")
-open class PipeWireBufferStruct : Structure {
-    constructor() : super()
-    constructor(p: Pointer?) : super(p)
+@Structure.FieldOrder(
+    "version", "destroy", "state_changed", "control_info", "io_changed", "param_changed",
+    "add_buffer", "remove_buffer", "process", "drained", "command", "trigger_done"
+)
+open class PwStreamEvents : Structure() {
+    @JvmField var version: Int = PipeWireLibrary.PW_VERSION_STREAM_EVENTS
+    @JvmField var destroy: Pointer? = null
+    @JvmField var state_changed: Pointer? = null
+    @JvmField var control_info: Pointer? = null
+    @JvmField var io_changed: Pointer? = null
+    @JvmField var param_changed: PwParamChanged? = null
+    @JvmField var add_buffer: Pointer? = null
+    @JvmField var remove_buffer: Pointer? = null
+    @JvmField var process: PwProcess? = null
+    @JvmField var drained: Pointer? = null
+    @JvmField var command: Pointer? = null
+    @JvmField var trigger_done: Pointer? = null
+}
 
-    @JvmField var id: Int = 0
-    @JvmField var datasize: Int = 0
-    @JvmField var datas: Pointer? = null
+/**
+ * Field offsets in `struct pw_buffer`, `struct spa_buffer`, `struct spa_data` and `struct spa_chunk`
+ * (spa/buffer/buffer.h, 64-bit), read and written straight from native memory.
+ */
+object SpaBufferLayout {
+    /** The first `spa_data` of a dequeued `pw_buffer`, or null. */
+    fun firstData(pwBuffer: Pointer): Pointer? {
+        val spaBuffer = pwBuffer.getPointer(0) ?: return null      // pw_buffer.buffer
+        if (spaBuffer.getInt(4) < 1) return null                    // spa_buffer.n_datas
+        return spaBuffer.getPointer(16)                              // spa_buffer.datas
+    }
+    fun maxSize(data: Pointer): Int = data.getInt(20)              // spa_data.maxsize
+    fun mapped(data: Pointer): Pointer? = data.getPointer(24)      // spa_data.data
+    fun chunk(data: Pointer): Pointer? = data.getPointer(32)       // spa_data.chunk
+    // spa_chunk: offset, size, stride, flags
+    fun chunkOffset(chunk: Pointer): Int = chunk.getInt(0)
+    fun chunkSize(chunk: Pointer): Int = chunk.getInt(4)
+    fun chunkStride(chunk: Pointer): Int = chunk.getInt(8)
+    fun setChunk(chunk: Pointer, size: Int, stride: Int) {
+        chunk.setInt(0, 0); chunk.setInt(4, size); chunk.setInt(8, stride); chunk.setInt(12, 0)
+    }
 }

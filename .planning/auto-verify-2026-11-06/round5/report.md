@@ -31,3 +31,28 @@ Test artefacts on the way: MIDI events only reach mappings when the simulated Tw
 ## Release zip run
 
 `leak.py` has a zip mode (`LEAK_ZIP`): the release's own `run-linux.sh`, its bundled JRE, `JAVA_TOOL_OPTIONS` for the GC log and a private home. A first try confirmed the launcher starts under XWayland; it stopped itself after a minute because the laptop went onto battery.
+
+## Real audio and MIDI paths (`pwlab.sh`, `labrun2.py`, `lab_report.py`)
+
+A private PipeWire and WirePlumber inside their own user, network and mount namespaces, with `/dev/snd` hidden, so nothing reaches the real sound card or the desktop's PipeWire. A null sink's monitor feeds `lsd:input_1/2`; a live readout (`LSD_LIVE_PROBE`, test build only) prints signals and tempo twice a second.
+
+- Audio arrives through the real JACK path, band signals move, no callback errors.
+- **Fixed:** when the server went away (PipeWire restarted), the app never noticed: `isConnected` was just `client != null`, so the watchdog never retried and audio stayed dead until a restart. A shutdown callback now flags it; reconnect verified mid-run. The log also said "reconnect disabled" after an ordinary failed try; reworded.
+- Tempo, Audio clock: `results/live_audio.txt`. Real tracks at Mixxx 129 and 122 read right; 135 wandered (89-139); 75 read 100. Synth 174 reads 140 live and 70 offline, so that's the tracker, not the live path; synth 85 reads 85 offline but 170 live.
+- MIDI hardware not testable: a virtual MIDI port needs the `snd-virmidi` kernel module (root).
+
+## PipeWire video (both directions were broken)
+
+Found with GStreamer in the same lab. Before: the shared feed offered no format (`EnumFormat []`), so nothing could connect; the stream flag constants were wrong (`MAP_BUFFERS` had `DRIVER`'s value; `ALLOC_BUFFERS` means the app allocates, which it didn't); the `spa_data` mirror had an extra field and the sender read `spa_buffer.metas` as `datas`; no chunk size was set; the sender read framebuffer 0 (the app window) instead of the feed's texture. The receiver offered no format either, assumed 1920x1080 RGBA, and the browser passed `node.description` as `target.object`, so PipeWire fell back to whatever source it liked.
+
+Rewritten against PipeWire 1.6's headers (fetched to check every constant): `SpaPod` (format and buffer pods, format parser, `SpaPodTest`), `SpaBufferLayout`, stream listener with `param_changed`, driver-mode sender with flipped rows, receiver accepting RGBA/BGRA/RGBx/BGRx at any size and rate, rows mirrored into GL order, discovery listing only `Video/Source` and `Stream/Output/Video` nodes and connecting by node name.
+
+Verified end to end: GStreamer SMPTE bars (BGRx 640x360 30 fps) → app receiver → Deck B → app's Deck B feed → GStreamer capture. The app's Deck B monitor and the captured frames match and are upright. Not tested: OBS (its PipeWire sources go through portals), a real camera, DMA-BUF (not implemented; the guide no longer claims it), size changes while a reader is connected.
+
+## Picture response (`respond.py`, `results/respond_*.txt`)
+
+Each stock source, effect and transition rendered twice over the same 20 s with the synth 128 track, Audio Response 100% and 0%; the difference is what the band responses add, correlated against bass changes.
+
+- Sources: most respond clearly (correlation with bass +0.5 to +0.86). Weak or none: `fluid_ink` (no difference), `scope` and `spectrogram` (they draw the audio directly, so Audio Response doesn't apply), `lenia`, `reaction_diffusion`, `kifs`, `cyclic_ca`, `glitch_blocks`, `wave_ripples`, `video_feedback` (weak, under +0.4), `icosa_h3` and `dynamic_spiral` (tiny differences).
+- Effects at their load defaults: 13 of 27 change nothing at all (identical to no effect: Color Levels, Directional Blur, Feedback, Fluid Smear, Luma Displace, Pinch/Bulge, Pixelate, Radial Blur, RGB Split, Video Strobe, Wave Displace, Faceted Glass, Bloom very nearly). With the Metaknob at 60% 11 of them come alive and track the bass; Pinch/Bulge and Faceted Glass still change nothing visible at 60% on Voronoi Cells.
+- Transitions held at 50%: all 8 respond (+0.64 to +0.83); Cyber Datamosh moves even at 0%.

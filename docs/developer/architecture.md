@@ -105,9 +105,10 @@ Liquid LSD provides low-latency, zero-copy (or DMA-BUF/MemFD) live video sharing
 - **Platform Drivers**:
   - **Windows**: Spout2 sender/receiver via native `SpoutLibrary.dll` JNA bindings. Reusable buffer pools prevent per-frame byte/int array allocations, and sender name strings are clamped to 255 bytes.
   - **macOS**: Syphon client/server via Objective-C runtime JNA bridge (`Syphon.framework`). Named `NSSize`/`NSRect` structures use 64-bit `Double` coordinates for ARM64/Apple Silicon LP64 ABI compliance with pre-allocated size query buffers.
-  - **Linux**: PipeWire 0.3 video bridge.
+  - **Linux**: PipeWire 0.3 video bridge (`rendering/pipewire/`).
 
-### PipeWire Thread Decoupling & Lock-Free Frame Handoff
-To maintain the project's strict real-time constraint preventing `pw_thread_loop_lock` or socket blocking on Thread 0:
-- **Output Path (`PipeWireBridge`)**: Thread 0 deposits a newly rendered `ByteBuffer` into `pendingFrame` (`AtomicReference<ByteBuffer?>`) via `publishFrameBuffer()`. An asynchronous background worker (`Dispatchers.IO`) polls at up to 120Hz and drains the frame into PipeWire via `drainPendingFrame()`, copying pixels into the resolved `spa_buffer` memory without ever acquiring locks on the GL thread.
-- **Ingest Path (`PipeWireReceiverImpl`)**: Buffers dequeued from `pw_stream_dequeue_buffer()` are processed using a reusable `SpaData` instance (`bindMemory(datasPtr)`), and pixel data is uploaded to OpenGL using direct native memory addresses (`Pointer.nativeValue(dataPtr)`), completely eliminating per-frame wrapper heap allocations on Thread 0.
+### PipeWire Video (format negotiation and frame handoff)
+- **Formats (`SpaPod`)**: the SPA pod builder is header-only C, so `SpaPod` writes the few pods a raw video stream needs by hand (EnumFormat, Buffers) and parses the agreed Format. Constants come from PipeWire 1.6's headers; `SpaPodTest` checks the layout. Field offsets in `pw_buffer`/`spa_buffer`/`spa_data`/`spa_chunk` are in `SpaBufferLayout`.
+- **Output (`PipeWireBridge`)**: a `Video/Source` stream with `PW_STREAM_FLAG_DRIVER`, offering RGBA at the stream size. `param_changed(Format)` answers with a Buffers param (size, stride). Thread 0 deposits the latest PBO readback in `pendingFrame` (no lock, no copy); a `Dispatchers.IO` worker copies it, rows flipped into top-to-bottom order, into a dequeued buffer, sets the chunk, queues it and calls `pw_stream_trigger_process`, with the thread loop locked. `LinuxTextureBridge` attaches the endpoint's texture to its own read FBO (reading FBO 0 would capture the window) and reconnects when the size changes.
+- **Ingest (`PipeWireReceiverImpl`)**: offers RGBA/BGRA/RGBx/BGRx at any size and rate, learns the agreed size and order in `param_changed`, takes the newest queued buffer on Thread 0 and uploads it row by row into mirrored positions (video rows run top to bottom), with alpha forced opaque for x formats. `target.object` is the node name `ExternalVideoDiscovery` mapped from the label in the browser.
+- **Lab check**: `.planning/auto-verify-2026-11-06/round5/` runs the app against a private PipeWire with GStreamer on both ends.
