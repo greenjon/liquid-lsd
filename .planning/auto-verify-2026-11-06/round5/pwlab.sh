@@ -27,4 +27,10 @@ wireplumber > $D/wireplumber.log 2>&1 &
 echo $! > $D/wp.pid
 export PWLAB_DIR=$D
 sleep 2
-"$@"
+# Stop this lab's PipeWire and WirePlumber afterwards (by the pid files, which labrun2 rewrites on a restart):
+# left running they hold the socket in $D/run and the next lab can't start.
+stop_lab() { for f in wp.pid pw.pid; do [ -f "$D/$f" ] && kill "$(cat "$D/$f")" 2>/dev/null; done; }
+trap 'stop_lab; exit 143' TERM INT
+"$@"; rc=$?
+stop_lab
+exit $rc
