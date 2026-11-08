@@ -1,0 +1,12 @@
+OK  library/isf_directories.json [cut]: alive=True picture=38 errors=1
+     [main] ERROR l.s.l.r.isf.ISFDirectoryManager - Failed to parse ISF directory settings from library/isf_directories.json; restoring platform defaults.
+OK  library/isf_directories.json [junk]: alive=True picture=38 errors=1
+     [main] ERROR l.s.l.r.isf.ISFDirectoryManager - Failed to parse ISF directory settings from library/isf_directories.json; restoring platform defaults.
+OK  library/isf_directories.json [empty]: alive=True picture=38 errors=1
+     [main] ERROR l.s.l.r.isf.ISFDirectoryManager - Failed to parse ISF directory settings from library/isf_directories.json; restoring platform defaults.
+OK  library/midi/default.json [cut]: alive=True picture=38 errors=1
+     [main] ERROR l.s.l.midi.MidiMappingManager - Failed to load MIDI profile: default
+OK  library/midi/default.json [junk]: alive=True picture=38 errors=1
+     [main] ERROR l.s.l.midi.MidiMappingManager - Failed to load MIDI profile: default
+OK  library/midi/default.json [empty]: alive=True picture=38 errors=1
+     [main] ERROR l.s.l.midi.MidiMappingManager - Failed to load MIDI profile: default
