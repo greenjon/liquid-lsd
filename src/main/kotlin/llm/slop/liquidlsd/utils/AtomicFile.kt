@@ -22,7 +22,10 @@ object AtomicFile {
         if (!file.isFile || file.length() == 0L) null
         else {
             var copy = File(file.absoluteFile.parentFile, file.name + ".unreadable")
-            if (copy.exists()) copy = File(file.absoluteFile.parentFile, file.name + ".unreadable-" + System.currentTimeMillis())
+            if (copy.exists()) {
+                val stamp = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"))
+                copy = File(file.absoluteFile.parentFile, "${file.name}.unreadable-$stamp")
+            }
             Files.copy(file.toPath(), copy.toPath())
             UserNotice.post("Couldn't read $what; kept it as ${copy.name} and started without it")
             copy
