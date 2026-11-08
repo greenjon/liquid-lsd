@@ -38,3 +38,24 @@
   PASS s8_bank_import: Apply to Deck B remaps deck paths
   PASS s8_bank_import: Mixer paths stay
   PASS s7_save_reload: a saved chain reloads with the same Metaknob targets, zones and invert
+  FAIL s4_zoom_reset: Deck Zoom moves with the knob   [[1.0, 1.0, 1.0, 1.0]]
+  PASS s4_zoom_reset: picking another source resets it
+  FAIL s4_zoom_reset: a preset keeps its saved framing (2.036)   [[1.0, 1.0, 1.0, 1.0]]
+
+  FAIL s4_zoom_reset: Deck Zoom moves with the knob   [[1.0, 1.0, 1.0, 1.0]]
+  PASS s4_zoom_reset: picking another source resets it
+  FAIL s4_zoom_reset: a preset keeps its saved framing (2.036)   [[1.0, 1.0, 1.0, 1.0]]
+  FAIL s4_zoom_reset: Deck Zoom moves with the knob   [[1.0, 1.0, 1.0, 2.0358026]]
+  PASS s4_zoom_reset: picking another source resets it
+  PASS s4_zoom_reset: a preset keeps its saved framing (2.036)
+  FAIL s4_zoom_reset: Deck Zoom moves with the knob   [[1.0, 1.0, 1.0, 2.0358026]]
+  PASS s4_zoom_reset: picking another source resets it
+  PASS s4_zoom_reset: a preset keeps its saved framing (2.036)
+  PASS s4_zoom_reset: Deck Zoom moves with the knob
+  PASS s4_zoom_reset: picking another source resets it
+  PASS s4_zoom_reset: a preset keeps its saved framing (2.036)
+
+  FAIL s9_clock_unit: check crashed   [TypeError 'NoneType' object is not subscriptable]
+  PASS s9_clock_unit: BEAT to TIME keeps the step length (1 beat at 128 BPM = 0.469 s)
+  PASS s9_clock_unit: TIME to FRAME converts at the frame rate (0.469 s = 14 frames at the tour's 30 fps)
+  PASS s9_clock_unit: Length takes an odd value (7)

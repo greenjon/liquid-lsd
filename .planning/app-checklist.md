@@ -155,7 +155,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [ ] Click the stock source of the preset you're playing: its defaults load. Click it again: nothing happens.
 - [ ] SRC tab rows: Gain, **Deck Zoom**, **Deck Rotate**, then the source's own. On Reaction Diffusion / Escape Time the two Zooms are clearly different; 3D sources (KIFS, Gyroid) hide Deck Zoom / Rotate. Tooltips explain them.
   auto: row order right, and KIFS hides Deck Zoom / Rotate. Left for you: the two Zooms differ, tooltips.
-- [ ] Set Deck Zoom, pick another source: it resets. Load a preset: it keeps its saved framing.
+- [ ] Set Deck Zoom, pick another source: it resets. Load a preset: it keeps its saved framing. auto (round 5): set to 2.4 with Initial Range, picking Voronoi Cells put it back to 1.0, loading a preset gave its saved 2.036.
 - [ ] Deck Zoom and Deck Rotate now move Isometric Voxels and Wave Ripples.
 - [ ] MIDI-learn Gain on Deck A, change source several times: the mapping still drives Gain. A mapping saved before (path `Deck A/<Source>/Gain`) still works. MST > LEVELS shows only level faders.
 - [x] Leak check: load ~30 sources and flame presets in a row on one deck (or run an A/B queue of flames for a while); `GPU buffers` in the title bar stays roughly flat.
@@ -263,9 +263,9 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
   auto: a drag paints, and one Ctrl+Z undoes the whole drag. Left for you: scroll, double-click, Shift, the outline.
 - [ ] Toolbar: Randomize, Invert, Shift < >, Copy/Paste between sequencers, Fill..., Euclid... (Rotate and preview), Clear. Snap menu. Keyboard editing with the pointer over the bars.
   auto: fixed 2026-11-06: the toolbar never wrapped, so Clear was clipped and Snap off the edge at 1280x720. Randomize, Invert, Shift, Copy, Paste, Clear and Euclid's Apply work, Ctrl+Z undoes. Left for you: Fill, Snap, Euclid's Rotate, keyboard.
-- [ ] Length 1-32 (odd lengths), Phase, Offset, Step Hold (randomize); Glide Curve greys when nothing glides; output trace and live dot; ghost steps past the length; bars dim when bypassed.
+- [ ] Length 1-32 (odd lengths), Phase, Offset, Step Hold (randomize); Glide Curve greys when nothing glides; output trace and live dot; ghost steps past the length; bars dim when bypassed. auto (round 5): typing 7 into Length gives 7 steps. Phase, Offset, Step Hold, Glide Curve and the trace are yours.
 - [ ] Auto toggle: randomization re-rolls the pattern, morph slides between patterns.
-- [ ] Changing Clock Unit converts the step duration.
+- [ ] Changing Clock Unit converts the step duration. auto (round 5): 1 beat at 128 BPM became 0.469 s in TIME, then 14 frames in FRAME (at the running frame rate).
 - [ ] After the app has run 15+ minutes: sweep a Time-clocked LFO's period (and a sequencer's Time interval) by hand and from a macro. It speeds up or slows down, never jumps. A preset morph between two different LFO periods glides too (2026-10-23).
 - [ ] Ctrl+Z undoes sequencer, LFO, Audio and MIDI CC edits (one step per drag).
   auto: sequencer and LFO edits undo one step at a time. Fixed 2026-11-07: one Ctrl+Z undid two steps in the pair view and Chain view, and Reset Parameter to Default couldn't be undone. Left for you: Audio, MIDI CC.
