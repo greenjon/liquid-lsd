@@ -70,3 +70,23 @@ Chromium and Firefox, local server, nothing leaves the machine: every key change
 ## Twister
 
 Round 3's simulated Twister already covers section 14; its results are on the checklist. What's left needs the hardware.
+
+## Overnight, 2026-11-08 (memory runs going alongside)
+
+### Video sharing on Windows and macOS (code review, nothing run on those platforms)
+- **Spout was impossible on Windows.** The release zips had no `SpoutLibrary.dll` (`library/*` is gitignored and no workflow fetched it), and the code called C exports the DLL doesn't have (it exports only `GetSpout`, a C++ object). New `SpoutApi` calls the object's vtable; slot numbers from SpoutLibrary.h 2.007.017 in MSVC order (overloads grouped), confirmed from the DLL's own vtable (slot 8 and 24 share a target, slot 4 fixes up a byte arg, the table ends after 171). `SpoutApiTest` checks dispatch through a fake vtable. CI now downloads the SDK zip (SHA-256 pinned) and takes the MD build, the same bytes checked; BSD-2 notice added. Sender inverts as the SDK default; receiver uses the 2.007 receive / IsUpdated loop.
+- **Syphon could not have worked.** Server init used a selector Syphon lacks, `objc_msgSend` was called variadically (wrong on Apple Silicon) with NSRect/NSSize by reference, C strings went where NSStrings belong, received frames are GL_TEXTURE_RECTANGLE but were sampled as 2D, and each frame image leaked. New `SyphonBridge` uses fixed-signature calls, by-value structs, the CGL context, released images and a blit into an own texture; keys come from the framework's exported constants. Checked against the headers of both the repo copy and the Syphon 5 framework the release ships (same selectors).
+- `--smoke-test` (run on all five platforms by CI before a release) now lists Spout senders on Windows and Syphon servers on macOS, so a wrong slot or call shows up there.
+
+### Other fixes
+- **Recordings ran fast below 60 fps.** One frame per render into a 60 fps file: 11 s at 30 fps became 5 s, ahead of the audio. Frames now carry their capture time and are repeated or skipped to the file's rate: 9.88 s video, 9.89 s audio for a 10 s recording at 30 fps. The guide's save folder and file name were wrong too.
+- **Reversed `smoothstep` edges** (undefined GLSL) in five shaders, desktop, bundled library and web copies; renders identical before and after (Pinch/Bulge within rounding). Web copies need a publish to go live.
+- Esc closes the offline render dialog.
+
+### Checked, fine
+- Every stock source, effect and transition compiles on Mesa (Intel and llvmpipe): no errors. Warnings are the harmless `GL_EXT_gpu_shader4 : enable` and Mesa's per-function "used uninitialized" on globals set in `main()` (false positives).
+- Real app on Xvfb: FX ON survives File > Exit and relaunch; the session (deck source, crossfader, FX states) is restored; Record Output and Render Video (Offline) produce valid 1080p H.264 with audio (offline 8.000 s for 8 s of audio); the secondary output window shows the master, upright.
+- Narrow windows: no exceptions at 1100, 900 or 700 px; the Clock row drops its QUEUE block below about 1000 px.
+- OSC suspension uses the same check as MIDI (covered).
+- `AbletonLinkEngineTest` fails only because the local `liblink_jni.so` (gitignored, built 2026-11-05, likely from the link-follow-lead work) predates the current JNI source; `main` doesn't ship the library. Not touched.
+- evdev touch backend: struct sizes and ioctl numbers match the kernel headers.
