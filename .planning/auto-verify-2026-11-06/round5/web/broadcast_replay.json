@@ -1,0 +1,21 @@
+{
+ "sent": 1074,
+ "st": {
+  "live": true,
+  "deckA": "empty",
+  "deckB": "aurora_ribbons",
+  "balance": 0.7072,
+  "fx": [
+   "color_levels",
+   "retro_crt",
+   "bloom"
+  ],
+  "broadcaster": "Overnight Test"
+ },
+ "pic": {
+  "mean": 59.26128472222225,
+  "sd": 59.9980566330147
+ },
+ "card": true,
+ "errors": []
+}
