@@ -162,7 +162,7 @@ for how they work and where to edit them.
     - Duration is customizable in Preferences (`FX Swap Fade (ms)`, 0–1000 ms, default 150 ms; 0 = immediate hard cut).
   - **Knob Labeling**:
     - Knob 1 controls the chain's `SUPER` knob. Middle-clicking it does nothing (centring it would move every linked slot at once).
-    - Knobs 2–4 display `META`, while the effect name itself is clearly displayed in the slot cell below. A slot whose Metaknob has no targets shows `NO TARGET`, since turning that knob does nothing; add a target on the slot's Edit tab.
+    - Knobs 2–4 display `META`, while the effect name itself is clearly displayed in the slot cell below. A slot whose Metaknob has no targets keeps its effect name; its tooltip says the knob does nothing until you add a target on the slot's Edit tab.
   - **Focus Mode (Traktor / Mixxx style)**:
     - **Entering Focus Mode**:
       - Click any slot pill (`[1]`, `[2]`, or `[3]`) in the FX row header.

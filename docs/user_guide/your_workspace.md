@@ -142,4 +142,4 @@ Every shortcut except `Caps Lock` and `Space` can be rebound in **Preferences â†
 | **OUT** | Edit's output-stage tab: Transitions and Master FX. |
 | **Dry/Wet** | How much of an FX chain (or one effect) is mixed in. **Chain Dry/Wet** is on the chain's Edit tab; a chain below 100% shows "Wet NN%" on its Perform row. |
 | **Mapping** | A hardware (MIDI/OSC) control tied to a parameter. A macro knob's **targets** are the parameters it drives (no hardware involved). |
-| **Bypass / Mute** | Bypass turns off an FX chain or shader; Mute turns off a modulator. |
+| **FX ON / Bypass / Mute** | FX ON (lit when on) turns a whole FX chain on or off; a slot's power icon bypasses one effect; Mute turns off a modulator. |
