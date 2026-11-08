@@ -736,7 +736,7 @@ tasks.processResources {
             Exec="${'$'}SCRIPT_DIR/run-linux.sh" %F
             Icon=liquid-lsd
             Terminal=false
-            Categories=AudioVideo;Graphics;Audio;
+            Categories=AudioVideo;Video;
             StartupNotify=true
             StartupWMClass=liquid-lsd
             DESKTOP_EOF
