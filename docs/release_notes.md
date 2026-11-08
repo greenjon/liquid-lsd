@@ -1,6 +1,7 @@
 ## [Unreleased]
 
 ### Fixes From Scripted Checks, Round 3: Macros, Audio and Video Sharing (`ui/VideoExportModal.kt`, `export/RealtimeRecorder.kt`, `rendering/SpoutApi.kt`, `rendering/SyphonBridge.kt`, `ui/PropertiesPanel.kt`, `ui/MacroBindingEditor.kt`, `ui/PerformanceMacroStrip.kt`, `audio/JackClient.kt`, `audio/AudioEngine.kt`, `rendering/pipewire/`, `rendering/TextureReceiver.kt`, `rendering/TextureStreamer.kt`, `rendering/ExternalVideoDiscovery.kt`)
+- **Fixed (untested on macOS): Syphon could be blocked by Gatekeeper.** The macOS launchers removed the download quarantine only from the bundled Java; the Syphon framework in `library/natives` stayed quarantined. They now clear it for the whole app folder.
 - **Fixed: on Linux the app could appear twice in the desktop menu.** Its desktop entry named two main categories (AudioVideo and Graphics); it now uses AudioVideo with Video.
 - **Fixed: Esc didn't close the Render Video (Offline) dialog.** It now closes it like the other dialogs (not while you're typing in a field, and not during a render).
 - **Fixed: recordings played back too fast when the app ran below the recording frame rate.** Record Output wrote one video frame per rendered frame into a 60 fps file, so 11 seconds recorded at 30 fps became a 5-second video that ran ahead of its audio. Frames are now placed by the clock (repeated or skipped as needed), so the video keeps real time and stays in step with the sound at any frame rate.

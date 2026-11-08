@@ -666,8 +666,9 @@ tasks.processResources {
             SCRIPT_DIR="$(cd "$(dirname "${'$'}{BASH_SOURCE[0]}")" && pwd)"
             cd "${'$'}SCRIPT_DIR"
 
-            # Remove quarantine attribute from bundled JRE if present (macOS Gatekeeper)
-            xattr -dr com.apple.quarantine jre 2>/dev/null || true
+            # Remove the download quarantine from the whole folder (macOS Gatekeeper): the bundled JRE, and the
+            # Syphon framework in library/natives, which won't load while quarantined.
+            xattr -dr com.apple.quarantine . 2>/dev/null || true
 
             JAVA_BIN=""
             if [ -f "jre/macos-aarch64/Contents/Home/bin/java" ]; then
@@ -692,8 +693,9 @@ tasks.processResources {
             SCRIPT_DIR="$(cd "$(dirname "${'$'}{BASH_SOURCE[0]}")" && pwd)"
             cd "${'$'}SCRIPT_DIR"
 
-            # Remove quarantine attribute from bundled JRE if present (macOS Gatekeeper)
-            xattr -dr com.apple.quarantine jre 2>/dev/null || true
+            # Remove the download quarantine from the whole folder (macOS Gatekeeper): the bundled JRE, and the
+            # Syphon framework in library/natives, which won't load while quarantined.
+            xattr -dr com.apple.quarantine . 2>/dev/null || true
 
             JAVA_BIN=""
             if [ -f "jre/macos-x64/Contents/Home/bin/java" ]; then
