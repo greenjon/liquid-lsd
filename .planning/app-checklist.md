@@ -186,6 +186,8 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [ ] A deck at level 0, and the master at 0: half rate. BG at level 0: half rate.
 - [ ] PV renders at half size and still looks fine in its monitor; send PV out over Spout/Syphon/PipeWire and it goes to full size and full rate.
 - [ ] Linux, PipeWire video (rewritten 2026-11-07): turn on Master in Preferences > Video & Display > Live Video Sharing and read it in OBS (try Video Capture Device (PipeWire) and Screen Capture) or `gst-launch-1.0 pipewiresrc target-object=LiquidLSD-MASTER ! videoconvert ! autovideosink`; and load a camera or another app's stream from External video. auto: both directions verified with GStreamer in a private PipeWire (RGB, YUY2 and GRAY8 in), picture upright; the laptop's webcam (YUY2) shows live on a deck (one-off test with permission, 2026-11-07). OBS untested.
+- [ ] Windows, Spout (rewritten 2026-11-08, never run): share Master and read it in Resolume / OBS's Spout plugin, right way up; load another app's Spout sender from External video. If it crashes, the vtable slots in `SpoutApi` are the suspect.
+- [ ] macOS (Intel and Apple Silicon), Syphon (rewritten 2026-11-08, never run): share Master and read it in Syphon Simple Client / Resolume; load another app's Syphon server from External video.
 - [ ] Preferences > General **Off-air decks at half frame rate** off: everything renders every frame.
 - [ ] A simulation (Reaction Diffusion, Lenia) cued off-air runs at half speed, then normal speed on air. Decide whether that's acceptable.
 

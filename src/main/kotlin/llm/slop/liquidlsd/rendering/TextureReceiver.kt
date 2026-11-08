@@ -41,10 +41,11 @@ class SpoutReceiverImpl : TextureReceiver {
     override val isSupported: Boolean
         get() = System.getProperty("os.name").lowercase().contains("win")
 
-    private var spoutPtr: com.sun.jna.Pointer? = null
-    private var spoutLib: SpoutLibrary? = null
-    private var active = false
-    
+    private var spout: SpoutApi? = null
+    private var localTextureId = 0
+    private var texW = 0
+    private var texH = 0
+
     override var currentWidth = 1920
         private set
     override var currentHeight = 1080
@@ -52,93 +53,56 @@ class SpoutReceiverImpl : TextureReceiver {
 
     override fun start(serverName: String): Boolean {
         if (!isSupported) return false
-        if (active || spoutPtr != null || localTextureId != 0) {
-            stop()
-        }
-        try {
-            val nativesPath = java.io.File("library/natives").absolutePath
-            System.setProperty("jna.library.path", "${System.getProperty("jna.library.path") ?: ""}${java.io.File.pathSeparator}$nativesPath")
-            
-            spoutLib = com.sun.jna.Native.load("SpoutLibrary", SpoutLibrary::class.java)
-            spoutPtr = spoutLib?.CreateSpout()
-            if (spoutPtr == null) return false
-            
-            val nameBytes = serverName.toByteArray(Charsets.UTF_8).let { it.copyOf(it.size + 1) }
-            val w = intArrayOf(0)
-            val h = intArrayOf(0)
-            
-            // Try to create receiver
-            val success = spoutLib?.CreateReceiver(spoutPtr!!, nameBytes, w, h, false) == true
-            if (success) {
-                currentWidth = w[0]
-                currentHeight = h[0]
-                active = true
-                logger.info { "Connected to Spout sender: $serverName" }
-                return true
-            }
-            return false
-        } catch (e: Exception) {
+        stop()
+        val api = SpoutApi.create() ?: return false
+        return try {
+            api.setReceiverName(serverName)
+            spout = api
+            logger.info { "Spout receiver set to sender: $serverName" }
+            true
+        } catch (e: Throwable) {
             logger.error(e) { "Failed to start Spout receiver" }
-            return false
+            api.release()
+            false
         }
     }
 
-    private var localTextureId = 0
-    // Pre-allocated reusable buffers — avoids ByteArray/IntArray allocation on every render frame
-    private val recvNameBuf = ByteArray(256)
-    private val recvWBuf    = IntArray(1)
-    private val recvHBuf    = IntArray(1)
+    private fun allocate(w: Int, h: Int) {
+        if (localTextureId == 0) localTextureId = glGenTextures()
+        glBindTexture(GL_TEXTURE_2D, localTextureId)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, null as java.nio.ByteBuffer?)
+        glBindTexture(GL_TEXTURE_2D, 0)
+        texW = w; texH = h
+    }
 
+    /**
+     * Spout 2.007's receive loop: receive into our texture; when the sender appears or changes size [SpoutApi.isUpdated]
+     * says so, and the texture is reallocated to the sender's size before the next receive.
+     */
     override fun update(): Int {
-        if (!active || spoutPtr == null) return 0
-        
-        // Ensure local texture exists and matches size
-        if (localTextureId == 0 || currentWidth <= 0 || currentHeight <= 0) {
-            // Allocate initial dummy texture if size is known
-            if (currentWidth > 0 && currentHeight > 0) {
-                localTextureId = glGenTextures()
-                glBindTexture(GL_TEXTURE_2D, localTextureId)
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, currentWidth, currentHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, null as java.nio.ByteBuffer?)
-                glBindTexture(GL_TEXTURE_2D, 0)
-            }
+        val api = spout ?: return 0
+        if (localTextureId == 0) allocate(currentWidth, currentHeight)
+        val hostFbo = glGetInteger(org.lwjgl.opengl.GL30.GL_FRAMEBUFFER_BINDING)
+        if (!api.receiveTexture(localTextureId, GL_TEXTURE_2D, false, hostFbo)) return 0
+        if (api.isUpdated()) {
+            currentWidth = api.senderWidth().coerceAtLeast(1)
+            currentHeight = api.senderHeight().coerceAtLeast(1)
+            if (currentWidth != texW || currentHeight != texH) allocate(currentWidth, currentHeight)
+            return 0
         }
-        
-        recvNameBuf.fill(0)
-        recvWBuf[0] = currentWidth
-        recvHBuf[0] = currentHeight
-        
-        val success = spoutLib?.ReceiveTexture(spoutPtr!!, recvNameBuf, recvWBuf, recvHBuf, localTextureId, GL_TEXTURE_2D, false, 0) == true
-        if (success) {
-            // Re-allocate if size changed
-            if (recvWBuf[0] != currentWidth || recvHBuf[0] != currentHeight) {
-                currentWidth = recvWBuf[0]
-                currentHeight = recvHBuf[0]
-                if (localTextureId != 0) {
-                    glDeleteTextures(localTextureId)
-                }
-                localTextureId = glGenTextures()
-                glBindTexture(GL_TEXTURE_2D, localTextureId)
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, currentWidth, currentHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, null as java.nio.ByteBuffer?)
-                glBindTexture(GL_TEXTURE_2D, 0)
-                // Need to call receive again since it failed to map due to size mismatch? 
-                // Or Spout handled it and next frame it will be fine.
-            }
-            return localTextureId
-        }
-        return 0
+        return localTextureId
     }
 
     override fun stop() {
-        if (active && spoutPtr != null) {
-            spoutLib?.ReleaseReceiver(spoutPtr!!)
-            spoutLib?.ReleaseSpout(spoutPtr!!)
-            spoutPtr = null
-            active = false
-        }
+        spout?.let { api -> try { api.releaseReceiver() } finally { api.release() } }
+        spout = null
         if (localTextureId != 0) {
             glDeleteTextures(localTextureId)
             localTextureId = 0
         }
+        texW = 0; texH = 0
     }
 }
 
@@ -148,9 +112,10 @@ class SyphonReceiverImpl : TextureReceiver {
 
     private val bridge = SyphonBridge()
     private var clientPtr: com.sun.jna.Pointer? = null
-    private var active = false
-    private var lastTextureId = 0
-    
+    /** Syphon frames are GL_TEXTURE_RECTANGLE and live only while their image is held; each one is copied here. */
+    private var copy: FBO? = null
+    private var readFbo = 0
+
     override var currentWidth = 1920
         private set
     override var currentHeight = 1080
@@ -158,39 +123,48 @@ class SyphonReceiverImpl : TextureReceiver {
 
     override fun start(serverName: String): Boolean {
         if (!isSupported) return false
-        clientPtr = bridge.createClient(serverName)
-        if (clientPtr != null) {
-            active = true
-            logger.info { "Connected to Syphon server: $serverName" }
-            return true
-        }
-        return false
+        stop()
+        clientPtr = bridge.createClient(serverName) ?: return false
+        logger.info { "Connected to Syphon server: $serverName" }
+        return true
     }
 
     override fun update(): Int {
-        if (!active || clientPtr == null) return 0
-        
-        if (bridge.hasNewFrame(clientPtr!!)) {
-            val img = bridge.newFrameImage(clientPtr!!)
-            if (img != null) {
-                lastTextureId = bridge.textureNameForImage(img)
-                val sz = bridge.textureSizeForImage(img)
-                if (sz[0] > 0) {
-                    currentWidth = sz[0]
-                    currentHeight = sz[1]
+        val client = clientPtr ?: return 0
+        if (bridge.hasNewFrame(client)) {
+            val img = bridge.newFrameImage(client) ?: return copy?.texture ?: 0
+            try {
+                val (w, h) = bridge.textureSizeForImage(img).let { it[0] to it[1] }
+                if (w > 0 && h > 0) {
+                    currentWidth = w; currentHeight = h
+                    blit(bridge.textureNameForImage(img), w, h)
                 }
+            } finally {
+                bridge.releaseObject(img)
             }
         }
-        return lastTextureId
+        return copy?.texture ?: 0
+    }
+
+    private fun blit(rectTex: Int, w: Int, h: Int) {
+        val dst = copy?.takeIf { it.width == w && it.height == h } ?: FBO(w, h).also { copy?.dispose(); copy = it }
+        if (readFbo == 0) readFbo = org.lwjgl.opengl.GL30.glGenFramebuffers()
+        val prevRead = glGetInteger(org.lwjgl.opengl.GL30.GL_READ_FRAMEBUFFER_BINDING)
+        val prevDraw = glGetInteger(org.lwjgl.opengl.GL30.GL_DRAW_FRAMEBUFFER_BINDING)
+        org.lwjgl.opengl.GL30.glBindFramebuffer(org.lwjgl.opengl.GL30.GL_READ_FRAMEBUFFER, readFbo)
+        org.lwjgl.opengl.GL30.glFramebufferTexture2D(org.lwjgl.opengl.GL30.GL_READ_FRAMEBUFFER, org.lwjgl.opengl.GL30.GL_COLOR_ATTACHMENT0, org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE, rectTex, 0)
+        org.lwjgl.opengl.GL30.glBindFramebuffer(org.lwjgl.opengl.GL30.GL_DRAW_FRAMEBUFFER, dst.framebufferId)
+        org.lwjgl.opengl.GL30.glBlitFramebuffer(0, 0, w, h, 0, 0, w, h, GL_COLOR_BUFFER_BIT, GL_NEAREST)
+        org.lwjgl.opengl.GL30.glFramebufferTexture2D(org.lwjgl.opengl.GL30.GL_READ_FRAMEBUFFER, org.lwjgl.opengl.GL30.GL_COLOR_ATTACHMENT0, org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE, 0, 0)
+        org.lwjgl.opengl.GL30.glBindFramebuffer(org.lwjgl.opengl.GL30.GL_READ_FRAMEBUFFER, prevRead)
+        org.lwjgl.opengl.GL30.glBindFramebuffer(org.lwjgl.opengl.GL30.GL_DRAW_FRAMEBUFFER, prevDraw)
     }
 
     override fun stop() {
-        if (active && clientPtr != null) {
-            bridge.stopClient(clientPtr!!)
-            clientPtr = null
-            active = false
-            lastTextureId = 0
-        }
+        clientPtr?.let { bridge.stopClient(it) }
+        clientPtr = null
+        copy?.dispose(); copy = null
+        if (readFbo != 0) { org.lwjgl.opengl.GL30.glDeleteFramebuffers(readFbo); readFbo = 0 }
     }
 }
 

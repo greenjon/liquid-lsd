@@ -103,8 +103,8 @@ Liquid LSD integrates a three-tier notes persistence model managed by `NotesMana
 Liquid LSD provides low-latency, zero-copy (or DMA-BUF/MemFD) live video sharing to external VJ software (Resolume Arena, OBS Studio, TouchDesigner, MadMapper):
 
 - **Platform Drivers**:
-  - **Windows**: Spout2 sender/receiver via native `SpoutLibrary.dll` JNA bindings. Reusable buffer pools prevent per-frame byte/int array allocations, and sender name strings are clamped to 255 bytes.
-  - **macOS**: Syphon client/server via Objective-C runtime JNA bridge (`Syphon.framework`). Named `NSSize`/`NSRect` structures use 64-bit `Double` coordinates for ARM64/Apple Silicon LP64 ABI compliance with pre-allocated size query buffers.
+  - **Windows**: Spout2 2.007.017 through `SpoutApi`. SpoutLibrary.dll exports only `GetSpout()`, a C++ object; every call goes through its vtable with the object as the first argument. Slots follow MSVC's layout (overloads grouped at the first one, last declared first), checked against the DLL's own vtable; `SpoutApiTest` checks dispatch with a fake object. A new DLL needs the slots checked again. Senders invert (GL bottom-up to Spout's top-down) as the SDK does by default; receivers follow the 2.007 loop (receive, and reallocate on `IsUpdated`).
+  - **macOS**: Syphon through `SyphonBridge`: `objc_msgSend` invoked with fixed signatures (variadic calls are wrong on Apple Silicon) and NSRect/NSSize by value; servers and clients are created on the current CGL context with `initWithName:context:options:` / `initWithServerDescription:context:options:newFrameHandler:`; received frames are GL_TEXTURE_RECTANGLE, blitted into an own 2D texture before the SyphonImage is released. Description keys are read from the framework's exported constants. The release build ships the universal framework from the `syphon-natives` tag.
   - **Linux**: PipeWire 0.3 video bridge (`rendering/pipewire/`).
 
 ### PipeWire Video (format negotiation and frame handoff)

@@ -94,48 +94,25 @@ object ExternalVideoDiscovery {
         return results.toList()
     }
 
-    private var cachedSpoutLib: SpoutLibrary? = null
-    private var spoutLoadFailed = false
+    /** One SpoutLibrary object kept for the sender list (no GL needed for it). */
+    private var spoutLister: SpoutApi? = null
     private val spoutNameBuffer = ByteArray(256)
-    private var lastSpoutSenderCount = -1
-    private var cachedSpoutList: List<String> = emptyList()
 
     private fun fetchSpoutServers(): List<String> {
-        if (spoutLoadFailed) return emptyList()
-        val lib = cachedSpoutLib ?: try {
-            com.sun.jna.Native.load("SpoutLibrary", SpoutLibrary::class.java).also { cachedSpoutLib = it }
-        } catch (e: Throwable) {
-            spoutLoadFailed = true
-            return emptyList()
-        }
-
+        val api = spoutLister ?: SpoutApi.create()?.also { spoutLister = it } ?: return emptyList()
         return try {
-            val ptr = lib.CreateSpout()
-            if (com.sun.jna.Pointer.nativeValue(ptr) == 0L) return emptyList()
-            try {
-                val count = lib.GetSenderCount(ptr)
-                if (count == 0) {
-                    lastSpoutSenderCount = 0
-                    cachedSpoutList = emptyList()
-                    return emptyList()
+            val results = mutableListOf<String>()
+            for (i in 0 until api.senderCount()) {
+                spoutNameBuffer.fill(0)
+                if (api.sender(i, spoutNameBuffer)) {
+                    val end = spoutNameBuffer.indexOf(0).let { if (it < 0) spoutNameBuffer.size else it }
+                    val name = String(spoutNameBuffer, 0, end, Charsets.UTF_8)
+                    if (name.isNotBlank()) results.add(name)
                 }
-                val results = mutableListOf<String>()
-                for (i in 0 until count) {
-                    spoutNameBuffer.fill(0)
-                    if (lib.GetSender(ptr, i, spoutNameBuffer, 256)) {
-                        val name = String(spoutNameBuffer).trimEnd('\u0000')
-                        if (name.isNotBlank()) {
-                            results.add(name)
-                        }
-                    }
-                }
-                lastSpoutSenderCount = count
-                cachedSpoutList = results
-                results
-            } finally {
-                lib.ReleaseSpout(ptr)
             }
+            results
         } catch (e: Throwable) {
+            logger.debug { "Spout sender list failed: ${e.message}" }
             emptyList()
         }
     }
