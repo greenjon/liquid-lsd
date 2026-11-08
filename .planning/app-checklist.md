@@ -176,7 +176,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
   auto: `MIDI: CC -1` fixed 2026-11-06. Wording right on the B row, and the die lists what it rolls. A row not read.
 - [x] Old presets and sessions still load (they carry the removed deck feedback and 3D-view values, which are now ignored).
   auto: 27 desktop presets from two points in git history load, and a session with the removed deck feedback and 3D-view values restores in a real run.
-- [ ] On a packaged install over an older version: unedited bundled shaders are updated, an edited one is kept (log line). Needs a real install to test.
+- [ ] On a packaged install over an older version: unedited bundled shaders are updated, an edited one is kept (log line). Needs a real install to test. auto (round 5): real release zips, v0.9.165 unzipped over v0.9.164 with an edited shader: edited shader kept, preset kept, no exceptions. A fresh v0.9.165 in a folder with spaces and accents builds all 37 bundled sources on first run.
   auto: real Linux zips, v0.9.162 then v0.9.164 unzipped over it: runs clean, your preset stays. Fixed 2026-11-07: the zip's own copy overwrote an edited shader. The fix only takes effect from the next release's zip; not retested on a built zip.
 
 ## 5. Off-air decks (2026-10-22)
