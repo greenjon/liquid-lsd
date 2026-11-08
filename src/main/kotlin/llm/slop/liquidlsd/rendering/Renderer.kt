@@ -83,9 +83,12 @@ class Renderer {
         val aspect = targetFBO.width.toFloat() / targetFBO.height.toFloat()
         val widthF = targetFBO.width.toFloat()
         val heightF = targetFBO.height.toFloat()
-        val currentTime = TimeSource.getTimeSec().toFloat()
-        val deltaTime = if (source.renderLastTime > 0f) currentTime - source.renderLastTime else 0.01666f
-        source.renderLastTime = currentTime
+        // TIME has to reach GLSL as a float, but TIMEDELTA is taken from double times: the difference of two floats
+        // hours into a show is coarse (8 h: 2 ms steps; a day: 8 ms, half a frame) and made motion judder.
+        val now = TimeSource.getTimeSec()
+        val currentTime = now.toFloat()
+        val deltaTime = if (source.renderLastTime > 0.0) (now - source.renderLastTime).toFloat() else 0.01666f
+        source.renderLastTime = now
         val frameIdx = source.renderFrameIndex++
 
         // Dimensions & Aspect

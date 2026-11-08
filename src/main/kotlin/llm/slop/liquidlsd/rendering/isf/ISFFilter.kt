@@ -188,7 +188,8 @@ class ISFFilter(
     private val transitionEndName: String
 
     private var frameIndex = 0
-    private var lastTime = TimeSource.getTimeSec().toFloat()
+    /** Seconds, in double precision: a float difference of two times hours into a show is coarse (see Renderer). */
+    private var lastTime = TimeSource.getTimeSec()
     
     // Multipass infrastructure — compiled once from the fixed header.PASSES list so the render loop
     // never does string parsing, map lookups, or Pair allocation (see ARCHITECTURE.md zero-alloc guarantees).
@@ -443,9 +444,10 @@ class ISFFilter(
         shader.bind()
 
         // Set standard ISF uniforms
-        val currentTime = TimeSource.getTimeSec().toFloat()
-        val deltaTime = currentTime - lastTime
-        lastTime = currentTime
+        val now = TimeSource.getTimeSec()
+        val currentTime = now.toFloat()
+        val deltaTime = (now - lastTime).toFloat()
+        lastTime = now
 
         shader.setUniform("TIME", currentTime)
         shader.setUniform("TIMEDELTA", deltaTime)
@@ -589,9 +591,10 @@ class ISFFilter(
 
         shader.bind()
 
-        val currentTime = TimeSource.getTimeSec().toFloat()
-        val deltaTime = currentTime - lastTime
-        lastTime = currentTime
+        val now = TimeSource.getTimeSec()
+        val currentTime = now.toFloat()
+        val deltaTime = (now - lastTime).toFloat()
+        lastTime = now
 
         shader.setUniform("TIME", currentTime)
         shader.setUniform("TIMEDELTA", deltaTime)
