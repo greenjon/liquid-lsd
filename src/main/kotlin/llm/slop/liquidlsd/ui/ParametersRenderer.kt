@@ -155,7 +155,7 @@ object ParametersRenderer {
         if (isMacroBound || metaInfo != null) {
             val badge = "[${(macroInfo ?: metaInfo)!!.badgeLabel}]"
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                ImGui.textColored(0.0f, 0.85f, 1.0f, 1.0f, badge)
+                ImGui.textColored(TangoPalette.LINKED_TEXT.u32(), badge)
             }
             ImGui.sameLine(0f, 4f)
         }
@@ -166,7 +166,8 @@ object ParametersRenderer {
             ImGui.sameLine(0f, 4f)
         }
         if (isMacroBound || isMetaDriven) {
-            session.uiTheme.tooltipColored(0.2f, 0.85f, 1.0f, 1.0f, label)
+            val linked = if (TangoPalette.isLightTheme) floatArrayOf(0.00f, 0.38f, 0.52f) else floatArrayOf(0.2f, 0.85f, 1.0f)
+            session.uiTheme.tooltipColored(linked[0], linked[1], linked[2], 1.0f, label)
         } else {
             session.uiTheme.tooltip(label)
         }
@@ -176,13 +177,13 @@ object ParametersRenderer {
             showCustomTooltip(key, estimatedWidth = 320f, estimatedHeight = 120f) {
                 if (isMacroBound) {
                     val info = macroInfo!!
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0.2f, 0.85f, 1.0f, 1.0f))
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, TangoPalette.LINKED_TEXT.u32())
                     ImGui.text("${Icons.LOCK} Target of ${info.controlName} [${info.badgeLabel}]")
                     ImGui.popStyleColor()
                     ImGui.textDisabled("Click row or VAL cell to edit the target.")
                     ImGui.separator()
                 } else if (isMetaDriven) {
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0.2f, 0.85f, 1.0f, 1.0f))
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, TangoPalette.LINKED_TEXT.u32())
                     ImGui.text("${Icons.LOCK} Driven by its ${param.metaDrivenBy}" + (metaInfo?.let { " [${it.badgeLabel}]" } ?: ""))
                     ImGui.popStyleColor()
                     ImGui.separator()

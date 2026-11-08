@@ -458,9 +458,15 @@ object OscilloscopeDrawer {
         ImGui.pushStyleColor(imgui.flag.ImGuiCol.FrameBg, ImGui.colorConvertFloat4ToU32(0.08f, 0.09f, 0.11f, 0.85f))
         ImGui.pushStyleColor(imgui.flag.ImGuiCol.FrameBgHovered, ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 0.95f))
         ImGui.pushStyleColor(imgui.flag.ImGuiCol.FrameBgActive, ImGui.colorConvertFloat4ToU32(0.20f, 0.23f, 0.28f, 1.0f))
+        // The scope stays a dark screen in both themes, so its dropdown text is always light.
+        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0.88f, 0.90f, 0.93f, 1.0f))
+        ImGui.pushStyleColor(imgui.flag.ImGuiCol.PopupBg, ImGui.colorConvertFloat4ToU32(0.10f, 0.11f, 0.13f, 0.98f))
+        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 0.95f))
+        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.22f, 0.25f, 0.30f, 1.0f))
         if (ImGui.combo("##scope_timebase_${param.hashCode()}_$scopeKey", timebaseComboIndex, timebaseLabels)) {
             param.setScopeTimebase(scopeKey, availableTimebases[timebaseComboIndex.get().coerceIn(0, availableTimebases.size - 1)])
         }
+        ImGui.popStyleColor(4) // text, popup and arrow: back to the theme before the tooltip
         val tooltip = if (isLfoScope) {
             "Oscilloscope Time Window: Auto scales to LFO period, or choose a fixed window (1s to 24h)."
         } else {

@@ -144,9 +144,11 @@ object TangoPalette {
     val BUTTON_BG          = Role(c(0.16f, 0.18f, 0.22f, 1f), lightSlot = ImGuiCol.Button)
     val BUTTON_HOVER       = Role(c(0.24f, 0.28f, 0.35f, 1f), lightSlot = ImGuiCol.ButtonHovered)
     val BUTTON_SOFT_BG     = Role(c(0.18f, 0.20f, 0.24f, 0.80f), lightSlot = ImGuiCol.Button)
-    val SPEED_BG           = Role(c(0.14f, 0.16f, 0.20f, 0.90f))
-    val SPEED_HOVER        = Role(c(0.20f, 0.24f, 0.32f, 1f))
-    val CLOCK_IDLE_BG      = Role(c(0.14f, 0.16f, 0.20f, 0.70f))
+    val SPEED_BG           = Role(c(0.14f, 0.16f, 0.20f, 0.90f), lightSlot = ImGuiCol.Button)
+    val SPEED_HOVER        = Role(c(0.20f, 0.24f, 0.32f, 1f), lightSlot = ImGuiCol.ButtonHovered)
+    val CLOCK_IDLE_BG      = Role(c(0.14f, 0.16f, 0.20f, 0.70f), lightSlot = ImGuiCol.Button)
+    /** The Clock row's BPM readout: a dark pill on the dark theme, a field on the light one. */
+    val CLOCK_READOUT_BG   = Role(c(0.08f, 0.08f, 0.08f, 0.80f), lightSlot = ImGuiCol.FrameBg)
     val PREVIEW_BG         = Role(c(0.12f, 0.22f, 0.18f, 0.85f), lightSlot = ImGuiCol.Button)
     val PREVIEW_HOVER      = Role(c(0.18f, 0.32f, 0.25f, 1f), light = a(PLUM.light))
     val EJECT_HOVER        = Role(c(0.45f, 0.20f, 0.20f, 1f), light = a(DANGER.light))
@@ -164,6 +166,15 @@ object TangoPalette {
     val MODE_ACTIVE        = Role(c(0.25f, 0.45f, 0.75f, 0.80f), light = a(SYNC.normal))
     val MODE_INACTIVE      = Role(c(0.18f, 0.18f, 0.18f, 0.80f), lightSlot = ImGuiCol.Button)
     val MODE_ACTIVE_TEXT   = Role(c(1f, 1f, 1f, 1f), light = c(0.05f, 0.05f, 0.05f, 1f))
+    // Unselected tabs and segment buttons (Value / LFO / SEQ, SRC / FX, the Edit rail): the dark theme's greys,
+    // the light theme's button surfaces, so the theme's text stays readable on them.
+    val TAB_IDLE           = Role(c(0.15f, 0.15f, 0.15f, 1f), lightSlot = ImGuiCol.Button)
+    val TAB_IDLE_HOVER     = Role(c(0.25f, 0.25f, 0.25f, 1f), lightSlot = ImGuiCol.ButtonHovered)
+    val TAB_IDLE_PRESS     = Role(c(0.35f, 0.35f, 0.35f, 1f), lightSlot = ImGuiCol.ButtonActive)
+    /** Labels of rows a macro knob or Metaknob drives (electric cyan; a deep teal on light surfaces). */
+    val LINKED_TEXT        = Role(c(0.2f, 0.85f, 1.0f, 1f), light = c(0.00f, 0.38f, 0.52f, 1f))
+    /** Empty track behind a level bar (the Value tab's static initial value). */
+    val BAR_TRACK          = Role(c(0.15f, 0.15f, 0.15f, 1f), lightSlot = ImGuiCol.FrameBg)
     val PANEL_BG           = Role(c(0.10f, 0.10f, 0.12f, 0.60f), lightSlot = ImGuiCol.ChildBg)
     val PANEL_BORDER       = Role(c(0.25f, 0.25f, 0.28f, 0.80f), lightSlot = ImGuiCol.Border)
 
@@ -209,21 +220,24 @@ object TangoPalette {
     /** RGB of the cell backdrop; alpha varies with filled/empty so it is applied by the caller via [u32]. */
     val FX_CELL_BG_RGB     = floatArrayOf(0.08f, 0.09f, 0.11f)
     val FX_PLACEHOLDER     = Role(c(0.40f, 0.42f, 0.48f, 0.6f))
-    val FX_PARAM_NAME      = Role(c(0.85f, 0.88f, 0.92f, 0.95f))
-    val FX_SLOT_NAME       = Role(c(0.85f, 0.85f, 0.88f, 0.95f))
-    val FX_SLOT_NAME_EMPTY = Role(c(0.5f, 0.5f, 0.55f, 0.8f))
-    val FX_SLOT_NAME_OFF   = Role(c(0.55f, 0.55f, 0.6f, 0.75f))
+    val FX_PARAM_NAME      = Role(c(0.85f, 0.88f, 0.92f, 0.95f), light = c(0.10f, 0.11f, 0.13f, 1f))
+    val FX_SLOT_NAME       = Role(c(0.85f, 0.85f, 0.88f, 0.95f), light = c(0.10f, 0.11f, 0.13f, 1f))
+    val FX_SLOT_NAME_EMPTY = Role(c(0.5f, 0.5f, 0.55f, 0.8f), light = c(0.40f, 0.42f, 0.46f, 1f))
+    val FX_SLOT_NAME_OFF   = Role(c(0.55f, 0.55f, 0.6f, 0.75f), light = c(0.36f, 0.38f, 0.42f, 1f))
+    /** A slot name under the mouse, or the focused slot's name. */
+    val FX_SLOT_NAME_HOVER = Role(c(1f, 1f, 1f, 1f), light = c(0f, 0f, 0f, 1f))
+    val FX_SLOT_NAME_FOCUS = Role(a(SYNC_CYAN.bright), light = c(0.00f, 0.38f, 0.52f, 1f))
     val FX_ARROW_IDLE      = Role(c(0.6f, 0.62f, 0.68f, 0.85f))
-    val FX_BTN_IDLE_BG     = Role(c(0.14f, 0.16f, 0.20f, 0.35f))
-    val FX_BTN_IDLE_HOVER  = Role(c(0.20f, 0.22f, 0.27f, 0.6f))
-    val FX_BTN_IDLE_TEXT   = Role(c(0.5f, 0.52f, 0.58f, 0.7f))
-    val FX_BTN_EMPTY_TEXT  = Role(c(0.4f, 0.4f, 0.45f, 0.5f))
+    val FX_BTN_IDLE_BG     = Role(c(0.14f, 0.16f, 0.20f, 0.35f), lightSlot = ImGuiCol.Button)
+    val FX_BTN_IDLE_HOVER  = Role(c(0.20f, 0.22f, 0.27f, 0.6f), lightSlot = ImGuiCol.ButtonHovered)
+    val FX_BTN_IDLE_TEXT   = Role(c(0.5f, 0.52f, 0.58f, 0.7f), light = c(0.30f, 0.32f, 0.36f, 1f))
+    val FX_BTN_EMPTY_TEXT  = Role(c(0.4f, 0.4f, 0.45f, 0.5f), light = c(0.50f, 0.52f, 0.56f, 1f))
     val FX_RESET_BG        = Role(c(0.45f, 0.35f, 0.10f, 0.75f))
     val FX_RESET_HOVER     = Role(c(0.60f, 0.47f, 0.14f, 0.9f))
     val FX_RESET_TEXT      = Role(c(0.95f, 0.85f, 0.55f, 1f))
-    val FX_LINK_IDLE_BG    = Role(c(0.14f, 0.16f, 0.20f, 0.50f))
-    val FX_LINK_IDLE_HOVER = Role(c(0.22f, 0.25f, 0.32f, 0.80f))
-    val FX_LINK_IDLE_TEXT  = Role(c(0.55f, 0.58f, 0.65f, 0.80f))
+    val FX_LINK_IDLE_BG    = Role(c(0.14f, 0.16f, 0.20f, 0.50f), lightSlot = ImGuiCol.Button)
+    val FX_LINK_IDLE_HOVER = Role(c(0.22f, 0.25f, 0.32f, 0.80f), lightSlot = ImGuiCol.ButtonHovered)
+    val FX_LINK_IDLE_TEXT  = Role(c(0.55f, 0.58f, 0.65f, 0.80f), light = c(0.30f, 0.32f, 0.36f, 1f))
 
     // Overlays and text that were white-alpha (invisible on a light panel): the light theme uses black-alpha / the styled slots.
     /** Hover wash over a transparent control (icon buttons, link-mode chips, row buttons). */

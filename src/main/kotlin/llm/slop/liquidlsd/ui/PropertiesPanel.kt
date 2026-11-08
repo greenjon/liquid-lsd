@@ -80,9 +80,9 @@ object PropertiesPanel {
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(rgb[0], rgb[1], rgb[2], 1f))
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
                 } else {
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f))
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.35f, 0.35f, 0.35f, 1f))
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        TangoPalette.TAB_IDLE.u32())
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, TangoPalette.TAB_IDLE_HOVER.u32())
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  TangoPalette.TAB_IDLE_PRESS.u32())
                 }
                 val btnW = (ImGui.calcTextSize(label).x + 18f * fontScale).coerceAtLeast(44f * fontScale)
                 if (ButtonChrome.button(label, btnW, btnH)) {
@@ -377,7 +377,7 @@ object PropertiesPanel {
 
                     val isMacroLearning = llm.slop.liquidlsd.macro.MacroLearnState.isLearning()
                     if (isMacroLearning) {
-                        ImGui.textColored(0.2f, 0.85f, 1.0f, 1.0f, "${Icons.REFRESH} Click a slider's name to add it as a target.")
+                        ImGui.textColored(TangoPalette.LINKED_TEXT.u32(), "${Icons.REFRESH} Click a slider's name to add it as a target.")
                         ImGui.spacing()
                     }
 

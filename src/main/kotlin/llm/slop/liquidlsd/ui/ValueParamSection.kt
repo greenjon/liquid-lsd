@@ -490,7 +490,7 @@ object ValueParamSection {
         val baseDl = ImGui.getWindowDrawList()
         val cx = ImGui.getCursorScreenPosX()
         val cy = ImGui.getCursorScreenPosY()
-        baseDl.addRectFilled(cx, cy, cx + baseBarW, cy + 10f, ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f))
+        baseDl.addRectFilled(cx, cy, cx + baseBarW, cy + 10f, TangoPalette.BAR_TRACK.u32())
         val normBase = if (param.maxClamp > param.minClamp) ((param.baseValue - param.minClamp) / (param.maxClamp - param.minClamp)).coerceIn(0f, 1f) else param.baseValue.coerceIn(0f, 1f)
         baseDl.addRectFilled(cx, cy, cx + baseBarW * normBase, cy + 10f, CvTheme.getThemeColor("base"))
         ImGui.dummy(baseBarW, 10f)
