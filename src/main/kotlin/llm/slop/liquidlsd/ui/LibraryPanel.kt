@@ -103,8 +103,6 @@ object LibraryPanel {
         AppPreferencesStore.savePreferences()
     }
 
-    private var lastKnownSignature: String = ""
-    private var lastAutoRefreshTimeMs: Long = 0L
 
     fun getActiveSelectedFile(session: SessionContext): File? {
         return when (activeSelectionSource) {
@@ -194,21 +192,9 @@ object LibraryPanel {
         return null
     }
 
-    private fun checkAutoRefresh() {
-        val now = llm.slop.liquidlsd.utils.TimeSource.getEpochMillis()
-        if (now - lastAutoRefreshTimeMs > 500L) {
-            val root = FileSystemManager.getPresetsRoot()
-            val sig = FileSystemManager.getRecursiveDirectorySignature(root)
-            if (sig != lastKnownSignature) {
-                refreshAssets()
-            }
-        }
-    }
-
+    /** Re-reads every listing now (after a change the app made). Changes made outside the app are picked up by the scans themselves. */
     fun refreshAssets() {
-        val root = FileSystemManager.getPresetsRoot()
-        lastKnownSignature = FileSystemManager.getRecursiveDirectorySignature(root)
-        lastAutoRefreshTimeMs = llm.slop.liquidlsd.utils.TimeSource.getEpochMillis()
+        FileSystemManager.clearScanCache()
         FileSystemManager.scanAllPresets()
         FileSystemManager.scanAllPlaylists()
         FileSystemManager.scanAllFxPresets()
@@ -219,7 +205,6 @@ object LibraryPanel {
     }
 
     fun draw(session: SessionContext, width: Float, height: Float, mixer: Mixer, parametersState: ParametersState, binding: BrowserDock.DockBinding? = null) {
-        checkAutoRefresh()
         val safeW = width.coerceAtLeast(80f)
         // Before the tab line, so its chip already shows the tab a new target opens on.
         binding?.let { BrowserDock.syncTab(it, parametersState.dockSelectionEpoch) }

@@ -57,6 +57,7 @@ object PresetRepository {
                 val content = PresetManager.json.encodeToString(dto)
                 file.parentFile?.mkdirs()
                 llm.slop.liquidlsd.utils.AtomicFile.write(file, content)
+                llm.slop.liquidlsd.ui.FileSystemManager.clearScanCache() // the Library shows the new file at once
                 when (deckIndex) {
                     0 -> PresetManager.activePresetMtimeA = file.lastModified().takeIf { it > 0L }
                     1 -> PresetManager.activePresetMtimeB = file.lastModified().takeIf { it > 0L }
@@ -89,6 +90,7 @@ object PresetRepository {
                 val dto = FXPresetDto(name = name, tags = tags, slot = slotDto)
                 file.parentFile?.mkdirs()
                 llm.slop.liquidlsd.utils.AtomicFile.write(file, PresetManager.json.encodeToString(dto))
+                llm.slop.liquidlsd.ui.FileSystemManager.clearScanCache() // the Library shows the new file at once
                 logger.info { "FX preset saved successfully to ${file.name}" }
             } catch (e: Exception) {
                 saveFailed("FX preset", file, e)
@@ -112,6 +114,7 @@ object PresetRepository {
                 val dto = chainDto.copy(name = name, tags = tags)
                 file.parentFile?.mkdirs()
                 llm.slop.liquidlsd.utils.AtomicFile.write(file, PresetManager.json.encodeToString(dto))
+                llm.slop.liquidlsd.ui.FileSystemManager.clearScanCache() // the Library shows the new file at once
                 logger.info { "FX chain saved successfully to ${file.name}" }
                 true
             } catch (e: Exception) {
@@ -135,6 +138,7 @@ object PresetRepository {
                 val dto = TransitionPresetDto(name = name, tags = tags, slot = slotDto)
                 file.parentFile?.mkdirs()
                 llm.slop.liquidlsd.utils.AtomicFile.write(file, PresetManager.json.encodeToString(dto))
+                llm.slop.liquidlsd.ui.FileSystemManager.clearScanCache() // the Library shows the new file at once
                 logger.info { "Transition preset saved successfully to ${file.name}" }
             } catch (e: Exception) {
                 saveFailed("transition", file, e)
@@ -148,6 +152,7 @@ object PresetRepository {
                 logger.info { "Saving Transition playlist to ${file.absolutePath}..." }
                 file.parentFile?.mkdirs()
                 llm.slop.liquidlsd.utils.AtomicFile.write(file, PresetManager.json.encodeToString(playlist))
+                llm.slop.liquidlsd.ui.FileSystemManager.clearScanCache() // the Library shows the new file at once
                 logger.info { "Transition playlist saved successfully to ${file.name}" }
             } catch (e: Exception) {
                 saveFailed("transition playlist", file, e)
@@ -169,6 +174,7 @@ object PresetRepository {
                 logger.info { "Saving FX playlist to ${file.absolutePath}..." }
                 file.parentFile?.mkdirs()
                 llm.slop.liquidlsd.utils.AtomicFile.write(file, PresetManager.json.encodeToString(playlist))
+                llm.slop.liquidlsd.ui.FileSystemManager.clearScanCache() // the Library shows the new file at once
                 logger.info { "FX playlist saved successfully to ${file.name}" }
             } catch (e: Exception) {
                 saveFailed("FX playlist", file, e)

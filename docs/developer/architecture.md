@@ -90,6 +90,12 @@ Every file the user owns (presets, chains, transitions, playlists, the session, 
 
 ---
 
+## Library Listings and Large Libraries
+
+The Library asks for its listings every frame. `FileSystemManager.scanAllPresets` returns the cached listing and re-checks the presets folder (a walk of every file) on the scanner thread at most every 2 s; `clearScanCache` (called after every change the app makes, including saves in `PresetRepository`) makes the next call rescan at once. Tour renders set `synchronousScans` and keep the old check-every-call behaviour for determinism. `BrowseCatalog.tree()` is built once per catalog (a catalog is rebuilt whenever its inputs change), and `PresetListPanel.drawRows` uses an `ImGuiListClipper` for lists over 400 rows, keeping selected rows and a row with an open menu drawn. Measured with 10,000 presets: 150 ms a frame before, 7 ms after.
+
+---
+
 ## Notes System Persistence Architecture
 
 Liquid LSD integrates a three-tier notes persistence model managed by `NotesManager.kt`:

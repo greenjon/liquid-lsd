@@ -67,3 +67,64 @@ SETUP['n_tmpfs_save_ok']=lambda lib: tmpfs_presets(lib,False)
 def _(r):
     r.check('saves fine with room (control)',abs(r.js('presets/tt_alpha.lsd')['parameters']['L1']['baseValue']-.77)<1e-3)
     r.check('no temp files left',not [x for x in os.listdir(r.lib+'/presets') if x.endswith('.tmp')])
+# ---- 10,000 presets: the clipped Library list still navigates, scrolls and opens row menus
+def big_library(lib):
+    src=lib+'/presets/tt_alpha.lsd'
+    for i in range(10000):
+        d=f'{lib}/presets/big/set{i//500:02d}'; os.makedirs(d,exist_ok=True); shutil.copy(src,f'{d}/flame_{i:05d}.lsd')
+@case
+def n_big_keys():
+    b=B(); b.full(); b.search('flame_'); b.t+=.5; b.click('browser_row_src_flame_00000'); b.t+=.4
+    for _ in range(40): b.key('down',.12)
+    b.t+=.4; b.shot('nav'); b.st('audit_rects',target='nav'); b.t+=.1; return b
+SETUP['n_big_keys']=big_library
+@chk('n_big_keys')
+def _(r):
+    # Rows the clipper drew at the end: the list followed the keyboard down; row 0 stays drawn because it is still selected.
+    log=open(os.path.normpath(r.lib+'/../../out/c_n_big_keys.log'),errors='replace').read()
+    import re as _re
+    m=_re.search(r'TOUR_RECTS \S+ t=\S+ (.*)',log); keys=[k.rpartition('=')[0] for k in (m.group(1).split('\t') if m else [])]
+    rows=sorted(k for k in keys if k.startswith('browser_row_src_flame_'))
+    r.check('keyboard walks 40 rows down a clipped list: row 40 drawn with the rows in view (plus the selected row 0), not all 10,000','browser_row_src_flame_00040' in rows and 'browser_row_src_flame_00000' in rows and len(rows)<60,(len(rows),rows[:1],rows[-1:]))
+@case
+def n_big_menu():
+    b=B(); b.full(); b.search('flame_'); b.t+=.5; b.go('browser_row_src_flame_00000')
+    for _ in range(6): b.st('scroll',value=-40.0,dt=.15)
+    b.t+=.6; b.shot('scrolled'); b.rclick(x=400,y=300); b.t+=.4; b.shot('menu'); b.click('m:Load to Deck A'); b.t+=1.2; b.state('a',.4); return b
+SETUP['n_big_menu']=big_library
+@chk('n_big_menu')
+def _(r):
+    a=r.st['a'].get('A','')
+    import re as _re
+    m=_re.search(r'flame_(\d{5})',a)
+    r.check('a row far down the clipped list opens its menu and loads',bool(m) and int(m.group(1))>100,a[:90])
+@case
+def n_small_keys():
+    # Control: the same keys on a list short enough not to be clipped (100 rows).
+    b=B(); b.full(); b.search('flame_000'); b.t+=.5; b.click('browser_row_src_flame_00000'); b.t+=.4
+    for _ in range(40): b.key('down',.12)
+    b.t+=.4; b.key('enter',1.2); b.state('a',.4); return b
+SETUP['n_small_keys']=big_library
+@chk('n_small_keys')
+def _(r): r.check('control (unclipped): Enter after 40 downs',True,r.st['a'].get('A','')[:90])
+@case
+def n_down_enter():
+    # Library, short list: click a row, Down once, Enter. enter_src (round 2) shows click + Enter loads.
+    b=B(); b.full(); b.search('tt_'); b.t+=.4; b.click('browser_row_src_tt_alpha'); b.t+=.3; b.key('down',.3); b.shot('down'); b.key('enter',1.2); b.state('a',.4); return b
+@chk('n_down_enter')
+def _(r): r.check('Down then Enter loads the next row',any(n in (r.st['a'].get('A','')+r.st['a'].get('B','')) for n in ('tt_beta','tt_gamma')),(r.st['a'].get('A','')[:60],r.st['a'].get('B','')[:60]))
+def _downs(n,gap):
+    def f():
+        b=B(); b.full(); b.search('flame_000'); b.t+=.5; b.click('browser_row_src_flame_00000'); b.t+=.4
+        for _ in range(n): b.key('down',gap)
+        b.t+=.4; b.shot('end'); b.key('enter',1.5); b.state('a',.4); return b
+    return f
+for n,g in ((5,.12),(40,.3)):
+    nm=f'n_downs_{n}_{int(g*100)}'; CASES[nm]=_downs(n,g); SETUP[nm]=big_library
+    CHECKS[nm]=(lambda n: lambda r: r.check(f'{n} downs then Enter loads flame_{n:05d}',f'flame_{n:05d}' in r.st['a'].get('A','')+r.st['a'].get('B',''),r.st['a'].get('A','')[:70]))(n)
+def _big_downs():
+    b=B(); b.full(); b.search('flame_'); b.t+=.5; b.click('browser_row_src_flame_00000'); b.t+=.4
+    for _ in range(40): b.key('down',.3)
+    b.t+=.4; b.key('enter',1.5); b.state('a',.4); return b
+CASES['n_big_downs_enter']=_big_downs; SETUP['n_big_downs_enter']=big_library
+CHECKS['n_big_downs_enter']=lambda r: r.check('clipped list (10,000 rows): 40 downs then Enter loads flame_00040','flame_00040' in r.st['a'].get('A','')+r.st['a'].get('B',''),r.st['a'].get('A','')[:70])
