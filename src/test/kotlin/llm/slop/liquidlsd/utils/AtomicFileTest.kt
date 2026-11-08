@@ -60,4 +60,20 @@ class AtomicFileTest {
         val f = File(tempDir(), "x.json").apply { writeText("") }
         assertEquals(null, AtomicFile.keepUnreadable(f))
     }
+
+    @Test
+    fun `permissions are kept, and a new file follows the umask`() {
+        if (!java.nio.file.FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) return
+        val dir = tempDir()
+        val shared = File(dir, "shared.lsd").apply { writeText("a") }
+        Files.setPosixFilePermissions(shared.toPath(), java.nio.file.attribute.PosixFilePermissions.fromString("rw-rw-r--"))
+        AtomicFile.write(shared, "b")
+        assertEquals("rw-rw-r--", java.nio.file.attribute.PosixFilePermissions.toString(Files.getPosixFilePermissions(shared.toPath())))
+        // A new file gets what a plain write would (the umask), not the temp file's private rw-------.
+        val plain = File(dir, "plain.lsd").apply { writeText("p") }
+        val fresh = File(dir, "new.lsd")
+        AtomicFile.write(fresh, "c")
+        assertEquals(Files.getPosixFilePermissions(plain.toPath()), Files.getPosixFilePermissions(fresh.toPath()))
+        assertEquals("c", fresh.readText())
+    }
 }

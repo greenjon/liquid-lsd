@@ -41,6 +41,16 @@ object AtomicFile {
         val tmp = File.createTempFile(".${target.name}.", ".tmp", dir)
         try {
             tmp.writeText(text)
+            // A temp file is private (rw-------). Keep the permissions the file had; a new file gets what the user's umask
+            // gives (creating it empty first applies the umask, which Java can't read directly).
+            try {
+                if (!target.exists()) Files.createFile(target.toPath())
+                Files.setPosixFilePermissions(tmp.toPath(), Files.getPosixFilePermissions(target.toPath()))
+            } catch (e: UnsupportedOperationException) {
+                // Windows: no POSIX permissions.
+            } catch (e: java.io.IOException) {
+                // Not ours to change (another owner): the private default stays.
+            }
             try {
                 Files.move(tmp.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE)
             } catch (e: AtomicMoveNotSupportedException) {
