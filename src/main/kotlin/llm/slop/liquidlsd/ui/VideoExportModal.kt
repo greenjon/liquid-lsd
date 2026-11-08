@@ -300,7 +300,9 @@ object VideoExportModal {
         }
 
         ImGui.sameLine()
-        if (ButtonChrome.button("Close", 100f, 32f)) {
+        // Esc closes it like the other dialogs (not while a field has the keyboard; Enter is left to the fields).
+        val escClose = !ImGui.getIO().wantTextInput && ModalKeys.answer() == false
+        if (ButtonChrome.button("Close", 100f, 32f) || escClose) {
             cancelPendingExport()
             isOpen = false
             ImGui.closeCurrentPopup()

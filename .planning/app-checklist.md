@@ -318,7 +318,7 @@ Preferences: randomization on. For each source: pick it fresh from Browse (not a
 ## 10. Mixer, output and app
 
 - [ ] Deck-tile level faders: dragging doesn't snap back with a bound knob (the knob follows); the handle shows the fader's own value, the bar the live level.
-- [ ] Output > Output Monitor: Automatic and a named monitor; the output reopens on the chosen screen (try Wayland + projector).
+- [ ] Output > Output Monitor: Automatic and a named monitor; the output reopens on the chosen screen (try Wayland + projector). auto (round 5): Output > Secondary Output Window opens a second window showing the master output, right way up (single virtual screen; monitor choice and projector are yours).
 - [x] New version available: menu-bar download icon instead of a startup popup.
   auto: fresh real run: green download icon in the menu bar, no popup.
 - [ ] During Video Export (offline render), controller knobs and MIDI queue steps still work. auto (round 5): Record Output and Render Video (Offline) both work in the real app (1080p H.264 with audio; offline 8.000 s for 8 s of audio at about 30 fps). Recording was time-compressed below 60 fps (fixed). Knobs and MIDI during an export not tried.
