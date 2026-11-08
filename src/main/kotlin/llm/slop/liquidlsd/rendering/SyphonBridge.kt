@@ -22,7 +22,9 @@ interface CglLibrary : Library {
  * Every message goes through `objc_msgSend` called as a fixed-signature function (JNA [Function.invoke] with the exact
  * argument types). Calling it as a C variadic function is wrong on Apple Silicon, where variadic arguments go on the
  * stack, and plain JNA structures are passed by reference; NSRect and NSSize must go by value ([Structure.ByValue]).
- * Objects made with alloc/init or returned by a `new...` method are released here (no ARC).
+ * Objects made with alloc/init or returned by a `new...` method are released here (no ARC). Every public call runs
+ * inside its own autorelease pool ([pooled]): the discovery poll runs on a background thread and the render thread
+ * has no pool of its own, so autoreleased results (the server list, NSStrings) would otherwise never be freed.
  */
 class SyphonBridge {
     @Structure.FieldOrder("width", "height")
@@ -48,8 +50,20 @@ class SyphonBridge {
         val msgSend: Function by lazy { objc.getFunction("objc_msgSend") }
         val getClass: Function by lazy { objc.getFunction("objc_getClass") }
         val selRegister: Function by lazy { objc.getFunction("sel_registerName") }
+        val poolPush: Function by lazy { objc.getFunction("objc_autoreleasePoolPush") }
+        val poolPop: Function by lazy { objc.getFunction("objc_autoreleasePoolPop") }
         val cgl: CglLibrary by lazy { Native.load("OpenGL", CglLibrary::class.java) }
         val selectors = java.util.concurrent.ConcurrentHashMap<String, Pointer>()
+    }
+
+    /** Runs [block] inside an autorelease pool (`@autoreleasepool`), so objects it gets autoreleased are freed after. */
+    private inline fun <T> pooled(block: () -> T): T {
+        val pool = poolPush.invokePointer(arrayOf())
+        try {
+            return block()
+        } finally {
+            poolPop.invokeVoid(arrayOf(pool))
+        }
     }
 
     private fun sel(name: String): Pointer = selectors.getOrPut(name) { selRegister.invokePointer(arrayOf(name)) }
@@ -102,24 +116,24 @@ class SyphonBridge {
     // --- Server ---------------------------------------------------------------------------------
 
     /** `[[SyphonServer alloc] initWithName:context:options:]` on the current GL context. Call on the GL thread. */
-    fun createServer(name: String): Pointer? {
-        val cls = serverClass ?: return null
-        val ctx = cgl.CGLGetCurrentContext() ?: return null
-        val instance = obj(cls, "alloc") ?: return null
-        return obj(instance, "initWithName:context:options:", nsString(name), ctx, null)
+    fun createServer(name: String): Pointer? = pooled {
+        val cls = serverClass ?: return@pooled null
+        val ctx = cgl.CGLGetCurrentContext() ?: return@pooled null
+        val instance = obj(cls, "alloc") ?: return@pooled null
+        obj(instance, "initWithName:context:options:", nsString(name), ctx, null)
     }
 
     private val publishRect = NSRect()
     private val publishSize = NSSize()
 
     /** Publishes a GL_TEXTURE_2D of [w]x[h]. GL textures are bottom-up, which is what Syphon expects unflipped. */
-    fun publishTexture(serverPtr: Pointer, textureId: Int, w: Int, h: Int) {
+    fun publishTexture(serverPtr: Pointer, textureId: Int, w: Int, h: Int) = pooled {
         publishRect.x = 0.0; publishRect.y = 0.0; publishRect.width = w.toDouble(); publishRect.height = h.toDouble()
         publishSize.width = w.toDouble(); publishSize.height = h.toDouble()
         void(serverPtr, "publishFrameTexture:textureTarget:imageRegion:textureDimensions:flipped:", textureId, GL_TEXTURE_2D_ID, publishRect, publishSize, 0.toByte())
     }
 
-    fun stopServer(serverPtr: Pointer) {
+    fun stopServer(serverPtr: Pointer) = pooled {
         void(serverPtr, "stop")
         void(serverPtr, "release")
     }
@@ -144,25 +158,26 @@ class SyphonBridge {
     }
 
     /** Server labels; throws if a runtime call fails (the smoke test wants to know). */
-    fun serverNames(): List<String> = descriptions().map { it.first }
+    fun serverNames(): List<String> = pooled { descriptions().map { it.first } }
 
     fun getAvailableServers(): List<String> = try { serverNames() } catch (e: Throwable) { emptyList() }
 
     // --- Client -----------------------------------------------------------------------------------
 
     /** `[[SyphonClient alloc] initWithServerDescription:context:options:newFrameHandler:nil]` on the current GL context. */
-    fun createClient(serverName: String): Pointer? {
-        val cls = clientClass ?: return null
-        val ctx = cgl.CGLGetCurrentContext() ?: return null
-        val dict = descriptions().firstOrNull { it.first == serverName }?.second ?: return null
-        val instance = obj(cls, "alloc") ?: return null
-        return obj(instance, "initWithServerDescription:context:options:newFrameHandler:", dict, ctx, null, null)
+    fun createClient(serverName: String): Pointer? = pooled {
+        val cls = clientClass ?: return@pooled null
+        val ctx = cgl.CGLGetCurrentContext() ?: return@pooled null
+        // The description dictionary lives in the autoreleased server list: use it inside the same pool.
+        val dict = descriptions().firstOrNull { it.first == serverName }?.second ?: return@pooled null
+        val instance = obj(cls, "alloc") ?: return@pooled null
+        obj(instance, "initWithServerDescription:context:options:newFrameHandler:", dict, ctx, null, null)
     }
 
-    fun hasNewFrame(clientPtr: Pointer): Boolean = bool(clientPtr, "hasNewFrame")
+    fun hasNewFrame(clientPtr: Pointer): Boolean = pooled { bool(clientPtr, "hasNewFrame") }
 
     /** A retained SyphonImage (its texture is GL_TEXTURE_RECTANGLE); release it with [releaseObject]. */
-    fun newFrameImage(clientPtr: Pointer): Pointer? = obj(clientPtr, "newFrameImage")
+    fun newFrameImage(clientPtr: Pointer): Pointer? = pooled { obj(clientPtr, "newFrameImage") }
 
     fun textureNameForImage(imagePtr: Pointer): Int = int(imagePtr, "textureName")
 
@@ -173,7 +188,7 @@ class SyphonBridge {
 
     fun releaseObject(p: Pointer) = void(p, "release")
 
-    fun stopClient(clientPtr: Pointer) {
+    fun stopClient(clientPtr: Pointer) = pooled {
         void(clientPtr, "stop")
         void(clientPtr, "release")
     }
