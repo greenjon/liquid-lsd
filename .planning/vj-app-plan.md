@@ -37,33 +37,38 @@ spazradio/                  depends on lsd-visuals; keeps its own settings panel
 vj-app/ (new repo)          depends on lsd-visuals; native Compose controls, audio inputs, external display
 ```
 
-**Distribution of lsd-visuals: a committed file-based Maven repo in each app.** `scripts/release_lsd_visuals.sh
-<app-dir>` builds the AAR in liquid-lsd and publishes it (with its POM, so OkHttp/WorkManager/webkit come along)
-into `<app-dir>/lsd-repo/`, which is committed. The app adds `maven { url = uri("lsd-repo") }` and
-`implementation("org.liquidlsd:lsd-visuals:<version>")`. This keeps Spaz Radio's rule that builds never depend on a
-liquid-lsd checkout (CI builds from the repo alone) and replaces `sync_visuals.sh`. Rejected: Gradle composite
-build (needs the checkout), JitPack (an outside service in the build path), a bare `.aar` in `libs/` (loses the
-dependency metadata).
+**Distribution of lsd-visuals: a committed copy of the module's source in each app** (changed from the
+first draft's committed Maven repo, 2026-11-09). `scripts/sync_lsd_visuals.sh <app-dir>` copies
+`android/lsd-visuals/` into `<app-dir>/lsd-visuals/` with the web engine as its assets and the liquid-lsd commit
+in `VERSION`; the app has `include(":lsd-visuals")` and `implementation(project(":lsd-visuals"))`. Same model as
+the old `sync_visuals.sh` (builds never need a liquid-lsd checkout), but with no publishing step, no binary in
+the repo, and the app's dependency locking sees ordinary dependencies. The copy must not be edited in the app.
 
-Versioning: lsd-visuals version = `<engine level>.<liquid-lsd short date>`; the engine level is
+Versioning: `VERSION` (the liquid-lsd commit) identifies a copy; `ContentUpdater.ENGINE` must match
 `CONTENT_ENGINE` in `make_content_manifest.py`, so an app knows which content it can take.
+
+## Status
+
+- 2026-11-09 phase 1 built: `android/lsd-visuals/` + `scripts/sync_lsd_visuals.sh`; spazradio branch
+  `lsd-visuals-module` uses it (old engine 1543ea9 kept, so the branch changes structure only). Unit tests, lint,
+  debug and release builds pass; the release dex keeps the bridge. Not yet run on a phone (none attached, no emulator
+  image installed).
 
 ## Phases
 
-### 1. Extract lsd-visuals (no behaviour change)
+### 1. Extract lsd-visuals (no behaviour change) — built 2026-11-09
 
-1. Create `android/lsd-visuals/` (its own small Gradle build in liquid-lsd; AGP, Kotlin, Compose for the
-   `VisualizerView` composable). Package `org.liquidlsd.visuals`.
-2. Move in: `VisualizerView` (split into a plain `LsdVisualsView` that owns the WebView, plus a thin Compose
-   wrapper, because phase 4 needs a WebView inside a `Presentation`, outside Compose), `AssetClient`,
-   `LsdHostBridge`, `ContentStore`, `ContentUpdater`, `ContentUpdates` (base URL and public key become
-   parameters), `PcmMonoChunker`, `VisualsSettings`. Their unit tests move with them.
-3. The assets: a Gradle task copies `web/` into the library's assets with the same excludes and gallery export
-   as `sync_visuals.sh`. Gallery photos become optional (`includeGallery`), since the VJ app may not want
-   Spaz Radio's photos.
-4. Spaz Radio switches to the library; its sync script is replaced by `release_lsd_visuals.sh`.
-5. Verify: Spaz Radio unit tests, lintDebug, a run on the phone (picture, sync, pause, content update, live
-   follow). Release only when the user wants one (not required for the VJ app).
+1. `android/lsd-visuals/` in liquid-lsd (no Gradle build of its own; it builds and tests inside an app).
+   Package `org.liquidlsd.visuals`.
+2. Moved in from Spaz Radio: `VisualizerView`, split into `LsdPage` (the plain WebView, for a `Presentation`
+   later) and `LsdVisuals` (Compose); `AssetClient`, the bridge (`HostBridge`), `ContentStore`, `ContentUpdater`,
+   `ContentUpdates` (server and key unchanged: both apps use spaz.org/tv), `PcmTap`/`PcmMonoChunker`,
+   `VisualsSettings`, and their unit tests. The background job got a new name (`lsd-visuals-content-update`;
+   the old one is cancelled, because its worker class no longer exists).
+3. Assets: `scripts/sync_lsd_visuals.sh APP_DIR [--no-gallery]` writes them into the app's copy.
+4. Spaz Radio uses the module; its `scripts/sync_visuals.sh` now calls liquid-lsd's script.
+5. Verify: unit tests, lint, debug + release builds (done); a run on the phone (picture, sync, pause, content
+   update, live follow) still to do. Release only when the user wants one.
 
 ### 2. Control API in the engine (`web/embed.js`)
 

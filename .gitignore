@@ -85,3 +85,7 @@ node_modules/
 /playwright/.cache/
 /playwright/.auth/
 /tests/web/.cache/
+
+# lsd-visuals: assets and VERSION are written only into app copies (scripts/sync_lsd_visuals.sh)
+/android/lsd-visuals/src/main/assets/
+/android/lsd-visuals/VERSION

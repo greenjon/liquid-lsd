@@ -255,7 +255,26 @@ in the script is the engine level the content needs: bump it when new content de
 lack, so those apps skip the update. Level 2 (2026-11-01): `audio` / `audioFFT` inputs (`web/audiotex.js`), for
 Spectrogram and Scope; an app release has to declare engine 2 before it takes content updates again. Level 3 (2026-11-03):
 source `gallery` (`web/gallery.js`, the photo-gallery background that `default_bg.lsdplay` starts with); an app
-release that bundles it has to declare engine 3. `rsync --delete` leaves `update/` alone.
+release that bundles it has to declare engine 3 (`ContentUpdater.ENGINE` in `android/lsd-visuals`). `rsync --delete` leaves `update/` alone.
+
+## 6d. The Android Module (`android/lsd-visuals/`)
+
+Everything an Android app needs to show the visuals, shared by Spaz Radio and the VJ app (plan:
+`.planning/vj-app-plan.md`): `LsdPage` (a WebView serving the bundled `?embed` page from
+`https://appassets.androidplatform.net/visuals/`, downloaded content overlaid, the `LSDHost` bridge, the
+`setOption`/`pause`/`resume`/`feed` calls), `LsdVisuals` (the Compose element: lifecycle, startup timeout,
+renderer-crash restarts, battery-saver quality, the delayed audio feed), `PcmTap` (16-bit PCM in from any
+source, mono 40 ms chunks out), `VisualsSettings`, and the content updater of section 6c (`ContentStore`,
+`ContentUpdater`, `ContentUpdates`: daily WorkManager job `lsd-visuals-content-update`, which also cancels the
+name Spaz Radio 2.0 used). Package `org.liquidlsd.visuals`.
+
+Apps carry a committed copy as a Gradle module (`include(":lsd-visuals")`), made by
+`scripts/sync_lsd_visuals.sh APP_DIR [--no-gallery]`: it copies the module, writes the engine (what `?embed`
+loads; no checks, tools, service worker, icons or fonts) into the copy's `src/main/assets/visuals/` with the
+gallery at 768 px (`gallery_curate.py export`), and the liquid-lsd commit into `VERSION`. In liquid-lsd itself
+the module has no assets (gitignored) and no Gradle build of its own; its unit tests run in an app
+(`./gradlew :lsd-visuals:testDebugUnitTest`). The module's `build.gradle.kts` names plugins without versions
+and pins its dependencies to the versions Spaz Radio locks; the app supplies the plugins.
 
 ## 7. Relay Server Operations (`server/server.js`)
 
