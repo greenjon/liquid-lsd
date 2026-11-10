@@ -66,7 +66,7 @@ The standalone browser client (`web/index.html`) presents the visualizer in a re
 
 **Version:** the MENU title shows the TV's version (v1, v2, …) on the right. If it is older than the one just announced, reload the page to get the latest.
 
-**Microphone:** press `A` or choose MENU › **Audio Input** to make the picture follow your microphone instead of the radio, for a room playing its own music. Your browser asks permission the first time; the sound is only analysed, never played through the speakers. Press `A` again for the radio. Turning the TV off also puts the radio back. Locked during a live broadcast.
+**Microphone:** press `A` or choose MENU › **Audio Input** to make the picture follow your microphone instead of the radio, for a room playing its own music. Your browser asks permission the first time; the sound is only analysed, never played through the speakers. Press `A` again for the radio. Turning the TV off also puts the radio back. It works offline too. Locked during a live broadcast.
 
 **Viewer controls** (Autopilot only; while you broadcast live they are locked and the screen says so):
 
@@ -99,6 +99,8 @@ Click or tap the picture to show the channel, the scene, its FX chain, the track
 **Lock screen and media keys:** your phone's lock screen and your keyboard's media keys show the show and the scene; play/pause is the power switch, next/previous change the scene.
 
 **Install as an app:** use your browser's Install / Add to Home Screen; it opens fullscreen like a TV app.
+
+**Offline:** after one visit with a network, the TV keeps every scene, effect and transition, and the last 60 gallery photos it showed, so it opens and changes scenes with no connection at all. The radio needs the network, so offline the screen says `OFFLINE · A FOR MICROPHONE` (on a phone, MENU › SOUND): turn the microphone on and the TV runs on the sound in the room. Live broadcasts, the chat, the schedule and tapes come back with the network.
 
 **Kiosk mode:** `index.html?kiosk` shows only the picture (no TV body), turns itself on and hides the mouse pointer; use the keyboard or swipes. Browsers that refuse to start sound on their own get a "click or press a key for sound" prompt.
 

@@ -114,6 +114,26 @@ export class Gallery {
       .finally(() => { this.inflight--; this.fill(); });
   }
 
+  /**
+   * Offline: only the photos the service worker kept (sw.js, the newest 60 shown), so the background goes on
+   * with those instead of failing on the rest; the whole list comes back with the network.
+   */
+  useKeptPhotos() {
+    if (this.allUrls || typeof caches === 'undefined') return;
+    this.allUrls = this.urls;
+    caches.open('lsd-tv-photos').then((c) => c.keys()).then((keys) => {
+      if (this.allUrls !== this.urls || keys.length === 0) { this.allUrls = null; return; }
+      this.urls = keys.map((k) => k.url).sort(() => Math.random() - 0.5);
+      this.next = 0;
+      this.failures = 0;
+      this.fill();
+      addEventListener('online', () => {
+        if (!this.allUrls) return;
+        this.urls = this.allUrls; this.allUrls = null; this.next = 0; this.failures = 0;
+      }, { once: true });
+    }).catch(() => { this.allUrls = null; });
+  }
+
   /** At the start: three photos at a time until the first few are in, so the picture starts quickly. */
   fill() {
     while (this.failures < 6 && this.inflight < 3 && this.pool.length + this.decoded.length + this.inflight < Math.min(5, this.urls.length)) this.fetchNext();
@@ -154,7 +174,11 @@ export class Gallery {
       this.failures = 0;
       this.fill();
     };
-    img.onerror = () => { done(); this.failures++; console.warn('[gallery] could not load', url); this.fill(); };
+    img.onerror = () => {
+      done(); this.failures++; console.warn('[gallery] could not load', url);
+      if (this.failures >= 2 && !this.curate) this.useKeptPhotos();
+      this.fill();
+    };
     img.src = url;
   }
 

@@ -56,10 +56,12 @@ export class Target {
   }
 }
 
+const RETRY_MS = 15000; // a shader file that did not load (offline) is fetched again after this
+
 /**
  * Lazily fetches and compiles ISF assets listed in catalog.json. `get` never blocks: it
  * returns null until the asset has loaded (callers skip the effect for those frames) and
- * null forever if it failed (logged once).
+ * null forever if it failed to compile (logged once); a file that did not load is tried again after RETRY_MS.
  */
 export class Library {
   constructor(gl, vertSrc, catalog, baseUrl = '') {
@@ -87,10 +89,22 @@ export class Library {
     const entry = this.entries[kind]?.get(id);
     if (!entry) { this.failed.add(key); console.warn(`[lsd] unknown ${kind} id "${id}"`); return; }
     this.pending.add(key);
+    let text;
     try {
       const res = await fetch(this.baseUrl + entry.file);
       if (!res.ok) throw new Error(`status ${res.status}`);
-      this.programs.set(key, new ISFProgram(this.gl, this.vertSrc, await res.text(), key));
+      text = await res.text();
+    } catch (err) {
+      // Not loaded (offline, server hiccup): failed for now, tried again later, so the scene comes back
+      // with the network instead of staying blank for the rest of the visit.
+      this.failed.add(key);
+      setTimeout(() => this.failed.delete(key), RETRY_MS);
+      console.warn(`[lsd] ${key} not loaded, trying again later:`, err.message);
+      this.pending.delete(key);
+      return;
+    }
+    try {
+      this.programs.set(key, new ISFProgram(this.gl, this.vertSrc, text, key));
     } catch (err) {
       this.failed.add(key);
       console.error(`[lsd] ${key} unavailable:`, err);

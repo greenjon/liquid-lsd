@@ -16,7 +16,7 @@ import { scheduleState, refreshSchedule, setShows, groupByDay, upcoming, parsePl
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v30';
+export const TV_VERSION = 'v31';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -305,10 +305,11 @@ export function initUI() {
         await startAudio();
         audioBlocked = false;
       } catch (err) {
-        // Autoplay blocked (kiosk power-on without a click) or the stream failed: the next click or key
-        // anywhere starts the sound; meanwhile dsp.js shows no signal and keeps retrying the stream.
+        // Autoplay blocked (kiosk power-on without a click): the next click or key anywhere starts the sound.
+        // Any other failure is the stream (offline, radio down): the audio is set up, so the microphone works,
+        // and dsp.js shows no signal and keeps retrying the stream.
         console.warn('Audio start failed:', err);
-        audioBlocked = true;
+        audioBlocked = err?.name === 'NotAllowedError';
       }
     }
   });
@@ -548,7 +549,7 @@ export function initUI() {
     ] },
     { name: 'SOUND', rows: [
       { label: 'AUDIO INPUT', needsPower: true, locked: live, value: () => (isMicOn() ? 'MICROPHONE' : deck?.current ? 'TAPE' : 'RADIO'),
-        help: 'What the picture listens to. Radio: the Spaz Radio stream, or the tape if one is in. Microphone: the sound in the room (the browser asks first; it is analysed only, never played back).',
+        help: 'What the picture listens to. Radio: the Spaz Radio stream, or the tape if one is in. Microphone: the sound in the room, also offline (the browser asks first; it is analysed only, never played back).',
         step: () => toggleMic() },
       { label: 'REACT', locked: live, help: 'How strongly the picture moves with the music. Raise it for quiet shows, lower it if it is too busy.', value: () => `${Math.round(viewerState.react * 100)}%`,
         step: (dir) => reactDial.set(toDial(Math.max(REACT_MIN, Math.min(REACT_MAX, viewerState.react + dir * 0.05)))) },
@@ -985,6 +986,13 @@ export function initUI() {
   // --- Installable app: the service worker (sw.js) caches the app shell; not in the headless checks ---
   if (!embed && 'serviceWorker' in navigator && !new URLSearchParams(location.search).has('nolive')) {
     navigator.serviceWorker.register('sw.js').catch((err) => console.warn('[lsd] service worker:', err.message));
+    // Then every scene for offline use (sw.js cacheContent), once the picture has started; only what is missing,
+    // plus a check of the rest every few hours.
+    navigator.serviceWorker.ready.then((reg) => setTimeout(() => reg.active?.postMessage('cache-content'), 5000))
+      .catch(() => {});
+    navigator.serviceWorker.addEventListener('message', (e) => {
+      if (e.data?.type === 'content-cached') viewerState.offlineContent = e.data;   // for the headless check
+    });
   }
 
   // --- Autopilot and broadcast events ---
@@ -1065,11 +1073,15 @@ export function initUI() {
   // --- Beat LED, and NO SIGNAL while the stream is down ---
   const beatLed = document.getElementById('beatLed');
   let noSignalShown = false;
+  // Offline the radio can't come back by itself: point at the microphone, which works without a network.
+  const coarse = matchMedia('(pointer: coarse)').matches;
+  const noSignalText = () => (navigator.onLine || isMicOn() || !micAvailable() ? 'NO SIGNAL'
+    : coarse ? 'OFFLINE \u00B7 MIC: MENU \u203A SOUND' : 'OFFLINE \u00B7 A FOR MICROPHONE');
   (function blink() {
     // Standing notices only fill the message line when nothing else (HOLD, REACT...) is showing there.
     const msgFree = !document.getElementById('osd-msg').classList.contains('show');
     if (audioBlocked && powerState.on) { if (msgFree) message('CLICK OR PRESS A KEY FOR SOUND', 1500); noSignalShown = true; }
-    else if (cvState.noSignal && powerState.on && !live()) { if (msgFree) message(deck?.current && !isMicOn() ? 'LOADING TAPE\u2026' : 'NO SIGNAL', 1500); noSignalShown = true; }
+    else if (cvState.noSignal && powerState.on && !live()) { if (msgFree) message(deck?.current && !isMicOn() ? 'LOADING TAPE\u2026' : noSignalText(), 1500); noSignalShown = true; }
     else if (noSignalShown) { noSignalShown = false; announceLook(); }
     const isLive = live() && autopilotState.clock.valid;
     const beats = heardBeats(performance.now(), viewerState.syncMs);

@@ -518,6 +518,10 @@ export async function setMic(on) {
     micSource = audioCtx.createMediaStreamSource(stream);
     micSource.connect(analysisIn);
     micOn = true;
+    analysisReady = true;   // the radio may never have played (offline): the microphone is input enough
+    cvState.isLive = true;
+    // A key or click turned it on: lets the analysis run even if the radio never could (offline at power-on).
+    if (audioCtx.state === 'suspended') await audioCtx.resume().catch(() => {});
     stream.getAudioTracks()[0]?.addEventListener('ended', () => { if (micStream === stream) setMic(false).catch(() => {}); });
     document.getElementById('lsdAudio')?.pause();
     tracker.reset();
