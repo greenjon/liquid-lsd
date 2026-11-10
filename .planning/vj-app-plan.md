@@ -51,8 +51,11 @@ Versioning: `VERSION` (the liquid-lsd commit) identifies a copy; `ContentUpdater
 
 - 2026-11-09 phase 1 built: `android/lsd-visuals/` + `scripts/sync_lsd_visuals.sh`; spazradio branch
   `lsd-visuals-module` uses it (old engine 1543ea9 kept, so the branch changes structure only). Unit tests, lint,
-  debug and release builds pass; the release dex keeps the bridge. Not yet run on a phone (none attached, no emulator
-  image installed).
+  debug and release builds pass; the release dex keeps the bridge. Run on an emulator (AVD `lsd_test`, Pixel 7,
+  Android 15, `-gpu host`; swiftshader crashed): picture at 60 fps, radio feed, pause/resume, relay, content
+  update; upgrade from the 2.0.0 code runs the new worker with no errors. Not yet on a real phone.
+- Emulator: `~/Android/Sdk/emulator/emulator -avd lsd_test -no-window -no-audio -gpu host`; launch the app with
+  `adb shell monkey -p <package> -c android.intent.category.LAUNCHER 1` (`am start` misreports here).
 
 ## Phases
 
@@ -68,7 +71,7 @@ Versioning: `VERSION` (the liquid-lsd commit) identifies a copy; `ContentUpdater
 3. Assets: `scripts/sync_lsd_visuals.sh APP_DIR [--no-gallery]` writes them into the app's copy.
 4. Spaz Radio uses the module; its `scripts/sync_visuals.sh` now calls liquid-lsd's script.
 5. Verify: unit tests, lint, debug + release builds (done); a run on the phone (picture, sync, pause, content
-   update, live follow) still to do. Release only when the user wants one.
+   update, live follow) done on the emulator, not on a phone. Release only when the user wants one.
 
 ### 2. Control API in the engine (`web/embed.js`)
 
