@@ -1,4 +1,4 @@
-# VJ app plan (working name: "the VJ app")
+# VJ app plan: Liquid LSD for Android
 
 A general-purpose, audio-responsive Android VJ app built on the same visuals as the web TV and the Spaz Radio
 app. Spaz Radio stays as it is (no feature creep); the VJ app is a separate app.
@@ -10,7 +10,9 @@ app. Spaz Radio stays as it is (no feature creep); the VJ app is a separate app.
 - The VJ app follows desktop live broadcasts, as the TV does.
 - Audio: microphone, or whatever the phone is playing (system audio capture).
 - Video out over USB-C (and anything else Android exposes as a second display).
-- Open: the app's name; licensing (see the licensing-intent memory; the VJ app is the first general product on
+- Name **Liquid LSD** (the desktop app's player: it shows, it doesn't edit), app ID **`lsd.liquid`**, own repo
+  `~/AndroidStudioProjects/liquid-lsd-android` (2026-11-10). GPL-3.0 for now (user leaning GPL).
+- Open: licensing (see the licensing-intent memory; the VJ app is the first general product on
   the engine, so this has to be settled before its release); which phone has DisplayPort over USB-C.
 
 ## What already exists (no need to build)
@@ -61,6 +63,12 @@ Versioning: `VERSION` (the liquid-lsd commit) identifies a copy; `ContentUpdater
   `tests/web/embed.spec.ts`; not published to spaz.org (nothing on the TV uses it). The lsd-visuals module
   doesn't expose it yet: `LSDHost.state` and a command helper come with phase 3.
 
+- 2026-11-10 phase 3 first version: repo liquid-lsd-android 230cede (local, no remote yet). lsd-visuals gained
+  `LsdControl`, `LsdState`, `LsdCatalog` and the `LSDHost.state` bridge (liquid-lsd e0befbc); package renamed
+  `lsd.liquid.visuals` (Spaz Radio branch resynced, b699b73, now also carrying the current web engine). Emulator:
+  picture, every tab, scene/hold/time controls, mic and phone-audio services start (no real sound in the
+  emulator), control settings and the channel survive a restart. Not on a phone.
+
 ## Phases
 
 ### 1. Extract lsd-visuals (no behaviour change) — built 2026-11-09
@@ -97,7 +105,7 @@ Spaz Radio ignores the new calls, so it doesn't need an update for this.
 
 ### 3. VJ app, first usable version
 
-- New repo, Kotlin + Compose, minSdk 29 (system audio capture needs Android 10; about 95% of active phones).
+- Repo `liquid-lsd-android`, app ID `lsd.liquid`, Kotlin + Compose, minSdk 29 (system audio capture needs Android 10; about 95% of active phones).
 - **Screen**: the picture full screen with controls over it (auto-hide like Spaz Radio's), or a split layout:
   picture on top, a control deck below. Controls: scene browser (catalog with tags), next/prev/roll,
   auto/manual switches per layer, TIME, background picker, effects picker, REACT, SYNC, live follow, tap tempo.
