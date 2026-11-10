@@ -393,7 +393,11 @@ const presetSource = new Map(); // playlist line -> source id
 // Heavy sources stay out until the GPU probe says this machine can take them (setHeavyAllowed).
 let heavyAllowed = false;
 export function setHeavyAllowed(on) { heavyAllowed = !!on; }
+// A build without photos (an app that bundles the engine without the gallery: gallery.json lists none) never
+// picks the photo-gallery background.
+let galleryAllowed = true;
 const runnable = (line) => (heavyAllowed || !autopilotSettings.heavySources.includes(presetSource.get(line)))
+  && (galleryAllowed || presetSource.get(line) !== 'gallery')
   && !(reducedMotion && (presetTags.get(line) ?? []).some((t) => CALM_SKIP_LOOK_TAGS.includes(t)));
 const playable = (line) => runnable(line) && !skipped.has(presetName(line));
 const presetName = (line) => (line ?? '').split('|')[0].trim();
@@ -915,7 +919,7 @@ export function contentCatalog() {
   const rotation = new Set(autopilotSettings.fxChains);
   return {
     scenes: fgPlaylist.map(scene),
-    backgrounds: bgPlaylist.map((line, i) => ({ index: i, name: presetName(line), source: presetSource.get(line) ?? null, tags: presetTags.get(line) ?? [] })),
+    backgrounds: bgPlaylist.map((line, i) => ({ index: i, name: presetName(line), source: presetSource.get(line) ?? null, tags: presetTags.get(line) ?? [], runnable: runnable(line) })),
     fxChains: catalog.fxChains.map((c) => ({ id: c.id, name: c.name, inRotation: rotation.has(c.id) })),
     transitions: catalog.transitionPresets.map((t) => ({ id: t.id, name: t.name, inRotation: autopilotSettings.transitions.includes(t.id) })),
   };
@@ -1201,10 +1205,18 @@ export async function startAutopilot() {
     bgPlaylist = await loadPlaylistFile(autopilotSettings.bgPlaylist);
     await loadPresetTags();
   }
+  try {
+    const res = await fetch('gallery.json');
+    galleryAllowed = res.ok && ((await res.json()).images?.length ?? 0) > 0;
+  } catch (e) {
+    galleryAllowed = true; // offline web TV with no cached list: gallery.js copes by itself
+  }
   if (bgPlaylist.length > 0) {
-    bgPlaylistIdx = 0;
-    autopilotState.deckBG = await buildDeck(bgPlaylist[0], true);
-    bgOnAir = bgPlaylist[0];
+    // The first background line (the TV starts on the gallery), or the first one this build can show.
+    const first = Math.max(0, bgPlaylist.findIndex((l) => runnable(l)));
+    bgPlaylistIdx = first;
+    autopilotState.deckBG = await buildDeck(bgPlaylist[first], true);
+    bgOnAir = bgPlaylist[first];
     autopilotState.bgAlpha = 1.0;
     bgSwitchAt = nextSwitchBeat(lastBeats, autopilotSettings.bgHoldBars, autopilotSettings.bgFadeBeats);
   }

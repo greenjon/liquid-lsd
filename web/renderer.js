@@ -246,11 +246,11 @@ async function init() {
   // Embedded in a phone app, smooth beats sharp: a 720p-class budget, finer steps down to a quarter, and a
   // quicker reaction to a slow frame.
   const SCALES = embed ? [1.0, 0.85, 0.7, 0.55, 0.42, 0.32, 0.25] : [1.0, 0.85, 0.7, 0.55, 0.4];
-  const MAX_PIXELS = embed ? 1280 * 720 : 1920 * 1080;
+  let maxPixels = embed ? 1280 * 720 : 1920 * 1080; // embed: the host can raise it (setOption 'maxPixels')
   const SLOW_DT = embed ? 1 / 52 : 1 / 45, SLOW_FOR = embed ? 1 : 2, STEP_GAP_MS = embed ? 1500 : 3000;
   const adapt = { idx: 0, ceiling: 0, ema: 1 / 60, slow: 0, fast: 0, lastChange: 0, wentUp: false };
   function renderSize(w, h) {
-    const cap = Math.min(1, Math.sqrt(MAX_PIXELS / (w * h)));
+    const cap = Math.min(1, Math.sqrt(maxPixels / (w * h)));
     const k = cap * SCALES[adapt.idx];
     return [Math.max(1, Math.round(w * k)), Math.max(1, Math.round(h * k))];
   }
@@ -514,6 +514,13 @@ async function init() {
     setQuality(index) {
       adapt.ceiling = index;
       if (adapt.idx < index) { adapt.idx = index; forceResize = true; }
+    },
+    // Render budget in pixels (a host driving an external display raises it to the display's size).
+    setMaxPixels(n) {
+      if (n === maxPixels) return;
+      maxPixels = n;
+      adapt.idx = adapt.ceiling; adapt.wentUp = false; // a new budget: let the scaler find its level again
+      forceResize = true;
     },
   });
 }

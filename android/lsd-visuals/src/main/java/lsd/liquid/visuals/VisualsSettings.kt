@@ -17,6 +17,8 @@ data class VisualsSettings(
     val syncMs: Int = DEFAULT_SYNC_MS,
     /** Fetch new scenes and playlists from the Liquid LSD server in the background (small downloads). */
     val contentUpdates: Boolean = true,
+    /** Render budget in pixels; null = the engine's phone default (1280x720's worth). An external display wants its own size. */
+    val maxPixels: Int? = null,
 ) {
     companion object {
         const val DEFAULT_REACTIVITY = 1f

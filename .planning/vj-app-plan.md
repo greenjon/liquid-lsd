@@ -76,6 +76,11 @@ Versioning: `VERSION` (the liquid-lsd commit) identifies a copy; `ContentUpdater
   while stopped). Not on real USB-C or Miracast hardware. Embed's 1280x720 render budget caps the external picture;
   a 1080p/4K setting is open. Repo greenjon/liquid-lsd-android created PRIVATE (a public create was blocked by
   the permission rules; the user can flip it).
+- 2026-11-10 out of the box: controls start hidden (tap hint, auto-hide after 8 s), first launch asks only for
+  the microphone and listens, the input is remembered (mic restarts by itself, phone audio falls back to the mic),
+  backgrounds change with the scenes and the Spaz photos are left out (`--no-gallery`), the external display renders
+  at its own size up to 1080p, a live broadcast shows a banner with Ignore (this session). No notification
+  permission prompt. Emulator-checked except the live banner (no broadcast to test with).
 
 ## Phases
 

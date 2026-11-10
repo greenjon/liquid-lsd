@@ -20,6 +20,7 @@ const MODES = ['auto', 'on', 'off'];
  *   reducedMotion  'auto' | 'on' | 'off'
  *   live           boolean                   follow a desktop live broadcast (needs the network)
  *   sync           -100 .. 400 (ms)          delay the picture to match the speaker
+ *   maxPixels      number                    render budget (default 1280*720; an external display may want its own size)
  */
 export function installEmbedApi(hooks) {
   const applyHeavy = () => {
@@ -41,6 +42,8 @@ export function installEmbedApi(hooks) {
     },
     live(v) { setRelayEnabled(!!v); },
     sync(v) { viewerState.syncMs = clamp(Math.round(Number(v) || 0), -100, 400); },
+    // Render budget in pixels, for an external display: 1280x720's worth by default, up to 3840x2160's.
+    maxPixels(v) { hooks.setMaxPixels(clamp(Math.round(Number(v) || 1280 * 720), 320 * 180, 3840 * 2160)); },
   };
 
   // ?debug: a status line every 2 s (the host app logs the console), for working out why a picture is black.
@@ -86,7 +89,7 @@ export function installEmbedApi(hooks) {
     // --- Controls (the VJ app). Spaz Radio uses none of these. Each returns what it did; every one does
     // nothing during a live broadcast (state().live), as on the TV. The state is pushed after each. ---
     /** What can be chosen: {scenes: [{channel, name, tags, source, pinnedChain, skipped, runnable}], backgrounds:
-     *  [{index, name, source, tags}], fxChains: [{id, name, inRotation}], transitions: [{id, name, inRotation}]}. */
+     *  [{index, name, source, tags, runnable}], fxChains: [{id, name, inRotation}], transitions: [{id, name, inRotation}]}. */
     catalog: () => contentCatalog(),
     /** What is on air and how the controls are set (the object LSDHost.state receives). */
     state,

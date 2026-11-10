@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Liquid LSD for Android Works Out of the Box (`web/renderer.js`, `web/autopilot.js`, `web/embed.js`, `android/lsd-visuals/`)
+- **New: an app can raise the picture's render budget** (`maxPixels`) for an external display, and an app built without the photo gallery never shows that background. The web TV and Spaz Radio are unchanged.
+
 ### Controls for Apps That Show the Visuals (`web/embed.js`, `web/autopilot.js`, `tests/web/embed.spec.ts`)
 - **New: an app showing the web TV's picture can now drive it.** Scenes by channel, next/previous/random, ROLL, HOLD and TIME, auto roll, effects on/off, an FX chain on the scene now or locked for every scene, a locked transition, Follow Music, the background (mode, next/previous, or one by name), and channel skips. The page reports what is on air, the tempo and the settings back to the app. This is for the coming VJ app; the web TV and Spaz Radio look and behave as before.
 

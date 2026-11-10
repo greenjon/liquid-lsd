@@ -62,7 +62,8 @@ data class LsdCatalog(
 ) {
     /** A playlist scene: [channel] tunes to it; [runnable] false = too heavy for this device's GPU. */
     data class Scene(val channel: Int, val name: String, val tags: List<String>, val source: String?, val skipped: Boolean, val runnable: Boolean)
-    data class Background(val index: Int, val name: String, val source: String?, val tags: List<String>)
+    /** A background; [runnable] false = this build can't show it (the photo gallery in an app without photos). */
+    data class Background(val index: Int, val name: String, val source: String?, val tags: List<String>, val runnable: Boolean = true)
     /** An FX chain or transition preset; [inRotation] = the autopilot picks it by itself. */
     data class Choice(val id: String, val name: String, val inRotation: Boolean)
 
@@ -75,7 +76,7 @@ data class LsdCatalog(
                 scenes = objs("scenes").map {
                     Scene(it.int("channel"), it.str("name") ?: "", it.strings("tags"), it.str("source"), it.bool("skipped"), it.bool("runnable", true))
                 },
-                backgrounds = objs("backgrounds").map { Background(it.int("index"), it.str("name") ?: "", it.str("source"), it.strings("tags")) },
+                backgrounds = objs("backgrounds").map { Background(it.int("index"), it.str("name") ?: "", it.str("source"), it.strings("tags"), it.bool("runnable", true)) },
                 fxChains = choices("fxChains"),
                 transitions = choices("transitions"),
             )

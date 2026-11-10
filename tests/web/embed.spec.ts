@@ -116,3 +116,25 @@ test('embed control API: catalog, scenes, hold, chains, transitions, backgrounds
   note('embed_controls', { ...r, errors });
   expect(errors).toEqual([]);
 });
+
+test('embed: a build with no photos never shows the gallery background; maxPixels raises the render budget', async ({ page, context }) => {
+  only('chromium'); test.setTimeout(90_000);
+  await sealOff(context);
+  await page.route('**/gallery.json', (r) => r.fulfill({ json: { base: 'gallery/', images: [] } }));
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  const errors = await openEmbed(page);
+  const st = await L<any>(page, 'LSD.state()');
+  const cat = await L<any>(page, 'LSD.catalog()');
+  const gallery = cat.backgrounds.filter((b: any) => b.source === 'gallery');
+  expect(gallery.length).toBeGreaterThan(0);
+  expect(gallery.every((b: any) => b.runnable === false)).toBe(true);
+  expect(cat.backgrounds.find((b: any) => b.name === st.background)?.source).not.toBe('gallery');
+  await L(page, `LSD.backgroundMode('scenes')`);
+  const before = await L<number[]>(page, 'LSD.renderSize()');
+  await L(page, `LSD.setOption('maxPixels', 1920 * 1080)`);
+  await page.waitForTimeout(1500);
+  const after = await L<number[]>(page, 'LSD.renderSize()');
+  note('embed_nophotos', { background: st.background, before, after, errors });
+  expect(after[0] * after[1]).toBeGreaterThan(before[0] * before[1]);
+  expect(errors).toEqual([]);
+});

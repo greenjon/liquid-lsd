@@ -92,7 +92,8 @@ object LsdPage {
                 "L.setOption('quality','${quality.js}');" +
                 "L.setOption('reactivity',${settings.reactivity});" +
                 "L.setOption('reducedMotion','${settings.reducedMotion.js}');" +
-                "L.setOption('live',${settings.live});})()",
+                "L.setOption('live',${settings.live});" +
+                (settings.maxPixels?.let { "L.setOption('maxPixels',$it);" } ?: "") + "})()",
             null,
         )
     }
