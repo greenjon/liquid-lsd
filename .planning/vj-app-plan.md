@@ -68,6 +68,14 @@ Versioning: `VERSION` (the liquid-lsd commit) identifies a copy; `ContentUpdater
   `lsd.liquid.visuals` (Spaz Radio branch resynced, b699b73, now also carrying the current web engine). Emulator:
   picture, every tab, scene/hold/time controls, mic and phone-audio services start (no real sound in the
   emulator), control settings and the channel survive a restart. Not on a phone.
+- 2026-11-10 phase 4 built: `LsdPlayer` + `LsdPresentation` in lsd-visuals; the app's `ExternalOutput` moves the
+  picture to the first presentation display (one renderer, one feed), shows a 2 fps preview and the display's name
+  and mode on the phone, and brings the picture back on unplug; Audio tab switch "Picture on the external display".
+  Emulator with overlay displays (720p, 1080p): plug, unplug, replug, output keeps running with the app in the
+  background. Found and fixed on the way: `LsdVisuals` didn't pause when the activity stopped (no recomposition
+  while stopped). Not on real USB-C or Miracast hardware. Embed's 1280x720 render budget caps the external picture;
+  a 1080p/4K setting is open. Repo greenjon/liquid-lsd-android created PRIVATE (a public create was blocked by
+  the permission rules; the user can flip it).
 
 ## Phases
 
@@ -122,7 +130,7 @@ Spaz Radio ignores the new calls, so it doesn't need an update for this.
 - Privacy: audio is analysed on the phone only, never recorded or sent; say so in the permission prompts and
   the store listing.
 
-### 4. External display (USB-C, Cast, Miracast)
+### 4. External display (USB-C, Cast, Miracast) — built 2026-11-10
 
 - `DisplayManager.DisplayListener` + `MediaRouter`'s presentation display; when a second display appears,
   offer "Output to <display>" (or do it automatically, a setting).

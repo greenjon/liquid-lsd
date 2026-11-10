@@ -23,9 +23,13 @@ Compose app does).
 
 ## API (package `lsd.liquid.visuals`)
 
-- `LsdVisuals(settings, active, onFailed, modifier)`: the picture as a Compose element.
-- `LsdPage`: the plain WebView (`create`, `applySettings`, `pause`, `resume`, `feed`), for hosts outside
-  Compose such as a `Presentation` on an external display.
+- `LsdVisuals(settings, active, onFailed, modifier, control, onState, onReady)`: the picture as a Compose element.
+- `LsdPlayer`: one running picture outside Compose (settings, `active`, the audio feed, startup timeout,
+  renderer restarts); `LsdVisuals` wraps one. Only one player should be active at a time (one `PcmTap` listener).
+- `LsdPresentation`: the picture on a second display (USB-C/HDMI, Miracast, an overlay), its own `LsdPlayer`, and
+  `snapshot(width)` for a preview on the phone; `LsdPresentation.displays(ctx)` lists the displays it can use.
+- `LsdControl`, `LsdState`, `LsdCatalog`: drive the page's controls (web/embed.js) and read what it reports.
+- `LsdPage`: the bare WebView (`create`, `applySettings`, `pause`, `resume`, `feed`).
 - `PcmTap`: push 16-bit PCM in (`configure(rate, channels)`, `onBuffer(buffer)`) from any audio source; it
   reaches the page while `LsdVisuals` is active.
 - `VisualsSettings`: quality, reactivity, reduced motion, live, sync, content updates.

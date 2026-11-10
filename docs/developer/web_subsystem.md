@@ -263,8 +263,11 @@ release that bundles it has to declare engine 3 (`ContentUpdater.ENGINE` in `and
 Everything an Android app needs to show the visuals, shared by Spaz Radio and the VJ app (plan:
 `.planning/vj-app-plan.md`): `LsdPage` (a WebView serving the bundled `?embed` page from
 `https://appassets.androidplatform.net/visuals/`, downloaded content overlaid, the `LSDHost` bridge, the
-`setOption`/`pause`/`resume`/`feed` calls), `LsdVisuals` (the Compose element: lifecycle, startup timeout,
-renderer-crash restarts, battery-saver quality, the delayed audio feed), `PcmTap` (16-bit PCM in from any
+`setOption`/`pause`/`resume`/`feed` calls), `LsdPlayer` (one running picture outside Compose: startup timeout,
+renderer-crash restarts, battery-saver quality, the delayed audio feed), `LsdVisuals` (the Compose element around a
+player; it pauses from the lifecycle observer itself, since a stopped activity gets no recomposition),
+`LsdPresentation` (a player on a second display, with a `PixelCopy` snapshot for previews), `LsdControl` /
+`LsdState` / `LsdCatalog` (the host controls of section 6b), `PcmTap` (16-bit PCM in from any
 source, mono 40 ms chunks out), `VisualsSettings`, and the content updater of section 6c (`ContentStore`,
 `ContentUpdater`, `ContentUpdates`: daily WorkManager job `lsd-visuals-content-update`, which also cancels the
 name Spaz Radio 2.0 used). Package `lsd.liquid.visuals`.

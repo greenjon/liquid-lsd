@@ -16,6 +16,9 @@ class LsdControl {
     /** The page this control talks to, or null to detach. */
     fun attach(view: WebView?) { web = view }
 
+    /** Detaches from [view] only if it is the page attached (another player may have taken over). */
+    fun detach(view: WebView) { if (web === view) web = null }
+
     val attached: Boolean get() = web != null
 
     fun next() = call("next")
