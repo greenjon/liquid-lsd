@@ -57,6 +57,10 @@ Versioning: `VERSION` (the liquid-lsd commit) identifies a copy; `ContentUpdater
 - Emulator: `~/Android/Sdk/emulator/emulator -avd lsd_test -no-window -no-audio -gpu host`; launch the app with
   `adb shell monkey -p <package> -c android.intent.category.LAUNCHER 1` (`am start` misreports here).
 
+- 2026-11-10 phase 2 built: the control API and state push in `web/embed.js` (see web_subsystem.md 6b),
+  `tests/web/embed.spec.ts`; not published to spaz.org (nothing on the TV uses it). The lsd-visuals module
+  doesn't expose it yet: `LSDHost.state` and a command helper come with phase 3.
+
 ## Phases
 
 ### 1. Extract lsd-visuals (no behaviour change) — built 2026-11-09
@@ -73,7 +77,7 @@ Versioning: `VERSION` (the liquid-lsd commit) identifies a copy; `ContentUpdater
 5. Verify: unit tests, lint, debug + release builds (done); a run on the phone (picture, sync, pause, content
    update, live follow) done on the emulator, not on a phone. Release only when the user wants one.
 
-### 2. Control API in the engine (`web/embed.js`)
+### 2. Control API in the engine (`web/embed.js`) — built 2026-11-10
 
 `window.LSD` today: `feed`, `setOption`, `pause`, `resume`, `next`, `prev`, `hold`. The VJ app needs a control
 surface comparable to the web TV's viewer controls. Most of it exists inside `ui.js`/`autopilot.js` and only

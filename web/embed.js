@@ -3,7 +3,11 @@
 // audio in with feed(), pauses the picture when it is hidden, and changes options from its own settings.
 import { viewerState } from './ui.js';
 import { feedPCM, feedReady } from './dsp.js';
-import { advanceForeground, previousForeground, setHold, setHeavyAllowed, setReducedMotion, setRelayEnabled } from './autopilot.js';
+import { advanceForeground, previousForeground, randomForeground, setHold, setHeavyAllowed, setReducedMotion, setRelayEnabled,
+  tuneTo, rollScene, setHoldBars, setAutoRollBars, setEffects, nextFxChain, setChain, lockChain, lockTransition, setFollowMusic,
+  setBackgroundMode, stepBackground, tuneBackground, toggleSkip, setSkipped, restoreChannel, nowShowing, controlState,
+  contentCatalog, autopilotState } from './autopilot.js';
+import { cvState } from './dsp.js';
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const MODES = ['auto', 'on', 'off'];
@@ -78,9 +82,71 @@ export function installEmbedApi(hooks) {
     },
     pause: hooks.pause,
     resume: hooks.resume,
-    // Not used by Spaz Radio v1 (the picture is a background); here so touch controls can be added later.
-    next: () => advanceForeground(),
-    prev: () => previousForeground(),
-    hold: (on) => setHold(!!on),
+
+    // --- Controls (the VJ app). Spaz Radio uses none of these. Each returns what it did; every one does
+    // nothing during a live broadcast (state().live), as on the TV. The state is pushed after each. ---
+    /** What can be chosen: {scenes: [{channel, name, tags, source, pinnedChain, skipped, runnable}], backgrounds:
+     *  [{index, name, source, tags}], fxChains: [{id, name, inRotation}], transitions: [{id, name, inRotation}]}. */
+    catalog: () => contentCatalog(),
+    /** What is on air and how the controls are set (the object LSDHost.state receives). */
+    state,
+    next: () => after(advanceForeground()),
+    prev: () => after(previousForeground()),
+    random: () => after(randomForeground()),
+    /** Scene by channel number (catalog().scenes[i].channel): 'ok', 'live', 'range' or 'heavy'. */
+    channel: (n) => after(tuneTo(Math.round(Number(n)))),
+    /** Rerolls the scene on air's random parameters; false if it has none. */
+    roll: () => after(rollScene()),
+    /** HOLD: the scene stays until released (automatic scene changes off). */
+    hold: (on) => after(setHold(!!on)),
+    /** How long a scene holds, in bars (the background twice that). */
+    time: (bars) => after(setHoldBars(clamp(Math.round(Number(bars) || 16), 1, 256))),
+    /** Reroll the scene every this many bars; 0 = off. */
+    autoRoll: (bars) => after(setAutoRollBars(clamp(Math.round(Number(bars) || 0), 0, 256))),
+    effects: (on) => after(setEffects(!!on)),
+    nextChain: () => after(nextFxChain()),
+    /** FX chain by id on the scene on air (null = none): 'ok', 'off', 'live' or 'unknown'. */
+    chain: (id) => after(setChain(id ?? null)),
+    /** Every scene takes this chain until unlocked (null). */
+    lockChain: (id) => after(lockChain(id ?? null)),
+    /** Every scene change uses this transition until unlocked (null). */
+    lockTransition: (id) => after(lockTransition(id ?? null)),
+    /** Calm scenes in breakdowns, a cut on the drop, tempo-weighted picks. */
+    follow: (on) => after(setFollowMusic(!!on)),
+    /** 'scenes' (changes every 2x TIME), 'hold' (stays) or 'off'. */
+    backgroundMode: (mode) => after(setBackgroundMode(mode)),
+    nextBackground: () => after(stepBackground(1)),
+    prevBackground: () => after(stepBackground(-1)),
+    /** Background by index (catalog().backgrounds[i].index). */
+    background: (i) => after(tuneBackground(Math.round(Number(i)))),
+    /** Skips the scene on air (it no longer comes up by itself), or restores it if skipped. */
+    skip: () => after(toggleSkip()),
+    restore: (name) => after(restoreChannel(String(name))),
+    setSkipped: (names) => after(setSkipped(Array.isArray(names) ? names.map(String) : [])),
   });
+
+  // State to the host: on every change of what is on air or of a control, and once a second if the tempo,
+  // beat lock or live broadcast changed. LSDHost.state(json) is optional (Spaz Radio has none).
+  let lastPushed = '';
+  function state() {
+    const live = autopilotState.isLiveBroadcast;
+    const bpm = live ? autopilotState.clock.bpm : cvState.bpm;
+    return { ...nowShowing(), ...controlState(), bpm: Math.round((bpm || 0) * 10) / 10,
+      beatLocked: live ? !!autopilotState.clock.valid : !!cvState.beatLocked, paused: hooks.isPaused() };
+  }
+  function push() {
+    const host = window.LSDHost;
+    if (!host?.state) return;
+    const json = JSON.stringify(state());
+    if (json === lastPushed) return;
+    lastPushed = json;
+    try { host.state(json); } catch (err) { console.warn('[lsd] LSDHost.state:', err); }
+  }
+  /** Pushes the state once a command has acted (some are async), and hands back its result. */
+  function after(result) {
+    Promise.resolve(result).finally(() => setTimeout(push, 0));
+    return result;
+  }
+  window.addEventListener('lsd-now-showing', () => setTimeout(push, 0));
+  setInterval(push, 1000);
 }

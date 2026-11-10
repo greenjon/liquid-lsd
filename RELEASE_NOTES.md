@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Controls for Apps That Show the Visuals (`web/embed.js`, `web/autopilot.js`, `tests/web/embed.spec.ts`)
+- **New: an app showing the web TV's picture can now drive it.** Scenes by channel, next/previous/random, ROLL, HOLD and TIME, auto roll, effects on/off, an FX chain on the scene now or locked for every scene, a locked transition, Follow Music, the background (mode, next/previous, or one by name), and channel skips. The page reports what is on air, the tempo and the settings back to the app. This is for the coming VJ app; the web TV and Spaz Radio look and behave as before.
+
 ### The Web TV Works Offline (`web/sw.js`, `web/ui.js`, `web/dsp.js`, `web/gallery.js`, `web/graph.js`, `tests/web/pwa.spec.ts`)
 - **New: after one visit the web TV runs with no network.** It now keeps every scene, effect and transition (about 290 files, under 2 MB) and the last 60 gallery photos it showed, and checks them for updates every few hours. Before, it kept only what it had already shown, so offline most scene changes failed. Offline it says `OFFLINE · A FOR MICROPHONE`: turn the microphone on and it plays on the sound in the room (TV v31).
 - **Fixed: offline, the microphone couldn't be turned on.** A radio that failed to start was taken for a browser blocking sound, so the TV kept asking for a click and refused the microphone; and the microphone's sound was never analysed if the radio hadn't played first. Both now work.
