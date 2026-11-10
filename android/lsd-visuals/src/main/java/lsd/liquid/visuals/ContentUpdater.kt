@@ -1,4 +1,4 @@
-package org.liquidlsd.visuals
+package lsd.liquid.visuals
 
 import com.google.gson.JsonParser
 import java.io.File

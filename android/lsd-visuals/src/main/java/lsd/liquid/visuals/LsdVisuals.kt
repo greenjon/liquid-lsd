@@ -1,4 +1,4 @@
-package org.liquidlsd.visuals
+package lsd.liquid.visuals
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -41,6 +41,8 @@ private const val FIRST_LOOK_GRACE_MS = 6_000L // the first scene needs a moment
  * [PcmTap] -> `LSD.feed()`, held back by [VisualsSettings.syncMs]. The view takes no touches. Drawing and analysis
  * run only while [active] and the app is on screen. [onFailed] fires if the picture can't start (no WebView, no
  * WebGL2, repeated renderer crashes, or no sign of life within 20 s), so the caller can show something else.
+ * [control] (optional) drives the scenes, effects and backgrounds; [onState] (optional) receives what is on air
+ * and how the controls are set whenever that changes.
  */
 @Composable
 fun LsdVisuals(
@@ -48,6 +50,8 @@ fun LsdVisuals(
     active: Boolean,
     onFailed: () -> Unit,
     modifier: Modifier = Modifier,
+    control: LsdControl? = null,
+    onState: ((LsdState) -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -60,6 +64,14 @@ fun LsdVisuals(
     val powerSave = rememberPowerSave(context)
     val currentSettings by rememberUpdatedState(settings)
     val currentOnFailed by rememberUpdatedState(onFailed)
+    val currentOnState by rememberUpdatedState(onState)
+    val wantsState = onState != null
+
+    // The control talks to the page only once it is up, and lets go of it when it goes.
+    DisposableEffect(control, webView, ready) {
+        control?.attach(if (ready) webView else null)
+        onDispose { control?.attach(null) }
+    }
 
     DisposableEffect(lifecycle) {
         val observer = LifecycleEventObserver { _, event ->
@@ -143,6 +155,7 @@ fun LsdVisuals(
                                 if (restarts < MAX_RESTARTS) restarts++ else currentOnFailed()
                             }
                         },
+                        onState = if (wantsState) { json -> LsdState.parse(json)?.let { currentOnState?.invoke(it) } } else null,
                     ).also { w -> handler.post { webView = w } } // state is not written during composition
                 } catch (e: Exception) { // no WebView installed or it is being updated
                     Log.w(TAG, "WebView unavailable", e)

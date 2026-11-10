@@ -1,4 +1,4 @@
-package org.liquidlsd.visuals
+package lsd.liquid.visuals
 
 import java.nio.ByteBuffer
 import java.nio.ByteOrder

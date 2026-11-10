@@ -1,4 +1,4 @@
-package org.liquidlsd.visuals
+package lsd.liquid.visuals
 
 import android.content.Context
 import android.util.Base64

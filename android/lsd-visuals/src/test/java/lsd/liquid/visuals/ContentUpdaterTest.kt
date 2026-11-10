@@ -1,4 +1,4 @@
-package org.liquidlsd.visuals
+package lsd.liquid.visuals
 
 import com.google.gson.JsonObject
 import org.junit.Assert.assertEquals

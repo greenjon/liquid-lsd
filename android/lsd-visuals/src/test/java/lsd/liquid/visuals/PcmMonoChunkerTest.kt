@@ -1,4 +1,4 @@
-package org.liquidlsd.visuals
+package lsd.liquid.visuals
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

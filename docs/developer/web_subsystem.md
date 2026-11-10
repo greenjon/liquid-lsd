@@ -267,7 +267,7 @@ Everything an Android app needs to show the visuals, shared by Spaz Radio and th
 renderer-crash restarts, battery-saver quality, the delayed audio feed), `PcmTap` (16-bit PCM in from any
 source, mono 40 ms chunks out), `VisualsSettings`, and the content updater of section 6c (`ContentStore`,
 `ContentUpdater`, `ContentUpdates`: daily WorkManager job `lsd-visuals-content-update`, which also cancels the
-name Spaz Radio 2.0 used). Package `org.liquidlsd.visuals`.
+name Spaz Radio 2.0 used). Package `lsd.liquid.visuals`.
 
 Apps carry a committed copy as a Gradle module (`include(":lsd-visuals")`), made by
 `scripts/sync_lsd_visuals.sh APP_DIR [--no-gallery]`: it copies the module, writes the engine (what `?embed`

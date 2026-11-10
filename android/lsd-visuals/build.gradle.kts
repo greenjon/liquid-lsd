@@ -11,7 +11,7 @@ plugins {
 }
 
 android {
-    namespace = "org.liquidlsd.visuals"
+    namespace = "lsd.liquid.visuals"
     compileSdk = 36
 
     defaultConfig {

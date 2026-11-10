@@ -66,7 +66,7 @@ Versioning: `VERSION` (the liquid-lsd commit) identifies a copy; `ContentUpdater
 ### 1. Extract lsd-visuals (no behaviour change) — built 2026-11-09
 
 1. `android/lsd-visuals/` in liquid-lsd (no Gradle build of its own; it builds and tests inside an app).
-   Package `org.liquidlsd.visuals`.
+   Package `lsd.liquid.visuals`.
 2. Moved in from Spaz Radio: `VisualizerView`, split into `LsdPage` (the plain WebView, for a `Presentation`
    later) and `LsdVisuals` (Compose); `AssetClient`, the bridge (`HostBridge`), `ContentStore`, `ContentUpdater`,
    `ContentUpdates` (server and key unchanged: both apps use spaz.org/tv), `PcmTap`/`PcmMonoChunker`,

@@ -21,7 +21,7 @@ implementation(project(":lsd-visuals"))
 The host build must have the Android, Kotlin Android and Compose compiler plugins on its classpath (any
 Compose app does).
 
-## API (package `org.liquidlsd.visuals`)
+## API (package `lsd.liquid.visuals`)
 
 - `LsdVisuals(settings, active, onFailed, modifier)`: the picture as a Compose element.
 - `LsdPage`: the plain WebView (`create`, `applySettings`, `pause`, `resume`, `feed`), for hosts outside
