@@ -264,6 +264,33 @@ abstract class PrepareDefaultAssetsTask : DefaultTask() {
     @get:InputDirectory
     abstract val defaultsDir: DirectoryProperty
 
+    /** web/presets: the `web-*.lsd` presets (scripts/gen_web_presets.py) ship as desktop factory presets too. */
+    @get:InputDirectory
+    abstract val webPresetsDir: DirectoryProperty
+
+    /** web/fxchains: the `web-*.lsdfxchain` chains are the desktop's factory FX chains. */
+    @get:InputDirectory
+    abstract val webFxChainsDir: DirectoryProperty
+
+    /**
+     * Copies web/<dir>/web-*.<ext> into [outDir] without the `web-` prefix (file name and "name") or the "web" tag,
+     * which mean nothing on the desktop. Returns the shipped file names.
+     */
+    private fun shipWebContent(inDir: File, ext: String, outDir: File): List<String> {
+        val files = inDir.listFiles { f -> f.isFile && f.name.startsWith("web-") && f.extension.lowercase() == ext }
+            ?.sortedBy { it.name } ?: emptyList()
+        return files.map { f ->
+            @Suppress("UNCHECKED_CAST")
+            val dto = groovy.json.JsonSlurper().parse(f) as MutableMap<String, Any?>
+            dto["name"] = (dto["name"] as? String ?: f.nameWithoutExtension).removePrefix("web-")
+            (dto["tags"] as? List<*>)?.let { tags -> dto["tags"] = tags.filter { it != "web" } }
+            val outName = f.name.removePrefix("web-")
+            if (File(outDir, outName).exists()) throw GradleException("Factory content name clash: $outName (from ${f.name})")
+            File(outDir, outName).writeText(groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(dto)) + "\n")
+            outName
+        }
+    }
+
     @get:Input
     abstract val appVersion: Property<String>
 
@@ -289,12 +316,15 @@ abstract class PrepareDefaultAssetsTask : DefaultTask() {
             presetsIn.listFiles { f -> f.isFile && f.extension.lowercase() == "lsd" }?.sortedBy { it.name } ?: emptyList<File>()
         } else emptyList<File>()
 
+        presetsOut.deleteRecursively()
+        presetsOut.mkdirs()
         val presetManifest = File(presetsOut, "manifest.txt")
         val presetLines = mutableListOf<String>()
         presetFiles.forEach { f ->
             f.copyTo(File(presetsOut, f.name), overwrite = true)
             presetLines.add(f.name)
         }
+        presetLines += shipWebContent(webPresetsDir.get().asFile, "lsd", presetsOut)
         // the curated Garden flames (defaults/presets/garden/**): .lsd presets and their thumbnails, keeping their sub-folders
         val gardenIn = File(presetsIn, "garden")
         if (gardenIn.exists()) {
@@ -324,12 +354,15 @@ abstract class PrepareDefaultAssetsTask : DefaultTask() {
             fxChainsIn.listFiles { f -> f.isFile && f.extension.lowercase() == "lsdfxchain" }?.sortedBy { it.name } ?: emptyList<File>()
         } else emptyList<File>()
 
+        fxChainsOut.deleteRecursively()
+        fxChainsOut.mkdirs()
         val fxChainManifest = File(fxChainsOut, "manifest.txt")
         val fxChainLines = mutableListOf<String>()
         fxChainFiles.forEach { f ->
             f.copyTo(File(fxChainsOut, f.name), overwrite = true)
             fxChainLines.add(f.name)
         }
+        fxChainLines += shipWebContent(webFxChainsDir.get().asFile, "lsdfxchain", fxChainsOut)
         fxChainManifest.writeText(fxChainLines.joinToString("\n"))
 
         val transitionsOut = File(outBase, "default_transition_presets")
@@ -373,6 +406,8 @@ val prepareDefaultAssets = tasks.register<PrepareDefaultAssetsTask>("prepareDefa
     group = "build"
     description = "Prepares bundled presets and playlists with manifests for classpath packaging."
     defaultsDir.set(layout.projectDirectory.dir("defaults"))
+    webPresetsDir.set(layout.projectDirectory.dir("web/presets"))
+    webFxChainsDir.set(layout.projectDirectory.dir("web/fxchains"))
     appVersion.set(project.version.toString())
     outputDir.set(layout.buildDirectory.dir("generated/default_assets"))
 }

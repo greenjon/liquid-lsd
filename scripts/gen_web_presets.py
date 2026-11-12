@@ -1190,8 +1190,9 @@ preset("web-rd-ambient", "reaction_diffusion", {
 
 
 # ---------------------------------------------------------------- batch 7: FX chains
-# Reactive web versions of the desktop's stock chains (web/content/fxchains/, which have no modulation)
-# plus chains for the filters no web chain used yet. No strobes: a fast full-screen flash on a public
+# Reactive versions of the desktop's former stock chains, plus chains for the filters no other chain used yet.
+# The desktop ships every web-* chain (and preset) as factory content, without the prefix (build.gradle.kts).
+# No strobes: a fast full-screen flash on a public
 # stream is a photosensitivity risk, and video_strobe's rate is a TIME multiplier anyway.
 chain("web-cyberpunk", ["pixel", "crt", "kick", "beat", "bass", "high"],
       slot("pixelate", {"pixelSize": (4.0, kick(0.06, 200)), "latticeMode": 0.0, "colorDepth": 16.0}),

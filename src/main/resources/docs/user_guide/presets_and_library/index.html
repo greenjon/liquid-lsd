@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
     
     
       
@@ -655,10 +655,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#bundled-stock-fx-chains" class="md-nav__link">
+  <a href="#factory-fx-chains" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Bundled Stock FX Chains
+        Factory FX Chains
       
     </span>
   </a>
@@ -1760,10 +1760,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#bundled-stock-fx-chains" class="md-nav__link">
+  <a href="#factory-fx-chains" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Bundled Stock FX Chains
+        Factory FX Chains
       
     </span>
   </a>
@@ -2028,7 +2028,7 @@
 <p>The <code>[ Sources ]</code> list shows two kinds of row side by side, each marked with its own icon:</p>
 <ul>
 <li><strong>Stock Sources</strong> — The bundled generators (see <a href="../visual_sources/">Visual Sources</a> for the list), plus external video streams and any custom sources dropped into your configured shader directories. They load straight to a deck's source stage with their shader's default parameters; they can't be added to a playlist or queue.</li>
-<li><strong>Saved Presets (<code>.lsd</code>)</strong> — A full deck preset: the source plus every parameter value, modulation connection, and note. Its row shows the source it plays before its tags; a preset whose source isn't installed (or failed to compile) shows ⚠ and won't load.</li>
+<li><strong>Saved Presets (<code>.lsd</code>)</strong> — A full deck preset: the source plus every parameter value, modulation connection, and note. Its row shows the source it plays before its tags; a preset whose source isn't installed (or failed to compile) shows ⚠ and won't load. A new library comes with over a hundred factory presets that move with the music (the tags say how: <code>kick</code>, <code>bass</code>, <code>beat</code>, <code>bar</code>, <code>ambient</code>, <code>groove</code>, <code>hard</code>...), plus the curated Garden flames; <strong>Restore Factory Presets</strong> brings back any you deleted, or adds new ones to an older library.</li>
 <li><strong>External Video</strong> — Live Spout, Syphon or PipeWire streams running right now, one row each in the <strong>External video</strong> folder (empty when none is active). Load one like a stock source (double-click, the menu, or drag it onto a deck); it appears and disappears as the stream starts and stops. Streams are not files, so they have no favorites, playlists or queues and cannot be saved as presets.</li>
 </ul>
 <p>Pick a section in the folder tree to show only stock sources, saved presets or live streams. Use the <strong>New preset</strong> button above the list to eject a deck to blank so you can build a new preset on it (see <a href="#saving-a-preset">Saving a preset</a> above).</p>
@@ -2067,73 +2067,196 @@
 <li><strong>Double-click</strong>: Loads into the dominant deck's first vacant slot (singles) or overwrites all 3 slots (chains). If all 3 slots are full, a single effect asks which slot to overwrite. FX always goes to the deck the crossfader is on (it is audible now); presets and generators go to the other deck (the next look). At exactly the middle of the crossfader, FX goes to Deck A and presets to Deck B.</li>
 <li><strong>Right-click or ⋮ menu</strong>: <code>Load to &gt; Deck [A|B|BG|PV] / Master FX &gt; Slot [1|2|3]</code> (stock filters and singles) or <code>Load to Deck [A|B|BG|PV] / Master FX</code> (chains), plus <strong>Add to A/B FX Queue</strong>, <strong>Add to BG FX Queue</strong>, <strong>Add to '<playlist>'</strong>, <strong>Rename...</strong>, <strong>Clone</strong>, <strong>Delete...</strong> and <strong>Reveal in File Manager</strong>. Deleting a saved effect also removes it from the queues and playlists.</li>
 </ul>
-<h4 id="bundled-stock-fx-chains">Bundled Stock FX Chains</h4>
-<p>Liquid LSD includes 16 pre-calibrated 3-slot FX chains in <code>library/fx_chains/</code> designed for live club and festival VJ performance:</p>
-<ol>
-<li><strong>Hyperspace Trip</strong> (<code>hyperspace_trip.lsdfxchain</code>):</li>
-<li><em>Slots</em>: <code>kaleidoscope</code> → <code>feedback</code> → <code>gradient_map</code></li>
-<li><em>Vibe</em>: Classic psychedelic trance / festival tunnel breakdown with multi-axis kaleidoscopic folding, dithered zoom burst, and filmic Oklab contrast roll-off.</li>
-<li><strong>The Drop Weapon</strong> (<code>the_drop_weapon.lsdfxchain</code>):</li>
-<li><em>Slots</em>: <code>radial_blur</code> → <code>video_strobe</code> → <code>rgb_split</code></li>
-<li><em>Vibe</em>: High-intensity EDM/bass music drop impact with directional motion streaks, rhythmic beat flash gating, and chromatic aberration impact.</li>
-<li><strong>Cyberpunk 1984</strong> (<code>cyberpunk_1984.lsdfxchain</code>):</li>
-<li><em>Slots</em>: <code>pixelate</code> → <code>retro_crt</code> → <code>rgb_split</code></li>
-<li><em>Vibe</em>: Retro-futuristic dystopian terminal aesthetic with honeycomb pixel lattice, curved CRT phosphor scanlines, and duotone cyberpunk neon grading.</li>
-<li><strong>Liquid Mercury</strong> (<code>liquid_mercury.lsdfxchain</code>):</li>
-<li><em>Slots</em>: <code>luma_displace</code> → <code>fluid_smear</code> → <code>bloom</code></li>
-<li><em>Vibe</em>: Viscous organic fluid and metallic chrome distortion with concentric liquid ripples, curl advection smearing, and surface normal refraction.</li>
-<li><strong>Neon Wireframe</strong> (<code>neon_wireframe.lsdfxchain</code>):</li>
-<li><em>Slots</em>: <code>neon_edge</code> → <code>directional_blur</code> → <code>feedback</code></li>
-<li><em>Vibe</em>: Glowing electric neon vector graphics with orientation-to-hue Sobel edge glow, spherical optical lens bulging, and soft high-pass bloom.</li>
-<li><strong>Wormhole Flight</strong> (<code>wormhole_flight.lsdfxchain</code>):</li>
-<li><em>Slots</em>: <code>polar_tunnel</code> → <code>pinch_bulge</code> → <code>bloom</code></li>
-<li><em>Vibe</em>: Deep space infinite warp portal with aspect-preserving log-polar vortex, zoom burst trails, and recursive feedback rotation.</li>
-<li><strong>FLIR Predator Vision</strong> (<code>flir_predator_vision.lsdfxchain</code>):</li>
-<li><em>Slots</em>: <code>thermal_scanner</code> → <code>retro_crt</code> → <code>video_strobe</code></li>
-<li><em>Vibe</em>: Military reconnaissance and sci-fi tactical optics with FLIR Ironbow heat mapping, sensor noise grain, horizontal smear, and quantized block mosaic.</li>
-<li><strong>Liquid Chrome Dimension</strong> (<code>liquid_chrome_dimension.lsdfxchain</code>):</li>
-<li><em>Slots</em>: <code>wave_displace</code> → <code>mirror_sphere</code> → <code>color_levels</code></li>
-<li><em>Vibe</em>: 3D raytraced floating chrome orb reflecting the scene with liquid surface turbulence and punchy high-contrast color grading.</li>
-<li><strong>2D to 3D Elevation with Feedback</strong> (<code>2d_to_3d_elevation_with_feedback.lsdfxchain</code>):</li>
-<li><em>Slots</em>: <code>3d_elevation</code> → <code>feedback</code> → <code>bloom</code></li>
-<li><em>Vibe</em>: The iconic Liquid LSD topological displacement chain featuring heightmap mesh rendering, recursive rotation feedback, and ACES filmic grading.</li>
-<li><strong>Laser Concert Anamorphic</strong> (<code>laser_concert_anamorphic.lsdfxchain</code>):<ul>
-<li><em>Slots</em>: <code>anamorphic_streak</code> → <code>bloom</code> → <code>color_levels</code></li>
-<li><em>Vibe</em>: Ultra-widescreen concert stage lighting with horizontal laser glare, soft volumetric bloom, and high-contrast filmic punch.</li>
-</ul>
-</li>
-<li><strong>Pop-Art Comic Print</strong> (<code>pop_art_comic_print.lsdfxchain</code>):<ul>
-<li><em>Slots</em>: <code>neon_edge</code> → <code>halftone</code> → <code>gradient_map</code></li>
-<li><em>Vibe</em>: Authentic Roy Lichtenstein / vintage comic book print with black ink contours, 4-plate CMYK dot rosettes, and duotone pop grading.</li>
-</ul>
-</li>
-<li><strong>Grindhouse VHS Bootleg</strong> (<code>grindhouse_vhs_bootleg.lsdfxchain</code>):<ul>
-<li><em>Slots</em>: <code>vhs_glitch</code> → <code>retro_crt</code> → <code>color_levels</code></li>
-<li><em>Vibe</em>: Gritty 80s horror / VHS bootleg tape with magnetic tracking jitter, head-switching bars, phosphor scanlines, and tape saturation.</li>
-</ul>
-</li>
-<li><strong>Prismatic Crystal Kaleidoscope</strong> (<code>prismatic_crystal_kaleidoscope.lsdfxchain</code>):<ul>
-<li><em>Slots</em>: <code>faceted_glass</code> → <code>kaleidoscope</code> → <code>rgb_split</code></li>
-<li><em>Vibe</em>: Shattered diamond prism reflection with polyhedral symmetry and spectral dispersion.</li>
-</ul>
-</li>
-<li><strong>Cosmic Black Hole Vortex</strong> (<code>cosmic_black_hole_vortex.lsdfxchain</code>):<ul>
-<li><em>Slots</em>: <code>vortex_swirl</code> → <code>luma_displace</code> → <code>polar_tunnel</code></li>
-<li><em>Vibe</em>: Gravitational accretion singularity with logarithmic space swirl, surface normal marbling, and infinite log-polar warp.</li>
-</ul>
-</li>
-<li><strong>Subtle Optical Warmth</strong> (<code>subtle_optical_warmth.lsdfxchain</code> — the default Master FX):<ul>
-<li><em>Slots</em>: <code>color_levels</code> → <code>retro_crt</code> → <code>bloom</code></li>
-<li><em>Vibe</em>: Gentle tape/phosphor warming with contrast roll-off, subtle enough to leave on the master all night.</li>
-</ul>
-</li>
-<li><strong>Digital Bitcrush Mosaic</strong> (<code>digital_bitcrush_mosaic.lsdfxchain</code>):<ul>
-<li><em>Slots</em>: <code>pixelate</code> → <code>rgb_split</code> → <code>video_strobe</code></li>
-<li><em>Vibe</em>: Lattice quantization and spectral glitch.</li>
-</ul>
-</li>
-</ol>
-<p>On a fresh install, Master FX starts with <em>Subtle Optical Warmth</em>, Deck A with <em>Liquid Mercury</em>, Deck B with <em>Liquid Chrome Dimension</em>, Deck BG with <em>Hyperspace Trip</em>, and Deck PV with <em>Prismatic Crystal Kaleidoscope</em>.</p>
+<h4 id="factory-fx-chains">Factory FX Chains</h4>
+<p>Liquid LSD ships 35 FX chains in <code>library/fx_chains/</code>. Most of them move with the music: a slot parameter is driven by the kick, the bass, the hi-hats, the beat or the bar, and a few open up only on a big bass hit (<em>bass-gated</em>). The tags say what each chain reacts to, so searching <code>kick</code> or <code>bar</code> in the FX list finds them. Unused slots are left empty for you to fill.</p>
+<table>
+<thead>
+<tr>
+<th>Chain</th>
+<th>Slots</th>
+<th>Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>bitcrush</strong></td>
+<td><code>pixelate</code> → <code>rgb_split</code></td>
+<td>pixel, glitch, kick, bass-gated</td>
+</tr>
+<tr>
+<td><strong>blackhole</strong></td>
+<td><code>vortex_swirl</code> → <code>luma_displace</code> → <code>polar_tunnel</code></td>
+<td>swirl, tunnel, bass, high, kick, beat</td>
+</tr>
+<tr>
+<td><strong>bloom</strong></td>
+<td><code>bloom</code> → <code>anamorphic_streak</code></td>
+<td>bloom, streak, kick</td>
+</tr>
+<tr>
+<td><strong>build-drop</strong></td>
+<td><code>bloom</code> → <code>rgb_split</code></td>
+<td>build, bar, bass-gated</td>
+</tr>
+<tr>
+<td><strong>chrome</strong></td>
+<td><code>wave_displace</code> → <code>mirror_sphere</code> → <code>color_levels</code></td>
+<td>mirror, wave, beat, bass, high, kick</td>
+</tr>
+<tr>
+<td><strong>crt</strong></td>
+<td><code>retro_crt</code></td>
+<td>crt, beat, kick, amp</td>
+</tr>
+<tr>
+<td><strong>cyberpunk</strong></td>
+<td><code>pixelate</code> → <code>retro_crt</code> → <code>rgb_split</code></td>
+<td>pixel, crt, kick, beat, bass, high</td>
+</tr>
+<tr>
+<td><strong>drop-strobe</strong></td>
+<td><code>invert</code> → <code>color_levels</code></td>
+<td>strobe, bass-gated, kick</td>
+</tr>
+<tr>
+<td><strong>drop-weapon</strong></td>
+<td><code>radial_blur</code> → <code>rgb_split</code> → <code>pinch_bulge</code></td>
+<td>blur, glitch, bass-gated, kick, beat</td>
+</tr>
+<tr>
+<td><strong>elevation</strong></td>
+<td><code>3d_elevation</code> → <code>color_levels</code></td>
+<td>3d, bar, bass, kick, mid</td>
+</tr>
+<tr>
+<td><strong>flir</strong></td>
+<td><code>thermal_scanner</code> → <code>retro_crt</code></td>
+<td>thermal, crt, bass, high, bar</td>
+</tr>
+<tr>
+<td><strong>glitch</strong></td>
+<td><code>rgb_split</code> → <code>vhs_glitch</code></td>
+<td>glitch, high, bass-gated</td>
+</tr>
+<tr>
+<td><strong>halftone-beat</strong></td>
+<td><code>halftone</code></td>
+<td>halftone, beat, bar, mid</td>
+</tr>
+<tr>
+<td><strong>hyperspace</strong></td>
+<td><code>kaleidoscope</code> → <code>feedback</code> → <code>gradient_map</code></td>
+<td>kaleidoscope, feedback, kick, bar</td>
+</tr>
+<tr>
+<td><strong>ink</strong></td>
+<td><code>fluid_smear</code> → <code>gradient_map</code></td>
+<td>liquid, palette, bass, mid, bar</td>
+</tr>
+<tr>
+<td><strong>kaleido</strong></td>
+<td><code>kaleidoscope</code> → <code>feedback</code></td>
+<td>kaleidoscope, feedback</td>
+</tr>
+<tr>
+<td><strong>laser</strong></td>
+<td><code>anamorphic_streak</code> → <code>bloom</code> → <code>color_levels</code></td>
+<td>streak, bloom, kick, bass, bass-gated</td>
+</tr>
+<tr>
+<td><strong>lumakey</strong></td>
+<td><code>luma_key</code> → <code>color_levels</code></td>
+<td>key, kick</td>
+</tr>
+<tr>
+<td><strong>mercury</strong></td>
+<td><code>luma_displace</code> → <code>fluid_smear</code></td>
+<td>liquid, bass, mid, high</td>
+</tr>
+<tr>
+<td><strong>mirror</strong></td>
+<td><code>mirror_sphere</code></td>
+<td>mirror, kick, bass, beat</td>
+</tr>
+<tr>
+<td><strong>motion</strong></td>
+<td><code>directional_blur</code></td>
+<td>blur, kick, bar</td>
+</tr>
+<tr>
+<td><strong>neon</strong></td>
+<td><code>neon_edge</code> → <code>directional_blur</code> → <code>feedback</code></td>
+<td>edges, feedback, kick, bass, high, bar</td>
+</tr>
+<tr>
+<td><strong>popart</strong></td>
+<td><code>neon_edge</code> → <code>halftone</code> → <code>gradient_map</code></td>
+<td>halftone, edges, kick, bass, beat, bar</td>
+</tr>
+<tr>
+<td><strong>prism</strong></td>
+<td><code>faceted_glass</code> → <code>kaleidoscope</code> → <code>rgb_split</code></td>
+<td>glass, kaleidoscope, bass, high, kick, bar</td>
+</tr>
+<tr>
+<td><strong>punch</strong></td>
+<td><code>radial_blur</code> → <code>pinch_bulge</code> → <code>feedback</code></td>
+<td>blur, pinch, kick, beat</td>
+</tr>
+<tr>
+<td><strong>ripple-drop</strong></td>
+<td><code>wave_displace</code> → <code>rgb_split</code></td>
+<td>wave, bass-gated, bar, high</td>
+</tr>
+<tr>
+<td><strong>thermal-drop</strong></td>
+<td><code>thermal_scanner</code></td>
+<td>thermal, bass-gated</td>
+</tr>
+<tr>
+<td><strong>trails-chroma</strong></td>
+<td><code>feedback</code></td>
+<td>feedback, chroma, high, beat</td>
+</tr>
+<tr>
+<td><strong>trails-drift</strong></td>
+<td><code>feedback</code></td>
+<td>feedback, bar, mid</td>
+</tr>
+<tr>
+<td><strong>trails</strong></td>
+<td><code>feedback</code></td>
+<td>feedback, kick, bar</td>
+</tr>
+<tr>
+<td><strong>tunnel</strong></td>
+<td><code>polar_tunnel</code></td>
+<td>tunnel, beat, bass</td>
+</tr>
+<tr>
+<td><strong>vhs</strong></td>
+<td><code>vhs_glitch</code> → <code>retro_crt</code> → <code>color_levels</code></td>
+<td>vhs, crt, kick, mid, high</td>
+</tr>
+<tr>
+<td><strong>vortex</strong></td>
+<td><code>vortex_swirl</code> → <code>feedback</code></td>
+<td>swirl, kick, beat</td>
+</tr>
+<tr>
+<td><strong>warmth</strong></td>
+<td><code>color_levels</code> → <code>retro_crt</code> → <code>bloom</code></td>
+<td>grade, crt, bass, mid, kick</td>
+</tr>
+<tr>
+<td><strong>wormhole</strong></td>
+<td><code>polar_tunnel</code> → <code>pinch_bulge</code> → <code>bloom</code></td>
+<td>tunnel, bloom, bass, bar, kick, beat</td>
+</tr>
+</tbody>
+</table>
+<p>On a fresh install, Master FX starts with <em>warmth</em>, Deck A with <em>mercury</em>, Deck B with <em>chrome</em>, Deck BG with <em>hyperspace</em>, and Deck PV with <em>prism</em>. The decks start playing too: <em>groove-mandala</em> on A (on air), <em>tunnel-synthwave</em> on B, <em>ambient-tides</em> on BG and <em>julia-groove</em> on PV. Eject a deck to start from a blank one.</p>
+<p>An existing library keeps the chains it already has. Choose <strong>Restore Factory Presets</strong> (Sources tab <strong>⋮</strong>) to add the new ones; it never overwrites a file you have.</p>
 <h3 id="fx-playlists-lsdfxplay">FX Playlists (<code>.lsdfxplay</code>)</h3>
 <p>FX playlists are entries under <strong>Playlists</strong> in the FX tree. Select one to edit it like a preset playlist: drag singles/chains in from the list to insert them, drag rows to reorder, and double-click an entry to apply it. Entries whose file is gone are listed below the playlist's rows instead, with <strong>Find</strong>, <strong>Locate...</strong> and <strong>Remove</strong> (see <a href="#playlists-setlists">Playlists</a>).</p>
 <h3 id="ab-fx-queues-ab-and-bg">A/B FX Queues (A/B and BG)</h3>
@@ -2372,7 +2495,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
       
     
   </body>

@@ -106,7 +106,7 @@ The same browser applies to a slot when you click one on a row (see above); then
 The `[ Sources ]` list shows two kinds of row side by side, each marked with its own icon:
 
 - **Stock Sources** — The bundled generators (see [Visual Sources](visual_sources.md) for the list), plus external video streams and any custom sources dropped into your configured shader directories. They load straight to a deck's source stage with their shader's default parameters; they can't be added to a playlist or queue.
-- **Saved Presets (`.lsd`)** — A full deck preset: the source plus every parameter value, modulation connection, and note. Its row shows the source it plays before its tags; a preset whose source isn't installed (or failed to compile) shows ⚠ and won't load.
+- **Saved Presets (`.lsd`)** — A full deck preset: the source plus every parameter value, modulation connection, and note. Its row shows the source it plays before its tags; a preset whose source isn't installed (or failed to compile) shows ⚠ and won't load. A new library comes with over a hundred factory presets that move with the music (the tags say how: `kick`, `bass`, `beat`, `bar`, `ambient`, `groove`, `hard`...), plus the curated Garden flames; **Restore Factory Presets** brings back any you deleted, or adds new ones to an older library.
 - **External Video** — Live Spout, Syphon or PipeWire streams running right now, one row each in the **External video** folder (empty when none is active). Load one like a stock source (double-click, the menu, or drag it onto a deck); it appears and disappears as the stream starts and stops. Streams are not files, so they have no favorites, playlists or queues and cannot be saved as presets.
 
 Pick a section in the folder tree to show only stock sources, saved presets or live streams. Use the **New preset** button above the list to eject a deck to blank so you can build a new preset on it (see [Saving a preset](#saving-a-preset) above).
@@ -146,60 +146,51 @@ Pick a section in the folder tree to show only stock filters, singles or chains.
 - **Double-click**: Loads into the dominant deck's first vacant slot (singles) or overwrites all 3 slots (chains). If all 3 slots are full, a single effect asks which slot to overwrite. FX always goes to the deck the crossfader is on (it is audible now); presets and generators go to the other deck (the next look). At exactly the middle of the crossfader, FX goes to Deck A and presets to Deck B.
 - **Right-click or ⋮ menu**: `Load to > Deck [A|B|BG|PV] / Master FX > Slot [1|2|3]` (stock filters and singles) or `Load to Deck [A|B|BG|PV] / Master FX` (chains), plus **Add to A/B FX Queue**, **Add to BG FX Queue**, **Add to '<playlist>'**, **Rename...**, **Clone**, **Delete...** and **Reveal in File Manager**. Deleting a saved effect also removes it from the queues and playlists.
 
-#### Bundled Stock FX Chains
+#### Factory FX Chains
 
-Liquid LSD includes 16 pre-calibrated 3-slot FX chains in `library/fx_chains/` designed for live club and festival VJ performance:
+Liquid LSD ships 35 FX chains in `library/fx_chains/`. Most of them move with the music: a slot parameter is driven by the kick, the bass, the hi-hats, the beat or the bar, and a few open up only on a big bass hit (*bass-gated*). The tags say what each chain reacts to, so searching `kick` or `bar` in the FX list finds them. Unused slots are left empty for you to fill.
 
-1. **Hyperspace Trip** (`hyperspace_trip.lsdfxchain`):
-   - *Slots*: `kaleidoscope` → `feedback` → `gradient_map`
-   - *Vibe*: Classic psychedelic trance / festival tunnel breakdown with multi-axis kaleidoscopic folding, dithered zoom burst, and filmic Oklab contrast roll-off.
-2. **The Drop Weapon** (`the_drop_weapon.lsdfxchain`):
-   - *Slots*: `radial_blur` → `video_strobe` → `rgb_split`
-   - *Vibe*: High-intensity EDM/bass music drop impact with directional motion streaks, rhythmic beat flash gating, and chromatic aberration impact.
-3. **Cyberpunk 1984** (`cyberpunk_1984.lsdfxchain`):
-   - *Slots*: `pixelate` → `retro_crt` → `rgb_split`
-   - *Vibe*: Retro-futuristic dystopian terminal aesthetic with honeycomb pixel lattice, curved CRT phosphor scanlines, and duotone cyberpunk neon grading.
-4. **Liquid Mercury** (`liquid_mercury.lsdfxchain`):
-   - *Slots*: `luma_displace` → `fluid_smear` → `bloom`
-   - *Vibe*: Viscous organic fluid and metallic chrome distortion with concentric liquid ripples, curl advection smearing, and surface normal refraction.
-5. **Neon Wireframe** (`neon_wireframe.lsdfxchain`):
-   - *Slots*: `neon_edge` → `directional_blur` → `feedback`
-   - *Vibe*: Glowing electric neon vector graphics with orientation-to-hue Sobel edge glow, spherical optical lens bulging, and soft high-pass bloom.
-6. **Wormhole Flight** (`wormhole_flight.lsdfxchain`):
-   - *Slots*: `polar_tunnel` → `pinch_bulge` → `bloom`
-   - *Vibe*: Deep space infinite warp portal with aspect-preserving log-polar vortex, zoom burst trails, and recursive feedback rotation.
-7. **FLIR Predator Vision** (`flir_predator_vision.lsdfxchain`):
-   - *Slots*: `thermal_scanner` → `retro_crt` → `video_strobe`
-   - *Vibe*: Military reconnaissance and sci-fi tactical optics with FLIR Ironbow heat mapping, sensor noise grain, horizontal smear, and quantized block mosaic.
-8. **Liquid Chrome Dimension** (`liquid_chrome_dimension.lsdfxchain`):
-   - *Slots*: `wave_displace` → `mirror_sphere` → `color_levels`
-   - *Vibe*: 3D raytraced floating chrome orb reflecting the scene with liquid surface turbulence and punchy high-contrast color grading.
-9. **2D to 3D Elevation with Feedback** (`2d_to_3d_elevation_with_feedback.lsdfxchain`):
-   - *Slots*: `3d_elevation` → `feedback` → `bloom`
-   - *Vibe*: The iconic Liquid LSD topological displacement chain featuring heightmap mesh rendering, recursive rotation feedback, and ACES filmic grading.
-10. **Laser Concert Anamorphic** (`laser_concert_anamorphic.lsdfxchain`):
-    - *Slots*: `anamorphic_streak` → `bloom` → `color_levels`
-    - *Vibe*: Ultra-widescreen concert stage lighting with horizontal laser glare, soft volumetric bloom, and high-contrast filmic punch.
-11. **Pop-Art Comic Print** (`pop_art_comic_print.lsdfxchain`):
-    - *Slots*: `neon_edge` → `halftone` → `gradient_map`
-    - *Vibe*: Authentic Roy Lichtenstein / vintage comic book print with black ink contours, 4-plate CMYK dot rosettes, and duotone pop grading.
-12. **Grindhouse VHS Bootleg** (`grindhouse_vhs_bootleg.lsdfxchain`):
-    - *Slots*: `vhs_glitch` → `retro_crt` → `color_levels`
-    - *Vibe*: Gritty 80s horror / VHS bootleg tape with magnetic tracking jitter, head-switching bars, phosphor scanlines, and tape saturation.
-13. **Prismatic Crystal Kaleidoscope** (`prismatic_crystal_kaleidoscope.lsdfxchain`):
-    - *Slots*: `faceted_glass` → `kaleidoscope` → `rgb_split`
-    - *Vibe*: Shattered diamond prism reflection with polyhedral symmetry and spectral dispersion.
-14. **Cosmic Black Hole Vortex** (`cosmic_black_hole_vortex.lsdfxchain`):
-    - *Slots*: `vortex_swirl` → `luma_displace` → `polar_tunnel`
-    - *Vibe*: Gravitational accretion singularity with logarithmic space swirl, surface normal marbling, and infinite log-polar warp.
-15. **Subtle Optical Warmth** (`subtle_optical_warmth.lsdfxchain` — the default Master FX):
-    - *Slots*: `color_levels` → `retro_crt` → `bloom`
-    - *Vibe*: Gentle tape/phosphor warming with contrast roll-off, subtle enough to leave on the master all night.
-16. **Digital Bitcrush Mosaic** (`digital_bitcrush_mosaic.lsdfxchain`):
-    - *Slots*: `pixelate` → `rgb_split` → `video_strobe`
-    - *Vibe*: Lattice quantization and spectral glitch.
+| Chain | Slots | Tags |
+|---|---|---|
+| **bitcrush** | `pixelate` → `rgb_split` | pixel, glitch, kick, bass-gated |
+| **blackhole** | `vortex_swirl` → `luma_displace` → `polar_tunnel` | swirl, tunnel, bass, high, kick, beat |
+| **bloom** | `bloom` → `anamorphic_streak` | bloom, streak, kick |
+| **build-drop** | `bloom` → `rgb_split` | build, bar, bass-gated |
+| **chrome** | `wave_displace` → `mirror_sphere` → `color_levels` | mirror, wave, beat, bass, high, kick |
+| **crt** | `retro_crt` | crt, beat, kick, amp |
+| **cyberpunk** | `pixelate` → `retro_crt` → `rgb_split` | pixel, crt, kick, beat, bass, high |
+| **drop-strobe** | `invert` → `color_levels` | strobe, bass-gated, kick |
+| **drop-weapon** | `radial_blur` → `rgb_split` → `pinch_bulge` | blur, glitch, bass-gated, kick, beat |
+| **elevation** | `3d_elevation` → `color_levels` | 3d, bar, bass, kick, mid |
+| **flir** | `thermal_scanner` → `retro_crt` | thermal, crt, bass, high, bar |
+| **glitch** | `rgb_split` → `vhs_glitch` | glitch, high, bass-gated |
+| **halftone-beat** | `halftone` | halftone, beat, bar, mid |
+| **hyperspace** | `kaleidoscope` → `feedback` → `gradient_map` | kaleidoscope, feedback, kick, bar |
+| **ink** | `fluid_smear` → `gradient_map` | liquid, palette, bass, mid, bar |
+| **kaleido** | `kaleidoscope` → `feedback` | kaleidoscope, feedback |
+| **laser** | `anamorphic_streak` → `bloom` → `color_levels` | streak, bloom, kick, bass, bass-gated |
+| **lumakey** | `luma_key` → `color_levels` | key, kick |
+| **mercury** | `luma_displace` → `fluid_smear` | liquid, bass, mid, high |
+| **mirror** | `mirror_sphere` | mirror, kick, bass, beat |
+| **motion** | `directional_blur` | blur, kick, bar |
+| **neon** | `neon_edge` → `directional_blur` → `feedback` | edges, feedback, kick, bass, high, bar |
+| **popart** | `neon_edge` → `halftone` → `gradient_map` | halftone, edges, kick, bass, beat, bar |
+| **prism** | `faceted_glass` → `kaleidoscope` → `rgb_split` | glass, kaleidoscope, bass, high, kick, bar |
+| **punch** | `radial_blur` → `pinch_bulge` → `feedback` | blur, pinch, kick, beat |
+| **ripple-drop** | `wave_displace` → `rgb_split` | wave, bass-gated, bar, high |
+| **thermal-drop** | `thermal_scanner` | thermal, bass-gated |
+| **trails-chroma** | `feedback` | feedback, chroma, high, beat |
+| **trails-drift** | `feedback` | feedback, bar, mid |
+| **trails** | `feedback` | feedback, kick, bar |
+| **tunnel** | `polar_tunnel` | tunnel, beat, bass |
+| **vhs** | `vhs_glitch` → `retro_crt` → `color_levels` | vhs, crt, kick, mid, high |
+| **vortex** | `vortex_swirl` → `feedback` | swirl, kick, beat |
+| **warmth** | `color_levels` → `retro_crt` → `bloom` | grade, crt, bass, mid, kick |
+| **wormhole** | `polar_tunnel` → `pinch_bulge` → `bloom` | tunnel, bloom, bass, bar, kick, beat |
 
-On a fresh install, Master FX starts with *Subtle Optical Warmth*, Deck A with *Liquid Mercury*, Deck B with *Liquid Chrome Dimension*, Deck BG with *Hyperspace Trip*, and Deck PV with *Prismatic Crystal Kaleidoscope*.
+On a fresh install, Master FX starts with *warmth*, Deck A with *mercury*, Deck B with *chrome*, Deck BG with *hyperspace*, and Deck PV with *prism*. The decks start playing too: *groove-mandala* on A (on air), *tunnel-synthwave* on B, *ambient-tides* on BG and *julia-groove* on PV. Eject a deck to start from a blank one.
+
+An existing library keeps the chains it already has. Choose **Restore Factory Presets** (Sources tab **⋮**) to add the new ones; it never overwrites a file you have.
 
 
 ### FX Playlists (`.lsdfxplay`)

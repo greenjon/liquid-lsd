@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Factory Presets and FX Chains From the Web TV (`build.gradle.kts`, `rendering/Mixer.kt`, `defaults/`, `web/sync_manifest.json`)
+- **New: 124 factory presets that move with the music.** The scenes the web TV plays now ship with the desktop app too, named without the TV's `web-` prefix (`bass-mandala`, `ambient-crystal`...), with tags that say what each reacts to (`kick`, `bass`, `beat`, `bar`, `ambient`, `groove`, `hard`). The Garden flames are still included.
+- **Changed: the 16 stock FX chains are replaced by 35 reactive ones.** Each of the old chains has a reactive version (Hyperspace Trip is now `hyperspace`, Liquid Mercury `mercury` and so on), plus 19 new chains. A fresh install starts Master FX on `warmth`, Deck A on `mercury`, Deck B on `chrome`, Deck BG on `hyperspace` and Deck PV on `prism`. The web TV drops the 16 old chains from its FX list too; it never played them on its own.
+- **New: a fresh install opens playing.** Instead of empty decks, the first run puts a factory preset on every deck (`groove-mandala` on A, on air; `tunnel-synthwave` on B; `ambient-tides` on BG; `julia-groove` on PV) with the chains above, so the first thing you see is the app working. Eject a deck to start from blank.
+- **Removed: seven leftover development presets** (`3d mandala`, `3d spiral`, `3d spiral 2`, `3d spiral test`, `Deck BG`, `mandala-7`, `mandala-10`).
+- An existing library keeps what it has: choose **Restore Factory Presets** (Library, Sources tab **⋮**) to add the new presets and chains. It never overwrites a file you have, and it doesn't delete the old chains or presets.
+
 ### Liquid LSD for Android Works Out of the Box (`web/renderer.js`, `web/autopilot.js`, `web/embed.js`, `android/lsd-visuals/`)
 - **New: an app can raise the picture's render budget** (`maxPixels`) for an external display, and an app built without the photo gallery never shows that background. The web TV and Spaz Radio are unchanged.
 

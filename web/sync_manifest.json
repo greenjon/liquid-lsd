@@ -479,13 +479,6 @@
   ],
   "content": [
     {
-      "desktop_dir": "defaults/fx_chains",
-      "web_dir": "web/content/fxchains",
-      "ext": ".lsdfxchain",
-      "catalog_key": "fxChains",
-      "description": "Desktop FX chain presets (FXChainDto) the autopilot can apply to decks"
-    },
-    {
       "desktop_dir": "defaults/transitions",
       "web_dir": "web/content/transitions",
       "ext": ".lsdtrans",
@@ -497,7 +490,7 @@
       "ext": ".lsdfxchain",
       "catalog_key": "fxChains",
       "web_only": true,
-      "description": "Web-authored FX chains (desktop FXChainDto format), named web-*"
+      "description": "FX chains (desktop FXChainDto format), named web-*; the desktop ships them as its factory chains without the prefix"
     }
   ],
   "mandala_recipes": {

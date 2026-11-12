@@ -85,7 +85,7 @@ export function validateTransition(file, dto, cat = catalog()) {
 
 /**
  * Every preset in web/presets, every FX chain and transition preset in the catalog, including the
- * desktop's stock chains copied from defaults/fx_chains: a parameter name its shader does not have is
+ * web-* chains the desktop also ships as its factory chains: a parameter name its shader does not have is
  * an error there too (the desktop silently ignores it, so the chain quietly loses that setting).
  */
 export function validateAll() {

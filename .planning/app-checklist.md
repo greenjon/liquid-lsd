@@ -217,6 +217,15 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [ ] FX queue arrow tooltips name the deck and say A and B share one position.
 - [ ] A MIDI/OSC mapping to `Deck X/FXChain/DryWet` needs relearning on `Deck X/FX/DryWet` (expected).
 
+## 6b. Factory presets and chains from the web TV (2026-11-12)
+
+The web TV's 124 `web-*` presets and 35 `web-*` chains now ship as the desktop's factory content, without the `web-` prefix; the 16 old stock chains and 7 dev presets are gone. First delete `library/presets/web/` and `library/fx_chains/web/` (stale partial copies), then Library > Sources > ⋮ > Restore Factory Presets.
+
+- [ ] Restore adds the presets (`bass-mandala`, `ambient-crystal`...) and chains (`warmth`, `mercury`...); nothing of yours is overwritten.
+- [ ] A handful of presets look right at desktop resolution, and move with the music the way they do on the TV (try `kick`, `bar`, `ambient` in the search).
+- [ ] A fresh install (empty `library/`) opens playing: presets `groove-mandala` on A (on air), `tunnel-synthwave` on B, `ambient-tides` on BG, `julia-groove` on PV; chains `warmth` on Master, `mercury` A, `chrome` B, `hyperspace` BG, `prism` PV. The mix isn't a mess, frame rate holds, and the four load toasts aren't annoying.
+- [ ] Re-render the Library and FX chains tours (their steps now point at `bass-mandala`, `groove-mandala`, `mandala-lace`, `hyperspace`, `cyberpunk`).
+
 ## 7. Super Knob and Metaknobs
 
 - [ ] A linked slot's knob 2-4 moves its Metaknob (not dead); in Focus Mode a linked slot's knob 1 works. auto (round 5): dragging a linked slot's Perform knob moves its Metaknob. Focus Mode knob 1 not tried.

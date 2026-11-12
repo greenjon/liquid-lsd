@@ -235,30 +235,18 @@ class StockDefaultsTest {
     }
 
     /**
-     * The stock FX chains store full slot parameters, so each stored input must carry its effect's shipped response and
-     * random range itself or loading the chain drops them (inputs a chain leaves out keep the effect's default). The
-     * web TV's copies must match.
+     * The factory FX chains (web/fxchains/web-*.lsdfxchain) set their own responses on the inputs they store; their LFO
+     * swings must still fit each parameter.
      */
     @Test
-    fun shippedFxChainsCarryTheShippedDefaults() {
-        val chains = File(root, "defaults/fx_chains").listFiles { f -> f.extension == "lsdfxchain" }!!.sortedBy { it.name }
+    fun factoryFxChainLfoSwingsFit() {
+        val chains = File(root, "web/fxchains").listFiles { f -> f.name.startsWith("web-") && f.extension == "lsdfxchain" }!!.sortedBy { it.name }
         assertTrue(chains.isNotEmpty())
         for (file in chains) {
-            assertEquals(file.readText(), File(root, "web/content/fxchains/${file.name}").readText(), "${file.name}: web copy differs")
             val chain = json.decodeFromString(llm.slop.liquidlsd.models.FXChainDto.serializer(), file.readText())
             for (slot in chain.slots.filterNotNull()) {
-                val shippedFile = File(root, "src/main/resources/stock_defaults/filters/${slot.filterId}.json")
-                if (!shippedFile.exists()) continue
-                val label = "${file.name}/${slot.filterId}"
-                val stored = slot.parameters
-                for ((name, shipped) in shippedFilterParams(shippedFile)) {
-                    val p = stored[name] ?: continue
-                    assertEquals(shipped.modulators, p.modulators, "$label: $name does not carry the shipped response")
-                    if (!shipped.randomizeBase && !p.randomizeBase) continue
-                    assertEquals(Triple(shipped.randomizeBase, shipped.baseMin, shipped.baseMax), Triple(p.randomizeBase, p.baseMin, p.baseMax),
-                        "$label: $name does not carry the shipped random range")
-                }
-                assertLfoSwingsFit(label, stored.filterKeys { it in filterRanges(slot.filterId) }, filterRanges(slot.filterId))
+                val ranges = filterRanges(slot.filterId)
+                assertLfoSwingsFit("${file.name}/${slot.filterId}", slot.parameters.filterKeys { it in ranges }, ranges)
             }
         }
     }
@@ -388,5 +376,31 @@ class StockDefaultsTest {
     @Test
     fun lfoSwingsFitTheirParameters() {
         for (file in sourceFiles) assertLfoSwingsFit(file.nameWithoutExtension, shippedParams(file), ranges(file.nameWithoutExtension))
+    }
+
+    /**
+     * The desktop ships web/presets/web-*.lsd and web/fxchains/web-*.lsdfxchain as its factory presets and FX chains
+     * (build.gradle.kts prepareDefaultAssets). Every parameter they set must exist on the desktop's source or filter:
+     * the desktop silently drops an unknown name, so the preset would quietly lose that setting.
+     */
+    @Test
+    fun factoryPresetsAndChainsUseDesktopParameterNames() {
+        val presets = File(root, "web/presets").listFiles { f -> f.name.startsWith("web-") && f.extension == "lsd" }!!.sortedBy { it.name }
+        assertTrue(presets.size >= 100, "expected the web-* presets, found ${presets.size}")
+        for (file in presets) {
+            val obj = parse(file)
+            val source = obj["visualSourceType"]!!.jsonPrimitive.content
+            val known = ranges(source).keys
+            for (name in (obj["parameters"] as? JsonObject).orEmpty().keys) assertTrue(name in known, "${file.name}: $source has no parameter '$name'")
+        }
+        val chains = File(root, "web/fxchains").listFiles { f -> f.name.startsWith("web-") && f.extension == "lsdfxchain" }!!.sortedBy { it.name }
+        assertTrue(chains.isNotEmpty())
+        for (file in chains) {
+            for (slot in parse(file)["slots"]!!.jsonArray.filterIsInstance<JsonObject>()) {
+                val filter = slot.jsonObject["filterId"]!!.jsonPrimitive.content
+                val known = filterRanges(filter).keys
+                for (name in (slot.jsonObject["parameters"] as? JsonObject).orEmpty().keys) assertTrue(name in known, "${file.name}: $filter has no parameter '$name'")
+            }
+        }
     }
 }

@@ -398,10 +398,23 @@ object SessionSerializer {
         llm.slop.liquidlsd.macro.TransitionMacroSync.sync(mixer)
     }
 
-    private fun loadInitialPreset(mixer: Mixer) {
-        val initialFile = File(PresetManager.PRESETS_ROOT, "Decks/Liquid LSD Default.json")
-        if (initialFile.exists()) {
-            DeckOps.request(DeckSlot.A, DeckChange.Preset(initialFile), LoadOrigin.QUEUE)
+    /**
+     * First run (no saved session): a factory preset on every deck, so the app opens playing rather than blank. The FX
+     * chains are already on (Mixer.loadDefaultFxChains). Light sources only, so a modest GPU keeps up; a preset the
+     * user has deleted is skipped.
+     */
+    internal val FIRST_RUN_PRESETS = listOf(
+        DeckSlot.A to "groove-mandala.lsd",
+        DeckSlot.B to "tunnel-synthwave.lsd",
+        DeckSlot.BG to "ambient-tides.lsd",
+        DeckSlot.PV to "julia-groove.lsd",
+    )
+
+    private fun loadInitialPreset(@Suppress("UNUSED_PARAMETER") mixer: Mixer) {
+        val root = llm.slop.liquidlsd.ui.FileSystemManager.getPresetsRoot()
+        for ((slot, name) in FIRST_RUN_PRESETS) {
+            val file = File(root, name)
+            if (file.exists()) DeckOps.request(slot, DeckChange.Preset(file), LoadOrigin.QUEUE)
         }
     }
 

@@ -59,7 +59,7 @@ Liquid LSD needs to hear your music. How you connect it depends on your platform
 
 ## 3. Your First 60 Seconds
 
-When the app opens, you'll see the Perform view: the Performance rows on the left with the Library below them, and the Mixer on the right:
+When the app opens for the first time, every deck is already playing a factory preset with an FX chain, and the music drives them: Deck A is on air. You'll see the Perform view: the Performance rows on the left with the Library below them, and the Mixer on the right:
 
 ```
 +---------------------------------------------+---------------------+

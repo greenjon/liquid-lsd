@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
     
     
       
@@ -2406,16 +2406,17 @@ val paramNotes: Map&lt;String, String&gt; = emptyMap()
 <p>To ensure users never start with a blank screen on clean git clones or new releases while protecting user customizations:</p>
 <h3 id="version-controlled-defaults-defaults">Version-Controlled Defaults (<code>defaults/</code>)</h3>
 <ul>
-<li>Curated presets and playlists are kept under version control in <code>defaults/presets/</code> and <code>defaults/playlists/</code>.</li>
+<li>Curated presets and playlists are kept under version control in <code>defaults/presets/</code> (the Garden flames) and <code>defaults/playlists/</code>.</li>
+<li><strong>Factory presets and FX chains come from the web TV content</strong>: <code>prepareDefaultAssets</code> also ships every <code>web/presets/web-*.lsd</code> and <code>web/fxchains/web-*.lsdfxchain</code> (made by <code>scripts/gen_web_presets.py</code>), dropping the <code>web-</code> prefix from the file name and <code>name</code> and the <code>web</code> tag. One set of files serves both apps; edit them there, not in <code>defaults/</code>. A name that clashes with a <code>defaults/</code> file fails the build. <code>StockDefaultsTest</code> checks every parameter they set exists on the desktop's source or filter.</li>
 <li><strong>Syncing from Library</strong>: Developers can run <code>./gradlew syncDefaultsFromLibrary</code> to copy curated <code>.lsd</code> presets from <code>library/presets/</code> and <code>.lsdplay</code> setlists from <code>library/playlists/</code> into <code>defaults/</code>.</li>
-<li><strong>Automated Packaging (<code>prepareDefaultAssets</code>)</strong>: During build, Gradle automatically generates <code>manifest.txt</code> indices and packages the contents of <code>defaults/</code> into the classpath (<code>/default_presets/</code> and <code>/default_playlists/</code>).</li>
+<li><strong>Automated Packaging (<code>prepareDefaultAssets</code>)</strong>: During build, Gradle automatically generates <code>manifest.txt</code> indices and packages the contents of <code>defaults/</code> into the classpath (<code>/default_presets/</code>, <code>/default_playlists/</code>, <code>/default_fx_chains/</code> and the transition folders).</li>
 </ul>
 <h3 id="safe-first-run-seeding-filesystemmanagerensuredefaultlibrary">Safe First-Run Seeding (<code>FileSystemManager.ensureDefaultLibrary</code>)</h3>
 <ul>
 <li>On first launch, <code>FileSystemManager.ensureDefaultLibrary()</code> checks for the presence of <code>library/.defaults_installed</code>.</li>
 <li>If uninitialized, it extracts all bundled presets into <code>library/presets/</code> and bundled playlists into <code>library/playlists/</code> (skipping any existing files to protect user data), then records <code>library/.defaults_installed</code>.</li>
 <li><strong>Deletion Safety</strong>: If a user intentionally deletes a factory preset or playlist, the existence of <code>library/.defaults_installed</code> ensures it will <strong>not</strong> be resurrected on subsequent application launches.</li>
-<li><strong>First-Run Visual Autoload</strong>: When starting without a pre-existing <code>last_session.json</code> (and without <code>--empty</code>), <code>PresetManager.loadSession</code> automatically loads the first available starter preset (preferring <code>3d mandala</code>) onto Deck A so the user is immediately greeted with live graphics.</li>
+<li><strong>First-Run Visual Autoload</strong>: When starting without a pre-existing <code>last_session.json</code> (and without <code>--empty</code>), <code>SessionSerializer.loadSession</code> loads a factory preset onto every deck (<code>SessionSerializer.FIRST_RUN_PRESETS</code>: <code>groove-mandala</code> on A, <code>tunnel-synthwave</code> on B, <code>ambient-tides</code> on BG, <code>julia-groove</code> on PV), skipping any the user has deleted. The decks' FX chains come from <code>Mixer.loadDefaultFxChains</code>, so the app opens playing. The picks avoid the sources the web TV lists as heavy (<code>web/settings.json</code> <code>heavySources</code>), and <code>StarterFxChainsTest</code> checks that.</li>
 </ul>
 <h3 id="factory-restore-action-filesystemmanagerrestorefactorypresets">Factory Restore Action (<code>FileSystemManager.restoreFactoryPresets</code>)</h3>
 <ul>
@@ -2536,7 +2537,7 @@ val paramNotes: Map&lt;String, String&gt; = emptyMap()
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
       
     
   </body>

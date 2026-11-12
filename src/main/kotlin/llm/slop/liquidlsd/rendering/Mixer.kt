@@ -139,7 +139,7 @@ class Mixer(
     private val chainJson = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
 
     /**
-     * Loads the starter FX chains: "Subtle Optical Warmth" on Master FX, and a distinct bundled
+     * Loads the starter FX chains: "warmth" on Master FX, and a distinct bundled
      * chain on each deck. Reads from the user's library first, falling back to the bundled copy.
      */
     fun loadDefaultFxChains() {
@@ -161,11 +161,11 @@ class Mixer(
             }
         }
 
-        loadChain("subtle_optical_warmth.lsdfxchain", masterFxChain)
-        loadChain("liquid_mercury.lsdfxchain", deckA.fxChain)
-        loadChain("liquid_chrome_dimension.lsdfxchain", deckB.fxChain)
-        loadChain("hyperspace_trip.lsdfxchain", deckBG.fxChain)
-        loadChain("prismatic_crystal_kaleidoscope.lsdfxchain", deckPV.fxChain)
+        loadChain("warmth.lsdfxchain", masterFxChain)
+        loadChain("mercury.lsdfxchain", deckA.fxChain)
+        loadChain("chrome.lsdfxchain", deckB.fxChain)
+        loadChain("hyperspace.lsdfxchain", deckBG.fxChain)
+        loadChain("prism.lsdfxchain", deckPV.fxChain)
 
         llm.slop.liquidlsd.macro.FxMacroSync.syncAll(this)
     }

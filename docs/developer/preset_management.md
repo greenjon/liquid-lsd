@@ -140,15 +140,16 @@ Auto-advance triggers inside `PlayQueueManager.triggerNext()`, `triggerPrevious(
 To ensure users never start with a blank screen on clean git clones or new releases while protecting user customizations:
 
 ### Version-Controlled Defaults (`defaults/`)
-- Curated presets and playlists are kept under version control in `defaults/presets/` and `defaults/playlists/`.
+- Curated presets and playlists are kept under version control in `defaults/presets/` (the Garden flames) and `defaults/playlists/`.
+- **Factory presets and FX chains come from the web TV content**: `prepareDefaultAssets` also ships every `web/presets/web-*.lsd` and `web/fxchains/web-*.lsdfxchain` (made by `scripts/gen_web_presets.py`), dropping the `web-` prefix from the file name and `name` and the `web` tag. One set of files serves both apps; edit them there, not in `defaults/`. A name that clashes with a `defaults/` file fails the build. `StockDefaultsTest` checks every parameter they set exists on the desktop's source or filter.
 - **Syncing from Library**: Developers can run `./gradlew syncDefaultsFromLibrary` to copy curated `.lsd` presets from `library/presets/` and `.lsdplay` setlists from `library/playlists/` into `defaults/`.
-- **Automated Packaging (`prepareDefaultAssets`)**: During build, Gradle automatically generates `manifest.txt` indices and packages the contents of `defaults/` into the classpath (`/default_presets/` and `/default_playlists/`).
+- **Automated Packaging (`prepareDefaultAssets`)**: During build, Gradle automatically generates `manifest.txt` indices and packages the contents of `defaults/` into the classpath (`/default_presets/`, `/default_playlists/`, `/default_fx_chains/` and the transition folders).
 
 ### Safe First-Run Seeding (`FileSystemManager.ensureDefaultLibrary`)
 - On first launch, `FileSystemManager.ensureDefaultLibrary()` checks for the presence of `library/.defaults_installed`.
 - If uninitialized, it extracts all bundled presets into `library/presets/` and bundled playlists into `library/playlists/` (skipping any existing files to protect user data), then records `library/.defaults_installed`.
 - **Deletion Safety**: If a user intentionally deletes a factory preset or playlist, the existence of `library/.defaults_installed` ensures it will **not** be resurrected on subsequent application launches.
-- **First-Run Visual Autoload**: When starting without a pre-existing `last_session.json` (and without `--empty`), `PresetManager.loadSession` automatically loads the first available starter preset (preferring `3d mandala`) onto Deck A so the user is immediately greeted with live graphics.
+- **First-Run Visual Autoload**: When starting without a pre-existing `last_session.json` (and without `--empty`), `SessionSerializer.loadSession` loads a factory preset onto every deck (`SessionSerializer.FIRST_RUN_PRESETS`: `groove-mandala` on A, `tunnel-synthwave` on B, `ambient-tides` on BG, `julia-groove` on PV), skipping any the user has deleted. The decks' FX chains come from `Mixer.loadDefaultFxChains`, so the app opens playing. The picks avoid the sources the web TV lists as heavy (`web/settings.json` `heavySources`), and `StarterFxChainsTest` checks that.
 
 ### Factory Restore Action (`FileSystemManager.restoreFactoryPresets`)
 - Users can trigger **File > Restore Factory Presets...** (or via the empty preset browser button) at any time.

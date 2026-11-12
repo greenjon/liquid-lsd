@@ -16,13 +16,25 @@ class StarterFxChainsTest {
 
     @Test
     fun everyStarterChainFileShipsWithThreeSlots() {
-        val starters = listOf(
-            "subtle_optical_warmth.lsdfxchain", "liquid_mercury.lsdfxchain", "liquid_chrome_dimension.lsdfxchain",
-            "hyperspace_trip.lsdfxchain", "prismatic_crystal_kaleidoscope.lsdfxchain"
-        )
+        // The factory chains are web/fxchains/web-*.lsdfxchain, shipped without the prefix (build.gradle.kts prepareDefaultAssets).
+        val starters = listOf("warmth", "mercury", "chrome", "hyperspace", "prism")
         for (name in starters) {
-            val chain = json.decodeFromString<FXChainDto>(java.io.File("defaults/fx_chains", name).readText())
+            val chain = json.decodeFromString<FXChainDto>(java.io.File("web/fxchains", "web-$name.lsdfxchain").readText())
             assertEquals(3, chain.slots.size, name)
+        }
+    }
+
+    /** The first-run presets ship (as web/presets/web-<name>) and none plays a source the web TV counts as heavy. */
+    @Test
+    fun firstRunPresetsShipAndAreLight() {
+        val heavy = Json.parseToJsonElement(java.io.File("web/settings.json").readText()).let {
+            (it as kotlinx.serialization.json.JsonObject)["heavySources"].toString()
+        }
+        for ((slot, name) in SessionSerializer.FIRST_RUN_PRESETS) {
+            val file = java.io.File("web/presets", "web-$name")
+            kotlin.test.assertTrue(file.exists(), "$slot: $file missing")
+            val source = json.decodeFromString<DeckPresetDto>(file.readText()).visualSourceType
+            assertFalse("\"$source\"" in heavy, "$slot: $name plays heavy source $source")
         }
     }
 
