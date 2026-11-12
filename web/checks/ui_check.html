@@ -197,7 +197,7 @@ try {
   const tabNames = () => [...menuEl.querySelectorAll('.menu-tab')].map((e) => e.textContent);
   const pageNow = () => menuEl.querySelector('.menu-tab.on').textContent;
   const hintText = () => menuEl.querySelector('.menu-hint').textContent;
-  check('Menu: three pages', tabNames().join() === 'SCENES,SOUND,TV', tabNames().join());
+  check('Menu: four pages', tabNames().join() === 'SCENES,SOUND,EQ,TV', tabNames().join());
   check('Menu: opens on the tabs, with no row selected', !!menuEl.querySelector('.menu-tab.sel') && !menuEl.querySelector('.menu-row.sel'));
   check('Menu: the tabs say the keys', /PAGE/.test(hintText()), hintText());
   key('ArrowRight');
@@ -240,6 +240,31 @@ try {
   check('Menu: reduced motion row cycles AUTO -> ON', w.LSD.viewerState.reducedMode === 'on', w.LSD.viewerState.reducedMode);
   key('ArrowLeft'); downTo('SYNC'); key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft');
   check('Menu: back to defaults', w.LSD.viewerState.syncMs === 0 && w.LSD.viewerState.reducedMode === 'auto', `${w.LSD.viewerState.syncMs} ${w.LSD.viewerState.reducedMode}`);
+  // EQ: off and flat by default; the bands lock while it is off; ◀ ▶ move 1 dB within ±12; remembered; RESET flattens it.
+  const vs = w.LSD.viewerState, eqRowText = () => menuEl.querySelector('.menu-row.sel')?.textContent ?? '';
+  check('EQ: off and flat by default', vs.eq.on === false && vs.eq.bass === 0 && vs.eq.mid === 0 && vs.eq.treble === 0, JSON.stringify(vs.eq));
+  downTo('BASS');
+  check('EQ: bands are locked while it is off', menuEl.querySelector('.menu-row.sel').classList.contains('locked'));
+  key('ArrowRight');
+  check('EQ: a locked band does not move', vs.eq.bass === 0, vs.eq.bass);
+  downTo('EQUALIZER'); key('ArrowRight');
+  check('EQ: the EQUALIZER row turns it on', vs.eq.on === true && /ON/.test(eqRowText()), eqRowText());
+  downTo('BASS'); for (let i = 0; i < 20; i++) key('ArrowRight');
+  check('EQ: BASS stops at +12 dB', vs.eq.bass === 12 && /\+12 DB/.test(eqRowText()), eqRowText());
+  downTo('TREBLE'); for (let i = 0; i < 3; i++) key('ArrowLeft');
+  check('EQ: TREBLE goes down in 1 dB steps', vs.eq.treble === -3 && /-3 DB/.test(eqRowText()), eqRowText());
+  check('EQ: remembered', JSON.parse(w.localStorage.getItem('lsd.eq')).bass === 12, w.localStorage.getItem('lsd.eq'));
+  await sleep(300); // the gains glide (30 ms time constant)
+  const gains = vs.eqGains();
+  check('EQ: the audio graph follows (gains and headroom)', !gains || (Math.abs(gains[0] - 12) < 0.1 && Math.abs(gains[2] + 3) < 0.1 && Math.abs(gains[3] - 10 ** (-12 / 20)) < 0.01), JSON.stringify(gains));
+  downTo('EQUALIZER'); key('ArrowRight');
+  await sleep(300);
+  const offGains = vs.eqGains();
+  check('EQ: off plays flat but keeps the bands', vs.eq.on === false && vs.eq.bass === 12 && (!offGains || offGains.every((g, i) => Math.abs(g - (i === 3 ? 1 : 0)) < 0.01)), JSON.stringify(offGains));
+  key('ArrowRight'); downTo('FLAT'); key('Enter');
+  check('EQ: FLAT puts the bands back to 0', vs.eq.on && vs.eq.bass === 0 && vs.eq.treble === 0, JSON.stringify(vs.eq));
+  downTo('MID'); key('ArrowRight'); downTo('RESET'); key('Enter');
+  check('EQ: RESET turns it off and flat', !vs.eq.on && vs.eq.mid === 0, JSON.stringify(vs.eq));
   downTo('ANNOUNCE SCENES');
   check('Menu: the selected row explains itself', /name of each new scene/.test(menuEl.querySelector('.menu-hint').textContent), menuEl.querySelector('.menu-hint').textContent);
   key('ArrowRight');

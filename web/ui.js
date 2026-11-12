@@ -1,7 +1,7 @@
 // ui.js
 // The TV's controls: power, volume, the viewer controls (channel rocker, FX, HOLD, TIME, REACT), the
 // on-screen display, keyboard and touch. Viewer controls are locked while the desktop broadcasts live.
-import { startAudio, stopAudio, setVolume, setMic, isMicOn, micAvailable, cvState, tapeStatus } from './dsp.js';
+import { startAudio, stopAudio, setVolume, setMic, isMicOn, micAvailable, cvState, tapeStatus, setEq, eqGains, EQ_MIN_DB, EQ_MAX_DB } from './dsp.js';
 import { embed } from './embedmode.js';
 import { autopilotState, advanceForeground, previousForeground, randomForeground, nextFxChain, setHold, setHoldBars, nowShowing, setHeavyAllowed, setReducedMotion,
   rollScene, setAutoRollBars, setEffects, setFollowMusic, setBackgroundMode, stepBackground,
@@ -16,7 +16,7 @@ import { scheduleState, refreshSchedule, setShows, groupByDay, upcoming, parsePl
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v32';
+export const TV_VERSION = 'v33';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -475,7 +475,7 @@ export function initUI() {
   const menuBtn = document.getElementById('menuBtn');
   const scheduleBtn = document.getElementById('scheduleBtn');
 
-  // --- Service MENU (menu.js): three pages, SCENES, SOUND and TV ---
+  // --- Service MENU (menu.js): four pages, SCENES, SOUND, EQ and TV (no EQ in embed: the host app plays the sound) ---
   viewerState.syncMs = Math.max(SYNC_MIN, Math.min(SYNC_MAX, Number(load('lsd.sync', 0)) || 0));
   viewerState.announce = load('lsd.announce', false) === true;
   viewerState.reducedMode = MODES.includes(load('lsd.reduced', 'auto')) ? load('lsd.reduced', 'auto') : 'auto';
@@ -515,6 +515,21 @@ export function initUI() {
   };
   applyReduced();
   if (typeof matchMedia === 'function') matchMedia('(prefers-reduced-motion: reduce)').addEventListener?.('change', applyReduced);
+  const EQ_FLAT = { on: false, bass: 0, mid: 0, treble: 0 };
+  const savedEq = load('lsd.eq', EQ_FLAT);
+  const eqClamp = (v) => Math.max(EQ_MIN_DB, Math.min(EQ_MAX_DB, Math.round(Number(v)) || 0));
+  const applyEq = (changes, store = true) => {
+    const e = { ...viewerState.eq, ...changes };
+    viewerState.eq = { on: e.on === true, bass: eqClamp(e.bass), mid: eqClamp(e.mid), treble: eqClamp(e.treble) };
+    setEq(viewerState.eq);
+    if (store) save('lsd.eq', viewerState.eq);
+  };
+  viewerState.eq = EQ_FLAT;
+  applyEq(savedEq && typeof savedEq === 'object' ? savedEq : {}, false);
+  viewerState.eqGains = eqGains; // for the headless check
+  const dbLabel = (db) => `${db > 0 ? '+' : ''}${db} DB`;
+  const eqBand = (label, key, help) => ({ label, help, locked: () => !viewerState.eq.on, value: () => dbLabel(viewerState.eq[key]),
+    step: (dir) => applyEq({ [key]: viewerState.eq[key] + dir }) });
   const cycle = (mode, dir) => MODES[(MODES.indexOf(mode) + dir + MODES.length) % MODES.length];
   const onOff = (b) => (b ? 'ON' : 'OFF');
   const pages = [
@@ -561,6 +576,16 @@ export function initUI() {
       { label: 'TAP SYNC', needsPower: true, value: () => 'TAP 8 BEATS', run: () => startTapSync(),
         help: 'Press Enter, then tap Space or the picture on 8 beats you hear: sets SYNC for you.' },
     ] },
+    ...(embed ? [] : [{ name: 'EQ', rows: [
+      { label: 'EQUALIZER', value: () => onOff(viewerState.eq.on), step: () => applyEq({ on: !viewerState.eq.on }), run: () => applyEq({ on: !viewerState.eq.on }),
+        help: 'Shapes the sound you hear from the radio or a tape. The picture still reacts to the music as broadcast.' },
+      eqBand('BASS', 'bass', 'Low end: kick and bass (120 Hz and below), up or down 12 dB.'),
+      eqBand('MID', 'mid', 'The middle: voices and most instruments (around 1 kHz).'),
+      eqBand('TREBLE', 'treble', 'Top end: hi-hats and air (6 kHz and above).'),
+      { label: 'FLAT', locked: () => !viewerState.eq.on, value: () => ((viewerState.eq.bass || viewerState.eq.mid || viewerState.eq.treble) ? 'RESET' : 'FLAT'),
+        run: () => applyEq({ bass: 0, mid: 0, treble: 0 }),
+        help: 'Put all three bands back to 0. Boosting a band turns the overall volume down a little so loud songs don’t distort.' },
+    ] }]),
     { name: 'TV', rows: [
       { label: 'FULLSCREEN', value: () => (document.fullscreenElement ? 'ON' : 'OFF'), step: () => toggleFullscreen(), run: () => toggleFullscreen(),
         help: 'The picture and its on-screen display fill the screen. Double-click the picture or press F to toggle; Esc leaves.' },
@@ -586,6 +611,7 @@ export function initUI() {
         viewerState.reducedMode = 'auto'; save('lsd.reduced', 'auto'); applyReduced();
         viewerState.heavyMode = 'auto'; save('lsd.heavy', 'auto'); applyHeavy();
         viewerState.announce = false; save('lsd.announce', false);
+        applyEq(EQ_FLAT);
         if (!kiosk) applyTheme('dark');
         if (!live()) {
           reactDial.set(toDial(REACT_DEFAULT)); timeDial.set(TIME_STEPS.indexOf(16) / (TIME_STEPS.length - 1));

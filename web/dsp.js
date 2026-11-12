@@ -41,6 +41,7 @@ export const cvState = {
 // Analysis nodes and pre-allocated buffers
 let audioCtx = null;
 let gainNode = null;
+let eqNodes = null; // [bass, mid, treble, trim] between the volume and the speakers
 let broadbandAnalyser = null;
 let bassAnalyser = null;
 let midAnalyser = null;
@@ -621,7 +622,17 @@ export async function startAudio() {
     if (radio) {
       radio.connect(source);
       radio.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
+      // The EQ shapes only what is heard: the analysis above taps the radio before it.
+      const band = (type, hz) => { const f = audioCtx.createBiquadFilter(); f.type = type; f.frequency.value = hz; return f; };
+      const bass = band('lowshelf', EQ_HZ.bass);
+      const mid = band('peaking', EQ_HZ.mid);
+      mid.Q.value = EQ_MID_Q;
+      const treble = band('highshelf', EQ_HZ.treble);
+      const trim = audioCtx.createGain();
+      gainNode.connect(bass); bass.connect(mid); mid.connect(treble); treble.connect(trim);
+      trim.connect(audioCtx.destination);
+      eqNodes = [bass, mid, treble, trim];
+      applyEq(true);
     }
     source.connect(broadbandAnalyser);
     source.connect(bassFilter);
@@ -729,6 +740,47 @@ export function setVolume(volume) {
   if (gainNode && audioCtx) {
     gainNode.gain.setTargetAtTime(volume * volume, audioCtx.currentTime, 0.05);
   }
+}
+
+// -------------------------------------------------------
+// Equalizer: three bands on what is heard (radio or tape), the same as the Spaz Radio app's.
+// -------------------------------------------------------
+export const EQ_MIN_DB = -12;
+export const EQ_MAX_DB = 12;
+const EQ_HZ = { bass: 120, mid: 1000, treble: 6000 };
+const EQ_MID_Q = 0.7;
+let eq = { on: false, bass: 0, mid: 0, treble: 0 };
+
+/** Boosts would push loud masters past full scale, so the whole signal drops by the largest boost. */
+export function eqHeadroomDb({ bass, mid, treble }) {
+  return -Math.max(0, bass, mid, treble);
+}
+
+function applyEq(now = false) {
+  if (!eqNodes || !audioCtx) return;
+  const [bass, mid, treble, trim] = eqNodes;
+  const g = eq.on ? eq : { bass: 0, mid: 0, treble: 0 };
+  // Glide while playing; a suspended context would leave a glide pending, so set the value outright.
+  const glide = !now && audioCtx.state === 'running';
+  const set = (param, v) => {
+    if (glide) { param.setTargetAtTime(v, audioCtx.currentTime, 0.03); return; }
+    param.cancelScheduledValues(0);
+    param.value = v;
+  };
+  set(bass.gain, g.bass);
+  set(mid.gain, g.mid);
+  set(treble.gain, g.treble);
+  set(trim.gain, 10 ** (eqHeadroomDb(g) / 20));
+}
+
+/** The EQ's live gains [bass dB, mid dB, treble dB, trim ratio], or null before the sound has started (for the headless check). */
+export const eqGains = () => eqNodes?.map((n) => n.gain.value) ?? null;
+
+/** settings: { on, bass, mid, treble } in whole dB. Takes effect at once, or when the sound starts. */
+export function setEq(settings) {
+  const clamp = (v) => Math.max(EQ_MIN_DB, Math.min(EQ_MAX_DB, Math.round(Number(v) || 0)));
+  eq = { on: !!settings.on, bass: clamp(settings.bass), mid: clamp(settings.mid), treble: clamp(settings.treble) };
+  applyEq();
 }
 
 // -------------------------------------------------------

@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Web TV Equalizer (`web/dsp.js`, `web/ui.js`, `web/checks/ui_check.html`)
+- **New: MENU › EQ.** Bass (120 Hz shelf), mid (1 kHz) and treble (6 kHz shelf), ±12 dB in 1 dB steps, with an on/off switch and FLAT. It shapes only what you hear from the radio or a tape; the picture still reacts to the music as broadcast. Boosting a band turns the overall level down by that much so loud songs don't distort. Off by default, remembered in the browser, and RESET turns it off. Not shown in apps that embed the visuals, since they play the sound themselves (Spaz Radio 2.0.1 has its own).
+
 ### Factory Presets and FX Chains From the Web TV (`build.gradle.kts`, `rendering/Mixer.kt`, `defaults/`, `web/sync_manifest.json`)
 - **New: 124 factory presets that move with the music.** The scenes the web TV plays now ship with the desktop app too, named without the TV's `web-` prefix (`bass-mandala`, `ambient-crystal`...), with tags that say what each reacts to (`kick`, `bass`, `beat`, `bar`, `ambient`, `groove`, `hard`). The Garden flames are still included.
 - **Changed: the 16 stock FX chains are replaced by 35 reactive ones.** Each of the old chains has a reactive version (Hyperspace Trip is now `hyperspace`, Liquid Mercury `mercury` and so on), plus 19 new chains. A fresh install starts Master FX on `warmth`, Deck A on `mercury`, Deck B on `chrome`, Deck BG on `hyperspace` and Deck PV on `prism`. The web TV drops the 16 old chains from its FX list too; it never played them on its own.

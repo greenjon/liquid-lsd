@@ -108,9 +108,10 @@ Click or tap the picture to show the channel, the scene, its FX chain, the track
 
 - **SCENES:** **Time**, **Auto roll**, **Follow music**, **Effects**, **Background**, **BG changes**, **Skip this channel**, **Skipped**.
 - **SOUND:** **Audio input** (radio or microphone), **REACT**, **SYNC** (how late the sound reaches you, for Bluetooth and other delayed speakers), **TAP SYNC**.
+- **EQ:** **Equalizer** on or off (off by default), **Bass**, **Mid** and **Treble** (±12 dB each), **Flat**. It changes only what you hear from the radio or a tape, never what the picture reacts to. Boosting a band turns the overall volume down by the same amount so loud songs don't distort.
 - **TV:** **Fullscreen**, **Theme** (the cabinet and the room around it, dark or light; dark by default), **Announce scenes** (name each new scene on screen; off by default), **Reduced motion** (Auto follows your system setting), **Big GPU scenes** (Auto lets the GPU check decide), **Reset**, **About**.
 
-Settings are remembered in this browser. REACT, TIME, Auto roll, the background, effects and follow-music rows, Audio input and Big GPU scenes are locked during a live broadcast. RESET puts every setting back but leaves skipped channels skipped.
+Settings are remembered in this browser. REACT, TIME, Auto roll, the background, effects and follow-music rows, Audio input and Big GPU scenes are locked during a live broadcast. RESET puts every setting back, including turning the EQ off and flat, but leaves skipped channels skipped.
 
 **Variations:** no scene looks exactly the same twice. Each one's settings roll within a narrow span around the values it was tuned with whenever it comes on, and again on **ROLL** (`R`). Settings that come in steps (a colour mode, a number of petals, Mandala's shape) change on the bar line; the rest glide over it. MENU › **Auto roll** rolls the scene on air every 4, 8 or 16 bars, which goes well with HOLD.
 
