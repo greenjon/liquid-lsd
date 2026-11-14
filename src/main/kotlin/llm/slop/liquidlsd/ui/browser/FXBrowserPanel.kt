@@ -6,9 +6,7 @@ import imgui.ImGui
 import imgui.flag.ImGuiKey
 import imgui.type.ImBoolean
 import imgui.type.ImString
-import kotlinx.serialization.json.Json
 import llm.slop.liquidlsd.SessionContext
-import llm.slop.liquidlsd.models.FXPlaylistDto
 import llm.slop.liquidlsd.presets.FXBgQueueManager
 import llm.slop.liquidlsd.presets.FXQueueManager
 import llm.slop.liquidlsd.rendering.Deck
@@ -44,7 +42,6 @@ import java.io.File
  */
 object FXBrowserPanel {
     private val logger = KotlinLogging.logger {}
-    private val json = Json { ignoreUnknownKeys = true; prettyPrint = true }
 
     private const val STOCK_PATH_PREFIX = "stock-fx://"
 
@@ -145,7 +142,7 @@ object FXBrowserPanel {
             else -> "Saved single FX preset (.lsdfx) — loads into one FX slot."
         }
         val how = if (target != null) "Click: apply. Right-click: more." else "Double-click or Enter: load to the live deck. Ctrl/Shift+click: select several. Right-click: more."
-        itemTooltip(listOfNotNull(PresetListPanel.fullNameTip(asset, nameElided), about, how).joinToString("\n"))
+        itemTooltip(listOfNotNull(PresetListPanel.fullNameTip(asset, nameElided), LoadedMarks.tooltipOrNull(marks), about, how).joinToString("\n"))
 
         if (ImGui.isItemClicked(0)) {
             LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
@@ -224,9 +221,7 @@ object FXBrowserPanel {
         val n = if (saved.size > 1) "${saved.size} FX" else "1 FX"
         if (ImGui.menuItem("Add $n to A/B FX Queue")) saved.forEach { FXQueueManager.appendToQueue(File(it.path)) }
         if (ImGui.menuItem("Add $n to BG FX Queue")) saved.forEach { FXBgQueueManager.appendToQueue(File(it.path)) }
-        LibraryPanel.selectedFxPlaylistFile?.let { pl ->
-            if (ImGui.menuItem("Add $n to '${pl.nameWithoutExtension}'")) appendToActiveFxPlaylist(pl, saved.map { it.path })
-        }
+        PlaylistMenu.draw(BrowseKind.FX, saved.map { it.path })
         ImGui.separator()
         if (ImGui.menuItem("Delete $n...")) BrowserPopupHandler.openDeleteConfirmation(saved)
     }
@@ -352,12 +347,7 @@ object FXBrowserPanel {
         if (ImGui.menuItem("Add to BG FX Queue")) {
             FXBgQueueManager.appendToQueue(file)
         }
-        val activePlaylist = LibraryPanel.selectedFxPlaylistFile
-        if (activePlaylist != null) {
-            if (ImGui.menuItem("Add to '${activePlaylist.nameWithoutExtension}'")) {
-                appendToActiveFxPlaylist(activePlaylist, listOf(asset.path))
-            }
-        }
+        PlaylistMenu.draw(BrowseKind.FX, listOf(asset.path))
         ImGui.separator()
         if (ImGui.menuItem("Rename...")) BrowserPopupHandler.openRename(asset)
         if (ImGui.menuItem("Clone")) {
@@ -366,17 +356,5 @@ object FXBrowserPanel {
         if (ImGui.menuItem("Delete...")) BrowserPopupHandler.openDeleteConfirmation(listOf(asset))
         ImGui.separator()
         if (ImGui.menuItem("Reveal in File Manager")) BrowserPopupHandler.revealInFileManager(file)
-    }
-
-    private fun appendToActiveFxPlaylist(playlistFile: File, fxPaths: List<String>) {
-        if (!playlistFile.exists()) return
-        try {
-            val dto = json.decodeFromString<FXPlaylistDto>(playlistFile.readText())
-            val updated = dto.copy(items = dto.items + fxPaths)
-            llm.slop.liquidlsd.utils.AtomicFile.write(playlistFile, json.encodeToString(FXPlaylistDto.serializer(), updated))
-            LibraryPanel.refreshAssets()
-        } catch (e: Exception) {
-            logger.error(e) { "Failed to append $fxPaths to FX playlist ${playlistFile.name}" }
-        }
     }
 }

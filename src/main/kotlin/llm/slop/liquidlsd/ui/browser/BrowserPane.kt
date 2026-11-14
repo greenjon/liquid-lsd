@@ -54,6 +54,12 @@ object BrowserPane {
 
     fun focusSearch(kind: BrowseKind) { searchFocusRequests.add(kind) }
 
+    /** Set when Esc lands in an empty search field: the global Esc handler, which skips while a text field has focus, goes back anyway. */
+    private var escapeFromEmptySearch = false
+
+    /** Whether Esc was pressed in an empty search field since the last call; clears the flag. */
+    fun consumeEscapeFromEmptySearch(): Boolean = escapeFromEmptySearch.also { escapeFromEmptySearch = false }
+
     /** Tree rows whose children are hidden, keyed by kind then by the node's scope. */
     private val collapsed = HashMap<BrowseKind, MutableSet<BrowseScope>>()
 
@@ -263,7 +269,7 @@ object BrowserPane {
         }
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             if (ButtonChrome.button("${Icons.LIST_PLUS}##browserNewPlaylist", btnSize, btnSize)) {
-                BrowserPopupHandler.pendingOpenNewPlaylistPopup = true
+                BrowserPopupHandler.openNewPlaylist(kind)
             }
         }
         itemTooltip(
@@ -271,7 +277,7 @@ object BrowserPane {
                 BrowseKind.SRC -> "Sources"
                 BrowseKind.FX -> "FX"
                 BrowseKind.TRANS -> "Transitions"
-            } + " playlist, listed under Playlists. Fill it by dragging rows onto it or with a row's \"Add to\" item."
+            } + " playlist, listed under Playlists. Fill it by dragging rows onto it or with a row's \"Add to Playlist\" menu."
         )
         ImGui.separator()
         if (!ImGui.beginChild("##browser_tree_scroll", 0f, 0f, false)) {
@@ -352,6 +358,7 @@ object BrowserPane {
                 ImGui.text(node.label)
                 ImGui.endDragDropSource()
             }
+            if (playlist != null && manage) playlistDropTarget(kind, playlist)
             if (playlist != null) playlistContextMenu(session, mixer, kind, playlist)
             // Counts are items; an empty row shows none, the same rule for folders, playlists and the Playlists header.
             if (node.count > 0) {
@@ -533,6 +540,26 @@ object BrowserPane {
     }
 
     /** Right-click menu of a playlist node: queue transport, rename, clone, delete. */
+    /** A playlist's tree row: rows dropped on it (one or a multi-selection) go in at the end, as dropping below its last row does. */
+    private fun playlistDropTarget(kind: BrowseKind, scope: BrowseScope.Playlist) {
+        if (!ImGui.beginDragDropTarget()) return
+        ImGui.acceptDragDropPayload<String>("ASSET_ITEM")?.let { payload ->
+            val file = File(scope.path)
+            val paths = payload.lines().map { it.trim() }.filter { it.isNotEmpty() && File(it).absolutePath != file.absolutePath }
+            val edit: PlaylistEdit? = when (kind) {
+                BrowseKind.SRC -> LibraryPanel.getOrLoadPlaylist(file)?.let { PresetPlaylistEdit(it) }
+                else -> TokenPlaylistEdit.open(kind, file)
+            }
+            if (edit != null && paths.isNotEmpty()) {
+                val before = edit.size
+                edit.insertPaths(paths, before)
+                val added = edit.size - before
+                if (added > 0) ToastOverlay.show("Added ${if (added == 1) "1 item" else "$added items"} to ${file.nameWithoutExtension}")
+            }
+        }
+        ImGui.endDragDropTarget()
+    }
+
     private fun playlistContextMenu(session: SessionContext, mixer: Mixer, kind: BrowseKind, scope: BrowseScope.Playlist) {
         val file = File(scope.path)
         if (!ImGui.beginPopupContextItem("playlist_node_menu")) return
@@ -555,7 +582,7 @@ object BrowserPane {
                 if (ImGui.menuItem("Add All to A/B FX Queue")) QueueOps.edit(QueueDrop.Queue.FX_AB, session.parametersState) { FXQueueManager.appendToQueue(file) }
                 if (ImGui.menuItem("Add All to BG FX Queue")) QueueOps.edit(QueueDrop.Queue.FX_BG, session.parametersState) { FXBgQueueManager.appendToQueue(file) }
             }
-            BrowseKind.TRANS -> if (ImGui.menuItem("Load Playlist to A/B Queue")) {
+            BrowseKind.TRANS -> if (ImGui.menuItem("Add Playlist to Transition Queue")) {
                 QueueOps.edit(QueueDrop.Queue.TRANS, session.parametersState) { TransitionQueueManager.appendToQueue(file) }
             }
         }
@@ -617,6 +644,8 @@ object BrowserPane {
         val search = searchBuffers.getOrPut(kind) { ImString(SearchMatcher.BUFFER_SIZE) }
         ImGui.setNextItemWidth(ImGui.getContentRegionAvailX())
         if (searchFocusRequests.remove(kind)) ImGui.setKeyboardFocusHere()
+        // Read before the field draws: on Esc ImGui reverts the field to its text from before it took focus.
+        val searchWasEmpty = search.get().isEmpty()
         session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
             // After a typed-ahead letter the field keeps the caret callback until it is active (focus lands a frame later).
             val moveCaret = kind in caretToEnd
@@ -628,11 +657,13 @@ object BrowserPane {
             }
             llm.slop.liquidlsd.tour.WidgetRegistry.note { "browser_search" }
         }
+        // Esc with text clears it and stays; Esc in an empty field (Ctrl+F, then nothing typed) also goes back, in one press.
         if (ImGui.isItemActive() && ImGui.isKeyPressed(ImGuiKey.Escape)) {
+            if (searchWasEmpty) escapeFromEmptySearch = true
             search.set("")
             LibraryPanel.shouldReclaimFocus = true
         }
-        itemTooltip("Type to filter by name, id, folder or tags.\nTyping a letter while the list has the keyboard starts a search too.\nPress Esc while searching to clear.")
+        itemTooltip("Type to filter by name, id, folder or tags.\nTyping a letter while the list has the keyboard starts a search too.\nPress Esc while searching to clear; Esc again goes back.")
         ImGui.separator()
         ImGui.spacing()
 

@@ -5,6 +5,8 @@ import llm.slop.liquidlsd.ui.AssetItem
 import llm.slop.liquidlsd.ui.AssetType
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class LoadedMarksTest {
     private fun snap(vararg held: Pair<DeckSlot, LoadedMarks.Held>) = LoadedMarks.Snapshot(held.toMap())
@@ -46,11 +48,18 @@ class LoadedMarksTest {
         assertEquals(emptyList(), s.marksFor(AssetItem(BrowseCatalogs.STOCK_TRANS_PREFIX + "fade", "fade", AssetType.TRANSITION_STOCK)).map { it.tag })
     }
 
-    @Test fun gutterFallsBackFromChipsToBarsToACount() {
+    @Test fun gutterFallsBackFromChipsToACount() {
         fun marks(vararg tags: String) = tags.map { LoadedMarks.Mark(it, floatArrayOf(1f, 0f, 0f), it) }
         val w = { tag: String -> tag.length * 8f }
         assertEquals(LoadedMarks.GutterStyle.CHIPS, LoadedMarks.gutterStyle(marks("A", "B"), w))
-        assertEquals(LoadedMarks.GutterStyle.BARS, LoadedMarks.gutterStyle(marks("A", "B", "BG", "PV"), w))
+        assertEquals(LoadedMarks.GutterStyle.COUNT, LoadedMarks.gutterStyle(marks("A", "B", "BG", "PV"), w))
         assertEquals(LoadedMarks.GutterStyle.COUNT, LoadedMarks.gutterStyle(marks("A1", "A2", "B1", "B2", "BG1", "PV1", "M1"), w))
+    }
+
+    @Test fun countChipTakesTheSharedColourElseNeutral() {
+        val red = floatArrayOf(1f, 0f, 0f)
+        val blue = floatArrayOf(0f, 0f, 1f)
+        assertTrue(LoadedMarks.countColor(listOf(LoadedMarks.Mark("A1", red, ""), LoadedMarks.Mark("A2", red, ""))).contentEquals(red))
+        assertFalse(LoadedMarks.countColor(listOf(LoadedMarks.Mark("A1", red, ""), LoadedMarks.Mark("B1", blue, ""))).contentEquals(red))
     }
 }

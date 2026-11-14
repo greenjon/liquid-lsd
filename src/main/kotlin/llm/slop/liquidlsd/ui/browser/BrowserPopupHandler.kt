@@ -65,6 +65,19 @@ object BrowserPopupHandler {
         }
     }
     var pendingOpenNewPlaylistPopup = false
+
+    /** What the open New Playlist modal makes: its kind (null: the Library tab shown), its folder (null: the top level) and the rows to add once it exists. */
+    private var newPlaylistKind: BrowseKind? = null
+    private var newPlaylistDir: File? = null
+    private var newPlaylistAdd: List<String> = emptyList()
+
+    /** Opens New Playlist for [kind], creating it in [dir] (null: the top of the kind's playlists) and then adding [addPaths] to it. */
+    fun openNewPlaylist(kind: BrowseKind, dir: File? = null, addPaths: List<String> = emptyList()) {
+        newPlaylistKind = kind
+        newPlaylistDir = dir
+        newPlaylistAdd = addPaths
+        pendingOpenNewPlaylistPopup = true
+    }
     var pendingOpenExportQueuePopup = false
     var pendingOpenExportFxQueuePopup = false
     var pendingOpenExportFxBgQueuePopup = false
@@ -341,61 +354,76 @@ object BrowserPopupHandler {
 
     fun drawNewPlaylistPopup() {
         if (ImGui.beginPopupModal("New Playlist##NewPlaylistPopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
-            val isTransMode = LibraryPanel.viewMode == LibraryPanel.LibraryViewMode.TRANS
-            val isFxMode = LibraryPanel.viewMode == LibraryPanel.LibraryViewMode.FX
-            val titleText = when {
-                isTransMode -> "Create New Transition Playlist"
-                isFxMode -> "Create New FX Playlist"
-                else -> "Create New Playlist"
+            val kind = newPlaylistKind ?: when (LibraryPanel.viewMode) {
+                LibraryPanel.LibraryViewMode.TRANS -> BrowseKind.TRANS
+                LibraryPanel.LibraryViewMode.FX -> BrowseKind.FX
+                else -> BrowseKind.SRC
             }
-            ImGui.text(titleText)
+            val root = LibraryFolders.rootOf(kind, BrowseSection.PLAYLISTS)!!
+            val dir = newPlaylistDir?.takeIf { LibraryFolders.isInside(it, root) } ?: root
+            ImGui.text(when (kind) {
+                BrowseKind.TRANS -> "Create New Transition Playlist"
+                BrowseKind.FX -> "Create New FX Playlist"
+                BrowseKind.SRC -> "Create New Playlist"
+            })
+            if (dir != root) ImGui.textDisabled("In ${dir.relativeTo(root).path.replace('\\', '/')}")
+            if (newPlaylistAdd.isNotEmpty()) ImGui.textDisabled(if (newPlaylistAdd.size == 1) "Adds the selected item" else "Adds the ${newPlaylistAdd.size} selected items")
             ImGui.separator()
             ModalKeys.focusOnOpen()
             ImGui.inputText("Name", newPlaylistNameBuffer)
-            val nameOk = llm.slop.liquidlsd.ui.NameCheck.ok(newPlaylistNameBuffer.get())
+            val name = newPlaylistNameBuffer.get().trim()
+            val ext = LibraryFolders.extensionOf(kind, BrowseSection.PLAYLISTS)!!
+            val taken = name.isNotEmpty() && File(dir, "$name.$ext").exists()
+            if (taken) ImGui.textDisabled("A playlist with that name is already here.")
+            val nameOk = llm.slop.liquidlsd.ui.NameCheck.ok(newPlaylistNameBuffer.get()) && !taken
             val keyAnswer = ModalKeys.answer()
             if ((ButtonChrome.button("Create", 120f, 0f) || keyAnswer == true) && nameOk) {
-                val name = newPlaylistNameBuffer.get().trim()
-                if (name.isNotBlank()) {
-                    if (isTransMode) {
-                        val root = FileSystemManager.getTransitionPlaylistsRoot()
-                        val file = File(root, "$name.lsdtransplay")
-                        if (FileSystemManager.isManagedAssetPath(file)) {
-                            val dto = TransitionPlaylistDto(name = name)
-                            file.parentFile?.mkdirs()
-                            llm.slop.liquidlsd.utils.AtomicFile.write(file, json.encodeToString(TransitionPlaylistDto.serializer(), dto))
-                            LibraryPanel.selectedTransitionPlaylistFile = file
-                            LibraryPanel.refreshAssets()
-                        } else {
-                            logger.error { "Refusing to create transition playlist outside managed root: $name" }
-                        }
-                    } else if (isFxMode) {
-                        val root = FileSystemManager.getFxPlaylistsRoot()
-                        val file = File(root, "$name.lsdfxplay")
-                        if (FileSystemManager.isManagedAssetPath(file)) {
-                            val dto = FXPlaylistDto(name = name)
-                            file.parentFile?.mkdirs()
-                            llm.slop.liquidlsd.utils.AtomicFile.write(file, json.encodeToString(FXPlaylistDto.serializer(), dto))
-                            LibraryPanel.selectedFxPlaylistFile = file
-                            LibraryPanel.refreshAssets()
-                        } else {
-                            logger.error { "Refusing to create FX playlist outside managed root: $name" }
-                        }
-                    } else {
-                        PlaylistManager.createPlaylist(name, FileSystemManager.getPlaylistsRoot()).onSuccess { newPlaylist ->
-                            LibraryPanel.selectedPlaylistFile = File(newPlaylist.filePath)
-                            LibraryPanel.activePlaylistData = newPlaylist
-                        }
-                    }
-                    newPlaylistNameBuffer.set("")
+                if (name.isNotBlank()) createPlaylist(kind, dir, name)?.let { file ->
+                    if (newPlaylistAdd.isNotEmpty()) PlaylistMenu.add(kind, file, newPlaylistAdd) else LibraryPanel.refreshAssets()
                 }
+                newPlaylistNameBuffer.set("")
+                clearNewPlaylistRequest()
                 ImGui.closeCurrentPopup()
             }
             ImGui.sameLine()
             if (ButtonChrome.button("Cancel", 120f, 0f) || keyAnswer == false) {
+                clearNewPlaylistRequest()
                 ImGui.closeCurrentPopup()
             }
             ImGui.endPopup()
+        }
+    }
+
+    private fun clearNewPlaylistRequest() {
+        newPlaylistKind = null
+        newPlaylistDir = null
+        newPlaylistAdd = emptyList()
+    }
+
+    /** Creates the empty playlist [name] of [kind] in [dir] and selects it in the tree; null (logged) when it can't. */
+    private fun createPlaylist(kind: BrowseKind, dir: File, name: String): File? {
+        if (kind == BrowseKind.SRC) {
+            return PlaylistManager.createPlaylist(name, dir.apply { mkdirs() }).map { pl ->
+                LibraryPanel.selectedPlaylistFile = File(pl.filePath)
+                LibraryPanel.activePlaylistData = pl
+                File(pl.filePath)
+            }.onFailure { logger.error(it) { "Failed to create playlist $name" } }.getOrNull()
+        }
+        val ext = LibraryFolders.extensionOf(kind, BrowseSection.PLAYLISTS)!!
+        val file = File(dir, "$name.$ext")
+        if (!FileSystemManager.isManagedAssetPath(file) || file.exists()) {
+            logger.error { "Refusing to create playlist $file" }
+            return null
+        }
+        return try {
+            val text = if (kind == BrowseKind.FX) json.encodeToString(FXPlaylistDto.serializer(), FXPlaylistDto(name = name))
+                else json.encodeToString(TransitionPlaylistDto.serializer(), TransitionPlaylistDto(name = name))
+            llm.slop.liquidlsd.utils.AtomicFile.write(file, text)
+            if (kind == BrowseKind.FX) LibraryPanel.selectedFxPlaylistFile = file else LibraryPanel.selectedTransitionPlaylistFile = file
+            file
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to create playlist $file" }
+            null
         }
     }
 

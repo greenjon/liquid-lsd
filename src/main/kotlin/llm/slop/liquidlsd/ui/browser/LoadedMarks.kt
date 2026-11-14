@@ -96,18 +96,20 @@ internal object LoadedMarks {
 
     class Gutter(val x: Float, val y: Float)
 
-    /** How the gutter shows a row's marks: labelled chips, narrow colour bars (one per holder), or one count chip. */
-    enum class GutterStyle { CHIPS, BARS, COUNT }
+    /** How the gutter shows a row's marks: labelled chips, or one count chip when the chips do not fit. */
+    enum class GutterStyle { CHIPS, COUNT }
 
     /** The first style that fits [marks] in the gutter, given each chip label's width ([labelW]). */
     fun gutterStyle(marks: List<Mark>, labelW: (String) -> Float): GutterStyle {
         val chips = marks.sumOf { (labelW(it.tag) + CHIP_PAD * 2).toDouble() }.toFloat() + CHIP_GAP * (marks.size - 1) + PAD_X
-        if (chips <= GUTTER_W) return GutterStyle.CHIPS
-        val bars = marks.size * BAR_W + CHIP_GAP * (marks.size - 1) + PAD_X
-        return if (bars <= GUTTER_W) GutterStyle.BARS else GutterStyle.COUNT
+        return if (chips <= GUTTER_W) GutterStyle.CHIPS else GutterStyle.COUNT
     }
 
-    private const val BAR_W = 7f
+    /** The count chip's colour: the holders' shared colour (one deck's slots), else neutral. */
+    fun countColor(marks: List<Mark>): FloatArray {
+        val first = marks.first().rgb
+        return if (marks.all { it.rgb.contentEquals(first) }) first else MASTER_RGB
+    }
 
     /** Dark or white ink, whichever reads on a chip of [rgb]. */
     private fun inkOn(rgb: FloatArray): Int {
@@ -116,19 +118,17 @@ internal object LoadedMarks {
     }
 
     /**
-     * Draws the row's marks in the reserved [gutter]: one labelled chip per holder in its colour; when those do not fit, one narrow
-     * colour bar per holder; when even those do not fit (an effect in many slots), one count chip in the first holder's colour.
-     * The hover text always lists every holder. Drawn after the selectable on purpose: it highlights the whole row width, gutter
-     * included, and would paint over marks drawn first.
+     * Draws the row's marks in the reserved [gutter]: one labelled chip per holder in its colour; when those do not fit, one
+     * `×n` count chip. No tooltip of its own: the row's selectable spans the gutter, and two tooltips asking at once each reset
+     * the other's hover delay, so the row's tooltip carries [tooltip] instead. Drawn after the selectable on purpose: it
+     * highlights the whole row width, gutter included, and would paint over marks drawn first.
      */
     fun drawGutter(gutter: Gutter, marks: List<Mark>, rowH: Float) {
         if (marks.isEmpty()) return
-        val x0 = gutter.x
-        val y0 = gutter.y
         val dl = ImGui.getWindowDrawList()
         val chipH = ImGui.getTextLineHeight() + 2f
-        val top = y0 + (rowH - chipH) * 0.5f
-        var x = x0 + PAD_X
+        val top = gutter.y + (rowH - chipH) * 0.5f
+        var x = gutter.x + PAD_X
         when (gutterStyle(marks) { ImGui.calcTextSize(it).x }) {
             GutterStyle.CHIPS -> for (m in marks) {
                 val w = ImGui.calcTextSize(m.tag).x + CHIP_PAD * 2
@@ -136,21 +136,13 @@ internal object LoadedMarks {
                 dl.addText(x + CHIP_PAD, top + 1f, inkOn(m.rgb), m.tag)
                 x += w + CHIP_GAP
             }
-            GutterStyle.BARS -> for (m in marks) {
-                dl.addRectFilled(x, top, x + BAR_W, top + chipH, TangoPalette.u32(m.rgb), 2f)
-                x += BAR_W + CHIP_GAP
-            }
             GutterStyle.COUNT -> {
-                val rgb = marks.first().rgb
+                val rgb = countColor(marks)
                 val text = "×${marks.size}"
                 val w = ImGui.calcTextSize(text).x + CHIP_PAD * 2
                 dl.addRectFilled(x, top, x + w, top + chipH, TangoPalette.u32(rgb), 3f)
                 dl.addText(x + CHIP_PAD, top + 1f, inkOn(rgb), text)
             }
-        }
-        if (ImGui.isWindowHovered() && ImGui.isMouseHoveringRect(x0, y0, x0 + GUTTER_W, y0 + rowH)) {
-            val tip = tooltip(marks)
-            llm.slop.liquidlsd.ui.showTooltip(tip, (x0.toInt() shl 16) xor (y0.toInt() and 0xFFFF) xor tip.hashCode())
         }
     }
 
@@ -162,4 +154,7 @@ internal object LoadedMarks {
     }
 
     fun tooltip(marks: List<Mark>): String = "Loaded on " + marks.joinToString(", ") { it.desc }
+
+    /** [tooltip], or null for a row loaded nowhere; for joining into a row's own tooltip. */
+    fun tooltipOrNull(marks: List<Mark>): String? = if (marks.isEmpty()) null else tooltip(marks)
 }

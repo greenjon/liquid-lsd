@@ -419,7 +419,9 @@ class UIManager(
         // Guarded so it never fires while a text/search input has keyboard focus.
         // A Library modal (Rename, Delete, ...) answers Esc itself, and an open menu or popup closes on it without also going back;
         // the unsaved-deck prompt is the exception, cancelled through back.
-        if (!ModalKeys.ownsEscape() && shouldHandleEscape(ImGui.getIO().wantTextInput, ImGui.isKeyPressed(imgui.flag.ImGuiKey.Escape, false))) {
+        // Esc in an empty Library search field is the exception: it leaves the field and goes back in the same press.
+        val escFromEmptySearch = llm.slop.liquidlsd.ui.browser.BrowserPane.consumeEscapeFromEmptySearch()
+        if (!ModalKeys.ownsEscape() && (escFromEmptySearch || shouldHandleEscape(ImGui.getIO().wantTextInput, ImGui.isKeyPressed(imgui.flag.ImGuiKey.Escape, false)))) {
             val mixer = currentMixer
             // ImGui has already closed the popup by the time this runs, so ask whether one was open just before.
             val popupOpen = popupOpenLastFrame || popupOpenFrameBefore

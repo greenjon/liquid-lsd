@@ -19,7 +19,6 @@ import llm.slop.liquidlsd.ui.FileSystemManager
 import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.LibraryNavigation
 import llm.slop.liquidlsd.ui.LibraryPanel
-import llm.slop.liquidlsd.ui.PlaylistManager
 import llm.slop.liquidlsd.ui.ParametersState
 import llm.slop.liquidlsd.ui.UIManager
 import llm.slop.liquidlsd.ui.UITheme
@@ -155,7 +154,8 @@ object PresetListPanel {
                 nameElided = lastNameElided
                 llm.slop.liquidlsd.tour.WidgetRegistry.note { tourRowKey(BrowseKind.SRC, asset) }
             }
-            LoadedMarks.drawGutter(gutter, loaded.marksFor(asset), DROPDOWN_ROW_HEIGHT)
+            val marks = loaded.marksFor(asset)
+            LoadedMarks.drawGutter(gutter, marks, DROPDOWN_ROW_HEIGHT)
             val io = ImGui.getIO()
             // Keyboard nav also "clicks" the focused row on Enter; Enter's row action is BrowserDock's, so that click is dropped here.
             if (itemClicked && (ImGui.isKeyPressed(ImGuiKey.Enter, false) || ImGui.isKeyPressed(ImGuiKey.KeypadEnter, false))) itemClicked = false
@@ -190,6 +190,7 @@ object PresetListPanel {
             if (isRowHovered) {
                 if (hasIssues) {
                     showCustomTooltip(asset.path.hashCode()) {
+                        LoadedMarks.tooltipOrNull(marks)?.let { ImGui.textUnformatted(it); ImGui.spacing() }
                         ImGui.textColored(0.95f, 0.40f, 0.40f, 1f, "[!] Preset has inactive or hidden modulators:")
                         ImGui.spacing()
                         for (issue in issues) {
@@ -206,6 +207,7 @@ object PresetListPanel {
                     val heavy = asset.gpuCost >= GPU_COST_HEAVY
                     showCustomTooltip(asset.path.hashCode(), estimatedHeight = if (thumb != 0) 240f else if (heavy) 150f else 110f) {
                         ImGui.textUnformatted(fullNameTip(asset, nameElided) ?: rowName(asset))
+                        LoadedMarks.tooltipOrNull(marks)?.let { ImGui.textDisabled(it) }
                         ImGui.separator()
                         for (note in notes) ImGui.textDisabled(note.description)
                         if (heavy) ImGui.textUnformatted("${Icons.GAUGE} $GPU_COST_TIP")
@@ -320,13 +322,7 @@ object PresetListPanel {
                     if (ImGui.menuItem(bgLabel)) {
                         targets.forEach { llm.slop.liquidlsd.presets.BgQueueManager.appendToQueue(File(it.path)) }
                     }
-                    val activePl = LibraryPanel.activePlaylistData
-                    if (activePl != null) {
-                        val plLabel = if (count > 1) "Add $count Presets to '${activePl.name}'" else "Add to '${activePl.name}'"
-                        if (ImGui.menuItem(plLabel)) {
-                            targets.forEach { PlaylistManager.insertPreset(activePl, it.path, activePl.presets.size) }
-                        }
-                    }
+                    PlaylistMenu.draw(BrowseKind.SRC, targets.map { it.path })
                     ImGui.separator()
                     if (count == 1) {
                         if (asset.type == AssetType.PRESET) {

@@ -5,10 +5,8 @@ import imgui.ImGui
 import imgui.flag.ImGuiKey
 import imgui.type.ImBoolean
 import imgui.type.ImString
-import kotlinx.serialization.json.Json
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.models.FXSlotDto
-import llm.slop.liquidlsd.models.TransitionPlaylistDto
 import llm.slop.liquidlsd.models.toDto
 import llm.slop.liquidlsd.presets.TransitionOps
 import llm.slop.liquidlsd.presets.TransitionQueueManager
@@ -37,12 +35,11 @@ import java.io.File
  * Transition row helpers for the unified browser: stock ISF transition shaders
  * and saved transition presets (.lsdtrans) in one filterable list, mirroring
  * FXBrowserPanel's stock/saved merge. Unlike FX_STOCK filters, stock transitions
- * support Add to A/B Queue / Add to Playlist same as saved presets — only
+ * support Add to Transition Queue / Add to Playlist same as saved presets — only
  * Rename/Clone/Delete (file lifecycle ops) are preset-only.
  */
 object TransitionBrowserPanel {
     private val logger = KotlinLogging.logger {}
-    private val json = Json { ignoreUnknownKeys = true; prettyPrint = true }
 
     private const val STOCK_PATH_PREFIX = "stock-trans://"
 
@@ -100,7 +97,7 @@ object TransitionBrowserPanel {
             "Saved transition preset (.lsdtrans) — apply, queue, add to a playlist, or manage."
         }
         val how = if (target != null) "Click: apply. Right-click: more." else "Double-click or Enter: apply to the mixer. Ctrl/Shift+click: select several. Right-click: more."
-        itemTooltip(listOfNotNull(PresetListPanel.fullNameTip(asset, nameElided), about, how).joinToString("\n"))
+        itemTooltip(listOfNotNull(PresetListPanel.fullNameTip(asset, nameElided), LoadedMarks.tooltipOrNull(marks), about, how).joinToString("\n"))
 
         if (ImGui.isItemClicked(0)) {
             LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
@@ -161,19 +158,14 @@ object TransitionBrowserPanel {
         return if (inOrder.any { it.path == asset.path }) inOrder else listOf(asset)
     }
 
-    private fun playlistToken(asset: AssetItem): String =
-        if (asset.type == AssetType.TRANSITION_STOCK) asset.path.removePrefix(STOCK_PATH_PREFIX) else asset.path
-
     /** The row menu while several rows are selected: queue and playlist for all of them, delete for the saved ones. */
     private fun drawMultiMenu(rows: List<AssetItem>) {
         val selected = selection.getSelectedInOrder(rows)
         val n = "${selected.size} Transitions"
         ImGui.textDisabled("$n Selected")
         ImGui.separator()
-        if (ImGui.menuItem("Add $n to A/B Queue")) selected.forEach { TransitionQueueManager.appendToQueue(fileFor(it)) }
-        LibraryPanel.selectedTransitionPlaylistFile?.let { pl ->
-            if (ImGui.menuItem("Add $n to '${pl.nameWithoutExtension}'")) appendToActiveTransitionPlaylist(pl, selected.map { playlistToken(it) })
-        }
+        if (ImGui.menuItem("Add $n to Transition Queue")) selected.forEach { TransitionQueueManager.appendToQueue(fileFor(it)) }
+        PlaylistMenu.draw(BrowseKind.TRANS, selected.map { fileFor(it).path })
         val saved = selected.filter { it.type == AssetType.TRANSITION_PRESET }
         if (saved.isNotEmpty()) {
             ImGui.separator()
@@ -210,15 +202,10 @@ object TransitionBrowserPanel {
             BrowseRecents.note(asset)
         }
         ImGui.separator()
-        if (ImGui.menuItem("Add to A/B Queue")) {
+        if (ImGui.menuItem("Add to Transition Queue")) {
             TransitionQueueManager.appendToQueue(fileFor(asset))
         }
-        val activePlFile = LibraryPanel.selectedTransitionPlaylistFile
-        if (activePlFile != null) {
-            if (ImGui.menuItem("Add to '${activePlFile.nameWithoutExtension}'")) {
-                appendToActiveTransitionPlaylist(activePlFile, listOf(playlistToken(asset)))
-            }
-        }
+        PlaylistMenu.draw(BrowseKind.TRANS, listOf(fileFor(asset).path))
 
         if (asset.type == AssetType.TRANSITION_PRESET) {
             ImGui.separator()
@@ -231,18 +218,6 @@ object TransitionBrowserPanel {
             if (ImGui.menuItem("Delete...")) BrowserPopupHandler.openDeleteConfirmation(listOf(asset))
             ImGui.separator()
             if (ImGui.menuItem("Reveal in File Manager")) BrowserPopupHandler.revealInFileManager(File(asset.path))
-        }
-    }
-
-    private fun appendToActiveTransitionPlaylist(playlistFile: File, tokens: List<String>) {
-        if (!playlistFile.exists()) return
-        try {
-            val dto = json.decodeFromString<TransitionPlaylistDto>(playlistFile.readText())
-            val updated = dto.copy(items = dto.items + tokens)
-            llm.slop.liquidlsd.utils.AtomicFile.write(playlistFile, json.encodeToString(TransitionPlaylistDto.serializer(), updated))
-            LibraryPanel.refreshAssets()
-        } catch (e: Exception) {
-            logger.error(e) { "Failed to append $tokens to transition playlist ${playlistFile.name}" }
         }
     }
 }

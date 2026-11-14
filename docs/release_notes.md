@@ -1,5 +1,13 @@
 ## [Unreleased]
 
+### Library Fixes From the In-App Checklist (`ui/browser/PlaylistMenu.kt`, `ui/browser/PlaylistTargets.kt`, `ui/browser/BrowserPopupHandler.kt`, `ui/browser/LoadedMarks.kt`, `ui/browser/PresetListPanel.kt`, `ui/browser/FXBrowserPanel.kt`, `ui/browser/TransitionBrowserPanel.kt`, `ui/browser/BrowserPane.kt`, `ui/UIManager.kt`, `ui/shortcuts/ShortcutManager.kt`)
+- **Fixed: a row loaded in many places showed blank coloured bars.** The same source on all four decks (or an effect in three slots) now shows one `×4` chip instead of unlabelled bars. The chip takes the deck's colour when every slot is on one deck, otherwise grey.
+- **Fixed: hovering the deck chips showed no tooltip.** The chips' tooltip and the row's own cancelled each other out. The row's tooltip now starts with `Loaded on Deck A, Deck B...` wherever you hover.
+- **Fixed: Esc took two presses after Ctrl+F.** Esc in an empty search box now leaves the Library in one press. With text in the box, the first Esc still clears it and the second goes back.
+- **Changed: transitions say Transition Queue.** The Transitions tab's menus read **Add to Transition Queue** and **Add Playlist to Transition Queue**, not A/B Queue. The `Q` shortcut is now called **Add to Queue** in Preferences › Shortcuts, since it adds to the current tab's queue.
+- **Changed: Add to Playlist is a submenu of every playlist.** On the Sources, FX and Transitions tabs, the row menu's **Add to Playlist** lists all the tab's playlists, with playlist folders as submenus, so a playlist no longer has to be selected in the tree first. **New Playlist...** (or **New Playlist Here...** in a folder) creates one and adds the rows to it. A toast confirms each add. The one-click **Add to '<playlist>'** for the selected playlist is still there.
+- **Fixed: effects added to a playlist from the menu stored their full file path.** Those playlists broke if the library folder moved. They now store the short path a drag stores; playlists made before still work.
+
 ### Web TV Key Bank (`web/index.html`, `web/tv.css`, `web/ui.js`, `web/checks/ui_check.html`)
 - **Changed: a tidier control panel.** PWR, VOL and CH are bigger; FX, ROLL, HOLD, BARS and REACT sit together on a recessed panel; the channel badge, what the TV is listening to and the listener count share one display window.
 - **New: the key bank.** What shows over the picture is now a row of piano keys under the display, like a car radio's: **OFF · INFO · MENU · SCHED · TAPES · ?**. One key is down at a time. **OFF** (new) closes any page and turns INFO off in one press; **?** (new) lists the keyboard shortcuts, as `?` does. INFO goes back down when you close a page opened over it. LIVE and CHAT are round buttons beside the keys (TV v34).
