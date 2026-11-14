@@ -54,6 +54,20 @@ class FxChainDirtyAndSteppingTest {
     }
 
     @Test
+    fun fileWithNoSuperKnobIsCleanOnLoad() {
+        val chain = FxChain("Web")
+        chain.slots[0] = testFilter("blur")
+        val live = chain.toFxChainDto("Web")
+        // The factory chains from the web TV store neither the Super Knob nor the link flags.
+        chain.baselineDto = live.copy(superKnob = null, slotSuperKnobLink = null)
+        assertFalse(chain.computeIsDirty(), "A chain file without a Super Knob is clean on load")
+        chain.superKnob.baseValue = 0.7f
+        assertFalse(chain.computeIsDirty(), "Turning the Super Knob never counts")
+        chain.superKnob.modulators.add(llm.slop.liquidlsd.parameters.CvModulator(sourceId = "audio_amp", depth = 0.5f))
+        assertTrue(chain.computeIsDirty(), "A modulator added to it does")
+    }
+
+    @Test
     fun testDirtyTrackingLoadTweakSaveRevert(@TempDir tempDir: Path) {
         val chain = FxChain("Test Chain")
         val file = tempDir.resolve("my_chain.lsdfxchain").toFile()

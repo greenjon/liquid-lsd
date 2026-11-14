@@ -1,0 +1,139 @@
+  PASS sess_unreadable: session loads
+
+  FAIL fresh_install: fresh install loads groove-mandala on A   [src=EMPTY file=null dirty=false fx=[Luma displace, Fluid smear, -]]
+  FAIL fresh_install: fresh install loads tunnel-synthwave on B   [src=EMPTY file=null dirty=false fx=[Wave displace, Mirror sphere, Color levels]]
+  FAIL fresh_install: fresh install loads ambient-tides on BG   [src=EMPTY file=null dirty=false fx=[Kaleidoscope, Feedback, Gradient map]]
+  FAIL fresh_install: fresh install loads julia-groove on PV   [src=EMPTY file=null dirty=false fx=[Faceted glass, Kaleidoscope, Rgb split]]
+  FAIL fresh_install: no chain unsaved at launch   [[('A_chain', 'ry.lsdfxchain dirty=true on=true wet=1.0'), ('B_chain', 'me.lsdfxchain dirty=true on=true wet=1.0'), ('BG_chain', 'ce.lsdfxchain dirty=true on=true wet=1.0'), ('PV_chain', 'sm.lsdfxchain dirty=true on=true wet=1.0'), ('M_chain', 'warmth file=warmth.lsdfxchain dirty=true')]]
+  PASS fresh_install: four load toasts or fewer
+  PASS fresh_install: fresh install loads groove-mandala on A
+  PASS fresh_install: fresh install loads tunnel-synthwave on B
+  PASS fresh_install: fresh install loads ambient-tides on BG
+  PASS fresh_install: fresh install loads julia-groove on PV
+  FAIL fresh_install: no chain unsaved at launch   [[('A_chain', 'ry.lsdfxchain dirty=true on=true wet=1.0'), ('B_chain', 'me.lsdfxchain dirty=true on=true wet=1.0'), ('BG_chain', 'ce.lsdfxchain dirty=true on=true wet=1.0'), ('PV_chain', 'sm.lsdfxchain dirty=true on=true wet=1.0'), ('M_chain', 'warmth file=warmth.lsdfxchain dirty=true')]]
+  PASS fresh_install: four load toasts or fewer
+  PASS sess_unreadable: session loads
+  PASS fresh_install: fresh install loads groove-mandala on A
+  PASS fresh_install: fresh install loads tunnel-synthwave on B
+  PASS fresh_install: fresh install loads ambient-tides on BG
+  PASS fresh_install: fresh install loads julia-groove on PV
+  PASS fresh_install: no chain unsaved at launch
+  PASS fresh_install: four load toasts or fewer
+  PASS sess_real: your real last session loads (no new .unreadable copy)
+  PASS sess_real: decks restored
+  PASS sess_unreadable: session loads
+
+
+  PASS q_menus_clear_undo: AB queue ⋮ has Export and Clear
+  PASS q_menus_clear_undo: AB filled
+  PASS q_menus_clear_undo: AB Clear empties it
+  PASS q_menus_clear_undo: AB Ctrl+Z brings it back
+  PASS q_menus_clear_undo: FX_AB queue ⋮ has Export and Clear
+  FAIL q_menus_clear_undo: FX_AB filled   [[]]
+  PASS q_menus_clear_undo: FX_AB Clear empties it
+  PASS q_menus_clear_undo: FX_AB Ctrl+Z brings it back
+  PASS q_menus_clear_undo: BG queue ⋮ has Export and Clear
+  PASS q_menus_clear_undo: BG filled
+  PASS q_menus_clear_undo: BG Clear empties it
+  PASS q_menus_clear_undo: BG Ctrl+Z brings it back
+  PASS q_menus_clear_undo: FX_BG queue ⋮ has Export and Clear
+  FAIL q_menus_clear_undo: FX_BG filled   [[]]
+  PASS q_menus_clear_undo: FX_BG Clear empties it
+  PASS q_menus_clear_undo: FX_BG Ctrl+Z brings it back
+  PASS q_menus_clear_undo: TRANS queue ⋮ has Export and Clear
+  PASS q_menus_clear_undo: TRANS filled
+  PASS q_menus_clear_undo: TRANS Clear empties it
+  PASS q_menus_clear_undo: TRANS Ctrl+Z brings it back
+  PASS q_menus_clear_undo: Clear toasts mention undo
+  PASS q_undo_marker: double-click plays the 2nd item
+  FAIL q_undo_marker: Remove drops the first row and the marker follows its item   [(['tt_alpha', 'tt_beta', 'tt_gamma'], 1, 1)]
+  PASS q_undo_marker: Ctrl+Z restores items and the playing marker
+  FAIL q_undo_marker: Remove toasts what went   [[]]
+  PASS q_menus_clear_undo: AB queue ⋮ has Export and Clear
+  PASS q_menus_clear_undo: AB filled
+  PASS q_menus_clear_undo: AB Clear empties it
+  PASS q_menus_clear_undo: AB Ctrl+Z brings it back
+  PASS q_menus_clear_undo: FX_AB queue ⋮ has Export and Clear
+  PASS q_menus_clear_undo: FX_AB filled
+  PASS q_menus_clear_undo: FX_AB Clear empties it
+  PASS q_menus_clear_undo: FX_AB Ctrl+Z brings it back
+  PASS q_menus_clear_undo: BG queue ⋮ has Export and Clear
+  PASS q_menus_clear_undo: BG filled
+  PASS q_menus_clear_undo: BG Clear empties it
+  PASS q_menus_clear_undo: BG Ctrl+Z brings it back
+  PASS q_menus_clear_undo: FX_BG queue ⋮ has Export and Clear
+  PASS q_menus_clear_undo: FX_BG filled
+  PASS q_menus_clear_undo: FX_BG Clear empties it
+  PASS q_menus_clear_undo: FX_BG Ctrl+Z brings it back
+  PASS q_menus_clear_undo: TRANS queue ⋮ has Export and Clear
+  PASS q_menus_clear_undo: TRANS filled
+  PASS q_menus_clear_undo: TRANS Clear empties it
+  PASS q_menus_clear_undo: TRANS Ctrl+Z brings it back
+  PASS q_menus_clear_undo: Clear toasts mention undo
+  PASS q_undo_marker: double-click plays the 2nd item
+  FAIL q_undo_marker: Remove drops the first row and the marker follows its item   [(['tt_alpha', 'tt_gamma'], 0, 1)]
+  PASS q_undo_marker: Ctrl+Z restores items and the playing marker
+  FAIL q_undo_marker: Remove toasts what went   [['Removed tt_beta from the A/B queue (Ctrl+Z)']]
+  PASS s1_folders_fx_chain_trans: New Folder under saved fx makes fx/ttfold_fx
+  FAIL s1_folders_fx_chain_trans: New Folder under saved fx_chains makes fx_chains/ttfold_ch   [['laser_concert_anamorphic.lsdfxchain', 'bloom.lsdfxchain', 'wormhole.lsdfxchain', 'chrome.lsdfxchain', 'laser.lsdfxchain', 'vortex.lsdfxchain', 'feedback, probably too much of it.lsdfxchain', 'grindhouse_vhs_bootleg.lsdfxchain', 'glitch.lsdfxchain', 'neon_wireframe.lsdfxchain', 'kaleido.lsdfxchain']
+  FAIL s1_folders_fx_chain_trans: New Folder under saved transitions makes transitions/ttfold_tr   [['laser_drop_flash.lsdtrans', 'tt_trans.lsdtrans', 'liquid_mercury_melt.lsdtrans', 'hyperspace_crash_zoom.lsdtrans', 'inferno_film_burn.lsdtrans', 'cosmic_singularity.lsdtrans', 'organic_plasma_dissolve.lsdtrans', 'pure_smooth_crossfade.lsdtrans', 'cyber_datamosh_glitch.lsdtrans']]
+  FAIL s1_folders_fx_chain_trans: folder menu has Rename/Delete Folder   [['m:File', 'm:Help', 'm:Output', 'm:View']]
+  FAIL s1_folders_fx_chain_trans: no folder menu on stock transitions   [['m:File', 'm:Help', 'm:Output', 'm:View']]
+  PASS s1_star_fx: starred single FX and chain listed under Favorites
+  FAIL s1_multisel_into_playlist: a dragged multi-selection lands in the playlist, in order   [['# Liquid LSD Playlist: test playlist', '# Generated: 2026-10-29T22:57:43.333558652', '']]
+  PASS s1_folders_fx_chain_trans: New Folder under saved fx makes fx/ttfold_fx
+  FAIL s1_folders_fx_chain_trans: New Folder under saved fx_chains makes fx_chains/ttfold_ch   [['laser_concert_anamorphic.lsdfxchain', 'bloom.lsdfxchain', 'wormhole.lsdfxchain', 'chrome.lsdfxchain', 'laser.lsdfxchain', 'vortex.lsdfxchain', 'feedback, probably too much of it.lsdfxchain', 'grindhouse_vhs_bootleg.lsdfxchain', 'glitch.lsdfxchain', 'neon_wireframe.lsdfxchain', 'kaleido.lsdfxchain']
+  FAIL s1_folders_fx_chain_trans: New Folder under saved transitions makes transitions/ttfold_tr   [['laser_drop_flash.lsdtrans', 'tt_trans.lsdtrans', 'liquid_mercury_melt.lsdtrans', 'hyperspace_crash_zoom.lsdtrans', 'inferno_film_burn.lsdtrans', 'cosmic_singularity.lsdtrans', 'organic_plasma_dissolve.lsdtrans', 'pure_smooth_crossfade.lsdtrans', 'cyber_datamosh_glitch.lsdtrans']]
+  FAIL s1_folders_fx_chain_trans: folder menu has Rename/Delete Folder   [['m:File', 'm:Help', 'm:Output', 'm:View']]
+  FAIL s1_folders_fx_chain_trans: no folder menu on stock transitions   [['m:File', 'm:Help', 'm:Output', 'm:View']]
+  PASS s1_folders_fx_chain_trans: New Folder under saved fx makes fx/ttfold_fx
+  PASS s1_folders_fx_chain_trans: New Folder under saved fx_chains makes fx_chains/ttfold_ch
+  PASS s1_folders_fx_chain_trans: New Folder under saved transitions makes transitions/ttfold_tr
+  PASS s1_folders_fx_chain_trans: folder menu has Rename/Delete Folder
+  FAIL s1_folders_fx_chain_trans: no folder menu on stock transitions   [['m:File', 'm:Help', 'm:Output', 'm:View']]
+  PASS s1_multisel_into_playlist: a multi-selection dropped on a playlist in the tree lands in it, in order
+  PASS s1_multisel_into_playlist: same for saved FX onto an FX playlist
+  PASS s1_rename_in_queue_fav: the renamed preset keeps its queue row, under the new name
+  FAIL s1_rename_in_queue_fav: the renamed queue row plays the renamed file   [src=EMPTY file=null dirty=false fx=[Luma displace, Fluid smear, -]]
+  PASS s1_rename_in_queue_fav: Favorites still lists it
+  FAIL s1_rename_in_queue_fav: Recent lists it after playing   [[]]
+  PASS s1_delete_loaded_recent_master: deleted preset gone from fav
+  PASS s1_delete_loaded_recent_master: deleted preset gone from rec
+  PASS s1_delete_loaded_recent_master: tt_beta file gone
+  PASS s1_delete_loaded_recent_master: Master's chain no longer points at the deleted file
+  PASS s1_multisel_into_folder_saveback: both selected rows moved into the folder
+  PASS s1_multisel_into_folder_saveback: no old-name copy at the top
+  PASS s1_multisel_into_folder_saveback: the loaded deck saves back into the folder (clean after Save)
+  PASS s1_multisel_into_folder_saveback: saved value written to the moved file
+  PASS s1_folder_onto_section_selection: a folder dragged onto its section moves back to the top
+  PASS s1_folder_onto_section_selection: renamed folder exists
+
+  PASS q_undo_marker: double-click plays the 2nd item
+  PASS q_undo_marker: Remove drops the first row and the marker follows its item
+  PASS q_undo_marker: Ctrl+Z restores items and the playing marker
+  PASS q_undo_marker: Remove toasts what went
+  PASS s6_dirty_events: chain loaded from file is clean
+  PASS s6_dirty_events: turning the Super Knob is not a change
+  PASS s6_dirty_events: turning a Metaknob is not a change
+  PASS s6_dirty_events: unlinking a slot is a change
+  PASS s6_dirty_events: reloading is clean again
+  PASS s6_dirty_events: swapping slots is a change
+  PASS s6_dirty_events: a new effect in a slot is a change
+  PASS s4_stock_click_defaults: preset loaded first
+  PASS s4_stock_click_defaults: clicking its stock source loads the defaults (no preset file)
+  PASS s4_stock_click_defaults: clicking it again changes nothing
+
+  PASS s1_unsaved_prompt: Esc cancels: deck A keeps tt_alpha
+
+
+  FAIL tw_s11_discrete_midi: a controller CC steps a discrete parameter onto whole steps   [['0.0', '0.15748031', '0.31496063', '0.39370078', '0.5511811', '0.70866144', '0.86614174', '1.0', '0.503937', '0.25984251']]
+  FAIL tw_s11_discrete_midi: a controller CC steps a discrete parameter: the live value is always on one of its 5 steps   [[(0.0, 0.0), (0.15748031, 0.0), (0.31496063, 0.0), (0.39370078, 0.0), (0.5511811, 1.0), (0.70866144, 1.0), (0.86614174, 1.0), (1.0, 1.0), (0.503937, 1.0), (0.25984251, 0.0)]]
+  PASS tw_s11_discrete_midi: a controller CC steps a discrete parameter: the live value is always on one of its 5 steps
+  PASS s1_folders_fx_chain_trans: New Folder under saved fx makes fx/ttfold_fx
+  PASS s1_folders_fx_chain_trans: New Folder under saved fx_chains makes fx_chains/ttfold_ch
+  PASS s1_folders_fx_chain_trans: New Folder under saved transitions makes transitions/ttfold_tr
+  PASS s1_folders_fx_chain_trans: folder menu has Rename/Delete Folder
+  PASS s1_folders_fx_chain_trans: no folder menu on stock transitions
+  PASS s1_rename_in_queue_fav: the renamed preset keeps its queue row, under the new name
+  PASS s1_rename_in_queue_fav: the renamed queue row plays the renamed file
+  PASS s1_rename_in_queue_fav: Favorites still lists it

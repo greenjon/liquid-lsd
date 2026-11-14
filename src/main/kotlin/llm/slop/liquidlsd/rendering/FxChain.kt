@@ -485,7 +485,9 @@ class FxChain(val label: String) {
         val base = baselineDto ?: return slots.any { it != null && it.id.isNotBlank() }
         val current = toFxChainDto()
         if (!sameParam(current.dryWet, base.dryWet)) return true
-        if (!sameParam(current.superKnob, base.superKnob, ignoreValue = true)) return true
+        // A file with no Super Knob (the web TV's chains) loaded it at rest, so only something added to it since counts.
+        if (base.superKnob == null) { if (current.superKnob?.modulators?.isNotEmpty() == true) return true }
+        else if (!sameParam(current.superKnob, base.superKnob, ignoreValue = true)) return true
         if (linkFlags(current) != linkFlags(base)) return true
         for (i in 0 until SLOT_COUNT) {
             if (!sameSlot(current.slots.getOrNull(i), base.slots.getOrNull(i))) return true

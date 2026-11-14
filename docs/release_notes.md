@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Fixes From the Checklist Run of 2026-11-14 (`rendering/FxChain.kt`, `ui/browser/BrowserPane.kt`)
+- **Fixed: every FX chain showed unsaved changes at launch.** The factory chains from the web TV store no Super Knob, and a missing one counted as a change, so all five starting chains showed `•` and an amber Save. A chain with no saved Super Knob is now clean until something is added to it.
+- **Fixed: dropping rows on a playlist in the tree did nothing.** Drag one row or a multi-selection onto a playlist under **Playlists** (Sources, FX or Transitions tab) and it goes in at the end, with a toast, as the user guide already said.
+
 ### Library Fixes From the In-App Checklist (`ui/browser/PlaylistMenu.kt`, `ui/browser/PlaylistTargets.kt`, `ui/browser/BrowserPopupHandler.kt`, `ui/browser/LoadedMarks.kt`, `ui/browser/PresetListPanel.kt`, `ui/browser/FXBrowserPanel.kt`, `ui/browser/TransitionBrowserPanel.kt`, `ui/browser/BrowserPane.kt`, `ui/UIManager.kt`, `ui/shortcuts/ShortcutManager.kt`)
 - **Fixed: a row loaded in many places showed blank coloured bars.** The same source on all four decks (or an effect in three slots) now shows one `×4` chip instead of unlabelled bars. The chip takes the deck's colour when every slot is on one deck, otherwise grey.
 - **Fixed: hovering the deck chips showed no tooltip.** The chips' tooltip and the row's own cancelled each other out. The row's tooltip now starts with `Loaded on Deck A, Deck B...` wherever you hover.

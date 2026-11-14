@@ -1,0 +1,14 @@
+audio_waveform_shape: loaded as src=EMPTY; music vs silence at the same moment RMSE [0.0982, 0.0982]; motion with music 0.0
+fft_color_lines: loaded as src=EMPTY; music vs silence at the same moment RMSE [0.0982, 0.0982]; motion with music 0.0
+fft_filled_waveform: loaded as src=EMPTY; music vs silence at the same moment RMSE [0.0982, 0.098]; motion with music 0.0032
+fft_spectrogram: loaded as src=EMPTY; music vs silence at the same moment RMSE [0.098, 0.098]; motion with music 0.0
+radial_spectrogram: loaded as src=EMPTY; music vs silence at the same moment RMSE [0.098, 0.098]; motion with music 0.0
+wd: loaded as src=Metaballs; music vs silence at the same moment RMSE [0.2296, 0.2705]; motion with music 0.1833
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by org.lwjgl.system.Library$$Lambda/0x00000000281298a0 in an unnamed module (file:/home/gj/projects/liquid-lsd/tests/web/.cache/app/rt/build/install/rt/
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+17:43:59.942 [main] WARN  llm.slop.liquidlsd.tour.TourRunner - Tour t=0.5: unknown source 'audio_waveform_shape'
+TOUR_WARN Tour t=0.5: unknown source 'audio_waveform_shape'
+TOUR_STATE audio_waveform_shape t=3.4 | A_chain: name=mercury file=mercury.lsdfxchain dirty=false on=true wet=1.0 | A: src=EMPTY file=null dirty=false fx=[Luma displace, Fluid smear, -] | B_chain: nam
+17:44:01.505 [main] WARN  llm.slop.liquidlsd.tour.TourRunner - Tour t=3.5: unknown source 'fft_color_lines'
