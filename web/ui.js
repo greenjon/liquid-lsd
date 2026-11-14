@@ -16,7 +16,7 @@ import { scheduleState, refreshSchedule, setShows, groupByDay, upcoming, parsePl
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v33';
+export const TV_VERSION = 'v34';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -226,6 +226,7 @@ function showIdent() {
 const kiosk = embed || new URLSearchParams(location.search).has('kiosk'); // embed is a kiosk without the extras
 let chatboard = null;      // the chat's blackboard (chatboard.js); none under kiosk / embed
 let deck = null;           // the VCR (tapedeck.js); none under kiosk / embed
+let syncKeys = () => {};   // puts the key bank's keys in step with the pages (set up with the controls)
 
 export function initUI() {
   const powerSwitch = document.getElementById('powerSwitch');
@@ -335,7 +336,7 @@ export function initUI() {
     if (e.target.closest('button, .rotary-dial, .rocker, #tv-menu, #about, #schedule, #keys, #skipped, a')) return; // they handle their own clicks
     if (viewerState.menu?.open) { viewerState.menu.hide(); return; } // a near-miss on the menu closes it, not the TV
     const near = e.target.closest('#tv-controls') ? nearestControl(e.clientX, e.clientY) : null;
-    if (!powerState.on && !near?.matches('#menuBtn, #scheduleBtn, #tapesBtn, #chatBtn')) { powerSwitch.click(); return; }
+    if (!powerState.on && !near?.matches('#key-bank button, #chatBtn')) { powerSwitch.click(); return; }
     if (near?.tagName === 'BUTTON') near.click(); // no control near: the picture shows the info; the cabinet is inert
   });
 
@@ -685,8 +686,8 @@ export function initUI() {
   const menu = createMenu(screen, pages, {
     version: TV_VERSION,
     isOn: () => powerState.on,
-    onOpen: () => { screen.classList.add('menu-open'); menuBtn.setAttribute('aria-pressed', 'true'); }, // the OSD steps aside
-    onClose: () => { screen.classList.remove('menu-open'); menuBtn.setAttribute('aria-pressed', 'false'); },
+    onOpen: () => { screen.classList.add('menu-open'); syncKeys(); }, // the OSD steps aside
+    onClose: () => { screen.classList.remove('menu-open'); syncKeys(); },
   });
   const toggleMenu = () => {
     const wasOpen = menu.open;
@@ -705,14 +706,14 @@ export function initUI() {
       about.hidden = true;
       keysPage.hidden = true;
       schedulePage.hidden = false;
-      scheduleBtn.setAttribute('aria-pressed', 'true');
+      syncKeys();
       // A list older than 10 minutes (or none yet) is fetched again; the page fills in when it lands.
       if (Date.now() - scheduleState.fetchedAt > SCHEDULE_STALE_MS) {
         refreshSchedule().then(() => { if (!schedulePage.hidden) renderSchedule(); });
       }
       renderSchedule();
     },
-    hide() { schedulePage.hidden = true; scheduleBtn.setAttribute('aria-pressed', 'false'); },
+    hide() { schedulePage.hidden = true; syncKeys(); },
     toggle() { schedulePage.hidden ? schedule.show() : schedule.hide(); },
     /** The headless check's fixture: parsed shows ({start, end, name}) instead of the network. */
     setShows,
@@ -847,18 +848,17 @@ export function initUI() {
   viewerState.skippedPage = skippedPage;
 
   // --- INFO: keeps the info lines (channel, scene, background, FX, track, next show) on screen ---
+  // It is the key bank's resting key: a page opened over it pops it up, and closing that page lets it back down.
   const infoBtn = document.getElementById('infoBtn');
   function setInfo(on) {
     viewerState.info = on;
     save('lsd.info', on);
-    infoBtn.setAttribute('aria-pressed', String(on));
+    syncKeys();
+    if (!powerState.on) return; // a setting with the TV off: the lines come up when it comes on
     if (on) showLook(undefined, 4000, true);
     else { for (const id of INFO_IDS) unflash(id); deck?.hideStrip(); }
   }
-  const toggleInfo = () => { if (powerState.on) setInfo(!viewerState.info); };
   viewerState.info = load('lsd.info', false) === true;
-  infoBtn.setAttribute('aria-pressed', String(viewerState.info));
-  infoBtn.addEventListener('click', toggleInfo);
   viewerState.schedule = schedule;
 
   // --- CHAT (chat.js, chatboard.js): the Spaz Radio chat on a blackboard beside the TV. It connects at page
@@ -901,6 +901,33 @@ export function initUI() {
     viewerState.tapes = deck;
   }
 
+  // --- The key bank: OFF · INFO · MENU · SCHED · TAPES · ?, one key down at a time, like a car radio's.
+  // The pages decide which key is down (a MutationObserver watches them), so every way in or out (keys, clicks,
+  // Esc, the power switch) keeps the bank in step. No page up: INFO or OFF is down, whichever is resting. ---
+  const pageKey = () => (menu.open || !about.hidden || skippedPage.open ? 'menu'
+    : schedule.open ? 'sched' : deck?.pageOpen ? 'tapes' : !keysPage.hidden ? 'keys' : null);
+  const bankKeys = { off: 'offBtn', info: 'infoBtn', menu: 'menuBtn', sched: 'scheduleBtn', tapes: 'tapesBtn', keys: 'keysBtn' };
+  syncKeys = () => {
+    const down = pageKey() ?? (viewerState.info ? 'info' : 'off');
+    for (const [k, id] of Object.entries(bankKeys)) {
+      const b = document.getElementById(id);
+      b.classList.toggle('down', k === down);
+      if (k !== 'tapes') b.setAttribute('aria-pressed', String(k === down)); // TAPES's own light is the tape deck's
+    }
+  };
+  /** INFO: from a page, closes it and rests on INFO; with no page up, toggles it. */
+  const pressInfo = () => {
+    if (pageKey()) { closePages(); if (!viewerState.info) setInfo(true); else syncKeys(); }
+    else setInfo(!viewerState.info);
+  };
+  document.getElementById('offBtn').addEventListener('click', () => { closePages(); if (viewerState.info) setInfo(false); });
+  infoBtn.addEventListener('click', () => pressInfo());
+  document.getElementById('keysBtn').addEventListener('click', () => {
+    if (keysPage.hidden) { closePages(); showKeys(); } else keysPage.hidden = true;
+  });
+  new MutationObserver(syncKeys).observe(screen, { subtree: true, attributes: true, attributeFilter: ['hidden'] });
+  syncKeys();
+
   // --- Keyboard ---
   window.addEventListener('keydown', (e) => {
     if (e.ctrlKey || e.metaKey || e.altKey || e.target.closest?.('input, textarea')) return;
@@ -911,7 +938,8 @@ export function initUI() {
     if (deck?.pageOpen) { deck.key(e); return; }
     if (tapping && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); tapSync(); return; }
     // With the menu open these still work: ?, S, I and T close it and do their thing, C toggles the chat.
-    if (menu.open && ['?', 'i', 'I', 's', 'S', 't', 'T'].includes(e.key)) menu.hide();
+    if (menu.open && ['?', 's', 'S', 't', 'T'].includes(e.key)) menu.hide();
+    if (menu.open && (e.key === 'i' || e.key === 'I')) { e.preventDefault(); pressInfo(); return; }
     if (!(menu.open && (e.key === 'c' || e.key === 'C')) && menu.key(e)) { e.preventDefault(); return; }
     if (e.key === 'm' || e.key === 'M') { e.preventDefault(); menu.show(); return; }
     if (e.key === 's' || e.key === 'S') { e.preventDefault(); schedule.show(); return; }
@@ -931,7 +959,7 @@ export function initUI() {
       '-': () => stepReact(-1), '=': () => stepReact(1), '+': () => stepReact(1),
       Escape: () => document.fullscreenElement && document.exitFullscreen().catch(console.error),
       f: toggleFullscreen, F: toggleFullscreen, a: toggleMic, A: toggleMic,
-      i: toggleInfo, I: toggleInfo,
+      i: pressInfo, I: pressInfo,
       ...(deck && powerState.on ? {
         k: deck.togglePause, K: deck.togglePause, l: () => document.getElementById('liveBtn').click(), L: () => document.getElementById('liveBtn').click(),
         ',': () => deck.seekBy(-30), '.': () => deck.seekBy(30), '<': () => deck.seekBy(-300), '>': () => deck.seekBy(300),

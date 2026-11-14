@@ -52,6 +52,26 @@ try {
   d.getElementById('infoBtn').click();
   check('The INFO button turns it off and the info goes', !w.LSD.viewerState.info && !osd('osd-name').shown && d.getElementById('infoBtn').getAttribute('aria-pressed') === 'false');
 
+  // The key bank: one key down at a time; INFO rests under the pages; OFF clears everything.
+  const bk = (id) => d.getElementById(id), down = () => [...d.querySelectorAll('#key-bank .bank-key.down')].map((b) => b.id);
+  check('Key bank: OFF is down with nothing over the picture', down().join() === 'offBtn', down().join());
+  bk('menuBtn').click();
+  check('Key bank: MENU goes down and pops OFF up', down().join() === 'menuBtn' && bk('offBtn').getAttribute('aria-pressed') === 'false', down().join());
+  bk('infoBtn').click();
+  check('Key bank: INFO closes the menu and goes down', bk('tv-menu').hidden && w.LSD.viewerState.info && down().join() === 'infoBtn', down().join());
+  bk('scheduleBtn').click();
+  check('Key bank: SCHED pops INFO up, INFO stays set', down().join() === 'scheduleBtn' && w.LSD.viewerState.info, down().join());
+  bk('scheduleBtn').click();
+  check('Key bank: SCHED again closes it and INFO is back down', bk('schedule').hidden && down().join() === 'infoBtn', down().join());
+  bk('keysBtn').click();
+  await sleep(50);
+  check('Key bank: ? lists the keys', !bk('keys').hidden && down().join() === 'keysBtn', down().join());
+  bk('offBtn').click();
+  await sleep(50);
+  check('Key bank: OFF closes the page and turns INFO off', bk('keys').hidden && !w.LSD.viewerState.info && down().join() === 'offBtn', down().join());
+  bk('infoBtn').click(); bk('infoBtn').click();
+  check('Key bank: INFO twice lets it back up', !w.LSD.viewerState.info && down().join() === 'offBtn', down().join());
+
   // Dragging a knob and letting go over the TV must not click the TV (power off).
   const dial = d.getElementById('reactDial');
   dial.dispatchEvent(new w.MouseEvent('mousedown', { bubbles: true, clientY: 300 }));

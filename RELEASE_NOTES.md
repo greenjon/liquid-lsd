@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Web TV Key Bank (`web/index.html`, `web/tv.css`, `web/ui.js`, `web/checks/ui_check.html`)
+- **Changed: a tidier control panel.** PWR, VOL and CH are bigger; FX, ROLL, HOLD, BARS and REACT sit together on a recessed panel; the channel badge, what the TV is listening to and the listener count share one display window.
+- **New: the key bank.** What shows over the picture is now a row of piano keys under the display, like a car radio's: **OFF · INFO · MENU · SCHED · TAPES · ?**. One key is down at a time. **OFF** (new) closes any page and turns INFO off in one press; **?** (new) lists the keyboard shortcuts, as `?` does. INFO goes back down when you close a page opened over it. LIVE and CHAT are round buttons beside the keys (TV v34).
+
 ### Web TV Equalizer (`web/dsp.js`, `web/ui.js`, `web/checks/ui_check.html`)
 - **New: MENU › EQ.** Bass (120 Hz shelf), mid (1 kHz) and treble (6 kHz shelf), ±12 dB in 1 dB steps, with an on/off switch and FLAT. It shapes only what you hear from the radio or a tape; the picture still reacts to the music as broadcast. Boosting a band turns the overall level down by that much so loud songs don't distort. Off by default, remembered in the browser, and RESET turns it off. Not shown in apps that embed the visuals, since they play the sound themselves (Spaz Radio 2.0.1 has its own).
 

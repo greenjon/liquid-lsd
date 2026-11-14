@@ -192,7 +192,7 @@ body {
 #tv-controls {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 22px;
   padding: 14px 8px 4px 8px;
 }
 
@@ -275,45 +275,73 @@ body {
   border-radius: 1px;
 }
 
-/* --- The toggles (MENU, SCHEDULE, INFO, CHAT), grouped on the right beside the station badge --- */
-#toggle-group {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  flex-grow: 1;              /* takes the row's spare width and sets the toggles against the right edge */
-  justify-content: flex-end;
+/* --- The clusters: the main controls, the recessed scene panel, the radio face --- */
+.control-cluster, #radio-face { display: flex; align-items: center; gap: 16px; }
+.main-controls { gap: 18px; }
+.scene-panel {
+  gap: 14px;
+  padding: 6px 12px 4px;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.12);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.45), 0 1px 0 var(--tv-highlight);
 }
+:root[data-theme="light"] .scene-panel { background: rgba(70,55,30,0.07); box-shadow: inset 0 1px 3px rgba(70,55,30,0.35), 0 1px 0 rgba(255,255,255,0.6); }
+.scene-panel .rotary-dial { width: 34px; height: 34px; }
+.scene-panel .push-btn { width: 26px; height: 26px; }
+.rotary-dial.big { width: 50px; height: 50px; }
+.rotary-dial.big .dial-marker { height: 13px; }
+.rocker.big .rocker-btn { width: 32px; height: 24px; font-size: 0.6rem; }
 
-/* --- Station Badge, with the count of who else is tuned in under it --- */
+/* The radio face: the display window over the key bank, LIVE on the display's right, CHAT on the keys' right */
+#radio-face {
+  margin-left: auto;          /* sits against the right edge, and stays there when it wraps to a row of its own */
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-areas: "display live" "keys chat";
+  gap: 6px 12px;
+  align-items: center;
+}
+#radio-face > #station-block { grid-area: display; }
+#radio-face > .face-btn:first-of-type { grid-area: live; }
+#radio-face > #key-bank { grid-area: keys; }
+#radio-face > .face-btn:last-of-type { grid-area: chat; }
+.face-btn { display: flex; align-items: center; gap: 6px; }
+.face-btn .control-label { width: 3.2em; }
+.face-btn .push-btn { width: 26px; height: 26px; }
+
+/* --- The display window: source, station and channel, the beat, and who's tuned in --- */
 #station-block {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  margin-left: auto;         /* stays on the right when it wraps to a row of its own */
+  gap: 1px;
+  padding: 3px 10px 2px;
+  background: var(--badge-bg);
+  border: 1px solid var(--badge-edge);
+  border-radius: 4px;
+  box-shadow: inset 0 1px 4px rgba(0,0,0,0.6);
+  min-width: 0;
 }
 
 #listeners {
   min-height: 1.3em;   /* room kept while there is no count, so the row never shifts */
-  color: var(--ink);
-  font-size: 0.62rem;
+  color: var(--badge-ink);
+  font-size: 0.6rem;
+  letter-spacing: 0.04em;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-variant-numeric: tabular-nums;
-  text-shadow: var(--ink-shadow);
   user-select: none;
 }
 #tv-body:not(.powered-on) #listeners { visibility: hidden; }
 
 #source-badge {
-  align-self: stretch;
-  padding: 2px 10px;
-  background: var(--badge-bg);
-  border-radius: 4px;
+  padding: 0 5px;
   border: 1px solid var(--badge-edge);
+  border-radius: 3px;
   color: var(--badge-ink);
-  font-size: 0.6rem;
+  font-size: 0.55rem;
   letter-spacing: 0.08em;
-  text-align: center;
   white-space: nowrap;
   user-select: none;
 }
@@ -323,11 +351,59 @@ body {
   display: flex;
   align-items: center;
   gap: 7px;
-  padding: 4px 10px;
-  background: var(--badge-bg);
-  border-radius: 4px;
-  border: 1px solid var(--badge-edge);
+  white-space: nowrap;
 }
+
+/* --- The key bank: piano keys like a car radio's. The key that is down sits lower, and its legend lights --- */
+#key-bank {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 5px;
+  background: var(--well);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.7), 0 1px 0 var(--tv-highlight);
+}
+.bank-key {
+  position: relative;
+  min-width: 42px;
+  height: 30px;
+  padding: 0 6px;
+  border: 1px solid var(--cap-edge);
+  border-radius: 3px 3px 4px 4px;
+  background: linear-gradient(180deg, var(--cap-hi) 0%, var(--cap-lo) 100%);
+  color: var(--cap-ink);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  user-select: none;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 3px 0 var(--cap-seam), 0 4px 4px rgba(0,0,0,0.5);
+  transform: translateY(-2px);
+  transition: transform 0.06s, box-shadow 0.06s, color 0.15s, text-shadow 0.15s;
+}
+.bank-key:active { transform: translateY(0); box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 0 var(--cap-seam); }
+.bank-key.down {
+  transform: translateY(0);
+  background: linear-gradient(180deg, var(--cap-lo) 0%, var(--cap-hi) 140%);
+  box-shadow: inset 0 2px 3px rgba(0,0,0,0.55), 0 1px 0 var(--cap-seam);
+  color: #ffbb33;
+  text-shadow: 0 0 6px rgba(255,170,0,0.8);
+}
+:root[data-theme="light"] .bank-key.down { color: #b45f00; text-shadow: 0 0 4px rgba(255,170,0,0.6); }
+.bank-key:focus-visible { outline: 1px solid var(--focus); outline-offset: 2px; }
+#keysBtn { min-width: 30px; font-size: 0.72rem; }
+/* TAPES's light: a tape is in (or its list is open) */
+.key-led {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--btn-led-off);
+}
+#tapesBtn[aria-pressed="true"] .key-led { background: #ffaa00; box-shadow: 0 0 4px rgba(255,170,0,0.9); }
 
 .led {
   width: 7px;
@@ -510,8 +586,10 @@ body {
   #tv-body { padding: 12px 10px 10px 10px; border-radius: 12px; }
   #tv-screen-border { padding: 6px; }
   #tv-controls { gap: 12px; justify-content: center; }
-  #toggle-group { gap: 12px; flex-grow: 0; justify-content: center; }
-  #station-block { margin-left: 0; }
+  .control-cluster { gap: 12px; }
+  #radio-face { margin-left: 0; grid-template-columns: 1fr auto; width: 100%; }
+  #key-bank { justify-content: space-between; }
+  .bank-key { flex: 1 1 0; min-width: 0; padding: 0 2px; }
 }
 
 /* --- Kiosk (?kiosk): no TV body, the picture fills the window; keyboard and swipe still work --- */
