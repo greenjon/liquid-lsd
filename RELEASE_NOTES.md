@@ -9,7 +9,7 @@
 
 ### Web TV Shows Live Shows (`web/schedule.js`, `web/ui.js`)
 - **Fixed: the TV never showed `[LIVE!]` or LIVE SHOW for a live stream** unless the show was on the schedule. The Spaz Radio app reads that from radio.spaz.org/playing, which a web page isn't allowed to read. The TV now reads the copy spaz.org/radio uses, so a live show puts `[LIVE!]` on the track line and LIVE SHOW on the source badge, as in the app (TV v39).
-- **Changed: the source badge says JUKEBOX instead of STREAM** when Spaz Radio is playing archive shows at random, so the box reads LIVE SHOW, JUKEBOX, TAPE (a show you picked from TAPES) or MIC. LIVE SHOW now means a show is really live: a show on the schedule no longer turns it on when the station says nothing is live. The schedule stands in only when the TV can't read the station's live flag (TV v40).
+- **Changed: the source badge says JUKEBOX instead of STREAM** when Spaz Radio is playing archive shows at random, so the box reads LIVE SHOW, JUKEBOX, TAPE (a show you picked from TAPES) or MIC. LIVE SHOW now means a show is really live: a show on the schedule no longer turns it on when the station says nothing is live. The schedule stands in only when the TV can't read the station's live flag (TV v41).
 
 ### Web TV: About Moves Onto the ? Page (`web/index.html`, `web/tv.css`, `web/ui.js`)
 - **Changed: no nameplate under the screen.** The Liquid LSD badge between the picture and the controls is gone; the TV already names Liquid LSD at power-on, on the INFO line and in the half-hourly bumper.
