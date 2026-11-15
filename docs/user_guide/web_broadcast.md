@@ -94,7 +94,7 @@ Click or tap the picture to show the channel, the scene, its FX chain, the track
 
 **Big GPU scenes:** the most demanding 3D fractals and simulations only play on computers fast enough for them (the TV checks at power-on; MENU › Big GPU scenes overrides it). Add `?heavy=1` to the address to force them on, `?heavy=0` to keep them off.
 
-**Display:** the display window always shows the channel. The small box before it says what the TV is listening to: `STREAM` (the regular Spaz Radio stream), `LIVE SHOW` (a desktop broadcast, a show on the schedule, or one the station says is live, which also gets `[LIVE!]` before its title), `TAPE` or `MIC`. Hover it for the show's name.
+**Display:** the display window always shows the channel. The small box before it says what the TV is listening to: `LIVE SHOW` (a desktop broadcast, or a show the station says is live, which also gets `[LIVE!]` before its title), `JUKEBOX` (no live show: Spaz Radio is playing shows from the archive at random), `TAPE` (a show you picked from TAPES) or `MIC`. Hover it for the show's name.
 
 **Screen:** while the TV is on, your computer or phone won't dim or lock (in browsers that support it).
 

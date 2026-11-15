@@ -193,7 +193,7 @@ try {
   check('L ejects: back on the radio stream', deck.current === null && audio.src.includes('radio.ogg'), audio.src);
   check('The strip goes', !strip.classList.contains('show'));
   check('The badge still shows the channel', /CH\.\d+|CH\.---/.test(badge()), badge());
-  check('The source badge goes back to STREAM', source() === 'STREAM', source());
+  check('The source badge goes back to JUKEBOX', source() === 'JUKEBOX', source());
   check('Back on the radio: LIVE lit, TAPES dark, no pulse', lit(liveBtn) && !lit(tapesBtn) && !liveBtn.classList.contains('pulsing'));
   check('The chat note goes', note.hidden);
   L.handleRelayMessage(FULL);

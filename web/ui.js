@@ -102,6 +102,7 @@ const INFO_IDS = ['osd-ch', 'osd-name', 'osd-bg', 'osd-chain', 'osd-track', 'osd
 
 let nowPlaying = '';
 let streamLive = false;  // the server says the show on the stream is live, in real time
+let streamKnown = false; // the last read of that flag worked (else the schedule stands in for it)
 let playingRetryAt = 0;
 function showLook(info = nowShowing(), ms = 4000, brand = false) {
   if (!powerState.on) return;
@@ -1061,13 +1062,15 @@ export function initUI() {
 
   // --- Autopilot and broadcast events ---
   // The source badge: what the TV is listening to. The microphone takes over from a tape, and a tape from the radio.
+  // The radio is a LIVE SHOW only when one is really on (a broadcast, or the station's live flag); otherwise it is the
+  // JUKEBOX, the station playing archive shows at random. The schedule stands in only when the flag can't be read.
   const sourceEl = document.getElementById('source-badge');
   const updateSource = () => {
-    const scheduled = upcoming(scheduleState.shows, Date.now()).find((s) => s.onAir)?.name;
+    const scheduled = streamKnown ? null : upcoming(scheduleState.shows, Date.now()).find((s) => s.onAir)?.name;
     const [text, title] = isMicOn() ? ['MIC', 'Listening to your microphone']
       : deck?.current ? ['TAPE', `Playing a tape: ${deck.current.title}`]
       : live() || streamLive || scheduled ? ['LIVE SHOW', `Live on Spaz Radio: ${autopilotState.broadcaster || scheduled || nowPlaying.replace('[LIVE!] ', '') || 'a live show'}`]
-      : ['STREAM', 'Playing the regular Spaz Radio stream'];
+      : ['JUKEBOX', 'Spaz Radio is playing shows from the archive'];
     if (sourceEl.textContent !== text) sourceEl.textContent = text;
     sourceEl.title = title;
   };
@@ -1212,14 +1215,14 @@ async function readPlayingFeed() {
 }
 /** The server's title, with [LIVE!] when it is live, or '' when it can't be read. */
 async function readPlaying() {
-  if (!viewerState.readPlaying) { streamLive = false; return ''; }
+  if (!viewerState.readPlaying) { streamLive = streamKnown = false; return ''; }
   if (performance.now() < playingRetryAt) return '';
   try {
     const { title, live } = parsePlaying(await viewerState.readPlaying());
-    streamLive = live;
+    streamLive = live; streamKnown = true;
     return title;
   } catch {
-    streamLive = false;
+    streamLive = streamKnown = false;
     playingRetryAt = performance.now() + PLAYING_RETRY_MS;
     return '';
   }

@@ -1262,6 +1262,39 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#chladni-cymatics-rebuilt-librarysourceschladni_cymatics-stock_defaultssourceschladni_cymaticsjson-renderingsourcedocregistrykt-scriptsgen_web_presetspy-webshaderschladni_cymaticsfrag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chladni Cymatics Rebuilt (library/sources/chladni_cymatics/, stock_defaults/sources/chladni_cymatics.json, rendering/SourceDocRegistry.kt, scripts/gen_web_presets.py, web/shaders/chladni_cymatics.frag)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#web-tv-shows-live-shows-webschedulejs-webuijs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web TV Shows Live Shows (web/schedule.js, web/ui.js)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#web-tv-about-moves-onto-the-page-webindexhtml-webtvcss-webuijs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web TV: About Moves Onto the ? Page (web/index.html, web/tv.css, web/ui.js)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#web-tv-keeps-the-archive-list-webtapesjs-webtapedeckjs-webswjs-webuijs-webtvcss" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7763,6 +7796,39 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#chladni-cymatics-rebuilt-librarysourceschladni_cymatics-stock_defaultssourceschladni_cymaticsjson-renderingsourcedocregistrykt-scriptsgen_web_presetspy-webshaderschladni_cymaticsfrag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chladni Cymatics Rebuilt (library/sources/chladni_cymatics/, stock_defaults/sources/chladni_cymatics.json, rendering/SourceDocRegistry.kt, scripts/gen_web_presets.py, web/shaders/chladni_cymatics.frag)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#web-tv-shows-live-shows-webschedulejs-webuijs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web TV Shows Live Shows (web/schedule.js, web/ui.js)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#web-tv-about-moves-onto-the-page-webindexhtml-webtvcss-webuijs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web TV: About Moves Onto the ? Page (web/index.html, web/tv.css, web/ui.js)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#web-tv-keeps-the-archive-list-webtapesjs-webtapedeckjs-webswjs-webuijs-webtvcss" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -14215,10 +14281,28 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="chladni-cymatics-rebuilt-librarysourceschladni_cymatics-stock_defaultssourceschladni_cymaticsjson-renderingsourcedocregistrykt-scriptsgen_web_presetspy-webshaderschladni_cymaticsfrag">Chladni Cymatics Rebuilt (<code>library/sources/chladni_cymatics/</code>, <code>stock_defaults/sources/chladni_cymatics.json</code>, <code>rendering/SourceDocRegistry.kt</code>, <code>scripts/gen_web_presets.py</code>, <code>web/shaders/chladni_cymatics.frag</code>)</h3>
+<ul>
+<li><strong>Changed: Chladni Cymatics looks like real cymatics.</strong> It used to draw fuzzy, spongy blobs that looked much the same at every setting: the mode numbers were fractions, and the sand was drawn wherever the plate moved little instead of on the lines. Now the plate rings only at whole-number modes. The sand forms thin, even lines on a bare plate, and changing mode throws the sand up and lets it settle into the new figure.</li>
+<li><strong>New: Plate</strong> picks a square plate, a round plate, or a water dish. The dish gives Faraday wave mandalas, with a <strong>Symmetry</strong> fold count from 3 to 12.</li>
+<li><strong>New: Mode Mix</strong> blends each mode with its partner, giving crosses, loops and lattices from the same mode numbers. <strong>Mode Snap</strong> sets how a mode change looks, from a slow blend to an instant jump.</li>
+<li><strong>Changed controls:</strong> Frequency M/N are now <strong>Mode M/N</strong>, Frequency L is <strong>Symmetry</strong>, Node Sharpness is <strong>Line Width</strong>, Sand Accumulation is <strong>Settled</strong> and Vibration Speed is <strong>Vibration</strong>. Saved presets keep their bindings but look different; the stock default and the five web TV cymatics channels have been redone (TV v40).</li>
+<li><strong>Stock default:</strong> Mode M steps up a mode and back over 32 beats, kicks throw the sand, a breakdown settles Mode N, and Mode Mix bends the lines over 64 beats. Bass climbing a mode and kicks jumping one are there, switched off. The macro knobs are MODE M, MODE N, MIX and SAND.</li>
+</ul>
+<h3 id="web-tv-shows-live-shows-webschedulejs-webuijs">Web TV Shows Live Shows (<code>web/schedule.js</code>, <code>web/ui.js</code>)</h3>
+<ul>
+<li><strong>Fixed: the TV never showed <code>[LIVE!]</code> or LIVE SHOW for a live stream</strong> unless the show was on the schedule. The Spaz Radio app reads that from radio.spaz.org/playing, which a web page isn't allowed to read. The TV now reads the copy spaz.org/radio uses, so a live show puts <code>[LIVE!]</code> on the track line and LIVE SHOW on the source badge, as in the app (TV v39).</li>
+<li><strong>Changed: the source badge says JUKEBOX instead of STREAM</strong> when Spaz Radio is playing archive shows at random, so the box reads LIVE SHOW, JUKEBOX, TAPE (a show you picked from TAPES) or MIC. LIVE SHOW now means a show is really live: a show on the schedule no longer turns it on when the station says nothing is live. The schedule stands in only when the TV can't read the station's live flag (TV v40).</li>
+</ul>
+<h3 id="web-tv-about-moves-onto-the-page-webindexhtml-webtvcss-webuijs">Web TV: About Moves Onto the ? Page (<code>web/index.html</code>, <code>web/tv.css</code>, <code>web/ui.js</code>)</h3>
+<ul>
+<li><strong>Changed: no nameplate under the screen.</strong> The Liquid LSD badge between the picture and the controls is gone; the TV already names Liquid LSD at power-on, on the INFO line and in the half-hourly bumper.</li>
+<li><strong>Changed: <code>?</code> is now the about page as well as the keys.</strong> It opens with the Liquid LSD name and logo, and under the keys has the link to liquid-lsd.greenjon.com with its QR code and a link to the Spaz Radio app for Android. MENU › TV › ABOUT opens the same page, and the separate ANDROID APP menu row is gone (the app link is also still at the bottom of TAPES). Clicking a link leaves the page open (TV v38).</li>
+</ul>
 <h3 id="web-tv-keeps-the-archive-list-webtapesjs-webtapedeckjs-webswjs-webuijs-webtvcss">Web TV Keeps the Archive List (<code>web/tapes.js</code>, <code>web/tapedeck.js</code>, <code>web/sw.js</code>, <code>web/ui.js</code>, <code>web/tv.css</code>)</h3>
 <ul>
 <li><strong>Changed: TAPES opens at once after the first visit.</strong> The list of 3,800-odd archive shows was downloaded again (a 6 MB feed) and re-read every time TAPES was opened in a new visit. The TV now keeps the list in the browser, opens with it straight away, offline too, and checks the feed only when the kept list is more than an hour old. When the feed hasn't changed, it isn't read again.</li>
-<li><strong>New: a link to the Spaz Radio Android app</strong>, which downloads shows to play offline (the TV doesn't). It's at the bottom of TAPES and in MENU › TV › <strong>ANDROID APP</strong>. On Android it opens spaz.org/go/; elsewhere, the Google Play page (TV v36).</li>
+<li><strong>New: a link to the Spaz Radio Android app</strong>, which downloads shows to play offline (the TV doesn't). It's at the bottom of TAPES and on the <code>?</code> page. On Android it opens spaz.org/go/; elsewhere, the Google Play page (TV v36).</li>
 </ul>
 <h3 id="web-tv-starts-faster-webautopilotjs-webrendererjs-webgraphjs-webuijs">Web TV Starts Faster (<code>web/autopilot.js</code>, <code>web/renderer.js</code>, <code>web/graph.js</code>, <code>web/ui.js</code>)</h3>
 <ul>

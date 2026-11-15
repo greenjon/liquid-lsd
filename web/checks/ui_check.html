@@ -379,7 +379,7 @@ try {
   w.LSD.handleRelayMessage({ type: 'broadcaster_offline' });
   await sleep(300);
   check('Offline: the badge still shows the channel', /CH\.\d{3}$/.test(d.querySelector('#station-badge .station-text').textContent), d.querySelector('#station-badge .station-text').textContent);
-  check('Offline: the source badge says STREAM', source() === 'STREAM', source());
+  check('Offline: the source badge says JUKEBOX', source() === 'JUKEBOX', source());
   // Branding: I adds the Liquid LSD line; MENU › ABOUT opens and any key closes it; the bumper.
   key('i');
   check('I shows the Liquid LSD line', osd('osd-brand').shown && osd('osd-brand').text.includes('liquid-lsd.greenjon.com'));
@@ -525,6 +525,14 @@ try {
   check('A live show: the track line starts [LIVE!], as in the app', osd('osd-track').text.includes('[LIVE!] Stub Show'), osd('osd-track').text);
   await sleep(1100); // the badge updates once a second
   check('A live show: the source badge says LIVE SHOW', source() === 'LIVE SHOW', source());
+  // The station says nothing is live: the badge is JUKEBOX even with a show on the schedule's clock.
+  w.LSD.viewerState.readPlaying = async () => ({ playing: 'Archive Show - 2019', listeners: 3, live: 'false' });
+  d.getElementById('powerSwitch').click();
+  await sleep(100);
+  d.getElementById('powerSwitch').click();
+  for (let i = 0; i < 40 && !osd('osd-track').text.includes('Archive Show'); i++) await sleep(100);
+  await sleep(1100);
+  check('Not live per the station: the source badge says JUKEBOX', source() === 'JUKEBOX', source());
   w.LSD.viewerState.readPlaying = null;
   // CHAT: the blackboard, on a fake broker and log (?nolive never starts the real room).
   const board = d.getElementById('chalkboard'), chatBtn = d.getElementById('chatBtn');
