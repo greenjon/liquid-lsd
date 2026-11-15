@@ -1,0 +1,41 @@
+
+
+
+
+  FAIL s1_recent_after_rename: Recent lists the renamed preset   [[]]
+  PASS s1_recent_after_rename: Recent no longer lists the old name
+  PASS s1_recent_after_rename: deck A follows the rename
+  FAIL s1_q_in_queue_cursor: Q with the cursor in a queue leaves the A/B queue alone   [((['tt_alpha', 'tt_beta', 'tt_gamma'], -1, -1), (['tt_alpha', 'tt_beta', 'tt_gamma', 'tt_beta'], -1, -1))]
+  FAIL s1_q_in_queue_cursor: Shift+Q there leaves both queues alone   [((['tt_alpha', 'tt_beta', 'tt_gamma', 'tt_beta'], -1, -1), ([], ['tt_beta']))]
+  PASS s2_x_unbinds: clicking the badge binds deck A source
+  PASS s2_x_unbinds: ✕ stops the binding
+  PASS s2_x_unbinds: after ✕ a list click does not load into deck A
+  PASS s1_bound_single_select: a click in the bound list applies
+  PASS s1_bound_single_select: Ctrl+click in a bound list gives no multi-selection (menu has no "Add 2"/"Delete 2")
+  PASS s2_main_monitor_binds: main output monitor binds the Master FX chain
+  PASS s4_missing_source: loading a preset whose source is missing keeps the deck as it was
+  PASS s4_missing_source: a toast says why
+  PASS s4_eject_add_source: Eject empties the deck and keeps the chain
+  PASS s4_eject_add_source: Add Source opens Browse bound to deck A source
+  FAIL s6_load_to_undo: Load to Deck A > Slot 2 puts Bloom in slot 2   [[Bloom, Anamorphic streak, -]]
+  PASS s6_load_to_undo: Ctrl+Z puts the chain back
+  PASS s16b_playlist_to_queue_undo: adding a playlist from its menu grows the A/B queue
+  PASS s16b_playlist_to_queue_undo: Ctrl+Z takes the playlist back out of A/B
+  PASS s16b_playlist_to_queue_undo: BG: add then Ctrl+Z
+  PASS s16b_macros_save_from: Save bank from offers Decks A/B/BG/PV and Master only
+
+
+  PASS s1_recent_after_rename: Recent lists the renamed preset
+  PASS s1_recent_after_rename: Recent no longer lists the old name
+  FAIL s1_recent_after_rename: deck A follows the rename   [src=EMPTY file=null dirty=false fx=[Luma displace, Fluid smear, -]]
+  PASS s6_load_to_undo: Load to Deck A > Slot 2 puts Pixelate in slot 2
+  PASS s6_load_to_undo: Ctrl+Z puts the chain back
+  PASS s3_clock_rand_1920: RAND A rolls deck A
+  PASS s3_clock_rand_1920: Ctrl+Z after RAND A puts every value back
+
+  PASS s1_save_transition_places: Transitions row's Save writes a file
+  FAIL s1_save_transition_places: Edit OUT > TRANS Save As writes a file
+  PASS s1_save_transition_places: Transitions row's Save writes a file
+  PASS s1_save_transition_places: Edit OUT > TRANS Save As writes a file
+
+  PASS s1_save_transition_library: the bound Transitions list's save icon writes a file

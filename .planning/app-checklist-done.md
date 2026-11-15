@@ -26,6 +26,12 @@ Notes marked `!!` are problems found on items that were ticked anyway.
   auto: a broken saved FX and a broken saved transition each show a toast.
 - [x] Click a preset then a source on the same deck within a blink: the last click wins.
   auto: preset then source one frame apart: the source wins.
+- [x] Save a transition from the Transitions row's Save, from Edit OUT > TRANS and from the Library.
+  auto 2026-11-14 (round 7): all three write the file: the row's Save, Edit OUT > TRANS ⋮ > Save Transition As..., and the save icon on the bound Transitions list.
+- [x] Multi-select (2026-10-27) in Sources, FX and Transitions: Ctrl+click toggles, Shift+click ranges, Ctrl+A selects all shown rows (not while typing in search). Right-click inside the selection: Add N to queue / playlist, Delete N. `Q`/`Shift+Q` and Delete act on all. Drag several FX or transitions into a playlist and into their queues: all land, in order. A bound list (picking for a slot) stays single-select.
+  auto: Ctrl+click, Shift+click, Ctrl+A, the menu, Q, Shift+Q, Delete and drags into queues. Fixed 2026-11-06: dragging a selection of FX or transitions took only one. Left for you: drags into playlists, bound list.
+  auto 2026-11-14: fixed 2026-11-14: dropping rows on a playlist in the tree did nothing; now a multi-selection goes in at the end, in order (Sources and FX checked). Left for you: bound list stays single-select.
+  auto 2026-11-14 (round 7): in a bound list Ctrl+click just applies the row (no multi-selection, the menu offers no "Add 2"). Nothing left.
 
 ## 2. Slots bound in place, pair view and Edit
 
@@ -37,6 +43,12 @@ Notes marked `!!` are problems found on items that were ticked anyway.
   auto: both.
 - [x] Ctrl+Z after picking an FX and after picking a transition in Edit.
   auto: both undo through the real picker.
+- [x] In a bound list: a click applies (Ctrl+Z undoes), a double-click applies and returns to the plain Library; Esc, ✕ or clicking the slot again stops without applying; changing page stops.
+  auto: a click applies, Ctrl+Z undoes, Esc stops, a double-click applies and returns to the plain Library, clicking the slot again stops without applying, changing page stops. Left for you: ✕.
+  auto 2026-11-14 (round 7): ✕ stops the binding; a list click afterwards doesn't touch the deck. Nothing left.
+- [x] Deck monitors, the main output monitor and the Master `M` badge bind their default half (a deck's source, the Master FX chain).
+  auto: a deck monitor binds its source, the `M` badge the Master FX chain. Left for you: the main output monitor.
+  auto 2026-11-14 (round 7): clicking the main output monitor binds the Master FX chain. Nothing left.
 
 ## 3. Perform rows, Transitions row and Clock row
 
@@ -63,6 +75,9 @@ Notes marked `!!` are problems found on items that were ticked anyway.
   auto: one row in Browse, and the log says Skipping for the other.
 - [x] Old presets and sessions still load (they carry the removed deck feedback and 3D-view values, which are now ignored).
   auto: 27 desktop presets from two points in git history load, and a session with the removed deck feedback and 3D-view values restores in a real run.
+- [x] Eject empties the deck and keeps its FX chain; tooltip says so. Empty-deck card in Edit: one **Add Source** button that opens Browse.
+  auto: FX chain kept, tooltip right, empty-deck card has one Add Source button. Left for you: clicking it.
+  auto 2026-11-14 (round 7): clicking Add Source opens Browse bound to the deck's source. Nothing left.
 
 ## 6. FX chains (2026-10-22 review)
 
@@ -74,6 +89,9 @@ Notes marked `!!` are problems found on items that were ticked anyway.
   auto: the wheel leaves the effect, Ctrl + wheel steps it.
 - [x] A chain at Chain Dry/Wet below 100% shows `Wet 40%` in its name; at 0% the name is dimmed.
   auto: seen, `Wet 40%` and dimmed at 0%.
+- [x] Ctrl+Z undoes slot drags (swap / Ctrl copy), drops, Paste, Reset Parameters, Clear, Revert, Library loads and the FX browser's right-click "Load to ...".
+  auto: swap, Ctrl copy, Paste, Clear, a Library chain load, Revert and Reset Parameters all undo. Left for you: the FX browser's Load to (the menu lists all five targets).
+  auto 2026-11-14 (round 7): FX browser right-click Load to Deck A (a saved chain) and Load to Deck A > Slot 2 (a stock filter) both undo with Ctrl+Z. Nothing left.
 
 ## 7. Super Knob and Metaknobs
 
