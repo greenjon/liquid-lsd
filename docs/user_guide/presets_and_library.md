@@ -119,7 +119,7 @@ Pick a section in the folder tree to show only stock sources, saved presets or l
   - **Ctrl+A** (**Cmd+A**) — Selects every row the list is showing (after search and the folder pick), while the list has the keyboard.
   - **Batch Queueing** — When multiple rows are selected, pressing `Q` (or the row menu's *Add N … to A/B Queue*) enqueues them all in list order into the A/B Queue. Pressing `Shift+Q` (or *Add to BG Queue*) enqueues them into the BG Queue. The hotkeys and row menu act on the tab you picked the items on: in the FX tab they feed the FX queues, and in the Transitions tab `Q` feeds the transition queue (there is no background queue for transitions).
   - **Batch Context Menu** — Right-clicking a row inside the selection shows the count and the actions that make sense for several items: **Add N to A/B Queue**, **Add N to BG Queue**, **Add N to Playlist** and **Delete N...**. Right-clicking a row outside the selection selects just that row. Stock rows that can't be queued (stock sources, stock FX filters) or deleted (any stock row) are skipped and not counted.
-  - **Multi-Item Drag & Drop** — Dragging any row from a multi-selection carries all selected saved items into a playlist or queue at once. A deck, FX slot or the crossfader takes one item, so drag a single row there.
+  - **Multi-Item Drag & Drop** — Dragging any row from a multi-selection carries all selected saved items into a playlist or queue at once. Stock sources, live video and stock filters have no file to carry, so they stay behind, and the drag label says how many (`Moving 2 presets (1 stock source stays put)`). A deck, FX slot or the crossfader takes one item, so drag a single row there.
   - **Batch Deletion** — Pressing `Delete` or choosing **Delete N...** opens a confirmation listing exactly what will be deleted. Inside a playlist, `Delete` removes the selected rows from the playlist instead.
   - **While the list is bound to a target** (opened from a deck, slot or transition to pick for it), a click applies the row, so selection stays single there.
 - **Double-click** — Loads the item into whichever deck is currently inactive on the crossfader. For a stock source this replaces only the deck's source, leaving its FX chain untouched; for a saved preset it loads the full deck state.
@@ -202,7 +202,7 @@ FX playlists are entries under **Playlists** in the FX tree. Select one to edit 
 
 On the **Queues** tab the two FX columns are independent **live FX queues** — volatile, RAM-only sequences of FX singles/chains you can improvise with mid-set:
 
-- **`<` / `>`** — Step to the previous/next queued FX item and apply it.
+- **`<` / `>`** — Step to the previous/next queued FX item and apply it. Each item is a whole look: a chain replaces the deck's chain, and a single effect replaces it too (it goes into Slot 1 and the other slots are emptied). That differs from a Library double-click, which adds a single effect to the chain.
 - **🔁 Repeat** — Cycle back to the start when the bottom of the queue is reached.
 - **🔀 Shuffle** — Play items in random order.
 - **⋮ menu** (right of the column caption) — **Export as playlist...** saves the current live queue as a new `.lsdfxplay` playlist; **Clear queue** empties it.

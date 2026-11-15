@@ -29,9 +29,9 @@ object FXQueueActionsPanel {
     fun draw(session: SessionContext, mixer: Mixer) {
         QueueToolbar.draw(session, QueueToolbar.Spec(
             caption = "A/B FX Queue", id = "fxQueue",
-            prevTooltip = "Trigger previous item in A/B FX Queue.",
+            prevTooltip = "Trigger previous item in A/B FX Queue. It goes to whichever of Deck A/B the crossfader favours. Decks A and B share one queue position. A single effect replaces the whole chain.",
             onPrev = { FXQueueManager.advancePrevious(session, mixer) },
-            nextTooltip = "Trigger next item in A/B FX Queue.",
+            nextTooltip = "Trigger next item in A/B FX Queue. It goes to whichever of Deck A/B the crossfader favours. Decks A and B share one queue position. A single effect replaces the whole chain.",
             onNext = { FXQueueManager.advanceNext(session, mixer) },
             repeat = QueueToolbar.Toggle(FXQueueManager.isRepeatEnabled,
                 "Repeat Queue: cycle back to start when bottom is reached.") {

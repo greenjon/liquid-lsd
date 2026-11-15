@@ -253,15 +253,15 @@ object PresetListPanel {
                     ImGui.setDragDropPayload(PAYLOAD_STOCK_SOURCE, asset.path.removePrefix(STOCK_PATH_PREFIX) as Any)
                     ImGui.textUnformatted(asset.name)
                 } else {
-                    val inOrder = selection.getSelectedInOrder(filtered).filter { !(it.type == AssetType.SOURCE_STOCK || it.type == AssetType.SOURCE_EXTERNAL) }
-                    val targets = if (inOrder.any { it.path == asset.path }) inOrder else listOf(asset)
+                    val selected = selection.getSelectedInOrder(filtered)
+                    val inOrder = selected.filter { !(it.type == AssetType.SOURCE_STOCK || it.type == AssetType.SOURCE_EXTERNAL) }
+                    val fromSelection = inOrder.any { it.path == asset.path }
+                    val targets = if (fromSelection) inOrder else listOf(asset)
                     val payload = targets.joinToString("\n") { it.path }
                     ImGui.setDragDropPayload("ASSET_ITEM", payload as Any)
-                    if (targets.size > 1) {
-                        ImGui.text("Moving ${targets.size} presets")
-                    } else {
-                        ImGui.textUnformatted(asset.name)
-                    }
+                    val label = if (targets.size > 1) "Moving ${targets.size} presets" else asset.name
+                    // Stock and live sources have no file to carry: say so, rather than let them drop out unseen.
+                    ImGui.textUnformatted(label + leftOutNote(if (fromSelection) selected.size - inOrder.size else 0, "stock source"))
                 }
                 ImGui.endDragDropSource()
             }
@@ -470,4 +470,8 @@ object PresetListPanel {
     /** Whether the last [rowSelectable] had to shorten its name. */
     internal var lastNameElided = false
         private set
+
+    /** " (2 stock sources stay put)" for a multi-row drag that leaves rows out, else "". */
+    internal fun leftOutNote(count: Int, noun: String): String =
+        if (count <= 0) "" else " ($count $noun${if (count == 1) " stays" else "s stay"} put)"
 }

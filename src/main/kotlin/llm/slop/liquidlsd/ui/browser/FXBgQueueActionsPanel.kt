@@ -29,9 +29,9 @@ object FXBgQueueActionsPanel {
     fun draw(session: SessionContext, mixer: Mixer) {
         QueueToolbar.draw(session, QueueToolbar.Spec(
             caption = "BG FX Queue", id = "fxBgQueue",
-            prevTooltip = "Trigger previous item in BG FX Queue.",
+            prevTooltip = "Trigger previous item in BG FX Queue. A single effect replaces the whole chain.",
             onPrev = { FXBgQueueManager.advancePrevious(session, mixer) },
-            nextTooltip = "Trigger next item in BG FX Queue.",
+            nextTooltip = "Trigger next item in BG FX Queue. A single effect replaces the whole chain.",
             onNext = { FXBgQueueManager.advanceNext(session, mixer) },
             repeat = QueueToolbar.Toggle(FXBgQueueManager.isRepeatEnabled,
                 "Repeat Queue: cycle back to start when bottom is reached.") {

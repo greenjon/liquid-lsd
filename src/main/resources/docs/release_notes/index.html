@@ -1284,10 +1284,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixes-from-the-checklist-run-of-2026-11-15-uibrowserbrowserpanekt-uifxchainheaderkt-exportffmpegprocesspipekt-mainkt-webuijs" class="md-nav__link">
+  <a href="#fixes-from-the-checklist-run-of-2026-11-15-uibrowserbrowserpanekt-uifxchainheaderkt-uibrowserpresetlistpanelkt-uibrowserfxbrowserpanelkt-uibrowserfxqueueactionspanelkt-uibrowserfxbgqueueactionspanelkt-uiperformanceclocktriggerskt-exportffmpegprocesspipekt-mainkt-webuijs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Fixes From the Checklist Run of 2026-11-15 (ui/browser/BrowserPane.kt, ui/FxChainHeader.kt, export/FFmpegProcessPipe.kt, Main.kt, web/ui.js)
+        Fixes From the Checklist Run of 2026-11-15 (ui/browser/BrowserPane.kt, ui/FxChainHeader.kt, ui/browser/PresetListPanel.kt, ui/browser/FXBrowserPanel.kt, ui/browser/FXQueueActionsPanel.kt, ui/browser/FXBgQueueActionsPanel.kt, ui/PerformanceClockTriggers.kt, export/FFmpegProcessPipe.kt, Main.kt, web/ui.js)
       
     </span>
   </a>
@@ -7785,10 +7785,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixes-from-the-checklist-run-of-2026-11-15-uibrowserbrowserpanekt-uifxchainheaderkt-exportffmpegprocesspipekt-mainkt-webuijs" class="md-nav__link">
+  <a href="#fixes-from-the-checklist-run-of-2026-11-15-uibrowserbrowserpanekt-uifxchainheaderkt-uibrowserpresetlistpanelkt-uibrowserfxbrowserpanelkt-uibrowserfxqueueactionspanelkt-uibrowserfxbgqueueactionspanelkt-uiperformanceclocktriggerskt-exportffmpegprocesspipekt-mainkt-webuijs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Fixes From the Checklist Run of 2026-11-15 (ui/browser/BrowserPane.kt, ui/FxChainHeader.kt, export/FFmpegProcessPipe.kt, Main.kt, web/ui.js)
+        Fixes From the Checklist Run of 2026-11-15 (ui/browser/BrowserPane.kt, ui/FxChainHeader.kt, ui/browser/PresetListPanel.kt, ui/browser/FXBrowserPanel.kt, ui/browser/FXQueueActionsPanel.kt, ui/browser/FXBgQueueActionsPanel.kt, ui/PerformanceClockTriggers.kt, export/FFmpegProcessPipe.kt, Main.kt, web/ui.js)
       
     </span>
   </a>
@@ -14228,12 +14228,15 @@
 <li><strong>New: TUNING… on screen</strong> while the first scene loads, instead of an empty channel and SCENE line (TV v35).</li>
 <li><strong>Fixed: the page asked for its files in waves.</strong> The browser found each layer of the TV's code only when the layer before it arrived, then the startup files only once all the code had run, a round trip each (a second or more on spaz.org). <code>index.html</code> now asks for all of them at once, catalog.json and the Mandala table are fetched once instead of twice, and the first scene's FX chain candidates are fetched side by side. About a second sooner again on a slow connection (TV v37).</li>
 </ul>
-<h3 id="fixes-from-the-checklist-run-of-2026-11-15-uibrowserbrowserpanekt-uifxchainheaderkt-exportffmpegprocesspipekt-mainkt-webuijs">Fixes From the Checklist Run of 2026-11-15 (<code>ui/browser/BrowserPane.kt</code>, <code>ui/FxChainHeader.kt</code>, <code>export/FFmpegProcessPipe.kt</code>, <code>Main.kt</code>, <code>web/ui.js</code>)</h3>
+<h3 id="fixes-from-the-checklist-run-of-2026-11-15-uibrowserbrowserpanekt-uifxchainheaderkt-uibrowserpresetlistpanelkt-uibrowserfxbrowserpanelkt-uibrowserfxqueueactionspanelkt-uibrowserfxbgqueueactionspanelkt-uiperformanceclocktriggerskt-exportffmpegprocesspipekt-mainkt-webuijs">Fixes From the Checklist Run of 2026-11-15 (<code>ui/browser/BrowserPane.kt</code>, <code>ui/FxChainHeader.kt</code>, <code>ui/browser/PresetListPanel.kt</code>, <code>ui/browser/FXBrowserPanel.kt</code>, <code>ui/browser/FXQueueActionsPanel.kt</code>, <code>ui/browser/FXBgQueueActionsPanel.kt</code>, <code>ui/PerformanceClockTriggers.kt</code>, <code>export/FFmpegProcessPipe.kt</code>, <code>Main.kt</code>, <code>web/ui.js</code>)</h3>
 <ul>
 <li><strong>Fixed: Esc after Ctrl+F still did nothing.</strong> The one-press Esc from an empty Library search box (above) never fired: the search box lets go of the keyboard on that same Esc, so the check for "is the box in use" always said no. Ctrl+F then Esc now leaves the Library in one press; with text in the box the first Esc clears it and the second goes back.</li>
 <li><strong>Fixed: the first recording froze the picture for about 2 seconds.</strong> Pressing Record (Ctrl+R) the first time checked which video encoders FFmpeg has, including a short test encode on the graphics card, on the drawing thread. The check now runs in the background when the app starts.</li>
 <li><strong>Fixed: the FX chain menu was titled "Deck A FX FX Chain"</strong> (and "Master FX FX Chain"). It now reads "Deck A FX Chain".</li>
 <li><strong>Changed (web TV checks only): SCHEDULE doesn't fetch the real schedule under <code>?nolive</code>.</strong> A real show on air turned the source badge to LIVE SHOW in the headless check. Viewers see no change.</li>
+<li><strong>FX queue tooltips say what a step does:</strong> the A/B FX and BG FX ◀ ▶ tooltips (Library and Clock row) say a single effect replaces the whole chain, and the A/B ones that Decks A and B share one queue position.</li>
+<li><strong>A multi-row drag says what stays behind:</strong> dragging a mixed selection of saved and stock sources (or stock filters) shows <code>Moving 2 presets (1 stock source stays put)</code> instead of quietly leaving them out.</li>
+<li><strong>The user guide</strong> explains the FX queue's whole-look rule, and says the arrow keys stay in the browser while the controller's pane step reaches the queues.</li>
 </ul>
 <h3 id="fixes-from-the-checklist-run-of-2026-11-14-renderingfxchainkt-uibrowserbrowserpanekt">Fixes From the Checklist Run of 2026-11-14 (<code>rendering/FxChain.kt</code>, <code>ui/browser/BrowserPane.kt</code>)</h3>
 <ul>

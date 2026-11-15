@@ -176,7 +176,10 @@ object FXBrowserPanel {
                     // A drag from inside a multi-selection carries every selected saved FX, one path per line.
                     val targets = savedTargets(rows, asset)
                     ImGui.setDragDropPayload("ASSET_ITEM", targets.joinToString("\n") { it.path } as Any)
-                    ImGui.textUnformatted(if (targets.size > 1) "Moving ${targets.size} FX" else asset.name)
+                    val selected = selection.getSelectedInOrder(rows)
+                    val leftOut = if (selected.any { it.path == asset.path }) selected.count { it.type == AssetType.FX_STOCK } else 0
+                    val label = if (targets.size > 1) "Moving ${targets.size} FX" else asset.name
+                    ImGui.textUnformatted(label + PresetListPanel.leftOutNote(leftOut, "stock filter"))
                 }
                 ImGui.endDragDropSource()
             }

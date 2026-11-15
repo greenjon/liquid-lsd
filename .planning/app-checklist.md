@@ -29,9 +29,9 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
   auto 2026-11-14: Export as playlist... and Clear queue are under every column's ⋮. Left for you: the controller.
 - [ ] Queues under the browser (Library maximized, Sources/FX/Transitions tabs): both halves usable at 1280x720; the divider drags, clamps, double-click resets, the ratio and the rows-icon toggle survive a restart; toggle off looks like before; Perform view's Library unchanged.
   auto 2026-11-15 (round 8): the divider drags (queues move up 132 px), clamps (browser keeps its minimum), the ratio and the rows-icon off survive a restart. Left for you: double-click reset, the look with the queues off.
-- [ ] Drag a source between two A/B queue items: lands at the line, the playing marker stays on its row. Drag it over the FX queues: dimmed, no drop. Drag a mixed selection: right ones go in, toast counts the skipped. Drag a playlist from the tree into a queue: its items go in at the line.
+- [ ] Drag a source between two A/B queue items: lands at the line, the playing marker stays on its row. Drag it over the FX queues: dimmed, no drop. Drag a mixed selection of saved and stock sources: the drag label says how many stock sources stay put (`Moving 2 presets (1 stock source stays put)`), the saved ones go in. Drag a playlist from the tree into a queue: its items go in at the line.
   auto: lands at the line, FX queue refuses it, a dragged playlist puts its items in. Left for you: playing marker, the mixed-selection toast.
-  auto 2026-11-15 (round 8): dropped between rows 1 and 2, the playing marker stays on its item. A stock source in a mixed selection is left out when the drag starts ("Moving 2 presets"), so the skipped toast can't come up from the Sources tab; your call whether that is fine.
+  auto 2026-11-15 (round 8): dropped between rows 1 and 2, the playing marker stays on its item. A stock source in a mixed selection is left out when the drag starts ("Moving 2 presets"), so the skipped toast can't come up from the Sources tab. Changed 2026-11-15: the drag label now names what stays behind (untested).
 - [ ] Drag to the bottom edge of a long queue (and of the browser list/tree): it scrolls. `Q` / `Shift+Q` and drops flash the receiving queue's border (dark and light theme).
 - [ ] Controller cursor on the split: tree, list, then each queue that has items; `Q` with the cursor in a queue does nothing. The arrow keys stay in the browser (user's call 2026-11-15; guide fixed).
   auto 2026-11-15 (round 8): the pane step goes tree, list, A/B queue; `Q` / Shift+Q with its cursor in the queue does nothing. Left for you: with items in the BG and FX queues, the step reaches them too (empty queues are skipped by design).
@@ -41,7 +41,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [ ] Macros tab: macro banks and Perform pages are listed; loading one works.
   auto: tab opens with Banks and Pages, and says when nothing is saved. Loading not run.
   auto 2026-11-15 (round 8): Save bank from Deck A writes `knobpresets/tt_bank.knobpreset.json` and the bank is listed; its right-click offers Deck A/B/BG/PV, Master and Delete. Loading not run.
-- [ ] Load a single `.lsdfx` into a full chain by double-click, by audition latch, and from the FX queue / FX playlist: one consistent placement rule.
+- [ ] Load a single `.lsdfx` into a full chain: a Library double-click asks which slot; with a slot bound it replaces that slot; a Twister tap replaces the last slot; an FX queue / playlist step replaces the whole chain (Slot 1, others emptied). The FX queue ◀ ▶ tooltips and the guide say so (user's call 2026-11-15: keep the rules, document them).
   auto 2026-11-15 (round 8): three rules today: Library double-click with a full chain asks which slot to overwrite (with room: first free slot); a slot-bound double-click replaces that slot; an FX queue or playlist step makes the chain that one effect in slot 1 (deliberate, `FxOps.applyItem`, "the same state every time"). Your call whether that is consistent enough.
 - [ ] Drop targets: deck badge takes presets, stock sources, external video, `.lsdfxchain` and `.lsdfx`. A deck monitor takes presets and sources, not FX. Slot drop in Edit accepts the same drags as the slot cell.
   auto: deck badge takes presets, stock sources, chains and saved FX (a full chain says so), a slot takes a stock effect. A deck monitor refuses FX, as intended. Left for you: external video, Edit's slot drop.
@@ -64,7 +64,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [ ] Saved presets, effects and transitions show as applied (row tint) in a bound list.
 - [ ] Learn inside a pair view drops to the 4-row layout (accepted for now). Learn finishes, state sane.
 - [ ] Badge, slot and monitor tooltips say the list below applies and a second click stops.
-  auto 2026-11-15 (round 8): badge, chain name and slot say "in the list below (click again to stop)". The monitor's says the list below but not that a second click stops.
+  auto 2026-11-15 (round 8): badge, chain name and slot say "in the list below (click again to stop)". The monitor's says the list below but not that a second click stops, and it is right: a second click on a monitor does not stop browsing (openFromMonitor always binds). Your call: make the monitor toggle like the badges, or drop the monitor from this item.
 - [ ] Edit shows the open unit's pair of rows (deck SRC + FX; OUT: Transitions + Master FX; MST: MST + Clock). Switching SRC/FX doesn't redraw the rows. The lit gear marks the editor's row; the other row's gear moves the editor; the lit gear closes Edit.
 - [ ] Edit side rail reads `MST OUT A B BG PV`, nothing clipped. MST has LEVELS and CTRL; OUT has FX and TRANS and returns to the last one. Gears: MST row → MST > LEVELS, Master FX → OUT > FX, Transitions → OUT > TRANS.
   auto: fixed 2026-11-06: an empty deck had no rail at all. All six buttons click. Left for you: labels and gears.
@@ -136,8 +136,8 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [ ] Eject leaves the deck's FX chain untouched; Clear with FX refreshes the FX row's knobs.
   auto: Eject keeps the chain. Left for you: Clear with FX refreshing the knobs.
 - [ ] Replace the focused effect with one that has fewer parameters: the focus page follows, knobs 2-4 not blank.
-- [ ] FX queue arrow tooltips name the deck and say A and B share one position.
-  auto 2026-11-15 (round 8): they say "applied to whichever of Deck A/B the crossfader favours" and point at MST > CTRL, but not that A and B share one position.
+- [ ] FX queue arrow tooltips name the deck, say A and B share one position, and that a single effect replaces the whole chain.
+  auto 2026-11-15 (round 8): they said "applied to whichever of Deck A/B the crossfader favours" but not the shared position; both added 2026-11-15 (untested).
 
 ## 6b. Factory presets and chains from the web TV (2026-11-12)
 

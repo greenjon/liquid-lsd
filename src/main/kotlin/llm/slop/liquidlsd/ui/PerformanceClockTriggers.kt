@@ -95,8 +95,8 @@ internal object PerformanceClockTriggers {
             if (on) m.muteCrossfadeNonMidiCv()
         }),
         QueueGroup("A/B FX", arrayOf(
-            nav("Mixer/fxQueuePrev", "◀", "A/B FX Queue Prev", "Previous item in the A/B FX Queue, applied to whichever of Deck A/B the crossfader favours.", { it.fxQueuePrev }) { s, m -> FXQueueManager.advancePrevious(s, m) },
-            nav("Mixer/fxQueueNext", "▶", "A/B FX Queue Next", "Next item in the A/B FX Queue, applied to whichever of Deck A/B the crossfader favours.", { it.fxQueueNext }) { s, m -> FXQueueManager.advanceNext(s, m) }
+            nav("Mixer/fxQueuePrev", "◀", "A/B FX Queue Prev", "Previous item in the A/B FX Queue, applied to whichever of Deck A/B the crossfader favours. Decks A and B share one queue position. A single effect replaces the whole chain.", { it.fxQueuePrev }) { s, m -> FXQueueManager.advancePrevious(s, m) },
+            nav("Mixer/fxQueueNext", "▶", "A/B FX Queue Next", "Next item in the A/B FX Queue, applied to whichever of Deck A/B the crossfader favours. Decks A and B share one queue position. A single effect replaces the whole chain.", { it.fxQueueNext }) { s, m -> FXQueueManager.advanceNext(s, m) }
         )),
         QueueGroup("BG", arrayOf(
             nav("Mixer/bgQueuePrev", "◀", "BG Queue Prev", "Previous item in the BG Queue.", { it.bgQueuePrev }) { s, m -> s.bgQueueManager.advanceBy(-1, m) },
