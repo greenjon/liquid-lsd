@@ -72,6 +72,13 @@
     }
    ]
   },
+  "PitchFollow": {
+   "baseValue": 0.0,
+   "baseMin": 0.6,
+   "baseMax": 1.0,
+   "randomizeBase": true,
+   "modulators": []
+  },
   "ModeMix": {
    "baseValue": -0.5,
    "baseMin": -0.9,

@@ -180,6 +180,7 @@ object SourceDocRegistry {
         "chladni_cymatics/Plate" to "What vibrates: 0 = square plate, 1 = round plate, 2 = water dish (Faraday waves).",
         "chladni_cymatics/Mode M" to "First mode number. Square: lines across. Round: one more than the number of diameters (1 = rings only). Water: ring count of the second wave. The plate holds whole numbers; in between it changes mode and the sand resettles.",
         "chladni_cymatics/Mode N" to "Second mode number. Square: lines down. Round: number of rings. Water: ring count of the main wave.",
+        "chladni_cymatics/Pitch Follow" to "How much the music's loudest held note (180 Hz to 3.5 kHz) picks the mode, as the driving tone does on a real plate: higher notes, finer figures. 0 = Mode M and N alone; 100 = scaled by the note (an octave up is about 1.4 times the mode numbers). Drums and bass don't count.",
         "chladni_cymatics/Mode Mix" to "Blends the mode with its partner (M and N swapped; on water, the N wave with the M wave). The main source of variety: straight crosses, loops and lattices. -100 and +100 look the same, so it can sweep around.",
         "chladni_cymatics/Symmetry" to "Water only: fold count of the dish pattern, 3 to 12. 5, 7, 8 and more never quite repeat.",
         "chladni_cymatics/Mode Snap" to "How a mode change looks: 0 = a slow blend across the whole step, 100 = an instant jump. The sand is thrown up during the change either way.",

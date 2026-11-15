@@ -71,6 +71,12 @@
         }
       ]
     },
+    "PitchFollow": {
+      "note": "The loudest held note (180 Hz - 3.5 kHz) scales the modes, as the driving tone does on a real plate.",
+      "randomizeBase": true,
+      "baseMin": 0.6,
+      "baseMax": 1
+    },
     "ModeMix": {
       "note": "The nodal lines bend slowly between the two paired modes over 64 beats.",
       "randomizeBase": true,
@@ -269,10 +275,10 @@
         ]
       },
       {
-        "label": "SAND",
+        "label": "PITCH",
         "bindings": [
           {
-            "parameterId": "SandAccumulation"
+            "parameterId": "PitchFollow"
           }
         ]
       }

@@ -117,6 +117,7 @@ Sand on a vibrating plate. A plate rings only at whole-number modes, and the san
 
 - **Plate**: square plate, round plate, or water dish. The dish shows Faraday wave mandalas.
 - **Mode M, Mode N**: the mode numbers. On the square plate they count lines across and down. On the round plate N counts rings and M sets the diameters (1 = rings only). On water they set the ring counts of two waves.
+- **Pitch Follow**: lets the music pick the mode, as the driving tone does on a real plate. The loudest held note between 180 Hz and 3.5 kHz scales Mode M and N: higher notes give finer figures, and an octave up is about 1.4 times the mode numbers. A note has to be held and clearly louder than the current one to take over, so drum hits don't flicker the pattern; with typical music it changes every 2 to 3 seconds. 0 leaves the modes to the knobs.
 - **Mode Mix**: blends the mode with its partner. This is the main source of variety: the same mode numbers give straight crosses, loops or lattices. The two ends look the same, so an LFO can sweep it around.
 - **Symmetry**: water only, the fold count of the dish pattern (3 to 12).
 - **Mode Snap**: how a mode change looks, from a slow blend across the whole step to an instant jump.

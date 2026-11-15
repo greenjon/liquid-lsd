@@ -1,6 +1,6 @@
 # Chladni Cymatics rewrite
 
-**Status 2026-11-15: IMPLEMENTED, uncommitted. Shader, stock default, 5 web presets, docs, tooltips, checklist done; render-checked on the web; gpu_bench.mjs hangs in this environment (Firefox never reports), so GPU cost is unmeasured.**
+**Status 2026-11-15: rewrite shipped e9cbbee (TV v40); Pitch Follow implemented, uncommitted. Shader, stock default, 5 web presets, docs, tooltips, checklist done; render-checked on the web; gpu_bench.mjs hangs in this environment (Firefox never reports), so GPU cost is unmeasured.**
 
 Goal: replace the "spongey sameness" with the geometric variety of real plates and water cymatics.
 Prototype renders (numpy port, session scratchpad): current vs proto contact sheets, 2026-11-15.
@@ -51,3 +51,11 @@ Prototype renders (numpy port, session scratchpad): current vs proto contact she
 4. Reroll web presets in `scripts/gen_web_presets.py` (web-cymatics-sub, -rings, ambient, hard, mid-lace) + regenerate `stock-chladni_cymatics`; reactivity.test.mjs ambient rules; bump TV_VERSION; render_check.
 5. Docs: SourceDocRegistry descriptions + param tooltips, docs/user_guide/visual_sources.md, both release-notes files, DECISIONS unstepped list (discrete-parameters note), app-checklist item replaced.
 6. Tests: full gradle test + web tests; publish TV only on user say-so.
+
+## Pitch Follow (added 2026-11-15, after the rewrite shipped as TV v40)
+Option 1 of "make the geometry frequency-driven": the loudest held tone picks the mode. Two persistent passes:
+specState (80x1, per-bin level smoothed over 0.6 s) and pitchState (1x1: current peak bin, glided log-pitch).
+A new peak must beat the current one by 0.08 (6 dB); 187 Hz - 3.5 kHz; +3 dB/oct tilt; modes scale by
+sqrt(pitch/440) (Chladni's law). Tuned offline on 5 tracks (numpy sim of SpectrumAnalyzer): 15-30 target
+changes/min, holds 2-3 s; a plain argmax gave 500-1000/min. Option 2 (every mode driven by its spectral
+energy) rejected: broadband music makes the mush we just removed.
