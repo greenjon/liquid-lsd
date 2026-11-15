@@ -77,6 +77,14 @@ class FFmpegProcessPipe(
             "hevc_nvenc", "hevc_qsv", "hevc_amf", "hevc_videotoolbox"
         )
 
+        /**
+         * Runs the encoder probe (`ffmpeg -encoders` plus a short test encode per hardware encoder) on a background thread, so the
+         * first recording doesn't do it on the render thread. Safe to call more than once; a caller that comes early waits for it.
+         */
+        fun warmUp() {
+            Thread({ runCatching { workingEncoders } }, "ffmpeg-encoder-probe").apply { isDaemon = true }.start()
+        }
+
         private val workingEncoders: Set<String> by lazy {
             val available = detectedEncoders
             val tested = mutableSetOf<String>()

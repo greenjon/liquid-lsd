@@ -1,0 +1,74 @@
+== ui_check
+ok   Chat shows the log, links and all, as text
+ok   Chat shows who is here
+ok   Chat asks for a name first
+ok   Typing in the chat leaves the TV keys alone (n, m, c, space)
+ok   Joining puts the name in the room
+ok   Sending posts {user, message} on spazradio
+ok   Your own line comes back in yellow, with a time
+ok   The box is empty again after sending
+ok   The X closes the board, and the TV takes the room back
+ok   Closing is remembered
+ok   A new line while closed lights the CHAT LED
+ok   C opens the board and the LED stops blinking, lit like HOLD
+ok   The CHAT button closes it
+ok   Leaving the page clears our name from the room
+ok   No page errors
+== tape_check
+ok   Off the tape, a broadcast takes over as ever
+ok   TAPES opens during a broadcast
+ok   ...and its button is not dimmed
+ok   LIVE is lit and not dimmed during a broadcast
+ok   A tape during a broadcast takes the picture back
+ok   LIVE pulses for the broadcast it left
+ok   Viewer controls are unlocked on a tape
+ok   The end of the tape goes back to the radio
+ok   ...and says so
+ok   A finished show is not offered for resume
+ok   RESUME offers the show last played, with its place
+ok   RESUME picks up where it stopped
+ok   ...and says so
+ok   The ? page lists the tape keys
+ok   No page errors
+== shader_check
+ok   web/shaders/fx/rgb_split.fs
+ok   web/shaders/fx/thermal_scanner.fs
+ok   web/shaders/fx/vhs_glitch.fs
+ok   web/shaders/fx/video_strobe.fs
+ok   web/shaders/fx/vortex_swirl.fs
+ok   web/shaders/fx/wave_displace.fs
+ok   web/shaders/transitions/cyber_datamosh.fs
+ok   web/shaders/transitions/film_burn.fs
+ok   web/shaders/transitions/kinetic_zoom.fs
+ok   web/shaders/transitions/linear_crossfade.fs
+ok   web/shaders/transitions/liquid_displacement.fs
+ok   web/shaders/transitions/luminous_flash.fs
+ok   web/shaders/transitions/noise_dissolve.fs
+ok   web/shaders/transitions/vortex_swirl.fs
+70/70 compiled
+== embed_check
+ok   Signals fall to zero when the host stops feeding
+ok   Still no snow after 5 s of silence
+ok   Unknown option is refused
+ok   reactivity
+ok   reactivity is clamped
+ok   sync
+ok   quality low: heavy scenes off, coarser picture
+ok   quality auto
+ok   reduced motion on
+ok   reduced motion off
+ok   live off is accepted without a connection
+ok   Paused: the beat clock does not advance (no frames run)
+ok   Resumed: frames run again
+ok   The picture is not black
+ok   No page errors
+== beat_check
+ok   96 BPM: tracked 96.0 locked=true kicks=8 worst 17.4 ms mean 12.0 ms (audio running)
+ok   124 BPM: tracked 124.0 locked=true kicks=10 worst 4.4 ms mean 1.8 ms (audio running)
+ok   140 BPM: tracked 139.6 locked=true kicks=11 worst 9.1 ms mean 6.5 ms (audio running)
+ok   174 BPM: tracked 173.9 locked=true kicks=14 worst 8.0 ms mean 4.3 ms (audio running)
+== render_check
+(node:269967) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/gj/projects/liquid-lsd/web/pairing.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/gj/projects/liquid-lsd/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)

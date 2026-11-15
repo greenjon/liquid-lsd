@@ -507,7 +507,8 @@ object FxChainHeader {
         pushOpenDropdownPadding()
         if (ImGui.beginPopup(menuId)) {
             pushOpenDropdownFont()
-            ImGui.textDisabled("$chainLabel FX Chain")
+            // The Perform rows pass their row title ("Deck A FX", "Master FX"): don't say FX twice.
+            ImGui.textDisabled("${chainLabel.removeSuffix(" FX")} FX Chain")
             ImGui.separator()
 
             if (chain.isFocused()) {

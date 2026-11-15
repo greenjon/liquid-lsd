@@ -1,0 +1,130 @@
+
+  FAIL a_chips_tips: preset row tooltip starts with Loaded on   [["Interactive monitor for Deck BG. Click to browse Deck BG's source in the list below (Deck BG's rows come over it when th", 'Type to filter by name, id, folder or tags. \\n Typing a letter while the list has the keyboard starts a search too. \\n P', 'FX: effects and saved FX chains', 'Type to filte]
+  FAIL a_chips_tips: tooltip names all four decks   [[]]
+  FAIL a_ctrlf_esc: Ctrl+F opens the Library search   [('HALF', 'HALF')]
+  PASS a_ctrlf_esc: Esc after Ctrl+F goes back in one press
+  PASS a_ctrlf_esc: with text typed, first Esc keeps the Library open
+  PASS a_ctrlf_esc: second Esc goes back
+  PASS a_trans_menu_wording: m: menu says Add to Transition Queue
+  FAIL a_trans_menu_wording: m2: menu says Add to Transition Queue   [['m:File', 'm:Help', 'm:Output', 'm:View']]
+  PASS a_folder_rename_delete_select: folder renamed on disk
+  PASS a_tags_buttons: Add Tag dialog offers existing tags as buttons
+  PASS a_tags_buttons: clicking an existing-tag button fills the field and tags both rows
+  PASS a_tags_buttons: stock categories do not show as tags
+
+  PASS b_ctrlf_from_edit: Ctrl+F leaves Edit for the Library
+  FAIL b_ctrlf_from_edit: Esc right after goes back in one press
+  FAIL b_ctrlf_from_edit: typed text: first Esc clears and stays
+  FAIL b_ctrlf_from_edit: second Esc goes back
+  PASS b_trans_saved_menu: saved transition menu says Add to Transition Queue
+  FAIL b_ctrlf_full: Ctrl+F then Esc leaves the Library in one press
+  PASS b_ctrlf_full: with text, first Esc stays
+  PASS b_ctrlf_full: second Esc goes back
+  PASS b_shortlist_favs: stepping never lands on the saved single FX
+  PASS b_shortlist_favs: stepping reaches the starred Kaleidoscope
+  PASS b_shortlist_favs: tooltip shows a shortlist position
+  PASS b_div_drag: dragging the divider up moves the queues up
+  PASS b_div_clamp_reset: browser keeps a minimum height (queues do not reach the search line)
+
+  PASS b_div_persist_2: divider position survives a restart
+  PASS b_div_persist_2: rows icon turns the queues off
+  PASS b_div_persist_3: queues stay off after a restart
+  PASS b_drop_marker: dropped between rows 1 and 2
+  PASS b_drop_marker: playing marker stays on its item
+
+  FAIL b_ctrlf_full: Ctrl+F then Esc leaves the Library in one press
+  PASS b_ctrlf_full: with text, first Esc stays
+  PASS b_ctrlf_full: second Esc goes back
+  PASS b_ctrlf_full: Ctrl+F then Esc leaves the Library in one press
+  FAIL b_ctrlf_full: with text, first Esc stays
+  PASS b_ctrlf_full: second Esc goes back
+  PASS b_ctrlf_full: Ctrl+F then Esc leaves the Library in one press
+  PASS b_ctrlf_full: with text, first Esc stays
+  PASS b_ctrlf_full: second Esc goes back
+
+  FAIL b_drop_mixed3: the saved presets go in   [([], -1, -1)]
+  FAIL b_drop_mixed3: toast counts the skipped stock source   [[]]
+  FAIL b_drop_mixed3: the saved presets go in   [([], -1, -1)]
+  FAIL b_drop_mixed3: toast counts the skipped stock source   [[]]
+
+  FAIL c_q_cursor: Q with the cursor in a queue leaves the A/B queue alone   [((['tt_alpha', 'tt_beta', 'tt_gamma'], -1, -1), (['tt_alpha', 'tt_beta', 'tt_gamma', 'tt_beta'], -1, -1))]
+  FAIL c_q_cursor: Shift+Q there leaves both queues alone   [((['tt_alpha', 'tt_beta', 'tt_gamma', 'tt_beta'], -1, -1), ([], ['tt_beta']))]
+  PASS c_keys_accept: Right arrow accepts: next item loads and the crossfader moves
+  PASS c_keys_accept: each press steps once
+  FAIL c_midi_plus3: three MIDI presses in one frame move three items   [((['tt_alpha', 'tt_beta', 'tt_gamma', 'tt_alpha', 'tt_beta'], -1, -1), (['tt_alpha', 'tt_beta', 'tt_gamma', 'tt_alpha', 'tt_beta'], -1, -1))]
+
+
+
+  PASS c_pairs_header: BG monitor on the A/B page opens the BG pair
+
+
+  PASS tw_knob_no_pull: knob turn leaves the Queues tab up
+  PASS tw_knob_no_pull: knob turn leaves the Macros tab up
+
+
+
+
+  PASS tw_pane_steps: Q with the controller cursor in a queue leaves it alone
+
+
+  FAIL tw_fxq_midi: a MIDI CC mapped to A/B FX queue next steps the FX queue   [['mercury', 'mercury', 'mercury']]
+
+  FAIL tw_fxq_learn: MIDI Learn on the Clock FX-queue button, then the CC steps the FX queue
+  FAIL tw_fxq_learn: MIDI Learn on the Clock FX-queue button, then the CC steps the FX queue
+  FAIL tw_learn_three: Esc cancels OSC Learn
+  PASS d_geom: row geometry is the same in normal, slot focus, bound and empty-chain states
+
+
+
+
+
+  FAIL e_slot_rows2: effect dropped on the FX2 badge lands in slot 2   [[3d elevation, Feedback, Bloom]]
+  PASS tw_chain_retarget: touching an FX2 knob in Chain view retargets the list to slot 2
+  PASS tw_chain_retarget: touching an FX3 knob retargets to slot 3
+  PASS e_osc_esc: Esc cancels OSC Learn
+
+
+  PASS f_flame_clean: curated flame loads clean (not dirty)
+  FAIL f_flame_clean: loading another preset over it: no prompt, it loads   [src=Fractal Flame file=curated-0001.lsd dirty=false fx=[Luma displace, Fluid smear, -]]
+  FAIL f_saveas_presets: Save As with a new name goes to presets/ (top level)   [['/home/gj/projects/liquid-lsd/tests/web/.cache/app/w/cwd/library/presets/garden/curated/tt_flame_copy.lsd']]
+
+
+
+  PASS tw_gain_midi: MIDI-learned Deck A Gain still drives Gain after three source changes
+
+  PASS f_no_targets: a slot with no Metaknob targets loads with none
+  PASS f_no_targets: still none after Save and reload
+
+  PASS g_drywet_owned: dragging the Wet slider of a Dry/Wet-owned slot moves its Metaknob
+  FAIL g_discrete: knob 1 (Fractal Type) lands on whole steps while dragging   [[]]
+  PASS g_level_fader: fader drag with a bound knob does not snap back
+  PASS g_level_fader: the bound knob follows
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  FAIL tw_quick_master: knob 13 tap in a pair view switches to the Master pair   [A]
+  PASS tw_bound_panes_clear: Shift + right-bottom clears the bound slot
+
+
+
+
+  PASS tw_quick_master2: Shift + tap knob 13 in a pair view switches to the Master pair
+
+  PASS i_copy_srcfx: Copy Source + FX: B gets the source and the three effects
+
+

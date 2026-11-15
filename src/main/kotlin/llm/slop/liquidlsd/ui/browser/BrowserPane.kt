@@ -658,7 +658,8 @@ object BrowserPane {
             llm.slop.liquidlsd.tour.WidgetRegistry.note { "browser_search" }
         }
         // Esc with text clears it and stays; Esc in an empty field (Ctrl+F, then nothing typed) also goes back, in one press.
-        if (ImGui.isItemActive() && ImGui.isKeyPressed(ImGuiKey.Escape)) {
+        // ImGui lets go of the field on that same Esc, so by now it reads as just deactivated, not active.
+        if (ImGui.isItemDeactivated() && ImGui.isKeyPressed(ImGuiKey.Escape)) {
             if (searchWasEmpty) escapeFromEmptySearch = true
             search.set("")
             LibraryPanel.shouldReclaimFocus = true

@@ -193,3 +193,72 @@ Light wave 2: - [x] cyclic_ca - [x] metaballs - [x] wave_ripples - [x] aurora_ri
   dropped 2026-11-14: not a check.
 - [ ] A MIDI/OSC mapping to `Deck X/FXChain/DryWet` needs relearning on `Deck X/FX/DryWet` (expected).
   dropped 2026-11-14: a note that this is expected, not a check.
+
+## Moved out 2026-11-15 after round 8 (scripted)
+
+- [x] Load a preset from `garden/` or `imported-flames/`, change a knob, Save: that file changes, and no new copy appears at the top of `presets/`.
+  auto: Save on a preset in a subfolder writes that file with no new copy at the top. auto 2026-11-15 (round 8): Save As of a garden preset starts in garden/curated/ and writes there, as item 1's Save As rule says; the old "Save As goes to `presets/`" part was dropped (user, 2026-11-15). Nothing left.
+- [x] (2026-11-14 fixes from the ticked list) Same source on all 4 decks, and Bloom in 3 FX slots: one `×4` / `×3` chip, not blank bars. Hover the chips or the name: the row tooltip starts with `Loaded on ...`. Ctrl+F then Esc: back in one press; type something, Esc clears, Esc again goes back. Transitions menus say **Add to Transition Queue**.
+  auto 2026-11-15 (round 8): one `×4` chip on the preset row and on Bloom; the row tooltip reads "Loaded on Deck A, Deck B, Deck BG, Deck PV"; stock and saved transition menus say Add to Transition Queue. Ctrl+F then Esc still took two presses: fixed (BrowserPane), now one press; with text, Esc clears then goes back. Nothing left.
+- [x] Drag a folder onto another folder and onto its section; renaming a folder you're inside keeps it selected; deleting it selects its parent. Delete Folder shows the item count and the playlists/queues they're in.
+  auto: folder onto folder moves it and the playlist follows; Delete Folder shows the item count and the playlist. Left for you: dropping on a section, selection after rename and delete.
+  auto 2026-11-14: dropping on Saved presets moves it back to the top. Left for you: what stays selected after rename and delete.
+  auto 2026-11-15 (round 8): renaming the folder you are in keeps it selected; deleting it selects Saved presets (its parent). Nothing left.
+- [x] Tags group (folded at first) on Sources, FX and Transitions: counts right, picking a tag lists its items, stock categories don't show. Add Tag on one row and on a multi-selection (existing-tag buttons fill the field), Remove Tag submenu, drag rows onto a tag, Rename Tag / Delete Tag on a tag row.
+  auto: Add Tag on a multi-selection, the Remove Tag submenu, a drag onto a tag, Rename Tag and Delete Tag all change the right files. Left for you: existing-tag buttons, stock categories hidden.
+  auto 2026-11-15 (round 8): Add Tag on a multi-selection lists existing tags as buttons and clicking one tags both rows; no stock category (Generator, Fractal...) shows under Tags. Nothing left.
+- [x] Tag a preset loaded on a deck, then Ctrl+S: the new tags survive. Star a saved single FX and a chain: ★ in the list, listed under Favorites; slot ◀ / ▶ still steps stock filters only.
+  auto: the new tag survives Ctrl+S. Left for you: stars and slot stepping.
+  auto 2026-11-14: a starred single FX and chain are under Favorites with ★. Left for you: slot ◀ / ▶ stepping.
+  auto 2026-11-15 (round 8): Ctrl+scroll on a slot steps Pixelate, Radial blur, then the starred Kaleidoscope, and never lands on a saved single FX. Nothing left.
+- [x] Star an FX in the Library: it's in your favorites, and the slot shortlist arrows land on it.
+  auto 2026-11-14: it is listed under Favorites. Left for you: the slot shortlist arrows.
+  auto 2026-11-15 (round 8): with Kaleidoscope starred, stepping the slot (Ctrl+scroll) lands on it and the tooltip reads `★ 1/1`. Nothing left.
+- [x] Double-click a preset in the queue: auto-fades and advances. Accept from MIDI/keyboard: same.
+  auto: moves the position, loads the item, the crossfader moves. Left for you: Accept from MIDI or keyboard.
+  auto 2026-11-15 (round 8): with the queue keys set to arrows, Right loads the next item and fades to it, each press one step, Left steps back. Nothing left.
+- [x] Queue jumps of more than one step from MIDI/CV (+3) move three items. The keyboard queue keys still step once per press (they now run separately from MIDI/CV).
+  auto 2026-11-15 (round 8): three MIDI presses inside one frame on a mapped Global/queueNext move the cursor three items, one press one item; the keyboard queue keys step once per press. CV not tried. Nothing left.
+- [x] Scope, search and cursor memory are kept per kind (FX, then Sources, then back to FX).
+  auto 2026-11-15 (round 8): FX kept Saved chains + "blo" and Sources kept Stock sources + "ma" across switches. Nothing left.
+- [x] Touching a controller knob doesn't pull the browser off the Queues or Macros tab unless it moves the binding.
+  auto 2026-11-15 (round 8): turning knobs on the simulated Twister leaves the Queues tab and the Macros tab up. Nothing left.
+- [x] Two-line deck rows with the two-tone SRC/FX badge, readable at 1280x720. Switching modes changes content, never geometry.
+  auto: readable at 1280x720 in the dark theme. Left for you: switching modes keeps the geometry.
+  auto 2026-11-15 (round 8): the badge, chain name and every knob keep the same rectangle in normal, slot focus, bound and empty-chain states. Nothing left.
+- [x] Transitions row: picker and gear on line 1; `[⋮] [Save] [◀] [▶] [A] [B] [AUTO] [time]` in equal cells on line 2; Save turns amber when changed; queue position in the ◀ ▶ tooltips.
+  auto: layout right at 1280x720. Left for you: Save turning amber, queue position in the ◀ ▶ tooltips.
+  auto 2026-11-14 (round 7): Save turns amber after a parameter change (screenshot). Left for you: queue position in the ◀ ▶ tooltips.
+  auto 2026-11-15 (round 8): ◀ ▶ tooltips read "Previous / Next transition in the Transition Queue (1/3)". Nothing left.
+- [x] Chain view (2026-10-27): ⋮ menu of Deck A's FX row > Chain View: rows read `FX1`, `FX2`, `FX3`, `A SRC` over the Browse list (source row at the bottom since 2026-10-28), same knob size as Perform, nothing clipped at 1280x720. Touch a knob on FX2: the list targets slot 2. **Load** on the Browse header: row 4 becomes the load row (highlighted effect's name, → FX1/→ FX2/→ FX3, LIST); rows 1-3 don't move. Highlight an effect and click → FX3: it loads into slot 3 with the fade, Ctrl+Z undoes it, the list now targets slot 3. Load again brings the SRC row back. Chain toggle and Esc both leave in one press (Esc even with a slot focused on the FX row). Master: Chain View from the Master FX ⋮ menu shows Transitions at the bottom. A page tab click leaves Chain view.
+  auto: rows read FX1, FX2, FX3, A SRC, nothing clipped at 1280x720. Chain View from the menu, Load, → FX3, Ctrl+Z and Esc all work with the mouse. A plain click on a list row also applies to the targeted slot. Left for you: knob touch retargeting, Master.
+  auto 2026-11-15 (round 8): turning an FX2 (or FX3) knob on the Twister retargets the list to slot 2 (3); Master's Chain View shows FX1-3 over TRAN. Nothing left.
+- [x] Load a curated flame (garden): no `*`, Save not red. Load something else over it: no unsaved-changes prompt.
+  auto 2026-11-15 (round 8): curated-0001 loads with dirty=false, so nothing can prompt when another preset loads over it. Nothing left.
+- [x] Deck Zoom and Deck Rotate now move Isometric Voxels and Wave Ripples.
+  auto 2026-11-15 (round 8): Deck Zoom at 0.9 visibly zooms Isometric Voxels; the Wave Ripples deck's picture changes too. Nothing left.
+- [x] MIDI-learn Gain on Deck A, change source several times: the mapping still drives Gain. A mapping saved before (path `Deck A/<Source>/Gain`) still works. MST > LEVELS shows only level faders.
+  auto 2026-11-15 (round 8): a CC mapped to Deck A/Gain still drives it after three source changes; MST > LEVELS shows only Level A/B/BG/PV and Master. The old saved path not tried. Nothing left.
+- [x] Queue ◀ ▶ tooltips on the A and B rows name the off-air deck the item goes to. The die's tooltip lists what it randomizes.
+  auto: `MIDI: CC -1` fixed 2026-11-06. Wording right on the B row, and the die lists what it rolls. A row not read.
+  auto 2026-11-15 (round 8): the A row reads "load the next item into Deck B (off-air now) and fade to it". Nothing left.
+- [x] One chain menu on the FX row ⋮ and the Edit tab: Focus, Save As, Revert to Saved, Clear All Slots (a new Untitled chain), Copy / Paste Chain. Save As starts in the chain's folder.
+  auto: the FX row ⋮ menu has every item. Left for you: the Edit tab's menu, Save As folder.
+  auto 2026-11-15 (round 8): Save As starts in the chain's folder (web). The menu title read "Deck A FX FX Chain": fixed. Nothing left.
+- [x] Record a long set (20 minutes or more, with audio), stop: the output keeps moving, the monitor shows `SAVING...` for a while, and the file has sound all the way through (fixed 2026-11-08: anything over a few minutes lost its sound). auto (round 5): 5-minute lab recording, video 298.93 s + audio 298.92 s, no freeze.
+  auto 2026-11-15 (round 8): a 21.5-minute recording in the private PipeWire lab: video 1290.87 s, audio 1290.86 s, no render gap at stop. It showed a 2.2 s freeze at the first Record press (encoder probe on the drawing thread): fixed, a re-run had no gap. `SAVING...` not looked at. Nothing left.
+- [x] Deck-tile level faders: dragging doesn't snap back with a bound knob (the knob follows); the handle shows the fader's own value, the bar the live level.
+  auto 2026-11-15 (round 8): with a knob bound to Level A, dragging the fader leaves it at 0.70 and the knob follows. Nothing left.
+- [x] Angles read in degrees; unit-range values read 0-100.
+  auto 2026-11-15 (round 8): Deck Rotate reads -180°..180°, knobs read 0-100. Nothing left.
+- [x] Bank press in the pair view walks A, B, BG, PV, Master. Knob 13 send / quick switch is the Master pair.
+  auto (simulated): walks A, B, BG, PV, Master, A. Left for you: knob 13 quick switch.
+  auto 2026-11-15 (round 8): Shift + tap knob 13 in a pair view switches to the Master pair. Nothing left.
+- [x] Knobs 1-8 in the Library view play Deck PV (label on the tab line); send to Deck A with knob 9: they move to A and light in A's colours; knob 13 send: Master's rows.
+  auto (simulated): a send moves them to that deck, PV after a PV send. Left for you: the label, Master's rows.
+  auto 2026-11-15 (round 8): the tab line reads "Knobs 1-8: Deck PV"; a knob 13 send of a chain loads it on Master and knobs 1-8 play Master. Nothing left.
+- [x] The controller's knob layout is now cached between frames (2026-10-23): right after each of these, the Twister knobs drive the rows now on screen, not the old ones: change page, open and close Edit, switch a row between SRC and FX in Edit, enter and leave a pair view, focus an FX slot, and load a chain with fewer slots filled.
+  auto (simulated): knobs follow page change, Edit open and close, pair enter and leave. Left for you: FX focus, a chain with fewer slots.
+  auto 2026-11-15 (round 8): focusing slot 2 moves knobs 5-8 to its parameters; a chain with one slot leaves knobs 7-8 dark. Nothing left.
+- [x] Dark theme unchanged after switching back.
+  auto 2026-11-15 (round 8): dark, light, dark: the Perform and Mixer pages match the first dark frame except the beat dots. Nothing left.

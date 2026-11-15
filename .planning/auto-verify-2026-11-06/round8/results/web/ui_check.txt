@@ -1,0 +1,197 @@
+ok   First power-on plays the Liquid LSD ident
+ok   ANNOUNCE SCENES is off by default: no scene name after power on
+ok   REACT starts at 100%
+ok   I shows the channel
+ok   I names the scene
+ok   I names the background
+ok   I names the FX
+ok   I turns INFO on, its light too
+ok   INFO keeps the info on screen
+ok   The INFO button turns it off and the info goes
+ok   Key bank: OFF is down with nothing over the picture
+ok   Key bank: MENU goes down and pops OFF up
+ok   Key bank: INFO closes the menu and goes down
+ok   Key bank: SCHED pops INFO up, INFO stays set
+ok   Key bank: SCHED again closes it and INFO is back down
+ok   Key bank: ? lists the keys
+ok   Key bank: OFF closes the page and turns INFO off
+ok   Key bank: INFO twice lets it back up
+ok   A knob drag released over the TV leaves it on
+ok   Double-click puts REACT back to 100%
+ok   Screen kept awake while on (where the browser has wake lock)
+ok   Lock screen shows the station and the scene
+ok   GPU probe ran at power-on
+ok   (info) GPU probe 66.0 ms, heavy sources off
+ok   CH up never brings a heavy source when the probe said no
+ok   CH up crossfades to another scene
+ok   CH down returns to the previous scene
+ok   CH up after CH down is the channel it left
+ok   Right arrow is CH up
+ok   The badge shows the channel on air, in three digits
+ok   FX changes the chain on air
+ok   HOLD latches
+ok   H releases HOLD
+ok   ] lengthens the scene (TIME dial)
+ok   = raises REACT
+ok   Down arrow lowers the volume, not the channel
+ok   Up arrow raises the volume
+ok   U mutes
+ok   U again brings the volume back
+ok   J tunes a random other channel
+ok   R rolls the scene on air
+ok   ROLL rolls the scene on air
+ok   B changes the background
+ok   BACKGROUND ◀ goes back to the background B left
+ok   MENU › EFFECTS OFF takes the FX off the scene
+ok   E with effects off says so
+ok   EFFECTS back to AUTO puts a chain back
+ok   X skips the channel and changes on
+ok   X again within 5 s undoes the skip
+ok   MENU › SKIPPED lists the skipped channel
+ok   Picking it on the SKIPPED page tunes to it
+ok   X on a skipped channel restores it
+ok   The SKIPPED page ends with RESTORE ALL
+ok   RESTORE ALL empties the list
+ok   Typing 003 tunes to channel 3
+ok   ? shows the keyboard shortcuts
+ok   Any key closes the shortcuts (and does nothing else)
+ok   With the menu open, C toggles the chat and the menu stays
+ok   With the menu open, I closes it and turns INFO on
+ok   With the menu open, ? closes it and lists the keys
+ok   The screen tooltip lists one command per line
+ok   M opens the menu
+ok   MENU LED lights while the menu is open
+ok   Menu: the title shows the TV version
+ok   Menu: four pages
+ok   Menu: opens on the tabs, with no row selected
+ok   Menu: the tabs say the keys
+ok   Menu: right arrow on the tabs goes to the next page
+ok   Menu: left arrow wraps round the pages
+ok   Menu: Tab changes page
+ok   Menu: up from the tabs goes to the last row
+ok   Menu: down from the last row comes back to the tabs
+ok   Menu: SCENES fits without scrolling
+ok   Menu: SCENES shows the help line
+ok   Menu: SOUND fits without scrolling
+ok   Menu: SOUND shows the help line
+ok   Menu: EQ fits without scrolling
+ok   Menu: EQ shows the help line
+ok   Menu: TV fits without scrolling
+ok   Menu: TV shows the help line
+ok   Menu: CHAT, TAPES, SCHEDULE and EXIT are gone (they have their own buttons)
+ok   Menu: has AUDIO INPUT and FULLSCREEN rows
+ok   Menu: the help line explains the row under the cursor
+ok   Menu: ...and goes back to the selected row
+ok   Menu: the X closes it
+ok   Menu: it comes back on the page used last
+ok   Menu: right arrow raises SYNC by 10 ms steps
+ok   Menu: the arrows do not change the scene while it is open
+ok   Menu: reduced motion row cycles AUTO -> ON
+ok   Menu: back to defaults
+ok   EQ: off and flat by default
+ok   EQ: bands are locked while it is off
+ok   EQ: a locked band does not move
+ok   EQ: the EQUALIZER row turns it on
+ok   EQ: BASS stops at +12 dB
+ok   EQ: TREBLE goes down in 1 dB steps
+ok   EQ: remembered
+ok   EQ: the audio graph follows (gains and headroom)
+ok   EQ: off plays flat but keeps the bands
+ok   EQ: FLAT puts the bands back to 0
+ok   EQ: RESET turns it off and flat
+ok   Menu: the selected row explains itself
+ok   Menu: ANNOUNCE SCENES turns on
+ok   Menu: ANNOUNCE SCENES turns off
+ok   Menu: clicking a row label leaves the TV on
+ok   Menu: clicking a row label keeps the menu open
+ok   Esc closes the menu
+ok   THEME: dark by default
+ok   THEME: the row says DARK
+ok   THEME: the row flips to LIGHT
+ok   THEME: light is remembered
+ok   THEME: the cabinet changes
+ok   THEME: the screen surround does not
+ok   THEME: the browser bar follows
+ok   RESET puts the theme back to dark
+ok   Listeners: plural
+ok   Listeners: singular
+ok   Listeners: under the badge
+ok   Listeners: no line for nobody, and the row keeps its height
+ok   Reduced motion: no hard scenes
+ok   Reduced motion: no flash transitions
+ok   Reduced motion: REACT is capped
+ok   Reduced motion off again
+ok   Breakdown: a calm or building scene comes in
+ok   Drop: the cut uses the drop flash
+ok   Drop: a hard scene cuts in
+ok   TAP SYNC: steady taps set SYNC
+ok   Live: the title card shows LIVE and the broadcaster
+ok   Live: the badge keeps the channel
+ok   Live: the source badge says LIVE SHOW and who
+ok   Live: CH up and HOLD do nothing
+ok   Live: OSD says controls are locked
+ok   Offline: the badge still shows the channel
+ok   Offline: the source badge says STREAM
+ok   I shows the Liquid LSD line
+ok   MENU › ABOUT opens the about page
+ok   Any key closes ABOUT
+ok   SCHEDULE button opens the schedule
+ok   Schedule: the show on air is marked ON AIR
+ok   Schedule: names are text, not markup
+ok   Schedule: grouped by day
+ok   Schedule: says which time zone
+ok   Any key closes the schedule
+ok   S opens the schedule
+ok   A click closes the schedule and leaves the TV on
+ok   A scheduled show on air: the source badge says LIVE SHOW
+ok   The OSD names the next show
+ok   Power off hides the schedule
+ok   Schedule stays closed after power on
+ok   Bumper names Liquid LSD and the site
+ok   Nameplate links to the site
+ok   Clicking the nameplate does not turn the TV off
+ok   A click on the picture leaves the TV on
+ok   A click on the cabinet leaves the TV on
+ok   A click just beside HOLD presses HOLD
+ok   PWR turns the TV off
+ok   A click on the TV turns it on again
+ok   Off: M opens the menu
+ok   Off: rows that need the picture or the sound are locked and say why
+ok   Off: the source badge is dark
+ok   Off: menu settings still change
+ok   Off: clicking a row leaves the TV off
+ok   Off: a stray click closes the menu, not powers on
+ok   Off: the MENU button opens it
+ok   Off: the MENU button closes it
+ok   Off: S opens the schedule
+ok   Off: a click closes the schedule, TV stays off
+ok   Off: the SCHEDULE button opens it
+ok   Off: ? shows the shortcuts
+ok   Off: a click closes the shortcuts, TV stays off
+ok   Off: a click on the MENU label opens the menu
+ok   Power on from the menu closes it
+ok   Off: a click on the FX label still turns the TV on
+ok   Menu wheel over a label changes nothing and scrolls
+ok   Menu wheel: a scroll carrying a value under the cursor stays a scroll
+ok   Menu wheel over a value changes it
+ok   A background refresh keeps the rows where they were scrolled
+FAIL A live show: the track line starts [LIVE!], as in the app (♪ Happy Camp Presents... Dub - 2019-03-31)
+ok   Chat board is open on a first visit
+ok   Chat board hangs beside the TV, inside the window, as tall as the cabinet
+ok   Chat board has a close X
+ok   Chat waits for the check under ?nolive (no real room)
+ok   Chat shows the log, links and all, as text
+ok   Chat shows who is here
+ok   Chat asks for a name first
+ok   Typing in the chat leaves the TV keys alone (n, m, c, space)
+ok   Joining puts the name in the room
+ok   Sending posts {user, message} on spazradio
+ok   Your own line comes back in yellow, with a time
+ok   The box is empty again after sending
+ok   The X closes the board, and the TV takes the room back
+ok   Closing is remembered
+ok   A new line while closed lights the CHAT LED
+ok   C opens the board and the LED stops blinking, lit like HOLD
+ok   The CHAT button closes it
+ok   Leaving the page clears our name from the room
+ok   No page errors

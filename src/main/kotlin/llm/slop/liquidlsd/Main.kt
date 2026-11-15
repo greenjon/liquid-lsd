@@ -498,6 +498,9 @@ fun main(args: Array<String>) {
         llm.slop.liquidlsd.osc.OscEngine.start(llm.slop.liquidlsd.osc.OscPreferences.inboundPort, llm.slop.liquidlsd.osc.OscPreferences.outboundPort)
     }
 
+    // Probe FFmpeg's encoders now, off the render thread: done lazily on the first Record press it froze the output ~2 s.
+    if (tour == null) llm.slop.liquidlsd.export.FFmpegProcessPipe.warmUp()
+
     // Main loop
     var frameCount = 0
     var frameIndex = 0

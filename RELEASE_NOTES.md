@@ -11,6 +11,12 @@
 - **New: TUNING… on screen** while the first scene loads, instead of an empty channel and SCENE line (TV v35).
 - **Fixed: the page asked for its files in waves.** The browser found each layer of the TV's code only when the layer before it arrived, then the startup files only once all the code had run, a round trip each (a second or more on spaz.org). `index.html` now asks for all of them at once, catalog.json and the Mandala table are fetched once instead of twice, and the first scene's FX chain candidates are fetched side by side. About a second sooner again on a slow connection (TV v37).
 
+### Fixes From the Checklist Run of 2026-11-15 (`ui/browser/BrowserPane.kt`, `ui/FxChainHeader.kt`, `export/FFmpegProcessPipe.kt`, `Main.kt`, `web/ui.js`)
+- **Fixed: Esc after Ctrl+F still did nothing.** The one-press Esc from an empty Library search box (above) never fired: the search box lets go of the keyboard on that same Esc, so the check for "is the box in use" always said no. Ctrl+F then Esc now leaves the Library in one press; with text in the box the first Esc clears it and the second goes back.
+- **Fixed: the first recording froze the picture for about 2 seconds.** Pressing Record (Ctrl+R) the first time checked which video encoders FFmpeg has, including a short test encode on the graphics card, on the drawing thread. The check now runs in the background when the app starts.
+- **Fixed: the FX chain menu was titled "Deck A FX FX Chain"** (and "Master FX FX Chain"). It now reads "Deck A FX Chain".
+- **Changed (web TV checks only): SCHEDULE doesn't fetch the real schedule under `?nolive`.** A real show on air turned the source badge to LIVE SHOW in the headless check. Viewers see no change.
+
 ### Fixes From the Checklist Run of 2026-11-14 (`rendering/FxChain.kt`, `ui/browser/BrowserPane.kt`)
 - **Fixed: every FX chain showed unsaved changes at launch.** The factory chains from the web TV store no Super Knob, and a missing one counted as a change, so all five starting chains showed `•` and an amber Save. A chain with no saved Super Knob is now clean until something is added to it.
 - **Fixed: dropping rows on a playlist in the tree did nothing.** Drag one row or a multi-selection onto a playlist under **Playlists** (Sources, FX or Transitions tab) and it goes in at the end, with a toast, as the user guide already said.
@@ -418,7 +424,7 @@
 - **A queue's border flashes when items arrive**, by drag or by `Q` / `Shift+Q`, so you see where they went.
 - **Dragging near the top or bottom of a long queue scrolls it** (the browser's tree and list too), so you can drop past the rows on screen.
 - A playlist dragged from the tree drops into a queue as its items, at the drop line.
-- The arrow keys and the controller's cursor step from the browser on into the queues under it.
+- The controller's pane step moves its cursor from the browser on into the queues under it (empty queues are skipped); the arrow keys stay in the browser.
 - Fixed: dropping into the A/B queue above the item that is playing moved the "playing" marker onto the wrong row.
 
 ### Missing Playlist Items Can Be Found Again; Playlist Folders (`ui/browser/BrowserPane.kt`, `ui/browser/BrowseModel.kt`, `ui/browser/LibraryRefs.kt`)

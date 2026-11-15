@@ -1,0 +1,6 @@
+94005.5 start
+94015.6 sh xdotool mousemove 1000 650 key ctrl+r => 
+94015.6 play music
+95308.2 sh xdotool mousemove 640 400 key ctrl+r => 
+95308.2 silence
+95728.2 end

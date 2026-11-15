@@ -1,0 +1,78 @@
+ok   The deck exists
+ok   On the radio: LIVE lit and inert, TAPES dark
+ok   T opens TAPES, its light too
+ok   ...and LIVE stays lit: the radio is still playing
+ok   The search box says how many shows
+ok   Only the rows in view exist
+ok   RANDOM TAPE and ON THIS DAY come first
+ok   Names are text, not markup
+ok   Scrolling to the end reaches the last show
+ok   Search filters the list and drops the action rows
+ok   No match says so
+ok   Arrow keys move the selection
+ok   Esc closes it
+ok   The TAPES button opens it
+ok   MENU replaces it
+ok   Enter inserts the show and closes the list
+ok   The badge keeps showing the channel on a tape
+ok   The source badge says TAPE
+ok   On a tape: TAPES lit, LIVE dark but pressable
+ok   The strip comes up
+ok   The track line names the tape
+ok   The audio element plays the tape
+ok   The tape is really playing
+ok   The picture hears it: the audio signal moves
+ok   No NO SIGNAL on a tape
+ok   A playing tape clears the request for a click
+ok   K pauses the tape
+ok   Paused stays put
+ok   K plays it again
+ok   With a tape in, Space pauses it and leaves HOLD alone
+ok   Space plays it again
+ok   Forward: the seek lands (clamped to the end of a short show)
+ok   Back 30 s goes to the start of a short show
+ok   The strip draws at a real size
+ok   A click on the waveform seeks there
+ok   The strip clock reads position / length
+ok   A broadcast does not take the picture from a tape
+ok   LIVE pulses
+ok   It says so once
+ok   The tape keeps playing
+ok   The badge still shows the channel
+ok   The source badge still says TAPE
+ok   LIVE stops pulsing when the show ends
+ok   The schedule's show on air pulses LIVE too
+ok   ...and stops with it
+ok   The chat notes the tape
+ok   Power off stops the sound; the tape stays in
+ok   Power off: both lights dark
+ok   Power on resumes the tape near where it was
+ok   Power on: TAPES lit again
+ok   T opens TAPES with the TV off, and the TV stays off
+ok   The list lights TAPES with the TV off
+ok   Esc closes it and the TV stays off
+ok   The TAPES button opens it with the TV off
+ok   Picking a tape with the TV off turns it on and plays
+ok   ...with its strip up
+ok   Picking the tape already in with the TV off plays it too
+ok   L ejects: back on the radio stream
+ok   The strip goes
+ok   The badge still shows the channel
+ok   The source badge goes back to STREAM
+ok   Back on the radio: LIVE lit, TAPES dark, no pulse
+ok   The chat note goes
+ok   Off the tape, a broadcast takes over as ever
+ok   TAPES opens during a broadcast
+ok   ...and its button is not dimmed
+ok   LIVE is lit and not dimmed during a broadcast
+ok   A tape during a broadcast takes the picture back
+ok   LIVE pulses for the broadcast it left
+ok   Viewer controls are unlocked on a tape
+ok   The end of the tape goes back to the radio
+ok   ...and says so
+ok   A finished show is not offered for resume
+ok   RESUME offers the show last played, with its place
+ok   RESUME picks up where it stopped
+ok   ...and says so
+ok   The ? page lists the tape keys
+ok   No page errors

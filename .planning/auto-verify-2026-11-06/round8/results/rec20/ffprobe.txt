@@ -1,0 +1,2 @@
+stream|codec_type=video|duration=1290.866667|nb_frames=77452
+stream|codec_type=audio|duration=1290.858000|nb_frames=60510

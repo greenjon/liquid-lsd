@@ -721,7 +721,8 @@ export function initUI() {
       schedulePage.hidden = false;
       syncKeys();
       // A list older than 10 minutes (or none yet) is fetched again; the page fills in when it lands.
-      if (Date.now() - scheduleState.fetchedAt > SCHEDULE_STALE_MS) {
+      // Not under ?nolive: the headless checks give the page a fixture, and a real show on air would turn the source badge.
+      if (Date.now() - scheduleState.fetchedAt > SCHEDULE_STALE_MS && !new URLSearchParams(location.search).has('nolive')) {
         refreshSchedule().then(() => { if (!schedulePage.hidden) renderSchedule(); });
       }
       renderSchedule();
