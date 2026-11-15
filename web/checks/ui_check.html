@@ -517,16 +517,15 @@ try {
   rowsBox.style.flex = ''; rowsBox.style.height = '';
   key('Escape');
   // [LIVE!]: the server's title and live flag, read as the Spaz Radio app reads them (a stub stands in for the feed).
-  const realFetch = w.fetch;
-  w.fetch = (u, o) => String(u).endsWith('/playing')
-    ? Promise.resolve(new w.Response(JSON.stringify({ playing: '[LIVE!] Stub Show - real time', listeners: 3, live: 'true' })))
-    : realFetch.call(w, u, o);
+  w.LSD.viewerState.readPlaying = async () => ({ playing: '[LIVE!] Stub Show - real time', listeners: 3, live: 'true' });
   d.getElementById('powerSwitch').click();
   await sleep(100);
   d.getElementById('powerSwitch').click();
   for (let i = 0; i < 40 && !osd('osd-track').text.includes('Stub Show'); i++) await sleep(100);
   check('A live show: the track line starts [LIVE!], as in the app', osd('osd-track').text.includes('[LIVE!] Stub Show'), osd('osd-track').text);
-  w.fetch = realFetch;
+  await sleep(1100); // the badge updates once a second
+  check('A live show: the source badge says LIVE SHOW', source() === 'LIVE SHOW', source());
+  w.LSD.viewerState.readPlaying = null;
   // CHAT: the blackboard, on a fake broker and log (?nolive never starts the real room).
   const board = d.getElementById('chalkboard'), chatBtn = d.getElementById('chatBtn');
   const cb = w.LSD.viewerState.chat;

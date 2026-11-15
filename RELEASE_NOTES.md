@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Web TV Shows Live Shows (`web/schedule.js`, `web/ui.js`)
+- **Fixed: the TV never showed `[LIVE!]` or LIVE SHOW for a live stream** unless the show was on the schedule. The Spaz Radio app reads that from radio.spaz.org/playing, which a web page isn't allowed to read. The TV now reads the copy spaz.org/radio uses, so a live show puts `[LIVE!]` on the track line and LIVE SHOW on the source badge, as in the app (TV v39).
+
 ### Web TV: About Moves Onto the ? Page (`web/index.html`, `web/tv.css`, `web/ui.js`)
 - **Changed: no nameplate under the screen.** The Liquid LSD badge between the picture and the controls is gone; the TV already names Liquid LSD at power-on, on the INFO line and in the half-hourly bumper.
 - **Changed: `?` is now the about page as well as the keys.** It opens with the Liquid LSD name and logo, and under the keys has the link to liquid-lsd.greenjon.com with its QR code and a link to the Spaz Radio app for Android. MENU › TV › ABOUT opens the same page, and the separate ANDROID APP menu row is gone (the app link is also still at the bottom of TAPES). Clicking a link leaves the page open (TV v38).

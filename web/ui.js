@@ -12,12 +12,12 @@ import { createChat } from './chat.js';
 import { createChatboard } from './chatboard.js';
 import { createTapeDeck } from './tapedeck.js';
 import { appUrl } from './tapes.js';
-import { scheduleState, refreshSchedule, setShows, groupByDay, upcoming, parsePlaying, zoneLabel, nextLine, SCHEDULE_REFRESH_MS, SCHEDULE_STALE_MS } from './schedule.js';
+import { scheduleState, refreshSchedule, setShows, groupByDay, upcoming, parsePlaying, loadPlayingJsonp, zoneLabel, nextLine, SCHEDULE_REFRESH_MS, SCHEDULE_STALE_MS } from './schedule.js';
 
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v38';
+export const TV_VERSION = 'v39';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -27,6 +27,8 @@ export const powerState = {
 
 // Viewer settings — renderer.js scales every audio signal by `react`
 export const viewerState = {
+  // Reads radio.spaz.org/playing ([LIVE!]). Null under ?nolive, where the headless check puts in a stub.
+  readPlaying: new URLSearchParams(globalThis.location?.search ?? '').has('nolive') ? null : readPlayingFeed,
   react: 1.0,
   announce: false,     // show the scene and its FX on every change (off: only when asked, or after a control)
   info: false,         // INFO: the info lines stay on screen
@@ -59,8 +61,8 @@ const REACT_MIN = 0.25, REACT_MAX = 2.0, REACT_DEFAULT = 1.0;
 const REACT_KEY = 'lsd.react.agc';
 const STREAM_STATUS_URL = 'https://radio.spaz.org:8060/status-json.xsl';
 const STREAM_MOUNT = '/radio.ogg';
-// What the Spaz Radio app shows: the title with [LIVE!] for a show streamed in real time. A browser can read it only
-// if the server sends a CORS header. Until then the fetch fails, and the title comes from the Icecast status alone.
+// What the Spaz Radio app shows: the title with [LIVE!] for a show streamed in real time. /playing sends no CORS
+// header, so the TV reads its JSONP copy (as spaz.org/radio does) and tries fetch() only if that fails.
 const PLAYING_URL = 'https://radio.spaz.org/playing';
 const PLAYING_RETRY_MS = 10 * 60 * 1000; // a failed read waits this long, or for the next power-on
 // THEME: the browser's own bar matches the cabinet (index.html sets a saved light theme before the first paint).
@@ -1201,13 +1203,19 @@ document.addEventListener('visibilitychange', holdScreenAwake);
 // Now playing (Icecast status), refreshed while the TV is on
 // -------------------------------------------------------
 let pollTimer = null;
+/** radio.spaz.org/playing's raw object: the JSONP copy, else fetch() (if the server ever sends a CORS header). */
+async function readPlayingFeed() {
+  try { return await loadPlayingJsonp(); } catch { /* fall through */ }
+  const res = await fetch(PLAYING_URL, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
 /** The server's title, with [LIVE!] when it is live, or '' when it can't be read. */
 async function readPlaying() {
+  if (!viewerState.readPlaying) { streamLive = false; return ''; }
   if (performance.now() < playingRetryAt) return '';
   try {
-    const res = await fetch(PLAYING_URL, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const { title, live } = parsePlaying(await res.json());
+    const { title, live } = parsePlaying(await viewerState.readPlaying());
     streamLive = live;
     return title;
   } catch {

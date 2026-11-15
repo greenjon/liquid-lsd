@@ -89,6 +89,32 @@ export function nextLine(shows, now, opts = {}) {
   return `NEXT: ${s.name} · ${day === 'TODAY' ? '' : `${day} `}${timeLabel(s.start, opts)}`;
 }
 
+/**
+ * Reads radio.spaz.org/playing the way spaz.org/radio does: its JSONP copy, a script that calls
+ * update_meta({...}). A script needs no CORS header, and /playing sends none, so fetch() can't read it.
+ * The file is static and always calls update_meta, whatever ?callback= says. Resolves with the raw object.
+ */
+export function loadPlayingJsonp(url = 'https://radio.spaz.org/streams/playing-jsonp', timeoutMs = 8000) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    let settled = false;
+    const done = (fn, v) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      s.remove();
+      globalThis.update_meta = () => {}; // a late copy finds a no-op, not a ReferenceError
+      fn(v);
+    };
+    globalThis.update_meta = (m) => done(resolve, m);
+    s.onload = () => done(reject, new Error('playing-jsonp did not call update_meta'));
+    s.onerror = () => done(reject, new Error('playing-jsonp failed to load'));
+    const timer = setTimeout(() => done(reject, new Error('playing-jsonp timed out')), timeoutMs);
+    s.src = `${url}${url.includes('?') ? '&' : '?'}callback=update_meta&t=${Date.now()}`;
+    document.head.appendChild(s);
+  });
+}
+
 /** radio.spaz.org/playing -> { title, live }. The server decides what is live, and puts `[LIVE!] ` before the title. */
 export function parsePlaying(raw) {
   const live = raw?.live === true || raw?.live === 'true';
