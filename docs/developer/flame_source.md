@@ -1,6 +1,6 @@
 # Fractal Flame Source
 
-The Fractal Flame generator (`fractal_flame`, class `FlameSource`) is an evolving-genome source: a large parameter set, a GPU point renderer and a sampler that picks the next morph target. Math: Draves & Reckase, "The Fractal Flame Algorithm" (clean-room, paper only). Status: experimental, extracted like the stock sources but listed in `VisualSourceRegistry.EXPERIMENTAL_SOURCE_IDS`. Planning notes and measurements live in `.planning/flame-source-plan.md` and `.planning/flame-source-handoff.md`.
+The Fractal Flame generator (`fractal_flame`, class `FlameSource`) is an evolving-genome source: a large parameter set, a GPU point renderer and a sampler that picks the next morph target. Math: Draves & Reckase, "The Fractal Flame Algorithm" (clean-room, paper only). Status: experimental, extracted like the stock sources but listed in `VisualSourceRegistry.EXPERIMENTAL_SOURCE_IDS`. Planning notes and measurements live in `.planning/flame-source-plan.md` and `.planning/flame-source-handoff.md` (removed; in git at 4fa7646).
 
 ## Rendering (`FlameEngine`, OpenGL 3.3 core)
 

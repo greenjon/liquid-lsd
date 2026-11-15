@@ -2,7 +2,7 @@
 // Mirrors Renderer.kt (renderDeck / renderMixer / renderFxChainPass). Mandala is the one
 // source drawn outside this graph (renderer.js), but its output is just a texture here.
 //
-// State shapes (see .planning/web-renderer-parity-plan.md; phase 3 will put these on the wire):
+// State shapes (see .planning/web-renderer-parity-plan.md (removed; in git at 4fa7646); phase 3 will put these on the wire):
 //   deck:  { source, params: { <ISF input NAME>: number|ParameterDto }, viewZoom, viewRotateZ, globalAlpha,
 //            fx: [slot|null x3] (or {"0".. "2"} on the wire), fxDryWet, fxEnabled,
 //            empty?: true, mandala?: {shader-ready uniforms} }

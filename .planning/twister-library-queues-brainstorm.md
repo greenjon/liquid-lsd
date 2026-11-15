@@ -1,6 +1,6 @@
 # Twister in the split Library view: brainstorm
 
-Status: BRAINSTORM 2026-10-27, nothing decided. Follows `.planning/library-queue-split-plan.md` (committed d39c5b2).
+Status: BRAINSTORM 2026-10-27, nothing decided. Follows `.planning/library-queue-split-plan.md` (removed; in git at 4fa7646) (committed d39c5b2).
 
 ## What the Twister already does in the Library view (`NavigationSurface`, `LibraryNavigation`)
 

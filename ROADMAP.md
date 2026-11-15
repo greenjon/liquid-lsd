@@ -252,7 +252,7 @@ The beat tracker finds tempo and beat phase but not which beat is beat 1. A bar 
 - [ ] **Pixelate transition**: pixelate deck A up to coarse blocks, swap at the midpoint, resolve deck B back down. A classic VJ transition with nothing like it in the stock eight. It must be exact at rest (block size 1 at progress 0 and 1).
 - [ ] **Any effect as a transition** (design first): a wrapper that runs a stock effect on both decks with its amount ramping up and back down across the fade (peaking at the midpoint) and swaps decks there, so every effect is also a transition without hand-writing one per effect. Questions: which input is the "amount" (the Metaknob target is the obvious choice), how the user picks the effect (a transition with an effect slot?), and cost (two effect passes per frame during a fade).
 - Maybes, only if wanted: Film Burn and Noise Dissolve as effects that reveal what is behind the deck (black is transparent, so a burn or noise mask over deck A shows BG through the holes; Luma Key partly covers this).
-- Keep existing ids: `vortex_swirl` stays both an effect and a transition (renaming breaks saved chains, presets and the `festival_elite` playlist); shipped defaults key the two by kind (see `.planning/transition-reactivity-plan.md`).
+- Keep existing ids: `vortex_swirl` stays both an effect and a transition (renaming breaks saved chains, presets and the `festival_elite` playlist); shipped defaults key the two by kind (see `.planning/transition-reactivity-plan.md` (removed; in git at 4fa7646)).
 
 **Done means:** stock-set lists in DECISIONS.md and the user guide, web sync entries, release notes in both files, tooltips, shipped default (with audio response) for each new shader.
 

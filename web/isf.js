@@ -4,7 +4,7 @@
 // Scope: float/long/bool/event/color/point2D/image inputs, audio/audioFFT inputs (bound to audiotex.js's
 // textures under the shader's own names, as AudioTexture.kt / ISFAudioInputs.kt do), multi-pass shaders with
 // PASSES, TARGET, PERSISTENT, FLOAT and $WIDTH/$HEIGHT dimension expressions. IMPORTED assets are not supported.
-// See .planning/web-renderer-parity-plan.md, phase 1.
+// See .planning/web-renderer-parity-plan.md (removed; in git at 4fa7646), phase 1.
 
 const HEADER_RE = /\/\*\s*(\{[\s\S]*?\})\s*\*\//;
 

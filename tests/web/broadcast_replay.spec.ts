@@ -28,8 +28,8 @@ test('desktop broadcast replayed into the web TV: LIVE, the broadcaster name, th
   const st = await page.evaluate(() => { const A = (window as any).LSD.autopilotState; return { live: A.isLiveBroadcast, deckA: A.deckA?.source ?? (A.deckA?.empty ? 'empty' : null), deckB: A.deckB?.source, balance: A.mixer?.balance, fx: Object.values(A.mixer?.fx ?? {}).map((f: any) => f?.id), broadcaster: A.broadcaster }; });
   await page.waitForTimeout(1500);
   const pic = await picture(page);
-  await page.screenshot({ path: '.planning/auto-verify-2026-11-06/round5/web/broadcast_replay.png' });
-  fs.writeFileSync('.planning/auto-verify-2026-11-06/round5/web/broadcast_replay.json', JSON.stringify({ sent: msgs.length, st, pic, card: card !== null, errors: tv.errors }, null, 1));
+  await page.screenshot({ path: 'tests/web/out/broadcast_replay.png' });
+  fs.writeFileSync('tests/web/out/broadcast_replay.json', JSON.stringify({ sent: msgs.length, st, pic, card: card !== null, errors: tv.errors }, null, 1));
   expect(st.live).toBe(true);
   expect(st.broadcaster).toBe('Overnight Test');
   expect(st.deckB).toBe('aurora_ribbons');

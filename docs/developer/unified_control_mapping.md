@@ -297,7 +297,7 @@ Package `llm.slop.liquidlsd.control`; tests in `src/test/kotlin/.../control/` an
 - `banks.switch` describes the device's bank buttons (`CC = cc + bankIndex`; a non-zero value means that bank is now active).
 - Binding keys are an input id with optional held-modifier prefixes (`shift+knob.3.press`); `bankBindings` (1-based bank) override `bindings`. In the last part of a key `*` matches a group index and `{n}` in the value is replaced by it (`"knob.*": "knob.{n}"`). `CompiledController.bindingFor(inputId, held, bank)` picks the most specific binding: more modifiers beat fewer, then a bank binding beats a global one.
 - `ControllerProfile.compile()` builds a `(type, channel, cc) -> ResolvedInput(inputId, kind, bank, mode)` table and a list of structural problems (CC collisions, out-of-range values, duplicate ids, bindings naming unknown inputs or non-modifier prefixes). `unknownCommands(registry)` lists binding targets that aren't registered.
-- Bindings, modifiers, banks and encoder handling are live (6.5). Navigation/browse commands are live (6.7). Not implemented yet: response curves. See `.planning/midi-controller-plan.md`.
+- Bindings, modifiers, banks and encoder handling are live (6.5). Navigation/browse commands are live (6.7). Not implemented yet: response curves. See `.planning/midi-controller-plan.md` (removed; in git at 4fa7646).
 
 ### 6.4 Built-in profile
 Banks select Perform pages (`banks.pages`: `perform.ab`, `perform.bgpv`, `perform.mixer`; the stock Twister profile has 4 banks, and bank 4 leaves the page alone). Side buttons `side.1..3` (CC 8, 11, 13 on bank 1; +6 per bank) are the context-dependent navigation buttons; shift is CC 10.

@@ -1555,7 +1555,7 @@
 
 
 <h1 id="fractal-flame-source">Fractal Flame Source</h1>
-<p>The Fractal Flame generator (<code>fractal_flame</code>, class <code>FlameSource</code>) is an evolving-genome source: a large parameter set, a GPU point renderer and a sampler that picks the next morph target. Math: Draves &amp; Reckase, "The Fractal Flame Algorithm" (clean-room, paper only). Status: experimental, extracted like the stock sources but listed in <code>VisualSourceRegistry.EXPERIMENTAL_SOURCE_IDS</code>. Planning notes and measurements live in <code>.planning/flame-source-plan.md</code> and <code>.planning/flame-source-handoff.md</code>.</p>
+<p>The Fractal Flame generator (<code>fractal_flame</code>, class <code>FlameSource</code>) is an evolving-genome source: a large parameter set, a GPU point renderer and a sampler that picks the next morph target. Math: Draves &amp; Reckase, "The Fractal Flame Algorithm" (clean-room, paper only). Status: experimental, extracted like the stock sources but listed in <code>VisualSourceRegistry.EXPERIMENTAL_SOURCE_IDS</code>. Planning notes and measurements live in <code>.planning/flame-source-plan.md</code> and <code>.planning/flame-source-handoff.md</code> (removed; in git at 4fa7646).</p>
 <h2 id="rendering-flameengine-opengl-33-core">Rendering (<code>FlameEngine</code>, OpenGL 3.3 core)</h2>
 <ol>
 <li>A ping-pong RGBA32F <strong>state texture</strong> (512x512, one IFS point per texel: x, y, colour, age).</li>

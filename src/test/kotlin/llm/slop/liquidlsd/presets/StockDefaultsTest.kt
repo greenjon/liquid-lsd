@@ -268,7 +268,7 @@ class StockDefaultsTest {
 
     /**
      * Inputs that make the picture pop the instant a fade leaves rest when pushed past a limit: the flash or the burn
-     * edge leaks to the ends of the fade (see `.planning/transition-reactivity-plan.md`). Checked against the highest
+     * edge leaks to the ends of the fade (see `.planning/transition-reactivity-plan.md` (removed; in git at 4fa7646)). Checked against the highest
      * value any modulator, running or bypassed, can push the input to.
      */
     private val atRestLimits = mapOf("luminous_flash" to mapOf("spread" to 0.45f), "film_burn" to mapOf("burnSpread" to 0.45f))

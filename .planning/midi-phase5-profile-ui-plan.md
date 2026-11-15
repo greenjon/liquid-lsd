@@ -1,6 +1,6 @@
 # MIDI phase 5: controller profile UI (plan)
 
-Written 2026-10-02 after a recon pass. **Status 2026-10-14: slice 1 is DONE and committed; the binding editor and learn-into-profile are also done; the remaining items under "Later slices" are v1.1 (feature freeze).** Read `.planning/midi-controller-handoff.md` first (architecture map,
+Written 2026-10-02 after a recon pass. **Status 2026-10-14: slice 1 is DONE and committed; the binding editor and learn-into-profile are also done; the remaining items under "Later slices" are v1.1 (feature freeze).** Read `.planning/midi-controller-handoff.md` (removed; in git at 4fa7646) first (architecture map,
 gotchas, definition of done). Phases 1-4 and the phase 3 leftovers are done and committed.
 
 ## Goal
@@ -67,7 +67,7 @@ The text below is the original plan, kept for reference.
 - ~~Optional manual per-device profile choice~~ done (see Slice 1).
 - Still open (v1.1): per-bank bindings in the editor (JSON only today).
 - Still open (v1.1): bind the unbound `fx.queue_next/prev` and `fx.bg_queue_next/prev` commands (no free Twister input; see DECISIONS.md).
-- Still open (v1.1): perform-pages phase 4 (page editing); see `.planning/perform-pages-plan.md`.
+- Still open (v1.1): perform-pages phase 4 (page editing); see `.planning/perform-pages-plan.md` (removed; in git at 4fa7646).
 
 ## Open questions for the user
 

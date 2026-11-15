@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 import { sealOff, openTV, until, picture, note, truth } from './tv';
 import fs from 'node:fs';
 const only = () => test.skip(test.info().project.name !== 'chromium');
-const dir = '.planning/auto-verify-2026-11-06/round3/web/measure'; fs.mkdirSync(dir, { recursive: true });
+const dir = 'tests/web/out/measure'; fs.mkdirSync(dir, { recursive: true });
 const SAMPLER = () => {
   const w = window as any; w.__s = []; w.__ev = [];
   const L = w.LSD, a = document.getElementById('lsdAudio') as HTMLAudioElement; let last: any = null;

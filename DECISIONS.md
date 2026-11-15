@@ -491,7 +491,7 @@ Each of these was built, then deliberately deleted. The reason is the point.
 
 ## The Library and the Pair View Browse Are One Dock (`BrowserDock`, `DockActions`, `ViewState`)
 - **Decision**: one browser dock (tabs, toolbar, pane, shortcuts, popups) whose only difference between the plain Library, the Perform dock bound in place and the pair view is an optional bound apply-target. Bound = the selected tab's kind equals the selected target's kind; any other tab is the plain Library (the chip stays, greyed and "paused"). The dock owns one selected tab (`LibraryPanel.viewMode`); the Macros tab is shown in the pair view unbound.
-- **Why**: two implementations of one browser drifted (new-playlist/rename dialogs did nothing in the bay, queues and `Q` keys were missing, tooltips explained the gaps). Plan: `.planning/library-browser-unification-plan.md`.
+- **Why**: two implementations of one browser drifted (new-playlist/rename dialogs did nothing in the bay, queues and `Q` keys were missing, tooltips explained the gaps). Plan: `.planning/library-browser-unification-plan.md` (removed; in git at 4fa7646).
 - **Left alone**: Library FULL with an *open Edit row* above it stays illegal (Edit is that layout; `setDisclosure` still drops FULL to HALF); both controller side-button maps (Library vs bound) are kept until hardware use suggests one; Macros tab is not controller-navigable.
 
 ## Fractal Flame Variations Come From the Published Paper Only (`FlameVariations`, `FlameEngine.COMMON`)

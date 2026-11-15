@@ -23,7 +23,7 @@ import llm.slop.liquidlsd.ui.shortcuts.ShortcutManager
 /**
  * The browser as one reusable block: tab strip + action toolbar ([drawHeader]), the pane ([drawBody]),
  * and the keyboard shortcuts and popups that belong to it ([drawShortcuts], [drawPopups]). The Library
- * window draws it unbound; see `.planning/library-browser-unification-plan.md`.
+ * window draws it unbound; see `.planning/library-browser-unification-plan.md` (removed; in git at 4fa7646).
  */
 object BrowserDock {
     /**

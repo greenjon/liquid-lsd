@@ -43,7 +43,7 @@ import java.io.File
 
 /**
  * The unified Library browser: folder tree (25% of the width) and the name | info list (the rest; the info column is half the dock). The queues live on the Queues tab ([QueuesPane]).
- * One pane serves every asset kind (sources, FX, transitions). See `.planning/unified-browser-pane-plan.md`.
+ * One pane serves every asset kind (sources, FX, transitions). See `.planning/unified-browser-pane-plan.md` (removed; in git at 4fa7646).
  */
 object BrowserPane {
     private val scopes = HashMap<BrowseKind, BrowseScope>()

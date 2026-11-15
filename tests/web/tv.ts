@@ -45,7 +45,7 @@ export const picture = (page: Page) => page.evaluate(() => new Promise<any>((res
   res({ mean: s / N, sd: Math.sqrt(Math.max(0, s2 / N - (s / N) ** 2)) });
 })));
 export function note(name: string, data: unknown) {
-  fs.mkdirSync('.planning/auto-verify-2026-11-06/round3/web/measure', { recursive: true });
-  fs.writeFileSync(`.planning/auto-verify-2026-11-06/round3/web/measure/${name}.json`, JSON.stringify(data, null, 1));
+  fs.mkdirSync('tests/web/out/measure', { recursive: true });
+  fs.writeFileSync(`tests/web/out/measure/${name}.json`, JSON.stringify(data, null, 1));
   console.log(`[measure] ${name}: ${JSON.stringify(data).slice(0, 900)}`);
 }

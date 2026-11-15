@@ -173,7 +173,7 @@ MidiMappingManager.processGlobalMidiEvents                         OscMappingMan
 - **Touch console** (`input/`): `TouchConsoleController` (CapsLock latch; zones drive crossfade and levels), backends `LinuxEvdevTouchBackend`, `MacCocoaTouchBackend`, `NoOpTouchBackend` (other platforms), events through a lock-free queue drained on Thread 0. DECISIONS §10.
 - **Keyboard**: `ui/shortcuts/` (`ShortcutManager`, rebindable; `~/.liquid-lsd/keybindings.json`); global hotkeys are handled in the GLFW key callback in `Main.kt`.
 
-Deeper: `docs/developer/unified_control_mapping.md`, `.planning/midi-controller-handoff.md`.
+Deeper: `docs/developer/unified_control_mapping.md`.
 
 ## 9. Audio, beat sync, Ableton Link
 
@@ -186,7 +186,7 @@ Deeper: `docs/developer/beat_sync.md`, `docs/developer/audio_dsp.md`.
 
 ## 10. UI
 
-`ui/UIManager` builds and drives everything each frame (`render`): keyboard queue shortcuts → ImGui frame → `MenuBar` → `drawLayout` → modals → `MacroUndoTracker.update` → `ToastOverlay`. Styling: `UITheme` (settings singleton over `AppPreferences`), `UIThemeStyler`, `TangoPalette` (sole colour source for Perform UI; DECISIONS §8). Its `Role`s hold a dark value and a light value or ImGui slot, resolved with `role.u32()` against `TangoPalette.isLightTheme` (set in `UIThemeStyler.setupThemeColors`); the light-theme roles include `HOVER_OVERLAY`, `PRESS_OVERLAY`, `HEADER_TINT`, `CELL_WASH`, `HOVER_BORDER`, `TEXT_FAINT`, `TEXT_DIM`, `TEXT_OK`, `TEXT_WARN`, `TEXT_ERROR`, `QUEUE_AB_TEXT`, `QUEUE_BG_TEXT`. `ButtonChrome` draws the bevel on real buttons (tunables in its per-theme `Look`). `CvTheme` is still separate; it dims its colours by `CvTheme.LIGHT_THEME_SCALE` (0.62) in the light theme. The light theme has not been checked visually; remaining literals: `AudioEnginePanel` meters/slider `themeColor` literals, `TourRunner` overlays (by design); see `.planning/theme-color-audit.md`. Control tooltips are built lazily with `controlTooltip { }` (`ControlTooltipBuilder` in `TooltipHelper.kt`: three tiers, `midiMappingText()`); plain ones via `itemTooltip` / `showTooltip`.
+`ui/UIManager` builds and drives everything each frame (`render`): keyboard queue shortcuts → ImGui frame → `MenuBar` → `drawLayout` → modals → `MacroUndoTracker.update` → `ToastOverlay`. Styling: `UITheme` (settings singleton over `AppPreferences`), `UIThemeStyler`, `TangoPalette` (sole colour source for Perform UI; DECISIONS §8). Its `Role`s hold a dark value and a light value or ImGui slot, resolved with `role.u32()` against `TangoPalette.isLightTheme` (set in `UIThemeStyler.setupThemeColors`); the light-theme roles include `HOVER_OVERLAY`, `PRESS_OVERLAY`, `HEADER_TINT`, `CELL_WASH`, `HOVER_BORDER`, `TEXT_FAINT`, `TEXT_DIM`, `TEXT_OK`, `TEXT_WARN`, `TEXT_ERROR`, `QUEUE_AB_TEXT`, `QUEUE_BG_TEXT`. `ButtonChrome` draws the bevel on real buttons (tunables in its per-theme `Look`). `CvTheme` is still separate; it dims its colours by `CvTheme.LIGHT_THEME_SCALE` (0.62) in the light theme. The light theme has not been checked visually; remaining literals: `AudioEnginePanel` meters/slider `themeColor` literals, `TourRunner` overlays (by design); see `.planning/open-items.md`. Control tooltips are built lazily with `controlTooltip { }` (`ControlTooltipBuilder` in `TooltipHelper.kt`: three tiers, `midiMappingText()`); plain ones via `itemTooltip` / `showTooltip`.
 
 **Three views plus the pair view, and a bound Perform dock** (no classic view, no Parameters/Properties panels, no modular rack with MULTI mode, no Preset Grid, no Column 3 MACROS tab):
 

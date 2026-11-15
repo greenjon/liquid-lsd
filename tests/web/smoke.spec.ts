@@ -16,7 +16,7 @@ test('smoke: loads, plays the stream, draws, menu and channels work', async ({ p
   await page.keyboard.press('Escape');
   const name = () => page.evaluate(() => { const A = (window as any).LSD.autopilotState; return (A.mixer.balance > .5 ? A.deckB : A.deckA)?.name; });
   const n0 = await name(); await page.click('#chUp'); await page.waitForTimeout(5000); const n1 = await name();
-  await page.screenshot({ path: `.planning/auto-verify-2026-11-06/round3/web/shots/smoke-${info.project.name}.png` });
+  await page.screenshot({ path: `tests/web/out/shots/smoke-${info.project.name}.png` });
   note(`smoke_${info.project.name}`, { gl, heardAfterS: heard, audio: a, pic: p, menu, n0, n1, bpm: await tv.lsd('LSD.cvState.bpm'), errors: tv.errors });
   expect(menu).toBeGreaterThan(3); expect(n1).not.toBe(n0); expect(tv.errors).toEqual([]);
   expect(heard, 'the stream reaches the analysers').not.toBeNull();

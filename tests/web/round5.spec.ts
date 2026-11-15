@@ -3,7 +3,7 @@ import { test, expect, type Page } from '@playwright/test';
 import fs from 'node:fs';
 import { sealOff, openTV, until } from './tv';
 
-const OUT = '.planning/auto-verify-2026-11-06/round5/web';
+const OUT = 'tests/web/out';
 const save = (name: string, data: unknown) => {
   fs.mkdirSync(OUT, { recursive: true });
   fs.writeFileSync(`${OUT}/${name}.json`, JSON.stringify(data, null, 1));

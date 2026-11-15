@@ -8,7 +8,7 @@ for (const [name, width, height, touch] of SIZES) test(`checklist: layout ${name
   const ctx = await browser.newContext({ viewport: { width, height }, hasTouch: touch, isMobile: touch, deviceScaleFactor: 1 });
   const page = await ctx.newPage(); await sealOff(ctx);
   const tv = await openTV(page); await tv.on(); await page.waitForTimeout(5500);
-  fs.mkdirSync('.planning/auto-verify-2026-11-06/round3/web/shots', { recursive: true });
+  fs.mkdirSync('tests/web/out/shots', { recursive: true });
   const audit = (label: string) => page.evaluate((label) => {
     const vis = (e: Element) => { const r = e.getBoundingClientRect(), s = getComputedStyle(e); return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none' && +s.opacity > 0; };
     const sw = document.documentElement.scrollWidth, iw = innerWidth;
@@ -18,14 +18,14 @@ for (const [name, width, height, touch] of SIZES) test(`checklist: layout ${name
     return { label, sw, iw, sh: document.documentElement.scrollHeight, ih: innerHeight, offscreen: off, smallTargets: small, clipped };
   }, label);
   const res: any[] = [await audit('tv')];
-  await page.screenshot({ path: `.planning/auto-verify-2026-11-06/round3/web/shots/${name}-tv.png` });
+  await page.screenshot({ path: `tests/web/out/shots/${name}-tv.png` });
   await page.keyboard.press('m'); await page.waitForTimeout(400);
   res.push(await page.evaluate(() => { const m = document.getElementById('tv-menu')!, r = m.getBoundingClientRect(), s = document.getElementById('tv-screen-area')!.getBoundingClientRect(); const lab = m.querySelector('.menu-label'); return { label: 'menu', menu: [r.left, r.top, r.right, r.bottom].map(Math.round), screen: [s.left, s.top, s.right, s.bottom].map(Math.round), font: lab && parseFloat(getComputedStyle(lab).fontSize), rows: m.querySelectorAll('.menu-row').length }; }));
-  await page.screenshot({ path: `.planning/auto-verify-2026-11-06/round3/web/shots/${name}-menu.png` });
+  await page.screenshot({ path: `tests/web/out/shots/${name}-menu.png` });
   await page.keyboard.press('Escape');
-  await page.keyboard.press('t'); await page.waitForTimeout(500); await page.screenshot({ path: `.planning/auto-verify-2026-11-06/round3/web/shots/${name}-tapes.png` }); await page.keyboard.press('Escape');
-  await page.keyboard.press('s'); await page.waitForTimeout(500); await page.screenshot({ path: `.planning/auto-verify-2026-11-06/round3/web/shots/${name}-schedule.png` }); await page.keyboard.press('Escape');
-  await page.keyboard.press('?'); await page.waitForTimeout(400); await page.screenshot({ path: `.planning/auto-verify-2026-11-06/round3/web/shots/${name}-keys.png` }); await page.keyboard.press('Escape');
+  await page.keyboard.press('t'); await page.waitForTimeout(500); await page.screenshot({ path: `tests/web/out/shots/${name}-tapes.png` }); await page.keyboard.press('Escape');
+  await page.keyboard.press('s'); await page.waitForTimeout(500); await page.screenshot({ path: `tests/web/out/shots/${name}-schedule.png` }); await page.keyboard.press('Escape');
+  await page.keyboard.press('?'); await page.waitForTimeout(400); await page.screenshot({ path: `tests/web/out/shots/${name}-keys.png` }); await page.keyboard.press('Escape');
   note(`layout_${name}`, { res, errors: tv.errors });
   expect(res[0].sw, 'no sideways scroll').toBeLessThanOrEqual(res[0].iw + 1);
   expect(res[0].offscreen).toEqual([]);
