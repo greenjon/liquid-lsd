@@ -3,6 +3,13 @@
   "name": "web-ambient-cymatics",
   "visualSourceType": "chladni_cymatics",
   "parameters": {
+    "PlateShape": {
+      "baseValue": 2.0,
+      "baseMin": 0.0,
+      "baseMax": 2.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
     "FrequencyM": {
       "baseValue": 4,
       "baseMin": 2.5,
@@ -12,27 +19,8 @@
         {
           "sourceId": "lfo",
           "operator": "ADD",
-          "depth": 0.06,
-          "dcOffset": 0.06,
-          "waveform": "SINE",
-          "genUnit": "BEAT",
-          "subdivision": 64.0,
-          "slope": 0.5,
-          "phaseOffset": 0.0
-        }
-      ]
-    },
-    "FrequencyN": {
-      "baseValue": 6,
-      "baseMin": 3.75,
-      "baseMax": 8.25,
-      "randomizeBase": true,
-      "modulators": [
-        {
-          "sourceId": "lfo",
-          "operator": "ADD",
-          "depth": 0.06,
-          "dcOffset": 0.06,
+          "depth": 0.035,
+          "dcOffset": 0.035,
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 48.0,
@@ -41,24 +29,17 @@
         }
       ]
     },
-    "FrequencyL": {
-      "baseValue": 3,
-      "baseMin": 1.5,
-      "baseMax": 4.5,
+    "FrequencyN": {
+      "baseValue": 7,
+      "baseMin": 4.75,
+      "baseMax": 9.25,
       "randomizeBase": true,
-      "modulators": []
-    },
-    "PlateShape": {
-      "baseValue": 0.5,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
       "modulators": [
         {
           "sourceId": "lfo",
           "operator": "ADD",
-          "depth": 0.15,
-          "dcOffset": 0.15,
+          "depth": 0.035,
+          "dcOffset": 0.035,
           "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 64.0,
@@ -66,6 +47,39 @@
           "phaseOffset": 0.0
         }
       ]
+    },
+    "ModeMix": {
+      "baseValue": -0.3,
+      "baseMin": -0.45,
+      "baseMax": -0.15,
+      "randomizeBase": true,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.4,
+          "dcOffset": 0.0,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 96.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "FrequencyL": {
+      "baseValue": 6,
+      "baseMin": 3.0,
+      "baseMax": 12.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "ModeSnap": {
+      "baseValue": 0.6,
+      "baseMin": 0.45,
+      "baseMax": 0.75,
+      "randomizeBase": true,
+      "modulators": []
     },
     "NodeSharpness": {
       "baseValue": 0.2,
@@ -75,9 +89,9 @@
       "modulators": []
     },
     "SandAccumulation": {
-      "baseValue": 0.6,
-      "baseMin": 0.45,
-      "baseMax": 0.75,
+      "baseValue": 0.9,
+      "baseMin": 0.75,
+      "baseMax": 1.0,
       "randomizeBase": true,
       "modulators": []
     },
@@ -139,9 +153,9 @@
       ]
     },
     "Scale": {
-      "baseValue": 0.5,
-      "baseMin": 0.35,
-      "baseMax": 0.65,
+      "baseValue": 0.55,
+      "baseMin": 0.4,
+      "baseMax": 0.7,
       "randomizeBase": true,
       "modulators": []
     }
@@ -152,7 +166,7 @@
     "bar",
     "amp"
   ],
-  "presetNotes": "A slowly morphing plate in soft colour; modes drift over 8-16 bars and loudness barely moves the glow.",
+  "presetNotes": "A six-fold water dish in soft colour; the rings change every 12-16 bars, slowly dissolving and resettling.",
   "globalAlpha": {
     "baseValue": 1.0,
     "baseMin": 0.0,

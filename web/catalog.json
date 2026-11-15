@@ -18,7 +18,7 @@
     {
       "id": "chladni_cymatics",
       "file": "shaders/chladni_cymatics.frag",
-      "name": "Physical 2D acoustic plate resonance simulation (Chladni cymatics)"
+      "name": "Chladni cymatics: sand on a vibrating plate or water dish"
     },
     {
       "id": "cyclic_ca",

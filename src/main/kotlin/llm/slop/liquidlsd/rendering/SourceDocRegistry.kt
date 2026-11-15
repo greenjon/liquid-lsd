@@ -27,8 +27,8 @@ object SourceDocRegistry {
                 " concentric harmonic interference rings, torus knot stereographic projections, and moiré fringes.",
         "hyper_slice" to "Raymarched 3D cross-section MRI scan through 4D 120-cell and 600-cell polychora via" +
                 " H4 Coxeter domain folding with 4D hyper-rotations and Wythoff facet morphing.",
-        "chladni_cymatics" to "Physical 2D acoustic plate resonance simulation (Chladni cymatics) with harmonic modal" +
-                " frequencies, boundary geometry folding, particle accumulation physics, and fluid antinode inversion.",
+        "chladni_cymatics" to "Chladni cymatics: sand settling on the still lines of a vibrating square plate, round plate" +
+                " or water dish. The plate rings only at whole-number modes; between them the sand is thrown up and resettles.",
         "mandelbox" to "Raymarched Mandelbox: a box fold, a sphere fold and a scale repeated per point, with orbit-trap colouring, ambient occlusion and a camera that glides in and out of the structure. GPU-heavy.",
         "kifs" to "Raymarched kaleidoscopic IFS fractal: iterated folds, scale and offset with per-iteration rotation. Menger, Sierpinski, octahedral and mixed constructions, orbit-trap colouring and an endless self-similar zoom. GPU-heavy.",
         "kifs_storm" to "The original KIFS, restored: every fold level, the outermost included, rotates freely before a six-way kaleidoscope fold, so nested cubes tumble against each other and fill the frame. Morphing base shape, neon crease glow and an optional endless lattice. GPU-heavy.",
@@ -177,18 +177,20 @@ object SourceDocRegistry {
         "hyper_slice/Zoom" to "Camera zoom scaling.",
 
         // Chladni Cymatics
-        "chladni_cymatics/Frequency M" to "First acoustic modal harmonic frequency.",
-        "chladni_cymatics/Frequency N" to "Second acoustic modal harmonic frequency.",
-        "chladni_cymatics/Frequency L" to "Third acoustic cross-harmonic frequency.",
-        "chladni_cymatics/Plate Shape" to "Plate boundary geometry: 0.0 = Square plate, 1.0 = Circular plate.",
-        "chladni_cymatics/Node Sharpness" to "Sharpness and width of the quiet nodal lines where sand gathers.",
-        "chladni_cymatics/Sand Accumulation" to "Density and micro-granular noise texture of collecting sand particles.",
-        "chladni_cymatics/Vibration Speed" to "Temporal vibration oscillation speed.",
-        "chladni_cymatics/Invert (Fluid Antinodes)" to "Inversion toggle: 0 = Quiet nodal sand gathering, 1 = Kinetic fluid puddling in energetic antinodes.",
-        "chladni_cymatics/Glow" to "Acoustic resonance radiance halo.",
+        "chladni_cymatics/Plate" to "What vibrates: 0 = square plate, 1 = round plate, 2 = water dish (Faraday waves).",
+        "chladni_cymatics/Mode M" to "First mode number. Square: lines across. Round: one more than the number of diameters (1 = rings only). Water: ring count of the second wave. The plate holds whole numbers; in between it changes mode and the sand resettles.",
+        "chladni_cymatics/Mode N" to "Second mode number. Square: lines down. Round: number of rings. Water: ring count of the main wave.",
+        "chladni_cymatics/Mode Mix" to "Blends the mode with its partner (M and N swapped; on water, the N wave with the M wave). The main source of variety: straight crosses, loops and lattices. -100 and +100 look the same, so it can sweep around.",
+        "chladni_cymatics/Symmetry" to "Water only: fold count of the dish pattern, 3 to 12. 5, 7, 8 and more never quite repeat.",
+        "chladni_cymatics/Mode Snap" to "How a mode change looks: 0 = a slow blend across the whole step, 100 = an instant jump. The sand is thrown up during the change either way.",
+        "chladni_cymatics/Line Width" to "Width of the sand lines.",
+        "chladni_cymatics/Settled" to "How much sand has reached the lines: 0 = scattered over the plate, 100 = all on the lines. Push it down on a kick to throw the sand.",
+        "chladni_cymatics/Vibration" to "How fast loose grains hop where the plate moves most; also the shimmer of the inverted surface.",
+        "chladni_cymatics/Invert (Antinodes)" to "0 = sand on the still lines, 100 = the moving surface instead, lit like water.",
+        "chladni_cymatics/Glow" to "Halo around the sand lines.",
         "chladni_cymatics/Palette Mode" to "Palette: 0 = Obsidian & Gold Sand, 1 = Electric Cymatic Blue, 2 = Prismatic Spectrum, 3 = Bioluminescent Emerald.",
-        "chladni_cymatics/Hue Offset" to "Base hue offset.",
-        "chladni_cymatics/Scale" to "Plate viewport scaling.",
+        "chladni_cymatics/Hue Offset" to "Hue shift for the Prismatic palette.",
+        "chladni_cymatics/Scale" to "Plate size: 1x shows the whole plate; larger crops in until the pattern fills the frame.",
 
         // Mandelbox
         "mandelbox/Scale" to "Mandelbox scale factor. Positive values (right of centre) give the classic box; negative values give the inverted variants. Jumps at 0, so avoid automating across the centre.",

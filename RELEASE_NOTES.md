@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Chladni Cymatics Rebuilt (`library/sources/chladni_cymatics/`, `stock_defaults/sources/chladni_cymatics.json`, `rendering/SourceDocRegistry.kt`, `scripts/gen_web_presets.py`, `web/shaders/chladni_cymatics.frag`)
+- **Changed: Chladni Cymatics looks like real cymatics.** It used to draw fuzzy, spongy blobs that looked much the same at every setting: the mode numbers were fractions, and the sand was drawn wherever the plate moved little instead of on the lines. Now the plate rings only at whole-number modes. The sand forms thin, even lines on a bare plate, and changing mode throws the sand up and lets it settle into the new figure.
+- **New: Plate** picks a square plate, a round plate, or a water dish. The dish gives Faraday wave mandalas, with a **Symmetry** fold count from 3 to 12.
+- **New: Mode Mix** blends each mode with its partner, giving crosses, loops and lattices from the same mode numbers. **Mode Snap** sets how a mode change looks, from a slow blend to an instant jump.
+- **Changed controls:** Frequency M/N are now **Mode M/N**, Frequency L is **Symmetry**, Node Sharpness is **Line Width**, Sand Accumulation is **Settled** and Vibration Speed is **Vibration**. Saved presets keep their bindings but look different; the stock default and the five web TV cymatics channels have been redone (TV v40).
+- **Stock default:** Mode M steps up a mode and back over 32 beats, kicks throw the sand, a breakdown settles Mode N, and Mode Mix bends the lines over 64 beats. Bass climbing a mode and kicks jumping one are there, switched off. The macro knobs are MODE M, MODE N, MIX and SAND.
+
 ### Web TV Shows Live Shows (`web/schedule.js`, `web/ui.js`)
 - **Fixed: the TV never showed `[LIVE!]` or LIVE SHOW for a live stream** unless the show was on the schedule. The Spaz Radio app reads that from radio.spaz.org/playing, which a web page isn't allowed to read. The TV now reads the copy spaz.org/radio uses, so a live show puts `[LIVE!]` on the track line and LIVE SHOW on the source badge, as in the app (TV v39).
 

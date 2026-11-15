@@ -3,6 +3,25 @@
   "name": "web-hard-cymatics",
   "visualSourceType": "chladni_cymatics",
   "parameters": {
+    "PlateShape": {
+      "baseValue": 0.0,
+      "baseMin": 0.0,
+      "baseMax": 2.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.5,
+          "dcOffset": 0.5,
+          "waveform": "SQUARE",
+          "genUnit": "BEAT",
+          "subdivision": 8.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
     "FrequencyM": {
       "baseValue": 5,
       "baseMin": 3.0,
@@ -12,11 +31,11 @@
         {
           "sourceId": "audio_flux_bass",
           "operator": "ADD",
-          "depth": 0.6,
+          "depth": 0.07,
           "dcOffset": 0.0,
           "followerMode": "CUSTOM",
           "attackMs": 4.0,
-          "decayMs": 120.0
+          "decayMs": 150.0
         }
       ]
     },
@@ -29,8 +48,8 @@
         {
           "sourceId": "lfo",
           "operator": "ADD",
-          "depth": 0.125,
-          "dcOffset": 0.125,
+          "depth": 0.035,
+          "dcOffset": 0.035,
           "waveform": "SQUARE",
           "genUnit": "BEAT",
           "subdivision": 4.0,
@@ -39,25 +58,18 @@
         }
       ]
     },
-    "FrequencyL": {
-      "baseValue": 2,
-      "baseMin": 1.0,
-      "baseMax": 3.0,
+    "ModeMix": {
+      "baseValue": -0.5,
+      "baseMin": -0.75,
+      "baseMax": -0.25,
       "randomizeBase": true,
-      "modulators": []
-    },
-    "PlateShape": {
-      "baseValue": 0.0,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
       "modulators": [
         {
           "sourceId": "lfo",
           "operator": "ADD",
-          "depth": 0.25,
-          "dcOffset": 0.25,
-          "waveform": "SQUARE",
+          "depth": 0.3,
+          "dcOffset": 0.0,
+          "waveform": "SINE",
           "genUnit": "BEAT",
           "subdivision": 8.0,
           "slope": 0.5,
@@ -65,16 +77,30 @@
         }
       ]
     },
+    "FrequencyL": {
+      "baseValue": 8,
+      "baseMin": 3.0,
+      "baseMax": 12.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "ModeSnap": {
+      "baseValue": 1.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
     "NodeSharpness": {
-      "baseValue": 0.6,
-      "baseMin": 0.45,
-      "baseMax": 0.75,
+      "baseValue": 0.3,
+      "baseMin": 0.15,
+      "baseMax": 0.45,
       "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "audio_flux_high",
           "operator": "ADD",
-          "depth": 0.3,
+          "depth": -0.12,
           "dcOffset": 0.0,
           "followerMode": "CUSTOM",
           "attackMs": 3.0,
@@ -83,11 +109,21 @@
       ]
     },
     "SandAccumulation": {
-      "baseValue": 0.8,
-      "baseMin": 0.65,
-      "baseMax": 0.95,
-      "randomizeBase": true,
-      "modulators": []
+      "baseValue": 1.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "depth": -0.4,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 4.0,
+          "decayMs": 200.0
+        }
+      ]
     },
     "VibrationSpeed": {
       "baseValue": 0.25,
@@ -174,7 +210,7 @@
     "high",
     "bass-gated"
   ],
-  "presetNotes": "The plate snaps between shapes every two beats, flashes on kicks, and inverts on loud bass.",
+  "presetNotes": "Square plate and eight-fold water dish swap every four beats; kicks jump a mode and throw the sand; loud bass inverts.",
   "globalAlpha": {
     "baseValue": 1.0,
     "baseMin": 0.0,

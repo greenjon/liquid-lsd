@@ -3,6 +3,13 @@
   "name": "web-mid-lace",
   "visualSourceType": "chladni_cymatics",
   "parameters": {
+    "PlateShape": {
+      "baseValue": 0.0,
+      "baseMin": 0.0,
+      "baseMax": 2.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
     "FrequencyM": {
       "baseValue": 4,
       "baseMin": 2.5,
@@ -19,7 +26,7 @@
         {
           "sourceId": "audio_mid",
           "operator": "ADD",
-          "depth": 0.6,
+          "depth": 0.2,
           "dcOffset": 0.0,
           "followerMode": "CUSTOM",
           "attackMs": 80.0,
@@ -27,23 +34,16 @@
         }
       ]
     },
-    "FrequencyL": {
-      "baseValue": 2,
-      "baseMin": 1.0,
-      "baseMax": 3.0,
+    "ModeMix": {
+      "baseValue": 0.25,
+      "baseMin": 0.125,
+      "baseMax": 0.375,
       "randomizeBase": true,
-      "modulators": []
-    },
-    "PlateShape": {
-      "baseValue": 0.2,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
       "modulators": [
         {
           "sourceId": "audio_mid",
           "operator": "ADD",
-          "depth": 0.4,
+          "depth": 0.2,
           "dcOffset": 0.0,
           "followerMode": "CUSTOM",
           "attackMs": 40.0,
@@ -51,17 +51,31 @@
         }
       ]
     },
+    "FrequencyL": {
+      "baseValue": 6,
+      "baseMin": 3.0,
+      "baseMax": 12.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "ModeSnap": {
+      "baseValue": 0.7,
+      "baseMin": 0.55,
+      "baseMax": 0.85,
+      "randomizeBase": true,
+      "modulators": []
+    },
     "NodeSharpness": {
-      "baseValue": 0.35,
-      "baseMin": 0.2,
-      "baseMax": 0.5,
+      "baseValue": 0.25,
+      "baseMin": 0.125,
+      "baseMax": 0.375,
       "randomizeBase": true,
       "modulators": []
     },
     "SandAccumulation": {
-      "baseValue": 0.6,
-      "baseMin": 0.45,
-      "baseMax": 0.75,
+      "baseValue": 0.9,
+      "baseMin": 0.75,
+      "baseMax": 1.0,
       "randomizeBase": true,
       "modulators": []
     },

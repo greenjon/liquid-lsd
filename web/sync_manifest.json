@@ -73,7 +73,7 @@
       "desktop": "library/sources/chladni_cymatics/chladni_cymatics.fs",
       "web": "web/shaders/chladni_cymatics.frag",
       "mode": "auto_shader",
-      "description": "Physical 2D acoustic plate resonance simulation (Chladni cymatics)"
+      "description": "Chladni cymatics: sand on a vibrating plate or water dish"
     },
     {
       "desktop": "src/main/resources/default_filters/3d_elevation.fs",

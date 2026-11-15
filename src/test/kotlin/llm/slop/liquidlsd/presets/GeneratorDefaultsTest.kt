@@ -228,7 +228,7 @@ class GeneratorDefaultsTest {
             "gyroid_hyperspace" to listOf("FlightSpeed", "WallThickness", "Frequency", "CoreGlow"),
             "celestial_engine" to listOf("Speed", "Symmetries", "PhaseTwist", "Glow"),
             "hyper_slice" to listOf("SliceOffset", "RotateXW", "Morph", "Zoom"),
-            "chladni_cymatics" to listOf("FrequencyM", "FrequencyN", "VibrationSpeed", "NodeSharpness"),
+            "chladni_cymatics" to listOf("FrequencyM", "FrequencyN", "ModeMix", "SandAccumulation"),
             "mandelbox" to listOf("Scale", "FoldLimit", "MinRadius", "FlightSpeed"),
             "kifs" to listOf("SurfaceType", "Scale", "TwistY", "MorphSpeed"),
             "kifs_storm" to listOf("TumbleSpeed", "Scale", "ShapeMorph", "TrapGlow"),

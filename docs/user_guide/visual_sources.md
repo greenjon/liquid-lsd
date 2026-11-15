@@ -113,13 +113,18 @@ A raymarched 3D cross-section (MRI scan) through 4-dimensional 120-cell (600 ver
 
 ### Chladni Cymatics (`chladni_cymatics`)
 
-A physical 2D acoustic plate resonance simulation computing standing wave nodal harmonics across square and circular boundaries, complete with particle accumulation physics.
+Sand on a vibrating plate. A plate rings only at whole-number modes, and the sand collects on the lines that stay still. Pushing a mode number across a whole number changes the mode: the old pattern dissolves, the sand is thrown up and settles into the new figure.
 
-- **Frequency M, N, L**: Acoustic modal frequencies governing standing wave harmonic interference patterns.
-- **Plate Shape**: Blends smoothly from square plate resonance (`0.0`) to circular Bessel vibration (`1.0`).
-- **Sand Accumulation & Node Sharpness**: Simulates sand grains migrating away from kinetic antinodes and gathering along quiet nodal lines.
-- **Invert Mode**: Swaps behavior from quiet nodal sand gathering (`0.0`) to kinetic fluid pooling in energetic antinodes (`1.0`).
+- **Plate**: square plate, round plate, or water dish. The dish shows Faraday wave mandalas.
+- **Mode M, Mode N**: the mode numbers. On the square plate they count lines across and down. On the round plate N counts rings and M sets the diameters (1 = rings only). On water they set the ring counts of two waves.
+- **Mode Mix**: blends the mode with its partner. This is the main source of variety: the same mode numbers give straight crosses, loops or lattices. The two ends look the same, so an LFO can sweep it around.
+- **Symmetry**: water only, the fold count of the dish pattern (3 to 12).
+- **Mode Snap**: how a mode change looks, from a slow blend across the whole step to an instant jump.
+- **Line Width, Settled**: the width of the sand lines and how much of the sand has reached them. Pulling Settled down on a kick throws the sand off the lines.
+- **Vibration**: how fast the loose grains hop.
+- **Invert**: shows the moving surface instead of the sand, lit like water.
 - **Palette Modes**: Obsidian & Gold Sand, Electric Cymatic Blue, Prismatic Spectrum, and Bioluminescent Emerald.
+- **Scale**: 1x shows the whole plate; zoom in to fill the frame.
 
 ### Mandelbox (`mandelbox`)
 

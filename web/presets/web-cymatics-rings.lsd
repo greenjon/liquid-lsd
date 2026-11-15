@@ -3,17 +3,24 @@
   "name": "web-cymatics-rings",
   "visualSourceType": "chladni_cymatics",
   "parameters": {
+    "PlateShape": {
+      "baseValue": 1.0,
+      "baseMin": 0.0,
+      "baseMax": 2.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
     "FrequencyM": {
-      "baseValue": 6,
-      "baseMin": 3.75,
-      "baseMax": 8.25,
-      "randomizeBase": true,
+      "baseValue": 1,
+      "baseMin": 1.0,
+      "baseMax": 16.0,
+      "randomizeBase": false,
       "modulators": [
         {
           "sourceId": "lfo",
           "operator": "ADD",
-          "depth": 0.1,
-          "dcOffset": 0.1,
+          "depth": 0.07,
+          "dcOffset": 0.07,
           "waveform": "SQUARE",
           "genUnit": "BEAT",
           "subdivision": 32.0,
@@ -31,7 +38,7 @@
         {
           "sourceId": "audio_mid",
           "operator": "ADD",
-          "depth": 0.3,
+          "depth": 0.07,
           "dcOffset": 0.0,
           "followerMode": "CUSTOM",
           "attackMs": 60.0,
@@ -39,30 +46,49 @@
         }
       ]
     },
-    "FrequencyL": {
-      "baseValue": 4,
-      "baseMin": 2.2,
-      "baseMax": 5.8,
+    "ModeMix": {
+      "baseValue": 0.0,
+      "baseMin": -0.3,
+      "baseMax": 0.3,
       "randomizeBase": true,
-      "modulators": []
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.2,
+          "dcOffset": 0.0,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 16.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
     },
-    "PlateShape": {
-      "baseValue": 1.0,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
+    "FrequencyL": {
+      "baseValue": 6,
+      "baseMin": 3.0,
+      "baseMax": 12.0,
       "randomizeBase": false,
       "modulators": []
     },
+    "ModeSnap": {
+      "baseValue": 0.8,
+      "baseMin": 0.65,
+      "baseMax": 0.95,
+      "randomizeBase": true,
+      "modulators": []
+    },
     "NodeSharpness": {
-      "baseValue": 0.5,
-      "baseMin": 0.35,
-      "baseMax": 0.65,
+      "baseValue": 0.25,
+      "baseMin": 0.125,
+      "baseMax": 0.375,
       "randomizeBase": true,
       "modulators": [
         {
           "sourceId": "audio_flux_high",
           "operator": "ADD",
-          "depth": 0.3,
+          "depth": -0.1,
           "dcOffset": 0.0,
           "followerMode": "CUSTOM",
           "attackMs": 3.0,
@@ -71,9 +97,9 @@
       ]
     },
     "SandAccumulation": {
-      "baseValue": 0.4,
-      "baseMin": 0.25,
-      "baseMax": 0.55,
+      "baseValue": 0.9,
+      "baseMin": 0.75,
+      "baseMax": 1.0,
       "randomizeBase": true,
       "modulators": []
     },
@@ -85,7 +111,7 @@
       "modulators": []
     },
     "InvertMode": {
-      "baseValue": 1.0,
+      "baseValue": 0.0,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
@@ -150,7 +176,7 @@
     "high",
     "kick"
   ],
-  "presetNotes": "A round plate drawn as bright rings on dark; mids change the mode, hats sharpen the nodes.",
+  "presetNotes": "A round plate in prismatic colour: every sixteen beats its rings gain diameters, mids ring a mode higher, hats thin the lines.",
   "globalAlpha": {
     "baseValue": 1.0,
     "baseMin": 0.0,
