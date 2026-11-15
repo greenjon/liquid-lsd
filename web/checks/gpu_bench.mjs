@@ -38,7 +38,9 @@ for (const size of sizes) {
   fs.writeFileSync(path.join(profile, 'user.js'), 'user_pref("webgl.sanitize-unmasked-renderer", false);\n');
   const ff = spawn('firefox', ['--headless', '--no-remote', '--profile', profile,
     `http://127.0.0.1:${server.address().port}/checks/gpu_bench.html?w=${w}&h=${h}&presets=${[...bySource.values()].join(',')}`], { stdio: 'ignore' });
-  const rep = await Promise.race([reported, new Promise((r) => setTimeout(() => r({ fatal: 'timeout' }), 300000))]);
+  let timer;
+  const rep = await Promise.race([reported, new Promise((r) => { timer = setTimeout(() => r({ fatal: 'timeout' }), 300000); })]);
+  clearTimeout(timer); // a pending 5-minute timer would keep node alive after the table prints
   ff.kill('SIGKILL');
   fs.rmSync(profile, { recursive: true, force: true });
   if (rep.fatal) { console.error(size, rep.fatal); process.exit(1); }
