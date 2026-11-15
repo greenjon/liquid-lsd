@@ -581,7 +581,8 @@ class ParametersState : MidiLearnSink {
     fun openFromMonitor(moduleId: String, deckLabel: String? = topTabForDeepEditModule(moduleId)) {
         if (deckLabel != null) activeTopTab = deckLabel
         val pair = PerfRows.pairForModule(moduleId) ?: return
-        openBrowse(pair.moduleId, pairBrowseTarget(pair))
+        // Like the row badges: a second click on the monitor whose list is already bound in place lets it go.
+        selectDock(pair.moduleId, pairBrowseTarget(pair))
     }
 
     /**

@@ -69,7 +69,7 @@ class MixerPanel(
 
         ImGui.setCursorScreenPos(imgScreenX, imgScreenY)
         ImGui.invisibleButton("##main_output_monitor", monitorBtnW, masterH.coerceAtLeast(1f))
-        itemTooltip("Main output monitor. Click to browse the Master FX chain, or the transition if you touched it last, in the list below (the Transitions and Master FX rows come over it when this page does not show them).")
+        itemTooltip("Main output monitor. Click to browse the Master FX chain, or the transition if you touched it last, in the list below (the Transitions and Master FX rows come over it when this page does not show them). Click again to stop.")
         if (ImGui.isItemClicked(0)) {
             parametersState.openFromMonitor(MacroEngine.MASTER, "Mixer")
         }
@@ -131,7 +131,7 @@ class MixerPanel(
             parametersState.openFromMonitor(MacroEngine.MASTER, "Mixer")
         }
         llm.slop.liquidlsd.tour.WidgetRegistry.note { "mixer_master_badge" }
-        itemTooltip("Master output. Click to browse the Master FX chain, or the transition if you touched it last, in the list below (the Transitions and Master FX rows come over it when this page does not show them).")
+        itemTooltip("Master output. Click to browse the Master FX chain, or the transition if you touched it last, in the list below (the Transitions and Master FX rows come over it when this page does not show them). Click again to stop.")
 
         // 2. [🎲 ALL] Button (to the left of [M])
         if (session.uiTheme.randomizationEnabled) {

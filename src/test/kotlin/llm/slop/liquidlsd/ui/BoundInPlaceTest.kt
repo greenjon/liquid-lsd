@@ -174,4 +174,20 @@ class BoundInPlaceTest {
         assertNull(mixer.focusedPair)
         assertEquals(ParametersState.DockSelection(MacroEngine.MASTER, ParametersState.BrowseTarget.FxChain(null)), mixer.dockSelection)
     }
+
+    @Test
+    fun aSecondMonitorClickStopsBrowsingLikeTheBadges() {
+        val state = onAbPage()
+        state.openFromMonitor(MacroEngine.DECK_B, "Deck B")
+        assertTrue(state.boundInPlace)
+        state.openFromMonitor(MacroEngine.DECK_B, "Deck B")
+        assertNull(state.dockSelection)
+        state.openFromMonitor(MacroEngine.DECK_B, "Deck B")
+        assertEquals(ParametersState.DockSelection(MacroEngine.DECK_B, ParametersState.BrowseTarget.Gen), state.dockSelection)
+
+        val mixer = ParametersState().apply { pageHasRow = { it == MacroEngine.MASTER_FX } }
+        mixer.openFromMonitor(MacroEngine.MASTER, "Mixer")
+        mixer.openFromMonitor(MacroEngine.MASTER, "Mixer")
+        assertNull(mixer.dockSelection)
+    }
 }

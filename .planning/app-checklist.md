@@ -64,7 +64,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [ ] Saved presets, effects and transitions show as applied (row tint) in a bound list.
 - [ ] Learn inside a pair view drops to the 4-row layout (accepted for now). Learn finishes, state sane.
 - [ ] Badge, slot and monitor tooltips say the list below applies and a second click stops.
-  auto 2026-11-15 (round 8): badge, chain name and slot say "in the list below (click again to stop)". The monitor's says the list below but not that a second click stops, and it is right: a second click on a monitor does not stop browsing (openFromMonitor always binds). Your call: make the monitor toggle like the badges, or drop the monitor from this item.
+  auto 2026-11-15 (round 8): badge, chain name and slot say "in the list below (click again to stop)". The monitor's says the list below but not that a second click stops, and it is right: a second click on a monitor does not stop browsing (openFromMonitor always binds). Changed 2026-11-15 (user's call): monitors now toggle like the badges and their tooltips say "click again to stop" (unit-tested, unseen in app).
 - [ ] Edit shows the open unit's pair of rows (deck SRC + FX; OUT: Transitions + Master FX; MST: MST + Clock). Switching SRC/FX doesn't redraw the rows. The lit gear marks the editor's row; the other row's gear moves the editor; the lit gear closes Edit.
 - [ ] Edit side rail reads `MST OUT A B BG PV`, nothing clipped. MST has LEVELS and CTRL; OUT has FX and TRANS and returns to the last one. Gears: MST row → MST > LEVELS, Master FX → OUT > FX, Transitions → OUT > TRANS.
   auto: fixed 2026-11-06: an empty deck had no rail at all. All six buttons click. Left for you: labels and gears.

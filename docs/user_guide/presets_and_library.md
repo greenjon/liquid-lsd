@@ -68,7 +68,7 @@ Click a source name, an FX chain name, an FX slot or the transition name on a Pe
 
 - **Click** a row to apply it; the list stays, so you can try several in a row. `Ctrl+Z` undoes each pick.
 - **Double-click** applies the row and goes back to the plain Library.
-- **Esc**, the **✕**, or clicking the slot on its row again stop without applying. Changing page stops too.
+- **Esc**, the **✕**, or clicking the slot on its row (or the monitor you started from) again stop without applying. Changing page stops too.
 - Only rows the slot can take are listed, and the row that is applied is tinted.
 - Pick another tab and the name greys out ("paused"): that tab is the plain Library. Going back to the slot's tab, or clicking the slot again, picks up where you were.
 - `Space` (or maximizing the Library) pauses the binding while the Library fills the column; `Space` again or **Esc** brings it back. `Ctrl+F` or `/` keeps it and just jumps to the search box.
