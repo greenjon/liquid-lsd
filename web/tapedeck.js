@@ -6,7 +6,7 @@
 import { cvState, insertTape, ejectTape, setTapePaused, seekTape, tapeStatus, isMicOn } from './dsp.js';
 import { setTapeHold, stationAir } from './autopilot.js';
 import { scheduleState, upcoming } from './schedule.js';
-import { tapesState, setTapes, refreshTapes, tapesStale, searchShows, randomShow, onThisDayQuery, formatClock, createResumeStore, fetchPeaks } from './tapes.js';
+import { tapesState, setTapes, refreshTapes, restoreTapes, tapesStale, searchShows, randomShow, onThisDayQuery, formatClock, createResumeStore, fetchPeaks, appUrl } from './tapes.js';
 
 const SAVE_EVERY_S = 10;
 const BUFFER_ROWS = 6;     // rows drawn beyond the visible ones
@@ -58,7 +58,12 @@ export function createTapeDeck({ page, strip, button, liveBtn, storage = null, i
   sizer.append(rowsEl);
   list.append(sizer);
   const hint = el('div', 'tp-hint', 'TYPE TO SEARCH · ↑↓ PICK · ENTER PLAYS · ESC CLOSES');
-  page.append(head, input, list, hint);
+  const app = el('a', 'tp-app', 'SHOWS OFFLINE? GET THE SPAZ RADIO ANDROID APP ›');
+  app.href = appUrl();
+  app.target = '_blank';
+  app.rel = 'noopener';
+  app.title = 'Get the Spaz Radio app for Android';
+  page.append(head, input, list, hint, app);
 
   let items = [];     // what the list holds: action rows, then shows
   let sel = 0;
@@ -108,7 +113,7 @@ export function createTapeDeck({ page, strip, button, liveBtn, storage = null, i
     if (!items.length) {
       sizer.style.height = '';
       rowsEl.style.transform = '';
-      const text = tapesState.loading && !tapesState.shows.length ? 'LOADING THE ARCHIVE…'
+      const text = (tapesState.loading || tapesState.restoring) && !tapesState.shows.length ? 'LOADING THE ARCHIVE…'
         : tapesState.failed ? 'THE ARCHIVE IS UNAVAILABLE · TRY AGAIN LATER' : 'NO SHOWS MATCH';
       rowsEl.replaceChildren(el('div', 'tp-empty', text));
       return;
@@ -173,7 +178,11 @@ export function createTapeDeck({ page, strip, button, liveBtn, storage = null, i
     rowH = 0;
     sel = 0;
     list.scrollTop = 0;
-    if (tapesStale()) refreshTapes().then(() => { if (isOpen()) rebuild(); });
+    // The kept list first (instant, and offline too), then the feed if that list is old.
+    restoreTapes().then(() => {
+      if (isOpen()) rebuild();
+      if (tapesStale()) refreshTapes().then(() => { if (isOpen()) rebuild(); });
+    });
     rebuild();
     if (typeof matchMedia === 'function' && matchMedia('(pointer: fine)').matches) {
       input.focus({ preventScroll: true }); // not on a phone: its keyboard would cover the list

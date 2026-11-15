@@ -4,9 +4,10 @@
 // shader, FX chain and transition the autopilot can pick) once the page asks (cacheContent). Gallery photos
 // are kept as they are shown, the newest PHOTO_MAX of them, so the background still has photos offline. The radio stream, its status, the
 // relay and the chat (broker and log) are other origins and are never touched. The archive shares this
-// origin, so it is left out by path below.
+// origin, so it is left out by path below (the page keeps the archive's show list itself, in TAPES_LIST).
 const CACHE = 'lsd-tv-v2';
 const PHOTOS = 'lsd-tv-photos';
+const TAPES_LIST = 'lsd-tv-tapes';  // the archive's show list, kept by the page (tapes.js LIST_CACHE)
 const PHOTO_MAX = 60;           // about 8 MB of photos
 const REVALIDATE_MS = 6 * 3600e3; // how often cached content is checked against the server
 const SHELL = [
@@ -29,7 +30,7 @@ self.addEventListener('install', (e) => {
 
 self.addEventListener('activate', (e) => {
   e.waitUntil(caches.keys()
-    .then((keys) => Promise.all(keys.filter((k) => k !== CACHE && k !== PHOTOS).map((k) => caches.delete(k))))
+    .then((keys) => Promise.all(keys.filter((k) => k !== CACHE && k !== PHOTOS && k !== TAPES_LIST).map((k) => caches.delete(k))))
     .then(() => self.clients.claim()));
 });
 

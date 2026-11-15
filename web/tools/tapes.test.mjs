@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { parseFeed, parseDuration, formatClock, tidyTitle, searchShows, randomShow, onThisDayQuery, createResumeStore, reducePeaks, peaksUrl, fetchPeaks, refreshTapes, tapesState, setTapes } from '../tapes.js';
+import { parseFeed, parseDuration, formatClock, tidyTitle, searchShows, randomShow, onThisDayQuery, createResumeStore, reducePeaks, peaksUrl, fetchPeaks, refreshTapes, restoreTapes, createListStore, packShows, unpackShows, tapesState, setTapes, LIST_CACHE } from '../tapes.js';
 
 const item = (title, file, duration, pubDate) => `<item><title>${title}</title><link>https://spaz.org/archives/imports/${file}</link><comments>http://spaz.org/radio</comments><pubDate>${pubDate}</pubDate><duration>${duration}</duration><image><url>https://spaz.org/x.png</url><title>nested image title</title><link>http://spaz.org/radio</link></image></item>`;
 const FEED = `<?xml version="1.0"?><rss><channel><title>SPAZ Radio Archives</title><link>http://spaz.org/radio</link>
@@ -141,4 +141,90 @@ test('the service worker leaves the archive alone', () => {
   assert.ok(skip.test('/archives/archives.rss'));
   assert.ok(skip.test('/archives/peaks/2026-11-02-show.json'));
   assert.ok(!skip.test('/tv/ui.js'));
+});
+
+// A Cache Storage stand-in: one cache, keyed by the request string.
+const fakeCaches = () => {
+  const caches = new Map();
+  return {
+    names: () => [...caches.keys()],
+    async open(name) {
+      if (!caches.has(name)) caches.set(name, new Map());
+      const c = caches.get(name);
+      return { match: async (k) => c.get(k)?.clone(), put: async (k, res) => { c.set(k, res); } };
+    },
+  };
+};
+const resetTapes = () => Object.assign(tapesState, { shows: [], fetchedAt: 0, modified: '', failed: false, loading: null, restoring: null, restored: false });
+const feedRes = (modified, body = FEED) => {
+  let parsed = 0;
+  const res = { ok: true, headers: { get: (h) => (h === 'last-modified' ? modified : null) }, text: async () => { parsed++; return body; } };
+  return { res, parsed: () => parsed };
+};
+
+test('the kept form round-trips a show', () => {
+  const shows = parseFeed(FEED);
+  assert.deepEqual(unpackShows(packShows(shows)), shows);
+  assert.deepEqual(unpackShows(null), []);
+  assert.deepEqual(unpackShows([['', 'x'], 'junk', ['ok']]).map((s) => s.id), ['ok']);
+});
+
+test('a fetched list is kept, and the next visit opens with it without fetching', async () => {
+  const caches = fakeCaches();
+  const store = createListStore(caches);
+  resetTapes();
+  await restoreTapes(store);
+  assert.equal(tapesState.shows.length, 0, 'nothing kept yet');
+  await refreshTapes(async () => feedRes('Sat, 14 Nov 2026 17:30:44 GMT').res, store);
+  assert.deepEqual(caches.names(), [LIST_CACHE]);
+  const fetchedAt = tapesState.fetchedAt;
+
+  resetTapes();   // a new visit
+  await restoreTapes(store);
+  assert.equal(tapesState.shows.length, 4);
+  assert.equal(tapesState.shows[0].url, 'https://spaz.org/archives/imports/2026-11-02-Live_from_Moss_Oak.ogg');
+  assert.equal(tapesState.fetchedAt, fetchedAt, 'the kept list keeps its age, so an old one is still refreshed');
+  assert.equal(tapesState.modified, 'Sat, 14 Nov 2026 17:30:44 GMT');
+});
+
+test('an unchanged feed is not parsed again; a changed one is', async () => {
+  const store = createListStore(fakeCaches());
+  resetTapes();
+  await refreshTapes(async () => feedRes('A').res, store);
+  const same = feedRes('A');
+  await refreshTapes(async () => same.res, store);
+  assert.equal(same.parsed(), 0);
+  assert.equal(tapesState.shows.length, 4);
+  const changed = feedRes('B', FEED.replace(/<item>[\s\S]*?<\/item>/, ''));
+  await refreshTapes(async () => changed.res, store);
+  assert.equal(changed.parsed(), 1);
+  assert.equal(tapesState.shows.length, 3);
+});
+
+test('a kept list does not replace one already in, and no Cache Storage just keeps nothing', async () => {
+  const store = createListStore(fakeCaches());
+  resetTapes();
+  await refreshTapes(async () => feedRes('A').res, store);
+  resetTapes();
+  setTapes([{ id: 'fixture' }]);
+  await restoreTapes(store);
+  assert.equal(tapesState.shows[0].id, 'fixture');
+  resetTapes();
+  const none = createListStore(undefined);
+  await refreshTapes(async () => feedRes('A').res, none);
+  assert.equal(tapesState.shows.length, 4);
+  resetTapes();
+  await restoreTapes(none);
+  assert.equal(tapesState.shows.length, 0);
+});
+
+test('the service worker keeps the show list when it clears old caches', () => {
+  const sw = fs.readFileSync(new URL('../sw.js', import.meta.url), 'utf8');
+  assert.ok(sw.includes(`'${LIST_CACHE}'`) && /k !== TAPES_LIST/.test(sw));
+});
+
+test('the app link: spaz.org/go/ on Android, the Play page elsewhere', async () => {
+  const { appUrl } = await import('../tapes.js');
+  assert.equal(appUrl('Mozilla/5.0 (Linux; Android 14; Pixel 7)'), 'https://spaz.org/go/');
+  assert.equal(appUrl('Mozilla/5.0 (X11; Linux x86_64) Firefox/140.0'), 'https://play.google.com/store/apps/details?id=llm.slop.spazradio');
 });

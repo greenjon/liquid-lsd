@@ -11,12 +11,13 @@ import { heardBeats, tapOffset } from './sync.js';
 import { createChat } from './chat.js';
 import { createChatboard } from './chatboard.js';
 import { createTapeDeck } from './tapedeck.js';
+import { appUrl } from './tapes.js';
 import { scheduleState, refreshSchedule, setShows, groupByDay, upcoming, parsePlaying, zoneLabel, nextLine, SCHEDULE_REFRESH_MS, SCHEDULE_STALE_MS } from './schedule.js';
 
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v35';
+export const TV_VERSION = 'v36';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -628,6 +629,9 @@ export function initUI() {
           applyAutoRoll(0); applyBgMode('hold'); applyEffects(true); applyFollow(true);
         }
       } },
+      ...(kiosk ? [] : [{ label: 'ANDROID APP', value: () => 'SPAZ RADIO',
+        run: () => { window.open(appUrl(), '_blank', 'noopener'); },
+        help: 'The Spaz Radio app for Android: the radio, these visuals and the archive, with shows downloaded to play offline.' }]),
       { label: 'ABOUT', help: 'About Liquid LSD, the software that makes these visuals.', value: () => 'LIQUID LSD', run: () => { menu.hide(); about.hidden = false; } },
     ] },
   ];

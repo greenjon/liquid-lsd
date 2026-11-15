@@ -102,7 +102,7 @@ Click or tap the picture to show the channel, the scene, its FX chain, the track
 
 **Install as an app:** use your browser's Install / Add to Home Screen; it opens fullscreen like a TV app.
 
-**Offline:** after one visit with a network, the TV keeps every scene, effect and transition, and the last 60 gallery photos it showed, so it opens and changes scenes with no connection at all. The radio needs the network, so offline the screen says `OFFLINE · A FOR MICROPHONE` (on a phone, MENU › SOUND): turn the microphone on and the TV runs on the sound in the room. Live broadcasts, the chat, the schedule and tapes come back with the network.
+**Offline:** after one visit with a network, the TV keeps every scene, effect and transition, and the last 60 gallery photos it showed, so it opens and changes scenes with no connection at all. The radio needs the network, so offline the screen says `OFFLINE · A FOR MICROPHONE` (on a phone, MENU › SOUND): turn the microphone on and the TV runs on the sound in the room. Live broadcasts, the chat, the schedule and tapes come back with the network (the TAPES list still opens offline, from the last copy). To play archive shows offline, download them in the Spaz Radio app for Android.
 
 **Kiosk mode:** `index.html?kiosk` shows only the picture (no TV body), turns itself on and hides the mouse pointer; use the keyboard or swipes. Browsers that refuse to start sound on their own get a "click or press a key for sound" prompt.
 
@@ -125,7 +125,9 @@ Settings are remembered in this browser. REACT, TIME, Auto roll, the background,
 
 **SCHEDULE:** the SCHED key or `S` lays Spaz Radio's upcoming shows over the picture, grouped by day (Today, Tomorrow, then the date), in your own time zone (shown at the top). The show playing now is marked ON AIR. Any key or a click closes it. It works during a live broadcast too. When the track name comes up on screen, the next show comes up under it (`NEXT: <show> · <time>`). If the station's schedule can't be reached, the page says so and the TV keeps the last copy it had.
 
-**TAPES:** the TAPES key or `T` opens the Spaz Radio archive over the picture. Type to search by name or date, use the arrows and Enter or click a show to play it, and Esc or the **✕** to close. **RANDOM TAPE** picks any show, **ON THIS DAY** finds today's date in every year, and **RESUME** goes back to the show you last stopped.
+**TAPES:** the TAPES key or `T` opens the Spaz Radio archive over the picture. Type to search by name or date, use the arrows and Enter or click a show to play it, and Esc or the **✕** to close. **RANDOM TAPE** picks any show, **ON THIS DAY** finds today's date in every year, and **RESUME** goes back to the show you last stopped. The TV keeps the show list in the browser, so TAPES opens at once on later visits and checks for new shows at most once an hour.
+
+To download shows and play them offline, use the Spaz Radio app for Android: the link at the bottom of TAPES, or MENU › TV › **ANDROID APP**, opens its download page (Google Play on other devices).
 
 The picture follows the tape as it follows the radio, and the display reads `TAPE`. Click the picture for the transport strip along the bottom (INFO keeps it up): eject, 30 seconds back and forward, pause, and the show's waveform to click or drag. Keys: `K` or `Space` pause, `,` and `.` 30 seconds, `<` and `>` 5 minutes.
 

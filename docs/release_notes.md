@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Web TV Keeps the Archive List (`web/tapes.js`, `web/tapedeck.js`, `web/sw.js`, `web/ui.js`, `web/tv.css`)
+- **Changed: TAPES opens at once after the first visit.** The list of 3,800-odd archive shows was downloaded again (a 6 MB feed) and re-read every time TAPES was opened in a new visit. The TV now keeps the list in the browser, opens with it straight away, offline too, and checks the feed only when the kept list is more than an hour old. When the feed hasn't changed, it isn't read again.
+- **New: a link to the Spaz Radio Android app**, which downloads shows to play offline (the TV doesn't). It's at the bottom of TAPES and in MENU › TV › **ANDROID APP**. On Android it opens spaz.org/go/; elsewhere, the Google Play page (TV v36).
+
 ### Web TV Starts Faster (`web/autopilot.js`, `web/renderer.js`, `web/graph.js`, `web/ui.js`)
 - **Fixed: the web TV could stay black for 20 seconds or more on a first visit.** Before showing anything it downloaded all 166 scenes in its playlists; on a phone, or with one slow request, the screen stayed black with an empty SCENE line, and the first scene often seemed to arrive only when CH was pressed. It now fetches just the first scene it picks (and the effects and shaders it needs), so the picture starts in a few seconds; the rest loads in the background, a few files at a time so a channel change isn't stuck behind them.
 - **Fixed: a stalled download no longer holds up the TV.** A request that gets no answer for 8 seconds is asked again (three tries); a shader gives up after 15 seconds and is tried again later.
