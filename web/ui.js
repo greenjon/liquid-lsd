@@ -16,7 +16,7 @@ import { scheduleState, refreshSchedule, setShows, groupByDay, upcoming, parsePl
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v34';
+export const TV_VERSION = 'v35';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -106,6 +106,10 @@ function showLook(info = nowShowing(), ms = 4000, brand = false) {
     flash('osd-ch', 'LIVE', ms);
     if (autopilotState.broadcaster) flash('osd-name', autopilotState.broadcaster, ms);
     unflash('osd-bg'); unflash('osd-chain'); // the desktop's scene is not ours to name
+  } else if (info.tuning) {
+    // Still loading the first scene: say so, not an empty SCENE line.
+    flash('osd-ch', 'TUNING\u2026', Math.max(ms, TUNING_MS));
+    unflash('osd-name'); unflash('osd-bg'); unflash('osd-chain');
   } else {
     // Bottom left, one size: the scene, the background behind it, the scene's FX chain.
     if (info.channel > 0) flash('osd-ch', `CH ${String(info.channel).padStart(3, '0')}${info.skipped ? ' \u00B7 SKIPPED' : ''}`, ms);
@@ -122,6 +126,11 @@ function showLook(info = nowShowing(), ms = 4000, brand = false) {
 }
 
 const message = (text, ms = 1500) => flash('osd-msg', text, ms);
+const TUNING_MS = 120000;  // TUNING… stays up until the first scene is on air (lsd-now-showing takes it down)
+/** The TV is on and the first scene is still loading: TUNING… on screen. */
+function showTuning() {
+  if (powerState.on && !autopilotState.isLiveBroadcast && nowShowing().tuning) flash('osd-ch', 'TUNING\u2026', TUNING_MS);
+}
 
 /** Under the badge: everyone on the stream. Nothing when the count is unknown or zero, as in the Spaz Radio app. */
 function showListeners(n) {
@@ -293,9 +302,9 @@ export function initUI() {
         // First power-on of the visit: the Liquid LSD ident over the end of the warm-up, then the scene.
         identShown = true;
         setTimeout(showIdent, 900);
-        setTimeout(() => announceLook(), 4600);
+        setTimeout(() => { announceLook(); showTuning(); }, 4600);
       } else {
-        setTimeout(() => announceLook(), 1600); // after the warm-up
+        setTimeout(() => { announceLook(); showTuning(); }, 1600); // after the warm-up
       }
       lastBumper = performance.now();
       pollNowPlaying();
@@ -358,9 +367,9 @@ export function initUI() {
   };
 
   // --- Channel rocker, FX, HOLD ---
-  const next = control(() => { lastUserChange = performance.now(); advanceForeground(); });
-  const prev = control(() => { lastUserChange = performance.now(); previousForeground(); });
-  const random = control(() => { lastUserChange = performance.now(); randomForeground(); });
+  const next = control(() => { lastUserChange = performance.now(); showTuning(); advanceForeground(); });
+  const prev = control(() => { lastUserChange = performance.now(); showTuning(); previousForeground(); });
+  const random = control(() => { lastUserChange = performance.now(); showTuning(); randomForeground(); });
   const fx = control(async () => {
     lastUserChange = performance.now();
     if (await nextFxChain() === 'off') message('EFFECTS OFF \u00B7 MENU', 2000);
@@ -1074,6 +1083,7 @@ export function initUI() {
   // The first scene on air means the playlist has loaded: drop stored skips for channels it no longer has.
   let skipsPruned = false;
   window.addEventListener('lsd-now-showing', (e) => {
+    if (document.getElementById('osd-ch')?.textContent.startsWith('TUNING')) unflash('osd-ch');
     announceLook(e.detail); updateMediaSession(); updateBadge(e.detail);
     if (!skipsPruned) { skipsPruned = true; save('lsd.skipped', prunedSkips()); }
     menu.refresh();

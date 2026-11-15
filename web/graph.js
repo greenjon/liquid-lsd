@@ -91,7 +91,9 @@ export class Library {
     this.pending.add(key);
     let text;
     try {
-      const res = await fetch(this.baseUrl + entry.file);
+      // A stalled fetch fails after 15 s (and is tried again later) instead of leaving the scene blank.
+      const signal = typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(15000) : undefined;
+      const res = await fetch(this.baseUrl + entry.file, signal ? { signal } : undefined);
       if (!res.ok) throw new Error(`status ${res.status}`);
       text = await res.text();
     } catch (err) {

@@ -82,6 +82,8 @@ let fgPreparing = false;
 let fgHoldStart = 0;       // beat the current scene finished fading in
 const fgHistory = [];      // scenes that have been on air, newest last (a channel coming back keeps its chain)
 const HISTORY_MAX = 50;
+let fgStarted = false;     // startup is over: a scene is on air, or there is no playlist to tune to (nowShowing().tuning)
+let tagsReady = false;     // every playlist preset's tags and source are known (loadPresetTags)
 
 let bgPlaylist = [];
 let bgPlaylistIdx = 0;
@@ -100,6 +102,23 @@ export function nextSwitchBeat(beats, holdBars, fadeBeats) {
   return Math.max(beats, barLine - fadeBeats);
 }
 
+// A fetch that gives up on a request after FETCH_TIMEOUT_MS and asks again (FETCH_TRIES in all): on a bad
+// mobile connection one stalled request would otherwise hold up whatever waits on it (the first scene) for
+// minutes, and asking again usually gets an answer at once. An HTTP error is returned, not retried.
+const FETCH_TIMEOUT_MS = 8000;
+const FETCH_TRIES = 3;
+export async function fetchTimed(url, ms = FETCH_TIMEOUT_MS) {
+  const timed = typeof AbortSignal !== 'undefined' && AbortSignal.timeout;
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await fetch(url, timed ? { signal: AbortSignal.timeout(ms) } : undefined);
+    } catch (err) {
+      if (!timed || attempt >= FETCH_TRIES) throw err;
+      console.warn(`[autopilot] ${url}: ${err.name}, asking again`);
+    }
+  }
+}
+
 // Preset Caches
 const presetCache = new Map();
 
@@ -115,7 +134,7 @@ async function fetchPreset(nameOrPath) {
   if (presetCache.has(path)) return presetCache.get(path);
 
   try {
-    const res = await fetch(path);
+    const res = await fetchTimed(path);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     presetCache.set(path, data);
@@ -136,7 +155,7 @@ async function loadPlaylistFile(filename) {
   }
 
   try {
-    const res = await fetch(path);
+    const res = await fetchTimed(path);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const text = await res.text();
     const lines = text.split(/\r?\n/)
@@ -173,7 +192,7 @@ async function fetchContent(list, id) {
   if (!entry) { console.warn(`[autopilot] Unknown content id '${id}'`); return null; }
   if (contentCache.has(entry.file)) return contentCache.get(entry.file);
   try {
-    const res = await fetch(entry.file);
+    const res = await fetchTimed(entry.file);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     contentCache.set(entry.file, data);
@@ -275,7 +294,7 @@ export function tickAutopilot(dt, beats, music = {}) {
   // 1. Foreground A/B crossfade, on the bar line
   if (fgPlaylist.length > 0) {
     if (fgTransitionState === 'hold') {
-      prepareForeground();
+      if (tagsReady) prepareForeground(); // until then a heavy scene could slip past runnable()
       if (!autopilotState.hold && beats >= fgSwitchAt && fgNext) startForegroundCrossfade(beats);
     } else {
       const fade = Math.max(0.25, fgFadeLen);
@@ -506,14 +525,43 @@ async function dropTransition() {
   return dto ? parseTransition(dto) : null;
 }
 
-/** Loads every playlist preset's tags (cached), so section changes can pick a fitting scene. */
-async function loadPresetTags() {
-  await Promise.all([...new Set([...fgPlaylist, ...bgPlaylist])].map(async (line) => {
-    const raw = await fetchPreset(line.split('|')[0].trim());
-    presetTags.set(line, raw?.tags ?? []);
-    presetSource.set(line, raw?.visualSourceType ?? null);
-  }));
+/** Learns one playlist line's tags and source (runnable() needs the source); false if its preset can't be had. */
+async function learnPreset(line) {
+  if (presetSource.has(line)) return true;
+  const raw = await fetchPreset(presetName(line));
+  if (!raw) return false;
+  presetTags.set(line, raw.tags ?? []);
+  presetSource.set(line, raw.visualSourceType ?? null);
+  return true;
 }
+
+/** Loads every playlist preset's tags (cached), so section changes can pick a fitting scene. */
+// A few at a time, so a channel change (or a shader the scene on air needs) isn't queued behind them:
+// browsers ask an HTTP/1.1 server (spaz.org) for at most six files at once.
+async function loadPresetTags(lines = [...fgPlaylist, ...bgPlaylist]) {
+  const todo = [...new Set(lines)];
+  const worker = async () => { for (let line = todo.shift(); line !== undefined; line = todo.shift()) await learnPreset(line); };
+  await Promise.all(Array.from({ length: 3 }, worker));
+}
+
+/**
+ * The first of playlist indices `order` whose scene this machine can play, learning each unknown one's source
+ * on the way (until loadPresetTags has them all); -1 if none can. Lets the first scene and channel changes
+ * go ahead without waiting for every preset.
+ */
+async function firstPlayable(order) {
+  for (const i of order) {
+    const line = fgPlaylist[i];
+    if (!tagsReady && !presetSource.has(line) && !(await learnPreset(line))) continue;
+    if (playable(line)) return i;
+  }
+  return -1;
+}
+const shuffled = (list) => {
+  const a = [...list];
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+};
 
 let bgPrepareToken = 0;
 function prepareBackground(idx = null) {
@@ -590,7 +638,7 @@ export function nowShowing() {
   const background = bgOnAir.split('|')[0].trim() || null;
   const backgroundPicked = (bgPicked ?? bgOnAir).split('|')[0].trim() || null;   // BACKGROUND's row: where a step is going
   return { name, chain: deck?.chainName ?? null, background, backgroundPicked, channel: fgPlaylist.indexOf(line) + 1, channels: fgPlaylist.length,
-    skipped: skipped.has(name), effects: effectsOn, bgMode };
+    skipped: skipped.has(name), effects: effectsOn, bgMode, tuning: !fgStarted && fgHistory.length === 0 };
 }
 
 function announce() {
@@ -611,23 +659,26 @@ function settleCrossfade() {
  * to), in playlist order, now. A scene that was on air before comes back with the chain it had.
  */
 let fgTuning = null;       // the line a channel change is building, so quick presses keep counting
-function changeChannel(dir) {
+async function changeChannel(dir) {
   const n = fgPlaylist.length;
   if (autopilotState.isLiveBroadcast || n === 0) return;
   const from = fgPlaylist.indexOf(fgTuning ?? fgHistory.at(-1)?.line);
-  let idx = from < 0 ? fgPlaylistIdx : from;
-  for (let tries = 0; tries < n; tries++) {
-    idx = (idx + dir + n) % n;
-    if (playable(fgPlaylist[idx])) break;
-  }
-  return tuneChannel(idx);
+  const start = from < 0 ? fgPlaylistIdx : from;
+  const order = Array.from({ length: n }, (_, k) => (((start + dir * (k + 1)) % n) + n) % n);
+  const idx = order.find((i) => tagsReady && playable(fgPlaylist[i])) ?? await firstPlayable(order);
+  return tuneChannel(idx >= 0 ? idx : order[0]);
 }
 
 /** R: a playable channel picked at random, never the one on air (or being tuned to). */
-function randomChannel(rand = Math.random) {
+async function randomChannel(rand = Math.random) {
   const n = fgPlaylist.length;
   if (autopilotState.isLiveBroadcast || n === 0) return;
   const current = fgTuning ?? fgHistory.at(-1)?.line;
+  if (!tagsReady) {
+    // Some sources still unknown: try a random order, learning as it goes.
+    const idx = await firstPlayable(shuffled([...fgPlaylist.keys()].filter((i) => fgPlaylist[i] !== current)));
+    return idx >= 0 ? tuneChannel(idx) : undefined;
+  }
   const choices = [];
   for (let i = 0; i < n; i++) if (fgPlaylist[i] !== current && playable(fgPlaylist[i])) choices.push(i);
   if (!choices.length) return;
@@ -1139,41 +1190,32 @@ function applyPatch(target, patch) {
 // Startup
 // -------------------------------------------------------
 export async function startAutopilot() {
-  // 1. Load settings.json
-  try {
-    const res = await fetch('settings.json');
-    if (res.ok) {
-      const cfg = await res.json();
-      Object.assign(autopilotSettings, cfg);
+  // Resolves once the first scene is on air (renderer.js starts drawing then); the background, the other
+  // presets' tags and the relay follow on their own. Only what the first scene needs is waited for: on a slow
+  // connection the old start (every preset in both playlists first) left the screen black for 20 s and more.
+  // 1. settings.json, Mandala's recipe table (each mandala scene rolls one recipe as it loads, preset.js) and the
+  //    content catalog (FX chain and transition presets), side by side.
+  await Promise.all([
+    fetchTimed('settings.json').then(async (res) => {
+      if (!res.ok) return;
+      Object.assign(autopilotSettings, await res.json());
       if (viewerHoldBars) { autopilotSettings.fgHoldBars = viewerHoldBars; autopilotSettings.bgHoldBars = viewerHoldBars * 2; }
       console.log('[autopilot] Loaded settings.json:', autopilotSettings);
-    }
-  } catch (e) {
-    console.warn('[autopilot] Could not load settings.json, using defaults.');
-  }
+    }).catch(() => console.warn('[autopilot] Could not load settings.json, using defaults.')),
+    fetchTimed('mandala_recipes.json').then(async (res) => {
+      if (res.ok) mandalaRecipes = new MandalaRecipes(await res.json());
+    }).catch(() => console.warn('[autopilot] Could not load mandala_recipes.json; mandala scenes keep their stored recipe.')),
+    fetchTimed('catalog.json').then(async (res) => {
+      if (res.ok) catalog = await res.json();
+    }).catch(() => console.warn('[autopilot] Could not load catalog.json; no FX chains or transitions.')),
+  ]);
 
-  // 1a. Mandala's recipe table, so each mandala scene rolls one recipe as it loads (preset.js)
-  try {
-    const res = await fetch('mandala_recipes.json');
-    if (res.ok) mandalaRecipes = new MandalaRecipes(await res.json());
-  } catch (e) {
-    console.warn('[autopilot] Could not load mandala_recipes.json; mandala scenes keep their stored recipe.');
-  }
-
-  // 1b. Load the content catalog (FX chain and transition presets)
-  try {
-    const res = await fetch('catalog.json');
-    if (res.ok) catalog = await res.json();
-  } catch (e) {
-    console.warn('[autopilot] Could not load catalog.json; no FX chains or transitions.');
-  }
-
-  // 2. Load Foreground playlist
+  // 2. Foreground playlist and its first scene
   fgPlaylist = await loadPlaylistFile(autopilotSettings.fgPlaylist);
   if (fgPlaylist.length === 0) {
     // Fallback: check autopilot.json
     try {
-      const res = await fetch('autopilot.json');
+      const res = await fetchTimed('autopilot.json');
       if (res.ok) {
         const list = await res.json();
         if (list.length > 0) {
@@ -1184,43 +1226,56 @@ export async function startAutopilot() {
         }
       }
     } catch (e) {}
+    fgStarted = true;
   } else {
-    bgPlaylist = await loadPlaylistFile(autopilotSettings.bgPlaylist);
-    await loadPresetTags();
-    // A random playable channel to start on, so every visit doesn't open on the same scene.
-    const starts = fgPlaylist.flatMap((line, i) => (playable(line) ? [i] : []));
-    fgPlaylistIdx = starts.length ? starts[Math.floor(Math.random() * starts.length)] : 0;
-    const first = fgPlaylist[fgPlaylistIdx];
-    autopilotState.deckA = await buildDeck(first);
-    autopilotState.deckB = await buildDeck(first);
-    autopilotState.mixer.balance = 0.0;
-    fgActiveDeck = 'A';
-    fgHistory.push({ line: first, deck: autopilotState.deckA, transition: {} });
-    fgSwitchAt = nextSwitchBeat(lastBeats, autopilotSettings.fgHoldBars, autopilotSettings.fgFadeBeats);
+    // A random playable channel to start on, so every visit doesn't open on the same scene. Only the
+    // candidates' own presets are fetched (runnable() needs each one's source), not the whole playlist.
+    const pick = await firstPlayable(shuffled([...fgPlaylist.keys()]));
+    const idx = pick >= 0 ? pick : Math.floor(Math.random() * fgPlaylist.length);
+    const first = fgPlaylist[idx];
+    const deck = await buildDeck(first);
+    // A CH press while this was loading has already put the viewer's pick on air: it stays.
+    if (!fgHistory.length) {
+      fgPlaylistIdx = idx;
+      autopilotState.deckA = deck;
+      autopilotState.deckB = await buildDeck(first);
+      autopilotState.mixer.balance = 0.0;
+      fgActiveDeck = 'A';
+      fgHistory.push({ line: first, deck, transition: {} });
+      fgSwitchAt = nextSwitchBeat(lastBeats, autopilotSettings.fgHoldBars, autopilotSettings.fgFadeBeats);
+    }
+    fgStarted = true;
     announce();
   }
 
-  // 3. Background playlist
-  if (bgPlaylist.length === 0) {
-    bgPlaylist = await loadPlaylistFile(autopilotSettings.bgPlaylist);
-    await loadPresetTags();
-  }
+  // 3. The rest, without holding up the picture
+  startBackground().catch((err) => console.warn('[autopilot] Background start failed:', err));
+  // 4. Connect to live relay
+  connectRelay();
+}
+
+/** Background playlist, every preset's tags and source, the first background. */
+async function startBackground() {
+  // The rotation (tickAutopilot) sees the background playlist only once its first line is on air.
+  const list = await loadPlaylistFile(autopilotSettings.bgPlaylist);
+  await loadPresetTags([...fgPlaylist, ...list]);
+  tagsReady = true;
   try {
-    const res = await fetch('gallery.json');
+    const res = await fetchTimed('gallery.json');
     galleryAllowed = res.ok && ((await res.json()).images?.length ?? 0) > 0;
   } catch (e) {
     galleryAllowed = true; // offline web TV with no cached list: gallery.js copes by itself
   }
-  if (bgPlaylist.length > 0) {
+  if (list.length > 0) {
     // The first background line (the TV starts on the gallery), or the first one this build can show.
-    const first = Math.max(0, bgPlaylist.findIndex((l) => runnable(l)));
+    const first = Math.max(0, list.findIndex((l) => runnable(l)));
+    const deck = await buildDeck(list[first], true);
+    bgPlaylist = list;
     bgPlaylistIdx = first;
-    autopilotState.deckBG = await buildDeck(bgPlaylist[first], true);
-    bgOnAir = bgPlaylist[first];
+    autopilotState.deckBG = deck;
+    bgOnAir = list[first];
     autopilotState.bgAlpha = 1.0;
     bgSwitchAt = nextSwitchBeat(lastBeats, autopilotSettings.bgHoldBars, autopilotSettings.bgFadeBeats);
+    announceBackground();
   }
-
-  // 4. Connect to live relay
-  connectRelay();
 }

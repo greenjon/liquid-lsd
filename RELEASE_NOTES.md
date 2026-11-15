@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Web TV Starts Faster (`web/autopilot.js`, `web/renderer.js`, `web/graph.js`, `web/ui.js`)
+- **Fixed: the web TV could stay black for 20 seconds or more on a first visit.** Before showing anything it downloaded all 166 scenes in its playlists; on a phone, or with one slow request, the screen stayed black with an empty SCENE line, and the first scene often seemed to arrive only when CH was pressed. It now fetches just the first scene it picks (and the effects and shaders it needs), so the picture starts in a few seconds; the rest loads in the background, a few files at a time so a channel change isn't stuck behind them.
+- **Fixed: a stalled download no longer holds up the TV.** A request that gets no answer for 8 seconds is asked again (three tries); a shader gives up after 15 seconds and is tried again later.
+- **Fixed: a channel change made while the TV was starting could be undone** by the first scene arriving after it. The viewer's pick stays.
+- **New: TUNING… on screen** while the first scene loads, instead of an empty channel and SCENE line (TV v35).
+
 ### Fixes From the Checklist Run of 2026-11-14 (`rendering/FxChain.kt`, `ui/browser/BrowserPane.kt`)
 - **Fixed: every FX chain showed unsaved changes at launch.** The factory chains from the web TV store no Super Knob, and a missing one counted as a change, so all five starting chains showed `•` and an amber Save. A chain with no saved Super Knob is now clean until something is added to it.
 - **Fixed: dropping rows on a playlist in the tree did nothing.** Drag one row or a multi-selection onto a playlist under **Playlists** (Sources, FX or Transitions tab) and it goes in at the end, with a toast, as the user guide already said.

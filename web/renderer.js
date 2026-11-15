@@ -1,6 +1,6 @@
 import { cvState, tick, suspendAudio, resumeAudio } from './dsp.js';
 import { powerState, viewerState } from './ui.js';
-import { autopilotState, autopilotSettings, tickAutopilot, startAutopilot, handleRelayMessage, advanceForeground, setPrewarm, setHeavyAllowed, setSteppedLookup } from './autopilot.js';
+import { autopilotState, autopilotSettings, tickAutopilot, startAutopilot, handleRelayMessage, advanceForeground, setPrewarm, setHeavyAllowed, setSteppedLookup, fetchTimed } from './autopilot.js';
 import { evaluateParameter, makeEvalContext, paramSpec } from './evaluator.js';
 import { lookupParam } from './isf.js';
 import { AudioTextures, audioFrame } from './audiotex.js';
@@ -13,7 +13,7 @@ import { installEmbedApi } from './embed.js';
 import { embed } from './embedmode.js';
 
 async function loadText(url) {
-  const res = await fetch(url);
+  const res = await fetchTimed(url);
   if (!res.ok) {
     throw new Error(`Failed to load ${url}: status ${res.status}`);
   }
