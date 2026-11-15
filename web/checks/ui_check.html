@@ -51,6 +51,11 @@ try {
   check('INFO keeps the info on screen', osd('osd-name').shown && osd('osd-ch').shown);
   d.getElementById('infoBtn').click();
   check('The INFO button turns it off and the info goes', !w.LSD.viewerState.info && !osd('osd-name').shown && d.getElementById('infoBtn').getAttribute('aria-pressed') === 'false');
+  d.getElementById('glCanvas').dispatchEvent(new w.PointerEvent('pointermove', { pointerType: 'mouse', clientX: 50, clientY: 50, bubbles: true }));
+  check('Pointing at the picture shows the info', osd('osd-name').shown && osd('osd-ch').shown);
+  for (const id of ['osd-ch', 'osd-name', 'osd-bg', 'osd-chain', 'osd-track', 'osd-next', 'osd-brand']) d.getElementById(id).classList.remove('show');
+  d.getElementById('glCanvas').dispatchEvent(new w.PointerEvent('pointermove', { pointerType: 'touch', clientX: 60, clientY: 60, bubbles: true }));
+  check('...a finger moving over it does not', !osd('osd-name').shown);
 
   // The key bank: one key down at a time; INFO rests under the pages; OFF clears everything.
   const bk = (id) => d.getElementById(id), down = () => [...d.querySelectorAll('#key-bank .bank-key.down')].map((b) => b.id);

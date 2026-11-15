@@ -1,9 +1,9 @@
 // tapedeck.js
-// The TV's VCR: the TAPES list over the picture, the transport strip along the bottom of it, and the LIVE
-// button that goes back to the radio. A tape is an audio input (dsp.js), so the picture reacts to it as it
+// The TV's VCR: the TAPES list over the picture and the transport strip along the bottom of it, whose EJECT
+// (or L) goes back to the radio. A tape is an audio input (dsp.js), so the picture reacts to it as it
 // does to the radio. While one is in, a desktop broadcast does not take the picture over (autopilot.js
-// setTapeHold): its picture follows the live sound, not the tape. The LIVE button pulses instead.
-import { cvState, insertTape, ejectTape, setTapePaused, seekTape, tapeStatus, isMicOn } from './dsp.js';
+// setTapeHold): its picture follows the live sound, not the tape. The source badge pulses instead (ui.js).
+import { cvState, insertTape, ejectTape, setTapePaused, seekTape, tapeStatus } from './dsp.js';
 import { setTapeHold, stationAir } from './autopilot.js';
 import { scheduleState, upcoming } from './schedule.js';
 import { tapesState, setTapes, refreshTapes, restoreTapes, tapesStale, searchShows, randomShow, onThisDayQuery, formatClock, createResumeStore, fetchPeaks, appUrl } from './tapes.js';
@@ -27,7 +27,7 @@ const iconBtn = (cls, text, title) => {
   return b;
 };
 
-export function createTapeDeck({ page, strip, button, liveBtn, storage = null, isOn = () => true, powerOn = () => {}, reduced = () => false, stickyStrip = () => false,
+export function createTapeDeck({ page, strip, button, storage = null, isOn = () => true, powerOn = () => {}, reduced = () => false, stickyStrip = () => false,
   message = () => {}, onOpen = () => {}, onChange = () => {} }) {
   const resume = createResumeStore(storage);
   let current = null;       // the show on the deck
@@ -274,14 +274,9 @@ export function createTapeDeck({ page, strip, button, liveBtn, storage = null, i
   pauseBtn.addEventListener('click', () => togglePause());
 
   // --- The deck ---
-  /** The two lights say where the sound comes from. TAPES: a tape is in, or its list is open. LIVE: the radio is
-   *  playing, or (pulsing red) a live show is on while a tape plays. With the TV off, only an open list lights TAPES. */
+  /** The TAPES light: a tape is in, or its list is open. With the TV off, only an open list lights it. */
   function lights() {
-    const on = isOn();
-    button.setAttribute('aria-pressed', String(isOpen() || (on && !!current)));
-    liveBtn.setAttribute('aria-pressed', String(on && !current && !isMicOn()));
-    liveBtn.setAttribute('aria-disabled', String(!current));
-    liveBtn.classList.toggle('pulsing', on && !!current && !!airName);
+    button.setAttribute('aria-pressed', String(isOpen() || (isOn() && !!current)));
   }
   function save() {
     const status = tapeStatus();
@@ -353,7 +348,7 @@ export function createTapeDeck({ page, strip, button, liveBtn, storage = null, i
     if (!current) return;
     const air = currentAir();
     if (air !== airName) {
-      if (air && !airName) message(`LIVE NOW: ${air} · PRESS L`, 6000); // the tape plays on; the button pulses
+      if (air && !airName) { message(`LIVE NOW: ${air} · EJECT OR L`, 6000); showStrip(6000); } // the tape plays on; the badge pulses
       airName = air;
       lights();
       onChange(current);
@@ -364,11 +359,12 @@ export function createTapeDeck({ page, strip, button, liveBtn, storage = null, i
   setInterval(everySecond, 1000);
 
   lights();
-  liveBtn.addEventListener('click', () => {
+  /** L: back to the radio. */
+  function backToRadio() {
     if (!isOn()) return;
     if (current) eject();
     else message('ALREADY ON THE RADIO', 1500);
-  });
+  }
   window.addEventListener('lsd-tape-ended', () => {
     if (!current) return;
     const { id } = current;
@@ -381,7 +377,7 @@ export function createTapeDeck({ page, strip, button, liveBtn, storage = null, i
     get current() { return current; },
     get airName() { return airName; },
     get pageOpen() { return isOpen(); },
-    open, close, insert, eject, seekBy, seekTo, togglePause, save, showStrip, hideStrip,
+    open, close, insert, eject, backToRadio, seekBy, seekTo, togglePause, save, showStrip, hideStrip,
     /** The power or the input changed: the lights follow. */
     refreshLights: lights,
     toggle() { isOpen() ? close() : open(); },

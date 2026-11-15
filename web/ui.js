@@ -17,7 +17,7 @@ import { scheduleState, refreshSchedule, setShows, groupByDay, upcoming, parsePl
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v41';
+export const TV_VERSION = 'v42';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -897,7 +897,7 @@ export function initUI() {
     try { storage = localStorage; } catch { /* private window: nothing remembered */ }
     deck = createTapeDeck({
       page: document.getElementById('tapes'), strip: document.getElementById('tape-strip'),
-      button: document.getElementById('tapesBtn'), liveBtn: document.getElementById('liveBtn'), storage,
+      button: document.getElementById('tapesBtn'), storage,
       isOn: () => powerState.on, powerOn: () => { if (!powerState.on) powerSwitch.click(); }, reduced: () => viewerState.reducedNow, stickyStrip: () => viewerState.info,
       message,
       onOpen: () => { menu.hide(); schedule.hide(); skippedPage.hide(); keysPage.hidden = true; },
@@ -972,7 +972,7 @@ export function initUI() {
       f: toggleFullscreen, F: toggleFullscreen, a: toggleMic, A: toggleMic,
       i: pressInfo, I: pressInfo,
       ...(deck && powerState.on ? {
-        k: deck.togglePause, K: deck.togglePause, l: () => document.getElementById('liveBtn').click(), L: () => document.getElementById('liveBtn').click(),
+        k: deck.togglePause, K: deck.togglePause, l: deck.backToRadio, L: deck.backToRadio,
         ',': () => deck.seekBy(-30), '.': () => deck.seekBy(30), '<': () => deck.seekBy(-300), '>': () => deck.seekBy(300),
       } : {}),
     };
@@ -1007,6 +1007,13 @@ export function initUI() {
     touch = null;
   });
   canvas.addEventListener('click', () => showLook(undefined, 4000, true));
+  // Pointing at the picture shows the same (and a tape's strip, with EJECT), as long as the mouse moves.
+  let hoverAt = 0;
+  canvas.addEventListener('pointermove', (e) => {
+    if (e.pointerType !== 'mouse' || performance.now() - hoverAt < 500) return;
+    hoverAt = performance.now();
+    showLook(undefined, 3000, true);
+  });
 
   // --- Fullscreen: double-click the picture, S, or MENU (the OSD comes along) ---
   canvas.addEventListener('dblclick', toggleFullscreen);
@@ -1068,10 +1075,11 @@ export function initUI() {
   const updateSource = () => {
     const scheduled = streamKnown ? null : upcoming(scheduleState.shows, Date.now()).find((s) => s.onAir)?.name;
     const [text, title] = isMicOn() ? ['MIC', 'Listening to your microphone']
-      : deck?.current ? ['TAPE', `Playing a tape: ${deck.current.title}`]
+      : deck?.current ? ['TAPE', deck.airName ? `Playing a tape. Live now: ${deck.airName} (eject or L to listen)` : `Playing a tape: ${deck.current.title}`]
       : live() || streamLive || scheduled ? ['LIVE SHOW', `Live on Spaz Radio: ${autopilotState.broadcaster || scheduled || nowPlaying.replace('[LIVE!] ', '') || 'a live show'}`]
       : ['JUKEBOX', 'Spaz Radio is playing shows from the archive'];
     if (sourceEl.textContent !== text) sourceEl.textContent = text;
+    sourceEl.classList.toggle('on-air', text === 'TAPE' && !!deck?.airName);
     sourceEl.title = title;
   };
   updateSource();

@@ -20,7 +20,8 @@ try {
   const key = (k) => w.dispatchEvent(new w.KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
   const audio = d.getElementById('lsdAudio');
   const page = d.getElementById('tapes'), strip = d.getElementById('tape-strip');
-  const liveBtn = d.getElementById('liveBtn'), tapesBtn = d.getElementById('tapesBtn');
+  const tapesBtn = d.getElementById('tapesBtn');
+  const onAir = () => d.getElementById('source-badge').classList.contains('on-air');
   const badge = () => d.querySelector('#station-badge .station-text').textContent;
   const msg = () => d.getElementById('osd-msg').textContent;
   const onFixture = () => audio.currentSrc.includes('tape_fixture') || audio.src.includes('tape_fixture');
@@ -42,10 +43,9 @@ try {
 
   // --- The list ---
   const lit = (b) => b.getAttribute('aria-pressed') === 'true';
-  check('On the radio: LIVE lit and inert, TAPES dark', lit(liveBtn) && liveBtn.getAttribute('aria-disabled') === 'true' && !lit(tapesBtn));
+  check('On the radio: TAPES dark, no LIVE button', !lit(tapesBtn) && !d.getElementById('liveBtn'));
   key('t');
   check('T opens TAPES, its light too', !page.hidden && lit(tapesBtn));
-  check('...and LIVE stays lit: the radio is still playing', lit(liveBtn));
   const box = page.querySelector('.tp-search');
   check('The search box says how many shows', box.placeholder.includes('4,002'), box.placeholder);
   check('Only the rows in view exist', page.querySelectorAll('.tp-row').length < 80, page.querySelectorAll('.tp-row').length);
@@ -65,7 +65,7 @@ try {
   key('ArrowDown'); key('ArrowDown');
   check('Arrow keys move the selection', sel()?.textContent.includes('Fixture'), sel()?.textContent);
   key('Escape');
-  check('Esc closes it', page.hidden && !lit(tapesBtn) && lit(liveBtn));
+  check('Esc closes it', page.hidden && !lit(tapesBtn));
   tapesBtn.click();
   check('The TAPES button opens it', !page.hidden);
   d.getElementById('menuBtn').click();
@@ -81,7 +81,7 @@ try {
   const source = () => d.getElementById('source-badge').textContent;
   check('The badge keeps showing the channel on a tape', /CH\.(\d+|---)$/.test(badge()), badge());
   check('The source badge says TAPE', source() === 'TAPE', source());
-  check('On a tape: TAPES lit, LIVE dark but pressable', lit(tapesBtn) && !lit(liveBtn) && liveBtn.getAttribute('aria-disabled') === 'false');
+  check('On a tape: TAPES lit', lit(tapesBtn));
   check('The strip comes up', strip.classList.contains('show'));
   check('The track line names the tape', d.getElementById('osd-track').textContent.includes('Fixture <b>One</b>'), d.getElementById('osd-track').textContent);
   check('The audio element plays the tape', onFixture(), audio.src);
@@ -133,20 +133,21 @@ try {
   L.handleRelayMessage(FULL);
   await sleep(1200);
   check('A broadcast does not take the picture from a tape', !st.isLiveBroadcast && !d.getElementById('tv-body').classList.contains('live'));
-  check('LIVE pulses', liveBtn.classList.contains('pulsing'));
+  check('The source badge pulses', onAir());
+  check('...and the strip comes up with EJECT', strip.classList.contains('show'));
   check('It says so once', msg().includes('LIVE NOW: DJ Test'), msg());
   check('The tape keeps playing', !audio.paused && onFixture());
   check('The badge still shows the channel', /CH\.(\d+|---)$/.test(badge()), badge());
   check('The source badge still says TAPE', source() === 'TAPE', source());
   L.handleRelayMessage({ type: 'broadcaster_offline' });
   await sleep(1200);
-  check('LIVE stops pulsing when the show ends', !liveBtn.classList.contains('pulsing'));
+  check('The badge stops pulsing when the show ends', !onAir());
   L.viewerState.schedule.setShows([{ start: Date.now() - 1000, end: Date.now() + 60000, name: 'Scheduled Show' }]);
   await sleep(1200);
-  check('The schedule\'s show on air pulses LIVE too', liveBtn.classList.contains('pulsing') && deck.airName === 'Scheduled Show', deck.airName);
+  check('The schedule\'s show on air pulses the badge too', onAir() && deck.airName === 'Scheduled Show', deck.airName);
   L.viewerState.schedule.setShows([]);
   await sleep(1200);
-  check('...and stops with it', !liveBtn.classList.contains('pulsing'));
+  check('...and stops with it', !onAir());
 
   // --- Chat marker ---
   const note = d.querySelector('#chalkboard .cb-tape');
@@ -159,18 +160,18 @@ try {
   d.getElementById('powerSwitch').click();
   await sleep(400);
   check('Power off stops the sound; the tape stays in', deck.current?.id === 'fixture-one' && audio.paused);
-  check('Power off: both lights dark', !lit(tapesBtn) && !lit(liveBtn));
+  check('Power off: TAPES dark', !lit(tapesBtn));
   d.getElementById('powerSwitch').click();
   await sleep(1500);
   check('Power on resumes the tape near where it was', onFixture() && !audio.paused && audio.currentTime >= heldAt - 1, `${heldAt} -> ${audio.currentTime} paused=${audio.paused}`);
-  check('Power on: TAPES lit again', lit(tapesBtn) && !lit(liveBtn));
+  check('Power on: TAPES lit again', lit(tapesBtn));
 
   // --- TV off: the list opens, and picking a tape turns the TV on and plays it ---
   d.getElementById('powerSwitch').click();
   await sleep(400);
   key('t');
   check('T opens TAPES with the TV off, and the TV stays off', !page.hidden && getComputedStyle(page).display !== 'none' && !L.powerState.on);
-  check('The list lights TAPES with the TV off', lit(tapesBtn) && !lit(liveBtn));
+  check('The list lights TAPES with the TV off', lit(tapesBtn));
   key('Escape');
   check('Esc closes it and the TV stays off', page.hidden && !L.powerState.on);
   tapesBtn.click();
@@ -194,7 +195,7 @@ try {
   check('The strip goes', !strip.classList.contains('show'));
   check('The badge still shows the channel', /CH\.\d+|CH\.---/.test(badge()), badge());
   check('The source badge goes back to JUKEBOX', source() === 'JUKEBOX', source());
-  check('Back on the radio: LIVE lit, TAPES dark, no pulse', lit(liveBtn) && !lit(tapesBtn) && !liveBtn.classList.contains('pulsing'));
+  check('Back on the radio: TAPES dark, no pulse', !lit(tapesBtn) && !onAir());
   check('The chat note goes', note.hidden);
   L.handleRelayMessage(FULL);
   await sleep(100);
@@ -204,12 +205,11 @@ try {
   key('t');
   check('TAPES opens during a broadcast', !page.hidden);
   check('...and its button is not dimmed', getComputedStyle(tapesBtn).opacity === '1');
-  check('LIVE is lit and not dimmed during a broadcast', lit(liveBtn) && getComputedStyle(liveBtn).opacity === '1');
   box.value = 'second'; box.dispatchEvent(new w.Event('input', { bubbles: true }));
   key('Enter');
   await sleep(1200);
   check('A tape during a broadcast takes the picture back', deck.current?.id === 'fixture-two' && !st.isLiveBroadcast);
-  check('LIVE pulses for the broadcast it left', liveBtn.classList.contains('pulsing'));
+  check('The badge pulses for the broadcast it left', onAir());
   check('Viewer controls are unlocked on a tape', !d.getElementById('tv-body').classList.contains('live'));
 
   // --- The end of the tape ---
