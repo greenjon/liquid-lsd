@@ -71,20 +71,20 @@ test('checklist: with the TV off, MENU, SCHEDULE, TAPES and ? open and close', a
   expect(tv.errors).toEqual([]);
 });
 
-test('checklist: the nameplate opens the site in a new tab and leaves the TV on', async ({ page, context }) => {
+test('checklist: the ? page links the site in a new tab and leaves the TV on', async ({ page, context }) => {
   await sealOff(context);
   const tv = await openTV(page);
   await tv.on();
-  const a = await page.evaluate(() => { const e = document.getElementById('nameplate') as HTMLAnchorElement; return { href: e.href, target: e.target, rel: e.rel }; });
+  await page.keyboard.press('?'); await page.waitForTimeout(300);
+  const a = await page.evaluate(() => { const e = document.querySelector('#keys a[href="https://liquid-lsd.greenjon.com"]') as HTMLAnchorElement; return e ? { href: e.href, target: e.target, rel: e.rel } : null; });
   const popup = context.waitForEvent('page', { timeout: 5000 }).catch(() => null);
-  await page.click('#nameplate');
+  await page.click('#keys a[href="https://liquid-lsd.greenjon.com"]');
   const p = await popup;
   const stillOn = await tv.lsd<boolean>('LSD.powerState.on');
-  // The about panel's QR: present, square, and the link beside it names the site.
-  await page.keyboard.press('m'); await page.waitForTimeout(500);
-  const qr = await page.evaluate(() => { const s = document.querySelector('#about .ab-qr') as SVGElement; return s ? { label: s.getAttribute('aria-label'), box: s.getAttribute('viewBox') } : null; });
-  save('branding', { nameplate: a, newTab: p?.url() ?? null, stillOn, qr });
-  expect(a.target).toBe('_blank');
+  // The QR beside the link: present, square, and names the site.
+  const qr = await page.evaluate(() => { const s = document.querySelector('#keys .ab-qr') as SVGElement; return s ? { label: s.getAttribute('aria-label'), box: s.getAttribute('viewBox') } : null; });
+  save('branding', { link: a, newTab: p?.url() ?? null, stillOn, qr });
+  expect(a?.target).toBe('_blank');
   expect(p, 'a new tab opened').not.toBeNull();
   expect(stillOn).toBe(true);
   expect(qr?.label).toContain('liquid-lsd.greenjon.com');

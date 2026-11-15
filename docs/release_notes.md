@@ -1,8 +1,12 @@
 ## [Unreleased]
 
+### Web TV: About Moves Onto the ? Page (`web/index.html`, `web/tv.css`, `web/ui.js`)
+- **Changed: no nameplate under the screen.** The Liquid LSD badge between the picture and the controls is gone; the TV already names Liquid LSD at power-on, on the INFO line and in the half-hourly bumper.
+- **Changed: `?` is now the about page as well as the keys.** It opens with the Liquid LSD name and logo, and under the keys has the link to liquid-lsd.greenjon.com with its QR code and a link to the Spaz Radio app for Android. MENU › TV › ABOUT opens the same page, and the separate ANDROID APP menu row is gone (the app link is also still at the bottom of TAPES). Clicking a link leaves the page open (TV v38).
+
 ### Web TV Keeps the Archive List (`web/tapes.js`, `web/tapedeck.js`, `web/sw.js`, `web/ui.js`, `web/tv.css`)
 - **Changed: TAPES opens at once after the first visit.** The list of 3,800-odd archive shows was downloaded again (a 6 MB feed) and re-read every time TAPES was opened in a new visit. The TV now keeps the list in the browser, opens with it straight away, offline too, and checks the feed only when the kept list is more than an hour old. When the feed hasn't changed, it isn't read again.
-- **New: a link to the Spaz Radio Android app**, which downloads shows to play offline (the TV doesn't). It's at the bottom of TAPES and in MENU › TV › **ANDROID APP**. On Android it opens spaz.org/go/; elsewhere, the Google Play page (TV v36).
+- **New: a link to the Spaz Radio Android app**, which downloads shows to play offline (the TV doesn't). It's at the bottom of TAPES and on the `?` page. On Android it opens spaz.org/go/; elsewhere, the Google Play page (TV v36).
 
 ### Web TV Starts Faster (`web/autopilot.js`, `web/renderer.js`, `web/graph.js`, `web/ui.js`)
 - **Fixed: the web TV could stay black for 20 seconds or more on a first visit.** Before showing anything it downloaded all 166 scenes in its playlists; on a phone, or with one slow request, the screen stayed black with an empty SCENE line, and the first scene often seemed to arrive only when CH was pressed. It now fetches just the first scene it picks (and the effects and shaders it needs), so the picture starts in a few seconds; the rest loads in the background, a few files at a time so a channel change isn't stuck behind them.

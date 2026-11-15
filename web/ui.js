@@ -17,7 +17,7 @@ import { scheduleState, refreshSchedule, setShows, groupByDay, upcoming, parsePl
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v37';
+export const TV_VERSION = 'v38';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -258,11 +258,11 @@ export function initUI() {
   // (The menu, ABOUT and SCHEDULE overlays carry an empty title so they don't inherit either.)
   const updatePowerTitles = () => {
     tvBody.title = powerState.on
-      ? 'Click the power button (PWR) to turn the TV off\nPress ? for keyboard shortcuts'
-      : 'Click the TV to turn it on\nPress ? for keyboard shortcuts';
+      ? 'Click the power button (PWR) to turn the TV off\nPress ? for about and keyboard shortcuts'
+      : 'Click the TV to turn it on\nPress ? for about and keyboard shortcuts';
     canvas.title = powerState.on
-      ? 'Click for info (press I or INFO to keep it on screen)\nDouble-click for fullscreen (or press S)\nPress ? for keyboard shortcuts'
-      : 'Click the TV to turn it on\nPress ? for keyboard shortcuts';
+      ? 'Click for info (press I or INFO to keep it on screen)\nDouble-click for fullscreen (or press S)\nPress ? for about and keyboard shortcuts'
+      : 'Click the TV to turn it on\nPress ? for about and keyboard shortcuts';
   };
   updatePowerTitles();
   // The pages over the picture also open with the TV off; pressing power either way clears them.
@@ -272,7 +272,6 @@ export function initUI() {
     deck?.close();
     skippedPage.hide();
     keysPage.hidden = true;
-    about.hidden = true;
   };
   powerSwitch.addEventListener('click', async () => {
     closePages();
@@ -343,7 +342,7 @@ export function initUI() {
     return best;
   };
   tvBody.addEventListener('click', (e) => {
-    if (e.target.closest('button, .rotary-dial, .rocker, #tv-menu, #about, #schedule, #keys, #skipped, a')) return; // they handle their own clicks
+    if (e.target.closest('button, .rotary-dial, .rocker, #tv-menu, #schedule, #keys, #skipped, a')) return; // they handle their own clicks
     if (viewerState.menu?.open) { viewerState.menu.hide(); return; } // a near-miss on the menu closes it, not the TV
     const near = e.target.closest('#tv-controls') ? nearestControl(e.clientX, e.clientY) : null;
     if (!powerState.on && !near?.matches('#key-bank button, #chatBtn')) { powerSwitch.click(); return; }
@@ -480,7 +479,6 @@ export function initUI() {
   document.getElementById('reactDial').addEventListener('dblclick', control(() => reactDial.set(toDial(REACT_DEFAULT))));
   const stepReact = control((dir) => reactDial.set(reactDial.get() + dir * 0.05));
 
-  const about = document.getElementById('about');
   const schedulePage = document.getElementById('schedule');
   const keysPage = document.getElementById('keys');
   const menuBtn = document.getElementById('menuBtn');
@@ -629,10 +627,7 @@ export function initUI() {
           applyAutoRoll(0); applyBgMode('hold'); applyEffects(true); applyFollow(true);
         }
       } },
-      ...(kiosk ? [] : [{ label: 'ANDROID APP', value: () => 'SPAZ RADIO',
-        run: () => { window.open(appUrl(), '_blank', 'noopener'); },
-        help: 'The Spaz Radio app for Android: the radio, these visuals and the archive, with shows downloaded to play offline.' }]),
-      { label: 'ABOUT', help: 'About Liquid LSD, the software that makes these visuals.', value: () => 'LIQUID LSD', run: () => { menu.hide(); about.hidden = false; } },
+      { label: 'ABOUT', help: 'About Liquid LSD, the software that makes these visuals, the Spaz Radio app, and every keyboard shortcut (also ?).', value: () => 'LIQUID LSD', run: () => showKeys() },
     ] },
   ];
   /** Listens to the microphone instead of the radio, or back. */
@@ -716,7 +711,6 @@ export function initUI() {
     show() {
       menu.hide();
       deck?.close();
-      about.hidden = true;
       keysPage.hidden = true;
       schedulePage.hidden = false;
       syncKeys();
@@ -776,15 +770,16 @@ export function initUI() {
   scheduleBtn.addEventListener('click', () => schedule.toggle());
   schedulePage.addEventListener('click', () => schedule.hide());
 
-  // --- ? : every keyboard shortcut, like ABOUT; any key or click closes it ---
+  // --- ? and MENU › ABOUT: Liquid LSD, the Spaz Radio app and every keyboard shortcut; any key or a click
+  // outside the links closes it ---
   const showKeys = () => {
     menu.hide();
     schedule.hide();
     deck?.close();
-    about.hidden = true;
     keysPage.hidden = false;
   };
-  keysPage.addEventListener('click', () => { keysPage.hidden = true; });
+  keysPage.querySelector('.ab-app').href = appUrl();
+  keysPage.addEventListener('click', (e) => { if (!e.target.closest('a')) keysPage.hidden = true; });
 
   // --- MENU › SKIPPED: the skipped channels; picking one tunes to it (X there restores it). ↑↓ Enter, Esc ---
   const skippedEl = document.getElementById('skipped');
@@ -793,7 +788,7 @@ export function initUI() {
   const skippedPage = {
     get open() { return !skippedEl.hidden; },
     show() {
-      menu.hide(); schedule.hide(); about.hidden = true; keysPage.hidden = true;
+      menu.hide(); schedule.hide(); keysPage.hidden = true;
       skipSel = 0;
       skippedEl.hidden = false;
       this.render();
@@ -902,7 +897,7 @@ export function initUI() {
       button: document.getElementById('tapesBtn'), liveBtn: document.getElementById('liveBtn'), storage,
       isOn: () => powerState.on, powerOn: () => { if (!powerState.on) powerSwitch.click(); }, reduced: () => viewerState.reducedNow, stickyStrip: () => viewerState.info,
       message,
-      onOpen: () => { menu.hide(); schedule.hide(); skippedPage.hide(); about.hidden = true; keysPage.hidden = true; },
+      onOpen: () => { menu.hide(); schedule.hide(); skippedPage.hide(); keysPage.hidden = true; },
       onChange: (show) => {
         updateBadge();
         updateMediaSession();
@@ -918,7 +913,7 @@ export function initUI() {
   // --- The key bank: OFF · INFO · MENU · SCHED · TAPES · ?, one key down at a time, like a car radio's.
   // The pages decide which key is down (a MutationObserver watches them), so every way in or out (keys, clicks,
   // Esc, the power switch) keeps the bank in step. No page up: INFO or OFF is down, whichever is resting. ---
-  const pageKey = () => (menu.open || !about.hidden || skippedPage.open ? 'menu'
+  const pageKey = () => (menu.open || skippedPage.open ? 'menu'
     : schedule.open ? 'sched' : deck?.pageOpen ? 'tapes' : !keysPage.hidden ? 'keys' : null);
   const bankKeys = { off: 'offBtn', info: 'infoBtn', menu: 'menuBtn', sched: 'scheduleBtn', tapes: 'tapesBtn', keys: 'keysBtn' };
   syncKeys = () => {
@@ -945,7 +940,6 @@ export function initUI() {
   // --- Keyboard ---
   window.addEventListener('keydown', (e) => {
     if (e.ctrlKey || e.metaKey || e.altKey || e.target.closest?.('input, textarea')) return;
-    if (!about.hidden) { e.preventDefault(); about.hidden = true; return; }
     if (schedule.open) { e.preventDefault(); schedule.hide(); return; }
     if (!keysPage.hidden) { e.preventDefault(); keysPage.hidden = true; return; }
     if (skippedPage.open) { e.preventDefault(); skippedPage.key(e); return; }
@@ -1120,14 +1114,11 @@ export function initUI() {
     updateMediaSession();
   });
 
-  // --- ABOUT (MENU › ABOUT): any key or a click outside the link closes it ---
-  about.addEventListener('click', (e) => { if (!e.target.closest('a')) about.hidden = true; });
-
   // --- Bumper: about every 30 minutes on air, a station ident line for 8 seconds (not while live or
-  // while the menu or ABOUT is open; the timer restarts at power-on) ---
+  // while the menu, SCHEDULE, TAPES or the ? page is open; the timer restarts at power-on) ---
   const bumper = document.getElementById('bumper');
   setInterval(() => {
-    if (embed || !powerState.on || live() || menu.open || !about.hidden || schedule.open || deck?.pageOpen) return;
+    if (embed || !powerState.on || live() || menu.open || !keysPage.hidden || schedule.open || deck?.pageOpen) return;
     if (performance.now() - lastBumper < BUMPER_EVERY_MS) return;
     lastBumper = performance.now();
     showBumper();

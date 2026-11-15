@@ -1,7 +1,7 @@
 /* tv.css — Retro CRT Television Shell */
 
 /* Two themes, one set of materials: moulded grainy plastic on a cabinet in a softly lit room, turned controls,
-   a metal nameplate, a framed blackboard. MENU › THEME sets data-theme on <html> (index.html does it before the
+   a framed blackboard. MENU › THEME sets data-theme on <html> (index.html does it before the
    first paint). Only the room and the cabinet change: the screen and its surround are dark glass in both, and
    everything on the picture stays phosphor on black. Kiosk and embed have no cabinet. */
 :root {
@@ -36,12 +36,6 @@
   --badge-edge:      #222;
   --badge-ink:       #888;
   --badge-ink-off:   #444;
-  --plate-hi:        #4a443c;   /* nameplate */
-  --plate-lo:        #26221d;
-  --plate-lift:      inset 0 1px 0 rgba(255,255,255,0.15), 0 1px 2px rgba(0,0,0,0.7);
-  --plate-name:      linear-gradient(180deg, #f4f4f4 0%, #9a9a9a 45%, #e8e8e8 55%, #7a7a7a 100%);
-  --plate-by:        #8a8378;
-  --plate-by-hover:  #c8bfb2;
   --wood-a:          #6b4428;   /* the blackboard's frame: walnut */
   --wood-b:          #74492b;
   --wood-c:          #643f25;
@@ -87,12 +81,6 @@
   --badge-edge:      #8f846d;
   --badge-ink:       #2c2822;
   --badge-ink-off:   #6e6451;
-  --plate-hi:        #f1ede3;
-  --plate-lo:        #bdb4a1;
-  --plate-lift:      inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 2px rgba(70,55,30,0.5);
-  --plate-name:      linear-gradient(180deg, #2c2822 0%, #5b5347 100%);
-  --plate-by:        #5e5546;
-  --plate-by-hover:  #2c2822;
   --wood-a:          #b58a58;
   --wood-b:          #bf9563;
   --wood-c:          #a97f4e;
@@ -676,36 +664,6 @@ body.kiosk.idle, body.kiosk.idle #tv-screen-area canvas { cursor: none; }
 #tv-body.powered-on #tv-screen-area { cursor: crosshair; }
 
 /* --- Branding --------------------------------------------------------------------------------- */
-/* Nameplate under the screen, a brushed-chrome maker's badge */
-#nameplate {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5em;
-  margin: 10px auto 0;
-  width: max-content;
-  padding: 3px 12px;
-  border-radius: 4px;
-  text-decoration: none;
-  font-family: "Courier New", monospace;
-  font-weight: bold;
-  background: linear-gradient(180deg, var(--plate-hi), var(--plate-lo));
-  box-shadow: var(--plate-lift);
-  cursor: pointer;
-}
-#nameplate .np-logo { width: 18px; height: 18px; }
-#nameplate .np-name {
-  font-size: 0.8rem;
-  letter-spacing: 0.3em;
-  background: var(--plate-name);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-#nameplate .np-by { font-size: 0.55rem; color: var(--plate-by); letter-spacing: 0.12em; }
-#nameplate:hover .np-by { color: var(--plate-by-hover); }
-body.kiosk #nameplate { display: none; }
-
 /* Power-on ident: logo and name fade in over the warm-up, once per visit */
 #ident {
   position: absolute;
@@ -755,39 +713,23 @@ body.kiosk #nameplate { display: none; }
 #bumper .bm-site { color: #d9c2ff; text-shadow: 0 0 8px rgba(160,90,255,0.9); }
 #tv-body:not(.powered-on) #bumper { display: none; }
 
-/* MENU › ABOUT */
-#about {
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  padding: 5% 8%;
-  background: rgba(0, 8, 0, 0.88);
-  color: #8cff8c;
-  font-family: "VT323", "Courier New", monospace;
-  font-weight: bold;
-  text-shadow: 0 0 6px rgba(80,255,80,0.7);
-  font-size: clamp(10px, 1.6vw, 22px);
-  display: flex;
-  flex-direction: column;
-  gap: 0.5em;
-  overflow: auto;
-}
-#about[hidden] { display: none; }
-#about p { margin: 0; line-height: 1.35; }
-#about .ab-head { display: flex; align-items: center; gap: 0.8em; }
-#about .ab-head img { width: 3.2em; height: 3.2em; }
-#about .ab-name { font-size: 1.8em; letter-spacing: 0.3em; color: #d9c2ff; text-shadow: 0 0 10px rgba(160,90,255,0.9); }
-#about .ab-by { letter-spacing: 0.2em; }
-#about .ab-link { display: flex; align-items: center; gap: 1em; margin-top: 0.3em; }
-#about .ab-qr { width: 6.5em; height: 6.5em; image-rendering: pixelated; border-radius: 3px; }
-#about a { color: #d9c2ff; font-size: 1.2em; }
-#about .ab-hint { margin-top: auto; font-size: 0.7em; opacity: 0.7; }
+/* The ? page (also MENU › ABOUT): Liquid LSD on top; under the keys, the site with its QR code and the Spaz Radio app */
+#keys .ab-head { display: flex; align-items: center; gap: 0.7em; margin-bottom: 0.3em; }
+#keys .ab-head img { width: 2.4em; height: 2.4em; }
+#keys .ab-name { font-size: 1.4em; letter-spacing: 0.3em; color: #d9c2ff; text-shadow: 0 0 10px rgba(160,90,255,0.9); }
+#keys .ab-by { font-size: 0.8em; letter-spacing: 0.2em; }
+#keys .ab-link { display: flex; align-items: center; gap: 0.8em; margin-top: 0.4em; }
+#keys .ab-qr { flex: none; width: 5.2em; height: 5.2em; image-rendering: pixelated; border-radius: 3px; }
+#keys .ab-text { display: flex; flex-direction: column; gap: 0.15em; }
+#keys .ab-text p { margin: 0; line-height: 1.25; }
+#keys .ab-text a { color: #d9c2ff; text-shadow: 0 0 8px rgba(160,90,255,0.8); }
+body.kiosk #keys .ab-app { display: none; }
+@media (max-width: 700px) { #keys .ab-text p { display: none; } #keys .ab-qr { width: 4em; height: 4em; } }
 #osd-brand { font-size: 0.75em; margin-top: 0.3em; color: #d9c2ff; text-transform: none; }
 #title-card .tc-from { font-size: 0.55em; letter-spacing: 0.3em; color: #d9c2ff; margin-top: 0.4em; }
 
-#tv-screen-area:has(#about:not([hidden])) #osd { visibility: hidden; }
 
-/* SCHEDULE (schedule.js): the same page as ABOUT, a list of the days and shows to come */
+/* SCHEDULE (schedule.js): the same page as ?, a list of the days and shows to come */
 #schedule {
   position: absolute;
   inset: 0;
@@ -821,7 +763,7 @@ body.kiosk #nameplate { display: none; }
 #tv-screen-area:has(#schedule:not([hidden])) #osd { visibility: hidden; }
 @media (max-width: 700px) { #schedule .sc-time { min-width: 0; } #schedule .sc-show { flex-direction: column; gap: 0; } }
 
-/* ? : the keyboard shortcuts, and MENU › SKIPPED: the same page as SCHEDULE */
+/* ? (and MENU › ABOUT): Liquid LSD and the keyboard shortcuts, and MENU › SKIPPED: the same page as SCHEDULE */
 #keys, #skipped {
   position: absolute;
   inset: 0;
@@ -843,7 +785,7 @@ body.kiosk #nameplate { display: none; }
 }
 #keys[hidden], #skipped[hidden] { display: none; }
 #keys .ky-name, #skipped .ky-name { font-size: 1.4em; letter-spacing: 0.2em; color: #d9c2ff; text-shadow: 0 0 10px rgba(160,90,255,0.9); }
-#keys .ky-groups { columns: 2; column-gap: 1.5em; font-size: 0.8em; }
+#keys .ky-groups { display: grid; grid-template-columns: 1fr 1fr; column-gap: 1.5em; font-size: 0.8em; }
 #keys .ky-group { break-inside: avoid; margin-bottom: 0.5em; }
 #keys .ky-head { font-size: 0.8em; letter-spacing: 0.2em; opacity: 0.65; }
 #keys .ky-list { display: grid; grid-template-columns: 6em 1fr; column-gap: 0.8em; margin: 0; }
@@ -1005,7 +947,7 @@ body.embed * { pointer-events: none; }
    then had no height and the screen stayed black). */
 body.embed #tv-screen-area { position: fixed; inset: 0; width: auto; height: auto; padding: 0; }
 body.embed #osd, body.embed #title-card, body.embed #ident, body.embed #bumper,
-body.embed #about, body.embed #schedule, body.embed #keys, body.embed #tv-menu, body.embed #nameplate { display: none !important; }
+body.embed #schedule, body.embed #keys, body.embed #tv-menu { display: none !important; }
 
 /* --- TAPES (tapedeck.js): the archive list, the page SCHEDULE is, with a search and rows that pick --- */
 #tapes {
@@ -1112,7 +1054,7 @@ body.embed #about, body.embed #schedule, body.embed #keys, body.embed #tv-menu, 
 #tape-strip.show { opacity: 1; visibility: visible; transition: opacity 0.1s; }
 #tv-body:not(.powered-on) #tape-strip, .menu-open #tape-strip, .card-up #tape-strip { display: none; }
 #tv-screen-area:has(#tapes:not([hidden])) #tape-strip, #tv-screen-area:has(#schedule:not([hidden])) #tape-strip,
-#tv-screen-area:has(#about:not([hidden])) #tape-strip, #tv-screen-area:has(#keys:not([hidden])) #tape-strip,
+#tv-screen-area:has(#keys:not([hidden])) #tape-strip,
 #tv-screen-area:has(#skipped:not([hidden])) #tape-strip { display: none; }
 #tv-screen-area:has(#tape-strip.show) #osd-info { bottom: calc(var(--strip-h) + 5%); }
 .ts-btn { flex: none; min-width: 2.6em; padding: 0 0.3em; background: none; border: 1px solid rgba(140,255,140,0.35); color: inherit; font: inherit; cursor: pointer; }

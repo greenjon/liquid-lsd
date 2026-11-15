@@ -86,7 +86,7 @@ The standalone browser client (`web/index.html`) presents the visualizer in a re
 
 **The controls:** PWR, VOL and CH on the left; the scene panel (FX, ROLL, HOLD, BARS and REACT) in the middle; and on the right the radio face, a display window over a row of piano keys, like a car radio's. The keys choose what shows over the picture: **OFF · INFO · MENU · SCHED · TAPES · ?**. One key is down at a time, and its label lights. Press the key that is down to let it back up. **OFF** clears the picture: it closes whatever page is open and turns INFO off. INFO is the key the others rest on: open MENU, SCHED, TAPES or `?` with INFO on and INFO pops up, then goes back down when you close the page. **LIVE** sits beside the display, **CHAT** beside the keys.
 
-Press `?` (or the **?** key) to list every key on the screen (any key or a click closes the list). With the menu open, `?`, `I`, `S` and `T` still work (they close it first), and `C` opens or closes the chat.
+Press `?` (or the **?** key) for the about and keys page: Liquid LSD at the top, every key below, and in the corner a link to the Liquid LSD website (with a QR code for your phone) and to the Spaz Radio app for Android. MENU › TV › **ABOUT** opens the same page. Any key, or a click anywhere but the links, closes it. With the menu open, `?`, `I`, `S` and `T` still work (they close it first), and `C` opens or closes the chat.
 
 Click or tap the picture to show the channel, the scene, its FX chain, the track playing on the radio and the next show on Spaz Radio for a few seconds. **INFO** (or `I`) keeps them on screen, updating as they change, until you turn it off; the TV remembers it. TIME, REACT, INFO, the MENU settings and your skipped channels are remembered in the browser. The display window on the right shows the channel on air (`SPAZ RADIO • CH.042`), or LIVE during a live broadcast. Under it, while the TV is on, is how many people are on the Spaz Radio stream right now, in any player (`12 mutants watching TV.`); the line is blank when the count is zero or can't be read.
 
@@ -127,7 +127,7 @@ Settings are remembered in this browser. REACT, TIME, Auto roll, the background,
 
 **TAPES:** the TAPES key or `T` opens the Spaz Radio archive over the picture. Type to search by name or date, use the arrows and Enter or click a show to play it, and Esc or the **✕** to close. **RANDOM TAPE** picks any show, **ON THIS DAY** finds today's date in every year, and **RESUME** goes back to the show you last stopped. The TV keeps the show list in the browser, so TAPES opens at once on later visits and checks for new shows at most once an hour.
 
-To download shows and play them offline, use the Spaz Radio app for Android: the link at the bottom of TAPES, or MENU › TV › **ANDROID APP**, opens its download page (Google Play on other devices).
+To download shows and play them offline, use the Spaz Radio app for Android: the link at the bottom of TAPES, or on the `?` page, opens its download page (Google Play on other devices).
 
 The picture follows the tape as it follows the radio, and the display reads `TAPE`. Click the picture for the transport strip along the bottom (INFO keeps it up): eject, 30 seconds back and forward, pause, and the show's waveform to click or drag. Keys: `K` or `Space` pause, `,` and `.` 30 seconds, `<` and `>` 5 minutes.
 
@@ -148,7 +148,7 @@ The board is open on your first visit. The **X** in its top corner closes it, an
 
 **The info panel:** click the picture or press **I** to see it. Top left: what Spaz Radio is playing and the next show. Bottom left: **SCENE** (the scene on air), **BACKGROUND** (what plays behind it: the photo gallery, or with BG changes *With scenes*, a scene that changes on its own clock, twice the scene length) and **FX** (the scene's effects). With MENU › **ANNOUNCE SCENES** on, the panel comes up by itself for each new scene, and the BACKGROUND line when the background changes. Control messages (HOLD, BARS, SYNC…) come up in the middle of the picture.
 
-**About:** the nameplate under the screen opens the Liquid LSD website. MENU › **ABOUT** tells you about the desktop app (with a QR code for your phone), and **I** shows a Liquid LSD line with the info.
+**About:** the `?` page (also MENU › **ABOUT**) links the Liquid LSD website, with a QR code for your phone, and **I** shows a Liquid LSD line with the info.
 
 **Beat light:** the second light on the badge blinks on every beat: green when the TV has locked onto the music's beat, amber while it keeps time on its own (quiet passages, or before it has found the beat).
 

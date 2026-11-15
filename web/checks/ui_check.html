@@ -380,15 +380,21 @@ try {
   await sleep(300);
   check('Offline: the badge still shows the channel', /CH\.\d{3}$/.test(d.querySelector('#station-badge .station-text').textContent), d.querySelector('#station-badge .station-text').textContent);
   check('Offline: the source badge says STREAM', source() === 'STREAM', source());
-  // Branding: I adds the Liquid LSD line; MENU › ABOUT opens and any key closes it; the bumper; the nameplate.
+  // Branding: I adds the Liquid LSD line; MENU › ABOUT opens and any key closes it; the bumper.
   key('i');
   check('I shows the Liquid LSD line', osd('osd-brand').shown && osd('osd-brand').text.includes('liquid-lsd.greenjon.com'));
   key('i');
   key('m'); downTo('ABOUT'); key('Enter');
-  const aboutEl = d.getElementById('about');
-  check('MENU › ABOUT opens the about page', !aboutEl.hidden && aboutEl.textContent.includes('greenjon'), aboutEl.hidden);
+  const aboutEl = d.getElementById('keys');
+  check('MENU › ABOUT opens the ? page with the site and the app', !aboutEl.hidden && aboutEl.textContent.includes('greenjon')
+    && aboutEl.querySelector('a[href="https://liquid-lsd.greenjon.com"]') && /spaz\.org\/go|play\.google\.com/.test(aboutEl.querySelector('.ab-app').href), aboutEl.hidden);
+  const siteLink = aboutEl.querySelector('a[href="https://liquid-lsd.greenjon.com"]');
+  siteLink.addEventListener('click', (e) => e.preventDefault(), { once: true }); // don't open a tab in the check
+  siteLink.click();
+  check('Clicking the site link leaves the page up and the TV on', !aboutEl.hidden && w.LSD.powerState.on);
   key('x');
   check('Any key closes ABOUT', aboutEl.hidden);
+  check('No nameplate under the screen', !d.getElementById('nameplate'));
   // SCHEDULE: a fixture instead of the network (?nolive skips the fetch); button, G, MENU row, any key, click.
   const H = 3600e3, t0 = Date.now();
   const sched = w.LSD.viewerState.schedule;
@@ -424,11 +430,6 @@ try {
   check('Schedule stays closed after power on', schedEl.hidden);
   w.LSD.viewerState.showBumper();
   check('Bumper names Liquid LSD and the site', d.getElementById('bumper').classList.contains('show') && /LIQUID-LSD\.GREENJON\.COM/.test(d.getElementById('bumper').textContent));
-  const plate = d.getElementById('nameplate');
-  check('Nameplate links to the site', plate.href === 'https://liquid-lsd.greenjon.com/' && plate.target === '_blank');
-  plate.addEventListener('click', (e) => e.preventDefault(), { once: true }); // don't open a tab in the check
-  plate.click();
-  check('Clicking the nameplate does not turn the TV off', w.LSD.powerState.on);
 
   // While on, neither the picture nor the cabinet turns it off (only PWR does); a near-miss presses the
   // nearest button; off, a click anywhere turns it on again.
