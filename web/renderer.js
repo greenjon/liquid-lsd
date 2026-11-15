@@ -1,6 +1,6 @@
 import { cvState, tick, suspendAudio, resumeAudio } from './dsp.js';
 import { powerState, viewerState } from './ui.js';
-import { autopilotState, autopilotSettings, tickAutopilot, startAutopilot, handleRelayMessage, advanceForeground, setPrewarm, setHeavyAllowed, setSteppedLookup, fetchTimed } from './autopilot.js';
+import { autopilotState, autopilotSettings, tickAutopilot, startAutopilot, handleRelayMessage, advanceForeground, setPrewarm, setHeavyAllowed, setSteppedLookup, fetchTimed, sharedJson } from './autopilot.js';
 import { evaluateParameter, makeEvalContext, paramSpec } from './evaluator.js';
 import { lookupParam } from './isf.js';
 import { AudioTextures, audioFrame } from './audiotex.js';
@@ -97,8 +97,8 @@ async function init() {
     loadText('shaders/mandala.frag'),
     loadText('shaders/mixer.frag'),
     loadText('shaders/crt_post.frag'),
-    loadText('catalog.json').then(JSON.parse),
-    loadText('mandala_recipes.json').then(JSON.parse)
+    sharedJson('catalog.json'),
+    sharedJson('mandala_recipes.json')
   ]);
 
   const mandalaProgram = createProgram(gl, mandalaVertSrc, mandalaFragSrc);

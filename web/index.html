@@ -28,6 +28,44 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <link rel="stylesheet" href="tv.css">
+  <!-- Everything the page and its first scene need, asked for at once: without these the browser finds each
+       import level, then each startup file, one round trip (a second or more on spaz.org) after the last.
+       Kept in step with the imports and settings.json by web/tools/preload.test.mjs. -->
+  <link rel="modulepreload" href="ui.js">
+  <link rel="modulepreload" href="renderer.js">
+  <link rel="modulepreload" href="audiotex.js">
+  <link rel="modulepreload" href="autopilot.js">
+  <link rel="modulepreload" href="chat.js">
+  <link rel="modulepreload" href="chatboard.js">
+  <link rel="modulepreload" href="dsp.js">
+  <link rel="modulepreload" href="embed.js">
+  <link rel="modulepreload" href="embedmode.js">
+  <link rel="modulepreload" href="energy.js">
+  <link rel="modulepreload" href="evaluator.js">
+  <link rel="modulepreload" href="gallery.js">
+  <link rel="modulepreload" href="graph.js">
+  <link rel="modulepreload" href="isf.js">
+  <link rel="modulepreload" href="mandala.js">
+  <link rel="modulepreload" href="menu.js">
+  <link rel="modulepreload" href="schedule.js">
+  <link rel="modulepreload" href="sync.js">
+  <link rel="modulepreload" href="tapedeck.js">
+  <link rel="modulepreload" href="beatclock.js">
+  <link rel="modulepreload" href="beattrack.js">
+  <link rel="modulepreload" href="mqtt.js">
+  <link rel="modulepreload" href="pairing.js">
+  <link rel="modulepreload" href="preset.js">
+  <link rel="modulepreload" href="tapes.js">
+  <link rel="preload" href="settings.json" as="fetch" crossorigin>
+  <link rel="preload" href="catalog.json" as="fetch" crossorigin>
+  <link rel="preload" href="mandala_recipes.json" as="fetch" crossorigin>
+  <link rel="preload" href="playlists/default.lsdplay" as="fetch" crossorigin>
+  <link rel="preload" href="shaders/blit.vert" as="fetch" crossorigin>
+  <link rel="preload" href="shaders/blit.frag" as="fetch" crossorigin>
+  <link rel="preload" href="shaders/mandala.vert" as="fetch" crossorigin>
+  <link rel="preload" href="shaders/mandala.frag" as="fetch" crossorigin>
+  <link rel="preload" href="shaders/mixer.frag" as="fetch" crossorigin>
+  <link rel="preload" href="shaders/crt_post.frag" as="fetch" crossorigin>
 </head>
 <body>
   <!-- Kiosk / embed classes before the first paint: ui.js (a module, so deferred) would add them only after

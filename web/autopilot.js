@@ -119,6 +119,18 @@ export async function fetchTimed(url, ms = FETCH_TIMEOUT_MS) {
   }
 }
 
+/** A JSON file fetched once for the whole page: renderer.js and the autopilot both read catalog.json and the
+ *  Mandala recipe table at startup. Rejects (and is forgotten, to be tried again) if it can't be had. */
+const sharedJsonCache = new Map();
+export function sharedJson(url) {
+  if (!sharedJsonCache.has(url)) {
+    const p = fetchTimed(url).then((res) => { if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`); return res.json(); });
+    sharedJsonCache.set(url, p);
+    p.catch(() => sharedJsonCache.delete(url));
+  }
+  return sharedJsonCache.get(url);
+}
+
 // Preset Caches
 const presetCache = new Map();
 
@@ -187,18 +199,26 @@ const contentCache = new Map();
 let fxIdx = -1;
 let transitionIdx = -1;
 
-async function fetchContent(list, id) {
+// The cache holds the promise, so a file asked for again while it is still on its way is fetched once
+// (pickChain asks for a few candidates ahead); a failed fetch is dropped from it, to be tried again.
+function fetchContent(list, id) {
   const entry = list.find((e) => e.id === id);
-  if (!entry) { console.warn(`[autopilot] Unknown content id '${id}'`); return null; }
-  if (contentCache.has(entry.file)) return contentCache.get(entry.file);
+  if (!entry) { console.warn(`[autopilot] Unknown content id '${id}'`); return Promise.resolve(null); }
+  if (!contentCache.has(entry.file)) {
+    const p = loadContent(entry.file);
+    contentCache.set(entry.file, p);
+    p.then((data) => { if (!data && contentCache.get(entry.file) === p) contentCache.delete(entry.file); });
+  }
+  return contentCache.get(entry.file);
+}
+
+async function loadContent(file) {
   try {
-    const res = await fetchTimed(entry.file);
+    const res = await fetchTimed(file);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    contentCache.set(entry.file, data);
-    return data;
+    return await res.json();
   } catch (err) {
-    console.warn(`[autopilot] Failed to fetch '${entry.file}':`, err.message);
+    console.warn(`[autopilot] Failed to fetch '${file}':`, err.message);
     return null;
   }
 }
@@ -227,13 +247,20 @@ async function buildDeck(line, background = false) {
 }
 
 /** Next chain in the settings rotation that suits a preset with these tags (pairing.js); null if none does. */
+const CHAIN_LOOKAHEAD = 4;   // chain candidates fetched at once
 async function pickChain(tags, dominant = null) {
   const n = autopilotSettings.fxChains.length;
   const calmOk = (c) => !(reducedMotion && (c.tags ?? []).some((t) => CALM_SKIP_CHAIN_TAGS.includes(t)));
   let fallback = null;
+  // The rotation's next n picks, worked out up front so a few can be fetched side by side: on a slow
+  // connection asking for one candidate after another held up the first scene by a round trip each.
+  const order = [];
+  for (let k = fxIdx, tries = 0; tries < n; tries++) order.push(k = getNextIndex(k, n, autopilotSettings.fxPlaybackOrder));
+  const ids = order.map((i) => autopilotSettings.fxChains[i]);
   for (let tries = 0; tries < n; tries++) {
-    fxIdx = getNextIndex(fxIdx, n, autopilotSettings.fxPlaybackOrder);
-    const candidate = await fetchContent(catalog.fxChains, autopilotSettings.fxChains[fxIdx]);
+    for (const id of ids.slice(tries + 1, tries + CHAIN_LOOKAHEAD)) fetchContent(catalog.fxChains, id);
+    fxIdx = order[tries];
+    const candidate = await fetchContent(catalog.fxChains, ids[tries]);
     if (!candidate || !calmOk(candidate) || !chainFits(tags, candidate)) continue;
     if (chainAnswers(tags, dominant, candidate)) return candidate;  // follows another part of the music
     fallback ??= candidate;
@@ -1202,11 +1229,11 @@ export async function startAutopilot() {
       if (viewerHoldBars) { autopilotSettings.fgHoldBars = viewerHoldBars; autopilotSettings.bgHoldBars = viewerHoldBars * 2; }
       console.log('[autopilot] Loaded settings.json:', autopilotSettings);
     }).catch(() => console.warn('[autopilot] Could not load settings.json, using defaults.')),
-    fetchTimed('mandala_recipes.json').then(async (res) => {
-      if (res.ok) mandalaRecipes = new MandalaRecipes(await res.json());
+    sharedJson('mandala_recipes.json').then((table) => {
+      mandalaRecipes = new MandalaRecipes(table);
     }).catch(() => console.warn('[autopilot] Could not load mandala_recipes.json; mandala scenes keep their stored recipe.')),
-    fetchTimed('catalog.json').then(async (res) => {
-      if (res.ok) catalog = await res.json();
+    sharedJson('catalog.json').then((data) => {
+      catalog = data;
     }).catch(() => console.warn('[autopilot] Could not load catalog.json; no FX chains or transitions.')),
   ]);
 

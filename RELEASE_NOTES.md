@@ -9,6 +9,7 @@
 - **Fixed: a stalled download no longer holds up the TV.** A request that gets no answer for 8 seconds is asked again (three tries); a shader gives up after 15 seconds and is tried again later.
 - **Fixed: a channel change made while the TV was starting could be undone** by the first scene arriving after it. The viewer's pick stays.
 - **New: TUNING… on screen** while the first scene loads, instead of an empty channel and SCENE line (TV v35).
+- **Fixed: the page asked for its files in waves.** The browser found each layer of the TV's code only when the layer before it arrived, then the startup files only once all the code had run, a round trip each (a second or more on spaz.org). `index.html` now asks for all of them at once, catalog.json and the Mandala table are fetched once instead of twice, and the first scene's FX chain candidates are fetched side by side. About a second sooner again on a slow connection (TV v37).
 
 ### Fixes From the Checklist Run of 2026-11-14 (`rendering/FxChain.kt`, `ui/browser/BrowserPane.kt`)
 - **Fixed: every FX chain showed unsaved changes at launch.** The factory chains from the web TV store no Super Knob, and a missing one counted as a change, so all five starting chains showed `•` and an amber Save. A chain with no saved Super Knob is now clean until something is added to it.
