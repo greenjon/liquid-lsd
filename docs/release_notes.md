@@ -4,6 +4,7 @@
 - **Changed: pointing at the picture shows the info lines**, and on a tape the strip with EJECT, as clicking it did. They go a few seconds after the mouse stops. On a phone, tap as before.
 - **Removed: the LIVE button.** It only took a tape out, which EJECT on the strip (and `L`) already does, and "LIVE" lit up over the jukebox was misleading. When a live show starts during a tape, the `TAPE` box now pulses red and the strip comes up with `LIVE NOW: <name> · EJECT OR L`.
 - **Removed: the little red light in the display window.** It was a power light and said nothing the picture doesn't (TV v42).
+- **Fixed: the beat light in the display window barely lit.** Its flash is a fraction of a beat, shorter than the light's fade-in, so it only reached about a third of its brightness and the green of a locked beat was hard to see. It now lights fully at once and fades out (TV v45).
 
 ### Chladni Cymatics Rebuilt (`library/sources/chladni_cymatics/`, `stock_defaults/sources/chladni_cymatics.json`, `rendering/SourceDocRegistry.kt`, `scripts/gen_web_presets.py`, `web/shaders/chladni_cymatics.frag`)
 - **Changed: Chladni Cymatics looks like real cymatics.** It used to draw fuzzy, spongy blobs that looked much the same at every setting: the mode numbers were fractions, and the sand was drawn wherever the plate moved little instead of on the lines. Now the plate rings only at whole-number modes. The sand forms thin, even lines on a bare plate, and changing mode throws the sand up and lets it settle into the new figure.

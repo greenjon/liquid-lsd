@@ -484,7 +484,8 @@ body {
 }
 
 /* Beat LED: lit on each beat; green = locked to the music, amber = keeping time on its own */
-.beat-led.on { background: #ffaa00; box-shadow: 0 0 6px rgba(255,170,0,0.8); }
+/* The flash lasts 15% of a beat, shorter than the .led fade, so it lights at once and fades out */
+.beat-led.on { background: #ffaa00; box-shadow: 0 0 6px rgba(255,170,0,0.8); transition: none; }
 .beat-led.on.locked { background: #33ff55; box-shadow: 0 0 6px rgba(50,255,90,0.9); }
 #tv-body:not(.powered-on) .beat-led { background: var(--led-off); box-shadow: none; }
 
