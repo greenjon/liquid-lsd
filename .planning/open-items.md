@@ -29,8 +29,8 @@ From the 2026-10-04 naming sweep, the decisions never made:
 
 ## Fractal Flame
 
-- Not built: the post stage (`post_X` at weight w gives `w * X(sum of the regular variations)`), `pre_curl`, `pre_crop`/`post_crop`. (flame-blackbox-handoff)
-- Missing variations, by use in the JWildfire set: `nblur` (random), `line`, `scry2`, `epispiral`, `glynnia`, `ecollide`, `bswirl`, `sphericaln`, `julian2`, `bubble2`, `voron`, `shredlin`. Random ones need statistics in `extract_points.py`. Then re-run `curateFlames` and compare `variation-survival.csv`. (flame-blackbox-handoff)
+- v1.1 (decided 2026-11-16). Not built: the post stage (`post_X` at weight w gives `w * X(sum of the regular variations)`), `pre_curl`, `pre_crop`/`post_crop`. (flame-blackbox-handoff)
+- v1.1 (decided 2026-11-16). Missing variations, by use in the JWildfire set: `nblur` (random), `line`, `scry2`, `epispiral`, `glynnia`, `ecollide`, `bswirl`, `sphericaln`, `julian2`, `bubble2`, `voron`, `shredlin`. Random ones need statistics in `extract_points.py`. Then re-run `curateFlames` and compare `variation-survival.csv`. (flame-blackbox-handoff)
 - Quality knobs (`Points`/`Passes`/`Kernel`) as a device setting; re-measure Tier H on the RTX A2000. (flame-source-handoff)
 - Owner only, recorded in the clean-room ledger: where the first AI's code description is and which program it read; what the `a7cba2b` amendments of `secant2`, `twintrian`, `cross` were based on; which beat-tracker papers to cite (BTrack, Stark, Davies and Plumbley 2009; Ellis 2007?); trademark search for Fractal Flame / Garden / Breed and a legal review of the ledger before selling. (flame-blackbox-handoff)
 
@@ -44,7 +44,6 @@ From the 2026-10-04 naming sweep, the decisions never made:
 ## Tours
 
 - Cross-video references are plain text; the `{ch:<video>/<chapter>}` syntax is not built. (walkthrough-tour-feedback)
-- Tour mode reads `library/` from the working directory, so a curated library for the final renders needs a clean checkout or a `--library` override (not built). (walkthrough-tour-feedback)
 
 ## Settled, kept so they are not re-argued (backlog-triage, 2026-10-12)
 

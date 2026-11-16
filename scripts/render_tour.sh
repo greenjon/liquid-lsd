@@ -1,9 +1,13 @@
 #!/bin/bash
 # Renders a tour script and derives the website/video outputs from it.
-# Usage: scripts/render_tour.sh [--draft] [--webm] <script.json> <out-dir> [extra app args, e.g. --tour-hidden]
-#        scripts/render_tour.sh [--draft] [--webm] --all <out-root> [extra app args]   # every tours/*.json into <out-root>/<name>/
+# Usage: scripts/render_tour.sh [--draft] [--webm] [--library <dir>|fresh] <script.json> <out-dir> [extra app args, e.g. --tour-hidden]
+#        scripts/render_tour.sh [--draft] [--webm] [--library <dir>|fresh] --all <out-root> [extra app args]   # every tours/*.json into <out-root>/<name>/
 #   --draft  fast preview while writing the script: 30 fps, 960x540, NVENC (NVIDIA GPU), no frame hashes.
 #   --webm   also encode hero.webm (VP9 on the CPU: slow, several minutes per minute of video).
+#   --library <dir>  render with a copy of <dir> as the library instead of the working tree's library/ (a curated library
+#            for final renders). `--library fresh` starts from an empty library, which the app seeds with its factory
+#            content on start, as on a new install. Either way the app runs in a scratch directory, so it also reads no
+#            lsd-preferences.properties (defaults) and the source library is never written to.
 # Outputs in <out-dir>: hero.mp4 (chapters embedded), poster.jpg, hero.vtt, captions.json, chapters.json,
 # clips/<chapter-id>.mp4 (each whole chapter, silent: the tour page and user-guide pages play these),
 # loops/<chapter-id>.mp4 (the first clipSec, max 20 s, of each chapter: the landing page's muted cards; .webm too with --webm),
@@ -11,10 +15,12 @@
 set -eu
 DRAFT=0
 WEBM=0
+LIBRARY=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --draft) DRAFT=1; shift ;;
     --webm) WEBM=1; shift ;;
+    --library) LIBRARY="${2:?--library needs a directory or 'fresh'}"; shift 2 ;;
     *) break ;;
   esac
 done
@@ -24,6 +30,7 @@ if [ "${1:-}" = "--all" ]; then
   FLAGS=()
   [ "$DRAFT" = 1 ] && FLAGS+=(--draft)
   [ "$WEBM" = 1 ] && FLAGS+=(--webm)
+  [ -n "$LIBRARY" ] && FLAGS+=(--library "$LIBRARY")
   for s in "$(dirname "$0")"/../tours/*.json; do
     name="$(basename "$s" .json)"
     echo "== $name"
@@ -34,14 +41,28 @@ fi
 SCRIPT="${1:?usage: $0 [--draft] [--webm] <script.json> <out-dir> [extra args]}"
 OUT="${2:?usage: $0 [--draft] [--webm] <script.json> <out-dir> [extra args]}"
 shift 2
+[ -n "$LIBRARY" ] && [ "$LIBRARY" != fresh ] && LIBRARY="$(realpath "$LIBRARY")"
 cd "$(dirname "$0")/.."
 SCRIPT="$(realpath "$SCRIPT")"
 mkdir -p "$OUT/clips" "$OUT/loops"
 OUT="$(realpath "$OUT")"
+RUN_DIR=()
+if [ -n "$LIBRARY" ]; then
+  STAGE="$(mktemp -d "${TMPDIR:-/tmp}/lsd-tour-XXXXXX")"
+  trap 'rm -rf "$STAGE"' EXIT
+  if [ "$LIBRARY" = fresh ]; then
+    mkdir "$STAGE/library"
+  else
+    [ -d "$LIBRARY" ] || { echo "--library: no such directory: $LIBRARY" >&2; exit 1; }
+    cp -a "$LIBRARY" "$STAGE/library"
+  fi
+  RUN_DIR=(-PrunDir="$STAGE")
+  echo "library: ${LIBRARY} (staged in $STAGE)"
+fi
 APP_ARGS="$*"
 [ "$DRAFT" = 1 ] && APP_ARGS="--tour-draft $APP_ARGS"
 START=$(date +%s)
-./gradlew run -q --args="--tour=$SCRIPT --tour-out=$OUT/raw.mp4 --no-audio $APP_ARGS" 2>&1 | grep -E "TOUR_(DONE|WARN|OUT|TIMING)|Exception|ERROR" || true
+./gradlew run -q "${RUN_DIR[@]}" --args="--tour=$SCRIPT --tour-out=$OUT/raw.mp4 --no-audio $APP_ARGS" 2>&1 | grep -E "TOUR_(DONE|WARN|OUT|TIMING)|Exception|ERROR" || true
 [ -s "$OUT/raw.mp4" ] || { echo "render failed: no raw.mp4" >&2; exit 1; }
 echo "render took $(( $(date +%s) - START )) s"
 
@@ -58,5 +79,5 @@ if [ "$WEBM" = 1 ]; then
 fi
 # Stamp the commit this render was built from; scripts/tour_staleness.py compares it with HEAD.
 DIRTY=false; [ -n "$(git status --porcelain --untracked-files=no)" ] && DIRTY=true
-printf '{"commit":"%s","dirty":%s,"draft":%s,"date":"%s"}\n' "$(git rev-parse HEAD)" "$DIRTY" "$([ "$DRAFT" = 1 ] && echo true || echo false)" "$(date -Is)" > "$OUT/rendered_at.json"
+printf '{"commit":"%s","dirty":%s,"draft":%s,"library":"%s","date":"%s"}\n' "$(git rev-parse HEAD)" "$DIRTY" "$([ "$DRAFT" = 1 ] && echo true || echo false)" "${LIBRARY:-working tree}" "$(date -Is)" > "$OUT/rendered_at.json"
 echo "Tour outputs in $OUT (total $(( $(date +%s) - START )) s)"

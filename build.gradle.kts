@@ -149,6 +149,9 @@ tasks.withType<JavaExec> {
 
 // Render on the NVIDIA GPU (PRIME offload) when running from Gradle on Linux. Skip with -PnoNvidia.
 tasks.named<JavaExec>("run") {
+    // -PrunDir=<dir>: run with another working directory, so the app reads that directory's library/ and preferences
+    // (scripts/render_tour.sh --library stages one there).
+    (project.findProperty("runDir") as String?)?.let { workingDir = file(it) }
     // NVIDIA's threaded optimizations held on to about 20 MB of memory a minute under X11. Same as the Linux launchers.
     if (System.getProperty("os.name").lowercase().contains("linux") && System.getenv("__GL_THREADED_OPTIMIZATIONS") == null) {
         environment("__GL_THREADED_OPTIMIZATIONS", "0")
