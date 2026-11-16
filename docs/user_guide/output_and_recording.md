@@ -61,24 +61,25 @@ You can also map the `REC` toggle to a MIDI controller button so you never have 
 
 ## Offline Render Studio
 
-The Offline Render Studio is for making video content — music videos, promotional visuals, or anything where quality matters more than real-time speed. It renders frame by frame at whatever resolution and frame rate you like, fully decoupled from the clock.
+The Offline Render Studio (the dialog is titled **Offline Video Export Studio**) is for making video content — music videos, promotional visuals, or anything where quality matters more than real-time speed. It renders frame by frame at the resolution and frame rate you pick, fully decoupled from the clock.
 
 Open it via **Output → Render Video (Offline)...**.
 
 ### What you can set
 
-- **Audio file** — A `.wav`, `.flac`, `.mp3`, or `.ogg` file that drives the visual modulation.
-- **Preset source** — The current active deck, or any saved preset.
-- **Resolution** — 1080p, 1440p, 4K UHD (3840×2160), or custom.
-- **Frame rate** — Typically 60fps, but configurable.
-- **Motion blur** — 2×, 4×, or 8× temporal oversampling. Each frame is blended from multiple sub-frame renders, producing smooth cinematic motion on fast-rotating mandalas and feedback loops. More samples = more render time.
-- **Output destination** — Where to save the file.
+- **Audio file** — A `.wav`, `.mp3`, `.flac`, `.ogg`, `.m4a` or `.aac` file that drives the visual modulation.
+- **Preset** — Leave it blank to render the current live session, or pick a saved `.lsd` preset or an `.lsdplay` playlist.
+- **Destination** — Where to save the file (`.mp4` or `.mov`).
+- **Resolution** — Match Project Canvas (your render resolution), 720p, 1080p, 1440p, 4K UHD (3840×2160), Vertical 9:16 (1080×1920), Square 1:1 (1080×1080) or Ultrawide 21:9 (2560×1080).
+- **Frame rate** — 24, 30, 60 (the default) or 120 fps.
+- **Codec** — H.264 (MP4, the default), H.265 / HEVC (MP4) or Apple ProRes 422 HQ (MOV).
+- **Motion blur** — Off, or 2×, 4× or 8× temporal oversampling. Each frame is blended from multiple sub-frame renders, producing smooth cinematic motion on fast-rotating mandalas and feedback loops. More samples = more render time.
 
 ### What happens
 
 The audio file is decoded up front and the audio analysis runs mathematically per frame — so the beat tracking, frequency bands, and envelope followers all behave exactly as they would in real time, just calculated offline. You get a frame-accurate render even on complex shaders.
 
-A progress bar shows render percentage, elapsed time, estimated time remaining, and output file size estimate. There's also a live thumbnail so you can confirm it looks right before committing an hour to a 4K render.
+A progress bar shows render percentage and frame count, with the render speed, elapsed time, estimated time remaining and an output file size estimate. There's also a live thumbnail so you can confirm it looks right before committing an hour to a 4K render.
 
 ---
 

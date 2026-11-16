@@ -8,9 +8,11 @@ Liquid LSD supports command-line startup options for headless automated capture,
 ./gradlew run --args="[OPTIONS]"
 ```
 
-Or when launching packaged executables:
+Or with the launcher in an unzipped release, which passes the options on to the app:
 ```bash
-./liquid-lsd [OPTIONS]
+./run-linux.sh [OPTIONS]            # Linux
+./run-mac-arm.command [OPTIONS]     # macOS, Apple silicon (run-mac-intel.command on Intel)
+run-windows.bat [OPTIONS]           # Windows
 ```
 
 ## Available Startup Options

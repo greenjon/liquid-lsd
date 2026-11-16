@@ -189,13 +189,15 @@ The operational signal $s[i]$ fed into the biquad filter bank and beat detector 
 
 ## Audio Engine Settings Persistence
 
-All Audio Engine configuration parameters are serialized to and restored from `lsd-settings.properties` via [`UITheme.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/ui/UITheme.kt):
+All Audio Engine configuration parameters are serialized to and restored from `lsd-preferences.properties` in the working directory by [`AppPreferencesStore.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/ui/AppPreferencesStore.kt) (the legacy `lsd-settings.properties` is only read as a fallback):
 - `audioEngineEnabled`: Master toggle for audio processing.
 - `audioBackend`: Selected audio backend mode (`AUTO`, `JACK_ONLY`, `JAVASOUND_ONLY`).
 - `audioChannelRouting`: Stereo routing selector (`MIX`, `LEFT_ONLY`, `RIGHT_ONLY`).
 - `audioDeviceName`: Explicitly selected audio hardware input device name (or default).
-- `audioInputGain`: Input pre-amplification multiplier (0.0x–10.0x).
-- `audioBpmLocked`: Manual BPM lock state.
+- `audioInputGain`: Input Trim, the pre-analysis multiplier (0.0x–10.0x).
+- `audioResponse`: Audio Response, the one reactivity control (a saved `audioAgcHeadroom` is folded into it once and removed).
+- `clockSource`: `MANUAL` or `AUDIO_TRACKER`; `audioBpmLocked` is still written and read for older files.
+- `beatsPerBar`, `downbeatMode`: bar length and downbeat detection.
 - `audioManualBpm`: Manual tempo setting (40–200 BPM).
 - `audioBeatTarget`: Frequency band target for onset detection (`LOW`, `MID`, `HIGH`, `UNFILTERED`).
 - `audioBpmFloor` & `audioBpmCeiling`: BPM search range bounds for the Beat Tracker.

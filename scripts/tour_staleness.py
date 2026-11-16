@@ -9,7 +9,9 @@ Each render stamps <out>/<tour>/rendered_at.json with the commit it was built fr
   2. maps each key to the Kotlin files that register it (string literal search in src/main/kotlin),
   3. lists commits since the render that touched those files, the tour script, or the tour renderer.
 Commits that only touched other UI/rendering files are counted as "maybe" (colors, layout, shaders can
-change a video without touching a widget key).
+change a video without touching a widget key), and so are chore(planning) commits. The source-id
+registries (NOT_KEY_FILES) are left out of the key mapping, since source ids and common words in tour
+keys match their string literals.
 
   -v       list the commits and the key->file mapping
   --names  print only the names of stale tours, one per line (for a render loop)
@@ -29,6 +31,13 @@ RENDERER = "src/main/kotlin/llm/slop/liquidlsd/tour"
 MAYBE_DIRS = ["src/main/kotlin/llm/slop/liquidlsd/ui", "src/main/kotlin/llm/slop/liquidlsd/rendering",
               "src/main/resources/shaders", "defaults"]
 MAX_FILES_PER_KEY = 15 # a needle matching more files than this is too generic to attribute
+# Registries of source ids and source docs: tour keys that are source ids or common words (mandala, mixer,
+# escape) match string literals there, so every source-doc edit would count against every tour. Commits to
+# them still show as "maybe" (they are under rendering/).
+NOT_KEY_FILES = {"src/main/kotlin/llm/slop/liquidlsd/rendering/SourceDocRegistry.kt",
+                 "src/main/kotlin/llm/slop/liquidlsd/rendering/VisualSourceRegistry.kt"}
+# Commits whose subject starts with one of these never change a video: counted as "maybe" at most.
+MAYBE_SUBJECTS = ("chore(planning)",)
 
 
 def git(*args):
@@ -40,7 +49,7 @@ def load_sources():
     out = {}
     for p in SRC.rglob("*.kt"):
         rel = p.relative_to(ROOT).as_posix()
-        if rel.startswith(RENDERER):
+        if rel.startswith(RENDERER) or rel in NOT_KEY_FILES:
             continue
         out[rel] = p.read_text(errors="ignore")
     return out
@@ -121,7 +130,8 @@ def main():
             continue
         mapping = {k: map_key(k, sources) for k in sorted(tour_keys(script))}
         files = sorted({f for fs in mapping.values() for f in fs})
-        direct = log(commit, files + [f"tours/{name}.json", RENDERER])
+        direct = [l for l in log(commit, files + [f"tours/{name}.json", RENDERER])
+                  if not l.split(" ", 2)[2].startswith(MAYBE_SUBJECTS)]
         seen = {l.split()[0] for l in direct}
         maybe = [l for l in log(commit, MAYBE_DIRS) if l.split()[0] not in seen]
         note = f"rendered from {commit[:7]} ({how})"

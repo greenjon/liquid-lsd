@@ -10,7 +10,7 @@ Presets are the core unit of work in Liquid LSD. A preset captures the complete 
 
 - All visual parameter values (geometry, colour, view, feedback)
 - Every modulation setup (LFOs, audio connections, sequencer patterns, MIDI assignments)
-- Preset notes and per-parameter notes (if you've added any)
+- Parameter notes (if you've added any)
 
 ### Saving a preset
 
@@ -332,7 +332,7 @@ Liquid LSD keeps hardware controller maps separate from visual presets, so you c
 
 ### MIDI Learn
 
-1. Click the **MIDI Learn** button in the Parameters header or next to any parameter slider.
+1. Right-click any on-screen knob, slider or button and choose **MIDI Learn**.
 2. Move a knob, fader, or button on your controller.
-3. Liquid LSD captures the CC and confirms the mapping automatically.
+3. Liquid LSD captures the CC and confirms the mapping automatically. See [Other MIDI controllers](hardware.md#other-midi-controllers) for the full steps.
 4. To remove a mapping, right-click the mapped control and choose **Clear MIDI Mapping**.

@@ -1,18 +1,18 @@
 # Performance Controls
 
-This page covers two things that are especially useful during a live show: the trackpad performance surface, and the notes system for keeping reminders attached to your presets and parameters.
+This page covers two things that are especially useful during a live show: the trackpad performance surface, and parameter notes for keeping reminders attached to the parameters of a preset.
 
 ---
 
 ## Trackpad Performance Surface
 
-If you're performing on a laptop, you can turn your trackpad into a hardware-style performance controller — a bit like the classic Stanton SCS.3m DJ mixer. Hold **`CapsLock`** to activate it.
+If you're performing on a laptop, you can turn your trackpad into a hardware-style performance controller — a bit like the classic Stanton SCS.3m DJ mixer. Press **`CapsLock`** to turn it on. The trackpad console works on Linux only for now (see [Setup](#setup-on-linux) below).
 
-While CapsLock is held:
+While it is on:
 - The trackpad stops moving the mouse cursor
 - It becomes an absolute-position performance surface with three faders and a crossfader
 
-Release CapsLock to return to normal mouse control.
+Press CapsLock again to return to normal mouse control.
 
 ### Surface layout
 
@@ -59,7 +59,7 @@ On Linux, the trackpad surface reads raw multi-touch input directly. This requir
 
 If the permission isn't set up, you'll see a **Touchpad Status: Read/Write Permission Required** message in **Preferences → General**, next to the **Enable CapsLock Trackpad Console** checkbox, with an **Install Permissions (Polkit)** button. Clicking it installs the necessary udev rule using `pkexec` — no reboot required. If you ran the desktop installer script (`./install-desktop.sh`) when you first unzipped the app, this was done automatically.
 
-On macOS, native trackpad support works without any extra setup.
+On Windows and macOS the trackpad console is not supported yet: Preferences shows it as not supported on that platform.
 
 **Focus safety:** If Liquid LSD loses window focus (e.g. via Alt+Tab), the trackpad grab releases immediately, so you're never locked out of your mouse.
 
@@ -78,36 +78,11 @@ Macro knob tooltips show the value in the target parameter's real units, with th
 
 Tooltips appear after a short delay (~250ms) so they don't flash annoyingly as you move the mouse.
 
-### The three-tier notes system
+### Parameter notes
 
-You can attach notes at three different scopes:
+You can attach a note to any parameter of a preset, for example "keep this under 0.3 or it strobes". The note is stored inside the preset's `.lsd` file, so it travels with the preset when you share it, and it shows in the parameter's hover tooltip.
 
-| Scope | What it's for | Where it's stored | When it appears |
-|-------|--------------|-------------------|-----------------|
-| **Source Note** | Notes about a visual generator (e.g. "Gyroid works best with low gain feedback") | `~/.liquid-lsd/source-notes.json` | Stays with you globally, across all presets |
-| **Preset Note** | Notes about a specific preset | Inside the `.lsd` file | Shows when hovering the preset name label on the deck monitor |
-| **Parameter Note** | A reminder about a specific parameter in a preset | Inside the `.lsd` file | Shows in the parameter's hover tooltip |
-
-Source Notes are global and persist no matter which preset you load — good for tips about generators that are always true. Preset and Parameter Notes travel with the preset file when you share it.
-
-### Adding and editing notes
-
-**Parameter notes:**
-Hover over any parameter row in Edit's parameter grid and click **⋮** (or right-click the parameter name), then choose **Add/Edit Parameter Note...**
-
-**Preset notes:**
-Right-click the preset name label below the deck monitor preview and choose **Add/Edit Preset Note...**
-
-**Source notes:**
-Open the Deck Menu popup and choose **Add/Edit Source Note...**
-
-All three open the same note editor: a multi-line text box up to 2048 characters. Press `Ctrl+Enter` to save, or `Escape` to cancel.
-
-### The preset name label
-
-Below each deck's monitor preview you'll see the name of the currently loaded preset. Hovering it shows the full file path, the last save time, and the preset note if one exists. A `*` next to the name means there are unsaved changes.
-
-If no preset is loaded yet (the deck is in an unsaved state), the label shows `Untitled` in grey. You can't attach a preset note until the preset has been saved at least once.
+To add or edit one, hover over a parameter row in Edit's parameter grid and click **⋮** (or right-click the parameter name), then choose **Add Parameter Note...** (**Edit Parameter Note...** when the parameter already has one). The note editor is a multi-line text box of up to 2048 characters; click **Save** or **Cancel**. The note is written to the file the next time you save the preset.
 
 ---
 
@@ -199,7 +174,7 @@ Liquid LSD includes an intelligent, multi-type MIDI subsystem for connecting har
 ### Quick Setup
 
 1. Connect your USB or DIN MIDI interface.
-2. Open **Preferences → MIDI Controls** (or press `Ctrl+,`).
+2. Open **Preferences → MIDI Controls** (or press `Ctrl+P`).
 3. Ensure **Enable MIDI Subsystem** is checked. The background watchdog automatically detects newly connected controllers without restarting the application.
 4. Check the **Live MIDI Monitor (Sniffer)** at the top of the panel: moving any knob or pressing any pad on your controller will immediately stream incoming packets (Channel, Message Type, Index, and Values).
 
@@ -431,7 +406,7 @@ Liquid LSD includes a native, zero-dependency OSC 1.0 server for wireless contro
 
 ### Quick Setup
 
-1. Open **Preferences → OSC Controls** (or press `Ctrl+,`).
+1. Open **Preferences → OSC Controls** (or press `Ctrl+P`).
 2. Check **Enable OSC Server**. By default it listens on UDP port `8000` and sends feedback out on port `9000` — both are editable, with a **Restart Server** button to apply port changes.
 3. Point your TouchOSC layout at your computer's IP address, using the same inbound/outbound ports. Move any control on the layout — Liquid LSD automatically learns the client's IP from the first packet it receives, so there's nothing to configure on the desktop side beyond the ports.
 4. The **Live Packet Sniffer** in the OSC Controls tab streams recent inbound and outbound traffic (address, arguments, and remote host) so you can confirm packets are arriving.

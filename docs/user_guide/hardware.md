@@ -8,7 +8,7 @@ Liquid LSD can be played from a hardware controller, a tablet or a phone. There 
 | **Any other MIDI controller** (knobs, faders, pads, keyboard) | MIDI Learn | Enable MIDI, right-click a control, move a knob |
 | **TouchOSC** or another OSC app on a phone or tablet | OSC Learn | Enable the OSC server, point the app at your computer |
 
-MIDI and OSC are both **off by default**. Turn them on in **Preferences** (`Ctrl+,`) under **MIDI Controls** and **OSC Controls**. Each tab has a live monitor that shows every incoming message, which is the quickest way to check that a device is talking to the app.
+MIDI and OSC are both **off by default**. Turn them on in **Preferences** (`Ctrl+P`) under **MIDI Controls** and **OSC Controls**. Each tab has a live monitor that shows every incoming message, which is the quickest way to check that a device is talking to the app.
 
 ## The Midi Fighter Twister
 

@@ -11,9 +11,9 @@ Liquid LSD is an open-source, real-time procedural visual synthesizer and VJ per
 - **Multi-Slot Deck & Master FX Chains**: 3-slot serial ISF FX chains per deck plus a 3-slot serial Master FX post-processing stage (bloom, CRT glitch, color correction, spatial distortion) operating across the final composite output.
 - **Modular Transitions & Setlist Queue**: ISF transition engine (Deck A $\leftrightarrow$ Deck B), custom transition presets (`.lsdtrans`), setlists (`.lsdtransplay`), auto-advance transition queue, and VJ crossfader controls.
 - **Low-Latency Audio & Beat Sync**: Real-time audio analysis via JACK / PipeWire-JACK (Linux) or cross-platform Java Sound fallback (macOS/Windows/Linux). Features an Adam Stark-based beat tracking engine with a continuous phase generator and Ableton Link network clock sync.
-- **Hierarchical CV Modulation Matrix**: Route real-time audio amplitude bands (Bass/Mid/High), onset triggers, beat clock phases, LFOs, and sample-and-hold generators to any visual parameter.
-- **Tactile Performance Surface**: Modern frameless CSD windowing with live performance telemetry (FPS, DSP latency, CPU usage, frame time, beat phase), TouchConsole support (evdev/macOS), a Library browser with the auto-VJ queues under it, drag-and-drop workflow, and clipboard management for presets, slots, and chains.
-- **Hardware & MIDI Control**: Multi-type MIDI engine (Notes, CC, Pitch Bend, Soft Takeover, Relative Rotary Encoders), centralized `ShortcutManager` for keyboard shortcuts, preset tagging & search, and 3-tier hierarchical set notes (`NotesManager`).
+- **Hierarchical CV Modulation Matrix**: Route real-time audio amplitude bands (Bass/Mid/Hi-Mid/High), section energy and drops, hits (onsets), beat clock phases, LFOs, and sample-and-hold generators to any visual parameter.
+- **Tactile Performance Surface**: Modern frameless CSD windowing with live performance telemetry (FPS, DSP latency, CPU usage, frame time, beat phase), a trackpad performance console (Linux evdev), a Library browser with the auto-VJ queues under it, drag-and-drop workflow, and clipboard management for presets, slots, and chains.
+- **Hardware & MIDI Control**: Multi-type MIDI engine (Notes, CC, Pitch Bend, Soft Takeover, Relative Rotary Encoders), centralized `ShortcutManager` for keyboard shortcuts, preset tagging & search, and per-parameter notes saved with the preset (`NotesManager`).
 - **Stage Interoperability & Recording**: Zero-copy GPU video streaming (Spout2 on Windows, Syphon on macOS, PipeWire DMA-BUF on Linux), video device/OBS ingest, high-performance asynchronous GPU PBO video export/recording pipeline (`PboReadbackPipeline`), and WebGL2 live web broadcast relay.
 - **FX Playlists & A/B FX Queues**: Unified FX browser (ISF stock filters, saved `.lsdfx` singles, saved `.lsdfxchain` 3-slot chains) with deterministic apply, curated FX playlists (`.lsdfxplay`), and volatile live FX queues for A/B and BG with shuffle, repeat, and history back-stepping.
 - **Midi Fighter Twister Out of the Box**: A bundled profile maps the Twister's 16 encoders and banks to the Perform pages, with knob-ring and LED feedback; with the optional XT firmware, native mode gives each ring a style that suits its parameter and colours the switch LEDs by row.
@@ -182,7 +182,7 @@ src/main/kotlin/llm/slop/liquidlsd/
   broadcast/             WebSocket relay client & WebGL2 TV state serializer
   cv/                    CV registry, BeatClock, evaluator functions, history ring buffers
   export/                Asynchronous GPU PBO video renderer & export studio
-  input/                 TouchConsole controller (evdev/macOS JNA drivers)
+  input/                 TouchConsole controller (Linux evdev driver; macOS backend not built yet)
   midi/                  Multi-message MIDI receiver, soft takeover, relative encoders
   models/                Preset, session, transition, and FX chain DTO schemas
   notes/                 NotesManager & 3-tier set notes persistence
@@ -201,7 +201,7 @@ src/main/resources/
 
 library/                 User-loadable dynamic assets
   sources/               GLSL & ISF visual generator sources
-  filters/               ISF effect filters (Slots 1-4)
+  filters/               ISF effect filters (FX chain slots 1-3)
   transitions/           ISF transition filters & .lsdtrans presets
   transition_playlists/  .lsdtransplay transition setlists
   fx/                    .lsdfx single-slot FX presets

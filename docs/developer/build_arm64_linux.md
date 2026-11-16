@@ -112,6 +112,6 @@ Already wired up:
   `linux-aarch64` build and `run-linux-arm.sh` launcher; included in `packageZips`.
 - **CI**: `linux-arm64` is a matrix entry (`runs-on: ubuntu-24.04-arm`) in the
   smoke-test matrices of both `smoke-test.yml` and `release.yml`.
-- **PipeWire**: `SpaData` and `PipeWireBufferStruct` in `PipeWireLibrary.kt` are JNA
-  structures whose layout follows declared field order rather than architecture-specific
-  padding assumed here — re-verify on aarch64 if those struct definitions ever change.
+- **PipeWire**: buffer access is by hand-coded byte offsets (`SpaBufferLayout` in
+  `PipeWireLibrary.kt`), and `SpaPod` writes pods by hand; both assume LP64, which aarch64
+  Linux shares with x86-64. Re-check the offsets on aarch64 if the PipeWire headers change.

@@ -30,7 +30,6 @@ Clock Source Selection: ClockSource (MANUAL | AUDIO_TRACKER)
     │
     └──► MANUAL: Internal Manual Flywheel & Tap Tempo Controller
             └─► CVRegistry.alignBeatPhase(alignedBeats, manualBpm, nanoTime)
-```
               │  (@Volatile primitive fields update: zero heap allocation)
               │
         Render Thread 0 (Every Frame @ 60Hz–144Hz+)
@@ -130,11 +129,11 @@ No-beat audio: on six long spoken-word files the lock is on 1.5 to 3.9% of the t
 
 ## BPM Sources & Locking
 
-### 1. Manual BPM Lock (`isBpmLocked = true`)
+### 1. Manual Clock (`clockSource = ClockSource.MANUAL`)
 The default and recommended mode for live performances. `AudioEngine.manualBpm` drives the flywheel directly. Automated phase realignment nudges and phase slew buffers are strictly bypassed, guaranteeing zero tempo jitter and perfectly smooth cosine / sine modulation.
 
-### 2. Automatic Detection (`isBpmLocked = false`)
-When unlocked, `BeatDetector` (in [`AudioEngine.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/audio/AudioEngine.kt)) delegates to [`BeatTrackerEngine.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/audio/BeatTrackerEngine.kt).
+### 2. Automatic Detection (`clockSource = ClockSource.AUDIO_TRACKER`)
+In this mode, `BeatDetector` (in [`AudioEngine.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/audio/AudioEngine.kt)) delegates to [`BeatTrackerEngine.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/audio/BeatTrackerEngine.kt).
 - **120 BPM Startup & Source Switch Lock**: On application launch, audio engine start, or audio device switching, the engine initializes and holds a steady 120.0 BPM lock until `BeatDetector` has continuously observed and confirmed a stable candidate tempo (`isTempoLocked = true`). Only upon confirmed lock does the engine smoothly transition from 120 BPM to the track's tempo.
 
 ### 3. Low-Signal Detection & Flywheel Tempo Retention
@@ -144,7 +143,7 @@ When incoming audio level drops below the analysis threshold (`localAudioEnergy 
 - **Continuous Flywheel Coasting**: During silent passages or drops, the beat flywheel preserves momentum and continues advancing sample-accurately at the active tempo rather than freezing or changing frequency.
 ### 4. Audio Engine Disabled / Internal Manual Clock Mode
 When the Audio Engine is disabled (`UITheme.audioEngineEnabled = false`):
-- **Suspended Audio Capture**: Live audio input capture, backend drivers, and audio-reactive CV signals (`audio_amp`, `audio_bass`, `audio_mid`, `audio_high`, `audio_flux_*`) are stopped to conserve CPU cycles.
+- **Suspended Audio Capture**: Live audio input capture, backend drivers, and audio-reactive CV signals (the levels `audio_amp|bass|mid|himid|high`, the hits `audio_flux_*` and the section energies; see `cv/AudioSignals`) are stopped to conserve CPU cycles.
 - **Clock Row & Preferences Telemetry**: Both the BPM readout and the bar phase meter remain visible and interactive on the Performance MIXER page's Clock row and within Preferences > Tempo & Sync, reflecting manual fixed clock mode with monotonic phase advance.
 
 ### 5. VJ Tap Tempo & Phase Synchronization

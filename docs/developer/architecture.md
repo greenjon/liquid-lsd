@@ -78,8 +78,8 @@ Because the audio processing loop runs at sub-millisecond hardware intervals (~5
 
 ### Concurrency Primitives
 - **`@Volatile` Beat Anchor Fields**: Lock-free update passing `anchorBeats`, `anchorBpm`, and `anchorTimeNs` directly from the audio thread to `CVRegistry.updateBeatAnchor()` using primitive `@Volatile` fields. Zero object allocations occur on the audio callback thread. Thread 0 reads these volatile variables without locks and interpolates sub-millisecond phase accuracy via `CVRegistry.getSynchronizedTotalBeats()`.
-- **`CvHistoryBuffer`**: Pre-allocated ring buffer storing 200 CV samples for lock-free oscilloscope drawing in the Modulation column (`PropertiesPanel`).
-- **`@Volatile` Flags**: Thread-safe single-scalar flags (`isBpmLocked`, `manualBpm`, `inputGain`) accessed across threads without lock overhead.
+- **`CvHistoryBuffer`**: Pre-allocated ring buffer storing 600 CV samples for lock-free oscilloscope drawing in the Modulation column (`PropertiesPanel`).
+- **`@Volatile` Flags**: Thread-safe single-scalar flags (`clockSource`, `manualBpm`, `inputGain`; the deprecated `isBpmLocked` is computed from `clockSource`) accessed across threads without lock overhead.
 - **Concurrent Queues**: `ConcurrentLinkedQueue`s carry finished deck, FX and transition loads (`DeckOps`, `FxOps`, `TransitionOps`, drained at the start of the render phase), incoming MIDI events (`MidiEngine`, capped, drained by `UIManager.processInput` before the render phase), and incoming OSC messages decoded on the dedicated UDP receiver thread (`OscEngine.inboundQueue`), all drained on Thread 0 once per frame.
 
 ---
@@ -106,7 +106,7 @@ Liquid LSD integrates a three-tier notes persistence model managed by `NotesMana
 | **Preset Notes** | `.lsd` JSON (`presetNotes`) | Saved/loaded per preset file | `NotesManager.getPresetNote / setPresetNote` |
 | **Parameter Notes** | `.lsd` JSON (`paramNotes`) | Saved/loaded per preset file | `NotesManager.getParamNote / setParamNote` |
 
-`PresetManager` automatically syncs in-memory notes with `.lsd` DTOs during async load (`syncFromDto`) and save (`syncToDto`) operations.
+In-memory notes are synced with `.lsd` DTOs on load by `DeckOps` (`syncFromDto`) and on save by `PresetRepository` (`syncToDto`).
 
 ---
 

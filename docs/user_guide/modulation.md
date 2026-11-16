@@ -70,15 +70,15 @@ Stock **effects** and **transitions** ship random ranges the same way. The deck 
 
 These control how quickly the signal rises and falls:
 
-| Profile              | Character                                                        |
-| -------------------- | ---------------------------------------------------------------- |
-| Instant (Raw Jitter) | No smoothing — raw and jittery.                                  |
-| Snap                 | Immediate attack, fast release. Good for fast percussive tracks. |
-| Punchy               | Slight attack, medium release. Captures rhythm cleanly.          |
-| Smooth Swell         | Slower attack, long release. Peaks become gentle pulses.         |
-| Slow Pulse           | Gradual rise, lingering tail.                                    |
-| Ambient Drift        | Long, fluid swells. Ideal for ambient or drone music.            |
-| Custom               | Set your own attack and decay times.                             |
+| Profile                 | Attack / decay | Character                                                        |
+| ----------------------- | -------------- | ---------------------------------------------------------------- |
+| Instant (Raw / 1-Frame) | 0 / 0 ms       | No smoothing — raw and jittery.                                  |
+| Strobe / Snap           | 0 / 35 ms      | Immediate attack, fast release. Good for fast percussive tracks. |
+| Punchy (Accent)         | 5 / 150 ms     | Slight attack, medium release. Captures rhythm cleanly.          |
+| Smooth Swell            | 40 / 400 ms    | Slower attack, long release. Peaks become gentle pulses.         |
+| Slow Bloom              | 100 / 900 ms   | Gradual rise, lingering tail.                                    |
+| Ambient Drift           | 250 / 1800 ms  | Long, fluid swells. Ideal for ambient or drone music.            |
+| Custom…                 | your own       | Set your own attack and decay times.                             |
 
 Selecting **Custom** inherits the timings from whatever profile was active before, so you can fine-tune from a sensible starting point.
 

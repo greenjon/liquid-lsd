@@ -44,6 +44,8 @@ To support automated visual regression testing, documentation asset generation, 
 | `--window` | `<W>x<H>` or `maximized` | Overrides initial window dimensions (e.g. `1920x1080` or `1280x720`). |
 | `--no-audio` | *(flag)* | Bypasses JACK and JavaSound audio initialization for headless or soundcard-less environments. |
 | `--ui-lab` | *(flag)* | Launches the isolated UI component gallery sandbox instead of the live mixer workspace. |
+| `--smoke-test` | *(flag)* | Headless check used by CI: runs six start-up checks (LWJGL and ImGui natives, bundled resources, the audio backend, Spout / Syphon) without opening the app, then exits with 0 or a failure code. |
+| `--tour=<script>` and the other `--tour*` flags | | Render a scripted walkthrough video; see `tour_renderer.md`. |
 | `--help` / `-h` | *(flag)* | Prints command line options and exits. |
 | `--version` / `-v` | *(flag)* | Prints application version and runtime details and exits. |
 

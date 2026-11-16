@@ -57,6 +57,7 @@ nav:
     - Unified Control Mapping Architecture: developer/unified_control_mapping.md
     - CLI & Automated Screen Capture Pipeline: developer/cli_and_screenshot_automation.md
     - Tour Renderer: developer/tour_renderer.md
+    - Audit Blueprint: developer/audit.md
   - Operations & Tuning: developer/ops_tuning.md
   - Release Notes: release_notes.md
   - Licenses & Credits: licenses/SHADERS_LICENSE.md

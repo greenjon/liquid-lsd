@@ -28,7 +28,7 @@ Streams are not files, so they cannot be saved as presets, added to playlists or
 
 ## Built-In Generators
 
-Liquid LSD includes a curated suite of 36 built-in procedural generators spanning harmonic geometry, 3D raymarching, 3D fractals, volumetric gas, 4D polytopes, organic fluid dynamics, living simulations, acoustic wavefields, two audio visualizers that draw the sound itself, and a set of light generators that run comfortably on integrated graphics.
+Liquid LSD includes a curated suite of 37 built-in procedural generators spanning harmonic geometry, 3D raymarching, 3D fractals, volumetric gas, 4D polytopes, organic fluid dynamics, living simulations, acoustic wavefields, two audio visualizers that draw the sound itself, and a set of light generators that run comfortably on integrated graphics.
 
 The raymarchers (Icosa-H3, Gyroid Hyperspace, 4D Hyper-Slice, Nebula Volume and the fractals below) show a gauge mark in the browser: they are GPU-intensive and can run slowly on integrated graphics. The fractals are tuned for a mid-range discrete GPU (an RTX A2000 or better); every one has a **Quality** knob, and lowering it is the first thing to try if a deck stutters.
 
@@ -124,8 +124,10 @@ Sand on a vibrating plate. A plate rings only at whole-number modes, and the san
 - **Mode Snap**: how a mode change looks, from a slow blend across the whole step to an instant jump.
 - **Line Width, Settled**: the width of the sand lines and how much of the sand has reached them. Pulling Settled down on a kick throws the sand off the lines.
 - **Vibration**: how fast the loose grains hop.
-- **Invert**: shows the moving surface instead of the sand, lit like water.
-- **Palette Modes**: Obsidian & Gold Sand, Electric Cymatic Blue, Prismatic Spectrum, and Bioluminescent Emerald.
+- **Invert (Antinodes)**: shows the moving surface instead of the sand, lit like water.
+- **Glow**: a soft halo around the sand lines.
+- **Palette Mode**: Obsidian & Gold Sand, Electric Cymatic Blue, Prismatic Spectrum, and Bioluminescent Emerald.
+- **Hue Offset**: turns the colours of the Prismatic Spectrum palette (the other palettes ignore it).
 - **Scale**: 1x shows the whole plate; zoom in to fill the frame.
 
 ### Mandelbox (`mandelbox`)

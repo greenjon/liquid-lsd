@@ -72,7 +72,7 @@ When the app opens for the first time, every deck is already playing a factory p
 
 Here's what to try first:
 
-1. **Check the audio feed.** Open **Preferences → Audio Hardware** (`Ctrl+P`) — the input peak meter and the Full Mix, Bass, Mid and High scopes should move with your music, and Sync State should read `ACTIVE`. If nothing moves, check your audio routing (Step 2).
+1. **Check the audio feed.** Open **Preferences → Audio Hardware** (`Ctrl+P`) — the input peak meter and the Full Mix, Bass, Mid, Hi-Mid and High scopes should move with your music, and Sync State should read `ACTIVE`. If nothing moves, check your audio routing (Step 2).
 
 2. **Click anything.** Click the gear on a deck's row to open that deck's **Edit**, then click any cell in its parameter grid — the **Modulation** column on the right shows the controls for that parameter. Hover over any label to see a tooltip explaining what it does.
 

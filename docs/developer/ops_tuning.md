@@ -10,10 +10,10 @@ To maintain 60+ FPS visual rendering and sub-millisecond audio analysis without 
 
 ```bash
 # Linux / Windows:
-java -XX:+UseZGC -XX:MaxGCPauseMillis=2 --enable-native-access=ALL-UNNAMED -jar build/libs/liquid-lsd-desktop-1.0-SNAPSHOT-all.jar
+java -XX:+UseZGC -XX:MaxGCPauseMillis=2 --enable-native-access=ALL-UNNAMED -jar build/libs/liquid-lsd-<version>-all.jar
 
 # macOS (requires -XstartOnFirstThread):
-java -XstartOnFirstThread -XX:+UseZGC -XX:MaxGCPauseMillis=2 --enable-native-access=ALL-UNNAMED -jar build/libs/liquid-lsd-desktop-1.0-SNAPSHOT-all.jar
+java -XstartOnFirstThread -XX:+UseZGC -XX:MaxGCPauseMillis=2 --enable-native-access=ALL-UNNAMED -jar build/libs/liquid-lsd-<version>-all.jar
 ```
 
 ### Key Flags Explained

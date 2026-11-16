@@ -53,7 +53,7 @@ Fed the engine's GPU timestamp samples, it scales the iterated and drawn rows (t
 
 ## Gotchas
 
-- Files in `library/sources/<id>/` are extracted once and never overwritten: delete the folder after changing a bundled source's resources.
+- Bundled files in `library/sources/<id>/` are replaced on startup only when they match a version we shipped before (unedited); a user-edited file is kept (`VisualSourceRegistry.ensureDefaultSources`). After changing a bundled source's files, run `./scripts/shipped_source_hashes.py` so the new version is recorded; `VisualSourceManifestTest` fails until it is.
 - A saved session or preset keeps each parameter's saved `randomizeBase` flag, so old saves do not pick up a changed morph default; re-add the source.
 - `gradlew run` does not forward `-D` flags; the engine's measuring switches are env vars (`FLAME_N`, `FLAME_DENSITY`, `FLAME_SKIP`).
 

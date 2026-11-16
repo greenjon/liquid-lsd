@@ -15,13 +15,13 @@ private val presetIoExecutor: ExecutorService = Executors.newSingleThreadExecuto
     Thread(runnable, "PresetManager-IO").apply { isDaemon = true }
 }
 ```
-Besides preset, chain and playlist files, it runs the Garden pool rescans, Garden thumbnail PNG encode/write and flame imports (section 12). Results are applied on Thread 0 (an `Ops` drain or `VisualSourceRegistry.runOnGlThread`); a failure toasts through `ToastOverlay`, whose text and expiry are one `AtomicReference` because this thread writes it.
+Besides preset, chain and playlist files, it writes the 60 s session autosave (serialised on Thread 0) and the recents, favorites, playlist and shortcut saves, and runs the Garden pool rescans, Garden thumbnail PNG encode/write and flame imports (section 12). Results are applied on Thread 0 (an `Ops` drain or `VisualSourceRegistry.runOnGlThread`); a failure toasts through `ToastOverlay`, whose text and expiry are one `AtomicReference` because this thread writes it.
 
 ### Auto-Healing Preset Loader (`sanitizePresetDto`)
-To eliminate schema drift and prevent dirty-flag trip bugs when shaders or feedback parameters evolve:
-- When `DeckOps.request` reads a preset file on `presetIoExecutor`, `PresetMigrator.sanitizePresetDto(dto)` verifies the incoming parameter map against the target visual source's `meta.json` and canonical feedback parameter specifications.
-- **Fills Missing Parameters**: Injects default `ParameterDto` instances for any newly introduced visual source or feedback parameters (`fbKaleido`, `Stellation`, `Support H`, etc.).
-- **Prunes Obsolete Keys**: Strips unknown or deprecated legacy fields (e.g. `sourceSelect`, `globalScale`).
+To keep folder-style sources' presets in step with their parameter list:
+- When `DeckOps.request` reads a preset file on `presetIoExecutor`, `PresetMigrator.sanitizePresetDto(dto)` checks the parameter map against the source's `library/sources/<id>/meta.json`. Only folder-style sources have one (`mandala`; `fractal_flame` is skipped because its genome is built in code); ISF sources pass through unchanged.
+- **Fills Missing Parameters**: adds a default `ParameterDto` for any parameter the `meta.json` lists and the preset lacks.
+- **Prunes Obsolete Keys**: drops parameters the `meta.json` no longer lists. A missing `globalAlpha` is filled in too. Legacy deck feedback values are dropped when the file is rewritten for another reason; on their own they don't trigger a rewrite (deck feedback is gone, `rendering.md`).
 - **Background Auto-Save**: If schema changes are detected, `DeckOps` immediately and quietly rewrites the updated `.lsd` file to disk on `presetIoExecutor` without blocking the main rendering thread.
 
 ### Thread-Safe Deferred Queue (`DeckOps.drainOnGlThread`) & Canonical Baseline Caching
@@ -41,10 +41,10 @@ var activePresetMtimePV: Long? = null
 ```
 - Populated from `File.lastModified()` prior to spawning background load tasks.
 - Updated upon completing successful `saveDeckPresetAsync` operations.
-- Consumed by `DeckControlPanel` to draw hover tooltips (`Last saved: yyyy-MM-dd HH:mm   v<version>`).
+- Bookkeeping only: no UI shows it.
 
 ### Clean First-Run & Session Lifecycle (`startEmpty`, `loadSession`)
-- **Initial App Launch**: Newly instantiated decks default to `isEmpty = true`. When launching without a pre-existing `last_session.json` (or when `StartupBehavior.EMPTY` is active), `PresetManager.startEmpty(mixer)` is invoked.
+- **Initial App Launch**: Newly instantiated decks default to `isEmpty = true`. When launching without a pre-existing `last_session.json` (or when `StartupBehavior.EMPTY` is active), `SessionSerializer.startEmpty(mixer)` (also reachable as `PresetManager.startEmpty`) is invoked; without a session file the factory presets are queued next (section 7).
 - **Empty Deck State**: Resets parameters across all available visual sources and 2D/3D view pipelines, clears FBO framebuffers, and leaves all deck monitors as blank black screens with the Parameters Launchpad activated ("Add Source" / "Load Preset").
 
 ### External Video Streams Excluded from Presets (`ExternalVideoSource`)
@@ -129,8 +129,15 @@ Auto-advance triggers inside `PlayQueueManager.triggerNext()`, `triggerPrevious(
 
 ## 6. PlaylistManager & PlaylistParser
 
-- **`PlaylistManager.kt`**: Handles CRUD operations on setlists (`.lsdplay` files), supports reordering presets, and provides `removePresetFromAllPlaylists(presetAbsPath)` to clean up deleted preset file references across all playlist files on disk.
-- **`PlaylistParser.kt`**: Parses text and DTO playlist formats, using primary resolution in `library/presets/` (and fallback to legacy `presets/patches/`) with auto-extension matching (`.lsd`, `.json`, `.patch`).
+- **`ui/PlaylistManager.kt`**: Handles CRUD operations on setlists (`.lsdplay` files), supports reordering presets, and provides `removePresetFromAllPlaylists(presetAbsPath)` to clean up deleted preset file references across all playlist files on disk.
+- **`PlaylistParser.kt`**: Parses both playlist formats (JSON with an `items` array, or plain text with one entry per line) and resolves an entry against `library/presets/` (or the roots a queue passes in), adding `.lsd` when the entry has no extension.
+
+### Playlist file format
+Three kinds, one entry per item, every entry written with `/` separators (a playlist made on Windows may still hold `\`, which is read as `/`):
+- **Sources** (`library/playlists/*.lsdplay`, `ui/PlaylistManager`): plain text. `#` lines are comments (the app writes a name and date header), blank lines are skipped, each other line is one preset. A preset under `library/presets` is written relative to it (`garden/my flame.lsd`); a file outside it keeps the path it was given.
+- **FX** (`library/fx_playlists/*.lsdfxplay`, `FXPlaylistDto`) and **transitions** (`library/transition_playlists/*.lsdtransplay`, `TransitionPlaylistDto`): JSON `{ "version", "name", "tags", "items" }`. A saved file is written relative to its saved root (`library/fx` or `library/fx_chains` for FX, `library/transitions` for transitions: `sub/my fx.lsdfx`), so the playlist survives moving the library; a stock transition is its shader id (`film_burn`); a file outside the roots keeps the path it was given (`PlaylistItems.shortToken`, `PlaylistTargets.token`).
+- **Resolving an entry** (`PlaylistParser.resolveItem`, `PlaylistManager.resolvePreset`): the entry as written (absolute, or relative to the working directory) first, then under each root in order. FX and transition queues pass the playlist's own folder, then their saved roots (`FxQueueEngine.playlistRoots`, `TransitionQueueManager.playlistRoots`); a transition entry that matches no file is kept as a stock shader id. Older playlists holding absolute paths still load.
+- **Renames and moves** rewrite entries through `LibraryRefs` (section 10): an entry is changed only if it named the old file and no longer names the new one, so a bare-name entry survives a folder move.
 - **`PlayQueueManager.kt` / `BgQueueManager.kt`**: Provides `removeFileFromQueue(file)` to remove all references to a deleted file from both queues and shift active index/shuffle state.
 
 ---
@@ -149,7 +156,7 @@ To ensure users never start with a blank screen on clean git clones or new relea
 - On first launch, `FileSystemManager.ensureDefaultLibrary()` checks for the presence of `library/.defaults_installed`.
 - If uninitialized, it extracts all bundled presets into `library/presets/` and bundled playlists into `library/playlists/` (skipping any existing files to protect user data), then records `library/.defaults_installed`.
 - **Deletion Safety**: If a user intentionally deletes a factory preset or playlist, the existence of `library/.defaults_installed` ensures it will **not** be resurrected on subsequent application launches.
-- **First-Run Visual Autoload**: When starting without a pre-existing `last_session.json` (and without `--empty`), `SessionSerializer.loadSession` loads a factory preset onto every deck (`SessionSerializer.FIRST_RUN_PRESETS`: `groove-mandala` on A, `tunnel-synthwave` on B, `ambient-tides` on BG, `julia-groove` on PV), skipping any the user has deleted. The decks' FX chains come from `Mixer.loadDefaultFxChains`, so the app opens playing. The picks avoid the sources the web TV lists as heavy (`web/settings.json` `heavySources`), and `StarterFxChainsTest` checks that.
+- **First-Run Visual Autoload**: When starting without a pre-existing `last_session.json` (and unless Startup is set to Empty), `SessionSerializer.loadSession` loads a factory preset onto every deck (`SessionSerializer.FIRST_RUN_PRESETS`: `groove-mandala` on A, `tunnel-synthwave` on B, `ambient-tides` on BG, `julia-groove` on PV), skipping any the user has deleted. The decks' FX chains come from `Mixer.loadDefaultFxChains`, so the app opens playing. The picks avoid the sources the web TV lists as heavy (`web/settings.json` `heavySources`), and `StarterFxChainsTest` checks that.
 
 ### Factory Restore Action (`FileSystemManager.restoreFactoryPresets`)
 - Users can trigger **File > Restore Factory Presets...** (or via the empty preset browser button) at any time.
@@ -159,13 +166,13 @@ To ensure users never start with a blank screen on clean git clones or new relea
 
 ## 8. Canonical Per-Deck Macro Banks (`MacroEngine`, `MacroBankSerializer`, `SessionSerializer`)
 
-The 19" Modular Video Rack chassis UI (`rack/`, `rack/ui/` — faceplates, rear patch-cable view, per-unit dynamic macro banks) documented in earlier revisions of this file has been **removed entirely** and replaced by **Performance Mode** (`PerformanceMatrixPanel.kt`, a 4×4 knob matrix toggled with `F4`; see `docs/user_guide/macros_and_rack.md`). Historical rack design notes are kept for reference in `docs/archive/modular_video_rack_proposal.md`, marked retired/superseded.
+The 19" Modular Video Rack chassis UI (`rack/`, `rack/ui/` — faceplates, rear patch-cable view, per-unit dynamic macro banks) documented in earlier revisions of this file has been **removed entirely** and replaced by **Performance Mode** (`PerformanceMatrixPanel.kt`, the 4×4 knob matrix of the default Perform view; see `docs/user_guide/macros_and_rack.md`). Historical rack design notes are kept for reference in `docs/archive/modular_video_rack_proposal.md`, marked retired/superseded.
 
 ### 12 Always-Resident Canonical Banks
-`MacroEngine` registers 12 canonical, always-resident banks by id (`MacroEngine.CANONICAL_BANK_IDS`): `DECK_A`, `DECK_B`, `DECK_BG`, `DECK_PV`, `DECK_A_FX`, `DECK_B_FX`, `DECK_BG_FX`, `DECK_PV_FX`, `TRANS`, `MASTER`, and `MASTER_FX`. `MacroEngine.canonicalIdForDeckLabel(deckLabel)` maps a deck label ("Deck A", "Deck B", "Deck BG", "Deck PV", "Master") to its generator bank id, falling through to `TRANS` for anything else, while `targetBankIdFor()` maps per-deck insert FX banks. Both the Performance Matrix's tabs and the Edit-row macro strip (`PerformanceMacroStrip`) read and write these same underlying banks — the matrix is a live control *view* onto them (dragging a knob live-updates `MacroControl.value`; editing bindings happens in the Edit-row strip and the Properties editor).
+`MacroEngine` registers 12 canonical, always-resident banks by id (`MacroEngine.CANONICAL_BANK_IDS`): `DECK_A`, `DECK_B`, `DECK_BG`, `DECK_PV`, `DECK_A_FX`, `DECK_B_FX`, `DECK_BG_FX`, `DECK_PV_FX`, `TRANS`, `MASTER`, `MASTER_FX` and `GLOBAL` (registered with 0 knobs). `MacroEngine.canonicalIdForDeckLabel(deckLabel)` maps a deck label ("Deck A", "Deck B", "Deck BG", "Deck PV", "Master") to its generator bank id, falling through to `TRANS` for anything else, while `targetBankIdFor()` maps per-deck insert FX banks. Both the Performance Matrix's tabs and the Edit-row macro strip (`PerformanceMacroStrip`) read and write these same underlying banks — the matrix is a live control *view* onto them (dragging a knob live-updates `MacroControl.value`; editing bindings happens in the Edit-row strip and the Properties editor).
 
-### `SessionSerializer` Is the Sole Bank Registrar
-[`SessionSerializer.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/presets/SessionSerializer.kt) is the only site that calls `MacroEngine.registerBank()`: both `loadSession()` (restoring `session.deckMacroBanks[canonicalId]` per canonical id) and `startEmpty()` register all 12 canonical banks on startup. There is no per-unit/dynamic bank registration anymore.
+### `SessionSerializer` Registers the Banks at Startup
+[`SessionSerializer.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/presets/SessionSerializer.kt) registers all 12 canonical banks at startup, in `loadSession()` (restoring `session.deckMacroBanks[canonicalId]` per canonical id) and in `startEmpty()`. A few other sites register a canonical bank lazily if it is missing when they need it (`GeneratorDefaults`, `DeckOps`, `FxMacroSync`, `TransitionMacroSync`, `MacroBankSerializer`), so a call before startup registration still finds a bank. There is no per-unit/dynamic bank registration anymore.
 
 ### Per-Deck Persistence (`MacroBankSerializer`, `PresetRepository`)
 Each deck's own canonical bank snapshot travels with its preset file, not just the session:
@@ -177,7 +184,7 @@ Each deck's own canonical bank snapshot travels with its preset file, not just t
 
 ## 9. FX Presets, Playlists & Live Queues
 
-The `[ FX ]` Library view mode (see `docs/developer/ui.md` §8 and `docs/user_guide/presets_and_library.md`) is backed by its own preset/queue manager family, parallel to but independent from the `.lsd` preset managers documented above.
+The Library's FX tab (see `docs/developer/ui.md` §8 and `docs/user_guide/presets_and_library.md`) is backed by its own preset/queue manager family, parallel to but independent from the `.lsd` preset managers documented above.
 
 ### One Mutation Path: `FxOps.kt`
 [`FxOps.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/presets/FxOps.kt) is the single entry point for changing what's loaded in any `FxChain` (the four decks' `fxChain` and `Mixer.masterFxChain`): `loadChain`, `applyChain`, `clearChain`, `setSlotFilter`, `loadSlot`, `applySlot`, `clearSlot`, and `applyItem` (the deterministic playlist/queue path: a `.lsdfxchain` replaces the chain, a `.lsdfx` becomes slot 1 of an otherwise empty chain). It is used by the Perform rows, Edit, the FX browser and toolbar, FX playlists, and both live FX queues.
@@ -198,7 +205,7 @@ Mirror `PlayQueueManager.kt` / `BgQueueManager.kt` but operate on FX assets inst
 [`FXPresetModels.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/models/FXPresetModels.kt) defines `FXPlaylistDto`, an ordered list of FX asset paths persisted by `PresetRepository` and `FileSystemManager` under `library/fx_playlists/`. A playlist is an entry in the FX tab's folder tree (`BrowserPane`): selecting it lists its rows, which support drag-and-drop insertion, reordering, double-click application and context-menu actions; the list edits are `ui/browser/PlaylistEdit.kt` (`PlaylistItems`), shared with transition playlists. The old column editors (`PlaylistEditorPanel`, `FXPlaylistEditorPanel`) are gone.
 
 ### `FXBrowserPanel.kt`
-Unifies the formerly separate `FXPresetListPanel` (single `.lsdfx` presets) and `FXChainListPanel` (`.lsdfxchain` chains) into the Library's FX tab with ISF stock filters, saved singles, and saved chains, tier badges, and an All / Stock / Singles / Chains filter menu. Stock (built-in ISF) filters and presets load into any deck's or Master's 3-slot FX chain via `FxOps`; saved presets and chains can additionally be added to FX playlists and live FX queues. "Load to" submenus for stock/single items let you target any of the 3 slots, while chains load directly. (The `.lsdfxbank` format was removed along with `FxBank`: Master FX is a plain `FxChain` now.)
+Unifies the formerly separate `FXPresetListPanel` (single `.lsdfx` presets) and `FXChainListPanel` (`.lsdfxchain` chains) into the Library's FX tab with ISF stock filters, saved singles, and saved chains, and tier badges; the sections are scopes in the `BrowserPane` tree. Stock (built-in ISF) filters and presets load into any deck's or Master's 3-slot FX chain via `FxOps`; saved presets and chains can additionally be added to FX playlists and live FX queues. "Load to" submenus for stock/single items let you target any of the 3 slots, while chains load directly. (The `.lsdfxbank` format was removed along with `FxBank`: Master FX is a plain `FxChain` now.)
 
 ### FX Metaknob / Super Knob Persistence
 `FXSlotDto` (in `PresetModels.kt`) carries `metaKnob: ParameterDto?`, `metaBinding: FxMetaBindingDto?` (legacy singular), `metaBindings: List<FxMetaBindingDto>?` (each with target, range, `curve`, `stepCount`, `linkMode`, `invert`, `enabled`) and `knobLayout: List<String>?` (focus-knob parameter order; null = authored order; names the shader lacks are dropped on load). `FxDefaultDto` (Save as Default, `library/isf_overrides/<hash>.json`) carries the same `metaBindings` and `knobLayout` (see `rendering/isf/FxMetaBinding.kt`); `FXChainDto` carries `superKnob: ParameterDto?` and `slotSuperKnobLink: List<Boolean>?`. Both are **baked at save time** — a saved slot/chain preset always restores the exact Metaknob binding/position it had when saved, even if `ISFAutoBindEngine`'s resolution for that shader (curated table, or a since-changed user override under `library/isf_overrides/`) has since changed. There is no live re-resolution path from a saved preset; re-save (or an explicit future "re-resolve" UI action) is required to pick up a changed binding.

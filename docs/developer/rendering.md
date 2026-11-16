@@ -30,13 +30,20 @@ Following the 100% ISF Pipeline Migration (see `ARCHITECTURE.md` §3), each Deck
                  │
                  ▼
      [FX Slot 3] (deck.fxSlots[2])
-                 │
+                 │   (slots ping-pong through fxPingFBO / fxPongFBO; the chain's
+                 │    Dry/Wet blends the result against cleanFBO into fxOutFBO)
                  ▼
      [Mixer.kt Transition Stage] — Renderer.renderMixer()
      [mixer.transitionFilter (ISF)] -> [mixer.blendFBO] -> [mixer.frag composite over Deck BG]
                  │
                  ▼
-            [mixer.masterFBO] ──► Screen
+            [mixer.masterCompositeFBO]
+                 │
+                 ▼
+     [Master FX chain] (mixer.masterFxChain, same renderFxChainPass)
+                 │
+                 ▼
+            [mixer.masterFBO] ──► Screen / recorder / streamers
 ```
 
 ### Execution Steps
@@ -44,9 +51,9 @@ Following the 100% ISF Pipeline Migration (see `ARCHITECTURE.md` §3), each Deck
    - **2D Sources (`!source.is3D`)**: The active 2D source renders directly into `cleanFBO` via `blit.vert` (or the source's own multi-pass topology), passing `uZoom` (`deck.viewZoom`), `uRotateZ` (`deck.viewRotateZ`), and `uAspectRatio` directly into the vertex shader.
    - **Native 3D Sources (`source.is3D == true`)**: e.g. `icosa_h3`. These handle their own rotation (`Rotate X/Y/Z`) and camera zoom internally and render straight into `cleanFBO`; `renderDeck()` forces the Deck's `viewZoom`/`viewRotateZ` to identity (`1.0`/`0.0`) for these sources rather than routing through a separate projection FBO.
    - **External Video Ingest Sources (`ExternalVideoSource`)**: Ingest live video streams from external applications via Spout2 (Windows), Syphon (macOS), or PipeWire 0.3 (Linux) (`PipeWireReceiverImpl` in `TextureReceiver.kt` and `fetchPipeWireStreams()` in `ExternalVideoDiscovery.kt`). `Renderer.renderExternalVideoSource()` blits the active incoming texture (`currentTextureId`) via `view2DShader` straight into `cleanFBO`, applying the same `uZoom`/`uRotateZ`/`uAspectRatio` uniforms as 2D sources.
-   - **Persistent-history generators**: sources with `hasFeedback == true` (e.g. trail-based generators like Dynamic Spiral) maintain their own `fb1`/`fb2` ping-pong pair directly on the `DynamicVisualSource` instance (not on `Deck`), lazily (re)allocated by `Renderer.render()` to match `cleanFBO`'s dimensions.
-2. **FX Slot Chain (Serial Processing Stage)**: `Renderer.renderDeck()` loops over `deck.fxSlots` (`FxChain.SLOT_COUNT` = 3). For each enabled slot with `dryWet > 0.0`, it renders the running texture (starting from `cleanFBO.texture`) through that slot's `ISFFilter` into the chain's per-slot buffer, then blends dry (previous stage's output) against wet (this stage's output) via `glBlendColor(..., 1.0 - dryWet)` when `dryWet < 1.0`. The final enabled slot's texture becomes the deck's effective output (`Deck.getOutputTexture()`); if no slots are enabled, `cleanFBO` passes through unchanged.
-3. **Mixer Transition & Compositing** (`Renderer.renderMixer()`): Deck A and Deck B's effective output textures feed the active ISF transition filter (`mixer.transitionFilter` — `Renderer.kt` caches a `linear_crossfade` instance so an unassigned transition never allocates/disposes filters mid-frame) into `mixer.blendFBO`, then a composite pass blends that over Deck BG with channel levels, bloom, and master alpha into `mixer.masterFBO`. With the crossfader fully on one side (progress exactly 0 or 1, `Renderer.restingTexture`) the transition pass is skipped and that deck's texture is copied into `blendFBO` instead, so the resting picture is exact and costs one copy. Transition parameters and their modulators keep updating, so a fade starts from their current values.
+   - **Persistent-history folder sources**: a folder-style source whose `meta.json` sets `feedback: true` (none shipped; ISF generators keep history with `PERSISTENT` passes instead) maintains its own `fb1`/`fb2` ping-pong pair directly on the `DynamicVisualSource` instance (not on `Deck`), lazily (re)allocated by `Renderer.render()` to match `cleanFBO`'s dimensions.
+2. **FX Slot Chain (Serial Processing Stage)**: `Renderer.renderDeck()` calls `renderFxChainPass` when the chain's `effectiveChainWet()` is above 0. It loops over the `FxChain.SLOT_COUNT` (3) slots; each slot with an effective wet above 0 renders the running texture (starting from `cleanFBO.texture`) through its `ISFFilter` into the ping or pong FBO, then blends dry (previous stage's output) against wet via `glBlendColor(..., 1.0 - dryWet)` when `dryWet < 1.0`. Last, the whole chain's output is blended against the clean texture by the chain Dry/Wet into `fxOutFBO`, which becomes the deck's effective output (`Deck.getOutputTexture()`); with the chain off or every slot dry, `cleanFBO` passes through unchanged.
+3. **Mixer Transition & Compositing** (`Renderer.renderMixer()`): Deck A and Deck B's effective output textures feed the active ISF transition filter (`mixer.transitionFilter` — `Renderer.kt` caches a `linear_crossfade` instance so an unassigned transition never allocates/disposes filters mid-frame) into `mixer.blendFBO`, then a composite pass (`mixer.frag`: levels A/B/BG and master level, no bloom) blends that over Deck BG into `mixer.masterCompositeFBO`. The Master FX chain then runs over it (`renderFxChainPass` with `mixer.masterFxChain` and the master ping/pong/out FBOs), and the result is blitted into `mixer.masterFBO`. With the crossfader fully on one side (progress exactly 0 or 1, `Renderer.restingTexture`) the transition pass is skipped and that deck's texture is copied into `blendFBO` instead, so the resting picture is exact and costs one copy. Transition parameters and their modulators keep updating, so a fade starts from their current values.
 
 ### Render budget (`DeckRenderBudget`)
 Decks the output can't show cost less. `Main` calls `DeckRenderBudget.nextFrame()` each frame, resizes PV to `pvSize` (half the output size unless PV is streamed), updates every deck, and renders a deck only when `shouldRender(slot, mixer)`: with `UITheme.offAirHalfRate` on, an off-air deck (one the master can't show now; `isOffAir` uses the same crossfader ends at which `renderMixer` copies the visible deck instead of running the transition) renders every other frame, so its monitor runs at half rate and frame-stepped simulations and feedback trails advance at half speed until it comes on air. A deck sent out over Spout / Syphon / PipeWire always renders in full.
@@ -69,7 +76,7 @@ Liquid LSD supports arbitrary user-defined render resolutions and aspect ratios 
 
 ## FBO-Count & GPU-Memory Telemetry
 
-`FBO.kt`'s companion object tracks every live `FBO` instance app-wide in a `ConcurrentHashMap<framebufferId, estimatedByteSize>`, populated on construction and cleared on `dispose()`. Byte size is format-aware (`GL_RGBA8` = 4 bytes/px, `GL_RGBA16F` = 8, `GL_RGBA32F` = 16). This is exposed as `PerformanceStats.fboCount` / `PerformanceStats.fboMemoryMB` and rendered in the menu bar telemetry HUD as `FBO: N (XMB)` (`MenuBar.kt`), covering all live FBOs in the core render pipeline (`cleanFBO`, `masterFBO`, etc.) app-wide. This instrumentation was added deliberately *before* any pooled FBO allocator, so a real GPU-memory bottleneck would show up in this readout first rather than being addressed speculatively.
+`FBO.kt`'s companion object tracks every live `FBO` instance app-wide in a `ConcurrentHashMap<framebufferId, estimatedByteSize>`, populated on construction and cleared on `dispose()`. Byte size is format-aware (`GL_RGBA8` = 4 bytes/px, `GL_RGBA16F` = 8, `GL_RGBA32F` = 16). This is exposed as `PerformanceStats.fboCount` / `PerformanceStats.fboMemoryMB` and rendered in the menu bar telemetry HUD as `GPU buffers: N (X MB)` (`MenuBar.kt`), covering all live FBOs in the core render pipeline (`cleanFBO`, `masterFBO`, etc.) app-wide. This instrumentation was added deliberately *before* any pooled FBO allocator, so a real GPU-memory bottleneck would show up in this readout first rather than being addressed speculatively.
 
 > The 19" Modular Video Rack chassis UI (`rack/`, `rack/ui/`), including its `RackMicroMonitor` confidence-preview downscaling and `RackPipeline` ping-pong stage buffers, was removed when the workspace was replaced by the Perform view (`PerformanceMatrixPanel.kt`); see `docs/archive/modular_video_rack_proposal.md` for retired design history.
 
@@ -79,17 +86,17 @@ Liquid LSD supports arbitrary user-defined render resolutions and aspect ratios 
 
 [`SourceDocRegistry.kt`](https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/rendering/SourceDocRegistry.kt) is an immutable singleton repository storing documentation for visual sources and parameters:
 
-- **Source Descriptions**: `sourceDescriptions: Map<String, String>` keyed by `sourceId`. Covers the currently-bundled built-in engines (`mandala`, `dynamic_spiral`, `icosa_h3`) plus stale dead-code entries (`colors`, `gyroid`, `chladni`, `attractor_feedback`, `hyper_mesh`, `hyper_slice`) left over from the legacy-source removal (see below) that no `VisualSourceRegistry` entry resolves to anymore — harmless (map lookups simply never hit them) but worth pruning next time this file is touched.
-- **Parameter Descriptions**: `paramDescriptions: Map<String, String>` keyed by `"<sourceId>/<paramName>"`, `"feedback/<paramName>"`, or `"mixer/<paramName>"`.
-- **UI Lookup API**: Surfaced by `ParametersRenderer` and `DeckControlPanel` to draw rich tooltips.
+- **Source Descriptions**: `sourceDescriptions: Map<String, String>` keyed by `sourceId`, one line per stock source. Add one when a source is added.
+- **Parameter Descriptions**: `paramDescriptions: Map<String, String>` keyed by `"<sourceId>/<paramName>"`, `"view/<paramName>"` (deck framing, and the fallback for camera parameters such as RotateX or Zoom) or `"mixer/<paramName>"`.
+- **UI Lookup API**: read by `ParametersRenderer` (`getParamDescription`, `getMixerParamDescription`) for the parameter tooltips.
 
 ---
 
 ## Pluggable Dynamic Visual Sources (`VisualSourceRegistry.kt`)
 
-Beyond hardcoded generators, the engine loads dynamic shaders from `library/sources/`:
+The engine loads its generators from `library/sources/` (stock ones are extracted there from `default_sources/` in the jar):
 
-- **`VisualSourceRegistry`**: Scans subfolders on startup, parses `meta.json`, compiles `shader.frag` against standard vertex shaders (`blit.vert`), and builds `DynamicVisualSource` templates.
+- **`VisualSourceRegistry`** scans the source folders on startup. There are two kinds: an ISF `.fs` file (`<id>/<id>.fs`, loaded as an `ISFVisualSource`), which is every stock source but two, and the folder style (`meta.json` + `shader.frag`, built into a `DynamicVisualSource` and compiled against `blit.vert` or the folder's `shader.vert`), used only by `mandala` and `fractal_flame` (`FOLDER_STYLE_IDS`).
 - **Shader Ownership**: The master template in `VisualSourceRegistry` owns the OpenGL shader program (`ownsShader = true`). Deck clones share shader program handles safely (`ownsShader = false`) to eliminate duplicate compilation overhead.
 - **Polymorphic Draw Topology**: Visual source rendering in `Renderer.render()` is fully polymorphic with zero source-type checks (`is Mandala`, `is FlameSource`). Each visual generator overrides `DynamicVisualSource.drawTopology()`:
   - Default: Renders a fullscreen quad via `Geometry.drawFullscreenQuad()`.
@@ -243,8 +250,8 @@ To ensure continuous parity between desktop visual sources and the browser-based
 
 ### 1. Dialect Conversion
 - **GLSL 3.30 Core $\rightarrow$ WebGL2 (GLSL ES 3.00)**:
-  - Desktop shaders in `src/main/resources/shaders/` and `library/sources/*/shader.frag` use `#version 330 core`.
-  - The synchronization tool transpiles `#version 330 core` into `#version 300 es\nprecision highp float;` for `web/shaders/`.
+  - Desktop shaders in `src/main/resources/shaders/` and the folder sources' `shader.frag` use `#version 330 core`; the ISF sources (`library/sources/<id>/<id>.fs`) carry no `#version` line.
+  - The synchronization tool turns `#version 330 core` into `#version 300 es\nprecision highp float;` (or prepends that header when there is no `#version`) and drops uniform initialisers, which ES 3.00 rejects, writing to `web/shaders/`.
 - **Sole Source of Truth**: Shaders and visual sources should always be authored in desktop directories; running `./scripts/sync_web.py --apply` or `./gradlew syncWeb` mechanically updates the web client.
 
 ### 2. Algorithmic Drift Tracking

@@ -42,8 +42,8 @@ To overcome this, `RealtimeRecorder` utilizes a multi-threaded, asynchronous rin
 
 Audio recording runs concurrently with zero allocations:
 - Inside the real-time audio callback (`AudioEngine`), an audio block is offered to a lock-free Single-Producer Single-Consumer (SPSC) ring buffer of pre-allocated `FloatArray` buffers (8192 samples).
-- An asynchronous worker thread (`RealtimeRecorder-AudioWorker`) polls the SPSC queue and writes raw 32-bit float PCM data to a temporary audio scratch file.
-- When recording stops, FFmpeg finalizes and multiplexes the video stream and raw PCM audio into the destination MP4 container.
+- An asynchronous worker thread (`RealtimeRecorder-AudioWorker`) polls the SPSC queue and writes 16-bit PCM to a temporary WAV file (`.tmp_aud_*.wav`).
+- When recording stops, FFmpeg finalizes and multiplexes the video stream and the WAV audio (AAC, 320 kb/s) into the destination MP4 container, on the `RealtimeRecorder-Finish` thread.
 
 ---
 
@@ -60,7 +60,7 @@ Offline rendering decouples rendering from physical wall-clock time. It runs a d
 │  3. For each Sub-Frame slice (Motion Blur):                  │
 │     - Compute intermediate CV modulators                     │
 │     - Render Deck A & Deck B into Clean FBOs                 │
-│     - Execute Ping-Pong Feedback & Mixer Passes              │
+│     - Run each deck's FX chain, then the Mixer passes        │
 │     - Accumulate slice in AccumulationBuffer (HDR)           │
 │  4. Normalize & Tone-Map Accumulation Buffer                 │
 │  5. Async PBO Readback ──► Stream to FFmpeg stdin            │
@@ -76,9 +76,8 @@ Offline rendering decouples rendering from physical wall-clock time. It runs a d
 
 Fast-moving geometry (e.g. ribbon rotations at 120 RPM or high-frequency feedback zoom) can appear strobed or stepped at standard 60 FPS.
 
-- **Temporal Oversampling**: Slices each frame into $S$ sub-steps ($S \in \{2, 4, 8, 16\}$).
-- **Weighting Curves**: Sub-frame slices are blended into a floating-point `RGBA16F` / `RGBA32F` accumulation texture using uniform or exposure-weighted Gaussian shutter curves.
-- **Shutter Angle**: Simulates physical camera shutter speeds (e.g., $180^\circ = 1/120\text{s}$ shutter at 60 FPS).
+- **Temporal Oversampling**: Slices each frame into $S$ sub-steps, $S$ = `superSamplingFactor` clamped to 1..8 (1 = no blur).
+- **Weighting**: every sub-frame is added into a `GL_RGBA16F` accumulation FBO with the same weight $1/S$ (a box filter over the whole frame interval). There is no Gaussian curve or shutter-angle setting.
 
 ---
 
@@ -88,9 +87,9 @@ Video frames are encoded on-the-fly by spawning FFmpeg as an asynchronous child 
 
 ```bash
 ffmpeg -y -f rawvideo -pix_fmt rgba -s:v 3840x2160 -r 60 -i - \
-       -i /tmp/audio_scratch.pcm -c:v libx264 -crf 17 -preset veryfast \
-       -pix_fmt yuv420p -c:a aac -b:a 320k output.mp4
+       -i song.wav -vf vflip -c:v libx264 -preset fast -crf 18 \
+       -pix_fmt yuv420p -c:a aac -b:a 320k -shortest output.mp4
 ```
 
-- **Hardware Acceleration Autodetection**: Automatically detects and selects hardware encoders (`h264_nvenc` for NVIDIA, `h264_qsv` for Intel, `h264_vaapi` for Linux/AMD, `h264_videotoolbox` for Apple Silicon) with transparent fallback to `libx264`.
+- **Hardware Acceleration Autodetection**: Automatically detects and selects hardware encoders by probing `ffmpeg -encoders` once (on the `ffmpeg-encoder-probe` thread): `h264_nvenc` / `hevc_nvenc` (NVIDIA), `_qsv` (Intel), `_amf` (AMD), `_videotoolbox` (Apple), with fallback to `libx264` / `libx265`. `forceSoftwareEncoder` (deterministic output) and an explicit `encoder` override the choice. Default quality is CRF 18 (`-cq` on NVENC); other encoders take `bitrateMbps`.
 - **Pipe Safety**: Ensures `stdin.flush()` and `Process.destroy()` lifecycle hygiene to avoid zombie processes or locked file handles.

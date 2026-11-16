@@ -27,7 +27,7 @@ The Library contains your **Presets**, **Playlists**, and **A/B Queues** — not
 
 Liquid LSD uses four independent rendering decks — think of them like channels on a mixer, each running its own visual independently:
 
-- **Deck A & Deck B** — Your two main stage decks. These go through the crossfader and blend modes, so you can mix between them in real time.
+- **Deck A & Deck B** — Your two main stage decks. These go through the crossfader and the current transition, so you can mix between them in real time.
 
 - **Deck BG (Background)** — Renders behind Decks A and B. Good for subtle textures or dark ambient fields that sit underneath your main visuals.
 
@@ -84,7 +84,6 @@ The right panel shows:
 - The crossfader between Deck A and Deck B
 - Level controls for each deck
 - Master output monitor
-- Blend mode selector
 
 Clicking a deck monitor points the Library at that deck's source; clicking the master monitor (or its **M** badge) points it at the Master FX chain (or at the transition, if you touched that last). When the current page doesn't show those rows, the pair view brings them on screen instead. Use a row's gear for the full Edit.
 
@@ -111,6 +110,7 @@ A few keyboard shortcuts work anywhere in the app:
 | `B` | Toggle background video rendering behind the UI |
 | `Ctrl+Z` | Undo the last parameter/modulator change (30-step history) |
 | `Ctrl+S` | Save the preset of the deck open in Edit |
+| `Ctrl+Shift+S` | Save the preset of the deck open in Edit under a new name (Save As) |
 | `Ctrl+R` | Start / stop recording |
 | `Ctrl+P` | Open Preferences |
 | `Ctrl+F` or `/` | Jump to the search box of the open Library tab |
@@ -118,10 +118,11 @@ A few keyboard shortcuts work anywhere in the app:
 | `Ctrl+Shift+O` | Toggle OSC map mode (click any OSC-learnable control to map it) |
 | `Ctrl+-` / `Ctrl+=` | Make the Library preset names smaller / larger |
 | `Caps Lock` | Toggle the touch console controller |
-| `Q` / `Shift+Q` | Add the selected Library item to the A/B queue / BG queue |
+| `Q` / `Shift+Q` | Add the selected Library item to the current tab's queue: the A/B Queue (Sources), the A/B FX Queue (FX) or the Transition Queue (Transitions) / to its BG queue (BG Queue or BG FX Queue) |
 | `Up` / `Down` | Move the selection in the Library lists and queues |
 | `Enter` | Run the selected Library row's default action (load, apply, or apply to the bound slot) |
 | `Delete` / `Backspace` | Delete the selected saved item, or remove the selected queue item (the key is set in Preferences → Shortcuts) |
+| `Delete` (in Edit) | Clear the modulators on the selected cell, or reset the selected parameter to its default |
 | `Alt+click` | Preview a Sources row on Deck PV |
 | A letter key | With the Library list focused, start a search with that letter (keys bound to a shortcut keep it) |
 | `Ctrl+C` / `Ctrl+V` | Copy / paste a modulation cell or row in Edit |
