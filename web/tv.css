@@ -1,9 +1,10 @@
 /* tv.css — Retro CRT Television Shell */
 
-/* Two themes, one set of materials: moulded grainy plastic on a cabinet in a softly lit room, turned controls,
-   a framed blackboard. MENU › THEME sets data-theme on <html> (index.html does it before the
-   first paint). Only the room and the cabinet change: the screen and its surround are dark glass in both, and
-   everything on the picture stays phosphor on black. Kiosk and embed have no cabinet. */
+/* Two themes. Dark: moulded grainy plastic on a cabinet in a softly lit room, turned controls, a framed
+   blackboard. Light: a 1970s hi-fi receiver, brushed aluminium in a walnut case (its own section further down).
+   MENU › THEME sets data-theme on <html> (index.html does it before the first paint). Only the room and the
+   cabinet change: the screen and its surround are dark glass in both, and everything on the picture stays
+   phosphor on black. Kiosk and embed have no cabinet. */
 :root {
   color-scheme:      dark;
   --room:            #141210;   /* the wall behind the TV */
@@ -46,46 +47,57 @@
   --tv-aspect:       calc(9 / 16);      /* 16:9 screen */
   --led-off:         #1a0000;
   --led-on:          #ff2200;
+  --lamp:            #ffaa00;   /* a lit button or key: HOLD, CHAT, TAPES */
+  --lamp-glow:       0 0 6px rgba(255,170,0,0.9);
+  --badge-glow:      none;
 }
 
-/* Light: an almond set in a sunlit room, ivory caps, an aluminium plate, an oak-framed board */
+/* Light: a 1970s hi-fi receiver. A brushed-aluminium faceplate in a walnut case, knurled spun-metal knobs,
+   aluminium piano keys, engraved black lettering, and a black glass display window lit blue. The cabinet's
+   lamps (HOLD, CHAT, TAPES, the key that is down) glow blue as the dial does; the beat light keeps its colours. */
 :root[data-theme="light"] {
   color-scheme:      light;
-  --room:            #e4dece;
-  --room-glow:       #f8f5ec;
-  --tv-bg:           #d6ccb6;
-  --tv-highlight:    #f3ecdc;
-  --tv-shadow:       #a2967e;
-  --tv-sheen:        rgba(255,255,255,0.35);
-  --tv-drop:         0 10px 36px rgba(70,55,30,0.38), 0 2px 8px rgba(70,55,30,0.28);
-  --grain:           url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .25 0 0 0 0 .25 0 0 0 0 .25 .07 0 0 0 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  --ink:             #463e31;
-  --ink-shadow:      0 1px 0 rgba(255,255,255,0.45);
-  --ink-off:         #6e6451;
-  --well:            #b2a78f;
-  --well-edge:       #8f846d;
-  --switch-off:      #efe9db;
-  --switch-edge:     #8f846d;
-  --switch-on:       #d22a08;
-  --cap-hi:          #fbf8f0;
-  --cap-lo:          #c9bfaa;
-  --cap-edge:        #8f846d;
-  --cap-seam:        #8f846d;
-  --cap-ink:         #463e31;
-  --cap-marker:      #3a332a;
-  --cap-lift:        0 2px 4px rgba(70,55,30,0.45), inset 0 1px 1px rgba(255,255,255,0.8);
-  --cap-pressed:     0 1px 1px rgba(70,55,30,0.45), inset 0 1px 3px rgba(70,55,30,0.45);
-  --btn-led-off:     #a3967a;
-  --focus:           #2f6f3f;
-  --badge-bg:        #f1ebdc;
-  --badge-edge:      #8f846d;
-  --badge-ink:       #2c2822;
-  --badge-ink-off:   #6e6451;
-  --wood-a:          #b58a58;
-  --wood-b:          #bf9563;
-  --wood-c:          #a97f4e;
-  --tray-hi:         #c49a68;
-  --tray-lo:         #8f6a3f;
+  --room:            #dcd9d2;
+  --room-glow:       #f4f2ed;
+  --tv-bg:           #d3d1cb;   /* the faceplate under its brushing */
+  --tv-highlight:    #fbfaf7;
+  --tv-shadow:       #8c8982;
+  --tv-sheen:        rgba(255,255,255,0.4);
+  --tv-drop:         0 14px 36px rgba(40,32,22,0.42), 0 3px 8px rgba(40,32,22,0.3);
+  /* Brushed metal: noise stretched along the plate, so it reads as fine horizontal strokes */
+  --brushed:         url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='240'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.0018 .9' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 .16'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23b)'/%3E%3C/svg%3E");
+  --spun:            conic-gradient(from 20deg, #fbfbf9, #aeaca7 12.5%, #f1f0ed 25%, #a3a19c 37.5%, #fbfbf9 50%, #aeaca7 62.5%, #f1f0ed 75%, #a3a19c 87.5%, #fbfbf9);
+  --metal-edge:      #5f5c56;
+  --ink:             #1f1e1c;   /* engraved, filled black */
+  --ink-shadow:      0 1px 0 rgba(255,255,255,0.75);
+  --ink-off:         #4f4c47;
+  --well:            #1e1d1b;   /* the slots the switch and the keys sit in */
+  --well-edge:       #5f5c56;
+  --switch-off:      linear-gradient(180deg, #fafaf8, #b9b7b1);
+  --switch-edge:     #5f5c56;
+  --switch-on:       linear-gradient(180deg, #ef5a3c, #b01f06);
+  --cap-hi:          #f8f7f4;
+  --cap-lo:          #bebcb6;
+  --cap-edge:        #5f5c56;
+  --cap-seam:        #6b6862;
+  --cap-ink:         #1f1e1c;
+  --cap-marker:      #1a1a1a;
+  --cap-lift:        0 2px 3px rgba(40,32,22,0.5), 0 1px 1px rgba(0,0,0,0.3);
+  --cap-pressed:     0 1px 1px rgba(40,32,22,0.5), inset 0 1px 3px rgba(0,0,0,0.4);
+  --btn-led-off:     #2c3a44;
+  --lamp:            #6fd2ff;
+  --lamp-glow:       0 0 6px rgba(90,200,255,0.95), 0 0 2px #fff;
+  --focus:           #0b5394;
+  --badge-bg:        linear-gradient(180deg, #0b1a24, #050c12);  /* the dial glass */
+  --badge-edge:      #2f4b5e;
+  --badge-ink:       #8fdcff;
+  --badge-ink-off:   #3f6a84;
+  --badge-glow:      0 0 6px rgba(80,190,255,0.75);
+  --wood-a:          #4a2a17;   /* the case, and the blackboard's frame to match: oiled walnut */
+  --wood-b:          #56331d;
+  --wood-c:          #3f2413;
+  --tray-hi:         #5c3820;
+  --tray-lo:         #331d0f;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -273,7 +285,6 @@ body {
   background: rgba(0,0,0,0.12);
   box-shadow: inset 0 1px 3px rgba(0,0,0,0.45), 0 1px 0 var(--tv-highlight);
 }
-:root[data-theme="light"] .scene-panel { background: rgba(70,55,30,0.07); box-shadow: inset 0 1px 3px rgba(70,55,30,0.35), 0 1px 0 rgba(255,255,255,0.6); }
 .scene-panel .rotary-dial { width: 34px; height: 34px; }
 .scene-panel .push-btn { width: 26px; height: 26px; }
 .rotary-dial.big { width: 50px; height: 50px; }
@@ -377,7 +388,6 @@ body {
   color: #ffbb33;
   text-shadow: 0 0 6px rgba(255,170,0,0.8);
 }
-:root[data-theme="light"] .bank-key.down { color: #b45f00; text-shadow: 0 0 4px rgba(255,170,0,0.6); }
 .bank-key:focus-visible { outline: 1px solid var(--focus); outline-offset: 2px; }
 #keysBtn { min-width: 30px; font-size: 0.72rem; }
 /* TAPES's light: a tape is in (or its list is open) */
@@ -390,7 +400,7 @@ body {
   border-radius: 50%;
   background: var(--btn-led-off);
 }
-#tapesBtn[aria-pressed="true"] .key-led { background: #ffaa00; box-shadow: 0 0 4px rgba(255,170,0,0.9); }
+#tapesBtn[aria-pressed="true"] .key-led { background: var(--lamp); box-shadow: var(--lamp-glow); }
 
 .led {
   width: 7px;
@@ -468,8 +478,8 @@ body {
 }
 
 .push-btn[aria-pressed="true"] .btn-led {
-  background: #ffaa00;
-  box-shadow: 0 0 6px rgba(255,170,0,0.9);
+  background: var(--lamp);
+  box-shadow: var(--lamp-glow);
 }
 
 .push-btn:focus-visible, .rocker-btn:focus-visible, .rotary-dial:focus-visible {
@@ -574,6 +584,121 @@ body {
   #radio-face { margin-left: 0; grid-template-columns: 1fr auto; width: 100%; }
   #key-bank { justify-content: space-between; }
   .bank-key { flex: 1 1 0; min-width: 0; padding: 0 2px; }
+}
+
+/* --- Light: the receiver. Same controls, same places; hi-fi materials (tokens in the light :root above) --- */
+:root[data-theme="light"] #tv-body {
+  border: 14px solid transparent;            /* the walnut case */
+  border-radius: 12px;
+  padding: 22px 16px 14px;                   /* with the case, as wide as the dark cabinet */
+  background:
+    var(--brushed) padding-box,
+    linear-gradient(180deg, rgba(255,255,255,0.5), rgba(255,255,255,0) 22%, rgba(0,0,0,0.04) 70%, rgba(255,255,255,0.2)) padding-box,
+    linear-gradient(100deg, transparent 15%, rgba(255,255,255,0.28) 38%, transparent 58%) padding-box,
+    linear-gradient(var(--tv-bg), var(--tv-bg)) padding-box,
+    linear-gradient(180deg, rgba(255,225,190,0.16), transparent 18%, transparent 82%, rgba(0,0,0,0.3)) border-box,
+    repeating-linear-gradient(91deg, var(--wood-a) 0 5px, var(--wood-b) 5px 8px, var(--wood-c) 8px 15px, var(--wood-b) 15px 17px) border-box;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.9),     /* the plate's machined edge */
+    inset 0 -1px 0 rgba(0,0,0,0.3),
+    inset 0 0 0 1px rgba(0,0,0,0.25),
+    0 0 0 1px #24140a,
+    var(--tv-drop);
+}
+@media (max-width: 700px) {
+  :root[data-theme="light"] #tv-body { border-width: 8px; padding: 10px 8px 8px; }
+}
+/* The picture behind black glass, in a bright chrome bezel */
+:root[data-theme="light"] #tv-screen-border {
+  box-shadow:
+    inset 0 0 20px rgba(0,0,0,0.9),
+    0 0 0 1px #3c3a36,
+    0 0 0 3px #eeedea,
+    0 0 0 4px #7d7a73,
+    0 2px 0 4px rgba(255,255,255,0.7);
+}
+/* Engraved lettering, spaced wide */
+:root[data-theme="light"] .control-label { letter-spacing: 0.16em; font-weight: 700; font-size: 0.64rem; }
+/* The scene panel: a printed rule round a group of controls, as on a faceplate */
+:root[data-theme="light"] .scene-panel {
+  background: none;
+  border: 1px solid rgba(30,28,25,0.55);
+  border-radius: 3px;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.75), inset 0 1px 0 rgba(255,255,255,0.75);
+}
+
+/* Knobs: a knurled skirt that turns with a spun-aluminium cap, and a black pointer line */
+:root[data-theme="light"] .rotary-dial {
+  border: 1px solid var(--metal-edge);
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255,255,255,0.55), transparent 58%),
+    radial-gradient(circle closest-side, transparent 80%, rgba(0,0,0,0.3) 100%),
+    repeating-conic-gradient(#5a5852 0 4deg, #e6e4df 4deg 8deg);
+  box-shadow: 0 3px 5px rgba(40,32,22,0.45), 0 1px 1px rgba(0,0,0,0.35);
+}
+:root[data-theme="light"] .rotary-dial::before {
+  content: "";
+  position: absolute;
+  inset: 17%;
+  border-radius: 50%;
+  background: var(--spun);
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.35), inset 0 1px 1px rgba(255,255,255,0.9);
+}
+:root[data-theme="light"] .rotary-dial .dial-marker { z-index: 1; top: 20%; height: 28%; width: 2px; }
+
+/* Push buttons: round spun-metal caps; the rocker a brushed bar */
+:root[data-theme="light"] .push-btn {
+  background: var(--spun);
+  border: 1px solid var(--metal-edge);
+  box-shadow: var(--cap-lift), inset 0 0 0 2px rgba(255,255,255,0.35);
+}
+:root[data-theme="light"] .push-btn:active, :root[data-theme="light"] .push-btn.pressed { box-shadow: var(--cap-pressed); }
+:root[data-theme="light"] .rocker { border: 1px solid var(--metal-edge); border-radius: 4px; box-shadow: var(--cap-lift); }
+:root[data-theme="light"] .rocker-btn { background: var(--brushed), linear-gradient(180deg, #f8f7f4, #c6c4be); box-shadow: inset 0 1px 0 rgba(255,255,255,0.8); }
+:root[data-theme="light"] .rocker-btn:active, :root[data-theme="light"] .rocker-btn.pressed { background: var(--brushed), linear-gradient(180deg, #c6c4be, #e8e7e3); box-shadow: inset 0 1px 3px rgba(0,0,0,0.4); }
+:root[data-theme="light"] .btn-led { box-shadow: inset 0 1px 1px rgba(0,0,0,0.7); }
+
+/* The power switch: a chrome lever in a black slot; red when it's on */
+:root[data-theme="light"] .power-switch { box-shadow: inset 0 2px 3px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.75); }
+:root[data-theme="light"] .switch-knob { box-shadow: 0 1px 2px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.9); }
+
+/* The display window: black glass and a blue glow, like a tuning dial */
+:root[data-theme="light"] #station-block {
+  border-color: #000;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.9), 0 0 0 2px #e9e8e4, 0 0 0 3px #7d7a73, 0 2px 0 3px rgba(255,255,255,0.6);
+}
+/* with a tuning scale along the bottom of the glass, lit when the set is on */
+:root[data-theme="light"] #station-block { position: relative; padding-bottom: 8px; }
+:root[data-theme="light"] #station-block::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 2px;
+  height: 5px;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(90deg, currentColor 0 1px, transparent 1px 36px) bottom / 100% 5px no-repeat,
+    repeating-linear-gradient(90deg, currentColor 0 1px, transparent 1px 6px) bottom / 100% 2px no-repeat;
+  color: var(--badge-ink-off);
+  opacity: 0.6;
+  transition: color 0.3s, opacity 0.3s;
+}
+:root[data-theme="light"] #tv-body.powered-on #station-block::after { color: var(--badge-ink); opacity: 0.55; filter: drop-shadow(0 0 2px rgba(80,190,255,0.8)); }
+:root[data-theme="light"] #source-badge,
+:root[data-theme="light"] #tv-body.powered-on .station-text,
+:root[data-theme="light"] #listeners { text-shadow: var(--badge-glow); }
+
+/* The key bank: aluminium keys in a black slot; the key that is down lights its legend blue */
+:root[data-theme="light"] #key-bank { box-shadow: inset 0 1px 3px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.75); }
+:root[data-theme="light"] .bank-key {
+  background: var(--brushed), linear-gradient(180deg, #fbfaf8 0%, #dcdad5 55%, #c2c0ba 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 3px 0 var(--cap-seam), 0 4px 4px rgba(0,0,0,0.5);
+}
+:root[data-theme="light"] .bank-key.down {
+  background: var(--brushed), linear-gradient(180deg, #c2c0ba 0%, #e4e3df 100%);
+  color: #0b4f8f;
+  text-shadow: 0 0 5px rgba(90,200,255,0.9);
 }
 
 /* --- Kiosk (?kiosk): no TV body, the picture fills the window; keyboard and swipe still work --- */
@@ -932,7 +1057,7 @@ body.chat-open:not(.kiosk) #chalkboard {
   background: linear-gradient(#4f4a44 0 55%, #d9d3c3 55% 100%); box-shadow: 0 1px 2px rgba(0,0,0,0.6); }
 
 /* The CHAT button's LED: lit while the board is open, like HOLD's; blinks for new lines while it is closed */
-#chatBtn.unread .btn-led { background: #ffaa00; box-shadow: 0 0 6px rgba(255,170,0,0.9); }
+#chatBtn.unread .btn-led { background: var(--lamp); box-shadow: var(--lamp-glow); }
 body:not(.reduced-motion) #chatBtn.unread .btn-led { animation: cb-blink 1.6s ease-in-out infinite; }
 @keyframes cb-blink { 50% { opacity: 0.45; } }
 

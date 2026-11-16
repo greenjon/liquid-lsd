@@ -17,7 +17,7 @@ import { scheduleState, refreshSchedule, setShows, groupByDay, upcoming, parsePl
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v45';
+export const TV_VERSION = 'v46';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -40,7 +40,7 @@ export const viewerState = {
   bgMode: 'hold',      // BG CHANGES: 'scenes' (every 2x TIME), 'hold' (the default: the photo gallery stays), 'off'
   effects: true,       // EFFECTS: AUTO (true) or OFF
   follow: true,        // FOLLOW MUSIC: breakdowns and drops pick the scene
-  theme: 'dark',       // THEME: the cabinet and the room, 'dark' or 'light' (tv.css)
+  theme: 'light',      // THEME: the cabinet and the room, 'dark' or 'light' (tv.css)
   reducedNow: false,   // reduced motion in effect (updated by applyReduced; the renderer reads it)
   /** Reduced motion as the setting and the system ask for it now. */
   get reduced() {
@@ -65,8 +65,8 @@ const STREAM_MOUNT = '/radio.ogg';
 // header, so the TV reads its JSONP copy (as spaz.org/radio does) and tries fetch() only if that fails.
 const PLAYING_URL = 'https://radio.spaz.org/playing';
 const PLAYING_RETRY_MS = 10 * 60 * 1000; // a failed read waits this long, or for the next power-on
-// THEME: the browser's own bar matches the cabinet (index.html sets a saved light theme before the first paint).
-const THEME_BAR = { dark: '#2a2520', light: '#d6ccb6' };
+// THEME: the browser's own bar matches the cabinet (index.html sets the theme before the first paint).
+const THEME_BAR = { dark: '#2a2520', light: '#d3d1cb' };
 
 // Per-viewer conveniences; the TV works the same without storage.
 function load(key, fallback) {
@@ -496,7 +496,7 @@ export function initUI() {
   viewerState.bgMode = BG_MODES.includes(load('lsd.bgMode', 'hold')) ? load('lsd.bgMode', 'hold') : 'hold';
   viewerState.effects = load('lsd.effects', true) !== false;
   viewerState.follow = load('lsd.follow', true) !== false;
-  viewerState.theme = load('lsd.theme', 'dark') === 'light' ? 'light' : 'dark';
+  viewerState.theme = load('lsd.theme', 'light') === 'dark' ? 'dark' : 'light';
   const paintTheme = () => {
     document.documentElement.setAttribute('data-theme', viewerState.theme);
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_BAR[viewerState.theme]);
@@ -603,7 +603,7 @@ export function initUI() {
         help: 'The picture and its on-screen display fill the screen. Double-click the picture or press F to toggle; Esc leaves.' },
       ...(kiosk ? [] : [{ label: 'THEME', value: () => viewerState.theme.toUpperCase(),
         step: () => applyTheme(viewerState.theme === 'dark' ? 'light' : 'dark'),
-        help: 'The TV’s cabinet and the room around it: dark (the default) or light. The picture is the same in both.' }]),
+        help: 'The TV’s cabinet and the room around it: light, a 1970s hi-fi in brushed aluminium and walnut (the default), or dark plastic. The picture is the same in both.' }]),
       { label: 'ANNOUNCE SCENES', value: () => onOff(viewerState.announce),
         step: () => { viewerState.announce = !viewerState.announce; save('lsd.announce', viewerState.announce); },
         help: 'Show the name of each new scene, its background and its effects when it comes on, and the background when it changes. Off: only when you click the picture (or turn INFO on).' },
@@ -624,7 +624,7 @@ export function initUI() {
         viewerState.heavyMode = 'auto'; save('lsd.heavy', 'auto'); applyHeavy();
         viewerState.announce = false; save('lsd.announce', false);
         applyEq(EQ_FLAT);
-        if (!kiosk) applyTheme('dark');
+        if (!kiosk) applyTheme('light');
         if (!live()) {
           reactDial.set(toDial(REACT_DEFAULT)); timeDial.set(TIME_STEPS.indexOf(16) / (TIME_STEPS.length - 1));
           applyAutoRoll(0); applyBgMode('hold'); applyEffects(true); applyFollow(true);

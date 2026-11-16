@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Web TV: The Light Theme Is a Hi-Fi Receiver, and the Default (`web/tv.css`, `web/ui.js`, `web/index.html`, `web/manifest.webmanifest`)
+- **Changed: MENU › THEME › LIGHT now dresses the TV as a 1970s hi-fi receiver** instead of an almond cabinet. A brushed-aluminium faceplate sits in a walnut case, the picture behind black glass in a chrome bezel. The knobs are knurled with spun-aluminium caps and a black pointer, the buttons are round metal caps, the channel rocker and the piano keys are brushed aluminium, and the lettering is engraved black. The scene controls sit inside a printed rule, as on a faceplate. The display window is black glass with blue-lit text and a tuning scale along its bottom. The lights on HOLD, CHAT and TAPES, and the legend of the key that is down, glow blue. The chat's blackboard gets a walnut frame to match the case. All the controls are where they were, the dark theme is unchanged, and the picture looks the same in both.
+- **Changed: light is now the default theme.** A viewer who picked DARK keeps it; RESET now goes back to light (TV v46).
+
 ### Web TV: No LIVE Button, Info on Hover (`web/index.html`, `web/tv.css`, `web/ui.js`, `web/tapedeck.js`)
 - **Changed: pointing at the picture shows the info lines**, and on a tape the strip with EJECT, as clicking it did. They go a few seconds after the mouse stops. On a phone, tap as before.
 - **Removed: the LIVE button.** It only took a tape out, which EJECT on the strip (and `L`) already does, and "LIVE" lit up over the jukebox was misleading. When a live show starts during a tape, the `TAPE` box now pulses red and the strip comes up with `LIVE NOW: <name> · EJECT OR L`.
