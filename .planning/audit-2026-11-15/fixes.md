@@ -66,3 +66,7 @@ App checklist:
 7. FX list, 3 selected: press one, move off, release, click elsewhere: selection stays.
 8. FX/Transitions row tooltips unchanged. 9. Stock chain loads clean; editing a Metaknob link makes it dirty.
 10. BG Queue Export/Clear tooltips say "BG Queue".
+
+## F4 (branch worktree-agent-a0dad83c34e570cb8, 9296d08 + f0caa3b) — all 7 bugs fixed, 0 false positives; TV v47
+Partly: L6-12 (worklet + loadTape + evalCtx done), L6-13 (shared request done; Content-Type is the spaz.org admin's). Relay fix needs a server deploy.
+Playwright chromium+firefox before 45 pass / 2 fail, after 48 / 0. node web/tools 532/532 (viewer_controls, content skipped as long; chat, mqtt hang on HEAD too).

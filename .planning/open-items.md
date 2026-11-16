@@ -52,3 +52,14 @@ From the 2026-10-04 naming sweep, the decisions never made:
 - Compost (v1.2, no milestone): the expanded FX chain view; the Mandala v2+ Recipe Vault; a free-knob Global row; discrete-parameter items 4 and 5 (momentary trigger buttons, controller detents); flame variations `super_shape`, `lazysusan`, `mobius`; patchable transitions/splitters and a Faceplate Designer.
 - Rejected: our own clean-room Twister firmware (native mode uses the user-flashed XT hex); the Deck A single-row and one-line deck-row experiments; restoring the last Edit module on every exit (backlog item 9, option C); modular rack chassis phases 5 and 7-9.
 - Library management, not doing (v1.1 or never): ratings, play counts, BPM/key analysis, Auto DJ, multiple library roots, smart crates, sortable columns.
+
+## Left open by the 2026-11-15 audit
+
+Report: `.planning/audit-2026-11-15.md` (lane files in `.planning/audit-2026-11-15/`).
+- Still on Thread 0: `AppPreferencesStore.savePreferences` (autosave line), `MacroBankSerializer` saves, the three export-queue-as-playlist modals, reading a dropped `.lsdplay`; offline-export ffmpeg decode (L1a-11); audio device change sleeps/opens on Thread 0 (L1a-12).
+- Per-frame allocation in Spout/Syphon/YUY2 input (L1a-8); web graph.js, gallery.js, delay line, FrameTransient (L6-12 rest).
+- Legacy `.json` presets are not re-linked on session restore (L1a-10 rest).
+- `presets/` still imports `UITheme`, `ToastOverlay`, `FileSystemManager`, `BrowseFavorites` from `ui/` (rule written as it stands; L2-15).
+- Relay fix (L6-1) needs a `server/server.js` deploy to the spaz.org VPS; `streams/playing-jsonp` should be served as `text/javascript` (spaz.org admin, L6-13).
+- Proposed checks not built: layering ratchet for every package (L2-24; macro/ ↛ ui/ is now enforced), no theme forks/literals (L2-25), doc identifiers exist (L2-26), thread inventory (L2-27), stock-set and profile claims (L2-28..30), `checkWebSync` in the build + WebSyncTest covering catalog.json and mandala_recipes.json (L6-15).
+- Owner decisions: section E of the report (notes entry points L4-9, README themes L4-16, unused screenshots L4-20, tour re-render L4-22, web tempo golden vectors L6-14, licensing L7-1..6, 10, 11, 13, 14, and the "To confirm" ledger rows).

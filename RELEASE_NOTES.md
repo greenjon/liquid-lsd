@@ -1,5 +1,15 @@
 ## [Unreleased]
 
+### Web TV: Audit Fixes, November 2026 (`web/autopilot.js`, `web/beatclock.js`, `web/sync.js`, `web/renderer.js`, `web/ui.js`, `web/embed.js`, `server/server.js`)
+- **Fixed: after a live broadcast ended, the TV kept the broadcaster's mix**, effects and background. It now goes back to its own scenes.
+- **Fixed: a broadcaster that reconnected knocked viewers off the live show.**
+- **Fixed: a scene that couldn't be loaded went on air as a plain mandala under its name.** It is now skipped for a minute.
+- **Fixed: after the graphics card reset, the picture stayed black until a reload.** The page now reloads by itself.
+- **Fixed: turning the TV off right after turning it on could keep the screen awake.**
+- **Fixed: SYNC settings under about 120 ms did nothing during live broadcasts.**
+- **Fixed: the picture's hover hint said S for fullscreen**; it is F.
+- **Fixed (apps): an app could start with an empty background list.** The catalog now says when it is complete (TV v47).
+
 ### Audit Fixes, November 2026 (`export/RealtimeRecorder.kt`, `rendering/pipewire/`, `rendering/TextureReceiver.kt`, `audio/BeatTrackerEngine.kt`, `utils/AtomicFile.kt`, `presets/LibraryIo.kt`, `ui/browser/`, `ui/CustomRangeSlider.kt`, `rendering/SourceDocRegistry.kt`)
 - **Fixed: quitting while a recording was still being saved froze the app.** The recording and your session are now saved as normal.
 - **Fixed: Linux PipeWire video output could show a torn frame**, and could crash when the output size changed or the output was turned off.
