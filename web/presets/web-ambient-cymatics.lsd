@@ -23,7 +23,7 @@
           "dcOffset": 0.035,
           "waveform": "SINE",
           "genUnit": "BEAT",
-          "subdivision": 48.0,
+          "subdivision": 24.0,
           "slope": 0.5,
           "phaseOffset": 0.0
         }
@@ -42,17 +42,24 @@
           "dcOffset": 0.035,
           "waveform": "SINE",
           "genUnit": "BEAT",
-          "subdivision": 64.0,
+          "subdivision": 32.0,
           "slope": 0.5,
           "phaseOffset": 0.0
         }
       ]
     },
     "PitchFollow": {
-      "baseValue": 0.0,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
+      "baseValue": 0.4,
+      "baseMin": 0.25,
+      "baseMax": 0.55,
+      "randomizeBase": true,
+      "modulators": []
+    },
+    "PitchRange": {
+      "baseValue": 0.3,
+      "baseMin": 0.15,
+      "baseMax": 0.45,
+      "randomizeBase": true,
       "modulators": []
     },
     "ModeMix": {
@@ -173,7 +180,7 @@
     "bar",
     "amp"
   ],
-  "presetNotes": "A six-fold water dish in soft colour; the rings change every 12-16 bars, slowly dissolving and resettling.",
+  "presetNotes": "A six-fold water dish in soft colour; the rings change every few bars and drift with the melody, slowly dissolving and resettling.",
   "globalAlpha": {
     "baseValue": 1.0,
     "baseMin": 0.0,

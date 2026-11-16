@@ -1,6 +1,6 @@
 # Chladni Cymatics rewrite
 
-**Status 2026-11-15: rewrite shipped e9cbbee (TV v40); Pitch Follow implemented, uncommitted. Shader, stock default, 5 web presets, docs, tooltips, checklist done; render-checked on the web; gpu_bench.mjs hangs in this environment (Firefox never reports), so GPU cost is unmeasured.**
+**Status 2026-11-15: rewrite shipped e9cbbee (TV v40); Pitch Follow 7516ac8 (TV v42); Pitch Range + faster mode changes uncommitted. Shader, stock default, 5 web presets, docs, tooltips, checklist done; render-checked on the web; gpu_bench.mjs hangs in this environment (Firefox never reports), so GPU cost is unmeasured.**
 
 Goal: replace the "spongey sameness" with the geometric variety of real plates and water cymatics.
 Prototype renders (numpy port, session scratchpad): current vs proto contact sheets, 2026-11-15.
@@ -59,3 +59,9 @@ A new peak must beat the current one by 0.08 (6 dB); 187 Hz - 3.5 kHz; +3 dB/oct
 sqrt(pitch/440) (Chladni's law). Tuned offline on 5 tracks (numpy sim of SpectrumAnalyzer): 15-30 target
 changes/min, holds 2-3 s; a plain argmax gave 500-1000/min. Option 2 (every mode driven by its spectral
 energy) rejected: broadband music makes the mush we just removed.
+
+## More shape changes (2026-11-15, after user: "the shape doesn't change very often")
+Pitch Range input (exponent 0.5..1.5 on log2 pitch; default 0.5 -> x2 per octave), tracker 0.4 s / 4 dB
+(sim: settled mode changes 18 -> 27/min on the 5 tracks, and linear range makes each change a bigger jump),
+stock Mode M LFO 32 -> 8 beats at two modes, base modes raised (M 2..8, N 4..9) since notes under 440 Hz
+now shrink modes more; web presets: shorter mode LFOs, Pitch Follow on all five.

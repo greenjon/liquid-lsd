@@ -65,6 +65,13 @@
       "randomizeBase": true,
       "modulators": []
     },
+    "PitchRange": {
+      "baseValue": 0.7,
+      "baseMin": 0.55,
+      "baseMax": 0.85,
+      "randomizeBase": true,
+      "modulators": []
+    },
     "ModeMix": {
       "baseValue": -0.5,
       "baseMin": -0.75,

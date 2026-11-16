@@ -11,9 +11,9 @@
       "modulators": []
     },
     "FrequencyM": {
-      "baseValue": 3,
-      "baseMin": 2.0,
-      "baseMax": 4.0,
+      "baseValue": 4,
+      "baseMin": 2.5,
+      "baseMax": 5.5,
       "randomizeBase": true,
       "modulators": [
         {
@@ -28,9 +28,9 @@
       ]
     },
     "FrequencyN": {
-      "baseValue": 5,
-      "baseMin": 3.0,
-      "baseMax": 7.0,
+      "baseValue": 6,
+      "baseMin": 3.75,
+      "baseMax": 8.25,
       "randomizeBase": true,
       "modulators": [
         {
@@ -40,13 +40,20 @@
           "dcOffset": 0.035,
           "waveform": "SQUARE",
           "genUnit": "BEAT",
-          "subdivision": 16.0,
+          "subdivision": 8.0,
           "slope": 0.5,
           "phaseOffset": 0.0
         }
       ]
     },
     "PitchFollow": {
+      "baseValue": 0.6,
+      "baseMin": 0.45,
+      "baseMax": 0.75,
+      "randomizeBase": true,
+      "modulators": []
+    },
+    "PitchRange": {
       "baseValue": 0.6,
       "baseMin": 0.45,
       "baseMax": 0.75,
@@ -182,7 +189,7 @@
     "bass",
     "kick"
   ],
-  "presetNotes": "A square plate: loud bass climbs the modes, the pattern jumps every eight beats and kicks throw the sand.",
+  "presetNotes": "A square plate: loud bass and held notes climb the modes, the pattern jumps every four beats and kicks throw the sand.",
   "globalAlpha": {
     "baseValue": 1.0,
     "baseMin": 0.0,

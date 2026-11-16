@@ -306,12 +306,12 @@ preset("web-gyroid-flight", "gyroid_hyperspace", {
     "A wireframe lattice you fly through: flight speed follows overall loudness, the core flashes on kicks, the cell size drifts over four bars.")
 
 preset("web-cymatics-sub", "chladni_cymatics", {
-    "PlateShape": 0.0, "FrequencyM": (3, bass(0.14, 60, 600)), "FrequencyN": (5, lfo(16, 0.07, wave="SQUARE")),
-    "PitchFollow": 0.6, "ModeMix": (-0.5, lfo(32, 0.3)), "FrequencyL": 6, "ModeSnap": 0.85, "NodeSharpness": 0.22,
+    "PlateShape": 0.0, "FrequencyM": (4, bass(0.14, 60, 600)), "FrequencyN": (6, lfo(8, 0.07, wave="SQUARE")),
+    "PitchFollow": 0.6, "PitchRange": 0.6, "ModeMix": (-0.5, lfo(32, 0.3)), "FrequencyL": 6, "ModeSnap": 0.85, "NodeSharpness": 0.22,
     "SandAccumulation": (0.95, kick(-0.35, 250)), "VibrationSpeed": 0.15, "InvertMode": 0.0,
     "Glow": (0.35, kick(0.5, 200)), "PaletteMode": 0.0, "HueOffset": (0.0, lfo(24, 1.0)), "Scale": 0.5,
 }, ["beat", "bar", "bass", "kick"],
-    "A square plate: loud bass climbs the modes, the pattern jumps every eight beats and kicks throw the sand.")
+    "A square plate: loud bass and held notes climb the modes, the pattern jumps every four beats and kicks throw the sand.")
 
 preset("web-celestial-pulse", "celestial_engine", {
     "Symmetries": (6, lfo(16, 0.25, wave="SQUARE")), "RingDensity": (0.26, lfo(8, 0.2)),
@@ -398,12 +398,12 @@ preset("web-gyroid-solid", "gyroid_hyperspace", {
     "Thick-walled caves instead of a lattice; the walls swell with the bass and the core glows on kicks.")
 
 preset("web-cymatics-rings", "chladni_cymatics", {
-    "PlateShape": 1.0, "FrequencyM": (1, lfo(32, 0.14, wave="SQUARE")), "FrequencyN": (6, mid(0.07, 60, 500)),
-    "PitchFollow": 1.0, "ModeMix": (0.0, lfo(16, 0.2)), "FrequencyL": 6, "ModeSnap": 0.8, "NodeSharpness": (0.25, hat(-0.1)),
+    "PlateShape": 1.0, "FrequencyM": (1, lfo(16, 0.14, wave="SQUARE")), "FrequencyN": (6, mid(0.07, 60, 500)),
+    "PitchFollow": 1.0, "PitchRange": 0.5, "ModeMix": (0.0, lfo(16, 0.2)), "FrequencyL": 6, "ModeSnap": 0.8, "NodeSharpness": (0.25, hat(-0.1)),
     "SandAccumulation": 0.9, "VibrationSpeed": 0.1, "InvertMode": 0.0, "Glow": (0.5, kick(0.4, 200)),
     "PaletteMode": 2.0, "HueOffset": (0.0, lfo(30, 1.0)), "Scale": 0.55,
 }, ["beat", "bar", "mid", "high", "kick"],
-    "A round plate in prismatic colour: every sixteen beats its rings gain diameters, mids ring a mode higher, hats thin the lines.")
+    "A round plate in prismatic colour: every eight beats its rings gain diameters, held notes change the ring count, mids ring a mode higher, hats thin the lines.")
 
 preset("web-celestial-bloom", "celestial_engine", {
     "Symmetries": (12, lfo(32, 0.2, wave="SQUARE")), "RingDensity": (0.55, lfo(12, 0.15)),
@@ -456,12 +456,12 @@ preset("web-mandala-heart", "mandala", {
 # ambient: only slow LFOs (>= 8 beats) and amp/mid followers, no gates or flux; groove: beat + mid + bass;
 # hard: kick/hat flux, gates, sub-beat pulses. reactivity.test.mjs enforces the ambient rules.
 preset("web-ambient-cymatics", "chladni_cymatics", {
-    "PlateShape": 2.0, "FrequencyM": (4, lfo(48, 0.07)), "FrequencyN": (7, lfo(64, 0.07)),
-    "PitchFollow": 0.0, "ModeMix": (-0.3, lfo(96, 0.4)), "FrequencyL": 6, "ModeSnap": 0.6, "NodeSharpness": 0.2,
+    "PlateShape": 2.0, "FrequencyM": (4, lfo(24, 0.07)), "FrequencyN": (7, lfo(32, 0.07)),
+    "PitchFollow": 0.4, "PitchRange": 0.3, "ModeMix": (-0.3, lfo(96, 0.4)), "FrequencyL": 6, "ModeSnap": 0.6, "NodeSharpness": 0.2,
     "SandAccumulation": 0.9, "VibrationSpeed": 0.08, "InvertMode": 0.0, "Glow": (0.35, amp(0.2, 200, 1500)),
     "PaletteMode": 1.0, "HueOffset": (0.0, lfo(96, 1.0)), "Scale": 0.55,
 }, ["ambient", "bar", "amp"],
-    "A six-fold water dish in soft colour; the rings change every 12-16 bars, slowly dissolving and resettling.")
+    "A six-fold water dish in soft colour; the rings change every few bars and drift with the melody, slowly dissolving and resettling.")
 
 preset("web-ambient-nebula", "celestial_engine", {
     "Symmetries": 8, "RingDensity": (0.35, lfo(32, 0.15)), "PhaseTwist": (0.15, lfo(48, 0.4)),
@@ -512,7 +512,7 @@ preset("web-groove-spiral", "dynamic_spiral", {
 
 preset("web-hard-cymatics", "chladni_cymatics", {
     "PlateShape": (0.0, lfo(8, 1.0, wave="SQUARE")), "FrequencyM": (5, kick(0.07, 150)),
-    "FrequencyN": (5, lfo(4, 0.07, wave="SQUARE")), "PitchFollow": 0.6, "ModeMix": (-0.5, lfo(8, 0.3)), "FrequencyL": 8,
+    "FrequencyN": (5, lfo(4, 0.07, wave="SQUARE")), "PitchFollow": 0.6, "PitchRange": 0.7, "ModeMix": (-0.5, lfo(8, 0.3)), "FrequencyL": 8,
     "ModeSnap": 1.0, "NodeSharpness": (0.3, hat(-0.12)), "SandAccumulation": (1.0, kick(-0.4, 200)),
     "VibrationSpeed": 0.25, "InvertMode": (0.0, gate("audio_bass", 0.6, 1.0, 5, 120)),
     "Glow": (0.4, kick(0.5, 150)), "PaletteMode": 3.0, "HueOffset": (0.0, lfo(8, 1.0)), "Scale": 0.5,
@@ -571,11 +571,11 @@ preset("web-mid-marble", "domain_warp_fluid", {
     "Marbling that swirls and cycles colour only while the mids play.")
 
 preset("web-mid-lace", "chladni_cymatics", {
-    "PlateShape": 0.0, "FrequencyM": 4, "FrequencyN": (4, mid(0.2, 80, 500)), "PitchFollow": 0.8, "ModeMix": (0.25, mid(0.2)),
+    "PlateShape": 0.0, "FrequencyM": (5, lfo(8, 0.07)), "FrequencyN": (4, mid(0.2, 80, 500)), "PitchFollow": 0.8, "PitchRange": 0.6, "ModeMix": (0.25, mid(0.2)),
     "FrequencyL": 6, "ModeSnap": 0.7, "NodeSharpness": 0.25, "SandAccumulation": 0.9, "VibrationSpeed": 0.1,
     "InvertMode": 0.0, "Glow": (0.3, mid(0.5)), "PaletteMode": 2.0, "HueOffset": (0.0, mid(0.3, 80, 800)), "Scale": 0.5,
-}, ["mid"],
-    "A plate whose pattern gets more complex as the mids get louder.")
+}, ["bar", "mid"],
+    "A plate whose pattern gets more complex as the mids get louder, steps a mode every few beats and follows the melody.")
 
 preset("web-build-drop-fluid", "domain_warp_fluid", {
     "WarpStrength": (0.0, gate("audio_bass", 0.6, 1.0)), "Swirl": (0.1, ramp(32, 0.7)),

@@ -17,6 +17,7 @@ precision highp float;
         { "NAME": "FrequencyM", "LABEL": "Mode M", "TYPE": "float", "DEFAULT": 3.0, "MIN": 1.0, "MAX": 16.0 },
         { "NAME": "FrequencyN", "LABEL": "Mode N", "TYPE": "float", "DEFAULT": 5.0, "MIN": 1.0, "MAX": 16.0 },
         { "NAME": "PitchFollow", "LABEL": "Pitch Follow", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 1.0 },
+        { "NAME": "PitchRange", "LABEL": "Pitch Range", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "ModeMix", "LABEL": "Mode Mix", "TYPE": "float", "DEFAULT": -0.5, "MIN": -1.0, "MAX": 1.0 },
         { "NAME": "FrequencyL", "LABEL": "Symmetry", "TYPE": "float", "DEFAULT": 6.0, "MIN": 3.0, "MAX": 12.0, "STEP": 1 },
         { "NAME": "ModeSnap", "LABEL": "Mode Snap", "TYPE": "float", "DEFAULT": 0.8, "MIN": 0.0, "MAX": 1.0 },
@@ -40,6 +41,7 @@ precision highp float;
 // Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
 #define NodeSharpness_ (0.002+NodeSharpness*0.026)
 #define ModeMix_ (ModeMix*1.5707963)
+#define PitchRange_ (0.5+PitchRange)   // modes per octave as a power of 2: 0.5 = x1.41 (real plate), 1 = x2, 1.5 = x2.83
 #define Glow_ (Glow*3.0)
 #define Scale_ (Scale<0.5?pow(0.2,1.0-2.0*Scale):pow(4.0,2.0*Scale-1.0))
 
@@ -63,9 +65,9 @@ const float PLATE_R = 0.48;   // plate half-size at Scale 1x, in screen heights
 const float BIN_HZ = 46.875;      // 512 bins over 24 kHz (48 kHz audio)
 const int KLO = 4;                // 187 Hz
 const int KHI = 75;               // 3.5 kHz
-const float HOLD_TAU = 0.6;       // seconds a bin's level is smoothed over
+const float HOLD_TAU = 0.4;       // seconds a bin's level is smoothed over
 const float GLIDE_TAU = 0.08;     // seconds to glide to a new peak
-const float MARGIN = 0.08;        // a new peak must beat the current one by this (0..1 = -80..0 dB)
+const float MARGIN = 0.05;        // a new peak must beat the current one by this, 4 dB (0..1 = -80..0 dB)
 const float TILT = 3.0 / 80.0;    // +3 dB per octave, so a melody isn't outshouted by its own low partials
 const float MIN_LEVEL = 0.3;      // quieter than -56 dB: no pitch, hold the last one
 
@@ -218,7 +220,7 @@ void main() {
     float win = mix(1.0, 0.06, ModeSnap);
     vec4 ps = texture(pitchState, vec2(0.5));
     float pitchOct = ps.a > 0.5 ? dec16(ps.gb) * 5.0 - 2.0 : 0.0;
-    float pitchScale = mix(1.0, exp2(0.5 * pitchOct), PitchFollow);
+    float pitchScale = mix(1.0, exp2(PitchRange_ * pitchOct), PitchFollow);
     float M = clamp(FrequencyM * pitchScale, 1.0, 16.0), N = clamp(FrequencyN * pitchScale, 1.0, 16.0);
     float m0 = floor(M), n0 = floor(N);
     float m1 = min(m0 + 1.0, 16.0), n1 = min(n0 + 1.0, 16.0);

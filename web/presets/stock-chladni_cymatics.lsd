@@ -12,8 +12,8 @@
   },
   "FrequencyM": {
    "baseValue": 3.0,
-   "baseMin": 1.0,
-   "baseMax": 7.0,
+   "baseMin": 2.0,
+   "baseMax": 8.0,
    "randomizeBase": true,
    "modulators": [
     {
@@ -21,9 +21,9 @@
      "operator": "ADD",
      "waveform": "SINE",
      "genUnit": "BEAT",
-     "subdivision": 32,
-     "depth": 0.035,
-     "dcOffset": 0.035
+     "subdivision": 8,
+     "depth": 0.07,
+     "dcOffset": 0.07
     },
     {
      "sourceId": "audio_bass",
@@ -49,17 +49,17 @@
   },
   "FrequencyN": {
    "baseValue": 5.0,
-   "baseMin": 3.0,
-   "baseMax": 8.0,
+   "baseMin": 4.0,
+   "baseMax": 9.0,
    "randomizeBase": true,
    "modulators": [
     {
      "sourceId": "lfo",
      "operator": "ADD",
      "bypassed": true,
-     "waveform": "SINE",
+     "waveform": "SQUARE",
      "genUnit": "BEAT",
-     "subdivision": 64,
+     "subdivision": 16,
      "depth": 0.035,
      "phaseOffset": 0.25,
      "dcOffset": 0.035
@@ -79,6 +79,13 @@
    "randomizeBase": true,
    "modulators": []
   },
+  "PitchRange": {
+   "baseValue": 0.5,
+   "baseMin": 0.4,
+   "baseMax": 0.7,
+   "randomizeBase": true,
+   "modulators": []
+  },
   "ModeMix": {
    "baseValue": -0.5,
    "baseMin": -0.9,
@@ -90,7 +97,7 @@
      "operator": "ADD",
      "waveform": "SINE",
      "genUnit": "BEAT",
-     "subdivision": 64,
+     "subdivision": 32,
      "depth": 0.08,
      "dcOffset": 0.0
     }

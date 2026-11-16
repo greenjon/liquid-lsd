@@ -8,20 +8,20 @@
       "baseMax": 2
     },
     "FrequencyM": {
-      "note": "Mode M climbs to the next whole mode and back over 32 beats; the sand scatters and resettles at each step. Bass climbing a mode and kicks jumping one are off by default.",
+      "note": "Mode M climbs two whole modes and back every 8 beats; the sand scatters and resettles at each step. Bass climbing a mode and kicks jumping one are off by default.",
       "randomizeBase": true,
-      "baseMin": 1,
-      "baseMax": 7,
+      "baseMin": 2,
+      "baseMax": 8,
       "modulators": [
         {
-          "name": "sine 32-beat",
+          "name": "sine 8-beat",
           "sourceId": "lfo",
           "operator": "ADD",
           "waveform": "SINE",
           "genUnit": "BEAT",
-          "subdivision": 32,
-          "depth": 0.035,
-          "dcOffset": 0.035
+          "subdivision": 8,
+          "depth": 0.07,
+          "dcOffset": 0.07
         },
         {
           "name": "bass climbs a mode",
@@ -46,19 +46,19 @@
       ]
     },
     "FrequencyN": {
-      "note": "Second mode number; a breakdown settles the plate into a simpler mode, louder passages excite higher ones. The 64-beat slide is off by default.",
+      "note": "Second mode number; a breakdown settles the plate into a simpler mode, louder passages excite higher ones. The 16-beat step is off by default.",
       "randomizeBase": true,
-      "baseMin": 3,
-      "baseMax": 8,
+      "baseMin": 4,
+      "baseMax": 9,
       "modulators": [
         {
-          "name": "sine 64-beat",
+          "name": "square 16-beat",
           "sourceId": "lfo",
           "operator": "ADD",
           "bypassed": true,
-          "waveform": "SINE",
+          "waveform": "SQUARE",
           "genUnit": "BEAT",
-          "subdivision": 64,
+          "subdivision": 16,
           "depth": 0.035,
           "phaseOffset": 0.25,
           "dcOffset": 0.035
@@ -77,19 +77,25 @@
       "baseMin": 0.6,
       "baseMax": 1
     },
+    "PitchRange": {
+      "note": "How far a note moves the modes: around x2 per octave, more than a real plate so melodies redraw the figure.",
+      "randomizeBase": true,
+      "baseMin": 0.4,
+      "baseMax": 0.7
+    },
     "ModeMix": {
-      "note": "The nodal lines bend slowly between the two paired modes over 64 beats.",
+      "note": "The nodal lines bend between the two paired modes over 32 beats.",
       "randomizeBase": true,
       "baseMin": -0.9,
       "baseMax": 0.9,
       "modulators": [
         {
-          "name": "sine 64-beat",
+          "name": "sine 32-beat",
           "sourceId": "lfo",
           "operator": "ADD",
           "waveform": "SINE",
           "genUnit": "BEAT",
-          "subdivision": 64,
+          "subdivision": 32,
           "depth": 0.08
         }
       ]

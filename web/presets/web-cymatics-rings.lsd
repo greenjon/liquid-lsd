@@ -23,7 +23,7 @@
           "dcOffset": 0.07,
           "waveform": "SQUARE",
           "genUnit": "BEAT",
-          "subdivision": 32.0,
+          "subdivision": 16.0,
           "slope": 0.5,
           "phaseOffset": 0.0
         }
@@ -51,6 +51,13 @@
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
+      "modulators": []
+    },
+    "PitchRange": {
+      "baseValue": 0.5,
+      "baseMin": 0.35,
+      "baseMax": 0.65,
+      "randomizeBase": true,
       "modulators": []
     },
     "ModeMix": {
@@ -183,7 +190,7 @@
     "high",
     "kick"
   ],
-  "presetNotes": "A round plate in prismatic colour: every sixteen beats its rings gain diameters, mids ring a mode higher, hats thin the lines.",
+  "presetNotes": "A round plate in prismatic colour: every eight beats its rings gain diameters, held notes change the ring count, mids ring a mode higher, hats thin the lines.",
   "globalAlpha": {
     "baseValue": 1.0,
     "baseMin": 0.0,
