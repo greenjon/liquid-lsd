@@ -924,7 +924,7 @@ val captureResponsiveApp = tasks.register<JavaExec>("captureResponsiveApp") {
     classpath = sourceSets["main"].runtimeClasspath
     mainClass.set("llm.slop.liquidlsd.MainKt")
     args = listOf(
-        "--screenshot-ui=docs/user_guide/assets/ui-desktop-1080p.png",
+        "--screenshot-ui=build/screenshots/ui-desktop-1080p.png",
         "--window=1920x1080",
         "--screenshot-after-frames=6",
         "--no-audio"
@@ -962,7 +962,7 @@ val captureUiLab = tasks.register<JavaExec>("captureUiLab") {
     mainClass.set("llm.slop.liquidlsd.MainKt")
     args = listOf(
         "--ui-lab",
-        "--screenshot-ui=docs/user_guide/assets/ui-lab-1080p.png",
+        "--screenshot-ui=build/screenshots/ui-lab-1080p.png",
         "--window=1280x720",
         "--screenshot-after-frames=6",
         "--no-audio"

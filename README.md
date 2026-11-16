@@ -47,7 +47,6 @@ The core v1.0 feature set is in place: the 100% ISF pipeline, the Performance ma
 - **UI & UX polish** across the Perform / Edit / Library views, down to the 1280×720 minimum screen size. This means the little details, but also includes deep overhauls if needed. We're going to keep pushing and pulling on the UI and UX until we love it.
 - **Stability testing**: long sessions, loading and swapping under load, session restore, device hot-plug.
 - **ISF binding audit**: every bundled ISF generator, filter and transition gets sensible default macro targets.
-- **Two polished themes.**
 
 ### v1.1 Backlog
 

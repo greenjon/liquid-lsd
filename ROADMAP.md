@@ -23,7 +23,6 @@ Liquid LSD is a real-time, audio-reactive procedural visual synthesizer and VJ p
 | **UI & UX Polish** | `ui/*` | **v1.0** | **ACTIVE** | Perform / Edit / Library views polished and verified at 1280×720. |
 | **Stability Testing** | all | **v1.0** | **ACTIVE** | Long sessions, load/swap under load, session restore, device hot-plug, 5 release platforms. |
 | **ISF Binding Audit** | `rendering/isf/*`, bundled shaders | **v1.0** | **ACTIVE** | Sensible Metaknob/auto-bind and default bindings verified for every bundled ISF. |
-| **Two Polished Themes** | `ui/UITheme.kt` | **v1.0** | **ACTIVE** | Two `UITheme.Theme` palettes dialed in as the supported v1.0 themes (TBD which). |
 | **Unified Control & Mapping** | `midi/*`, `shortcuts/*`, `ui/*` | **v1.1** | **PENDING** | Decoupled `CommandRegistry`, hardware controller profiles (`library/mappings/`), universal learn. |
 | **Session Scratchpad** | `notes/*`, `ui/*` | **v1.1** | **PENDING** | Standalone floating/docked notes scratchpad window (`~/.liquid-lsd/scratchpad.txt`). |
 | **Mandala v2+ Recipe Vault** | `sources/mandala/*`, `ui/*` | **v1.1** | **PENDING** | Visual recipe gallery popover with micro-previews, geometric style tagging, quick-slots. |
@@ -53,7 +52,6 @@ The feature set is frozen for v1.0. What remains is finishing and hardening, not
 - [ ] **UI & UX Polish**: layout, spacing, labels, tooltips and interaction flow across Perform / Edit / Library views, verified at the 1280×720 minimum screen size.
 - [ ] **Stability Testing**: long-running sessions, preset/chain/queue load and swap under load, session restore, device hot-plug (audio, MIDI, video ingest), across the 5 release platforms.
 - [ ] **ISF Binding Audit**: check the Metaknob/auto-bind result (`ISFAutoBindEngine`, the shipped defaults in `resources/stock_defaults/`) and default parameter bindings for **every** bundled ISF generator, filter and transition, so each one does something sensible out of the box.
-- [ ] **Two Polished Themes**: dial in two of the `UITheme.Theme` palettes as the supported v1.0 themes (which two is TBD).
 - [ ] **Linux Camera Input**: webcams appear under External video (PipeWire lists them as video nodes) but have never connected in testing. Suspect: `ExternalVideoDiscovery` names streams by `node.description`, and `PipeWireReceiverImpl` passes that as `target.object`, which PipeWire matches against `node.name` or `object.serial`. Until fixed, the user guide and the walkthrough do not mention cameras.
 
 ---

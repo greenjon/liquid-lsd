@@ -60,8 +60,8 @@ Screenshot capture is handled by `ScreenshotCapture`:
 ## 4. Gradle Tasks
 
 The build file `build.gradle.kts` defines two automated verification tasks:
-- `./gradlew captureResponsiveApp`: Renders full 1080p workspace screenshot to `docs/user_guide/assets/ui-desktop-1080p.png`.
-- `./gradlew captureUiLab`: Renders 720p UI Lab gallery screenshot to `docs/user_guide/assets/ui-lab-1080p.png`.
+- `./gradlew captureResponsiveApp`: Renders full 1080p workspace screenshot to `build/screenshots/ui-desktop-1080p.png` (not shipped).
+- `./gradlew captureUiLab`: Renders 720p UI Lab gallery screenshot to `build/screenshots/ui-lab-1080p.png` (not shipped).
 
 ## 5. Headless CI Integration (`xvfb`)
 
