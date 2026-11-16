@@ -6,7 +6,7 @@
 import { cvState, insertTape, ejectTape, setTapePaused, seekTape, tapeStatus } from './dsp.js';
 import { setTapeHold, stationAir } from './autopilot.js';
 import { scheduleState, upcoming } from './schedule.js';
-import { tapesState, setTapes, refreshTapes, restoreTapes, tapesStale, searchShows, randomShow, onThisDayQuery, formatClock, createResumeStore, fetchPeaks, appUrl } from './tapes.js';
+import { tapesState, setTapes, refreshTapes, restoreTapes, tapesStale, searchShows, randomShow, onThisDayQuery, formatClock, createResumeStore, fetchPeaks, appUrl, showForLink, tapeLinkUrl } from './tapes.js';
 
 const SAVE_EVERY_S = 10;
 const BUFFER_ROWS = 6;     // rows drawn beyond the visible ones
@@ -28,7 +28,7 @@ const iconBtn = (cls, text, title) => {
 };
 
 export function createTapeDeck({ page, strip, button, storage = null, isOn = () => true, powerOn = () => {}, reduced = () => false, stickyStrip = () => false,
-  message = () => {}, onOpen = () => {}, onChange = () => {} }) {
+  message = () => {}, onOpen = () => {}, onChange = () => {}, location = globalThis.location, clipboard = globalThis.navigator?.clipboard }) {
   const resume = createResumeStore(storage);
   let current = null;       // the show on the deck
   let airName = '';         // the live show on Spaz Radio, while a tape is in
@@ -205,10 +205,11 @@ export function createTapeDeck({ page, strip, button, storage = null, isOn = () 
   const backBtn = iconBtn('ts-back', '«30', 'Back 30 seconds (,)');
   const pauseBtn = iconBtn('ts-pause', '❚❚', 'Pause the tape (K)');
   const fwdBtn = iconBtn('ts-fwd', '30»', 'Forward 30 seconds (.)');
+  const linkBtn = iconBtn('ts-link', 'LINK', 'Copy a link to this moment of the show');
   const wave = el('canvas', 'ts-wave');
   wave.title = 'Click or drag to move through the show';
   const clock = el('span', 'ts-clock');
-  strip.append(ejectBtn, backBtn, pauseBtn, fwdBtn, wave, clock);
+  strip.append(ejectBtn, backBtn, pauseBtn, fwdBtn, wave, clock, linkBtn);
   let stripTimer = null;
 
   const length = () => current?.seconds || tapeStatus()?.duration || 0;
@@ -272,6 +273,7 @@ export function createTapeDeck({ page, strip, button, storage = null, isOn = () 
   backBtn.addEventListener('click', () => seekBy(-30));
   fwdBtn.addEventListener('click', () => seekBy(30));
   pauseBtn.addEventListener('click', () => togglePause());
+  linkBtn.addEventListener('click', () => copyLink());
 
   // --- The deck ---
   /** The TAPES light: a tape is in, or its list is open. With the TV off, only an open list lights it. */
@@ -282,11 +284,21 @@ export function createTapeDeck({ page, strip, button, storage = null, isOn = () 
     const status = tapeStatus();
     if (current && status) resume.set(current.id, status.pos, current.seconds);
   }
-  function insert(show, { fromStart = false } = {}) {
+  /**
+   * Puts [show] in: from where it was left ([fromStart]: from the top; [at]: from there) and, with [power], turns the
+   * TV on to play it. Without [power] and the TV off the tape waits for power-on, the click a browser needs for sound.
+   */
+  function insert(show, { fromStart = false, at = null, power = true } = {}) {
     if (!show) return;
-    if (current?.id === show.id) { close(); powerOn(); showStrip(); return; }
+    if (current?.id === show.id) {
+      if (at !== null) seekTo(at);
+      close();
+      if (power) powerOn();
+      showStrip();
+      return;
+    }
     save();
-    const startAt = fromStart ? 0 : resume.get(show.id);
+    const startAt = at !== null ? at : fromStart ? 0 : resume.get(show.id);
     current = show;
     peaks = null;
     fetchPeaks(show).then((levels) => { if (current === show) { peaks = levels; drawStrip(); } });
@@ -294,7 +306,7 @@ export function createTapeDeck({ page, strip, button, storage = null, isOn = () 
     if (!reduced()) cvState.glitchUntil = performance.now() + GLITCH_MS; // the picture rolls as the tape goes in
     insertTape(show.url, startAt);
     close();
-    powerOn(); // picked with the TV off: it comes on and starts the tape
+    if (power) powerOn(); // picked with the TV off: it comes on and starts the tape
     airName = currentAir(); // already on when the tape went in: the viewer chose this, so no announcement
     lights();
     saveIn = SAVE_EVERY_S;
@@ -338,6 +350,39 @@ export function createTapeDeck({ page, strip, button, storage = null, isOn = () 
     showStrip();
   }
 
+  /** A share link ({ id, at } from tapes.js parseTapeLink): cues that show at that moment, by its id alone when the kept show list doesn't have it yet. */
+  async function cueLink(link) {
+    if (!link) return;
+    await restoreTapes();
+    const show = showForLink(link.id, tapesState.shows);
+    insert(show, { at: link.at, power: false });
+    if (show.seconds) return;
+    // Not in the kept list: it plays from its id at once, and takes its proper name and length when the feed is in.
+    await refreshTapes();
+    const known = tapesState.shows.find((s) => s.id === link.id);
+    if (!known || current !== show) return;
+    Object.assign(show, known);
+    onChange(current);
+    drawStrip();
+  }
+  /** The share link for where the tape is now, or null with no tape in. */
+  function link() {
+    if (!current || !location) return null;
+    return tapeLinkUrl(location.href, current.id, tapeStatus()?.pos ?? 0);
+  }
+  /** LINK: the link to this moment on the clipboard; where there is no clipboard, in the address bar to copy from there. */
+  async function copyLink() {
+    const url = link();
+    if (!url) return;
+    showStrip();
+    try {
+      await clipboard.writeText(url);
+      message('LINK COPIED', 2000);
+    } catch {
+      try { history.replaceState(history.state, '', url); message('LINK IN THE ADDRESS BAR', 3000); } catch { message(url, 6000); }
+    }
+  }
+
   /** The live show on Spaz Radio now: a desktop broadcast, or the schedule's show on air. */
   function currentAir() {
     const scheduled = upcoming(scheduleState.shows, Date.now()).find((s) => s.onAir)?.name;
@@ -377,7 +422,7 @@ export function createTapeDeck({ page, strip, button, storage = null, isOn = () 
     get current() { return current; },
     get airName() { return airName; },
     get pageOpen() { return isOpen(); },
-    open, close, insert, eject, backToRadio, seekBy, seekTo, togglePause, save, showStrip, hideStrip,
+    open, close, insert, eject, backToRadio, seekBy, seekTo, togglePause, save, showStrip, hideStrip, cueLink, link, copyLink,
     /** The power or the input changed: the lights follow. */
     refreshLights: lights,
     toggle() { isOpen() ? close() : open(); },

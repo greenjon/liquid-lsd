@@ -3,6 +3,7 @@
 <title>LSD TAPES check</title>
 <iframe id="app" src="../index.html?nolive&nostatic" width="1100" height="760" style="border:0" allow="autoplay"></iframe>
 <script type="module">
+import { parseTapeLink } from '../tapes.js';
 // Drives the VCR in the real page (driven by tape_check.mjs). POSTs {results:[{name, ok, detail}]} to /report.
 const app = document.getElementById('app');
 const results = [];
@@ -231,6 +232,28 @@ try {
   check('RESUME picks up where it stopped', deck.current?.id === 'fixture-one' && audio.currentTime >= 5 && audio.currentTime < 9, audio.currentTime);
   check('...and says so', msg().startsWith('RESUMING AT') || msg() === 'END OF TAPE', msg());
   deck.eject();
+
+  // --- Share links (?tape=<id>&t=…): cued with the TV off, power-on plays from there ---
+  d.getElementById('powerSwitch').click();
+  await sleep(400);
+  await deck.cueLink(parseTapeLink('?tape=fixture-two&t=4s'));
+  check('A link cues its show and leaves the TV off', deck.current?.id === 'fixture-two' && !L.powerState.on, `${deck.current?.id} on=${L.powerState.on}`);
+  d.getElementById('powerSwitch').click();
+  await sleep(1500);
+  check('Power-on plays the linked show from the linked moment', onFixture() && !audio.paused && audio.currentTime >= 4 && audio.currentTime < 8, `${audio.currentTime} paused=${audio.paused}`);
+  deck.seekTo(6);
+  await sleep(300);
+  check('The link names the show and the moment', /[?&]tape=fixture-two&t=[67]s$/.test(deck.link()), deck.link());
+  check('The link drops the page options', !deck.link().includes('nolive'), deck.link());
+  deck.showStrip();
+  const linkBtn = strip.querySelector('.ts-link');
+  linkBtn?.click();
+  await sleep(300);
+  check('LINK copies it (or puts it in the address bar)', msg() === 'LINK COPIED' || msg() === 'LINK IN THE ADDRESS BAR', msg());
+  await deck.cueLink(parseTapeLink('?tape=../evil'));
+  check('A link that is not an archive name does nothing', deck.current?.id === 'fixture-two');
+  deck.eject();
+  w.history.replaceState(null, '', `${w.location.pathname}?nolive&nostatic`); // in case LINK fell back to the address bar
 
   // --- Help ---
   key('?');

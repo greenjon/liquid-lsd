@@ -131,6 +131,8 @@ To download shows and play them offline, use the Spaz Radio app for Android: the
 
 The picture follows the tape as it follows the radio, and the display reads `TAPE`. Point at or tap the picture for the transport strip along the bottom (INFO keeps it up): eject, 30 seconds back and forward, pause, and the show's waveform to click or drag. Keys: `K` or `Space` pause, `,` and `.` 30 seconds, `<` and `>` 5 minutes.
 
+**LINK** on the strip copies a link to this moment of the show, such as `https://spaz.org/tv/?tape=2026-06-19-Portland_s_Most_Unwanted&t=1h2m`. Whoever opens it gets the TV with that show cued at that point; turning the TV on plays it. (Where the browser won't copy, the link goes into the address bar to copy from there.) Leave `&t=…` off to start from the top; it also takes `72m`, `90s` or `1:12:03`.
+
 **EJECT** on the strip, or `L`, takes the tape out and goes back to the radio. The small light on the TAPES key is on while a tape is in or its list is open. If a live show starts during a tape, the tape keeps playing, the `TAPE` box pulses red, and `LIVE NOW: <name> · EJECT OR L` comes up once with the strip; a broadcast's picture does not take over until you go back. The chat stays on the live room, with a note on the board that you're on a tape.
 
 Your place in each show is remembered in this browser. Turning the TV off and on keeps the tape in; a reload starts on the radio, with RESUME in the list. At the end of a show, the TV goes back to the radio.

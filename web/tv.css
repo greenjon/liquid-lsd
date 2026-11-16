@@ -1183,7 +1183,7 @@ body.embed #schedule, body.embed #keys, body.embed #tv-menu { display: none !imp
 #tape-strip .ts-wave { position: static; display: block; flex: 1 1 0; min-width: 40px; width: 0; height: 100%; cursor: pointer; touch-action: none; }
 .ts-clock { flex: none; align-self: center; padding: 0 0.3em; white-space: nowrap; }
 @media (max-width: 700px) {
-  .ts-eject { min-width: 0; }
+  .ts-eject, .ts-link { min-width: 0; }
   .ts-btn { min-width: 2.2em; }
   .ts-clock { font-size: 0.85em; }
 }

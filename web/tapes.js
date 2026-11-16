@@ -58,6 +58,57 @@ export function parseFeed(xml) {
   return shows;
 }
 
+// -------------------------------------------------------
+// Share links: /tv/?tape=<id>&t=1h12m3s opens the TV with that show cued at that moment. The id is the archive
+// file's name without .ogg, as in the feed, so a link outlives the list it was made from.
+// -------------------------------------------------------
+const LINK_MIN_S = 5;   // a link to the first few seconds is a link to the show
+
+/** `1h12m3s`, `72m`, `90s`, `4323`, `1:12:03` -> seconds. Anything else -> 0. */
+export function parseLinkTime(s) {
+  const v = String(s ?? '').trim().toLowerCase();
+  if (/^\d+(:\d+)*$/.test(v)) return parseDuration(v);
+  const m = v.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/);
+  if (!v || !m) return 0;
+  return Number(m[1] ?? 0) * 3600 + Number(m[2] ?? 0) * 60 + Number(m[3] ?? 0);
+}
+
+/** 4323 -> `1h12m3s`, 90 -> `1m30s`, 0 -> `0s`. */
+export function formatLinkTime(seconds) {
+  const s = Math.max(0, Math.floor(Number(seconds) || 0));
+  const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, ss = s % 60;
+  return `${h ? `${h}h` : ''}${m ? `${m}m` : ''}${ss || (!h && !m) ? `${ss}s` : ''}`;
+}
+
+/** `?tape=<id>&t=…` -> { id, at } (at in seconds), or null when there is no usable tape id. */
+export function parseTapeLink(search) {
+  const params = new URLSearchParams(search ?? '');
+  const id = params.get('tape')?.trim();
+  // The id becomes part of a URL under the archive. Every archive name is letters, digits, _ and -, so nothing else
+  // gets in: nothing that could leave that folder or end the path.
+  if (!id || id.length > 200 || !/^[\w.-]+$/.test(id) || id.includes('..')) return null;
+  return { id, at: parseLinkTime(params.get('t')) };
+}
+
+/** The show a link names: from the list when it is there, else made from the id alone (no length, a rough title). */
+export function showForLink(id, shows = []) {
+  const known = shows.find((s) => s.id === id);
+  if (known) return known;
+  const title = tidyTitle(id.replace(/^\d{4}-\d{2}-\d{2}[-_ ]*/, '')) || id;
+  const date = id.match(/^\d{4}-\d{2}-\d{2}/)?.[0] ?? '';
+  return { id, url: `${FILE_PREFIX}${id}.ogg`, title, date, seconds: 0, search: `${title} ${date}`.toLowerCase() };
+}
+
+/** The share link for show `id` at `seconds`, on the page at `href` (its other options dropped). */
+export function tapeLinkUrl(href, id, seconds = 0) {
+  const url = new URL(href);
+  url.search = '';
+  url.hash = '';
+  url.searchParams.set('tape', id);
+  if (seconds >= LINK_MIN_S) url.searchParams.set('t', formatLinkTime(seconds));
+  return url.href;
+}
+
 /** Shows matching every word of `query` in the title or date. An empty query keeps them all. */
 export function searchShows(shows, query) {
   const words = String(query ?? '').toLowerCase().split(/\s+/).filter(Boolean);

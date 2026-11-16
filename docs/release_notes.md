@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Web TV: Tape Share Links (`web/tapes.js`, `web/tapedeck.js`, `web/ui.js`)
+- **New: LINK on a tape's transport strip** copies a link to that moment of the show (`spaz.org/tv/?tape=<show>&t=1h2m`). Opening it cues the show there; turning the TV on plays it.
+
 ### Queue Undo
 - **Fixed: adding to a queue couldn't be undone.** Q, Shift+Q, the toolbar's enqueue buttons, the right-click Add to … Queue items and the Twister's add-to-queue now each make one Ctrl+Z step, like dropping onto a queue already did.
 

@@ -11,7 +11,7 @@ import { heardBeats, tapOffset } from './sync.js';
 import { createChat } from './chat.js';
 import { createChatboard } from './chatboard.js';
 import { createTapeDeck } from './tapedeck.js';
-import { appUrl } from './tapes.js';
+import { appUrl, parseTapeLink } from './tapes.js';
 import { scheduleState, refreshSchedule, setShows, groupByDay, upcoming, parsePlaying, loadPlayingJsonp, zoneLabel, nextLine, SCHEDULE_REFRESH_MS, SCHEDULE_STALE_MS } from './schedule.js';
 
 // Power state — imported by renderer.js each frame
@@ -911,6 +911,8 @@ export function initUI() {
       },
     });
     viewerState.tapes = deck;
+    // A share link (?tape=<id>&t=1h12m): that show, cued at that moment; power-on (the click a browser needs for sound) plays it.
+    deck.cueLink(parseTapeLink(location.search)).catch((err) => console.warn('Tape link failed:', err));
   }
 
   // --- The key bank: OFF · INFO · MENU · SCHED · TAPES · ?, one key down at a time, like a car radio's.

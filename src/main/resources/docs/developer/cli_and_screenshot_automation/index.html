@@ -1567,8 +1567,8 @@
 4. <code>glfwSetWindowShouldClose(window, true)</code> signals clean shutdown immediately after writing.</p>
 <h2 id="4-gradle-tasks">4. Gradle Tasks</h2>
 <p>The build file <code>build.gradle.kts</code> defines two automated verification tasks:
-- <code>./gradlew captureResponsiveApp</code>: Renders full 1080p workspace screenshot to <code>docs/user_guide/assets/ui-desktop-1080p.png</code>.
-- <code>./gradlew captureUiLab</code>: Renders 720p UI Lab gallery screenshot to <code>docs/user_guide/assets/ui-lab-1080p.png</code>.</p>
+- <code>./gradlew captureResponsiveApp</code>: Renders full 1080p workspace screenshot to <code>build/screenshots/ui-desktop-1080p.png</code> (not shipped).
+- <code>./gradlew captureUiLab</code>: Renders 720p UI Lab gallery screenshot to <code>build/screenshots/ui-lab-1080p.png</code> (not shipped).</p>
 <h2 id="5-headless-ci-integration-xvfb">5. Headless CI Integration (<code>xvfb</code>)</h2>
 <p>On Linux CI runners without physical displays (e.g. GitHub Actions), run screenshot tasks using <code>xvfb-run</code>:</p>
 <pre><code class="language-bash">xvfb-run -s &quot;-screen 0 1920x1080x24&quot; ./gradlew captureResponsiveApp

@@ -2539,7 +2539,7 @@ val paramNotes: Map&lt;String, String&gt; = emptyMap()
 <h2 id="11-queue-edits-uibrowserqueueopskt-queuedropkt-queuesplitkt">11. Queue Edits (<code>ui/browser/QueueOps.kt</code>, <code>QueueDrop.kt</code>, <code>QueueSplit.kt</code>)</h2>
 <ul>
 <li><code>QueueOps</code> edits any of the five queues by index (cursor, play now, move, remove, <code>insert</code>, <code>clear</code>, <code>edit</code>) and pushes one restore-only undo step per edit (items, playing position, shuffle history). Callers: each queue panel's Clear, drops from the browser onto a queue (<code>QueueDrop</code>, which also refuses items of the wrong kind), the playlist menu's play now / insert / append, the controller's queue knobs (<code>QueueKnobs</code>).</li>
-<li>Not through <code>QueueOps</code>: plain appends (<code>LibraryNavigation.enqueue</code>, the Q key, toolbar enqueue) still call the queue managers and push no undo.</li>
+<li>Appends go through <code>QueueOps.append</code> (expands playlists, one undo step, flash): <code>LibraryNavigation.enqueue</code> (Q / Shift+Q, toolbar, controller), <code>BrowserPane.enqueueCursorPlaylist</code>, and the browser and queue panels' Add to … Queue menu items. Not through <code>QueueOps</code>: relinking a missing item (<code>MissingItemsPanel</code>) and the queue managers' own play-now paths.</li>
 <li><code>QueueSplit</code> shows the five queues (<code>QueuesPane</code>) under the browser in Library FULL; a browser row dragged onto a queue lands at the drop position.</li>
 </ul>
 <h2 id="12-fractal-flame-garden-and-imports-presetsgardenkt-gardenthumbnailskt-flameimportopskt">12. Fractal Flame Garden and Imports (<code>presets/Garden.kt</code>, <code>GardenThumbnails.kt</code>, <code>FlameImportOps.kt</code>)</h2>

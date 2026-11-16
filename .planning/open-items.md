@@ -36,7 +36,7 @@ From the 2026-10-04 naming sweep, the decisions never made:
 
 ## Web TV and Spaz Radio
 
-- Tapes, later steps: `/tv/?tape=<id>&t=1h12m` share links and WATCH links on spaz.org/radio/archives/; peaks-driven scene timing (cut just ahead of a known drop); a rerun channel timed from the clock. (web-tv-tapes-plan)
+- Tapes, later steps (share links done 2026-11-16): WATCH links on spaz.org/radio/archives/ (outside this repo; they can use the `?tape=<id>&t=` links); peaks-driven scene timing (cut just ahead of a known drop); a rerun channel timed from the clock. (web-tv-tapes-plan)
 - Rolled looks: 4 scenes came out too bright in the render check (build-drop-fluid, gyroid-kick, icosa-build, rd-hard); narrow their spans if they look washed out. Nobody measured how many scenes are opaque, so the background never shows behind them. (web-tv-viewer-controls-plan)
 - Channels (C6) and share links (C7) from the upgrade plan; `?kiosk` (the other half of C7) is built. (web-tv-upgrade-plan)
 - Gallery background ideas: a live endpoint for new uploads; music reaction (beat zoom, energy to turn speed, drop to a new photo). (spaz-gallery-bg-trial)

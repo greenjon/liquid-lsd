@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { parseFeed, parseDuration, formatClock, tidyTitle, searchShows, randomShow, onThisDayQuery, createResumeStore, reducePeaks, peaksUrl, fetchPeaks, refreshTapes, restoreTapes, createListStore, packShows, unpackShows, tapesState, setTapes, LIST_CACHE } from '../tapes.js';
+import { parseFeed, parseDuration, formatClock, tidyTitle, searchShows, randomShow, onThisDayQuery, createResumeStore, reducePeaks, peaksUrl, fetchPeaks, refreshTapes, restoreTapes, createListStore, packShows, unpackShows, tapesState, setTapes, LIST_CACHE, parseLinkTime, formatLinkTime, parseTapeLink, showForLink, tapeLinkUrl } from '../tapes.js';
 
 const item = (title, file, duration, pubDate) => `<item><title>${title}</title><link>https://spaz.org/archives/imports/${file}</link><comments>http://spaz.org/radio</comments><pubDate>${pubDate}</pubDate><duration>${duration}</duration><image><url>https://spaz.org/x.png</url><title>nested image title</title><link>http://spaz.org/radio</link></image></item>`;
 const FEED = `<?xml version="1.0"?><rss><channel><title>SPAZ Radio Archives</title><link>http://spaz.org/radio</link>
@@ -227,4 +227,41 @@ test('the app link: spaz.org/go/ on Android, the Play page elsewhere', async () 
   const { appUrl } = await import('../tapes.js');
   assert.equal(appUrl('Mozilla/5.0 (Linux; Android 14; Pixel 7)'), 'https://spaz.org/go/');
   assert.equal(appUrl('Mozilla/5.0 (X11; Linux x86_64) Firefox/140.0'), 'https://play.google.com/store/apps/details?id=llm.slop.spazradio');
+});
+
+test('share links: times both ways', () => {
+  assert.equal(parseLinkTime('1h12m3s'), 4323);
+  assert.equal(parseLinkTime('72m'), 4320);
+  assert.equal(parseLinkTime('90s'), 90);
+  assert.equal(parseLinkTime('1:12:03'), 4323);
+  assert.equal(parseLinkTime('4323'), 4323);
+  for (const bad of ['', 'x', '1h-2m', null, '12q']) assert.equal(parseLinkTime(bad), 0, String(bad));
+  assert.equal(formatLinkTime(4323), '1h12m3s');
+  assert.equal(formatLinkTime(90), '1m30s');
+  assert.equal(formatLinkTime(3600), '1h');
+  assert.equal(formatLinkTime(0), '0s');
+  for (const s of [0, 59, 61, 3599, 3601, 8153]) assert.equal(parseLinkTime(formatLinkTime(s)), s);
+});
+
+test('share links: only an archive name is a tape id', () => {
+  assert.deepEqual(parseTapeLink('?tape=2026-11-02-Live_from_Moss_Oak&t=1h2m'), { id: '2026-11-02-Live_from_Moss_Oak', at: 3720 });
+  assert.deepEqual(parseTapeLink('?tape=2025-05-09-Portland'), { id: '2025-05-09-Portland', at: 0 });
+  for (const bad of ['', '?t=1h', '?tape=', '?tape=../x', '?tape=a/b', '?tape=a%2Fb', '?tape=a%3Fb', '?tape=a%20b', '?tape=' + 'x'.repeat(201)]) assert.equal(parseTapeLink(bad), null, bad);
+});
+
+test('share links: the show from the list, or from its id alone', () => {
+  const shows = parseFeed(FEED);
+  assert.equal(showForLink('2025-05-09-Portland', shows), shows[1]);
+  const made = showForLink('2026-11-02-Live_from_Moss_Oak', []);
+  assert.equal(made.url, 'https://spaz.org/archives/imports/2026-11-02-Live_from_Moss_Oak.ogg');
+  assert.equal(made.title, 'Live from Moss Oak');
+  assert.equal(made.date, '2026-11-02');
+  assert.equal(made.seconds, 0);
+});
+
+test('share links: the link drops the page options and a time near the start', () => {
+  assert.equal(tapeLinkUrl('https://spaz.org/tv/?nolive#x', '2025-05-09-Portland', 4323.6), 'https://spaz.org/tv/?tape=2025-05-09-Portland&t=1h12m3s');
+  assert.equal(tapeLinkUrl('https://spaz.org/tv/', '2025-05-09-Portland', 3), 'https://spaz.org/tv/?tape=2025-05-09-Portland');
+  const back = parseTapeLink(new URL(tapeLinkUrl('https://spaz.org/tv/', '2025-05-09-Portland', 600)).search);
+  assert.deepEqual(back, { id: '2025-05-09-Portland', at: 600 });
 });
