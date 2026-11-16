@@ -22,7 +22,7 @@ Liquid LSD is a real-time, audio-reactive procedural visual synthesizer and VJ p
 | **Performance Mode & Macros** | `ui/*`, `macro/*`, `presets/*` | **v1.0** | **OPERATIONAL** | Performance matrix (A/B, BG/PV, MIXER pages, `F4`) with Deep Edit, `MacroEngine`/`MacroBank` binding, curves, FX slot cells and focus mode on the deck/Master rows. Remaining macro-learn coverage bumped to v1.1 (Milestone 5). |
 | **UI & UX Polish** | `ui/*` | **v1.0** | **ACTIVE** | Perform / Edit / Library views polished and verified at 1280×720. |
 | **Stability Testing** | all | **v1.0** | **ACTIVE** | Long sessions, load/swap under load, session restore, device hot-plug, 5 release platforms. |
-| **ISF Binding Audit** | `rendering/isf/*`, bundled shaders | **v1.0** | **ACTIVE** | Sensible Metaknob/auto-bind and default bindings verified for every bundled ISF. |
+| **ISF Binding Audit** | `rendering/isf/*`, bundled shaders | **v1.0** | **DONE** | All 717 parameters of the 37 sources, 27 effects and 8 transitions bind to a knob and the knob moves them (2026-11-06; one failure, Luminous Flash Intensity, fixed). |
 | **Unified Control & Mapping** | `midi/*`, `shortcuts/*`, `ui/*` | **v1.1** | **PENDING** | Decoupled `CommandRegistry`, hardware controller profiles (`library/mappings/`), universal learn. |
 | **Session Scratchpad** | `notes/*`, `ui/*` | **v1.1** | **PENDING** | Standalone floating/docked notes scratchpad window (`~/.liquid-lsd/scratchpad.txt`). |
 | **Mandala v2+ Recipe Vault** | `sources/mandala/*`, `ui/*` | **v1.1** | **PENDING** | Visual recipe gallery popover with micro-previews, geometric style tagging, quick-slots. |
@@ -51,7 +51,7 @@ The feature set is frozen for v1.0. What remains is finishing and hardening, not
 
 - [ ] **UI & UX Polish**: layout, spacing, labels, tooltips and interaction flow across Perform / Edit / Library views, verified at the 1280×720 minimum screen size.
 - [ ] **Stability Testing**: long-running sessions, preset/chain/queue load and swap under load, session restore, device hot-plug (audio, MIDI, video ingest), across the 5 release platforms.
-- [ ] **ISF Binding Audit**: check the Metaknob/auto-bind result (`ISFAutoBindEngine`, the shipped defaults in `resources/stock_defaults/`) and default parameter bindings for **every** bundled ISF generator, filter and transition, so each one does something sensible out of the box.
+- [x] **ISF Binding Audit**: done 2026-11-06. Every parameter of every bundled source, effect and transition (717 in all; Fractal Flame's per-transform values left out) binds to a knob and the knob moves it. The one failure, Luminous Flash Intensity, is fixed.
 - [ ] **Linux Camera Input**: webcams appear under External video (PipeWire lists them as video nodes) but have never connected in testing. Suspect: `ExternalVideoDiscovery` names streams by `node.description`, and `PipeWireReceiverImpl` passes that as `target.object`, which PipeWire matches against `node.name` or `object.serial`. Until fixed, the user guide and the walkthrough do not mention cameras.
 
 ---
