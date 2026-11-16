@@ -475,6 +475,20 @@
       "mode": "manual_review",
       "description": "Shader audio spectrum (FFT, dB mapping, release); golden vectors in web/tools/spectrum_vectors.json",
       "last_synced_hash": "584f0d9997565e122b4808df50cd6bef155dd977ae3e04ab5f4afe386bb2dce4"
+    },
+    {
+      "desktop": "src/main/kotlin/llm/slop/liquidlsd/audio/BeatTrackerEngine.kt",
+      "web": "web/beattrack.js",
+      "mode": "manual_review",
+      "description": "Tempo tracker (autocorrelation, multiples comb, tempo prior, accent check); a reimplementation, not a line port, so no golden vectors: measure with web/checks/tempo_report.mjs",
+      "last_synced_hash": "62f86dced7d101fe3fa6415f2d151d037b0fe2a330bfa27a9418e9b4c3082b4f"
+    },
+    {
+      "desktop": "src/main/kotlin/llm/slop/liquidlsd/audio/BeatHopper.kt",
+      "web": "web/beattrack.js",
+      "mode": "manual_review",
+      "description": "Tempo tracker hop/band onset feed; a reimplementation, measure with web/checks/tempo_report.mjs",
+      "last_synced_hash": "58ea1524c4ef476fcc43b4591964776b5818f1fdf8f483aef2e170f1f2abd789"
     }
   ],
   "content": [
