@@ -40,10 +40,15 @@ object ExternalVideoDiscovery {
         }
     }
 
+    /** Stops polling and frees the Spout sender lister once the poll has finished with it. */
     fun stopPolling() {
         if (!isRunning.getAndSet(false)) return
-        job?.cancel()
+        job?.let { j -> runBlocking { j.cancelAndJoin() } }
         job = null
+        spoutLister?.let { api ->
+            try { api.release() } catch (e: Throwable) { logger.warn(e) { "Releasing the Spout sender lister failed" } }
+        }
+        spoutLister = null
     }
 
     private fun fetchServers(): List<String> {
@@ -56,8 +61,9 @@ object ExternalVideoDiscovery {
         }
     }
 
-    /** Label shown in the browser -> PipeWire `node.name`, which is what `target.object` matches. */
-    private val pipeWireTargets = java.util.concurrent.ConcurrentHashMap<String, String>()
+    /** Label shown in the browser -> PipeWire `node.name`, which is what `target.object` matches. Rebuilt each scan. */
+    @Volatile
+    private var pipeWireTargets: Map<String, String> = emptyMap()
 
     /** The `node.name` to connect to for a label from [fetchPipeWireStreams] (the label itself if unknown). */
     fun pipeWireTarget(label: String): String = pipeWireTargets[label] ?: label
@@ -67,11 +73,18 @@ object ExternalVideoDiscovery {
      * labelled by description, else node name. Our own receiver (a consumer) is left out.
      */
     fun fetchPipeWireStreams(): List<String> {
-        val results = linkedSetOf<String>()
+        val nodes = mutableListOf<Pair<String, String>>()   // node.name to base label
+        var dump: java.io.File? = null
         try {
-            val process = ProcessBuilder("pw-dump").redirectError(ProcessBuilder.Redirect.DISCARD).start()
-            val output = process.inputStream.bufferedReader().use { it.readText() }
-            process.waitFor()
+            // Output to a file, not a pipe: a full pipe would stall pw-dump, and a hung pw-dump must not stop discovery.
+            dump = java.io.File.createTempFile("lsd-pw-dump", ".json")
+            val process = ProcessBuilder("pw-dump").redirectError(ProcessBuilder.Redirect.DISCARD).redirectOutput(dump).start()
+            if (!process.waitFor(PW_DUMP_TIMEOUT_SEC, java.util.concurrent.TimeUnit.SECONDS)) {
+                process.destroyForcibly()
+                logger.warn { "pw-dump took over $PW_DUMP_TIMEOUT_SEC s; skipped this PipeWire scan" }
+                return emptyList()
+            }
+            val output = dump.readText()
             val root = kotlinx.serialization.json.Json.parseToJsonElement(output)
             for (obj in root as? kotlinx.serialization.json.JsonArray ?: return emptyList()) {
                 val o = obj as? kotlinx.serialization.json.JsonObject ?: continue
@@ -82,17 +95,29 @@ object ExternalVideoDiscovery {
                 if (mediaClass != "Video/Source" && mediaClass != "Stream/Output/Video") continue
                 val name = prop("node.name") ?: continue
                 val base = prop("node.description")?.takeIf { it.isNotBlank() } ?: name
-                // Two nodes can share a description (a webcam and its IR sensor both say "HP HD Camera"): number the rest.
-                var label = base; var n = 2
-                while (label in results) label = "$base ($n)".also { n++ }
-                pipeWireTargets[label] = name
-                results.add(label)
+                nodes += name to base
             }
         } catch (e: Throwable) {
             logger.debug { "PipeWire stream discovery failed: ${e.message}" }
+            return emptyList()
+        } finally {
+            dump?.delete()
         }
+        // Two nodes can share a description (a webcam and its IR sensor both say "HP HD Camera"): number the rest in
+        // node.name order (stable across scans and replugs, unlike pw-dump's order) so a saved label keeps its node.
+        val results = linkedSetOf<String>()
+        val targets = HashMap<String, String>()
+        for ((name, base) in nodes.sortedBy { it.first }) {
+            var label = base; var n = 2
+            while (label in results) label = "$base ($n)".also { n++ }
+            targets[label] = name
+            results.add(label)
+        }
+        pipeWireTargets = targets
         return results.toList()
     }
+
+    private const val PW_DUMP_TIMEOUT_SEC = 5L
 
     /** One SpoutLibrary object kept for the sender list (no GL needed for it). */
     private var spoutLister: SpoutApi? = null
@@ -122,6 +147,7 @@ object ExternalVideoDiscovery {
             val bridge = SyphonBridge()
             bridge.getAvailableServers()
         } catch (e: Throwable) {
+            logger.debug { "Syphon server list failed: ${e.message}" }
             emptyList()
         }
     }

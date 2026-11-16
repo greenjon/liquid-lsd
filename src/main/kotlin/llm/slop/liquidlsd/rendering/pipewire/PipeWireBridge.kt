@@ -25,7 +25,7 @@ class PipeWireBridge {
     private var core: Pointer? = null
     private var stream: Pointer? = null
 
-    private var active = false
+    @Volatile private var active = false
     private var streamName = ""
     private var currentWidth = 0
     private var currentHeight = 0
@@ -134,9 +134,10 @@ class PipeWireBridge {
             }
             if (!active) return false
 
+            frames = FrameTripleBuffer(width * height * 4)
             drainJob = scope.launch {
                 while (isActive && active) {
-                    if (pendingFrame.get() != null) drainPendingFrame()
+                    if (frames?.hasFresh() == true) drainPendingFrame()
                     delay(4)
                 }
             }
@@ -162,18 +163,18 @@ class PipeWireBridge {
     }
 
     // ── Lock-free frame hand-off from GL thread → PipeWire ─────────────────────────────────────
-    // The GL thread deposits a reference here via publishFrameBuffer(); the drain coroutine copies it into a
-    // PipeWire buffer, so neither side waits on the other.
-    private val pendingFrame = java.util.concurrent.atomic.AtomicReference<ByteBuffer?>(null)
+    // The GL thread copies each readback into a buffer the bridge owns; the drain coroutine copies the newest one
+    // into a PipeWire buffer. Neither side waits on the other, and neither reads memory the other is writing.
+    @Volatile private var frames: FrameTripleBuffer? = null
 
     /**
      * Called from the GL render thread once per frame with a direct buffer holding a GL readback (RGBA, bottom
-     * row first) of the stream's size.
-     * Returns at once; the copy happens on the drain coroutine.
+     * row first) of the stream's size. Copies it (the caller reuses [buffer] next frame) and returns; the copy into
+     * PipeWire happens on the drain coroutine.
      */
     fun publishFrameBuffer(buffer: ByteBuffer, width: Int, height: Int) {
         if (!active || stream == null || width != currentWidth || height != currentHeight) return
-        pendingFrame.set(buffer)
+        frames?.publish(buffer)
     }
 
     /**
@@ -184,7 +185,7 @@ class PipeWireBridge {
         val lib = pw ?: return
         val st = stream ?: return
         val loop = threadLoop ?: return
-        val buf = pendingFrame.getAndSet(null) ?: return
+        val buf = frames?.takeFresh() ?: return
         if (!negotiated) return
 
         lib.pw_thread_loop_lock(loop)
@@ -219,9 +220,9 @@ class PipeWireBridge {
      * Disconnects and destroys the PipeWire video stream and associated thread loop.
      */
     fun stopServer() {
-        drainJob?.cancel()
+        // Wait for the drain to finish: it may be copying out of [frames] or inside a stream call.
+        drainJob?.let { job -> runBlocking { job.cancelAndJoin() } }
         drainJob = null
-        pendingFrame.set(null)
 
         val lib = pw
         val loop = threadLoop
@@ -274,8 +275,47 @@ class PipeWireBridge {
 
         active = false
         negotiated = false
+        frames?.free()
+        frames = null
         events = null
         hook = null
         logger.info { "Closed PipeWire Video Stream '$streamName'" }
+    }
+}
+
+/**
+ * Three frame buffers handed between one producer (the GL thread) and one consumer (the drain): the producer
+ * always has a buffer of its own to write, the consumer always reads a complete frame, and a frame the consumer
+ * hasn't taken yet is replaced by a newer one. No locks, no allocation per frame.
+ */
+internal class FrameTripleBuffer(val sizeBytes: Int) {
+    private val buffers = Array(3) { org.lwjgl.system.MemoryUtil.memAlloc(sizeBytes) }
+    private var writeIndex = 0                       // producer only
+    private var readIndex = 1                        // consumer only
+    private val middle = java.util.concurrent.atomic.AtomicInteger(2)   // index, plus FRESH once published
+
+    /** Producer: copies [src] (at least [sizeBytes], direct) in and makes it the newest frame. */
+    fun publish(src: ByteBuffer) {
+        if (!src.isDirect || src.capacity() < sizeBytes) return
+        val dst = buffers[writeIndex]
+        org.lwjgl.system.MemoryUtil.memCopy(org.lwjgl.system.MemoryUtil.memAddress(src, 0), org.lwjgl.system.MemoryUtil.memAddress(dst, 0), sizeBytes.toLong())
+        writeIndex = middle.getAndSet(writeIndex or FRESH) and INDEX
+    }
+
+    fun hasFresh(): Boolean = middle.get() and FRESH != 0
+
+    /** Consumer: the newest published frame, or null when nothing new arrived. Valid until the next call. */
+    fun takeFresh(): ByteBuffer? {
+        if (!hasFresh()) return null
+        readIndex = middle.getAndSet(readIndex) and INDEX
+        return buffers[readIndex]
+    }
+
+    /** Only once neither side uses it any more. */
+    fun free() { for (b in buffers) org.lwjgl.system.MemoryUtil.memFree(b) }
+
+    private companion object {
+        const val INDEX = 3
+        const val FRESH = 4
     }
 }

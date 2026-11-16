@@ -338,6 +338,9 @@ class PipeWireReceiverImpl : TextureReceiver {
                 for (c in intArrayOf(org.lwjgl.opengl.GL33.GL_TEXTURE_SWIZZLE_G, org.lwjgl.opengl.GL33.GL_TEXTURE_SWIZZLE_B)) glTexParameteri(GL_TEXTURE_2D, c, GL_RED)
             } else {
                 glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texW, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0L)
+                // The same texture may have shown GRAY8 before: undo its red-to-grey swizzle.
+                glTexParameteri(GL_TEXTURE_2D, org.lwjgl.opengl.GL33.GL_TEXTURE_SWIZZLE_G, org.lwjgl.opengl.GL11.GL_GREEN)
+                glTexParameteri(GL_TEXTURE_2D, org.lwjgl.opengl.GL33.GL_TEXTURE_SWIZZLE_B, org.lwjgl.opengl.GL11.GL_BLUE)
             }
             // RGBx / BGRx / GRAY8 carry no alpha: read it as opaque.
             val noAlpha = info.format == SpaPod.VIDEO_FORMAT_RGBX || info.format == SpaPod.VIDEO_FORMAT_BGRX || gray

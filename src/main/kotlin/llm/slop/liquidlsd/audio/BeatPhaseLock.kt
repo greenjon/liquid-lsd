@@ -262,9 +262,19 @@ class BeatPhaseLock(private val inline: Boolean = false) {
         }
     }
 
+    /**
+     * Stops the worker and waits for it (an analysis in progress takes milliseconds), so a following [reset] can't be
+     * undone by a reading of the old audio and two workers never share the comb's scratch arrays.
+     */
     fun stopWorker() {
-        worker?.interrupt()
+        val w = worker ?: return
         worker = null
+        w.interrupt()
+        try {
+            w.join(500)
+        } catch (_: InterruptedException) {
+            Thread.currentThread().interrupt()
+        }
     }
 
     /** Forgets the audio. Not while [process] or the worker could be running on another thread with old data that matters. */
