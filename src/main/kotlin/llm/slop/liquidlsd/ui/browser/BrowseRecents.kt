@@ -91,6 +91,7 @@ object BrowseRecents {
 
     /** Test hook: point a kind at [file] and drop in-memory state. */
     internal fun resetForTest(kind: BrowseKind, file: File) {
+        llm.slop.liquidlsd.presets.PresetManager.awaitIo() // saves already asked for land first
         val store = stores.getValue(kind)
         store.file = file
         store.keys.clear()
@@ -112,12 +113,8 @@ object BrowseRecents {
         return store
     }
 
+    /** The list as it is now, written on the preset IO thread (never the render thread). */
     private fun save(store: Store) {
-        try {
-            store.file.parentFile?.mkdirs()
-            llm.slop.liquidlsd.utils.AtomicFile.write(store.file, json.encodeToString(listSerializer, store.keys))
-        } catch (e: Exception) {
-            logger.error(e) { "Could not save recent items ${store.file.path}" }
-        }
+        llm.slop.liquidlsd.presets.LibraryIo.writeLater(store.file, json.encodeToString(listSerializer, store.keys.toList()), "recent items")
     }
 }

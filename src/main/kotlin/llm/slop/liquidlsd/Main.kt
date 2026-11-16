@@ -531,7 +531,7 @@ fun main(args: Array<String>) {
         if (tour == null && frameStartTime - lastAutosave >= autosaveIntervalSec) {
             lastAutosave = frameStartTime
             AppPreferencesStore.savePreferences()
-            SessionSerializer.saveSession(mixer)
+            SessionSerializer.saveSessionLater(mixer)
         }
         glfwPollEvents()
         if (tour != null) {

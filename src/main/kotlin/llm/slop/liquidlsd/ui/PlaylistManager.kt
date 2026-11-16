@@ -30,6 +30,11 @@ object PlaylistManager {
         fun markClean() {
             originalPresets = presets.toList()
         }
+
+        /** Marks [saved], the list as it was when a save was asked for, as what is on disk. */
+        internal fun markClean(saved: List<String>) {
+            originalPresets = saved
+        }
         
         /**
          * Validates all preset references and returns list of missing presets.
@@ -94,21 +99,38 @@ object PlaylistManager {
         }
     }
     
+    private fun playlistText(name: String, presets: List<String>): String = buildString {
+        appendLine("# Liquid LSD Playlist: $name")
+        appendLine("# Generated: ${LocalDateTime.now()}")
+        appendLine()
+        presets.forEach { preset ->
+            appendLine(preset)
+        }
+    }
+
     /**
-     * Saves a playlist to disk.
+     * Saves [playlist] as it is now on the preset IO thread, so the render thread never waits on the disk; [done] gets the
+     * result on the render thread. Saves of one playlist land in the order asked, so the last one asked for wins.
+     */
+    fun savePlaylistLater(playlist: Playlist, done: (Result<Unit>) -> Unit = {}) {
+        val snapshot = playlist.presets.toList()
+        val text = playlistText(playlist.name, snapshot)
+        val file = File(playlist.filePath)
+        llm.slop.liquidlsd.presets.LibraryIo.run({ llm.slop.liquidlsd.utils.AtomicFile.write(file, text) }) { result ->
+            result.onSuccess { playlist.markClean(snapshot) }
+                .onFailure { logger.error(it) { "Failed to save playlist: ${playlist.name}" } }
+            done(result)
+        }
+    }
+
+    /**
+     * Saves a playlist to disk, on the calling thread (the preset IO thread, a test); the UI uses [savePlaylistLater].
      */
     fun savePlaylist(playlist: Playlist): Result<Unit> {
         return try {
             val file = File(playlist.filePath)
-            val content = buildString {
-                appendLine("# Liquid LSD Playlist: ${playlist.name}")
-                appendLine("# Generated: ${LocalDateTime.now()}")
-                appendLine()
-                playlist.presets.forEach { preset ->
-                    appendLine(preset)
-                }
-            }
-            
+            val content = playlistText(playlist.name, playlist.presets)
+
             llm.slop.liquidlsd.utils.AtomicFile.write(file, content)
             playlist.markClean()
             
@@ -143,7 +165,7 @@ object PlaylistManager {
                 presets = mutableListOf()
             )
             
-            savePlaylist(playlist)
+            savePlaylist(playlist).getOrThrow()
             logger.info { "Created new playlist: $name" }
             Result.success(playlist)
         } catch (e: Exception) {

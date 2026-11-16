@@ -1,6 +1,7 @@
 package llm.slop.liquidlsd.ui.browser
 
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
 import llm.slop.liquidlsd.models.FXPlaylistDto
 import llm.slop.liquidlsd.models.TransitionPlaylistDto
 import llm.slop.liquidlsd.ui.PlaylistManager
@@ -39,6 +40,30 @@ class PlaylistTargetsTest {
         assertEquals(2, added.getOrThrow())
         assertEquals(listOf("old", "dark/glow.lsdfx", "/elsewhere/x.lsdfx"), json.decodeFromString<FXPlaylistDto>(pl.readText()).items)
         assertEquals("set", json.decodeFromString<FXPlaylistDto>(pl.readText()).name)
+    }
+
+    @Test
+    fun `an add keeps fields this build doesn't know`(@TempDir dir: File) {
+        val pl = File(dir, "set.lsdfxplay").apply {
+            writeText("""{"version":3,"name":"set","tags":["x"],"items":["old"],"futureField":{"a":1},"color":"red"}""")
+        }
+
+        PlaylistTargets.appendTokens(BrowseKind.FX, pl, listOf("/elsewhere/x.lsdfx"), emptyList()).getOrThrow()
+
+        val obj = json.parseToJsonElement(pl.readText()).jsonObject
+        assertEquals("""{"a":1}""", obj["futureField"].toString())
+        assertEquals("\"red\"", obj["color"].toString())
+        assertEquals("3", obj["version"].toString())
+        assertEquals(listOf("old", "/elsewhere/x.lsdfx"), json.decodeFromString<FXPlaylistDto>(pl.readText()).items)
+    }
+
+    @Test
+    fun `withItems rewrites only the items of a transition playlist`() {
+        val text = """{"name":"t","items":["a","b"],"extra":true}"""
+        val out = json.parseToJsonElement(PlaylistItems.withItems(BrowseKind.TRANS, text) { it.reversed() }).jsonObject
+        assertEquals("true", out["extra"].toString())
+        assertEquals("""["b","a"]""", out["items"].toString())
+        assertTrue(runCatching { PlaylistItems.withItems(BrowseKind.TRANS, "[1,2]") { it } }.isFailure)
     }
 
     @Test

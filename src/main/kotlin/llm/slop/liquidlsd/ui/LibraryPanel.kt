@@ -192,16 +192,17 @@ object LibraryPanel {
         return null
     }
 
-    /** Re-reads every listing now (after a change the app made). Changes made outside the app are picked up by the scans themselves. */
+    /**
+     * Drops every listing (after a change the app made), so the next look at one re-reads it; a listing nobody shows isn't
+     * read at all. Changes made outside the app are picked up by the scans themselves.
+     */
     fun refreshAssets() {
         FileSystemManager.clearScanCache()
-        FileSystemManager.scanAllPresets()
-        FileSystemManager.scanAllPlaylists()
-        FileSystemManager.scanAllFxPresets()
-        FileSystemManager.scanAllFxChains()
-        FileSystemManager.scanAllFxPlaylists()
-        FileSystemManager.scanAllTransitionPresets()
-        FileSystemManager.scanAllTransitionPlaylists()
+    }
+
+    /** [refreshAssets] after the app wrote only a playlist: the presets listing, the costly one to rebuild, is kept. */
+    fun refreshPlaylists() {
+        FileSystemManager.clearPlaylistScanCache()
     }
 
     fun draw(session: SessionContext, width: Float, height: Float, mixer: Mixer, parametersState: ParametersState, binding: BrowserDock.DockBinding? = null) {

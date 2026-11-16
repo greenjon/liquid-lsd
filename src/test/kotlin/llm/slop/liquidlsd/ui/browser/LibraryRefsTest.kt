@@ -11,6 +11,10 @@ import java.io.File
 import java.util.concurrent.CopyOnWriteArrayList
 
 class LibraryRefsTest {
+    // Saves are written on the preset IO thread: let them land before the temp folder goes.
+    @org.junit.jupiter.api.AfterEach
+    fun awaitSaves() = llm.slop.liquidlsd.presets.PresetManager.awaitIo()
+
     @Test
     fun `kind follows the saved file's extension`() {
         assertEquals(BrowseKind.SRC, LibraryRefs.kindOf(File("a.lsd")))

@@ -61,7 +61,24 @@ object FileSystemManager {
      * checked against the file's modification time, and re-reading thousands of presets after every save would stall.
      */
     internal fun clearScanCache() {
+        // Bumped before clearing, so a background scan that started earlier can't store its listing afterwards.
+        scanGeneration.incrementAndGet()
         scanCache.clear()
+    }
+
+    /**
+     * Drops only the playlist listings (Sources, FX, Transitions), after the app wrote a playlist: the presets listing, the
+     * costly one to rebuild, is still right.
+     */
+    internal fun clearPlaylistScanCache() {
+        scanCache.keys.removeIf { it.startsWith("ALL_PLAYLISTS_ROOT_") || it.startsWith("ALL_FX_PLAYLISTS_ROOT_") || it.startsWith("ALL_TRANSITION_PLAYLISTS_ROOT_") }
+    }
+
+    /** Counts [clearScanCache] calls; a background scan stores its result only if none happened while it ran. */
+    private val scanGeneration = java.util.concurrent.atomic.AtomicLong()
+
+    private fun storeIfCurrent(cacheKey: String, generation: Long, entry: ScanCacheEntry) {
+        scanCache.compute(cacheKey) { _, current -> if (scanGeneration.get() == generation) entry else current }
     }
 
     internal fun getPresetMeta(file: File): Pair<List<String>, llm.slop.liquidlsd.presets.PresetDependencies> {
@@ -151,10 +168,14 @@ object FileSystemManager {
         if (!revalidating.add(cacheKey)) return
         executor.execute {
             try {
+                // Taken before the walk: if the app changes the folder (and clears the cache) while this runs, what this
+                // finds may already be out of date, so it isn't stored over the listing the render thread rebuilt.
+                val generation = scanGeneration.get()
                 val signature = getRecursiveDirectorySignature(root)
                 val current = scanCache[cacheKey]
-                if (current != null && current.signature == signature) scanCache[cacheKey] = current.copy(cachedAtMs = System.currentTimeMillis())
-                else buildAllPresets(root, cacheKey, signature)
+                if (current != null && current.signature == signature) {
+                    scanCache.computeIfPresent(cacheKey) { _, now -> if (now === current) current.copy(cachedAtMs = System.currentTimeMillis()) else now }
+                } else buildAllPresets(root, cacheKey, signature, generation)
             } catch (e: Exception) {
                 logger.warn(e) { "Background preset scan failed" }
             } finally {
@@ -163,7 +184,8 @@ object FileSystemManager {
         }
     }
 
-    private fun buildAllPresets(root: File, cacheKey: String, signature: String): List<AssetItem> {
+    /** [generation] is the [scanGeneration] a background scan started at; null on the render thread, which always stores. */
+    private fun buildAllPresets(root: File, cacheKey: String, signature: String, generation: Long? = null): List<AssetItem> {
         val now = System.currentTimeMillis()
         val items = root.walkTopDown()
             .filter { it.isFile }
@@ -186,7 +208,8 @@ object FileSystemManager {
             .sortedBy { it.name.lowercase() }
             .toList()
 
-        scanCache[cacheKey] = ScanCacheEntry(signature, now, items)
+        val entry = ScanCacheEntry(signature, now, items)
+        if (generation == null) scanCache[cacheKey] = entry else storeIfCurrent(cacheKey, generation, entry)
         return items
     }
 
@@ -520,6 +543,7 @@ object FileSystemManager {
         pendingScanFutures[cacheKey]?.cancel(false)
         val task = Runnable {
             try {
+                val generation = scanGeneration.get()
                 if (!directory.exists() || !directory.isDirectory) return@Runnable
                 
                 val currentSignature = directorySignature(directory)
@@ -600,7 +624,7 @@ object FileSystemManager {
                     }
                 }
                 val sortedItems = items.sortedWith(compareBy({ it.type != AssetType.FOLDER }, { it.name }))
-                scanCache[cacheKey] = ScanCacheEntry(currentSignature, System.currentTimeMillis(), sortedItems)
+                storeIfCurrent(cacheKey, generation, ScanCacheEntry(currentSignature, System.currentTimeMillis(), sortedItems))
             } catch (e: Exception) {
                 logger.error(e) { "Error during async scan of $directory" }
             } finally {

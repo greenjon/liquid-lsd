@@ -70,19 +70,27 @@ object PresetListPanel {
     /** The row whose press inside a multi-selection is waiting for its release: a drag takes the whole selection, a plain click narrows it. */
     private var pendingNarrow: Any? = null
 
+    /** When the press [pendingNarrow] waits on happened (ImGui's click time), so only the release of that same press narrows. */
+    private var pendingPressTime = -1.0
+
     /** Selection on pressing a row in the FX and Transitions lists. Call with the row just drawn. */
     internal fun <T : Any> pressSelect(selection: MultiSelectionModel<T>, item: T, rows: List<T>, target: ApplyTarget?) {
         val io = ImGui.getIO()
         val plain = !(io.keyCtrl || io.keySuper || io.keyShift)
-        if (target == null && plain && selection.isSelected(item) && selection.count > 1) pendingNarrow = item
-        else clickSelect(selection, item, rows, target)
+        if (target == null && plain && selection.isSelected(item) && selection.count > 1) {
+            pendingNarrow = item
+            pendingPressTime = io.getMouseClickedTime(0)
+        } else clickSelect(selection, item, rows, target)
     }
 
-    /** Finishes a [pressSelect] that waited: call for every row, after its drag source. */
+    /**
+     * Finishes a [pressSelect] that waited: call for every row, after its drag source. A release that belongs to a later
+     * press (the row wasn't drawn when its own press ended, say the list was hidden) only drops the wait.
+     */
     internal fun <T : Any> releaseSelect(selection: MultiSelectionModel<T>, item: T, rows: List<T>, target: ApplyTarget?) {
         if (pendingNarrow == item && ImGui.isMouseReleased(0)) {
             pendingNarrow = null
-            clickSelect(selection, item, rows, target)
+            if (ImGui.getIO().getMouseClickedTime(0) == pendingPressTime) clickSelect(selection, item, rows, target)
         }
     }
 
@@ -118,9 +126,7 @@ object PresetListPanel {
             val deps = if (isStock) null else (asset.dependencies ?: FileSystemManager.getPresetDependencies(File(asset.path)))
             val allIssues = deps?.getIssues(session) ?: emptyList()
             // Only a real warning marks the row red; an INFO note waits quietly in the normal tooltip.
-            val issues = allIssues.filter { it.severity == llm.slop.liquidlsd.presets.DependencySeverity.WARNING }
-            val notes = allIssues.filter { it.severity == llm.slop.liquidlsd.presets.DependencySeverity.INFO }
-            val hasIssues = issues.isNotEmpty()
+            val hasIssues = allIssues.any { it.severity == llm.slop.liquidlsd.presets.DependencySeverity.WARNING }
 
             // Stock rows leave the icon slot blank (a box there read as a checkbox); saved presets keep the disc.
             val icon = if (isStock || (hasIssues && asset.isValid)) null else Icons.DISC
@@ -193,7 +199,8 @@ object PresetListPanel {
                         LoadedMarks.tooltipOrNull(marks)?.let { ImGui.textUnformatted(it); ImGui.spacing() }
                         ImGui.textColored(0.95f, 0.40f, 0.40f, 1f, "[!] Preset has inactive or hidden modulators:")
                         ImGui.spacing()
-                        for (issue in issues) {
+                        for (issue in allIssues) {
+                            if (issue.severity != llm.slop.liquidlsd.presets.DependencySeverity.WARNING) continue
                             ImGui.bullet()
                             ImGui.text("${issue.title}: ${issue.description}")
                         }
@@ -209,7 +216,7 @@ object PresetListPanel {
                         ImGui.textUnformatted(fullNameTip(asset, nameElided) ?: rowName(asset))
                         LoadedMarks.tooltipOrNull(marks)?.let { ImGui.textDisabled(it) }
                         ImGui.separator()
-                        for (note in notes) ImGui.textDisabled(note.description)
+                        for (note in allIssues) if (note.severity == llm.slop.liquidlsd.presets.DependencySeverity.INFO) ImGui.textDisabled(note.description)
                         if (heavy) ImGui.textUnformatted("${Icons.GAUGE} $GPU_COST_TIP")
                         if (isStock) llm.slop.liquidlsd.rendering.VisualSourceRegistry.compileErrors[asset.path.removePrefix(STOCK_PATH_PREFIX)]?.let { err ->
                             ImGui.pushStyleColor(ImGuiCol.Text, TangoPalette.u32(TangoPalette.ALERT.normal))

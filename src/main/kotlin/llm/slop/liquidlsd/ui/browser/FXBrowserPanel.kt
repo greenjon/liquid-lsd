@@ -135,14 +135,17 @@ object FXBrowserPanel {
         llm.slop.liquidlsd.tour.WidgetRegistry.note { PresetListPanel.tourRowKey(BrowseKind.FX, asset) }
         LoadedMarks.drawGutter(gutter, marks, DROPDOWN_ROW_HEIGHT)
         val isRowHovered = ImGui.isItemHovered()
-        val about = when (asset.type) {
-            AssetType.FX_STOCK -> "Stock ISF filter — load only, not saveable to a playlist or queue." +
-                if (asset.gpuCost >= PresetListPanel.GPU_COST_HEAVY) "\n${Icons.GAUGE} ${PresetListPanel.GPU_COST_TIP}" else ""
-            AssetType.FX_CHAIN -> "Saved 3-slot FX chain (.lsdfxchain) — replaces all 3 slots of the target chain."
-            else -> "Saved single FX preset (.lsdfx) — loads into one FX slot."
+        // The tooltip text is built only for the hovered row, not for every row every frame.
+        if (isRowHovered) {
+            val about = when (asset.type) {
+                AssetType.FX_STOCK -> "Stock ISF filter — load only, not saveable to a playlist or queue." +
+                    if (asset.gpuCost >= PresetListPanel.GPU_COST_HEAVY) "\n${Icons.GAUGE} ${PresetListPanel.GPU_COST_TIP}" else ""
+                AssetType.FX_CHAIN -> "Saved 3-slot FX chain (.lsdfxchain) — replaces all 3 slots of the target chain."
+                else -> "Saved single FX preset (.lsdfx) — loads into one FX slot."
+            }
+            val how = if (target != null) "Click: apply. Right-click: more." else "Double-click or Enter: load to the live deck. Ctrl/Shift+click: select several. Right-click: more."
+            itemTooltip(listOfNotNull(PresetListPanel.fullNameTip(asset, nameElided), LoadedMarks.tooltipOrNull(marks), about, how).joinToString("\n"))
         }
-        val how = if (target != null) "Click: apply. Right-click: more." else "Double-click or Enter: load to the live deck. Ctrl/Shift+click: select several. Right-click: more."
-        itemTooltip(listOfNotNull(PresetListPanel.fullNameTip(asset, nameElided), LoadedMarks.tooltipOrNull(marks), about, how).joinToString("\n"))
 
         if (ImGui.isItemClicked(0)) {
             LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS

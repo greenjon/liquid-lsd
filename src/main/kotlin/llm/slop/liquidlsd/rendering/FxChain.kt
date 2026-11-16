@@ -527,9 +527,22 @@ class FxChain(val label: String) {
     /** A slot's Metaknob targets; files from before multi-targets have only the single [FXSlotDto.metaBinding]. */
     private fun metaLinks(dto: FXSlotDto) = dto.metaBindings ?: listOfNotNull(dto.metaBinding)
 
-    /** The Metaknob links the effect [filterId] gets by default, from the slot running it. */
-    private fun defaultLinksFor(filterId: String) = slots.firstOrNull { it?.id == filterId }
-        ?.let { llm.slop.liquidlsd.rendering.isf.ISFAutoBindEngine.resolveDefault(it).metaBindings }
+    /**
+     * The Metaknob links the effect [filterId] gets by default, from the slot running it. Resolving reads the override folder
+     * and the shipped defaults, so each slot's answer is kept until the baseline or the filter in the slot changes: the dirty
+     * check runs four times a second.
+     */
+    private fun defaultLinksFor(filterId: String): List<llm.slop.liquidlsd.rendering.isf.FxMetaBindingDto>? {
+        val filter = slots.firstOrNull { it?.id == filterId } ?: return null
+        if (defaultLinksBaseline !== baselineDto || defaultLinksCache.size > SLOT_COUNT * 4) {
+            defaultLinksCache.clear()
+            defaultLinksBaseline = baselineDto
+        }
+        return defaultLinksCache.getOrPut(filter) { llm.slop.liquidlsd.rendering.isf.ISFAutoBindEngine.resolveDefault(filter).metaBindings }
+    }
+
+    private val defaultLinksCache = java.util.IdentityHashMap<ISFFilter, List<llm.slop.liquidlsd.rendering.isf.FxMetaBindingDto>>()
+    private var defaultLinksBaseline: FXChainDto? = null
 
     /** A modulator as far as "changed" goes: its generated id and an all-zero step list (a file may leave both out) mean nothing. */
     private fun comparable(p: ParameterDto) = p.copy(

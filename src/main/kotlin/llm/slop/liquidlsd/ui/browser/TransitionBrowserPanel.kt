@@ -91,13 +91,16 @@ object TransitionBrowserPanel {
         llm.slop.liquidlsd.tour.WidgetRegistry.note { PresetListPanel.tourRowKey(BrowseKind.TRANS, asset) }
         LoadedMarks.drawGutter(gutter, marks, DROPDOWN_ROW_HEIGHT)
         val isRowHovered = ImGui.isItemHovered()
-        val about = if (asset.type == AssetType.TRANSITION_STOCK) {
-            "Stock ISF transition shader — apply, queue, or add to a playlist."
-        } else {
-            "Saved transition preset (.lsdtrans) — apply, queue, add to a playlist, or manage."
+        // The tooltip text is built only for the hovered row, not for every row every frame.
+        if (isRowHovered) {
+            val about = if (asset.type == AssetType.TRANSITION_STOCK) {
+                "Stock ISF transition shader — apply, queue, or add to a playlist."
+            } else {
+                "Saved transition preset (.lsdtrans) — apply, queue, add to a playlist, or manage."
+            }
+            val how = if (target != null) "Click: apply. Right-click: more." else "Double-click or Enter: apply to the mixer. Ctrl/Shift+click: select several. Right-click: more."
+            itemTooltip(listOfNotNull(PresetListPanel.fullNameTip(asset, nameElided), LoadedMarks.tooltipOrNull(marks), about, how).joinToString("\n"))
         }
-        val how = if (target != null) "Click: apply. Right-click: more." else "Double-click or Enter: apply to the mixer. Ctrl/Shift+click: select several. Right-click: more."
-        itemTooltip(listOfNotNull(PresetListPanel.fullNameTip(asset, nameElided), LoadedMarks.tooltipOrNull(marks), about, how).joinToString("\n"))
 
         if (ImGui.isItemClicked(0)) {
             LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
