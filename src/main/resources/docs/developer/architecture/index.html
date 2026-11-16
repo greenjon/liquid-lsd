@@ -1339,6 +1339,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit Blueprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1682,8 +1710,8 @@
 <h3 id="concurrency-primitives">Concurrency Primitives</h3>
 <ul>
 <li><strong><code>@Volatile</code> Beat Anchor Fields</strong>: Lock-free update passing <code>anchorBeats</code>, <code>anchorBpm</code>, and <code>anchorTimeNs</code> directly from the audio thread to <code>CVRegistry.updateBeatAnchor()</code> using primitive <code>@Volatile</code> fields. Zero object allocations occur on the audio callback thread. Thread 0 reads these volatile variables without locks and interpolates sub-millisecond phase accuracy via <code>CVRegistry.getSynchronizedTotalBeats()</code>.</li>
-<li><strong><code>CvHistoryBuffer</code></strong>: Pre-allocated ring buffer storing 200 CV samples for lock-free oscilloscope drawing in the Modulation column (<code>PropertiesPanel</code>).</li>
-<li><strong><code>@Volatile</code> Flags</strong>: Thread-safe single-scalar flags (<code>isBpmLocked</code>, <code>manualBpm</code>, <code>inputGain</code>) accessed across threads without lock overhead.</li>
+<li><strong><code>CvHistoryBuffer</code></strong>: Pre-allocated ring buffer storing 600 CV samples for lock-free oscilloscope drawing in the Modulation column (<code>PropertiesPanel</code>).</li>
+<li><strong><code>@Volatile</code> Flags</strong>: Thread-safe single-scalar flags (<code>clockSource</code>, <code>manualBpm</code>, <code>inputGain</code>; the deprecated <code>isBpmLocked</code> is computed from <code>clockSource</code>) accessed across threads without lock overhead.</li>
 <li><strong>Concurrent Queues</strong>: <code>ConcurrentLinkedQueue</code>s carry finished deck, FX and transition loads (<code>DeckOps</code>, <code>FxOps</code>, <code>TransitionOps</code>, drained at the start of the render phase), incoming MIDI events (<code>MidiEngine</code>, capped, drained by <code>UIManager.processInput</code> before the render phase), and incoming OSC messages decoded on the dedicated UDP receiver thread (<code>OscEngine.inboundQueue</code>), all drained on Thread 0 once per frame.</li>
 </ul>
 <hr />
@@ -1725,7 +1753,7 @@
 </tr>
 </tbody>
 </table>
-<p><code>PresetManager</code> automatically syncs in-memory notes with <code>.lsd</code> DTOs during async load (<code>syncFromDto</code>) and save (<code>syncToDto</code>) operations.</p>
+<p>In-memory notes are synced with <code>.lsd</code> DTOs on load by <code>DeckOps</code> (<code>syncFromDto</code>) and on save by <code>PresetRepository</code> (<code>syncToDto</code>).</p>
 <hr />
 <h2 id="video-io-external-gpu-texture-streaming-architecture">Video I/O &amp; External GPU Texture Streaming Architecture</h2>
 <p>Liquid LSD provides low-latency, zero-copy (or DMA-BUF/MemFD) live video sharing to external VJ software (Resolume Arena, OBS Studio, TouchDesigner, MadMapper):</p>

@@ -1422,6 +1422,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit Blueprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1928,13 +1956,15 @@ $$y[n] = b_0 x[n] + b_1 x[n-1] + b_2 x[n-2] - a_1 y[n-1] - a_2 y[n-2]$$</p>
 - <strong>Clipping Warning</strong>: Instant red <code>CLIP</code> indicator when peak level $\ge 1.0$.</p>
 <hr />
 <h2 id="audio-engine-settings-persistence">Audio Engine Settings Persistence</h2>
-<p>All Audio Engine configuration parameters are serialized to and restored from <code>lsd-settings.properties</code> via <a href="https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/ui/UITheme.kt"><code>UITheme.kt</code></a>:
+<p>All Audio Engine configuration parameters are serialized to and restored from <code>lsd-preferences.properties</code> in the working directory by <a href="https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/ui/AppPreferencesStore.kt"><code>AppPreferencesStore.kt</code></a> (the legacy <code>lsd-settings.properties</code> is only read as a fallback):
 - <code>audioEngineEnabled</code>: Master toggle for audio processing.
 - <code>audioBackend</code>: Selected audio backend mode (<code>AUTO</code>, <code>JACK_ONLY</code>, <code>JAVASOUND_ONLY</code>).
 - <code>audioChannelRouting</code>: Stereo routing selector (<code>MIX</code>, <code>LEFT_ONLY</code>, <code>RIGHT_ONLY</code>).
 - <code>audioDeviceName</code>: Explicitly selected audio hardware input device name (or default).
-- <code>audioInputGain</code>: Input pre-amplification multiplier (0.0x–10.0x).
-- <code>audioBpmLocked</code>: Manual BPM lock state.
+- <code>audioInputGain</code>: Input Trim, the pre-analysis multiplier (0.0x–10.0x).
+- <code>audioResponse</code>: Audio Response, the one reactivity control (a saved <code>audioAgcHeadroom</code> is folded into it once and removed).
+- <code>clockSource</code>: <code>MANUAL</code> or <code>AUDIO_TRACKER</code>; <code>audioBpmLocked</code> is still written and read for older files.
+- <code>beatsPerBar</code>, <code>downbeatMode</code>: bar length and downbeat detection.
 - <code>audioManualBpm</code>: Manual tempo setting (40–200 BPM).
 - <code>audioBeatTarget</code>: Frequency band target for onset detection (<code>LOW</code>, <code>MID</code>, <code>HIGH</code>, <code>UNFILTERED</code>).
 - <code>audioBpmFloor</code> &amp; <code>audioBpmCeiling</code>: BPM search range bounds for the Beat Tracker.

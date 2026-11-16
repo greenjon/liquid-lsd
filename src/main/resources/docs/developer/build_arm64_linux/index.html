@@ -1272,6 +1272,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit Blueprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1563,9 +1591,9 @@ intervention.</p>
   <code>linux-aarch64</code> build and <code>run-linux-arm.sh</code> launcher; included in <code>packageZips</code>.
 - <strong>CI</strong>: <code>linux-arm64</code> is a matrix entry (<code>runs-on: ubuntu-24.04-arm</code>) in the
   smoke-test matrices of both <code>smoke-test.yml</code> and <code>release.yml</code>.
-- <strong>PipeWire</strong>: <code>SpaData</code> and <code>PipeWireBufferStruct</code> in <code>PipeWireLibrary.kt</code> are JNA
-  structures whose layout follows declared field order rather than architecture-specific
-  padding assumed here — re-verify on aarch64 if those struct definitions ever change.</p>
+- <strong>PipeWire</strong>: buffer access is by hand-coded byte offsets (<code>SpaBufferLayout</code> in
+  <code>PipeWireLibrary.kt</code>), and <code>SpaPod</code> writes pods by hand; both assume LP64, which aarch64
+  Linux shares with x86-64. Re-check the offsets on aarch64 if the PipeWire headers change.</p>
 
 
 

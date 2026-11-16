@@ -14,7 +14,7 @@
         <link rel="prev" href="../cli_and_screenshot_automation/">
       
       
-        <link rel="next" href="../ops_tuning/">
+        <link rel="next" href="../audit/">
       
       
         
@@ -1299,6 +1299,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit Blueprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1540,7 +1568,7 @@ scripts/render_tour.sh [--webm] tours/overview.json tours/out/overview --tour-hi
 scripts/render_tour.sh [--draft] --all tours/out --tour-hidden                           # every tours/*.json into tours/out/&lt;name&gt;/
 scripts/tour_determinism_check.sh &lt;script.json&gt; --tour-hidden [--tour-draft]   # renders twice, compares per-frame SHA-256
 </code></pre>
-<p>Render settings come from the command line, not the script (the website's renders use <code>--tour-fps=30 --tour-encoder=nvenc --tour-no-hashes</code>: the site plays 30 fps, NVENC output is reproducible on the same machine, and hashes are only for determinism checks; about 10 minutes for all seven videos instead of 1.5 hours): <code>--tour-fps=&lt;n&gt;</code> (default 60), <code>--tour-scale=&lt;f&gt;</code> (the UI is always laid out at 1920x1080; the frame is shrunk on the GPU before readback, so targets never move), <code>--tour-encoder=x264|nvenc</code> (default x264), <code>--tour-hashes</code> (per-frame SHA-256, about 5 ms a frame at 1080p). <code>--tour-draft</code> = 30 fps, scale 0.5, NVENC, no hashes. On the dev laptop (RTX A2000) a final frame costs about 20 ms (app and UI about 6, hash 5, x264 4, readback 3) and a draft frame about 11 ms, at half the frame count. Drafts are deterministic too (raw and NVENC-encoded frames, checked on this machine). <code>TOUR_GL</code> names the GPU the app rendered on and <code>TOUR_TIMING</code> gives the per-frame breakdown. VP9 has no hardware encoder here, so <code>--webm</code> is opt-in and slow.</p>
+<p>Render settings come from the command line, not the script (the website's renders use <code>--tour-fps=30 --tour-encoder=nvenc --tour-no-hashes</code>: the site plays 30 fps, NVENC output is reproducible on the same machine, and hashes are only for determinism checks; about 10 minutes for all seven videos instead of 1.5 hours): <code>--tour-fps=&lt;n&gt;</code> (default 60), <code>--tour-scale=&lt;f&gt;</code> (the UI is always laid out at 1920x1080; the frame is shrunk on the GPU before readback, so targets never move), <code>--tour-encoder=x264|nvenc</code> (default x264), per-frame SHA-256 hashes (<code>&lt;out&gt;.hashes</code>), on by default (about 5 ms a frame at 1080p; <code>--tour-no-hashes</code> turns them off, <code>--tour-hashes</code> turns them back on after <code>--tour-draft</code>). <code>--tour-draft</code> = 30 fps, scale 0.5, NVENC, no hashes. On the dev laptop (RTX A2000) a final frame costs about 20 ms (app and UI about 6, hash 5, x264 4, readback 3) and a draft frame about 11 ms, at half the frame count. Drafts are deterministic too (raw and NVENC-encoded frames, checked on this machine). <code>TOUR_GL</code> names the GPU the app rendered on and <code>TOUR_TIMING</code> gives the per-frame breakdown. VP9 has no hardware encoder here, so <code>--webm</code> is opt-in and slow.</p>
 <p>Tour mode isolates itself: preferences are not read or written, MIDI/OSC/Link/watchers/live audio are off (a script with <code>audio</code> still shows the AUD column), <code>imgui.ini</code> is not used, real GLFW input is ignored, randomness comes from <code>DeterministicRandom(seed)</code>. Library contents are part of the input: pin a small curated library for the final render.</p>
 <h2 id="script-format-tourtourscriptkt">Script format (<code>tour/TourScript.kt</code>)</h2>
 <p>Top level: <code>durationSec</code> (optional: defaults to the last step's end plus <code>tailSec</code>), <code>seed</code>, <code>audio</code> (file fed to the analyzer by frame clock and muxed), <code>bpm</code> (manual beat clock), <code>burnCaptions</code> (draw captions into the video; the <code>.vtt</code> is always written; the tour page shows captions as text under the player, so only <code>overview.json</code>, whose full video is published, should burn them in, and its chapter clips will carry them until the render pipeline can make clips from a caption-free pass), <code>captionStyle</code> (<code>cursor</code>, the default, or <code>bottom</code>), <code>tooltips</code> (ImGui hover tooltips, off by default so they never collide with the caption box), <code>chapters</code> (<code>{t, id, title, endSec?, clipSec?}</code>, or use <code>chapter</code> steps), <code>steps</code>.</p>

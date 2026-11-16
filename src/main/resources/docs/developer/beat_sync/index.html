@@ -923,10 +923,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-manual-bpm-lock-isbpmlocked-true" class="md-nav__link">
+  <a href="#1-manual-clock-clocksource-clocksourcemanual" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Manual BPM Lock (isBpmLocked = true)
+        1. Manual Clock (clockSource = ClockSource.MANUAL)
       
     </span>
   </a>
@@ -934,10 +934,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-automatic-detection-isbpmlocked-false" class="md-nav__link">
+  <a href="#2-automatic-detection-clocksource-clocksourceaudio_tracker" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Automatic Detection (isBpmLocked = false)
+        2. Automatic Detection (clockSource = ClockSource.AUDIO_TRACKER)
       
     </span>
   </a>
@@ -1377,6 +1377,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit Blueprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1587,10 +1615,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-manual-bpm-lock-isbpmlocked-true" class="md-nav__link">
+  <a href="#1-manual-clock-clocksource-clocksourcemanual" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Manual BPM Lock (isBpmLocked = true)
+        1. Manual Clock (clockSource = ClockSource.MANUAL)
       
     </span>
   </a>
@@ -1598,10 +1626,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-automatic-detection-isbpmlocked-false" class="md-nav__link">
+  <a href="#2-automatic-detection-clocksource-clocksourceaudio_tracker" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Automatic Detection (isBpmLocked = false)
+        2. Automatic Detection (clockSource = ClockSource.AUDIO_TRACKER)
       
     </span>
   </a>
@@ -1715,17 +1743,15 @@ Clock Source Selection: ClockSource (MANUAL | AUDIO_TRACKER)
     │
     └──► MANUAL: Internal Manual Flywheel &amp; Tap Tempo Controller
             └─► CVRegistry.alignBeatPhase(alignedBeats, manualBpm, nanoTime)
+              │  (@Volatile primitive fields update: zero heap allocation)
+              │
+        Render Thread 0 (Every Frame @ 60Hz–144Hz+)
+              │
+              └─► CVRegistry.getSynchronizedTotalBeats()
+                      └─► Sub-millisecond forward clock interpolation; a small backward step coasts at 80% of tempo
+                              │
+                        Evaluators.kt  ← beatPhase, LFO 1/2, Sample &amp; Hold
 </code></pre>
-<pre><code>          │  (@Volatile primitive fields update: zero heap allocation)
-          │
-    Render Thread 0 (Every Frame @ 60Hz–144Hz+)
-          │
-          └─► CVRegistry.getSynchronizedTotalBeats()
-                  └─► Sub-millisecond forward clock interpolation; a small backward step coasts at 80% of tempo
-                          │
-                    Evaluators.kt  ← beatPhase, LFO 1/2, Sample &amp; Hold
-</code></pre>
-<p>```</p>
 <hr />
 <h2 id="beat-tracker-model-beattrackerenginekt">Beat Tracker Model (<code>BeatTrackerEngine.kt</code>)</h2>
 <p>Liquid LSD features a real-time beat tracker and continuous phase generator modeled on the beat tracking algorithm by Adam Stark and the Dan Ellis causal dynamic programming beat tracker.</p>
@@ -1854,10 +1880,10 @@ $$\text{Score}(t) = \text{ODF}(t) + \lambda \cdot \max_{\tau \in [\tau_{\min}, \
 </table>
 <p>No-beat audio: on six long spoken-word files the lock is on 1.5 to 3.9% of the time and moves the clock at most 0.05 beat per minute, and on beatless ambient tracks it is mostly off. On 43 DJ mixes (45.5 h) it is on 79% of the time, with 0.43 jumps a minute.</p>
 <h2 id="bpm-sources-locking">BPM Sources &amp; Locking</h2>
-<h3 id="1-manual-bpm-lock-isbpmlocked-true">1. Manual BPM Lock (<code>isBpmLocked = true</code>)</h3>
+<h3 id="1-manual-clock-clocksource-clocksourcemanual">1. Manual Clock (<code>clockSource = ClockSource.MANUAL</code>)</h3>
 <p>The default and recommended mode for live performances. <code>AudioEngine.manualBpm</code> drives the flywheel directly. Automated phase realignment nudges and phase slew buffers are strictly bypassed, guaranteeing zero tempo jitter and perfectly smooth cosine / sine modulation.</p>
-<h3 id="2-automatic-detection-isbpmlocked-false">2. Automatic Detection (<code>isBpmLocked = false</code>)</h3>
-<p>When unlocked, <code>BeatDetector</code> (in <a href="https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/audio/AudioEngine.kt"><code>AudioEngine.kt</code></a>) delegates to <a href="https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/audio/BeatTrackerEngine.kt"><code>BeatTrackerEngine.kt</code></a>.
+<h3 id="2-automatic-detection-clocksource-clocksourceaudio_tracker">2. Automatic Detection (<code>clockSource = ClockSource.AUDIO_TRACKER</code>)</h3>
+<p>In this mode, <code>BeatDetector</code> (in <a href="https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/audio/AudioEngine.kt"><code>AudioEngine.kt</code></a>) delegates to <a href="https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/audio/BeatTrackerEngine.kt"><code>BeatTrackerEngine.kt</code></a>.
 - <strong>120 BPM Startup &amp; Source Switch Lock</strong>: On application launch, audio engine start, or audio device switching, the engine initializes and holds a steady 120.0 BPM lock until <code>BeatDetector</code> has continuously observed and confirmed a stable candidate tempo (<code>isTempoLocked = true</code>). Only upon confirmed lock does the engine smoothly transition from 120 BPM to the track's tempo.</p>
 <h3 id="3-low-signal-detection-flywheel-tempo-retention">3. Low-Signal Detection &amp; Flywheel Tempo Retention</h3>
 <p>When incoming audio level drops below the analysis threshold (<code>localAudioEnergy &lt;= 0.0025f</code>), such as during quiet ambient breakdowns, vocal bridges, or extended silence:
@@ -1866,7 +1892,7 @@ $$\text{Score}(t) = \text{ODF}(t) + \lambda \cdot \max_{\tau \in [\tau_{\min}, \
 - <strong>Continuous Flywheel Coasting</strong>: During silent passages or drops, the beat flywheel preserves momentum and continues advancing sample-accurately at the active tempo rather than freezing or changing frequency.</p>
 <h3 id="4-audio-engine-disabled-internal-manual-clock-mode">4. Audio Engine Disabled / Internal Manual Clock Mode</h3>
 <p>When the Audio Engine is disabled (<code>UITheme.audioEngineEnabled = false</code>):
-- <strong>Suspended Audio Capture</strong>: Live audio input capture, backend drivers, and audio-reactive CV signals (<code>audio_amp</code>, <code>audio_bass</code>, <code>audio_mid</code>, <code>audio_high</code>, <code>audio_flux_*</code>) are stopped to conserve CPU cycles.
+- <strong>Suspended Audio Capture</strong>: Live audio input capture, backend drivers, and audio-reactive CV signals (the levels <code>audio_amp|bass|mid|himid|high</code>, the hits <code>audio_flux_*</code> and the section energies; see <code>cv/AudioSignals</code>) are stopped to conserve CPU cycles.
 - <strong>Clock Row &amp; Preferences Telemetry</strong>: Both the BPM readout and the bar phase meter remain visible and interactive on the Performance MIXER page's Clock row and within Preferences &gt; Tempo &amp; Sync, reflecting manual fixed clock mode with monotonic phase advance.</p>
 <h3 id="5-vj-tap-tempo-phase-synchronization">5. VJ Tap Tempo &amp; Phase Synchronization</h3>
 <p>The application features a real-time Tap Tempo system (<a href="https://github.com/greenjon/liquid-lsd/blob/main/src/main/kotlin/llm/slop/liquidlsd/audio/TapTempoController.kt"><code>TapTempoController.kt</code></a>) enabling VJs to rhythmically tap in tempos via the Clock row's <code>[TAP]</code> button, global keyboard shortcut (<code>T</code>), or MIDI CC (<code>Mixer/tapTempo</code> or <code>Global/tapTempo</code>):

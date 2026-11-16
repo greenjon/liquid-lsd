@@ -644,32 +644,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#the-three-tier-notes-system" class="md-nav__link">
+  <a href="#parameter-notes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The three-tier notes system
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#adding-and-editing-notes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Adding and editing notes
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#the-preset-name-label" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The preset name label
+        Parameter notes
       
     </span>
   </a>
@@ -1604,6 +1582,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit Blueprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1792,32 +1798,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#the-three-tier-notes-system" class="md-nav__link">
+  <a href="#parameter-notes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The three-tier notes system
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#adding-and-editing-notes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Adding and editing notes
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#the-preset-name-label" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The preset name label
+        Parameter notes
       
     </span>
   </a>
@@ -2143,14 +2127,14 @@
 
 
 <h1 id="performance-controls">Performance Controls</h1>
-<p>This page covers two things that are especially useful during a live show: the trackpad performance surface, and the notes system for keeping reminders attached to your presets and parameters.</p>
+<p>This page covers two things that are especially useful during a live show: the trackpad performance surface, and parameter notes for keeping reminders attached to the parameters of a preset.</p>
 <hr />
 <h2 id="trackpad-performance-surface">Trackpad Performance Surface</h2>
-<p>If you're performing on a laptop, you can turn your trackpad into a hardware-style performance controller — a bit like the classic Stanton SCS.3m DJ mixer. Hold <strong><code>CapsLock</code></strong> to activate it.</p>
-<p>While CapsLock is held:
+<p>If you're performing on a laptop, you can turn your trackpad into a hardware-style performance controller — a bit like the classic Stanton SCS.3m DJ mixer. Press <strong><code>CapsLock</code></strong> to turn it on. The trackpad console works on Linux only for now (see <a href="#setup-on-linux">Setup</a> below).</p>
+<p>While it is on:
 - The trackpad stops moving the mouse cursor
 - It becomes an absolute-position performance surface with three faders and a crossfader</p>
-<p>Release CapsLock to return to normal mouse control.</p>
+<p>Press CapsLock again to return to normal mouse control.</p>
 <h3 id="surface-layout">Surface layout</h3>
 <pre><code>┌────────────────────────────────────────────────────┐
 │  [Deck A Level]  [Deck BG Level]  [Deck B Level]   │  ← Top 55% of trackpad
@@ -2180,7 +2164,7 @@
 <h3 id="setup-on-linux">Setup on Linux</h3>
 <p>On Linux, the trackpad surface reads raw multi-touch input directly. This requires read/write permission on the input device.</p>
 <p>If the permission isn't set up, you'll see a <strong>Touchpad Status: Read/Write Permission Required</strong> message in <strong>Preferences → General</strong>, next to the <strong>Enable CapsLock Trackpad Console</strong> checkbox, with an <strong>Install Permissions (Polkit)</strong> button. Clicking it installs the necessary udev rule using <code>pkexec</code> — no reboot required. If you ran the desktop installer script (<code>./install-desktop.sh</code>) when you first unzipped the app, this was done automatically.</p>
-<p>On macOS, native trackpad support works without any extra setup.</p>
+<p>On Windows and macOS the trackpad console is not supported yet: Preferences shows it as not supported on that platform.</p>
 <p><strong>Focus safety:</strong> If Liquid LSD loses window focus (e.g. via Alt+Tab), the trackpad grab releases immediately, so you're never locked out of your mouse.</p>
 <hr />
 <h2 id="notes-tooltips">Notes &amp; Tooltips</h2>
@@ -2191,50 +2175,9 @@
 3. Any personal note you've attached to the parameter (in amber text).</p>
 <p>Macro knob tooltips show the value in the target parameter's real units, with the knob position as a percentage: <code>ZOOM: 5.00 (100%)</code>. The same real value is shown on the knob face (always while a row is in Edit, otherwise on hover).</p>
 <p>Tooltips appear after a short delay (~250ms) so they don't flash annoyingly as you move the mouse.</p>
-<h3 id="the-three-tier-notes-system">The three-tier notes system</h3>
-<p>You can attach notes at three different scopes:</p>
-<table>
-<thead>
-<tr>
-<th>Scope</th>
-<th>What it's for</th>
-<th>Where it's stored</th>
-<th>When it appears</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Source Note</strong></td>
-<td>Notes about a visual generator (e.g. "Gyroid works best with low gain feedback")</td>
-<td><code>~/.liquid-lsd/source-notes.json</code></td>
-<td>Stays with you globally, across all presets</td>
-</tr>
-<tr>
-<td><strong>Preset Note</strong></td>
-<td>Notes about a specific preset</td>
-<td>Inside the <code>.lsd</code> file</td>
-<td>Shows when hovering the preset name label on the deck monitor</td>
-</tr>
-<tr>
-<td><strong>Parameter Note</strong></td>
-<td>A reminder about a specific parameter in a preset</td>
-<td>Inside the <code>.lsd</code> file</td>
-<td>Shows in the parameter's hover tooltip</td>
-</tr>
-</tbody>
-</table>
-<p>Source Notes are global and persist no matter which preset you load — good for tips about generators that are always true. Preset and Parameter Notes travel with the preset file when you share it.</p>
-<h3 id="adding-and-editing-notes">Adding and editing notes</h3>
-<p><strong>Parameter notes:</strong>
-Hover over any parameter row in Edit's parameter grid and click <strong>⋮</strong> (or right-click the parameter name), then choose <strong>Add/Edit Parameter Note...</strong></p>
-<p><strong>Preset notes:</strong>
-Right-click the preset name label below the deck monitor preview and choose <strong>Add/Edit Preset Note...</strong></p>
-<p><strong>Source notes:</strong>
-Open the Deck Menu popup and choose <strong>Add/Edit Source Note...</strong></p>
-<p>All three open the same note editor: a multi-line text box up to 2048 characters. Press <code>Ctrl+Enter</code> to save, or <code>Escape</code> to cancel.</p>
-<h3 id="the-preset-name-label">The preset name label</h3>
-<p>Below each deck's monitor preview you'll see the name of the currently loaded preset. Hovering it shows the full file path, the last save time, and the preset note if one exists. A <code>*</code> next to the name means there are unsaved changes.</p>
-<p>If no preset is loaded yet (the deck is in an unsaved state), the label shows <code>Untitled</code> in grey. You can't attach a preset note until the preset has been saved at least once.</p>
+<h3 id="parameter-notes">Parameter notes</h3>
+<p>You can attach a note to any parameter of a preset, for example "keep this under 0.3 or it strobes". The note is stored inside the preset's <code>.lsd</code> file, so it travels with the preset when you share it, and it shows in the parameter's hover tooltip.</p>
+<p>To add or edit one, hover over a parameter row in Edit's parameter grid and click <strong>⋮</strong> (or right-click the parameter name), then choose <strong>Add Parameter Note...</strong> (<strong>Edit Parameter Note...</strong> when the parameter already has one). The note editor is a multi-line text box of up to 2048 characters; click <strong>Save</strong> or <strong>Cancel</strong>. The note is written to the file the next time you save the preset.</p>
 <hr />
 <h2 id="fx-chain-slot-management">FX Chain &amp; Slot Management</h2>
 <p>Every deck and the master bus each own one FX chain of 3 serial ISF filter slots: a deck's chain is
@@ -2340,7 +2283,7 @@ for how they work and where to edit them.</p>
 <h3 id="quick-setup">Quick Setup</h3>
 <ol>
 <li>Connect your USB or DIN MIDI interface.</li>
-<li>Open <strong>Preferences → MIDI Controls</strong> (or press <code>Ctrl+,</code>).</li>
+<li>Open <strong>Preferences → MIDI Controls</strong> (or press <code>Ctrl+P</code>).</li>
 <li>Ensure <strong>Enable MIDI Subsystem</strong> is checked. The background watchdog automatically detects newly connected controllers without restarting the application.</li>
 <li>Check the <strong>Live MIDI Monitor (Sniffer)</strong> at the top of the panel: moving any knob or pressing any pad on your controller will immediately stream incoming packets (Channel, Message Type, Index, and Values).</li>
 </ol>
@@ -2678,7 +2621,7 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <p>Liquid LSD includes a native, zero-dependency OSC 1.0 server for wireless control from TouchOSC and other OSC-capable apps on phones and tablets — no external bridge software required.</p>
 <h3 id="quick-setup_1">Quick Setup</h3>
 <ol>
-<li>Open <strong>Preferences → OSC Controls</strong> (or press <code>Ctrl+,</code>).</li>
+<li>Open <strong>Preferences → OSC Controls</strong> (or press <code>Ctrl+P</code>).</li>
 <li>Check <strong>Enable OSC Server</strong>. By default it listens on UDP port <code>8000</code> and sends feedback out on port <code>9000</code> — both are editable, with a <strong>Restart Server</strong> button to apply port changes.</li>
 <li>Point your TouchOSC layout at your computer's IP address, using the same inbound/outbound ports. Move any control on the layout — Liquid LSD automatically learns the client's IP from the first packet it receives, so there's nothing to configure on the desktop side beyond the ports.</li>
 <li>The <strong>Live Packet Sniffer</strong> in the OSC Controls tab streams recent inbound and outbound traffic (address, arguments, and remote host) so you can confirm packets are arriving.</li>

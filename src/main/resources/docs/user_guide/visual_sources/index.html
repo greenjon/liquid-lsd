@@ -1784,6 +1784,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit Blueprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2520,7 +2548,7 @@
 <p>Streams are not files, so they cannot be saved as presets, added to playlists or queued.</p>
 <hr />
 <h2 id="built-in-generators">Built-In Generators</h2>
-<p>Liquid LSD includes a curated suite of 36 built-in procedural generators spanning harmonic geometry, 3D raymarching, 3D fractals, volumetric gas, 4D polytopes, organic fluid dynamics, living simulations, acoustic wavefields, two audio visualizers that draw the sound itself, and a set of light generators that run comfortably on integrated graphics.</p>
+<p>Liquid LSD includes a curated suite of 37 built-in procedural generators spanning harmonic geometry, 3D raymarching, 3D fractals, volumetric gas, 4D polytopes, organic fluid dynamics, living simulations, acoustic wavefields, two audio visualizers that draw the sound itself, and a set of light generators that run comfortably on integrated graphics.</p>
 <p>The raymarchers (Icosa-H3, Gyroid Hyperspace, 4D Hyper-Slice, Nebula Volume and the fractals below) show a gauge mark in the browser: they are GPU-intensive and can run slowly on integrated graphics. The fractals are tuned for a mid-range discrete GPU (an RTX A2000 or better); every one has a <strong>Quality</strong> knob, and lowering it is the first thing to try if a deck stutters.</p>
 <p><strong>Decks off air cost less.</strong> Deck PV only feeds its monitor, so it renders at half the output size (full size when you send it out over Spout / Syphon / PipeWire). With <strong>Off-air decks at half frame rate</strong> on (<em>Preferences &gt; General</em>, on by default), a deck the output can't show at the moment (A or B faded fully across, a deck or the master at level 0, and PV) renders every other frame, leaving the GPU to the decks on air. Its monitor runs at half rate, and simulations and feedback trails on it advance at half speed until it comes on air. A deck you stream always renders every frame.</p>
 <p><strong>Black is transparent.</strong> Generators let the BG deck (or any layer beneath them) show through wherever they are black: a source's alpha follows its brightest colour channel, so bright areas cover what is behind and dark areas reveal it. Over a black BG nothing changes.</p>
@@ -2603,8 +2631,10 @@
 <li><strong>Mode Snap</strong>: how a mode change looks, from a slow blend across the whole step to an instant jump.</li>
 <li><strong>Line Width, Settled</strong>: the width of the sand lines and how much of the sand has reached them. Pulling Settled down on a kick throws the sand off the lines.</li>
 <li><strong>Vibration</strong>: how fast the loose grains hop.</li>
-<li><strong>Invert</strong>: shows the moving surface instead of the sand, lit like water.</li>
-<li><strong>Palette Modes</strong>: Obsidian &amp; Gold Sand, Electric Cymatic Blue, Prismatic Spectrum, and Bioluminescent Emerald.</li>
+<li><strong>Invert (Antinodes)</strong>: shows the moving surface instead of the sand, lit like water.</li>
+<li><strong>Glow</strong>: a soft halo around the sand lines.</li>
+<li><strong>Palette Mode</strong>: Obsidian &amp; Gold Sand, Electric Cymatic Blue, Prismatic Spectrum, and Bioluminescent Emerald.</li>
+<li><strong>Hue Offset</strong>: turns the colours of the Prismatic Spectrum palette (the other palettes ignore it).</li>
 <li><strong>Scale</strong>: 1x shows the whole plate; zoom in to fill the frame.</li>
 </ul>
 <h3 id="mandelbox-mandelbox">Mandelbox (<code>mandelbox</code>)</h3>

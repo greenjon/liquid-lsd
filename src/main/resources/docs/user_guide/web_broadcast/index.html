@@ -1255,6 +1255,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit Blueprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1597,7 +1625,7 @@ Each viewer's browser — renders the visuals locally using WebGL
 <li><strong>SCENES:</strong> <strong>Time</strong>, <strong>Auto roll</strong>, <strong>Follow music</strong>, <strong>Effects</strong>, <strong>Background</strong>, <strong>BG changes</strong>, <strong>Skip this channel</strong>, <strong>Skipped</strong>.</li>
 <li><strong>SOUND:</strong> <strong>Audio input</strong> (radio or microphone), <strong>REACT</strong>, <strong>SYNC</strong> (how late the sound reaches you, for Bluetooth and other delayed speakers), <strong>TAP SYNC</strong>.</li>
 <li><strong>EQ:</strong> <strong>Equalizer</strong> on or off (off by default), <strong>Bass</strong>, <strong>Mid</strong> and <strong>Treble</strong> (±12 dB each), <strong>Flat</strong>. It changes only what you hear from the radio or a tape, never what the picture reacts to. Boosting a band turns the overall volume down by the same amount so loud songs don't distort.</li>
-<li><strong>TV:</strong> <strong>Fullscreen</strong>, <strong>Theme</strong> (the cabinet and the room around it, dark or light; dark by default), <strong>Announce scenes</strong> (name each new scene on screen; off by default), <strong>Reduced motion</strong> (Auto follows your system setting), <strong>Big GPU scenes</strong> (Auto lets the GPU check decide), <strong>Reset</strong>, <strong>About</strong>.</li>
+<li><strong>TV:</strong> <strong>Fullscreen</strong>, <strong>Theme</strong> (the cabinet and the room around it: light, a 1970s hi-fi receiver in brushed aluminium and walnut, the default; or dark plastic), <strong>Announce scenes</strong> (name each new scene on screen; off by default), <strong>Reduced motion</strong> (Auto follows your system setting), <strong>Big GPU scenes</strong> (Auto lets the GPU check decide), <strong>Reset</strong>, <strong>About</strong>.</li>
 </ul>
 <p>Settings are remembered in this browser. REACT, TIME, Auto roll, the background, effects and follow-music rows, Audio input and Big GPU scenes are locked during a live broadcast. RESET puts every setting back, including turning the EQ off and flat, but leaves skipped channels skipped.</p>
 <p><strong>Variations:</strong> no scene looks exactly the same twice. Each one's settings roll within a narrow span around the values it was tuned with whenever it comes on, and again on <strong>ROLL</strong> (<code>R</code>). Settings that come in steps (a colour mode, a number of petals, Mandala's shape) change on the bar line; the rest glide over it. MENU › <strong>Auto roll</strong> rolls the scene on air every 4, 8 or 16 bars, which goes well with HOLD.</p>
@@ -1616,10 +1644,10 @@ The board is open on your first visit. The <strong>X</strong> in its top corner 
 <p><strong>Reduced motion:</strong> follows your system's "reduce motion" setting (or MENU › Reduced motion): gentler reaction, no hard scenes, no flashes or glitch effects, no cut on the drop, slower changes.</p>
 <p><strong>Going live:</strong> when the desktop starts broadcasting, viewers see a LIVE title card with the broadcaster's name (if one is set in the desktop's Web Broadcast preferences).</p>
 <p><strong>Power:</strong> click anywhere on the TV to turn it on (the browser needs that click to start the sound). The piano keys (OFF, INFO, MENU, SCHED, TAPES, ?) and CHAT work without turning it on, and picking a tape turns it on and plays the tape. Once it's on, only the PWR switch turns it off: clicks on the cabinet are ignored, a click that just misses a button presses the nearest one, and clicks on the picture show the info.</p>
-<p><strong>The info panel:</strong> click the picture or press <strong>I</strong> to see it. Top left: what Spaz Radio is playing and the next show. Bottom left: <strong>SCENE</strong> (the scene on air), <strong>BACKGROUND</strong> (what plays behind it: the photo gallery, or with BG changes <em>With scenes</em>, a scene that changes on its own clock, twice the scene length) and <strong>FX</strong> (the scene's effects). With MENU › <strong>ANNOUNCE SCENES</strong> on, the panel comes up by itself for each new scene, and the BACKGROUND line when the background changes. Control messages (HOLD, BARS, SYNC…) come up in the middle of the picture.</p>
-<p><strong>About:</strong> the <code>?</code> page (also MENU › <strong>ABOUT</strong>) links the Liquid LSD website, with a QR code for your phone, and <strong>I</strong> shows a Liquid LSD line with the info.</p>
-<p><strong>Beat light:</strong> the second light on the badge blinks on every beat: green when the TV has locked onto the music's beat, amber while it keeps time on its own (quiet passages, or before it has found the beat).</p>
-<p><strong>What viewers see.</strong> Each deck's source and its parameters, the deck FX chains and the master FX chain, the transition and crossfader, the channel levels and the beat all go over the wire, so the web TV follows your mix closely. A few things stay desktop-only: external video sources (Spout, NDI, PipeWire, webcam) show as nothing, and anything the web player does not have (a custom shader you added to your own library) is skipped. Viewers join in the middle of a broadcast on the right beat.</p>
+<p><strong>The info panel:</strong> point at or click the picture, or press <strong>I</strong>, to see it. Top left: what Spaz Radio is playing and the next show. Bottom left: <strong>SCENE</strong> (the scene on air), <strong>BACKGROUND</strong> (what plays behind it: the photo gallery, or with BG changes <em>With scenes</em>, a scene that changes on its own clock, twice the scene length) and <strong>FX</strong> (the scene's effects). With MENU › <strong>ANNOUNCE SCENES</strong> on, the panel comes up by itself for each new scene, and the BACKGROUND line when the background changes. Control messages (HOLD, BARS, SYNC…) come up in the middle of the picture.</p>
+<p><strong>About:</strong> the <code>?</code> page (also MENU › TV › <strong>ABOUT</strong>) links the Liquid LSD website, with a QR code for your phone, and <strong>I</strong> shows a Liquid LSD line with the info.</p>
+<p><strong>Beat light:</strong> the beat light in the display window blinks on every beat: green when the TV has locked onto the music's beat, amber while it keeps time on its own (quiet passages, or before it has found the beat).</p>
+<p><strong>What viewers see.</strong> Each deck's source and its parameters, the deck FX chains and the master FX chain, the transition and crossfader, the channel levels and the beat all go over the wire, so the web TV follows your mix closely. A few things stay desktop-only: external video sources (Spout, Syphon and PipeWire, webcams included) show as nothing, and anything the web player does not have (a custom shader you added to your own library) is skipped. Viewers join in the middle of a broadcast on the right beat.</p>
 <p>The viewer's browser also connects to a live audio stream and runs its own audio analysis, keeping the visuals reactive to music even when you're not broadcasting.</p>
 <hr />
 <h2 id="autopilot-mode">Autopilot mode</h2>

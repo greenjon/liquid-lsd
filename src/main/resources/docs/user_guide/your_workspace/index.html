@@ -1299,6 +1299,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit Blueprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1552,7 +1580,7 @@
 <p>Liquid LSD uses four independent rendering decks — think of them like channels on a mixer, each running its own visual independently:</p>
 <ul>
 <li>
-<p><strong>Deck A &amp; Deck B</strong> — Your two main stage decks. These go through the crossfader and blend modes, so you can mix between them in real time.</p>
+<p><strong>Deck A &amp; Deck B</strong> — Your two main stage decks. These go through the crossfader and the current transition, so you can mix between them in real time.</p>
 </li>
 <li>
 <p><strong>Deck BG (Background)</strong> — Renders behind Decks A and B. Good for subtle textures or dark ambient fields that sit underneath your main visuals.</p>
@@ -1599,8 +1627,7 @@ one row per deck or section, with tabs across the top (A/B, BG/PV and MIXER). Cl
 - Live previews of each deck
 - The crossfader between Deck A and Deck B
 - Level controls for each deck
-- Master output monitor
-- Blend mode selector</p>
+- Master output monitor</p>
 <p>Clicking a deck monitor points the Library at that deck's source; clicking the master monitor (or its <strong>M</strong> badge) points it at the Master FX chain (or at the transition, if you touched that last). When the current page doesn't show those rows, the pair view brings them on screen instead. Use a row's gear for the full Edit.</p>
 <p>Macro knobs are edited in the Performance rows' Edit view, where each knob gets a target strip for choosing what it controls. See <a href="../macros_and_rack/">Macro Controls &amp; the Perform View</a>.</p>
 <hr />
@@ -1646,6 +1673,10 @@ one row per deck or section, with tabs across the top (A/B, BG/PV and MIXER). Cl
 <td>Save the preset of the deck open in Edit</td>
 </tr>
 <tr>
+<td><code>Ctrl+Shift+S</code></td>
+<td>Save the preset of the deck open in Edit under a new name (Save As)</td>
+</tr>
+<tr>
 <td><code>Ctrl+R</code></td>
 <td>Start / stop recording</td>
 </tr>
@@ -1675,7 +1706,7 @@ one row per deck or section, with tabs across the top (A/B, BG/PV and MIXER). Cl
 </tr>
 <tr>
 <td><code>Q</code> / <code>Shift+Q</code></td>
-<td>Add the selected Library item to the A/B queue / BG queue</td>
+<td>Add the selected Library item to the current tab's queue: the A/B Queue (Sources), the A/B FX Queue (FX) or the Transition Queue (Transitions) / to its BG queue (BG Queue or BG FX Queue)</td>
 </tr>
 <tr>
 <td><code>Up</code> / <code>Down</code></td>
@@ -1688,6 +1719,10 @@ one row per deck or section, with tabs across the top (A/B, BG/PV and MIXER). Cl
 <tr>
 <td><code>Delete</code> / <code>Backspace</code></td>
 <td>Delete the selected saved item, or remove the selected queue item (the key is set in Preferences → Shortcuts)</td>
+</tr>
+<tr>
+<td><code>Delete</code> (in Edit)</td>
+<td>Clear the modulators on the selected cell, or reset the selected parameter to its default</td>
 </tr>
 <tr>
 <td><code>Alt+click</code></td>

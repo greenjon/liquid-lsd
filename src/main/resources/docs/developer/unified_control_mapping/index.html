@@ -1352,15 +1352,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#6-implemented-so-far-2026-10-01" class="md-nav__link">
+  <a href="#6-implemented-so-far" class="md-nav__link">
     <span class="md-ellipsis">
       
-        6. Implemented So Far (2026-10-01)
+        6. Implemented So Far
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="6. Implemented So Far (2026-10-01)">
+    <nav class="md-nav" aria-label="6. Implemented So Far">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1552,6 +1552,34 @@
     
   
     Tour Renderer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit Blueprint
   
 
     
@@ -1896,15 +1924,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#6-implemented-so-far-2026-10-01" class="md-nav__link">
+  <a href="#6-implemented-so-far" class="md-nav__link">
     <span class="md-ellipsis">
       
-        6. Implemented So Far (2026-10-01)
+        6. Implemented So Far
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="6. Implemented So Far (2026-10-01)">
+    <nav class="md-nav" aria-label="6. Implemented So Far">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -2800,7 +2828,7 @@
 <li>Support loading/saving controller presets to <code>library/mappings/</code>.</li>
 </ol>
 <hr />
-<h2 id="6-implemented-so-far-2026-10-01">6. Implemented So Far (2026-10-01)</h2>
+<h2 id="6-implemented-so-far">6. Implemented So Far</h2>
 <p>Package <code>llm.slop.liquidlsd.control</code>; tests in <code>src/test/kotlin/.../control/</code> and <code>midi/GlobalCommandDispatchTest.kt</code>.</p>
 <h3 id="61-command-registry">6.1 Command registry</h3>
 <ul>
@@ -2816,15 +2844,15 @@
 <ul>
 <li>A profile is JSON: <code>id</code>, <code>name</code>, <code>description</code>, <code>match</code> (case-insensitive substrings of the device name), <code>banks</code>, <code>inputs</code>, <code>bindings</code>, <code>bankBindings</code>.</li>
 <li>Built-ins live in <code>src/main/resources/controllers/</code> and are listed in <code>ControllerProfileStore.BUILT_IN_NAMES</code>; user profiles in <code>library/controllers/*.json</code>. A user profile with the same <code>id</code> replaces the built-in, and user profiles win when two match one device. Profiles that fail to parse or validate are skipped with an error in the log.</li>
-<li><code>banks.pages</code> lists the app page to show when each hardware bank becomes active (index = 0-based bank; <code>perform.&lt;page id&gt;</code>: the built-ins are <code>decks</code>, <code>master</code>, <code>ab</code>, <code>bgpv</code>, <code>mixer</code>, plus any page in <code>library/perform_pages/</code>; the shipped Twister profile uses <code>ab</code>, <code>bgpv</code>, <code>mixer</code>, <code>master</code>). <code>inputs</code>: each entry is one input or a group. Group members come from <code>ccs</code> or <code>cc until cc + count</code> and are named <code>&lt;id&gt;.&lt;n&gt;</code> (1-based). <code>bankStride</code> adds <code>bank * bankStride</code> to the CC so a logical input keeps one id on every hardware bank. An <code>ENCODER</code> can carry <code>press: {channel}</code> (same CCs on another channel), exposed as <code>&lt;id&gt;.&lt;n&gt;.press</code>. <code>kind</code> is <code>ENCODER</code>, <code>BUTTON</code>, <code>FADER</code> or <code>MODIFIER</code> (a held button that selects alternate bindings). Encoders also take <code>mode</code> (<code>ABSOLUTE</code>, <code>RELATIVE_BINARY_OFFSET</code>, <code>RELATIVE_SIGNED_BIT</code>, <code>RELATIVE_TWOS_COMP</code>), <code>step</code> (fraction of a control's range per tick, default 1/127) and <code>accel</code> (maximum speed-up, 1 disables).</li>
+<li><code>banks.pages</code> lists the app page to show when each hardware bank becomes active (index = 0-based bank; <code>perform.&lt;page id&gt;</code>: the built-in pages are <code>ab</code>, <code>bgpv</code> and <code>mixer</code> (files <code>deck-ab.json</code>, <code>deck-bgpv.json</code>, <code>mixer.json</code> in <code>resources/perform_pages/</code>), plus any page in <code>library/perform_pages/</code>; the shipped Twister profiles use <code>ab</code>, <code>bgpv</code>, <code>mixer</code>). <code>inputs</code>: each entry is one input or a group. Group members come from <code>ccs</code> or <code>cc until cc + count</code> and are named <code>&lt;id&gt;.&lt;n&gt;</code> (1-based). <code>bankStride</code> adds <code>bank * bankStride</code> to the CC so a logical input keeps one id on every hardware bank. An <code>ENCODER</code> can carry <code>press: {channel}</code> (same CCs on another channel), exposed as <code>&lt;id&gt;.&lt;n&gt;.press</code>. <code>kind</code> is <code>ENCODER</code>, <code>BUTTON</code>, <code>FADER</code> or <code>MODIFIER</code> (a held button that selects alternate bindings). Encoders also take <code>mode</code> (<code>ABSOLUTE</code>, <code>RELATIVE_BINARY_OFFSET</code>, <code>RELATIVE_SIGNED_BIT</code>, <code>RELATIVE_TWOS_COMP</code>), <code>step</code> (fraction of a control's range per tick, default 1/127) and <code>accel</code> (maximum speed-up, 1 disables).</li>
 <li><code>banks.switch</code> describes the device's bank buttons (<code>CC = cc + bankIndex</code>; a non-zero value means that bank is now active).</li>
 <li>Binding keys are an input id with optional held-modifier prefixes (<code>shift+knob.3.press</code>); <code>bankBindings</code> (1-based bank) override <code>bindings</code>. In the last part of a key <code>*</code> matches a group index and <code>{n}</code> in the value is replaced by it (<code>"knob.*": "knob.{n}"</code>). <code>CompiledController.bindingFor(inputId, held, bank)</code> picks the most specific binding: more modifiers beat fewer, then a bank binding beats a global one.</li>
 <li><code>ControllerProfile.compile()</code> builds a <code>(type, channel, cc) -&gt; ResolvedInput(inputId, kind, bank, mode)</code> table and a list of structural problems (CC collisions, out-of-range values, duplicate ids, bindings naming unknown inputs or non-modifier prefixes). <code>unknownCommands(registry)</code> lists binding targets that aren't registered.</li>
 <li>Bindings, modifiers, banks and encoder handling are live (6.5). Navigation/browse commands are live (6.7). Not implemented yet: response curves. See <code>.planning/midi-controller-plan.md</code> (removed; in git at 4fa7646).</li>
 </ul>
 <h3 id="64-built-in-profile">6.4 Built-in profile</h3>
-<p>Banks select Perform pages (<code>banks.pages</code>: <code>perform.ab</code>, <code>perform.bgpv</code>, <code>perform.mixer</code>; the stock Twister profile has 4 banks, and bank 4 leaves the page alone). Side buttons <code>side.1..3</code> (CC 8, 11, 13 on bank 1; +6 per bank) are the context-dependent navigation buttons; shift is CC 10.
-<code>midi-fighter-twister</code>: 64 encoders (CC 0..63 on ch1 = knob + 16 * bank), encoder switches on ch2 with the same CCs, 6 side buttons per bank on ch4 (CC 8+6n..13+6n: left-top, left-middle = chain link, left-bottom = shift, right-top, right-middle = bank step, right-bottom), all <code>CC Hold</code>; the app steps banks and sends the bank change (ch4 CC 0..3). The matching Utility settings ship as <code>resources/controllers/midi-fighter-twister.mfs</code>; the profile's optional <code>utilityFile</code> names it and Preferences &gt; MIDI Controls &gt; Controller Profiles saves a copy anywhere (<code>ControllerProfileStore.utilityFileBytes</code>; the last folder is the <code>utilitySettingsDirectory</code> preference). Measured on hardware.</p>
+<p>Banks select Perform pages (<code>banks.pages</code>: <code>perform.ab</code>, <code>perform.bgpv</code>, <code>perform.mixer</code>; the stock Twister profile has 4 banks, and bank 4 leaves the page alone). Side buttons <code>side.1..3</code> (CC 8, 12, 13 on bank 1: left-top, right-middle, right-bottom; +6 per bank) are the context-dependent navigation buttons; <code>chainlink</code> is CC 9, <code>shift</code> CC 10 and <code>bankstep</code> CC 11.
+<code>midi-fighter-twister</code>: 64 encoders (CC 0..63 on ch1 = knob + 16 * bank), encoder switches on ch2 with the same CCs, 6 side buttons per bank on ch4 (CC 8+6n..13+6n: left-top, left-middle = chain link, left-bottom = shift, right-top = bank step, right-middle, right-bottom), all <code>CC Hold</code>; the app steps banks and sends the bank change (ch4 CC 0..3). The matching Utility settings ship as <code>resources/controllers/midi-fighter-twister.mfs</code>; the profile's optional <code>utilityFile</code> names it and Preferences &gt; MIDI Controls &gt; Controller Profiles saves a copy anywhere (<code>ControllerProfileStore.utilityFileBytes</code>; the last folder is the <code>utilitySettingsDirectory</code> preference). Measured on hardware.</p>
 <h3 id="65-controller-runtime-and-the-perform-grid-phase-2">6.5 Controller runtime and the Perform grid (phase 2)</h3>
 <ul>
 <li><code>ControllerManager</code> creates one <code>ControllerRuntime</code> per device the first time it sends a message and its name matches a profile. <code>MidiMappingManager.processGlobalMidiEvents</code> offers each event to it before the legacy <code>Global/*</code> and parameter bindings; a runtime consumes an event only if the profile binds that input, and a learned mapping on the exact channel/CC takes precedence over the profile, except while <code>NavSurface.browsing</code> is true (the profile then gets the event first).</li>

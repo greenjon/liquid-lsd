@@ -1289,6 +1289,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit Blueprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1547,8 +1575,8 @@
 <h3 id="lock-free-audio-tapping">Lock-Free Audio Tapping</h3>
 <p>Audio recording runs concurrently with zero allocations:
 - Inside the real-time audio callback (<code>AudioEngine</code>), an audio block is offered to a lock-free Single-Producer Single-Consumer (SPSC) ring buffer of pre-allocated <code>FloatArray</code> buffers (8192 samples).
-- An asynchronous worker thread (<code>RealtimeRecorder-AudioWorker</code>) polls the SPSC queue and writes raw 32-bit float PCM data to a temporary audio scratch file.
-- When recording stops, FFmpeg finalizes and multiplexes the video stream and raw PCM audio into the destination MP4 container.</p>
+- An asynchronous worker thread (<code>RealtimeRecorder-AudioWorker</code>) polls the SPSC queue and writes 16-bit PCM to a temporary WAV file (<code>.tmp_aud_*.wav</code>).
+- When recording stops, FFmpeg finalizes and multiplexes the video stream and the WAV audio (AAC, 320 kb/s) into the destination MP4 container, on the <code>RealtimeRecorder-Finish</code> thread.</p>
 <hr />
 <h2 id="2-offline-render-studio-offlinerenderstudiokt">2. Offline Render Studio (<code>OfflineRenderStudio.kt</code>)</h2>
 <p>Offline rendering decouples rendering from physical wall-clock time. It runs a deterministic simulation where every video frame advances the internal timeline and audio DSP state by an exact fractional step ($\Delta t = 1.0 / \text{FPS}$).</p>
@@ -1560,7 +1588,7 @@
 │  3. For each Sub-Frame slice (Motion Blur):                  │
 │     - Compute intermediate CV modulators                     │
 │     - Render Deck A &amp; Deck B into Clean FBOs                 │
-│     - Execute Ping-Pong Feedback &amp; Mixer Passes              │
+│     - Run each deck's FX chain, then the Mixer passes        │
 │     - Accumulate slice in AccumulationBuffer (HDR)           │
 │  4. Normalize &amp; Tone-Map Accumulation Buffer                 │
 │  5. Async PBO Readback ──► Stream to FFmpeg stdin            │
@@ -1574,19 +1602,18 @@
 <h3 id="sub-frame-accumulation-motion-blur-accumulationbufferkt">Sub-Frame Accumulation Motion Blur (<code>AccumulationBuffer.kt</code>)</h3>
 <p>Fast-moving geometry (e.g. ribbon rotations at 120 RPM or high-frequency feedback zoom) can appear strobed or stepped at standard 60 FPS.</p>
 <ul>
-<li><strong>Temporal Oversampling</strong>: Slices each frame into $S$ sub-steps ($S \in {2, 4, 8, 16}$).</li>
-<li><strong>Weighting Curves</strong>: Sub-frame slices are blended into a floating-point <code>RGBA16F</code> / <code>RGBA32F</code> accumulation texture using uniform or exposure-weighted Gaussian shutter curves.</li>
-<li><strong>Shutter Angle</strong>: Simulates physical camera shutter speeds (e.g., $180^\circ = 1/120\text{s}$ shutter at 60 FPS).</li>
+<li><strong>Temporal Oversampling</strong>: Slices each frame into $S$ sub-steps, $S$ = <code>superSamplingFactor</code> clamped to 1..8 (1 = no blur).</li>
+<li><strong>Weighting</strong>: every sub-frame is added into a <code>GL_RGBA16F</code> accumulation FBO with the same weight $1/S$ (a box filter over the whole frame interval). There is no Gaussian curve or shutter-angle setting.</li>
 </ul>
 <hr />
 <h2 id="3-subprocess-ffmpeg-pipe-ffmpegprocesspipekt">3. Subprocess FFmpeg Pipe (<code>FFmpegProcessPipe.kt</code>)</h2>
 <p>Video frames are encoded on-the-fly by spawning FFmpeg as an asynchronous child process and streaming raw RGBA byte arrays directly to its <code>stdin</code> file descriptor:</p>
 <pre><code class="language-bash">ffmpeg -y -f rawvideo -pix_fmt rgba -s:v 3840x2160 -r 60 -i - \
-       -i /tmp/audio_scratch.pcm -c:v libx264 -crf 17 -preset veryfast \
-       -pix_fmt yuv420p -c:a aac -b:a 320k output.mp4
+       -i song.wav -vf vflip -c:v libx264 -preset fast -crf 18 \
+       -pix_fmt yuv420p -c:a aac -b:a 320k -shortest output.mp4
 </code></pre>
 <ul>
-<li><strong>Hardware Acceleration Autodetection</strong>: Automatically detects and selects hardware encoders (<code>h264_nvenc</code> for NVIDIA, <code>h264_qsv</code> for Intel, <code>h264_vaapi</code> for Linux/AMD, <code>h264_videotoolbox</code> for Apple Silicon) with transparent fallback to <code>libx264</code>.</li>
+<li><strong>Hardware Acceleration Autodetection</strong>: Automatically detects and selects hardware encoders by probing <code>ffmpeg -encoders</code> once (on the <code>ffmpeg-encoder-probe</code> thread): <code>h264_nvenc</code> / <code>hevc_nvenc</code> (NVIDIA), <code>_qsv</code> (Intel), <code>_amf</code> (AMD), <code>_videotoolbox</code> (Apple), with fallback to <code>libx264</code> / <code>libx265</code>. <code>forceSoftwareEncoder</code> (deterministic output) and an explicit <code>encoder</code> override the choice. Default quality is CRF 18 (<code>-cq</code> on NVENC); other encoders take <code>bitrateMbps</code>.</li>
 <li><strong>Pipe Safety</strong>: Ensures <code>stdin.flush()</code> and <code>Process.destroy()</code> lifecycle hygiene to avoid zombie processes or locked file handles.</li>
 </ul>
 

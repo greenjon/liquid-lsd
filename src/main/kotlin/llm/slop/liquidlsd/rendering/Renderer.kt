@@ -295,7 +295,7 @@ class Renderer {
 
         mixer.blendFBO.unbind()
 
-        // Pass 2: Composite blended result with Deck BG, bloom & master alpha into masterCompositeFBO
+        // Pass 2: Composite blended result with Deck BG and master alpha into masterCompositeFBO
         mixer.masterCompositeFBO.bind()
         glViewport(0, 0, mixer.width, mixer.height)
         glClearColor(0f, 0f, 0f, 1f)

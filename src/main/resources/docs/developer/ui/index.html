@@ -1404,6 +1404,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit Blueprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1789,11 +1817,13 @@
     PropertiesPanel --&gt; MidiModulatorSection[MidiModulatorSection.kt - MIDI CC Modulator Controls]
     PropertiesPanel --&gt; Lfo1Section[Lfo1Section.kt - LFO 1 / Generator Shaping]
     PropertiesPanel --&gt; Lfo2Section[Lfo2Section.kt - LFO 2 Secondary Modulator]
+    PropertiesPanel --&gt; SeqSection[SeqSection.kt - Step Sequencer]
+    PropertiesPanel --&gt; ValueParamSection[ValueParamSection.kt - Value / Parameter Details]
 
     MixerPanel --&gt; DeckControlPanel[DeckControlPanel.kt]
     UIManager --&gt; SavePresetModal[SavePresetModal.kt]
 </code></pre>
-<p>Most panel <code>draw(...)</code> methods (like <code>PerformanceMatrixPanel</code>) receive <code>session: SessionContext</code>, the current <code>Mixer</code> reference, and <code>parametersState: ParametersState</code> at frame render time. Other panels like <code>MixerPanel</code> and <code>DeckControlPanel</code> receive state via dependency injection in their constructors. Panels access subsystems (<code>AudioEngine</code>, <code>CVRegistry</code>, <code>PresetManager</code>, <code>PlayQueueManager</code>, <code>NotesManager</code>) via <code>session</code> rather than direct global singletons.</p>
+<p>Most panel <code>draw(...)</code> methods (like <code>PerformanceMatrixPanel</code>) receive <code>session: SessionContext</code>, the current <code>Mixer</code> reference, and <code>parametersState: ParametersState</code> at frame render time. Other panels like <code>MixerPanel</code> and <code>DeckControlPanel</code> receive state via dependency injection in their constructors. Panels access subsystems (<code>AudioEngine</code>, <code>CVRegistry</code>, <code>PresetManager</code>, <code>PlayQueueManager</code>, ...) via <code>session</code> (<code>NotesManager</code> is not on it; <code>NoteEditorModal</code> calls it directly) rather than direct global singletons.</p>
 <p>Deck preview monitors (<code>Deck A</code>, <code>Deck B</code>, <code>Deck BG</code>, <code>Deck PV</code>) in <code>MixerPanel</code> and <code>DeckControlPanel</code> render clean video monitors maximizing active preview area without non-image toolbar clutter. Former toolbar rows above the images (Save, Eject, and preset name box) and the crossfader transition button have been removed from the Mixer strip; saving presets is handled via keyboard shortcuts (<code>Ctrl+S</code>/<code>Cmd+S</code>) or Gen Browse, deck loading is handled via Browser drag-drop, and transition selection is configured via Edit or Browser drag-drop onto the crossfader slider. <code>MixerLayoutCalculator</code> dedicates full vertical space to video monitor rendering.</p>
 <p>Each deck preview monitor (<code>DeckControlPanel.drawDeckControls</code>) carries the same small overlay on all four decks:
 - <strong>Level fader</strong> (left edge): the channel Level (<code>mixer.levelA</code>, <code>levelB</code>, <code>levelBG</code>, <code>levelPV</code>) from the top margin down to just above the badge. Drag, scroll wheel, middle-click reset (100%). The fill shows the live level, the handle the base value.
@@ -1812,7 +1842,7 @@
 <li><strong>Title Bar Drag-to-Resize</strong>: Supports vertical resizing of the docked Library by click-dragging empty areas of the Library menu bar.</li>
 <li><strong>Deferred Font Atlas Rebuilding</strong>: Adjusting preset name scale sets <code>pendingFontRebuild</code>. Rebuilding the font atlas and OpenGL textures occurs at the <strong>top of the next frame</strong> (before <code>ImGui.newFrame()</code>) to prevent mid-frame atlas corruption.</li>
 <li><strong>Deferred Popup Triggering</strong>: Modal popups set a <code>pendingOpen*</code> flag and execute <code>ImGui.openPopup(id)</code> at the root ID stack level outside child windows.</li>
-<li><strong>Modal Rendering Pipeline</strong>: Invokes <code>NoteEditorModal.draw()</code>, <code>SavePresetModal.draw()</code>, and <code>PopupManager</code>'s specific draw methods (e.g. <code>drawExitPopup()</code>, <code>drawDeckConfirmPopups()</code>, <code>drawSourceChangeConfirmPopup()</code>, <code>drawMidiWarningPopup()</code>) at root scope.</li>
+<li><strong>Modal Rendering Pipeline</strong>: after <code>drawLayout</code>, draws at root scope, in order: <code>VideoExportModal</code>, <code>PopupManager</code>'s <code>drawExitPopup()</code>, <code>drawDeckConfirmPopups()</code>, <code>drawMidiWarningPopup()</code> and <code>drawRestoreDefaultsPopup()</code>, then <code>NoteEditorModal</code>, <code>SavePresetModal</code>, <code>BrowserPopupHandler.drawDeleteAssetConfirmationPopup</code>, <code>UpdatePromptModal</code>, <code>AboutModal</code>, the missing-items panel and <code>PerformanceMacroStrip.drawFileBrowser</code>.</li>
 <li><strong>Single workspace (Perform view)</strong>: <code>PerformanceMatrixPanel.kt</code> (4×4 macro knob matrix + Edit — see <code>docs/user_guide/macros_and_rack.md</code>) is the primary live editing view, orchestrating dedicated sub-controllers for clean separation of concerns:</li>
 <li><code>PerformanceUiContext.kt</code>: Shared styling colors (<code>PerformanceColors</code>), the Edit bay's SRC/FX and MIX/FX predicates (<code>isDeckBayFx</code>, <code>isMasterBayFx</code>, which read the deck / Mixer sub-tab in <code>ParametersState</code> to pick the row an open module shows), and label/module resolution helpers.</li>
 <li><code>PerformanceTransitionsControls.kt</code>: Transitions row controls: Line 1 transition picker (active shader/preset name with dirty marker) and TransitionQueue stepping (<code>&lt; [N/Total] &gt;</code>); Line 2 crossfader (Deck A/B snap badges, bipolar slider track, <code>[AUTO]</code>/<code>[FADING]</code> button, fade speed widget); right wing: randomize die button on Line 1 matching deck rows.</li>
@@ -1836,7 +1866,7 @@
 </ul>
 <h3 id="3-deckpresetcontrollerkt-parameterskeyboardkt">3. <code>DeckPresetController.kt</code> &amp; <code>ParametersKeyboard.kt</code></h3>
 <ul>
-<li><strong><code>DeckPresetController.kt</code> Role</strong>: Dedicated orchestrator for deck preset lifecycle, modal save/load/eject workflows, and file dialogs.</li>
+<li><strong><code>DeckPresetController.kt</code> Role</strong>: Deck preset save/eject workflows; loads and source changes go through <code>DeckOps</code> (see <code>preset_management.md</code> §3).</li>
 <li><strong>Deck Actions</strong>: Coordinates move/copy/swap deck utilities with dirty-state checks, quick save vs "Save As" flow (<code>SavePresetModal</code>), duplicate copy naming (<code>_copy</code>), and ejecting with Auto-VJ dirty behavior resolution.</li>
 <li><strong><code>ParametersKeyboard.kt</code> Keyboard Shortcuts</strong>: Intercepts keyboard navigation and editing commands within the Edit view. <code>allowUndo</code> / <code>allowSave</code> / <code>allowCellEdits</code> let <code>PerformanceMatrixPanel</code> split them: undo runs every frame; save and cell edits run only inside the Edit that owns the keyboard (<code>keyboardOwnerModuleId</code>: last clicked, else first open), while that Edit's <code>rackSelectedCell</code> is swapped into <code>ParametersState</code>, and cell edits additionally require the Performance window to be focused:</li>
 <li><code>Ctrl+S</code> / <code>Cmd+S</code>: Saves the active deck preset directly if named, or opens the Save As modal if untitled. Ignored when focused on the Mixer or an empty deck.</li>
@@ -1844,8 +1874,7 @@
 <li><code>Ctrl+Z</code> / <code>Cmd+Z</code>: Parameter and modulator undo.</li>
 <li><code>Ctrl+C</code> / <code>Ctrl+V</code>: Copy and paste of cell modulators or entire parameter rows.</li>
 <li><code>Delete</code> / <code>Backspace</code>: Resets active parameter or removes cell modulators.</li>
-<li><strong>Safe Visual Source Switching (<code>changeVisualSourceSafely</code>)</strong>: Prompts user confirmation if changing visual sources when an active preset is loaded or dirty, resets active preset and cached DTO associations, clears stale selections in <code>ParametersState</code>, updates sub-tabs, and pushes an undo snapshot.</li>
-<li><strong>ImGui File Browsers</strong>: Manages independent <code>ImGuiFileBrowser</code> dialogs for Deck A and Deck B and executes asynchronous disk I/O via <code>PresetManager</code>.</li>
+<li><strong>Visual source switching (<code>changeVisualSourceSafely</code>)</strong>: a one-line delegate to <code>DeckOps.request(slot, DeckChange.Source(...))</code>; the dirty prompt, bookkeeping, selection reset (<code>DeckOps.postApply</code>) and undo all happen in <code>DeckOps</code>.</li>
 </ul>
 <h3 id="4-noteeditormodalkt">4. <code>NoteEditorModal.kt</code></h3>
 <ul>
@@ -1933,14 +1962,14 @@
 <li><strong>Left Column</strong>: Backend, input hardware device, channel routing dropdowns positioned inline on the same line as their text labels; Input Trim (<code>AudioEngine.inputGain</code>, setup only) and System Volume sliders below Channel Routing; sync state, with an "input too quiet for beat detection" warning when the gate is SILENT but the input meter shows signal; then the Audio Response slider (<code>AudioEngine.response</code>, the one reactivity control, scales the audio CV signals after the always-on auto gain, saved as <code>audioResponse</code>) with the per-band auto-gain boost readout under it; and beat synchronization / detection controls (manual BPM locking, Beat Tracker target band, detection presets, dual-headed BPM range slider). Colored backend status ("Jack active", "Java Sound Active", or "Audio Inactive") is displayed inline to the right of the "Enable Audio Engine" checkbox.</li>
 <li><strong>Right Column</strong>: Real-time 2-channel stereo Input Peak Meter (L / R) at the top, followed by uniformly sized oscilloscopes (height 50 px) in a two-column comparison grid: Raw Buffer directly beside Beat Sine Oscillator, the five RMS bands (Full Mix, Bass, Mid, Hi-Mid, High) in the left column beside their hits (Full Mix, Kick, Snare, Crack, Hat) in the right column, Section Energy beside Section Drop, then the four per-band energies, two to a row.</li>
 <li>MIDI controller detection status readout is located under Preferences &gt; General inline to the right of the "Enable MIDI" checkbox.</li>
-<li><strong>Audio Engine Quick Access</strong>: Clicking the real-time DSP latency metric in the top performance stats bar (or opening <code>File &gt; Preferences... &gt; Audio Engine</code>, or pressing <code>Ctrl+P</code> / <code>Cmd+P</code>) navigates directly to the <code>AUDIO_ENGINE</code> category.</li>
+<li><strong>Audio Engine Quick Access</strong>: Clicking the real-time DSP latency metric in the top performance stats bar (or opening <code>File &gt; Preferences... &gt; Audio Hardware</code>, or pressing <code>Ctrl+P</code> / <code>Cmd+P</code>) navigates directly to the <code>AUDIO_ENGINE</code> category.</li>
 <li><strong>Title Bar &amp; Menu Bar Architecture (<code>MenuBar.kt</code>)</strong>: The main menu bar consolidates application actions into clean top-level menus:</li>
-<li><code>File</code>: Preset creation (<code>New Preset</code>), <code>Preferences...</code> (<code>Ctrl+P</code> / <code>Cmd+P</code>), and <code>Exit</code>.</li>
+<li><code>File</code>: Preset creation (<code>New Preset</code>), <code>Restore Factory Presets...</code>, <code>Preferences...</code> (<code>Ctrl+P</code> / <code>Cmd+P</code>), and <code>Exit</code>.</li>
 <li><code>View</code>: Preferences dismissal, Edit collapse, and Library mode (<code>Full</code> / <code>Half</code>).</li>
 <li><code>Output</code>: <code>Secondary Output Window</code>, <code>Output Monitor</code> (Automatic or a named monitor, <code>OutputMonitors</code>), <code>Record Output (REC)</code>, <code>Web Broadcast</code>, and <code>Render Video (Offline)...</code>.</li>
-<li><code>Help</code>: <code>Documentation</code>, update checker (an available update shows as a download icon in the menu bar, opening <code>UpdatePromptModal</code>), and <code>Show Tooltips</code> toggle.</li>
+<li><code>Help</code>: <code>Documentation</code>, <code>Check for Updates...</code> (an available update also shows as a download icon in the menu bar, opening <code>UpdatePromptModal</code>), the <code>Show Tooltips</code> toggle and <code>About Liquid LSD</code> (<code>AboutModal</code>).</li>
 <li>Contextual HUD status badges for recording (<code>REC mm:ss</code>, dropped frames counter), Web Broadcast (<code>LIVE</code>, <code>CONNECTING</code>, <code>LIVE ERR</code>), and Ableton Link (<code>LINK [peers]</code>) appear dynamically on the title bar only when active.</li>
-<li><strong>CSD &amp; Telemetry HUD Layout</strong>: In frameless mode, Client-Side Decorations (Minimize, Maximize/Restore, Close) are anchored directly to the title bar's right boundary (<code>contentRightX</code>), ensuring the Close button is flush with the right boundary across all display resolutions. Monospace telemetry stats (CPU%, DSP execution latency, FPS, Frame Time, and FBO live count/estimated VRAM) render in a unified right-side block positioned cleanly to the left of the window controls. Musical timing controls (clock source toggle, Link status, BPM display, 4-beat phase meter dots, tap tempo, resync, half/double tempo, and nudges) are consolidated on the Performance MASTER tab's Clock row and within Preferences &gt; Tempo &amp; Sync.</li>
+<li><strong>CSD &amp; Telemetry HUD Layout</strong>: In frameless mode, Client-Side Decorations (Minimize, Maximize/Restore, Close) are anchored directly to the title bar's right boundary (<code>contentRightX</code>), ensuring the Close button is flush with the right boundary across all display resolutions. Monospace telemetry stats (CPU%, DSP execution latency, FPS, Frame Time, and FBO live count/estimated VRAM) render in a unified right-side block positioned cleanly to the left of the window controls. Musical timing controls (clock source toggle, Link status, BPM display, 4-beat phase meter dots, tap tempo, resync, half/double tempo, and nudges) are consolidated on the Perform view's MIXER page Clock row and within Preferences &gt; Tempo &amp; Sync.</li>
 </ul>
 <h3 id="8-librarypanelkt-browserdockkt">8. <code>LibraryPanel.kt</code> &amp; <code>BrowserDock.kt</code></h3>
 <ul>
@@ -1951,20 +1980,19 @@
 <li><strong>Folders, tags, multi-select</strong>: <code>LibraryFolders</code> (folders inside the Saved sections only; <code>FolderPopups</code> for create/rename/move/delete), <code>LibraryTags</code> + <code>TagPopups</code> (tags are crates: a <code>tags</code> list in the file itself, <code>BrowseScope.Tag</code> in the tree; only that field is rewritten), <code>MultiSelectionModel</code> (Ctrl/Shift ranges over the visible rows; bulk move, tag, delete, queue).</li>
 <li><strong>Queues under the browser</strong> (<code>QueueSplit</code>): in Library FULL, while <code>UITheme.libraryQueueSplit</code> is on, Sources/FX/Transitions draw the browser over <code>QueuesPane</code> with a draggable divider; a drag from the browser lands at the drop position (<code>QueueDrop</code>, which also dims columns of the wrong kind). Every queue edit goes through <code>QueueOps</code> (undoable); the controller drives them with <code>QueueKnobs</code>.</li>
 <li><strong>Unified pane in the pair view or bound in place</strong>: <code>PerformanceBrowseBay</code> builds an <code>ApplyTarget</code> per tab (deck source, FX slot, Chain, transition) and calls <code>BrowserPane.draw(..., target)</code>. A target makes a click apply, filters the rows to what it <code>accepts</code>, marks the <code>isApplied</code> row and keeps scope, search and cursor per kind (<code>ScopeMemory</code>; only a whole-chain target has its own). <code>BrowserPane.hosted()</code> (the target the dock was last drawn bound to) decides whether the controller's accept applies and shift + side 3 clears (<code>NavigationSurface.inPicker</code> itself is <code>ViewState.pair || ViewState.bound</code>); <code>LibraryPanel.navMode</code> makes the shared cursor functions follow the hosted kind. Bound picks are undoable (<code>undoable = true</code> on the <code>FxOps</code>/<code>TransitionOps</code> calls; <code>undoSink</code> wired in <code>UIManager</code>). See DECISIONS.md.</li>
-<li><strong><code>[ Presets ]</code> / <code>[ FX ]</code> View Mode</strong>: <code>LibraryPanel</code>'s <code>LibraryViewMode</code> toggle picks the <code>BrowseKind</code> the pane shows. In <code>[ FX ]</code> mode the pane lists stock/single/chain rows (tree sections Stock filters / Saved single FX / Saved chains, <code>.lsdfxplay</code> curated sequences as playlist scopes), and its live queues (on the Queues tab) are <code>FXBgQueueActionsPanel.kt</code> / <code>FXQueueActionsPanel.kt</code> (volatile live FX queues backed by <code>FXBgQueueManager.kt</code> / <code>FXQueueManager.kt</code>) in place of the normal preset <code>BgQueueManager</code> / <code>PlayQueueManager</code> panels. Both single presets (<code>.lsdfx</code>) and 3-slot chains (<code>.lsdfxchain</code>) resolve deterministically through <code>FxOps.applyItem</code> (a single <code>.lsdfx</code> = slot 1 of an empty chain) rather than arbitrary vacant-slot allocation. See <code>docs/developer/preset_management.md</code> §8 for the manager-level architecture.</li>
-<li>A 8 px horizontal gap (<code>groupGap</code>) separates the two rounded group boxes, and the top edge of both boxes touches the bottom of the top toolbar menu bar.</li>
-<li><strong>Pane scrolling</strong>: the pane's parts (tree, list, each queue) are inner child windows with <code>NoScrollbar or NoScrollWithMouse</code> on the outer child; the title/search rows stay pinned while rows scroll in their own children (<code>##presets_scroll</code>, <code>##queue_items_scroll</code>, <code>##bg_queue_items_scroll</code>).</li>
-<li><strong>Balanced Padding (<code>LibraryPanel.kt</code>)</strong>: Library title bar vertical frame padding is scaled to 6.0 px (<code>libTitleBarH = 32f</code>), preserving the ~2.5 px bottom margin while adding sufficient top clearance to prevent button borders from clipping against the horizontal splitter line.</li>
+<li><strong>FX items</strong>: single presets (<code>.lsdfx</code>) and 3-slot chains (<code>.lsdfxchain</code>) from playlists and queues resolve deterministically through <code>FxOps.applyItem</code> (a single <code>.lsdfx</code> = slot 1 of an empty chain) rather than arbitrary vacant-slot allocation. See <code>docs/developer/preset_management.md</code> §9 for the manager-level architecture.</li>
+<li><strong>Pane scrolling</strong>: the pane's parts (tree, list, each queue) are inner child windows with <code>NoScrollbar or NoScrollWithMouse</code> on the outer child; the title/search rows stay pinned while rows scroll in their own children (e.g. <code>##queue_items_scroll</code>, <code>##bg_queue_items_scroll</code>, <code>##fx_bg_queue_items_scroll</code>).</li>
+<li><strong>Balanced Padding (<code>LibraryPanel.kt</code>)</strong>: Library title bar vertical frame padding is scaled to 6.0 px (<code>libTitleBarH</code>, the text line height plus padding and borders, at least 32 px), preserving the ~2.5 px bottom margin while adding sufficient top clearance to prevent button borders from clipping against the horizontal splitter line.</li>
 </ul>
 <h3 id="9-tooltip-subsystem-ergonomic-positioning-tooltiphelperkt">9. Tooltip Subsystem &amp; Ergonomic Positioning (<code>TooltipHelper.kt</code>)</h3>
 <ul>
 <li><strong>Ergonomic Design Rationale</strong>: Dear ImGui's built-in <code>setTooltip</code> positions popups strictly to the bottom-right of the mouse pointer (<code>mouse.x + 16, mouse.y + 10</code>), routinely obscuring parameter readouts, sliders, and adjacent matrix cells. Dear ImGui 1.92 (imgui-java 1.92.7.1) has hover delay flags, but they don't give the per-tooltip delay and size cache below. <code>TooltipHelper.kt</code> provides an ergonomic, zero-allocation tooltip positioning and delay subsystem.</li>
 <li><strong>Pure Geometric Quadrant Engine (<code>calculateTooltipPos</code>)</strong>:</li>
 <li>Calculates tooltip placement relative to a fixed $16 \times 22\,\text{px}$ cursor bounding box with a $4\,\text{px}$ vertical gap and $8\,\text{px}$ viewport margin.</li>
-<li><strong>Beneath Pointer</strong>: By default, places the tooltip below the cursor box (<code>targetY = mouseY + CURSOR_HEIGHT + CURSOR_GAP</code>) with its left edge aligned with the cursor's left edge (<code>targetX = mouseX</code>, <code>pivotX = 0.0f</code>).</li>
-<li><strong>Right-Edge Alignment</strong>: If the tooltip width overflows the right viewport edge (<code>mouseX + tipW &gt; viewX + viewW - MARGIN</code>), it anchors to the cursor's right edge (<code>targetX = mouseX + CURSOR_WIDTH</code>, <code>pivotX = 1.0f</code>), extending cleanly to the left.</li>
-<li><strong>Bottom-Edge Overflow Flip</strong>: If the tooltip overflows the viewport bottom (<code>targetY + tipH &gt; viewY + viewH - MARGIN</code>), it flips above the cursor box (<code>targetY = mouseY - CURSOR_GAP</code>, <code>pivotY = 1.0f</code>).</li>
-<li><strong>Viewport Edge Clamping</strong>: Clamps final window coordinates within viewport bounds <code>[viewX + MARGIN, viewX + viewW - MARGIN]</code>.</li>
+<li><strong>Beneath Pointer</strong>: By default, places the tooltip below the cursor box (<code>targetY = mouseY + CURSOR_BOX_HEIGHT + GAP_Y</code>) with its left edge aligned with the cursor's left edge (<code>targetX = mouseX</code>, <code>pivotX = 0.0f</code>).</li>
+<li><strong>Right-Edge Alignment</strong>: If the tooltip width overflows the right viewport edge (<code>mouseX + tipW &gt; viewX + viewW - PADDING</code>), it anchors to the cursor's right edge (<code>targetX = mouseX + CURSOR_BOX_WIDTH</code>, <code>pivotX = 1.0f</code>), extending cleanly to the left.</li>
+<li><strong>Bottom-Edge Overflow Flip</strong>: If the tooltip overflows the viewport bottom (<code>targetY + tipH &gt; viewY + viewH - PADDING</code>), it flips above the cursor box (<code>targetY = mouseY - GAP_Y</code>, <code>pivotY = 1.0f</code>).</li>
+<li><strong>Viewport Edge Clamping</strong>: Clamps final window coordinates within viewport bounds <code>[viewX + PADDING, viewX + viewW - PADDING]</code>.</li>
 <li><strong><code>ImGuiCond.Always</code> — Required to Override Dear ImGui's Internal Positioning</strong>:</li>
 <li><code>prepareTooltipPos</code> uses <code>ImGuiCond.Always</code>. Dear ImGui's own <code>BeginTooltip()</code> internally calls <code>setNextWindowPos(mouse + offset, Always)</code> — any weaker condition such as <code>Appearing</code> is silently overridden, causing all tooltips to land at roughly the cursor hotspot position from frame 2 onward.</li>
 <li><code>Always</code> ensures our <code>setNextWindowPos</code> fires last, wins, and places tooltips at the computed quadrant position every frame.</li>
@@ -1981,13 +2009,14 @@
 <li>
 <p><strong>Zero-Allocation Hover Delay Tracker (<code>shouldShowTooltip</code>)</strong>:</p>
 </li>
-<li>Tracks hover state without runtime heap allocations using a spatial hash key combining item bounding rect and content: <code>(minX.toInt() shl 16) xor minY.toInt() xor text.hashCode()</code>.</li>
-<li>Compares <code>ImGui.getFrameCount()</code> against <code>lastHoveredFrame</code> to detect cursor departures or transitions between adjacent widgets.</li>
+<li>Tracks hover state without runtime heap allocations using a spatial hash key combining item bounding rect and content: <code>(minX shl 16) xor (minY and 0xFFFF) xor text.hashCode()</code> (rect corners as ints).</li>
+<li>Compares <code>ImGui.getFrameCount()</code> against <code>lastHoverFrame</code> to detect cursor departures or transitions between adjacent widgets.</li>
 <li>Suppresses rendering until the cursor hovers continuously for $250\,\text{ms}$ (<code>DEFAULT_HOVER_DELAY_MS</code>), preventing distracting visual flashing during mouse sweeps across sliders, buttons, and grid cells.</li>
 <li><strong>Standardized UI Integration API</strong>:</li>
-<li><code>itemTooltip(text: String, delayMs: Long = 250L)</code>: Replaces the verbose boilerplate pattern <code>if (isItemHovered() &amp;&amp; tooltipsEnabled) ImGui.setTooltip(text)</code> across all UI panels.</li>
+<li><code>itemTooltip(text: String, delayMs: Long = 250L, allowWhenDisabled: Boolean = false)</code>: Replaces the verbose boilerplate pattern <code>if (isItemHovered() &amp;&amp; tooltipsEnabled) ImGui.setTooltip(text)</code> across all UI panels.</li>
 <li><code>itemTooltip(delayMs: Long = 250L, block: () -&gt; Unit)</code>: Renders custom multi-section tooltips with dimension measurement caching.</li>
 <li><code>showTooltip(text: String)</code>: Positions and displays an ergonomic tooltip when hover detection is handled externally (e.g. within complex custom slider hitboxes).</li>
+<li><code>showCustomTooltip(key, delayMs, estimatedWidth) { ... }</code>: the same for arbitrary ImGui content when hover is detected externally; <code>key</code> drives the hover delay.</li>
 <li><code>controlTooltip(block: ControlTooltipBuilder.() -&gt; Unit)</code>: High-level declarative API for interactive controls (knobs, sliders, buttons). <code>inline</code>, and the block only runs while the item is hovered, so an idle control allocates nothing. <code>midiMappingText(mapping)</code> gives the <code>MIDI:</code> line ("CC 12" / "Ch 2 CC 12"). Enforces the canonical 3-tier layout:<ol>
 <li><strong>Header &amp; Context</strong>: Control Label / formatted value / state badge, followed by target parameter routing (<code>Target: ...</code>, macro knobs only) or context description.</li>
 <li><strong>Interactive Gestures</strong> (in canonical Order 2 with bullet indicators <code>•</code> and blank line chunking):</li>

@@ -1488,6 +1488,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit Blueprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1920,7 +1948,7 @@ by combining those modulators. This document explains the full pipeline.</p>
 <pre><code>baseValue ──┐
             ├──► evaluate() ──► value  (clamped to [minClamp, maxClamp])
 modulators ─┘                     │
-                                  └──► history (CvHistoryBuffer, 200 samples)
+                                  └──► history (CvHistoryBuffer, 600 samples)
 </code></pre>
 <p>Key properties:</p>
 <table>
@@ -2023,7 +2051,7 @@ monopolar parameter was remapped to <code>[0, 1]</code> first; stock presets and
 <tr>
 <td><code>sourceId</code></td>
 <td><code>String</code></td>
-<td>Which CV signal drives this modulator. Registered IDs: <code>lfo</code>, <code>beatPhase</code>, <code>sampleAndHold</code>, <code>audio_amp</code>, <code>audio_bass</code>, <code>audio_mid</code>, <code>audio_himid</code>, <code>audio_high</code>, <code>audio_flux_amp</code>, <code>audio_flux_bass</code>, <code>audio_flux_mid</code>, <code>audio_flux_himid</code>, <code>audio_flux_high</code>, <code>audio_energy</code>, <code>audio_energy_bass</code>, <code>audio_energy_mid</code>, <code>audio_energy_himid</code>, <code>audio_energy_high</code>, <code>audio_drop</code> (all listed in <code>cv/AudioSignals.kt</code>), <code>bpm</code>, <code>midi_cc_&lt;ch&gt;_&lt;cc&gt;</code> (<code>trigger_onset</code>/<code>trigger_accent</code> exist only in the WebGL2 web client's <code>dsp.js</code>/<code>evaluator.js</code> — see <code>docs/developer/web_subsystem.md</code> — not as a desktop <code>CvModulator</code> source)</td>
+<td>Which CV signal drives this modulator. Registered IDs: <code>lfo</code>, <code>seq</code> (step sequencer), <code>beatPhase</code>, <code>sampleAndHold</code>, <code>beatSine</code> (sine of the beat clock, -1..1), <code>audio_amp</code>, <code>audio_bass</code>, <code>audio_mid</code>, <code>audio_himid</code>, <code>audio_high</code>, <code>audio_flux_amp</code>, <code>audio_flux_bass</code>, <code>audio_flux_mid</code>, <code>audio_flux_himid</code>, <code>audio_flux_high</code>, <code>audio_energy</code>, <code>audio_energy_bass</code>, <code>audio_energy_mid</code>, <code>audio_energy_himid</code>, <code>audio_energy_high</code>, <code>audio_drop</code> (all listed in <code>cv/AudioSignals.kt</code>), <code>bpm</code>, <code>midi_cc_&lt;ch&gt;_&lt;cc&gt;</code> (<code>trigger_onset</code>/<code>trigger_accent</code> exist only in the WebGL2 web client's <code>dsp.js</code>/<code>evaluator.js</code> — see <code>docs/developer/web_subsystem.md</code> — not as a desktop <code>CvModulator</code> source)</td>
 </tr>
 <tr>
 <td><code>operator</code></td>
@@ -2140,7 +2168,7 @@ values <code>{1/8, 1/4, 1/2, 1, 2, 4, 8 … 256}</code>. For frame-based subdivi
 <li><strong>Randomization Range Storage</strong>: When <code>lfoMinMaxMode</code> is true, the two-tier randomization sliders store the bounds for the Minimum limit in <code>dcOffsetMin</code> / <code>dcOffsetMax</code> (with flag <code>randomizeDcOffset</code>) and the bounds for the Maximum limit in <code>depthMin</code> / <code>depthMax</code> (with flag <code>randomizeDepth</code>). This ensures complete preset serialization compatibility without altering the underlying DTO schema.</li>
 </ul>
 <h3 id="audio-envelope-followers-applies-when-isaudiosourcesourceid">Audio Envelope Followers — applies when <code>isAudioSource(sourceId)</code></h3>
-<p>When a modulator uses an audio band source (<code>audio_amp</code>, <code>audio_bass</code>, <code>audio_mid</code>, <code>audio_high</code>), it can apply an independent asymmetric one-pole IIR envelope follower:</p>
+<p>When a modulator uses an audio level or hit source (<code>audio_amp|bass|mid|himid|high</code>, <code>audio_flux_*</code>; not the section sources, which are already shaped), it can apply an independent asymmetric one-pole IIR envelope follower:</p>
 <table>
 <thead>
 <tr>
@@ -2154,7 +2182,7 @@ values <code>{1/8, 1/4, 1/2, 1, 2, 4, 8 … 256}</code>. For frame-based subdivi
 <tr>
 <td><code>followerMode</code></td>
 <td><code>AudioFollowerMode</code></td>
-<td><code>RAW</code>, <code>PUNCHY</code>, <code>SMOOTH</code>, <code>SLOW</code>, <code>AMBIENT</code>, <code>CUSTOM</code></td>
+<td><code>RAW</code>, <code>SNAP</code>, <code>PUNCHY</code>, <code>SMOOTH</code>, <code>SLOW</code>, <code>AMBIENT</code>, <code>CUSTOM</code></td>
 <td>Envelope dynamics preset mode</td>
 </tr>
 <tr>
@@ -2406,6 +2434,10 @@ in <code>Evaluators.kt</code>).</p>
                     4. combine: AM → carrier*(1+lfo2*depth)
                                 ADD → carrier + lfo2*depth
                                 PM/NONE → carrier
+  &quot;seq&quot;           → step sequencer (0 while sequencers are off in Preferences):
+                    seqStepCount steps of seqSteps, position from seqCyclePosition
+                    (TIME/FRAME clocks anchored by ClockAnchors), glide by seqHold /
+                    seqCurveSmooth (SeqPatterns.glide); edited in SeqSection
   &quot;audio_*&quot;       → CVRegistry.get(id) — pushed from AudioEngine each frame (includes audio_flux_* onset/transient signals)
   &quot;bpm&quot;           → CVRegistry.get(&quot;bpm&quot;)
   &quot;midi_cc_*&quot;     → MidiEngine.getCcValue(channel, cc)
@@ -2420,7 +2452,7 @@ in <code>Evaluators.kt</code>).</p>
 <li><strong>Authoring rule:</strong> an LFO on a 0..1 parameter that sits at (or near) its minimum swings both ways around the set value. To sweep upward use <code>depth = dcOffset = d/2</code> (range <code>base .. base + d</code>). <code>StockDefaultsTest.lfoSwingsFitTheirParameters</code> fails when any LFO swing leaves its parameter's range (the clamp would flatten part of every cycle); A <code>MUL</code> LFO must keep its factor <code>1 + dcOffset ± depth</code> non-negative. <code>everyShippedSourceDefaultIsValid</code> checks parameter and knob names against the shader, one active modulator per parameter (plus at most one <code>audio_energy</code> and one <code>audio_drop</code>, which layer on top), and <code>|depth| &lt;= 1</code>; <code>shippedRandomRangesFitTheirParameters</code> sums the running <code>ADD</code> responses (Energy counted at its breakdown, -1; its rarer louder side may clamp); <code>everyShippedFilterDefaultTargetsRealInputs</code> and <code>everyShippedFilterResponseIsValid</code> do the same for effects (swings included), <code>everyShippedTransitionDefaultIsValid</code> for transitions, and <code>ISFAutoBindEngineTest</code> checks that a stock filter gets its shipped modulators and that a saved default replaces them.</li>
 <li><strong>Random ranges (sources):</strong> the same file turns randomization on per parameter with <code>"randomizeBase": true, "baseMin": lo, "baseMax": hi</code> (shader units). Every stock shader source but Mandala (<code>meta.json</code> <code>defaultMin</code>/<code>defaultMax</code>) and Fractal Flame (genome) has them on its look parameters; Brightness, Quality, Detail-style cost controls, Reseed and most Zoom/Center inputs stay off, as do Escape Time Power and Core Size (their motion looks like an error). <code>StockDefaultsTest.shippedRandomRangesFitTheirParameters</code> fails when a range leaves the parameter or when a running <code>ADD</code> response (an LFO's <code>dcOffset ± depth</code>, a follower's <code>depth</code>) would push either end of it past the limit, so hue ranges with the stock drift stop at about 0.65. Draws go through <code>ModulatableParameter.sampleBase</code> (a stepped parameter draws a whole step uniformly), and <code>DeckMorphController.update</code> holds a stepped parameter at the nearer end (<code>isStepped</code>, like <code>GenomeMorph.isDiscreteMorph</code>). Every randomize writes through <code>ModulatableParameter.writeBase</code>: when a macro knob drives the base (<code>baseDriver</code>, set by <code>MacroEngine.rebuildResolvedBindings</code> from the first enabled base binding, <code>KnobDrive.driver</code>), the knob moves to the inverse-mapped position, otherwise the knob's <code>tick</code> would overwrite the roll next frame. The dice call <code>ParametersUndo.pushRandomizeUndo</code>, which also restores every base value and canonical knob position (a <code>GenomeMorph</code> source's parameters excepted).</li>
 <li><strong>Random ranges (effects and transitions):</strong> same keys in <code>stock_defaults/filters|transitions/&lt;id&gt;.json</code>, applied by <code>FxDefaultDto.applyParametersTo</code> (<code>applyDto</code>). Who rolls them: <code>Deck.getAllRandomizableParameters</code> includes <code>FxChain.slotRandomizableParameters()</code> (each enabled slot's Dry/Wet and inputs), so the deck die / deck Rand roll the deck's effects; <code>Mixer.getAllMixerRandomizableParameters</code> uses the same call for the Master chain. <code>Mixer.randomizeTransition</code> (<code>ISFFilter.randomizeTransitionInputs</code>: every input but <code>progress</code>, through <code>randomizeBaseValue</code>, so only <code>randomizeBase</code> inputs move, and <code>writeBase</code> moves the TRANS knob that drives them) backs the transition die and the end of <code>Mixer.randomizeAll</code>; transitions sit in no <code>DeckMorphController</code>, so Rand All jumps them rather than morphing. No range sits on an input a shipped Metaknob binding targets (<code>StockDefaultsTest.noRandomRangeOnAMetaknobTarget</code>): <code>ISFFilter.applyMetaKnobBinding</code> rewrites that base every frame, and the Metaknob means the amount, which stays the performer's. <code>shippedFilterRandomRangesFitTheirParameters</code> applies the source check to effects (every effect but Invert and Luma Key must have a range), <code>everyShippedTransitionDefaultIsValid</code> to transitions (each must have one), and <code>transitionResponsesStayInsideTheAtRestLimits</code> measures reach from <code>baseMax</code> when an input is ranged. Menu (<code>long</code>) inputs take ranges like stepped floats (3D Elevation mode, Film Burn tint, Linear Crossfade curve). The stock transition presets carry the ranges (<code>shippedTransitionPresetsCarryTheShippedResponse</code>), and so do the stock FX chains. Engine tests: <code>FxDiceTest</code>.</li>
-<li><strong>Effects:</strong> <code>ISFAutoBindEngine.shippedDefault</code> lays <code>params</code> over the filter and <code>FxDefaultDto.applyParametersTo</code> puts them on the slot, in <code>ISFFilter</code> init (user override by content hash, then shipped file, then heuristic). The Metaknob writes its target's <em>base</em> every frame, and modulators ride on top. A response on the Metaknob's own input therefore uses <code>MUL</code>, so a knob at zero stays off and the hits scale with the knob; <code>ADD</code> responses go on inputs that only show once the main amount is up (angle, fringe, flow speed). Feedback-style filters (Feedback, Fluid Smear) integrate per frame, so their depths are small. A shipped filter file is ignored when any input it names (Metaknob target or <code>params</code> key) is missing from the shader (a user shader that shares a stock id). Loading an FX chain applies the chain's stored slot parameters (<code>FxChain.applyFxSlot</code>), which replace the shipped response; inputs the chain does not store keep the filter's resolved default. The 16 stock chains in <code>defaults/fx_chains/</code> (and their identical <code>web/content/fxchains/</code> copies) were rebuilt so every stored input carries its effect's shipped modulators and random range, keeping the chain's own base values; <code>StockDefaultsTest.shippedFxChainsCarryTheShippedDefaults</code> fails on drift, a differing web copy, or an LFO swing that leaves its parameter at the chain's base.</li>
+<li><strong>Effects:</strong> <code>ISFAutoBindEngine.shippedDefault</code> lays <code>params</code> over the filter and <code>FxDefaultDto.applyParametersTo</code> puts them on the slot, in <code>ISFFilter</code> init (user override by content hash, then shipped file, then heuristic). The Metaknob writes its target's <em>base</em> every frame, and modulators ride on top. A response on the Metaknob's own input therefore uses <code>MUL</code>, so a knob at zero stays off and the hits scale with the knob; <code>ADD</code> responses go on inputs that only show once the main amount is up (angle, fringe, flow speed). Feedback-style filters (Feedback, Fluid Smear) integrate per frame, so their depths are small. A shipped filter file is ignored when any input it names (Metaknob target or <code>params</code> key) is missing from the shader (a user shader that shares a stock id). Loading an FX chain applies the chain's stored slot parameters (<code>FxChain.applyFxSlot</code>), which replace the shipped response; inputs the chain does not store keep the filter's resolved default. The factory chains are <code>web/fxchains/web-*.lsdfxchain</code> (written by <code>scripts/gen_web_presets.py</code>, shipped to the desktop without the prefix; see <code>preset_management.md</code> §7); <code>StockDefaultsTest.factoryFxChainLfoSwingsFit</code> fails on an LFO swing that leaves its parameter at the chain's base, and <code>factoryPresetsAndChainsUseDesktopParameterNames</code> on a parameter the desktop source or filter lacks.</li>
 <li><strong>Transitions:</strong> <code>stock_defaults/transitions/&lt;id&gt;.json</code>, same shape as an effect's file, usually without <code>metaBindings</code> (the TRANS bank's K2-K4 follow the first three float inputs, <code>TransitionMacroSync</code>, so the heuristic Metaknob is kept). <code>ISFFilter.isTransition</code> (set by <code>ISFTransitionRegistry</code>) picks the folder, so effect and transition ids may collide (<code>vortex_swirl</code> is both). Transitions carry a <code>contentHash</code> too, so Save as Default / Remove Saved Default (<code>TransitionSave.drawDefaultMenuItems</code>) use the same override store as effects. Responses only play during a fade: at progress 0 or 1 <code>Renderer.renderMixer</code> copies the visible deck through. Never modulate <code>progress</code>. An input that leaks at the ends makes the picture pop as a fade leaves rest, so <code>StockDefaultsTest.transitionResponsesStayInsideTheAtRestLimits</code> caps the highest value any modulator (bypassed included) can push <code>luminous_flash.spread</code> and <code>film_burn.burnSpread</code> to (0.45), in shipped defaults and in the stock presets. The presets in <code>defaults/transitions/</code> (and their <code>web/content/transitions/</code> copies) store full parameters, so they carry the shipped modulators themselves; <code>shippedTransitionPresetsCarryTheShippedResponse</code> fails when they drift. <code>TransitionOps.isModified</code> compares against the resolved default, so the shipped response does not mark a stock transition modified.</li>
 <li><strong>Registries hand out <code>ISFFilter.newInstance()</code></strong>, which resolves the default afresh, so a default saved or removed in this session applies to the next copy; <code>clone()</code> (copying an instance's own values) is no longer how a stock filter or transition is created.</li>
 <li><strong>Audio levels:</strong> recipes are tuned against the AGC (<code>audio/AudioAgc.kt</code>, always on), which normalises each band against its own long-term level (frozen during breakdowns), at Audio Response 100%. The web TV runs the same auto gain (<code>AudioAgc</code> in <code>web/dsp.js</code>) with REACT 100% as the equivalent, so recipes read the same there.</li>
@@ -2431,24 +2463,21 @@ in <code>Evaluators.kt</code>).</p>
 <p><code>CvModulator</code> is <code>@Serializable</code> (kotlinx-serialization). The DTO conversion lives in
 <code>models/PresetModels.kt</code>:</p>
 <ul>
-<li><code>ModulatorDto.toDomain()</code> — load path; includes a one-line migration:
-  <code>"gen1" / "gen2"</code> → <code>"lfo"</code> to silently upgrade patches saved before the rename.</li>
-<li><code>CvModulator.toDto()</code> — save path; field names are stable (some use <code>@SerialName</code> aliases,
-  e.g. <code>weight</code> for <code>depth</code>).</li>
+<li><code>ModulatorDto.toDomain()</code> — load path; fields map straight across, with no source-id migration.</li>
+<li><code>CvModulator.toDto()</code> — save path; field names are the JSON keys (no <code>@SerialName</code> aliases).</li>
 </ul>
-<p>Do not rename <code>CvModulator</code> fields without adding a corresponding <code>@SerialName</code> or migration in
-<code>toDomain()</code>.</p>
+<p>Do not rename <code>CvModulator</code> / <code>ModulatorDto</code> fields: during beta an unknown key is simply dropped
+on load (DECISIONS §1), and from v1.0 a rename needs a migration in <code>toDomain()</code>.</p>
 <hr />
 <h2 id="parameterresolver">ParameterResolver</h2>
 <p><strong>File</strong>: <code>parameters/ParameterResolver.kt</code></p>
 <p><code>getAllParameterPaths(mixer)</code> returns every <code>(path, ModulatableParameter)</code> pair in the mixer,
-using the standard hierarchical path format (e.g. <code>"Deck A/Mandala/Lobes"</code>, <code>"Deck A/View/Zoom"</code>, <code>"Deck A/FB/Decay"</code>). Used for undo snapshots and MIDI learn target resolution.</p>
-<p>All dynamic visual sources (<code>Mandala</code>, plus pure-ISF sources like <code>dynamic_spiral</code> and <code>icosa_h3</code> loaded via <code>ISFVisualSource</code>) inherit from <code>DynamicVisualSource</code>, exposing their parameter map generically as <code>"Deck &lt;X&gt;/&lt;DisplayName&gt;/&lt;Param&gt;"</code> plus <code>"Deck &lt;X&gt;/&lt;DisplayName&gt;/Gain"</code>. (The standalone <code>DynamicSpiral.kt</code> and <code>Icosahedron.kt</code> Kotlin classes referenced by older docs were retired when those generators were migrated to pure ISF v2.0 shader files — see <code>DECISIONS.md</code>.)</p>
+using the standard hierarchical path format (e.g. <code>"Deck A/Mandala/Lobes"</code>, <code>"Deck A/View/Zoom"</code>, <code>"Deck A/FX/FX1/&lt;input&gt;"</code>). Used for undo snapshots and MIDI learn target resolution. The lists come from each owner's <code>getParameterPaths</code> (<code>Deck</code>, <code>Mixer</code>, <code>FxChain</code>, the sources).</p>
+<p>All dynamic visual sources (<code>Mandala</code>, plus pure-ISF sources like <code>dynamic_spiral</code> and <code>icosa_h3</code> loaded via <code>ISFVisualSource</code>) inherit from <code>DynamicVisualSource</code>, exposing their parameter map generically as <code>"Deck &lt;X&gt;/&lt;DisplayName&gt;/&lt;Param&gt;"</code>. The source's Gain sits at the deck level, <code>"Deck &lt;X&gt;/Gain"</code>, so a mapping to it survives a source change; the old <code>"Deck &lt;X&gt;/&lt;DisplayName&gt;/Gain"</code> is still read as an alias (<code>ParameterResolver.legacyGainPath</code>). (The standalone <code>DynamicSpiral.kt</code> and <code>Icosahedron.kt</code> Kotlin classes referenced by older docs were retired when those generators were migrated to pure ISF v2.0 shader files — see <code>DECISIONS.md</code>.)</p>
 <p>The overall parameter categories cover:
-- Deck Visual Source: mapped dynamically from <code>source.parameters</code> (e.g. Lobes, Recipe Select, L1–L4, Thickness, Hue Offset, Hue Sweep, Depth, etc.) + <code>Gain</code>
-- Deck View: 3DMode, Zoom, RotateX, RotateY, RotateZ, Persp, DepthDim, Separation, BlendMode
-- Deck Feedback: Decay, Gain, Zoom, Rotate, HueShift, Blur, Chroma, Mode, Kaleido
-- Mixer: crossfade, xfadeSpeed, levelA, levelB, levelBG, levelPV, masterLevel, queuePrev, queueNext, bgQueuePrev, bgQueueNext, randDeckA, randDeckB, randDeckBG, randDeckPV, randAll</p>
+- Deck: <code>Gain</code>; the source's parameters under its display name (e.g. Lobes, Recipe Select, L1–L4, Thickness, Hue Offset); the FX chain under <code>FX</code> (<code>DryWet</code>, <code>Super</code>, then each slot's inputs under <code>FX1</code>–<code>FX3</code>); and the framing <code>View/Zoom</code>, <code>View/RotateZ</code> (no other view or feedback parameters exist).
+- Mixer (<code>Mixer/...</code>): crossfade, levelA, levelB, levelBG, levelPV, masterLevel, xfadeSpeed, queuePrev, queueNext, bgQueuePrev, bgQueueNext, transQueuePrev, transQueueNext, fxQueuePrev, fxQueueNext, fxBgQueuePrev, fxBgQueueNext, tapTempo, randDeckA, randDeckB, randDeckBG, randDeckPV, randAll, and the current transition's inputs under <code>Mixer/Transition/</code>.
+- Master FX: <code>Master/FX/...</code>, same shape as a deck's chain.</p>
 <hr />
 <h2 id="crossfade-manual-takeover-auto-centering">Crossfade Manual Takeover &amp; Auto-Centering</h2>
 <p><strong>Files</strong>: <code>rendering/Mixer.kt</code>, <code>ui/MixerPanel.kt</code>, <code>ui/ParametersRenderer.kt</code>, <code>ui/PropertiesPanel.kt</code>, <code>midi/MidiMappingManager.kt</code></p>

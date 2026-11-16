@@ -1305,6 +1305,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit Blueprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1549,8 +1577,10 @@
 <h2 id="quick-syntax">Quick Syntax</h2>
 <pre><code class="language-bash">./gradlew run --args=&quot;[OPTIONS]&quot;
 </code></pre>
-<p>Or when launching packaged executables:</p>
-<pre><code class="language-bash">./liquid-lsd [OPTIONS]
+<p>Or with the launcher in an unzipped release, which passes the options on to the app:</p>
+<pre><code class="language-bash">./run-linux.sh [OPTIONS]            # Linux
+./run-mac-arm.command [OPTIONS]     # macOS, Apple silicon (run-mac-intel.command on Intel)
+run-windows.bat [OPTIONS]           # Windows
 </code></pre>
 <h2 id="available-startup-options">Available Startup Options</h2>
 <h3 id="1-automated-ui-screenshot-capture">1. Automated UI Screenshot Capture</h3>

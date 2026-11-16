@@ -11,7 +11,7 @@
       
       
       
-        <link rel="prev" href="../tour_renderer/">
+        <link rel="prev" href="../audit/">
       
       
         <link rel="next" href="../../release_notes/">
@@ -1153,6 +1153,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit Blueprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1696,10 +1724,10 @@
 <h2 id="low-latency-jvm-tuning-zgc">Low-Latency JVM Tuning (ZGC)</h2>
 <p>To maintain 60+ FPS visual rendering and sub-millisecond audio analysis without frame stuttering or audio dropouts (xruns), Liquid LSD should be launched with the Z Garbage Collector (ZGC):</p>
 <pre><code class="language-bash"># Linux / Windows:
-java -XX:+UseZGC -XX:MaxGCPauseMillis=2 --enable-native-access=ALL-UNNAMED -jar build/libs/liquid-lsd-desktop-1.0-SNAPSHOT-all.jar
+java -XX:+UseZGC -XX:MaxGCPauseMillis=2 --enable-native-access=ALL-UNNAMED -jar build/libs/liquid-lsd-&lt;version&gt;-all.jar
 
 # macOS (requires -XstartOnFirstThread):
-java -XstartOnFirstThread -XX:+UseZGC -XX:MaxGCPauseMillis=2 --enable-native-access=ALL-UNNAMED -jar build/libs/liquid-lsd-desktop-1.0-SNAPSHOT-all.jar
+java -XstartOnFirstThread -XX:+UseZGC -XX:MaxGCPauseMillis=2 --enable-native-access=ALL-UNNAMED -jar build/libs/liquid-lsd-&lt;version&gt;-all.jar
 </code></pre>
 <h3 id="key-flags-explained">Key Flags Explained</h3>
 <ul>

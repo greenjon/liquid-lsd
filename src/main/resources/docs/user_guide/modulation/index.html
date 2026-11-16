@@ -1505,6 +1505,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit Blueprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2021,36 +2049,44 @@
 <thead>
 <tr>
 <th>Profile</th>
+<th>Attack / decay</th>
 <th>Character</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Instant (Raw Jitter)</td>
+<td>Instant (Raw / 1-Frame)</td>
+<td>0 / 0 ms</td>
 <td>No smoothing — raw and jittery.</td>
 </tr>
 <tr>
-<td>Snap</td>
+<td>Strobe / Snap</td>
+<td>0 / 35 ms</td>
 <td>Immediate attack, fast release. Good for fast percussive tracks.</td>
 </tr>
 <tr>
-<td>Punchy</td>
+<td>Punchy (Accent)</td>
+<td>5 / 150 ms</td>
 <td>Slight attack, medium release. Captures rhythm cleanly.</td>
 </tr>
 <tr>
 <td>Smooth Swell</td>
+<td>40 / 400 ms</td>
 <td>Slower attack, long release. Peaks become gentle pulses.</td>
 </tr>
 <tr>
-<td>Slow Pulse</td>
+<td>Slow Bloom</td>
+<td>100 / 900 ms</td>
 <td>Gradual rise, lingering tail.</td>
 </tr>
 <tr>
 <td>Ambient Drift</td>
+<td>250 / 1800 ms</td>
 <td>Long, fluid swells. Ideal for ambient or drone music.</td>
 </tr>
 <tr>
-<td>Custom</td>
+<td>Custom…</td>
+<td>your own</td>
 <td>Set your own attack and decay times.</td>
 </tr>
 </tbody>

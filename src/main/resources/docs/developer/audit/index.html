@@ -1,0 +1,2055 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for the Liquid LSD real-time graphics and audio workstation.">
+      
+      
+      
+      
+        <link rel="prev" href="../tour_renderer/">
+      
+      
+        <link rel="next" href="../ops_tuning/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>Audit Blueprint - Liquid LSD</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="dark" data-md-color-primary="teal" data-md-color-accent="cyan">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#audit-blueprint" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Liquid LSD" class="md-header__button md-logo" aria-label="Liquid LSD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Liquid LSD
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Audit Blueprint
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="dark" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/greenjon/liquid-lsd" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Liquid LSD" class="md-nav__button md-logo" aria-label="Liquid LSD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Liquid LSD
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/greenjon/liquid-lsd" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting_started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/your_workspace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Your Workspace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/visual_sources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visual Sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/modulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/presets_and_library/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Presets & Library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/output_and_recording/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output & Recording
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/performance_controls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance Controls
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/macros_and_rack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Macro Controls & the Perform View
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/web_broadcast/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Broadcast
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/cli_usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command Line Usage & Startup Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../audio_dsp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Real-Time Audio & DSP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../beat_sync/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Beat Sync & Stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rendering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenGL Rendering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../export_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Media Export & Recording Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../web_subsystem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Subsystem & Broadcast Protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../flame_source/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fractal Flame Source
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../clean_room_provenance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clean-Room Provenance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UI Architecture & ImGui
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../imgui_upgrade_guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ImGui Version & ARM64 Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../preset_management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preset & Queue Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../build_arm64_linux/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Build for ARM64 Linux
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../unified_control_mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Unified Control Mapping Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_and_screenshot_automation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI & Automated Screen Capture Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tour_renderer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tour Renderer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit Blueprint
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit Blueprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#goal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Goal
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Baseline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lanes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lanes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Lanes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-correctness-of-changes-since-the-baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Correctness of changes since the baseline
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-architecture-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Architecture rules
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-developer-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Developer docs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-user-docs-and-release-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. User docs and release notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-tooltips-and-ui-text" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Tooltips and UI text
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-web-tv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Web TV
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-licensing-and-provenance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Licensing and provenance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#8-health-and-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Health and tracking
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#method" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Method
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#who-runs-what" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Who runs what
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#finding-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Finding format
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#automatic-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automatic checks
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ops_tuning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations & Tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release_notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../licenses/SHADERS_LICENSE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Licenses & Credits
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#goal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Goal
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Baseline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lanes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lanes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Lanes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-correctness-of-changes-since-the-baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Correctness of changes since the baseline
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-architecture-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Architecture rules
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-developer-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Developer docs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-user-docs-and-release-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. User docs and release notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-tooltips-and-ui-text" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Tooltips and UI text
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-web-tv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Web TV
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-licensing-and-provenance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Licensing and provenance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#8-health-and-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Health and tracking
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#method" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Method
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#who-runs-what" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Who runs what
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#finding-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Finding format
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#automatic-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automatic checks
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="audit-blueprint">Audit Blueprint</h1>
+<p>How we run a full audit of Liquid LSD. Run one about every two weeks, and always before a release.</p>
+<h2 id="goal">Goal</h2>
+<p>After an audit:</p>
+<ol>
+<li>Every claim in the docs, the release notes, the tooltips and the UI text matches what the code does.</li>
+<li>Every rule in <code>DECISIONS.md</code> and <code>ARCHITECTURE.md</code> holds in the code, or the rule has been changed on purpose.</li>
+<li>Changes made since the last audit carry no known correctness bug: threading, real-time safety, undo, persistence.</li>
+<li>The web TV, the licensing record and the test suite are in the same state as the desktop app.</li>
+<li>Each audit is cheaper than the last. Any kind of finding seen in two audits becomes an automatic check.</li>
+</ol>
+<p>An audit does not cover new features, redesigns or taste. Those findings go to <code>ROADMAP.md</code> or <code>.planning/open-items.md</code>.</p>
+<h2 id="baseline">Baseline</h2>
+<p>Every audit diffs against the previous one. When an audit closes, tag the commit it finished on as <code>audit-YYYY-MM-DD</code>.
+The next audit starts from <code>git describe --tags --match 'audit-*' --abbrev=0</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Audit</th>
+<th>Baseline tag</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2026-10-07</td>
+<td>none</td>
+<td>first roundup</td>
+</tr>
+<tr>
+<td>2026-10-29</td>
+<td><code>audit-2026-10-29</code> → <code>fa4335e</code></td>
+<td>tagged afterwards; report is at <code>git show 4fa7646^:.planning/audit-2026-10-29.md</code></td>
+</tr>
+<tr>
+<td>2026-11-15</td>
+<td><code>audit-2026-11-15</code></td>
+<td>first audit run from this blueprint</td>
+</tr>
+</tbody>
+</table>
+<h2 id="lanes">Lanes</h2>
+<p>All eight lanes run in every audit for now. Each lane has a fixed checklist. A lane reviewer works through the whole
+checklist and records the items that came up clean too, so we can tell "checked and clean" apart from "not looked at".</p>
+<h3 id="1-correctness-of-changes-since-the-baseline">1. Correctness of changes since the baseline</h3>
+<p>Read every changed file under <code>src/main/kotlin</code>, in full where the change touches control flow. Check:</p>
+<ul>
+<li><strong>Thread 0 (GL/UI):</strong> no file I/O, network, <code>Thread.sleep</code>, blocking joins or MIDI port open/close. File work goes
+  to <code>presetIoExecutor</code> or a named thread.</li>
+<li><strong>Audio callback:</strong> no allocation, no locks, no logging, no boxing in the JACK/PipeWire process path.</li>
+<li><strong>Per-frame work:</strong> no allocation in the frame loop or in per-knob code (lists, lambdas, regex, string building, <code>ImString</code>).</li>
+<li><strong>Cross-thread fields:</strong> anything written off Thread 0 and read on it (or the other way round) is <code>@Volatile</code>, atomic
+  or handed over through a queue.</li>
+<li><strong>Ops paths:</strong> deck, FX, transition and queue changes go through <code>DeckOps</code> / <code>FxOps</code> / <code>TransitionOps</code> / <code>QueueOps</code>,
+  with undo where <code>DECISIONS.md</code> says there is undo.</li>
+<li><strong>Precedence:</strong> the macro, Metaknob, Super Knob and MIDI precedence agrees with <code>MacroEngine</code> everywhere it is re-implemented.</li>
+<li><strong>Persistence:</strong> writes are atomic (temp file + move), unknown JSON fields survive a round-trip, and versioned files bump their version.</li>
+<li><strong>Lifecycle:</strong> native resources (GL objects, PipeWire/Syphon/Spout handles, MIDI ports, threads) are released on every exit path, including shutdown hooks.</li>
+<li><strong>Error paths:</strong> failures reach the user (toast or log), not just <code>printStackTrace</code>. No swallowed <code>catch (e: Exception) {}</code>.</li>
+</ul>
+<h3 id="2-architecture-rules">2. Architecture rules</h3>
+<ul>
+<li>Go through <code>DECISIONS.md</code> and <code>ARCHITECTURE.md</code> claim by claim and check each against the code. Report each one as
+  true, false, or stale (the claim was true once and has since been overtaken).</li>
+<li>Check the file counts, the thread table, the frame-loop steps, the persistence layout and the subsystem list in <code>ARCHITECTURE.md</code>.</li>
+<li>Re-check each item on the <code>ARCHITECTURE.md</code> "Unverified" list and either verify it or drop it.</li>
+<li>Look for new layering violations, and check the allow-list in <code>LayerDependencyTest</code>.</li>
+<li>If a rule can be checked mechanically, propose a test for it.</li>
+</ul>
+<h3 id="3-developer-docs">3. Developer docs</h3>
+<ul>
+<li>Read every <code>docs/developer/*.md</code> page end to end against the code, not only the parts touched since the baseline.</li>
+<li>Check class, function and file names, defaults and status lines (planned / done / v1.1).</li>
+<li>Look for <code>file:///</code> or absolute links, and for links to files that no longer exist.</li>
+<li>Pages in <code>docs/archive/</code> must not be linked as if they were current.</li>
+</ul>
+<h3 id="4-user-docs-and-release-notes">4. User docs and release notes</h3>
+<ul>
+<li>Read <code>docs/getting_started.md</code>, <code>docs/user_guide/*.md</code>, <code>docs/index.md</code> and <code>README.md</code> against the current UI.</li>
+<li><strong>Release notes:</strong> <code>RELEASE_NOTES.md</code> and <code>docs/release_notes.md</code> must be identical in content. Every user-visible
+  commit since the baseline needs an entry.</li>
+<li><strong>mkdocs:</strong> every page under <code>docs/</code> is in <code>mkdocs.yml</code> nav or is archived on purpose. No unused images.</li>
+<li><strong>Bundled HTML:</strong> <code>src/main/resources/docs/</code> must be rebuilt from the current Markdown.</li>
+<li><strong>Tours:</strong> run <code>scripts/tour_staleness.py</code> and list the stale tours. Re-rendering them is a separate decision.</li>
+</ul>
+<h3 id="5-tooltips-and-ui-text">5. Tooltips and UI text</h3>
+<ul>
+<li>Every interactive widget added or changed since the baseline has a tooltip.</li>
+<li>Tooltips go through <code>ui/TooltipHelper.kt</code> (<code>itemTooltip</code>, <code>controlTooltip</code>, <code>showTooltip</code>, <code>showCustomTooltip</code>),
+  with no raw <code>ImGui.setTooltip</code>. Composite widgets wrap the tooltip target in <code>beginGroup</code>/<code>endGroup</code>.</li>
+<li>Vocabulary follows the glossary in <code>docs/user_guide/your_workspace.md</code> and the banned terms below.</li>
+<li>Menu items, OSC names and command names use the same wording for the same action.</li>
+<li>Tooltip text matches what the control does: its range, units and default.</li>
+</ul>
+<p>Banned terms in UI text (grow this list):</p>
+<table>
+<thead>
+<tr>
+<th>Banned</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>play queue, PlayQueue</td>
+<td>A/B Queue</td>
+</tr>
+<tr>
+<td>Properties (meaning modulation)</td>
+<td>Modulation</td>
+</tr>
+<tr>
+<td>Alpha (fader)</td>
+<td>Level</td>
+</tr>
+<tr>
+<td>blend mode (transitions)</td>
+<td>removed; do not mention</td>
+</tr>
+<tr>
+<td>Library of Presets</td>
+<td>Library</td>
+</tr>
+<tr>
+<td>Flux (audio)</td>
+<td>Hits</td>
+</tr>
+<tr>
+<td>background queue</td>
+<td>BG Queue</td>
+</tr>
+<tr>
+<td>Trans queue</td>
+<td>Transition Queue</td>
+</tr>
+<tr>
+<td>Deep Edit</td>
+<td>Edit</td>
+</tr>
+<tr>
+<td>Bypass (on a modulator)</td>
+<td>Mute (Bypass is for FX and shaders)</td>
+</tr>
+</tbody>
+</table>
+<p>Menu items get a tooltip only when the label alone does not say what will happen.</p>
+<h3 id="6-web-tv">6. Web TV</h3>
+<p>Covers <code>web/</code>, <code>server/</code>, <code>scripts/publish_web_tv.sh</code> and <code>tests/web/</code>.</p>
+<ul>
+<li>Run the same correctness checklist as lane 1, adapted to the web: AudioWorklet and audio-thread allocation, per-frame
+  allocation in render loops, leaked timers and listeners, <code>fetch</code> failures handled, no CORS assumptions about
+  spaz.org endpoints.</li>
+<li><strong>Parity:</strong> the evaluator, DSP and tempo code behaves like the desktop. Golden vectors are current
+  (<code>UPDATE_WEB_VECTORS=1</code>), and <code>scripts/sync_web.py</code> leaves no diff.</li>
+<li><code>TV_VERSION</code> in <code>web/ui.js</code> was bumped for every code publish. The about/keys page matches the actual key map.</li>
+<li><code>docs/developer/web_subsystem.md</code> matches the code.</li>
+<li>Each viewer control has a hover hint, and the dark and light themes both define every token.</li>
+</ul>
+<h3 id="7-licensing-and-provenance">7. Licensing and provenance</h3>
+<ul>
+<li>Run <code>python3 scripts/shipped_source_hashes.py --check</code> (writes nothing; exits 1 if the hash list is out of date).</li>
+<li>Every shader, font, library and image added since the baseline has an entry in <code>docs/licenses/</code> or
+  <code>src/main/notices/</code>, with a compatible license and the attribution kept.</li>
+<li>New clean-room work is recorded in <code>docs/developer/clean_room_provenance.md</code>.</li>
+<li>Shaders with <code>To confirm</code> provenance are listed. Check the ISF headers (<code>CREDIT</code>, <code>LICENSE</code>).</li>
+<li>Check the state against <code>.planning/license-audit-*.md</code>.</li>
+</ul>
+<h3 id="8-health-and-tracking">8. Health and tracking</h3>
+<ul>
+<li>Run the full Gradle test suite and the Playwright suite. Record the pass/fail counts, the slowest tests and anything flaky.</li>
+<li><strong>Build:</strong> no new compiler warnings in changed files.</li>
+<li><strong><code>.planning/open-items.md</code>:</strong> strike the items that are done and re-check the copied ones.</li>
+<li><strong><code>.planning/app-checklist.md</code>:</strong> move done items out. Items that can be checked by script go to <code>scripts/verify</code>.</li>
+<li><strong>Memory notes:</strong> flag notes that contradict the code. For example, a note that says something is "uncommitted"
+  when it has since been committed.</li>
+</ul>
+<h2 id="method">Method</h2>
+<ol>
+<li><strong>Scope.</strong> Find the baseline tag and list the commits since it (<code>git log --oneline &lt;tag&gt;..HEAD</code>), split into desktop
+   (<code>src/</code>), web (<code>web/</code>, <code>server/</code>) and docs. Run <code>python3 scripts/audit/checks.py</code> and hand its output to the lanes.</li>
+<li><strong>Review (read-only).</strong> One reviewer agent per lane. Lane 1 is split by package when the diff is large, and lane 8
+   is run directly. Reviewers write findings to <code>.planning/audit-YYYY-MM-DD/laneN.md</code> and edit nothing else.</li>
+<li><strong>Verify.</strong> Every finding marked <strong>bug</strong> or <strong>wrong</strong> is checked by a second reader, who opens the code at the cited
+   line before anything gets fixed. Findings that don't hold up are dropped and noted as false positives. The fixer can
+   be the second reader: a fix agent confirms each bug before changing code, and the docs pass confirms each "wrong"
+   doc line against the code before rewriting it.</li>
+<li><strong>Triage.</strong> Merge everything into <code>.planning/audit-YYYY-MM-DD.md</code> with sections A (bugs), B (rules/docs false),
+   C (stale), D (polish), E (owner decisions needed) and F (new automatic checks).</li>
+<li><strong>Fix.</strong> Code fixes first, in worktrees whose file scopes don't overlap. Each fix gets a test where a test is
+   practical. Fixes the user would notice get a release-notes entry and an app-checklist line.</li>
+<li><strong>Docs pass.</strong> Done last, because the fixes change what the docs must say. Covers <code>ARCHITECTURE.md</code>,
+   <code>DECISIONS.md</code> (edit entries in place, no dated appends), <code>docs/developer</code>, the user guide, both release-notes
+   files, the bundled HTML and tooltips.</li>
+<li><strong>Turn findings into checks.</strong> Every finding type seen in a second audit gets a script or test (see below).</li>
+<li><strong>Close.</strong> Tag <code>audit-YYYY-MM-DD</code>, then move anything left open into <code>.planning/open-items.md</code>. Delete the
+   per-lane files and keep only the merged report until the next audit.</li>
+</ol>
+<h2 id="who-runs-what">Who runs what</h2>
+<p>Agent definitions live in <code>.claude/agents/</code>. Pick the cheapest model that fits the work:</p>
+<table>
+<thead>
+<tr>
+<th>Work</th>
+<th>Agent type</th>
+<th>Model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Lanes 1, 2, 6 (correctness, rules, web review)</td>
+<td><code>general-purpose</code></td>
+<td>session model (Opus)</td>
+</tr>
+<tr>
+<td>Lanes 3, 4, 5, 7 and the docs pass</td>
+<td><code>audit-docs</code></td>
+<td>Sonnet</td>
+</tr>
+<tr>
+<td>Fix groups (step 5)</td>
+<td><code>audit-fixer</code></td>
+<td>Sonnet</td>
+</tr>
+<tr>
+<td>Lane 8</td>
+<td>run directly</td>
+<td>none</td>
+</tr>
+</tbody>
+</table>
+<h2 id="finding-format">Finding format</h2>
+<pre><code>### L&lt;lane&gt;-&lt;n&gt; [bug|wrong|stale|polish|decision] Short title
+- Where: path/File.kt:123 (and any other sites)
+- Evidence: what the code does, quoted or paraphrased, and what the doc/rule/user expects
+- Impact: who notices and when
+- Fix: the smallest change that resolves it
+- Verified: (filled in during step 3) yes / no, false positive because ...
+</code></pre>
+<p>Severity:</p>
+<ul>
+<li><strong>bug:</strong> wrong behaviour, a crash, a stall or data loss.</li>
+<li><strong>wrong:</strong> a doc, rule or tooltip says something false.</li>
+<li><strong>stale:</strong> something that was true once and is now incomplete.</li>
+<li><strong>polish:</strong> consistency or wording.</li>
+<li><strong>decision:</strong> the owner has to choose.</li>
+</ul>
+<h2 id="automatic-checks">Automatic checks</h2>
+<p>Findings that came up in two audits, and the checks they become. Status is kept up to date here.</p>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Catches</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LayerDependencyTest</code></td>
+<td>package layering (midi/control ↛ ui, ...)</td>
+<td>exists</td>
+</tr>
+<tr>
+<td><code>TooltipHelperTest</code></td>
+<td>tooltip helper behaviour</td>
+<td>exists</td>
+</tr>
+<tr>
+<td><code>checks.py release_notes_parity</code></td>
+<td><code>RELEASE_NOTES.md</code> vs <code>docs/release_notes.md</code> drift</td>
+<td>exists</td>
+</tr>
+<tr>
+<td><code>checks.py doc_links</code></td>
+<td><code>file:///</code> or absolute links, links to missing files, docs not in mkdocs nav</td>
+<td>exists</td>
+</tr>
+<tr>
+<td><code>checks.py ui_terms</code></td>
+<td>banned terms (table in lane 5) in Kotlin string literals</td>
+<td>exists</td>
+</tr>
+<tr>
+<td><code>checks.py raw_tooltips</code></td>
+<td><code>ImGui.setTooltip</code> / <code>beginTooltip</code> outside <code>TooltipHelper.kt</code></td>
+<td>exists</td>
+</tr>
+</tbody>
+</table>
+<p><code>scripts/audit/checks.py</code> runs all of them (or one, by name) and exits 1 on any problem; run it in step 1 of every
+audit. A line that is fine as it is opts out with a trailing <code>// audit-allow: &lt;check&gt;</code> comment that says why.
+When a lane's banned-terms table grows, update <code>BANNED_TERMS</code> in the script too.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>

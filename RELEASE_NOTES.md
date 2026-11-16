@@ -1,5 +1,24 @@
 ## [Unreleased]
 
+### Audit Fixes, November 2026 (`export/RealtimeRecorder.kt`, `rendering/pipewire/`, `rendering/TextureReceiver.kt`, `audio/BeatTrackerEngine.kt`, `utils/AtomicFile.kt`, `presets/LibraryIo.kt`, `ui/browser/`, `ui/CustomRangeSlider.kt`, `rendering/SourceDocRegistry.kt`)
+- **Fixed: quitting while a recording was still being saved froze the app.** The recording and your session are now saved as normal.
+- **Fixed: Linux PipeWire video output could show a torn frame**, and could crash when the output size changed or the output was turned off.
+- **Fixed: a PipeWire video input that switched from black-and-white to colour stayed grey.** Two same-named PipeWire sources now keep their numbering between scans and replugs, and a stuck `pw-dump` no longer stops source discovery.
+- **Fixed: tempo detection could pick the wrong beat grouping** left over from an earlier estimate.
+- **Fixed: adding to, dropping onto, editing or creating a playlist made the output stutter.** Those files, the 60-second session autosave, favorites, recent items and key bindings are now written in the background.
+- **Fixed: a preset you had just saved or renamed could briefly drop out of the Sources list.**
+- **Fixed: adding to an FX or transition playlist dropped any extra fields in the file.**
+- **Fixed: after a failed preset save, unsaved macro-knob changes stopped counting as unsaved.**
+- **Fixed: a multi-selection in the FX or Transitions list could be narrowed by a stray click later.**
+- **Fixed: creating a playlist that can't be written said nothing.** It now tells you, as does a damaged file that can't be backed up before it is replaced.
+- **Fixed: if the sound couldn't be added to a recording**, it was left in a hidden file. It is now saved next to the video as a `.wav` with the same name, and you're told.
+- **Fixed: a crash during a file's first save could leave an empty file behind.**
+- **Fixed: the tooltips on Audio Response, Input Trim, System Volume, Master BPM, Rate Limit and the step sequencer's Length, Phase, Step Hold and Offset never appeared.**
+- **Fixed: rows on the Master CTRL and LEVELS tabs had no description.** They now have one, and their names match the queue names used elsewhere (A/B Queue Prev, Transition Queue Next, Randomize Deck A, …).
+- **Changed: a modulator's power button says Mute / Unmute**, the Audio Response tooltip names the Hits signals and the Hi-Mid band, and the Q and Shift+Q descriptions in Shortcuts match what the keys do.
+- **Changed: on macOS the trackpad console shows "Not supported on macOS yet"** instead of Ready; it is Linux only for now.
+- **New: tooltips** across the OSC and MIDI preferences, Video Export, Preferences and several Edit controls. Go Live explains itself whether it is enabled or not.
+
 ### Web TV: The Light Theme Is a Hi-Fi Receiver, and the Default (`web/tv.css`, `web/ui.js`, `web/index.html`, `web/manifest.webmanifest`)
 - **Changed: MENU › THEME › LIGHT now dresses the TV as a 1970s hi-fi receiver** instead of an almond cabinet. A brushed-aluminium faceplate sits in a walnut case, the picture behind black glass in a chrome bezel. The knobs are knurled with spun-aluminium caps and a black pointer, the buttons are round metal caps, the channel rocker and the piano keys are brushed aluminium, and the lettering is engraved black. The scene controls sit inside a printed rule, as on a faceplate. The display window is black glass with blue-lit text and a tuning scale along its bottom. The lights on HOLD, CHAT and TAPES, and the legend of the key that is down, glow blue. The chat's blackboard gets a walnut frame to match the case. All the controls are where they were, the dark theme is unchanged, and the picture looks the same in both.
 - **Changed: light is now the default theme.** A viewer who picked DARK keeps it; RESET now goes back to light (TV v46).

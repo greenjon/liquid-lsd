@@ -1283,6 +1283,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit Blueprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1539,20 +1567,21 @@
 <p>You can also map the <code>REC</code> toggle to a MIDI controller button so you never have to touch the keyboard during a performance.</p>
 <hr />
 <h2 id="offline-render-studio">Offline Render Studio</h2>
-<p>The Offline Render Studio is for making video content — music videos, promotional visuals, or anything where quality matters more than real-time speed. It renders frame by frame at whatever resolution and frame rate you like, fully decoupled from the clock.</p>
+<p>The Offline Render Studio (the dialog is titled <strong>Offline Video Export Studio</strong>) is for making video content — music videos, promotional visuals, or anything where quality matters more than real-time speed. It renders frame by frame at the resolution and frame rate you pick, fully decoupled from the clock.</p>
 <p>Open it via <strong>Output → Render Video (Offline)...</strong>.</p>
 <h3 id="what-you-can-set">What you can set</h3>
 <ul>
-<li><strong>Audio file</strong> — A <code>.wav</code>, <code>.flac</code>, <code>.mp3</code>, or <code>.ogg</code> file that drives the visual modulation.</li>
-<li><strong>Preset source</strong> — The current active deck, or any saved preset.</li>
-<li><strong>Resolution</strong> — 1080p, 1440p, 4K UHD (3840×2160), or custom.</li>
-<li><strong>Frame rate</strong> — Typically 60fps, but configurable.</li>
-<li><strong>Motion blur</strong> — 2×, 4×, or 8× temporal oversampling. Each frame is blended from multiple sub-frame renders, producing smooth cinematic motion on fast-rotating mandalas and feedback loops. More samples = more render time.</li>
-<li><strong>Output destination</strong> — Where to save the file.</li>
+<li><strong>Audio file</strong> — A <code>.wav</code>, <code>.mp3</code>, <code>.flac</code>, <code>.ogg</code>, <code>.m4a</code> or <code>.aac</code> file that drives the visual modulation.</li>
+<li><strong>Preset</strong> — Leave it blank to render the current live session, or pick a saved <code>.lsd</code> preset or an <code>.lsdplay</code> playlist.</li>
+<li><strong>Destination</strong> — Where to save the file (<code>.mp4</code> or <code>.mov</code>).</li>
+<li><strong>Resolution</strong> — Match Project Canvas (your render resolution), 720p, 1080p, 1440p, 4K UHD (3840×2160), Vertical 9:16 (1080×1920), Square 1:1 (1080×1080) or Ultrawide 21:9 (2560×1080).</li>
+<li><strong>Frame rate</strong> — 24, 30, 60 (the default) or 120 fps.</li>
+<li><strong>Codec</strong> — H.264 (MP4, the default), H.265 / HEVC (MP4) or Apple ProRes 422 HQ (MOV).</li>
+<li><strong>Motion blur</strong> — Off, or 2×, 4× or 8× temporal oversampling. Each frame is blended from multiple sub-frame renders, producing smooth cinematic motion on fast-rotating mandalas and feedback loops. More samples = more render time.</li>
 </ul>
 <h3 id="what-happens">What happens</h3>
 <p>The audio file is decoded up front and the audio analysis runs mathematically per frame — so the beat tracking, frequency bands, and envelope followers all behave exactly as they would in real time, just calculated offline. You get a frame-accurate render even on complex shaders.</p>
-<p>A progress bar shows render percentage, elapsed time, estimated time remaining, and output file size estimate. There's also a live thumbnail so you can confirm it looks right before committing an hour to a 4K render.</p>
+<p>A progress bar shows render percentage and frame count, with the render speed, elapsed time, estimated time remaining and an output file size estimate. There's also a live thumbnail so you can confirm it looks right before committing an hour to a 4K render.</p>
 <hr />
 <h2 id="hardware-preferences-persistence">Hardware Preferences &amp; Persistence</h2>
 <p>Your audio routing, MIDI mappings, display preferences, and broadcast preferences all save automatically to <code>lsd-preferences.properties</code> in the app folder (with automatic backward compatibility for existing <code>lsd-settings.properties</code> files). You don't need to reconfigure anything between sessions.</p>

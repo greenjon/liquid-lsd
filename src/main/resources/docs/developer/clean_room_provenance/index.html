@@ -1266,6 +1266,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit Blueprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1490,7 +1518,7 @@ commercial release.</p>
 <th>Component</th>
 <th>Source of the maths</th>
 <th>Method</th>
-<th>Evidence in the repo</th>
+<th>Evidence</th>
 <th>To confirm</th>
 </tr>
 </thead>
@@ -1626,77 +1654,77 @@ commercial release.</p>
 <td>Sum of N rotated cosine plane waves (de Bruijn's multigrid / cut-and-project picture), cosine palettes (textbook)</td>
 <td>Written by the assistant from the mathematics; no third-party shader code read</td>
 <td><code>library/sources/quasicrystal/quasicrystal.fs</code>, <code>.planning/light-sources-notes/quasicrystal.md</code></td>
-<td></td>
+<td>n/a</td>
 </tr>
 <tr>
 <td>Thin Film source (<code>thin_film</code>)</td>
 <td>Thin-film interference: optical path 2 n d cos(theta_t), per-wavelength phase for R/G/B, Snell refraction; value-noise fbm and domain warping (textbook)</td>
 <td>Own implementation with our own integer hash; no third-party shader code read</td>
 <td><code>library/sources/thin_film/thin_film.fs</code>, <code>.planning/light-sources-notes/thin_film.md</code></td>
-<td></td>
+<td>n/a</td>
 </tr>
 <tr>
 <td>Tunnel Scenes source (<code>tunnel_scenes</code>)</td>
 <td>Analytic ray-plane and ray-cylinder intersection, Truchet tiling, polar mapping (textbook)</td>
 <td>Written from the mathematics; no third-party shader code read</td>
 <td><code>library/sources/tunnel_scenes/tunnel_scenes.fs</code>, <code>.planning/light-sources-notes/tunnel_scenes.md</code></td>
-<td></td>
+<td>n/a</td>
 </tr>
 <tr>
 <td>Video Feedback source (<code>video_feedback</code>)</td>
 <td>Inverse-warp resampling of the previous frame, Rodrigues rotation of colour about the grey axis, exponential decay, screen blend (textbook)</td>
 <td>Written from the definitions; no third-party shader code read</td>
 <td><code>library/sources/video_feedback/video_feedback.fs</code>, <code>.planning/light-sources-notes/video_feedback.md</code></td>
-<td></td>
+<td>n/a</td>
 </tr>
 <tr>
 <td>Hyperbolic Tiling source (<code>hyperbolic_tiling</code>)</td>
 <td>Coxeter (2,P,Q) triangle group, reflection folds and circle inversion in the Poincare disk, hyperbolic distance, Mobius translation</td>
 <td>Derived from the mathematics; no third-party shader code read</td>
 <td><code>library/sources/hyperbolic_tiling/hyperbolic_tiling.fs</code>, <code>.planning/light-sources-notes/hyperbolic_tiling.md</code></td>
-<td></td>
+<td>n/a</td>
 </tr>
 <tr>
 <td>Cyclic CA source (<code>cyclic_ca</code>)</td>
 <td>Cyclic cellular automaton rule (cell advances when enough neighbours are one state ahead), toroidal grid, cosine palettes</td>
 <td>Written from the rule definition; no third-party shader code read</td>
 <td><code>library/sources/cyclic_ca/cyclic_ca.fs</code></td>
-<td></td>
+<td>n/a</td>
 </tr>
 <tr>
 <td>Metaballs source (<code>metaballs</code>)</td>
 <td>Summed inverse-square field with threshold, finite-difference shading, iso-contours (Blinn 1982)</td>
 <td>Written from the definition; no third-party shader code read</td>
 <td><code>library/sources/metaballs/metaballs.fs</code></td>
-<td></td>
+<td>n/a</td>
 </tr>
 <tr>
 <td>Wave Ripples source (<code>wave_ripples</code>)</td>
 <td>Superposition of radial waves cos(kr - wt) with distance falloff, Lissajous source paths</td>
 <td>Written from the mathematics; no third-party shader code read</td>
 <td><code>library/sources/wave_ripples/wave_ripples.fs</code></td>
-<td></td>
+<td>n/a</td>
 </tr>
 <tr>
 <td>Aurora Ribbons source (<code>aurora_ribbons</code>)</td>
 <td>Displaced sheet density with exponential height falloff, hash-based starfield, value-noise fbm</td>
 <td>Own implementation; no third-party shader code read</td>
 <td><code>library/sources/aurora_ribbons/aurora_ribbons.fs</code></td>
-<td></td>
+<td>n/a</td>
 </tr>
 <tr>
 <td>Isometric Voxels source (<code>isometric_voxels</code>)</td>
 <td>Isometric projection and per-layer analytic occlusion for height-field columns</td>
 <td>Derived from the projection geometry; no third-party shader code read</td>
 <td><code>library/sources/isometric_voxels/isometric_voxels.fs</code></td>
-<td></td>
+<td>n/a</td>
 </tr>
 <tr>
 <td>Halftone Matrix source (<code>halftone_matrix</code>)</td>
 <td>Rotated-grid halftone (screen angles 15, 75, 0 degrees for CMY), dot-size from a scalar field</td>
 <td>Written from the standard halftone definition; no third-party shader code read</td>
 <td><code>library/sources/halftone_matrix/halftone_matrix.fs</code></td>
-<td></td>
+<td>n/a</td>
 </tr>
 <tr>
 <td>Kali Set source (<code>kali_set</code>)</td>
@@ -1710,35 +1738,70 @@ commercial release.</p>
 <td>Wallpaper-group fundamental-domain folding (p4m, p6m, 4.8.8), Hankin contact-angle construction</td>
 <td>Derived from the group definitions and the published construction; no third-party shader code read</td>
 <td><code>library/sources/girih_stars/girih_stars.fs</code></td>
-<td></td>
+<td>n/a</td>
 </tr>
 <tr>
 <td>Glitch Blocks source (<code>glitch_blocks</code>)</td>
 <td>Hashed block displacement, scanline offset, channel split, posterise (integer hash)</td>
 <td>Our own construction; no third-party shader code read</td>
 <td><code>library/sources/glitch_blocks/glitch_blocks.fs</code></td>
-<td></td>
+<td>n/a</td>
 </tr>
 <tr>
 <td>Voronoi Cells source (<code>voronoi_cells</code>)</td>
 <td>Worley cellular noise: 3x3 neighbourhood feature points, F1 and F2 (Worley 1996)</td>
 <td>Written from the published definition; no third-party shader code read</td>
 <td><code>library/sources/voronoi_cells/voronoi_cells.fs</code></td>
-<td></td>
+<td>n/a</td>
 </tr>
 <tr>
 <td>Spectrogram source (<code>spectrogram</code>)</td>
 <td>Short-time spectrum history (the textbook spectrogram), ring buffer with a moving write head, log-frequency axis</td>
 <td>Written from the definition. The Vidvox ISF-Files "FFT Spectrogram" and "Radial Spectrogram" were run and read as host compatibility tests (2026-11-01); this shader shares no code with them and uses a different structure (wrapped write head with peak hold instead of shifting the whole buffer each frame)</td>
 <td><code>library/sources/spectrogram/spectrogram.fs</code></td>
-<td></td>
+<td>n/a</td>
 </tr>
 <tr>
 <td>Scope source (<code>scope</code>)</td>
 <td>Oscilloscope trace with rising-edge trigger, line distance field |y - h(x)| / sqrt(1 + h'^2), feedback by inverse-warp resampling (as in <code>video_feedback</code>)</td>
 <td>Written from the definitions; the Vidvox "Audio Waveform Shape" was run and read as a compatibility test, no code taken</td>
 <td><code>library/sources/scope/scope.fs</code></td>
-<td></td>
+<td>n/a</td>
+</tr>
+<tr>
+<td>Chladni Cymatics source (<code>chladni_cymatics</code>, rewrite)</td>
+<td>Chladni plate physics: standing-wave modes of a square plate (sums of cosine products), Bessel-function modes of a round plate (the code uses a WKB approximation of J_m and J_m', free rim, n nodal rings at phase n pi), a Faraday water dish with N-fold symmetry; Chladni's law (mode frequency grows with the mode numbers, so the mode numbers scale with sqrt(pitch / 440 Hz)). Sand drawn from the distance to the nodal line, |w| / |grad w|</td>
+<td>Written from the physics. Pitch Follow: per-bin levels smoothed over 0.4 s, the loudest held tone between 180 Hz and 3.5 kHz picks the mode, a new peak must beat the current by 4 dB (6 dB / 0.6 s at first); tuned offline on five tracks. No third-party shader named in the commits or code comments</td>
+<td><code>e9cbbee</code> (modes, plates), <code>7516ac8</code> (Pitch Follow), <code>5d628ff</code> (Pitch Range, faster tracker), <code>library/sources/chladni_cymatics/chladni_cymatics.fs</code></td>
+<td>The commits and comments name no external source. Owner to confirm the WKB form of the Bessel functions is from textbook asymptotics and not from a shader or paper; if from a paper, name it. The earlier version (<code>c7ed16e</code>) has no recorded basis either</td>
+</tr>
+<tr>
+<td>Beat phase lock (<code>BeatPhaseLock</code>)</td>
+<td>A comb filter at the tracker's tempo over an onset envelope, the same method as the web TV's <code>BeatTracker</code>/<code>BeatClock</code> (<code>web/beattrack.js</code>, <code>5df3ba5</code> 2026-10-23); the tempo itself comes from <code>BeatTrackerEngine</code> (see its row)</td>
+<td>Every 250 ms the comb runs over the last 8 s of the envelope; the offset with the most onset energy is the time since the last beat; readings steer the clock only at a tempo held for about 5 s, with the best offset clear of the average and two readings agreeing. Measured against Mixxx beat grids on 150 tracks (30.0% to 53.2% within 70 ms). The Mixxx grids were used as test data only; no Mixxx code is recorded as read</td>
+<td><code>ef9c2ac</code>, <code>BeatPhaseLock.kt</code>, <code>AudioPhaseReportTest</code></td>
+<td>The commit and code name no paper or program for the comb idea. Owner to confirm it is own design on the textbook comb filter, and that the Mixxx grids were read as files only</td>
+</tr>
+<tr>
+<td>Transient signals (<code>TransientDetector</code>, <code>TransientGate</code>) and <code>HitScale</code></td>
+<td>Own design; no source named. A rise in a band's level gated against its own rises over the last second (a held bass note's rises never stand above their mean, a kick's do); a hit held 34 ms so a frame-rate reader sees it; hits sized against a reference that climbs in 0.05 s and falls over 8 s, frozen while the section watch holds, lift capped at 3x</td>
+<td>Written for this project after measuring the old flux signal on real mixes (scales set on three long mixes; hi-mid averaged 0.16 on rock, 0.43 on drum and bass). Ported to <code>web/dsp.js</code>; <code>WebTransientVectorsTest</code> keeps the two identical</td>
+<td><code>4de0ef9</code> (detector), <code>115f847</code> (HitScale), <code>TransientDetector.kt</code>, <code>AudioMixReportTest</code></td>
+<td>Basis is only "own design" from the code comments; owner to confirm no onset-detection paper or program was followed</td>
+</tr>
+<tr>
+<td>Tempo feeder (<code>BeatHopper</code>) and tracker rebuild</td>
+<td>Existing <code>BeatTrackerEngine</code> (see its row) with per-band onsets, a comb over each lag's multiples, a log-normal tempo preference and a check of where the accents fall among the strongest candidates</td>
+<td>Fixes the 512-sample counting error (a 128 BPM kick read 200 BPM at 64 frames) by feeding the tracker on a fixed grid; estimator changes made against BPM tags on 313 tracks (agreement with octaves 72% to 83%) and a 2.4 h drum and bass mix. Tags used as test data only</td>
+<td><code>f38bb1e</code>, <code>BeatHopper.kt</code></td>
+<td>The commit names no paper for the multiples comb, tempo prior or accent check. <strong>To confirm</strong> whether any came from a published method or another program</td>
+</tr>
+<tr>
+<td>Web tempo port (<code>web/beattrack.js</code>, <code>web/dsp.js</code>)</td>
+<td>The desktop tracker above (three onset bands through the desktop's filters, 4 s weighted autocorrelation, comb over each lag's multiples, accent check, unwrapping up to 180 BPM). Phase keeps the web's own envelope comb (<code>5df3ba5</code>: autocorrelation under a 120 BPM prior, period fine-tuned by comb fit)</td>
+<td>Ported from our own desktop code (<code>2298c14</code>, 2026-11-05); the desktop tempo inertia was not ported. Measured on hand readings from Mixxx on a 100 min mix (45% to 89%), BPM tags on 596 tracks and 43 mixes</td>
+<td><code>2298c14</code>, <code>5df3ba5</code>, <code>web/checks/tempo_report.mjs</code>, <code>web/beattrack.js</code> header</td>
+<td>Inherits the beat tracker's open item; the hand readings from Mixxx are observations of a running program, to confirm no more than that was taken</td>
 </tr>
 <tr>
 <td>Variation statistics and curated library</td>
@@ -1752,6 +1815,13 @@ commercial release.</p>
 <p>Built variations: 98 of the 101 ids (the paper's 49, 46 from the spec, and <code>hemisphere</code>, <code>pre_blur</code> and <code>plusrecip</code> by black box). The three reserved ids are <code>super_shape</code>,
 <code>lazysusan</code> and <code>mobius</code>.</p>
 <h2 id="black-box-log">Black-box log</h2>
+<p>The observation tables (<code>table.csv</code>, with the probe renders) are <strong>not in git</strong>. <code>run_probes.py</code> and <code>cloud_stats.py</code>
+write them under <code>build/blackbox/&lt;program&gt;/&lt;variation&gt;/</code> relative to the folder they are run from, so a run from the
+repository root lands in <code>build/blackbox/</code> and a run from <code>tools/blackbox/</code> in <code>tools/blackbox/build/blackbox/</code>; both are
+covered by the <code>build/</code> rule in <code>.gitignore</code>, and <code>./gradlew clean</code> deletes the first. The paths below are where each
+table was written on the owner's machine. What is tracked is the kit (<code>tools/blackbox/</code>, see its <code>README.md</code>) and the
+test pairs taken from each table (<code>FlameVariationsTest</code>, <code>FlameShaderValuesTest</code>, <code>FlamePreStageTest</code>,
+<code>FlameImporterTest</code>). A lost table is regenerated by re-running the kit with the program and version in the row.</p>
 <table>
 <thead>
 <tr>

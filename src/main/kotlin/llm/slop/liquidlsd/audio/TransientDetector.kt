@@ -8,7 +8,7 @@ import kotlin.math.sqrt
 /**
  * Scores a band's rise in level against its recent rises, so what stands out passes and what is always there does not.
  * A sustained bass note ripples in an 11.6 ms window, but evenly, so its rises never stand above their own mean; a kick
- * stands far above it. Ported to `web/dsp.js` (TransientGate); `WebTransientVectorsTest` keeps the two identical.
+ * stands far above it. Ported to `web/dsp.js` (TransientGate); `TransientDetectorTest` and `web/tools/transient.test.mjs` keep the two identical.
  */
 class TransientGate {
     private var meanRise = 0f
@@ -32,7 +32,7 @@ class TransientGate {
  * rock's hats at half the size of drum and bass's, and kicks under a long sub smallest of all. The reference climbs
  * quickly and falls slowly, and stops falling while [frozen] (the section watch holds), so a breakdown stays quiet
  * and the drop lands where the music before it did. [MAX_BOOST] caps the lift above the auto-gain scale.
- * Ported to `web/dsp.js` (HitScale); `WebTransientVectorsTest` keeps the two identical.
+ * Ported to `web/dsp.js` (HitScale); `TransientDetectorTest` and `web/tools/transient.test.mjs` keep the two identical.
  */
 class HitScale(private val attackSec: Float = ATTACK_SEC) {
     private var ref = 0f

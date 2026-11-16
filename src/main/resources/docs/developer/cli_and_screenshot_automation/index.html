@@ -1255,6 +1255,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit Blueprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1508,6 +1536,16 @@
 <td><code>--ui-lab</code></td>
 <td><em>(flag)</em></td>
 <td>Launches the isolated UI component gallery sandbox instead of the live mixer workspace.</td>
+</tr>
+<tr>
+<td><code>--smoke-test</code></td>
+<td><em>(flag)</em></td>
+<td>Headless check used by CI: runs six start-up checks (LWJGL and ImGui natives, bundled resources, the audio backend, Spout / Syphon) without opening the app, then exits with 0 or a failure code.</td>
+</tr>
+<tr>
+<td><code>--tour=&lt;script&gt;</code> and the other <code>--tour*</code> flags</td>
+<td></td>
+<td>Render a scripted walkthrough video; see <code>tour_renderer.md</code>.</td>
 </tr>
 <tr>
 <td><code>--help</code> / <code>-h</code></td>

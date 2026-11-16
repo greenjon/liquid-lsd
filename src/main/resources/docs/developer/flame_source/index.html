@@ -1310,6 +1310,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit Blueprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1586,7 +1614,7 @@
 <p><code>FlameGenomeTest</code>, <code>FlamePackGoldenTest</code>, <code>StructuredEditorLockTest</code> (the named variation combo is disabled while a macro or Metaknob drives it, like the other choice widgets), <code>FlameVariationsTest</code> (Kotlin mirror of the deterministic formulas against hand-derived pairs and every deterministic pair of the spec), <code>FlameShaderValuesTest</code> (GL: the real <code>vari()</code> on spec pairs), <code>FlameSamplerTest</code>, <code>FlameQualityTest</code>, <code>FlameGovernorTest</code>, <code>FlameEditorLayoutTest</code>, <code>GardenTest</code>, and the GL tests <code>FlameShaderCompileTest</code> and <code>FlameProbeTest</code> (skipped without a GL context; run them under <code>xvfb-run</code>). GL tests that draw must share one context per JVM: <code>Geometry</code> caches its fullscreen-quad VAO.</p>
 <h2 id="gotchas">Gotchas</h2>
 <ul>
-<li>Files in <code>library/sources/&lt;id&gt;/</code> are extracted once and never overwritten: delete the folder after changing a bundled source's resources.</li>
+<li>Bundled files in <code>library/sources/&lt;id&gt;/</code> are replaced on startup only when they match a version we shipped before (unedited); a user-edited file is kept (<code>VisualSourceRegistry.ensureDefaultSources</code>). After changing a bundled source's files, run <code>./scripts/shipped_source_hashes.py</code> so the new version is recorded; <code>VisualSourceManifestTest</code> fails until it is.</li>
 <li>A saved session or preset keeps each parameter's saved <code>randomizeBase</code> flag, so old saves do not pick up a changed morph default; re-add the source.</li>
 <li><code>gradlew run</code> does not forward <code>-D</code> flags; the engine's measuring switches are env vars (<code>FLAME_N</code>, <code>FLAME_DENSITY</code>, <code>FLAME_SKIP</code>).</li>
 </ul>

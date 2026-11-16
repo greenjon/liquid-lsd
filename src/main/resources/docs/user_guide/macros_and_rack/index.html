@@ -1505,6 +1505,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit Blueprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2196,26 +2224,24 @@ toggled with <code>F4</code>; everything it did now lives in Edit, below.)</p>
 Opening a deck in Edit shows the row for the Edit tab you are on (SRC or FX).</p>
 <ul>
 <li><strong>Per-Deck Insert FX &amp; Flexible Routing</strong>: Every deck (A, B, BG, PV) now owns its own dedicated 3-slot <code>FxChain</code> running post-generator and pre-crossfader, completely decoupled from other decks.</li>
-<li><strong>Deck Rows Are Split into a Source Row and an FX Row</strong>: Each deck has a <strong>source row</strong> (<code>[ SRC ]</code> pill, kebab, generator/preset badge, Save, queue navigation, eject; its knobs are the source's macros) and an <strong>FX row</strong> (<code>[ FX ]</code> pill, kebab, chain name, Save, queue navigation, slot pills <code>1 2 3</code>; its knobs are the chain's Super Knob and three Metaknobs). The right wing of the FX row has the <code>[ FX ON ]</code> button. The source row's right wing has the randomize die (Source and FX).</li>
-<li><strong>Master Rows Are Split Too</strong>: The <strong>Master MST row</strong> (<code>[ MST ]</code> pill) has the deck-levels badge, with the four knobs on the deck levels and the master level. The <strong>Master FX row</strong> (<code>[ FX ]</code> pill) has the Master FX chain header (the chain name, then <code>[⋮] [Save] [1] [2] [3]</code>) and its <code>[ FX ON ]</code> button, with the knobs on the Master FX Super Knob + 3 Metaknobs. The crossfader sits on the Transitions row.</li>
+<li><strong>Deck Rows Are Split into a Source Row and an FX Row</strong>: Each deck has a <strong>source row</strong> (title badge captioned <code>SRC</code>; generator/preset badge, kebab, Save, queue navigation, eject; its knobs are the source's macros) and an <strong>FX row</strong> (title badge captioned <code>FX</code>; chain name, kebab, Save, queue navigation, slot pills <code>1 2 3</code>; its knobs are the chain's Super Knob and three Metaknobs). The right wing of the FX row has the <code>[ FX ON ]</code> button. The source row's right wing has the randomize die (Source and FX).</li>
+<li><strong>Master Rows Are Split Too</strong>: The <strong>Master MST row</strong> (<code>M</code> badge captioned <code>MST</code>) has the deck-levels badge, with the four knobs on the deck levels and the master level. The <strong>Master FX row</strong> (<code>M</code> badge captioned <code>FX</code>) has the Master FX chain header (the chain name, then <code>[⋮] [Save] [1] [2] [3]</code>) and its <code>[ FX ON ]</code> button, with the knobs on the Master FX Super Knob + 3 Metaknobs. The crossfader sits on the Transitions row.</li>
 <li>The Transitions row has the transition picker on line 1 (click it to pick from the Library below — see below; the Edit gear sits at its end), and line 2 is laid out like an FX row: <code>[⋮]</code> menu, <code>[Save]</code> (saves the transition as a preset), queue <code>[◀] [▶]</code>, then the crossfader cells below. Its four knobs are fixed: <strong>knob 1 is the crossfader</strong> (it follows auto-fades and the slider, and turning it takes over like the slider does), and <strong>knobs 2-4 are the active transition's first three sliders</strong>, relabelled whenever you change transition. Transitions with fewer than three sliders leave the spare knobs blank. Line 2 ends with <code>A</code> / <code>B</code> snap buttons, <code>AUTO</code> and the fade time; there is no crossfader slider on the row (use knob 1 or the Mixer panel's slider). These knobs cannot be re-learned; Dry/Wet stays in the Edit bay.</li>
 </ul>
 <p>Each row is color-coded to its deck or target (orange for Deck A, blue for Deck B, green for Deck BG, plum for Deck PV, cyan for Transitions, light grey for Master) and starts with a title badge spanning both control lines: a large <strong>A</strong>, <strong>B</strong>, <strong>BG</strong> or <strong>PV</strong> on deck rows (its caption strip, <strong>SRC</strong> or <strong>FX</strong>, shows which half the knobs control), a large <strong>M</strong> captioned <strong>TRAN</strong>, <strong>FX</strong> or <strong>MST</strong> on the MIXER page's Transitions and Master rows, and <strong>CLK</strong> on the Clock row. No row has a header bar over its knobs, so MIXER-page knobs are the same size as deck knobs.</p>
 <h3 id="performance-controls-side-wing-layout">Performance Controls &amp; Side-Wing Layout</h3>
 <p>To maximize vertical space in the matrix and keep the knobs comfortably clustered together:
-- <strong>Row Titles &amp; Side-Wing Controls</strong>: Row group titles (e.g. <code>DECK A</code>, <code>DECK A (FX)</code>) sit at the top-left of the row, level with the top of the knobs. The left- and right-wing controls sit below the title, with their bottom edge lined up with the bottom of the knobs, so short rows never push the controls up into the title. Every wing control (buttons, badges, generator/preset badge) is the same height.
+- <strong>Title Badges &amp; Side-Wing Controls</strong>: Each row starts with its title badge (see above), spanning both control lines. The left-wing controls sit on the two lines beside it, and every wing control (buttons, badges, generator/preset badge) is the same height.
 - <strong>Row Height</strong>: Every row has the same fixed height, whatever the window size, so knobs never resize and nothing scrolls. The Library fills the window height below the rows.
 - <strong>Deck Rows (Deck A, B, BG, PV)</strong>:
   - <strong>Left Wing (Info &amp; Deck Controls)</strong>:
-    - <strong>Row 1 (SRC)</strong>:
-      - <strong><code>[ SRC ]</code> Pill</strong>: Labels the source row, whose 4 on-screen macro knobs drive the deck's source.
+    - <strong>Source row</strong> (badge caption <code>SRC</code>): its 4 on-screen macro knobs drive the deck's source.
       - <strong>Source / Preset Badge</strong>: One control, not two -- a preset is just a source with its parameter values saved under a name. With a preset loaded it shows the preset's name (with <code>*</code> when changed) followed by the source it plays, dimmed (<code>curated-0001 · Fractal flame</code>); with a bare source, the source's name. Click it and the Library below lists stock sources and saved presets together, applying to this deck (click again to stop); right-click for source defaults. Clicking the stock source of the preset you're playing loads that source's defaults; clicking the source a deck already plays bare does nothing.
       - <strong>Eject Button (<code>⏏</code>)</strong>: Empties the deck (with the unsaved-changes guard). The deck's FX chain is left as it is. Ctrl+Z can't undo it.
-      - <strong>Queue Navigation</strong>: Deck A and Deck B connect to <code>PlayQueueManager</code> (<code>&lt; N/Total &gt;</code>), Deck BG connects to <code>BgQueueManager</code> (<code>&lt; N/Total &gt;</code>), and Deck PV features a quick Preview focus button.
+      - <strong>Queue Navigation</strong> (<code>◀</code> / <code>▶</code>): on Decks A and B they step the A/B Queue (the same buttons on both rows: the next item loads into whichever deck is off-air, then fades to it); on Deck BG they step the BG Queue. Deck PV has no queue, so its cells stay empty.
       - <strong>Save Button</strong>: Saves the deck's source and parameters as a preset, back to the file it was loaded from (a new name goes to <code>presets/</code>). Greyed out for external video, which can't be saved.
       - <strong>Kebab Menu (<code>⋮</code>)</strong>: Source operations (Browse, Save As, defaults).
-    - <strong>Row 2 (FX)</strong>:
-      - <strong><code>[ FX ]</code> Knob Pill</strong>: Assigns the row's 4 on-screen macro knobs to the deck's insert FX chain (Super Knob + 3 Metaknobs).
+    - <strong>FX row</strong> (badge caption <code>FX</code>): its 4 on-screen macro knobs drive the deck's insert FX chain (Super Knob + 3 Metaknobs).
       - <strong>Dedicated Chain Controls</strong>: Step through chains (<code>◀</code> / <code>▶</code>), active chain name with dirty dot (<code>•</code>) — click it to pick a whole chain from the Library below — <code>[Save]</code> button, and kebab menu (<code>[⋮]</code>) for Save As, Revert, Copy/Paste, and Resync.
   - <strong>Knob Columns</strong>: The 4 macro knobs are uniformly spaced across the center area between the control wings, sharing the exact same column pitch and horizontal alignment whether assigned to <code>SRC</code> or <code>FX</code>. When assigned to <code>FX</code>, each of knobs 2–4 gets two stacked buttons on its left: a link button (<code>Icons.LINK</code>/<code>Icons.UNLINK</code>) that links/unlinks its Metaknob to the Super Knob, and a power button that bypasses just that effect. Interactive FX slot cells showing the effect name appear beneath knobs 2–4; hover a cell to show its <code>◀</code> / <code>▶</code> shortlist arrows.
   - <strong>Macro Knob Ergonomics &amp; Display Modes</strong>:
@@ -2227,15 +2253,15 @@ Opening a deck in Edit shows the row for the Edit tab you are on (SRC or FX).</p
     - <strong>Double-Click Direct Numeric Entry</strong>: Double-click any macro knob face to open an inline text entry box. Type exact numerical values (e.g. <code>0.25</code>, <code>-1.5</code>, <code>42</code>) and press <code>Enter</code> to commit, or <code>Escape</code> to cancel. The typed value is what the parameter receives, so the knob's curve, invert and zone are taken into account (the readout shows the same value). For stepped or half-range bindings the knob snaps to the nearest position that gets closest.
     - <strong>In-Face Readouts</strong>: Hovering or dragging over a targetless or group-mode knob displays a subtle real-time value readout in the center of the knob face.
   - <strong>Right Wing</strong>:
-    - <strong>Randomize Die Button (<code>🎲</code>)</strong>: Randomizes the source's modulators and base values, its Gain, Deck Zoom / Deck Rotate, the FX chain's Dry/Wet and the inputs of the effects in its chain (parameters with randomization turned on), with undo of both the values and the knob positions (when randomization is enabled). Every stock source and most stock effects ship with random ranges on their look parameters (see Modulation, "Built-in random ranges"; an effect's Metaknob is never rolled), and the source knobs move with the roll. Positioned on Row 1 directly above the FX ON button.
-    - <strong><code>[ FX ON ]</code></strong>: Turns the deck's FX chain on or off; lit while on. Positioned on Row 2 aligned with the FX row.
-  - <strong>Drag-and-Drop</strong>: Dropping a deck preset (<code>.patch</code>, <code>.lsd</code>, <code>.json</code>) loads the visual preset; dropping a <code>.lsdfxchain</code> loads that FX chain onto the deck.
+    - <strong>Randomize Die Button (<code>🎲</code>)</strong>: Randomizes the source's modulators and base values, its Gain, Deck Zoom / Deck Rotate, the FX chain's Dry/Wet and the inputs of the effects in its chain (parameters with randomization turned on), with undo of both the values and the knob positions (when randomization is enabled). Every stock source and most stock effects ship with random ranges on their look parameters (see Modulation, "Built-in random ranges"; an effect's Metaknob is never rolled), and the source knobs move with the roll. On the source row.
+    - <strong><code>[ FX ON ]</code></strong>: Turns the deck's FX chain on or off; lit while on. On the FX row.
+  - <strong>Drag-and-Drop</strong>: Dropping a deck preset (<code>.lsd</code>; the older <code>.patch</code> and <code>.json</code> files load too) loads the visual preset; dropping a <code>.lsdfxchain</code> loads that FX chain onto the deck.
 - <strong>Whole-Rig Randomize (<code>[ ALL 🎲 ]</code>)</strong>: Positioned at the top right of the performance matrix tab strip, pushing undo state and invoking <code>mixer.randomizeAll()</code> across all decks (their effects included), the Master parameters and FX, and the transition simultaneously.
-- <strong>Master FX row</strong>: Left wing: the <code>FX</code>-captioned <code>M</code> badge, the chain name box and the chain controls line, as on a deck FX row; right wing: Master FX <code>[ FX ON ]</code>. Dropping a <code>.lsdfxchain</code> onto the <code>MASTER</code> badge loads it into Master FX.
+- <strong>Master FX row</strong>: Left wing: the <code>FX</code>-captioned <code>M</code> badge, the chain name box and the chain controls line, as on a deck FX row; right wing: Master FX <code>[ FX ON ]</code>. Dropping a <code>.lsdfxchain</code> onto the <code>M</code> badge loads it into Master FX.
 - <strong>Level faders on the deck tiles</strong> (the thin strip beside each preview badge) share their value with the Master MST knobs: move the fader and the knob follows, turn the knob and the fader follows, last mover wins. A fader drag also mutes non-MIDI modulation on it and makes a Soft Takeover MIDI/OSC mapping on it pick up again instead of jumping. The handle line marks the fader's own value; the filled bar is the live level after modulation.
 - <strong>Master MST row</strong>: The <code>M</code> badge carries an <code>MST</code> caption. Line 1 is the <code>Deck Levels &amp; Master</code> box (click to edit the levels, right-click for level resets) and a <code>100%</code> reset button; its gear opens Edit on the MST side tab's LEVELS section (the master level, then each deck's level), which shows this row together with the Clock row; the knobs are the Deck A / B / BG and Master levels. The crossfader is not here: it lives on the Transitions row (knob 1) and the Mixer panel.
-- <strong>Transitions (Row 2 in MASTER)</strong>: Left wing features a Transition Picker button displaying the active transition with modified indicator (<code>*</code>) — click it to pick from the transition list in the Library below — and Transition Queue stepping controls (<code>&lt;</code>, <code>N/Total</code>, <code>&gt;</code>); right wing hosts the transition randomize die button (<code>🎲</code>) on Row 1 (matching the deck rows): it rolls the transition's inputs that have a random range, inside that range, and moves the TRANS knobs with them; Ctrl+Z undoes it. Transition presets (<code>.lsdtrans</code>) and shaders (<code>.fs</code>/<code>.isf</code>) can be dropped directly onto the picker button.
-- <strong>Clock &amp; Global (Row 4 in MASTER)</strong>: The two lines beside the <code>CLOCK</code> badge have the tempo controls from Preferences &gt; Tempo &amp; Sync, placed here for use mid-set:
+- <strong>Transitions (Row 1 on MIXER)</strong>: Left wing features a Transition Picker button displaying the active transition with modified indicator (<code>*</code>) — click it to pick from the transition list in the Library below — and Transition Queue stepping controls (<code>&lt;</code>, <code>N/Total</code>, <code>&gt;</code>); right wing hosts the transition randomize die button (<code>🎲</code>) on Row 1 (matching the deck rows): it rolls the transition's inputs that have a random range, inside that range, and moves the TRANS knobs with them; Ctrl+Z undoes it. Transition presets (<code>.lsdtrans</code>) and shaders (<code>.fs</code>/<code>.isf</code>) can be dropped directly onto the picker button.
+- <strong>Clock (Row 4 on MIXER)</strong>: The two lines beside the <code>CLK</code> badge have the tempo controls from Preferences &gt; Tempo &amp; Sync, placed here for use mid-set:
   - <strong><code>[ MAN ]</code> / <code>[ AUDIO ]</code></strong>: clock source (manual tempo or the audio beat tracker).
   - <strong><code>[ LINK n ]</code></strong>: the third button of the top line, with the peer count while Ableton Link is on and dim while it is off. Click it to open Tempo &amp; Sync preferences.
   - <strong>BPM readout</strong>: click it to open Tempo &amp; Sync preferences. The <strong>beat dots</strong> under it (one per beat of the bar, 4 by default) show the bar phase; the downbeat is cyan. Hover for the detector's confidence when Downbeat is on Auto.

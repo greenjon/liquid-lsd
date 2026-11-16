@@ -44,9 +44,9 @@ object FXBgQueueActionsPanel {
                     FXBgQueueManager.initializeShuffle()
                 }
             },
-            exportTooltip = "Export: save background FX queue as a new FX playlist.",
+            exportTooltip = "Export: save the BG FX Queue as a new FX playlist.",
             onExport = { BrowserPopupHandler.pendingOpenExportFxBgQueuePopup = true },
-            clearTooltip = "Clear: empty the background FX queue.",
+            clearTooltip = "Clear: empty the BG FX Queue.",
             onClear = { QueueOps.clear(QueueDrop.Queue.FX_BG, session.parametersState) }
         ))
 

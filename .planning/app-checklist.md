@@ -393,6 +393,20 @@ auto 2026-11-06, headless Firefox, local web/ (TV v26, same version as live): ui
   auto (simulated): nothing sent while unplugged, app keeps running, lights rewritten and native mode re-entered on replug. Left for you: Ctrl-C, hardware.
 - [ ] Tooltips: hover the new ones (System Volume, Master BPM and presets, Library tabs, MIDI mapping columns, Broadcast buttons) and a few converted knob/slider tooltips (what / gestures / MIDI layout). Menus say "MIDI Learn (X)" / "OSC Learn (X)"; MIDI Preferences column says Control; the transition on/off checkbox no longer says Bypass; colours of the menu bar, About, Link button and Clock row group tints look unchanged (dark) and sensible (light).
 
+## 16c. Audit fixes (2026-11-15)
+
+- [ ] Recording: start one, then quit. The app closes cleanly; the MP4 and the session are saved. If a mux fails (e.g. ffmpeg missing an audio codec), the toast names the kept `.wav`.
+- [ ] PipeWire output on, change the output size with a reader (OBS) connected, then turn it off: no crash, no torn frames. A source that switches black-and-white to colour shows colour (needs a camera that renegotiates).
+- [ ] Playlists: Add to Playlist from the row menu on all three tabs (toast, list updates at once); New Playlist... with rows selected creates, selects and fills it, a blocked folder shows an error toast; drop rows onto a tree playlist, reorder/remove in open Sources and FX playlists, quick repeated edits stick.
+- [ ] Save a preset, rename one: each shows in the Sources list at once and stays.
+- [ ] Run past 60 s: `last_session.json` updated, no hitch; quit and restart restores it. Starring, recents and a key rebinding survive a restart.
+- [ ] FX list with 3 selected: press one, move off, release, click elsewhere: the selection stays. FX/Transitions row tooltips unchanged. A stock chain loads clean; editing a Metaknob link makes it dirty.
+- [ ] Hover Audio Response, Input Trim, System Volume, Master BPM, Rate Limit and Seq Length/Phase/Step Hold/Offset: the explanation shows under the name in both the label and track tooltips.
+- [ ] MST > CTRL and LEVELS: hover row labels, descriptions and the new names show. BG Queue / BG FX Queue Export and Clear tooltips say "BG Queue" / "BG FX Queue".
+- [ ] Light theme: FX slot cell backgrounds (filled and empty) and the Queues pane column shading look as before; macro/Metaknob-driven row labels still cyan (dark) / teal (light).
+- [ ] Spot-check the new OSC/MIDI preferences, Video Export and Go Live tooltips (Go Live in both states).
+- [ ] Mac: Preferences says "Not supported on macOS yet"; Caps Lock does nothing.
+
 ## 17. Before release
 
 - [ ] Walkthrough videos re-rendered where `scripts/tour_staleness.py` says (much of the UI they show changed).

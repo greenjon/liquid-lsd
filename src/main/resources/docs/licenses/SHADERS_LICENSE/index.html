@@ -1151,6 +1151,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit Blueprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1312,6 +1340,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#bundled-transitions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bundled Transitions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#algorithm-credits" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1383,6 +1422,17 @@
     <span class="md-ellipsis">
       
         Bundled Visual Sources (Generators)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bundled-transitions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bundled Transitions
       
     </span>
   </a>
@@ -1692,7 +1742,7 @@
 </tr>
 <tr>
 <td style="text-align: left;"><strong>Mandala</strong></td>
-<td style="text-align: left;"><code>library/sources/mandala/mandala.fs</code></td>
+<td style="text-align: left;"><code>library/sources/mandala/shader.frag</code></td>
 <td style="text-align: left;">Liquid LSD Engine</td>
 <td style="text-align: left;">MIT</td>
 <td style="text-align: left;">Approved</td>
@@ -1921,6 +1971,134 @@
 <td style="text-align: left;">MIT</td>
 <td style="text-align: left;">Approved</td>
 <td style="text-align: left;">Audio oscilloscope (waveform or spectrum trace) in a zoom / rotate / warp feedback loop.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Celestial Engine</strong></td>
+<td style="text-align: left;"><code>library/sources/celestial_engine/celestial_engine.fs</code></td>
+<td style="text-align: left;">Liquid LSD (header CREDIT); added c7ed16e 2026-09-20, whose message calls the batch "cleanroom procedural visual sources"; per-shader basis not recorded (<strong>To confirm</strong>)</td>
+<td style="text-align: left;">Unlabelled (no LICENSE key; see audit L7-1)</td>
+<td style="text-align: left;">Pending L7-1</td>
+<td style="text-align: left;">Flower of Life folding, harmonic interference rings, torus knot stereographic projection and moire fringes.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Chladni Cymatics</strong></td>
+<td style="text-align: left;"><code>library/sources/chladni_cymatics/chladni_cymatics.fs</code></td>
+<td style="text-align: left;">Liquid LSD (header CREDIT); added c7ed16e 2026-09-20; fully rewritten e9cbbee, 7516ac8, 5d628ff (2026-11-15), see the ledger row</td>
+<td style="text-align: left;">Unlabelled (no LICENSE key; see audit L7-1)</td>
+<td style="text-align: left;">Pending L7-1</td>
+<td style="text-align: left;">Sand on the nodal lines of a square plate, round (Bessel) plate or water dish, with Pitch Follow. Maths: plate modes, Bessel functions, Chladni's law (textbook physics); no third-party shader recorded.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Domain Warp Fluid</strong></td>
+<td style="text-align: left;"><code>library/sources/domain_warp_fluid/domain_warp_fluid.fs</code></td>
+<td style="text-align: left;">Liquid LSD (header CREDIT); added c7ed16e 2026-09-20; per-shader basis not recorded (<strong>To confirm</strong>)</td>
+<td style="text-align: left;">Unlabelled (no LICENSE key; see audit L7-1)</td>
+<td style="text-align: left;">Pending L7-1</td>
+<td style="text-align: left;">Domain-warped fluid with multi-scale curl noise, vorticity, specular normals and iridescent marbling.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Gyroid Hyperspace</strong></td>
+<td style="text-align: left;"><code>library/sources/gyroid_hyperspace/gyroid_hyperspace.fs</code></td>
+<td style="text-align: left;">Liquid LSD (header CREDIT); added c7ed16e 2026-09-20; per-shader basis not recorded (<strong>To confirm</strong>)</td>
+<td style="text-align: left;">Unlabelled (no LICENSE key; see audit L7-1)</td>
+<td style="text-align: left;">Pending L7-1</td>
+<td style="text-align: left;">Raymarched triply periodic minimal surfaces (Gyroid, Schwarz P, Neovius) with morphing and camera flight; GPU-heavy (<code>LSD_COST</code> 3).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Hyper Slice</strong></td>
+<td style="text-align: left;"><code>library/sources/hyper_slice/hyper_slice.fs</code></td>
+<td style="text-align: left;">Liquid LSD (header CREDIT); added 159db62 2026-08-25 (before the ledger existed); basis not recorded (<strong>To confirm</strong>)</td>
+<td style="text-align: left;">Unlabelled (no LICENSE key; see audit L7-1)</td>
+<td style="text-align: left;">Pending L7-1</td>
+<td style="text-align: left;">Raymarched 3D cross-section through 4D 120-cell and 600-cell polychora by H4 Coxeter domain folding; GPU-heavy (<code>LSD_COST</code> 3).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Fractal Flame</strong></td>
+<td style="text-align: left;"><code>library/sources/fractal_flame/shader.frag</code> (tone-map pass; the genome and chaos game are Kotlin, <code>FlameGenome</code>, <code>FlameSource</code>)</td>
+<td style="text-align: left;">Draves and Reckase, "The Fractal Flame Algorithm"; see Algorithm Credits below and <code>docs/developer/clean_room_provenance.md</code> (shader added f53bd84 2026-10-10)</td>
+<td style="text-align: left;">Unlabelled (no LICENSE key; see audit L7-1)</td>
+<td style="text-align: left;">Pending L7-1</td>
+<td style="text-align: left;">Log-density tone mapping with mip-based density-estimation blur. Variations 46-48 and 49-97 have open ledger items.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="bundled-transitions">Bundled Transitions</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Transition Name</th>
+<th style="text-align: left;">File Path</th>
+<th style="text-align: left;">Origin / Credit</th>
+<th style="text-align: left;">License</th>
+<th style="text-align: left;">Commercial Viability</th>
+<th style="text-align: left;">Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Linear Crossfade</strong></td>
+<td style="text-align: left;"><code>default_transitions/linear_crossfade.fs</code> (web copy <code>web/shaders/transitions/linear_crossfade.fs</code>)</td>
+<td style="text-align: left;">Liquid LSD (header CREDIT); file added c5f1d64 2026-09-09, reworked c7ed16e 2026-09-20, whose message calls the batch "cleanroom"; per-shader basis not recorded (<strong>To confirm</strong>)</td>
+<td style="text-align: left;">Unlabelled (no LICENSE key; see audit L7-1)</td>
+<td style="text-align: left;">Pending L7-1</td>
+<td style="text-align: left;">Smooth, linear and equal-power mixes.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Cyber Datamosh</strong></td>
+<td style="text-align: left;"><code>default_transitions/cyber_datamosh.fs</code> (web copy <code>web/shaders/transitions/cyber_datamosh.fs</code>)</td>
+<td style="text-align: left;">Liquid LSD (header CREDIT); added c7ed16e 2026-09-20, whose message calls the batch "cleanroom"; per-shader basis not recorded (<strong>To confirm</strong>)</td>
+<td style="text-align: left;">Unlabelled (no LICENSE key; see audit L7-1)</td>
+<td style="text-align: left;">Pending L7-1</td>
+<td style="text-align: left;">Glitch envelope peaking at the crossfade midpoint.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Film Burn</strong></td>
+<td style="text-align: left;"><code>default_transitions/film_burn.fs</code> (web copy <code>web/shaders/transitions/film_burn.fs</code>)</td>
+<td style="text-align: left;">Liquid LSD (header CREDIT); added c7ed16e 2026-09-20, whose message calls the batch "cleanroom"; per-shader basis not recorded (<strong>To confirm</strong>)</td>
+<td style="text-align: left;">Unlabelled (no LICENSE key; see audit L7-1)</td>
+<td style="text-align: left;">Pending L7-1</td>
+<td style="text-align: left;">Value-noise burn.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Kinetic Zoom</strong></td>
+<td style="text-align: left;"><code>default_transitions/kinetic_zoom.fs</code> (web copy <code>web/shaders/transitions/kinetic_zoom.fs</code>)</td>
+<td style="text-align: left;">Liquid LSD (header CREDIT); added c7ed16e 2026-09-20, whose message calls the batch "cleanroom"; per-shader basis not recorded (<strong>To confirm</strong>)</td>
+<td style="text-align: left;">Unlabelled (no LICENSE key; see audit L7-1)</td>
+<td style="text-align: left;">Pending L7-1</td>
+<td style="text-align: left;">Deck A rushes toward the camera, deck B swoops in from wide.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Liquid Displacement</strong></td>
+<td style="text-align: left;"><code>default_transitions/liquid_displacement.fs</code> (web copy <code>web/shaders/transitions/liquid_displacement.fs</code>)</td>
+<td style="text-align: left;">Liquid LSD (header CREDIT); added c7ed16e 2026-09-20, whose message calls the batch "cleanroom"; per-shader basis not recorded (<strong>To confirm</strong>)</td>
+<td style="text-align: left;">Unlabelled (no LICENSE key; see audit L7-1)</td>
+<td style="text-align: left;">Pending L7-1</td>
+<td style="text-align: left;">Luminance-derived displacement with a wave envelope.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Luminous Flash</strong></td>
+<td style="text-align: left;"><code>default_transitions/luminous_flash.fs</code> (web copy <code>web/shaders/transitions/luminous_flash.fs</code>)</td>
+<td style="text-align: left;">Liquid LSD (header CREDIT); added c7ed16e 2026-09-20, whose message calls the batch "cleanroom"; per-shader basis not recorded (<strong>To confirm</strong>)</td>
+<td style="text-align: left;">Unlabelled (no LICENSE key; see audit L7-1)</td>
+<td style="text-align: left;">Pending L7-1</td>
+<td style="text-align: left;">Smoothstep crossfade with a Gaussian flash at the midpoint.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Noise Dissolve</strong></td>
+<td style="text-align: left;"><code>default_transitions/noise_dissolve.fs</code> (web copy <code>web/shaders/transitions/noise_dissolve.fs</code>)</td>
+<td style="text-align: left;">Liquid LSD (header CREDIT); added c7ed16e 2026-09-20, whose message calls the batch "cleanroom"; per-shader basis not recorded (<strong>To confirm</strong>)</td>
+<td style="text-align: left;">Unlabelled (no LICENSE key; see audit L7-1)</td>
+<td style="text-align: left;">Pending L7-1</td>
+<td style="text-align: left;">Domain-warped noise dissolve.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Vortex Swirl</strong></td>
+<td style="text-align: left;"><code>default_transitions/vortex_swirl.fs</code> (web copy <code>web/shaders/transitions/vortex_swirl.fs</code>)</td>
+<td style="text-align: left;">Liquid LSD (header CREDIT); added c7ed16e 2026-09-20, whose message calls the batch "cleanroom"; per-shader basis not recorded (<strong>To confirm</strong>)</td>
+<td style="text-align: left;">Unlabelled (no LICENSE key; see audit L7-1)</td>
+<td style="text-align: left;">Pending L7-1</td>
+<td style="text-align: left;">Swirl angle peaking at the midpoint.</td>
 </tr>
 </tbody>
 </table>

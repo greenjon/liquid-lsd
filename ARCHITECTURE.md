@@ -1,6 +1,6 @@
 # Liquid LSD — Architecture
 
-A map of the code as it is. For the *why* behind a rule, follow the `DECISIONS §n` links (`DECISIONS.md`, durable decisions only); for depth on a subsystem, follow the `docs/developer/` link at the end of its section. Verified against `src/main/kotlin/llm/slop/liquidlsd/` (379 files; 229 test files) on 2026-11-15.
+A map of the code as it is. For the *why* behind a rule, follow the `DECISIONS §n` links (`DECISIONS.md`, durable decisions only); for depth on a subsystem, follow the `docs/developer/` link at the end of its section. Verified against `src/main/kotlin/llm/slop/liquidlsd/` (380 files; 236 test files) on 2026-11-15.
 
 Liquid LSD is a Kotlin/JVM VJ application: OpenGL 3.3 core (LWJGL 3 + GLFW), Dear ImGui (`imgui-java`), JACK (JNAJack) with a Java Sound fallback for audio, Java Sound for MIDI. **Everything that draws is an ISF shader**: generators, FX filters and transitions. The exceptions: `blit`, `mixer` and `view2d` are hard-wired shaders (`src/main/resources/shaders/`), `mandala` and `fractal_flame` are `meta.json` + `shader.frag` sources built in Kotlin, and `FlameEngine` compiles its iterate/splat GLSL inline (DECISIONS §2).
 
@@ -281,7 +281,7 @@ Deeper: `docs/developer/web_subsystem.md`.
 ## 14. Build, test, release
 
 - Gradle Kotlin DSL (`build.gradle.kts`): Kotlin 2.3.0, JVM toolchain 17, LWJGL 3.3.3, imgui-java 1.92.7.1, JNAJack 1.4.0, JNA 5.19.1, kotlinx.serialization/coroutines. `./gradlew run | compileKotlin | test | checkWebSync | syncWeb | packageZips`. CLI (`cli/CliArgs`): `--version`, `--help`, `--smoke-test`, `--screenshot-ui`, `--screenshot-after-frames`, `--window`, `--no-audio`, `--ui-lab`, and the tour renderer's `--tour=<script>`, `--tour-out=`, `--tour-hidden`, `--tour-dump=`, `--tour-draft`, `--tour-fps=`, `--tour-scale=`, `--tour-encoder=`, `--tour-hashes`, `--tour-no-hashes` (`tour/`: `TourRunner`, `TourScript`, `PipelineDiagram`, `WidgetRegistry`; `docs/developer/tour_renderer.md`). Flame tools: `./gradlew curateFlames | flameStats | compareVariation`.
-- Tests: `src/test/kotlin/llm/slop/liquidlsd/` (229 files) mirror the packages; `architecture/LayerDependencyTest` is the layering guard.
+- Tests: `src/test/kotlin/llm/slop/liquidlsd/` (236 files) mirror the packages; `architecture/LayerDependencyTest` is the layering guard.
 - CI/release/platforms: `.github/workflows/release.yml` (tags `v0.9.N`, own smoke matrix), `smoke-test.yml` (PRs), `build-syphon.yml` (manual, the Syphon framework asset); DECISIONS §11. Docs site: `scripts/build_website.py`, `scripts/publish_site.sh`. Self-update check: `update/` (`UpdateChecker`, `SemVer`, `AppVersion`).
 
 ## Unverified
