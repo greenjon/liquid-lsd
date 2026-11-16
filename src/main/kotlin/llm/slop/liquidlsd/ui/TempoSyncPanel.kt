@@ -206,6 +206,7 @@ object TempoSyncPanel {
         CustomRangeSlider.drawCompactSlider(
             session = session,
             label = "Master BPM",
+            description = "Tempo of the beat clock (40 to 240 BPM). In Audio Tracker mode it shows the detected tempo. With Ableton Link on, setting it sets the Link session tempo too.",
             currentValue = if (currentClock == ClockSource.MANUAL) audioEngine.manualBpm else currentBpm,
             minLimit = 40f,
             maxLimit = 240f,
@@ -221,7 +222,6 @@ object TempoSyncPanel {
                 AppPreferencesStore.savePreferences()
             }
         )
-        itemTooltip("Tempo of the beat clock (40 to 240 BPM). In Audio Tracker mode it shows the detected tempo. With Ableton Link on, setting it sets the Link session tempo too.")
 
         ImGui.spacing()
 

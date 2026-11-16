@@ -111,6 +111,7 @@ object VideoDisplayPreferencesPanel {
                     session.uiTheme.updateVideoOutputConfig(endpoint, config.copy(isEnabled = enabled.get()))
                     AppPreferencesStore.savePreferences()
                 }
+                itemTooltip("Turn this video output on or off.")
                 
                 ImGui.tableNextColumn()
                 val nameInput = imgui.type.ImString(config.customName, 64)
@@ -213,5 +214,6 @@ object VideoDisplayPreferencesPanel {
             session.uiTheme.recordingFps = if (fpsIdx.get() == 0) 30 else 60
             AppPreferencesStore.savePreferences()
         }
+        itemTooltip("Frame rate of the videos the Record button makes.")
     }
 }

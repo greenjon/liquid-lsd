@@ -35,11 +35,12 @@ object QueuesPane {
         Column("QueuesTrans", QueueDrop.Queue.TRANS, TransitionQueuePanel::draw)
     )
 
-    /** [col] (packed U32) mixed [amt] of the way toward white (dark theme) or black (light theme), alpha kept. */
+    /** [col] (packed U32) mixed [amt] of the way toward [TangoPalette.CONTRAST_INK] (white on dark, black on light), alpha kept. */
     private fun contrasted(col: Int, amt: Float): Int {
-        val target = if (TangoPalette.isLightTheme) 0f else 255f
+        val ink = TangoPalette.CONTRAST_INK.u32()
         fun ch(shift: Int): Int {
             val v = (col shr shift) and 0xFF
+            val target = (ink shr shift) and 0xFF
             return (v + (target - v) * amt).toInt().coerceIn(0, 255)
         }
         return (col and (0xFF shl 24)) or (ch(16) shl 16) or (ch(8) shl 8) or ch(0)

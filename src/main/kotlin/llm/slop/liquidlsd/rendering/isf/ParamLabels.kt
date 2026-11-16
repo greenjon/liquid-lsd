@@ -1,6 +1,4 @@
-package llm.slop.liquidlsd.ui
-
-import llm.slop.liquidlsd.rendering.isf.ISFHeader
+package llm.slop.liquidlsd.rendering.isf
 
 /**
  * Display names for shader parameters: the ISF input's LABEL when it has one, else the NAME made readable

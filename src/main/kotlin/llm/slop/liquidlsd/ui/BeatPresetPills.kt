@@ -34,6 +34,7 @@ object BeatPresetPills {
             if (idx > 0) ImGui.sameLine(0f, 4f * FONT_SCALE)
             val selected = abs(current - value) < 0.001f
             if (ButtonChrome.toggleButton("$label##beat_preset_${idPrefix}_$idx", selected, themeColor, 42f * FONT_SCALE, 0f)) onPick(value)
+            itemTooltip("Set this value to that many beats (lit: the current value).")
         }
     }
 }

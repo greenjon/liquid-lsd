@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui
 
+import llm.slop.liquidlsd.rendering.isf.ParamLabels
 import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.rendering.isf.FxMetaBinding
 import llm.slop.liquidlsd.rendering.isf.ISFFilter

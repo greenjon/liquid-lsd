@@ -174,8 +174,6 @@ class UiLabPanel {
         val color = ImGui.getStyle().getColor(colorIdx)
         val rgba = floatArrayOf(color.x, color.y, color.z, color.w)
         ImGui.colorButton("##swatch_$label", rgba, imgui.flag.ImGuiColorEditFlags.NoTooltip, 20f, 20f)
-        if (ImGui.isItemHovered()) {
-            ImGui.setTooltip(label)
-        }
+        itemTooltip(label)
     }
 }

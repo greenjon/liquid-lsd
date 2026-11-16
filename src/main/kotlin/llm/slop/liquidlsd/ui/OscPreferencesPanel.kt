@@ -109,10 +109,12 @@ object OscPreferencesPanel {
             OscPreferences.activeProfile = selected
             OscPreferences.savePreferences()
         }
+        itemTooltip("OSC mapping profile in use. Pick another to load its mappings.")
         ImGui.sameLine()
         if (ButtonChrome.button("${Icons.SAVE} Save##osc_save_profile")) {
             OscMappingManager.saveActiveProfile()
         }
+        itemTooltip("Save the current OSC mappings to this profile.")
         ImGui.sameLine()
         val canDelete = OscMappingManager.activeProfileName != "default"
         if (!canDelete) ImGui.beginDisabled()
@@ -121,6 +123,7 @@ object OscPreferencesPanel {
             OscPreferences.activeProfile = "default"
             OscPreferences.savePreferences()
         }
+        itemTooltip("Delete this profile and switch to the default one. The default profile cannot be deleted.", allowWhenDisabled = true)
         if (!canDelete) ImGui.endDisabled()
 
         ImGui.sameLine(0f, 20f)
@@ -138,6 +141,7 @@ object OscPreferencesPanel {
                 newProfileInput.set("")
             }
         }
+        itemTooltip("Create a profile with the name typed to the left and switch to it.")
 
         ImGui.spacing()
         ImGui.separator()
@@ -226,6 +230,7 @@ object OscPreferencesPanel {
             OscMappingManager.clearAllMappings()
             OscMappingManager.saveActiveProfile()
         }
+        itemTooltip("Remove every OSC mapping in this profile.")
 
         val filterText = filterMappingInput.get()
         val mappings = OscMappingManager.getMappings()
@@ -302,6 +307,7 @@ object OscPreferencesPanel {
                     ImGui.setNextItemWidth(55f)
                     val changedMax = ImGui.dragFloat("##osc_max_$address", maxArr, 0.01f, -100f, 100f, "%.2f")
                     val commitMax = ImGui.isItemDeactivatedAfterEdit()
+                    itemTooltip("Min / Max: the values the parameter takes at the lowest and highest OSC input. Drag to adjust.")
                     if (changedMin || changedMax) {
                         OscMappingManager.updateMapping(address, map.copy(minVal = minArr[0], maxVal = maxArr[0]))
                     }
@@ -315,11 +321,13 @@ object OscPreferencesPanel {
                         OscMappingManager.updateMapping(address, map.copy(inverted = inv.get()))
                         OscMappingManager.saveActiveProfile()
                     }
+                    itemTooltip("Reverse the control's direction.")
 
                     ImGui.tableNextColumn()
                     val slewArr = floatArrayOf(map.slewMs)
                     ImGui.setNextItemWidth(70f)
                     val changedSlew = ImGui.dragFloat("##osc_slew_$address", slewArr, 1f, 0f, 250f, "%.0f ms")
+                    itemTooltip("Slew: glide to each new value over this many milliseconds, smoothing steppy controls (0 = jump at once). Drag to adjust.")
                     if (changedSlew) {
                         OscMappingManager.updateMapping(address, map.copy(slewMs = slewArr[0]))
                     }
@@ -334,12 +342,14 @@ object OscPreferencesPanel {
                         OscMappingManager.updateMapping(address, map.copy(takeoverMode = takeoverValues[toIdx.get()]))
                         OscMappingManager.saveActiveProfile()
                     }
+                    itemTooltip("Takeover: IMMEDIATE jumps the parameter to the control's position. SOFT_TAKEOVER waits until the control passes the current value, so nothing jumps when the two disagree.")
 
                     ImGui.tableNextColumn()
                     if (ButtonChrome.button("${Icons.TRASH}##osc_del_$address")) {
                         OscMappingManager.removeMapping(address)
                         OscMappingManager.saveActiveProfile()
                     }
+                    itemTooltip("Remove this mapping.")
                 }
                 ImGui.endTable()
             }

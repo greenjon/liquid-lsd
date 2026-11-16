@@ -6,9 +6,11 @@ import java.util.concurrent.ConcurrentLinkedQueue
 private val logger = KotlinLogging.logger {}
 
 /**
- * macOS Cocoa multi-touch trackpad backend.
- * Uses indirect touch events from the NSView associated with the GLFW window.
- * Dispatches normalized (0.0..1.0) coordinates into the thread-safe event queue.
+ * macOS Cocoa multi-touch trackpad backend: a stub. Nothing installs the Cocoa touch hook yet, so
+ * [onNativeCocoaTouch] is never called; the backend reports [TouchBackendState.DISABLED] ("not supported on
+ * macOS") rather than READY, so Preferences does not offer a console that would receive no touches.
+ * When a real hook exists it would take indirect touch events from the GLFW window's NSView and dispatch
+ * normalized (0.0..1.0) coordinates into the thread-safe event queue.
  */
 class MacCocoaTouchBackend(
     private val windowHandle: Long,
@@ -21,12 +23,9 @@ class MacCocoaTouchBackend(
     private var isStarted = false
 
     init {
+        // Not READY even on macOS until start() installs a real Cocoa touch hook (see the class comment).
         val os = System.getProperty("os.name", "").lowercase()
-        if (os.contains("mac")) {
-            state = TouchBackendState.READY
-        } else {
-            state = TouchBackendState.NO_DEVICE
-        }
+        state = if (os.contains("mac")) TouchBackendState.DISABLED else TouchBackendState.NO_DEVICE
     }
 
     override fun start(): Boolean {

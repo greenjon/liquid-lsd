@@ -1,7 +1,5 @@
-package llm.slop.liquidlsd.ui
+package llm.slop.liquidlsd.rendering.isf
 
-import llm.slop.liquidlsd.rendering.isf.ISFHeader
-import llm.slop.liquidlsd.rendering.isf.ISFInput
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

@@ -154,7 +154,7 @@ object AudioEnginePanel {
         if (!theme.audioEngineEnabled) {
             ImGui.spacing()
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, TangoPalette.TEXT_WARN.u32())
-            ImGui.textWrapped("${Icons.ALERT} Audio engine is disabled. Live audio input and audio-reactive CV signals (Amp, Bass, Mid, High, Flux) are inactive.")
+            ImGui.textWrapped("${Icons.ALERT} Audio engine is disabled. Live audio input and audio-reactive signals (the Full Mix, Bass, Mid, Hi-Mid and High levels and their Hits) are inactive.")
             ImGui.popStyleColor()
             ImGui.spacing()
         }
@@ -242,6 +242,7 @@ object AudioEnginePanel {
             CustomRangeSlider.drawCompactSlider(
                 session = session,
                 label = "Input Trim",
+                description = "Level of the incoming audio before analysis, for setting up the input: raise it if the Sync State stays SILENT while music plays. It does not change how much the picture moves (auto gain levels the audio signals); use Audio Response for that.",
                 currentValue = audioEngine.inputGain,
                 minLimit = 0.0f,
                 maxLimit = 10.0f,
@@ -256,7 +257,6 @@ object AudioEnginePanel {
                     AppPreferencesStore.savePreferences()
                 }
             )
-            itemTooltip("Level of the incoming audio before analysis, for setting up the input: raise it if the Sync State stays SILENT while music plays. It does not change how much the picture moves (auto gain levels the audio signals); use Audio Response for that.")
 
             if (SystemAudioVolume.isSupported) {
                 SystemAudioVolume.queryAsync()
@@ -266,6 +266,7 @@ object AudioEnginePanel {
                 CustomRangeSlider.drawCompactSlider(
                     session = session,
                     label = label,
+                    description = "Your computer's input volume for the default recording device, the same setting as the system sound settings (it changes it for every app). Raise it, or Input Trim, if the Sync State stays SILENT. MUTED means the device is muted in the system.",
                     currentValue = sysVol,
                     minLimit = 0.0f,
                     maxLimit = 1.0f,
@@ -279,7 +280,6 @@ object AudioEnginePanel {
                         SystemAudioVolume.updateSystemVolume(newVal)
                     }
                 )
-                itemTooltip("Your computer's input volume for the default recording device, the same setting as the system sound settings (it changes it for every app). Raise it, or Input Trim, if the Sync State stays SILENT. MUTED means the device is muted in the system.")
             }
 
             ImGui.spacing()
@@ -330,6 +330,7 @@ object AudioEnginePanel {
             CustomRangeSlider.drawCompactSlider(
                 session = session,
                 label = "Audio Response",
+                description = "How strongly the picture follows the music moment to moment: scales the level signals (Full Mix, Bass, Mid, Hi-Mid, High) and the Hits signals that audio modulators read. 0% = these stop moving, 100% = as tuned, 200% = twice as much (loud passages hit the top sooner). Auto gain keeps this the same at any input level. Section signals (Energy and Drop) are not scaled, so at 0% breakdowns and drops still change the stock looks. Beat detection, LFOs and the beat clock are not affected either.",
                 currentValue = audioEngine.response,
                 minLimit = 0.0f,
                 maxLimit = AudioEngine.MAX_RESPONSE,
@@ -344,7 +345,6 @@ object AudioEnginePanel {
                     AppPreferencesStore.savePreferences()
                 }
             )
-            itemTooltip("How strongly the picture follows the music moment to moment: scales the Amp, Bass, Mid, High and Flux signals that audio modulators read. 0% = these stop moving, 100% = as tuned, 200% = twice as much (loud passages hit the top sooner). Auto gain keeps this the same at any input level. Section signals (Energy and Drop) are not scaled, so at 0% breakdowns and drops still change the stock looks. Beat detection, LFOs and the beat clock are not affected either.")
             val agc = audioEngine.agc
             theme.caption("Auto gain  amp %.1fx  bass %.1fx  mid %.1fx  high %.1fx".format(
                 agc.boost(AudioAgc.AMP), agc.boost(AudioAgc.BASS), agc.boost(AudioAgc.MID), agc.boost(AudioAgc.HIGH)))

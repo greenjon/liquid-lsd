@@ -85,9 +85,7 @@ object FxSlotCell {
         val dl = ImGui.getWindowDrawList()
         val h = HEIGHT
 
-        val bgAlpha = if (fx == null) 0.25f else 0.45f
-        // Light theme: a light surface (a dark wash over white came out mid-grey under grey text).
-        val cellBg = if (TangoPalette.isLightTheme) ImGui.getColorU32(ImGuiCol.FrameBg) else TangoPalette.u32(TangoPalette.FX_CELL_BG_RGB, bgAlpha)
+        val cellBg = (if (fx == null) TangoPalette.FX_SLOT_CELL_BG_EMPTY else TangoPalette.FX_SLOT_CELL_BG).u32()
         dl.addRectFilled(x, y, x + w, y + h, cellBg, 4f)
 
         // -- ◀ (hover only) -----------------------------------------------------------------

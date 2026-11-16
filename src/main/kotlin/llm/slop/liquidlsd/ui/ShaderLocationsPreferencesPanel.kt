@@ -81,6 +81,7 @@ object ShaderLocationsPreferencesPanel {
                     llm.slop.liquidlsd.rendering.isf.ISFDirectoryManager.toggleDirectoryEnabled(resolved.config.path, enabled.get())
                     rescan()
                 }
+                itemTooltip("Load shaders from this folder. An unchecked folder is skipped.")
 
                 // Col 1: Path
                 ImGui.tableSetColumnIndex(1)

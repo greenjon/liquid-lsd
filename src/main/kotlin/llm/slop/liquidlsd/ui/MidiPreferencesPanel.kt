@@ -103,14 +103,17 @@ object MidiPreferencesPanel {
             addModifier.set(addModifier.get().coerceIn(0, modifiers.size - 1))
             ImGui.setNextItemWidth(130f)
             ImGui.combo("##add_mod", addModifier, modifiers.toTypedArray())
+            itemTooltip("Modifier: a button held while the control moves. Leave it at (no modifier) for the plain control.")
             ImGui.sameLine()
             ImGui.setNextItemWidth(130f)
             ImGui.combo("##add_input", addInput, inputs.toTypedArray())
+            itemTooltip("The control on the device this mapping is for.")
             ImGui.sameLine()
             val addKey = ProfileBindingEdit.key(modifiers.getOrNull(addModifier.get())?.takeIf { addModifier.get() > 0 }?.let { listOf(it) } ?: emptyList(), inputs[addInput.get()])
             if (ButtonChrome.button((addCommand.ifEmpty { "Choose command..." }) + "##add_cmd")) {
                 pickerKey = ADD_ROW; pickerFilter.set(""); ImGui.openPopup("command_picker")
             }
+            itemTooltip("Command the new mapping runs. Click to pick one.")
             drawCommandPicker(ADD_ROW, registry, compiled, addKey) { chosen -> addCommand = chosen; false }
             ImGui.sameLine()
             val exists = addKey in profile.bindings
@@ -242,6 +245,7 @@ object MidiPreferencesPanel {
             if (ButtonChrome.button("${Icons.FOLDER} Open Folder##utility_open")) {
                 try { java.awt.Desktop.getDesktop().open(saved.parentFile) } catch (e: Exception) { profileMessage = "Could not open ${saved.parentFile}" }
             }
+            itemTooltip("Open the folder the settings file was saved to.")
         }
 
         for (rejected in store.rejected()) {
@@ -326,10 +330,12 @@ object MidiPreferencesPanel {
                 }
             }
         }
+        itemTooltip("Turn MIDI input and output on or off. Off closes every MIDI device.")
         ImGui.sameLine(0f, 20f)
         if (ButtonChrome.button("${Icons.REFRESH} Rescan Controllers##midi_rescan")) {
             MidiEngine.scanForNewDevices()
         }
+        itemTooltip("Look again for MIDI devices, after you plug one in.")
 
         val midiCount = MidiEngine.getActiveDeviceCount()
         val deviceNames = MidiEngine.getConnectedDeviceNames()
@@ -373,10 +379,12 @@ object MidiPreferencesPanel {
             session.uiTheme.activeMidiProfile = selected
             AppPreferencesStore.savePreferences()
         }
+        itemTooltip("Learned-mapping profile in use. Pick another to load its mappings.")
         ImGui.sameLine()
         if (ButtonChrome.button("${Icons.SAVE} Save##midi_save_profile")) {
             session.midiMappingManager.saveActiveProfile()
         }
+        itemTooltip("Save the current learned mappings to this profile.")
         ImGui.sameLine()
         val canDelete = session.midiMappingManager.activeProfileName != "default"
         if (!canDelete) ImGui.beginDisabled()
@@ -385,6 +393,7 @@ object MidiPreferencesPanel {
             session.uiTheme.activeMidiProfile = "default"
             AppPreferencesStore.savePreferences()
         }
+        itemTooltip("Delete this profile and switch to the default one. The default profile cannot be deleted.", allowWhenDisabled = true)
         if (!canDelete) ImGui.endDisabled()
 
         ImGui.sameLine(0f, 20f)
@@ -402,6 +411,7 @@ object MidiPreferencesPanel {
                 newProfileInput.set("")
             }
         }
+        itemTooltip("Create a profile with the name typed to the left and switch to it.")
 
         ImGui.spacing()
         ImGui.separator()

@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui
 
+import llm.slop.liquidlsd.rendering.isf.ParamLabels
 import imgui.ImGui
 import imgui.type.ImBoolean
 import llm.slop.liquidlsd.rendering.FxChain
@@ -126,10 +127,12 @@ object FXChainMacroStrip {
         if (pages > 1) {
             ImGui.sameLine()
             if (ImGui.smallButton("◀##fx_page_prev_$bankId")) FxMacroSync.stepParamPage(bankId, mixer, -1)
+            itemTooltip("Previous page of this effect's parameters for knobs 2-4.")
             ImGui.sameLine()
             ImGui.textDisabled("P${chain.focusParamPage + 1}/$pages")
             ImGui.sameLine()
             if (ImGui.smallButton("▶##fx_page_next_$bankId")) FxMacroSync.stepParamPage(bankId, mixer, 1)
+            itemTooltip("Next page of this effect's parameters for knobs 2-4.")
         }
         ImGui.sameLine()
         if (ImGui.smallButton("${Icons.X} Group Mode##fx_unfocus_$bankId")) FxMacroSync.focusSlot(bankId, mixer, null)

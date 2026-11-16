@@ -20,7 +20,8 @@ object CustomRangeSlider {
     /**
      * Tooltip for a slider's name label (also [BeatDivisionSlider] and the Min/Max captions): what it is, the
      * armed MIDI/OSC Learn state, and its gestures. [defaultText] is the formatted default, null to leave it out;
-     * [resettable] says middle-click resets it; [learnable] says the right-click menu offers MIDI/OSC Learn.
+     * [resettable] says middle-click resets it; [learnable] says the right-click menu offers MIDI/OSC Learn;
+     * [about] is the control's explanation, shown under the header.
      */
     internal fun labelTooltip(
         label: String,
@@ -30,7 +31,8 @@ object CustomRangeSlider {
         oscArmed: Boolean,
         midiArmed: Boolean,
         learnable: Boolean,
-        resettable: Boolean
+        resettable: Boolean,
+        about: String? = null
     ) {
         showTooltip(buildControlTooltip {
             if (bound != null) {
@@ -39,6 +41,7 @@ object CustomRangeSlider {
                 leftClick = "edit the target"
             } else {
                 header = if (defaultText != null) "$label (default $defaultText)" else label
+                description = about
                 status = when {
                     oscArmed -> "[OSC LEARN ARMED] Move a control on your OSC surface to map it."
                     midiArmed -> "[MIDI LEARN ARMED] Move a knob or fader on your MIDI controller to map it."
@@ -56,7 +59,8 @@ object CustomRangeSlider {
 
     /**
      * Tooltip for a slider track (also [BeatDivisionSlider]). [what] names the value ("value", "speed"); [isRange]
-     * is true while the random range (two handles) is shown; [rangeScroll] says what scrolling does to the range.
+     * is true while the random range (two handles) is shown; [rangeScroll] says what scrolling does to the range;
+     * [about] is the control's explanation.
      */
     internal fun trackTooltip(
         label: String,
@@ -64,7 +68,8 @@ object CustomRangeSlider {
         locked: llm.slop.liquidlsd.macro.MacroBindingInfo?,
         isRange: Boolean,
         spot: TrackSpot,
-        rangeScroll: String
+        rangeScroll: String,
+        about: String? = null
     ) {
         showTooltip(when {
             locked != null -> buildControlTooltip {
@@ -78,12 +83,14 @@ object CustomRangeSlider {
                     TrackSpot.MAX -> "$label: maximum $what"
                     else -> "$label: random range"
                 }
+                description = about
                 drag = "move a handle"
                 scroll = rangeScroll
                 middleClick = "reset to default"
             }
             else -> buildControlTooltip {
                 header = "$label: base $what"
+                description = about
                 drag = "adjust"
                 scroll = "adjust"
                 middleClick = "reset to default"
@@ -641,7 +648,8 @@ object CustomRangeSlider {
         modulatorIndex: Int? = null,
         modulatorId: String? = null,
         propertyName: String? = null,
-        paramKey: String? = null
+        paramKey: String? = null,
+        description: String? = null
     ) {
         drawCustomRangeSlider(
             session = session,
@@ -666,7 +674,8 @@ object CustomRangeSlider {
             modulatorIndex = modulatorIndex,
             modulatorId = modulatorId,
             propertyName = propertyName,
-            paramKey = paramKey
+            paramKey = paramKey,
+            description = description
         )
     }
 
@@ -690,7 +699,8 @@ object CustomRangeSlider {
         modulatorIndex: Int? = null,
         modulatorId: String? = null,
         propertyName: String? = null,
-        paramKey: String? = null
+        paramKey: String? = null,
+        description: String? = null
     ) {
         drawCustomRangeSlider(
             session = session,
@@ -715,7 +725,8 @@ object CustomRangeSlider {
             modulatorIndex = modulatorIndex,
             modulatorId = modulatorId,
             propertyName = propertyName,
-            paramKey = paramKey
+            paramKey = paramKey,
+            description = description
         )
     }
 
@@ -750,7 +761,8 @@ object CustomRangeSlider {
         propertyName: String? = null,
         paramKey: String? = null,
         displayScale: Float? = null,
-        driveThroughKnob: Boolean = false
+        driveThroughKnob: Boolean = false,
+        description: String? = null
     ) {
         val dispScale = displayScale ?: if (formatValue === ValueFormat.AUTO) ValueFormat.scaleFor(minLimit, maxLimit) else 1f
         val effectiveIsRandomizable = if (isRandomizeDisabled) false else ((isRandomizable && session.uiTheme.randomizationEnabled) || (!showControls && isRandomizable))
@@ -972,7 +984,7 @@ object CustomRangeSlider {
 
             if (isLabelHovered) {
                 labelTooltip(label, defaultValue?.let { labelFormatFunc(it) }, if (isMacroBound) macroInfo else null, isMacroLearning,
-                    isOscLearningThis, isMidiLearningThis, learnable = targetPath != null, resettable = true)
+                    isOscLearningThis, isMidiLearningThis, learnable = targetPath != null, resettable = true, about = description)
             }
             if (isMacroLearning) {
                 val pulseAlpha = (kotlin.math.sin(llm.slop.liquidlsd.utils.TimeSource.getEpochMillis() * 0.008) * 0.35 + 0.65).toFloat()
@@ -1311,7 +1323,7 @@ object CustomRangeSlider {
                     else -> TrackSpot.NONE
                 }
             } else TrackSpot.NONE
-            trackTooltip(label, "value", if (isMacroBound) macroInfo else null, effectiveIsRandomizable, spot, "move the nearer handle")
+            trackTooltip(label, "value", if (isMacroBound) macroInfo else null, effectiveIsRandomizable, spot, "move the nearer handle", description)
         }
 
         if (isMacroBound && macroInfo!!.binding.enabled && propertyName != null) {
@@ -1319,6 +1331,8 @@ object CustomRangeSlider {
         }
 
         ImGui.popID()
+        // The last item is this empty dummy, so an itemTooltip() after the slider never shows: pass the
+        // explanation as `description` instead, which the label and track tooltips carry.
         ImGui.setCursorScreenPos(rowStartX, startY + h)
         ImGui.dummy(0f, 0f)
     }
