@@ -361,6 +361,7 @@ function reconnect() {
 // where it was.
 const TAPE_STUCK_S = 6;
 let tape = null; // { url, pos, paused, ready, stuck, lastT }
+let tapeMetaListener = null; // loadTape's pending 'loadedmetadata' handler
 
 /** Points the element at the tape, from `tape.pos`. The promise is play()'s: it rejects if the browser refuses. */
 function loadTape() {
@@ -369,12 +370,16 @@ function loadTape() {
   const t = tape;
   t.ready = false;
   t.stuck = 0;
-  audioEl.addEventListener('loadedmetadata', () => {
+  // A stuck tape is reloaded every few seconds: the previous load's listener goes, so they do not pile up.
+  if (tapeMetaListener) audioEl.removeEventListener('loadedmetadata', tapeMetaListener);
+  tapeMetaListener = () => {
+    tapeMetaListener = null;
     if (tape !== t) return;
     if (t.pos > 0) audioEl.currentTime = t.pos;
     t.ready = true;
     t.lastT = t.pos;
-  }, { once: true });
+  };
+  audioEl.addEventListener('loadedmetadata', tapeMetaListener, { once: true });
   audioEl.src = t.url;
   if (t.paused || micOn) return Promise.resolve();
   return audioEl.play().then(() => { analysisReady = true; cvState.isLive = true; });

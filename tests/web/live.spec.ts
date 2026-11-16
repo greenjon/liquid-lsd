@@ -1,7 +1,7 @@
 import { test, expect, chromium } from '@playwright/test';
 import { sealOff, openTV, until, note, picture } from './tv';
 const only = () => test.skip(test.info().project.name !== 'chromium');
-const full = (broadcaster?: string) => JSON.stringify({ type: 'state_full', v: 2, clock: { bpm: 128, beats: 16, t: Date.now() }, preset: { deckA: { source: 'metaballs', params: {} }, deckB: null, deckBG: null, mixer: { balance: 0, alpha: 1 }, ...(broadcaster ? { broadcaster } : {}) } });
+const full = (broadcaster?: string) => JSON.stringify({ type: 'state_full', v: 2, clock: { bpm: 128, beats: 16, t: Date.now() }, preset: { deckA: { source: 'metaballs', params: {} }, deckB: null, deckBG: null, mixer: { balance: 0, alpha: 1, levelA: 0.3, fxDryWet: 0.5 }, ...(broadcaster ? { broadcaster } : {}) } });
 test('checklist: a real relay socket: LIVE title card with the name, controls locked, name cleared, back to autopilot; socket loss recovers', async ({ page, context }) => {
   only(); test.setTimeout(100_000);
   let sock: any = null; let conns = 0;
@@ -11,6 +11,8 @@ test('checklist: a real relay socket: LIVE title card with the name, controls lo
   expect(await until(page, 'true', 1)).not.toBeNull();
   const t0 = Date.now(); while (!sock && Date.now() - t0 < 15000) await page.waitForTimeout(200);
   expect(sock, 'the TV connects to the relay').not.toBeNull();
+  await until(page, 'LSD.catalog().complete', 30);
+  const pic0 = await page.evaluate(() => { const A = (window as any).LSD.autopilotState; return { bg: A.deckBG?.source ?? null, mixer: JSON.stringify(A.mixer) }; });
   sock.send(full('DJ Test'));
   const card = await until(page, "document.body.innerText.includes('DJ Test')", 6);
   const badge = await page.locator('#source-badge').innerText();
@@ -23,12 +25,16 @@ test('checklist: a real relay socket: LIVE title card with the name, controls lo
   const cleared = await tv.lsd('LSD.autopilotState.broadcaster');
   sock.send(JSON.stringify({ type: 'broadcaster_offline' }));
   const off = await until(page, '!LSD.autopilotState.isLiveBroadcast', 5);
+  // The autopilot's own picture comes back: its background, and none of the broadcaster's mixer (levels, master FX).
+  const pic1 = await page.evaluate(() => { const A = (window as any).LSD.autopilotState; return { bg: A.deckBG?.source ?? null, levelA: A.mixer.levelA ?? null, fxDryWet: A.mixer.fxDryWet ?? null }; });
   await page.waitForTimeout(6000);
   const after = await page.evaluate(() => { const A = (window as any).LSD.autopilotState; return (A.mixer.balance > .5 ? A.deckB : A.deckA)?.name; });
   const c0 = conns; await sock.close(); const t1 = Date.now(); while (conns === c0 && Date.now() - t1 < 40000) await page.waitForTimeout(300);
-  note('live', { disabled, card, badge, live0, name0, locked, cleared, off, after, reconnectS: (Date.now() - t1) / 1000, conns, errors: tv.errors });
+  note('live', { pic0, pic1, disabled, card, badge, live0, name0, locked, cleared, off, after, reconnectS: (Date.now() - t1) / 1000, conns, errors: tv.errors });
   expect(card, 'title card names the broadcaster').not.toBeNull(); expect(badge).toBe('LIVE SHOW'); expect(locked.source).toBe('metaballs'); expect(locked.hold).toBe(false);
-  expect(off).not.toBeNull(); expect(after).toBeTruthy(); expect(conns, 'a dropped relay socket is reconnected').toBeGreaterThan(c0);
+  expect(off).not.toBeNull(); expect(after).toBeTruthy();
+  expect(pic0.bg, 'a background before the broadcast').not.toBeNull();
+  expect(pic1).toEqual({ bg: pic0.bg, levelA: null, fxDryWet: null }); expect(conns, 'a dropped relay socket is reconnected').toBeGreaterThan(c0);
   expect(tv.errors).toEqual([]);
 });
 test('checklist: GPU tier: the NVIDIA says heavy on, the Intel GPU says heavy off', async () => {

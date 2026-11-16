@@ -21,7 +21,9 @@ export default defineConfig({
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 720 }, launchOptions } },
     { name: 'firefox', use: { ...devices['Desktop Firefox'], viewport: { width: 1280, height: 720 }, launchOptions: { firefoxUserPrefs: { 'media.autoplay.default': 0, 'media.autoplay.blocking_policy': 0 } } } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'], viewport: { width: 1280, height: 720 } } },
+    // WebKit needs system libraries `playwright install-deps` only sets up on apt systems: on others it fails to launch
+    // for every test and buries the real failures, so it runs only when asked for (WEBKIT=1).
+    ...(process.env.WEBKIT ? [{ name: 'webkit', use: { ...devices['Desktop Safari'], viewport: { width: 1280, height: 720 } } }] : []),
     { name: 'phone', use: { ...devices['Pixel 7'], launchOptions } },
   ],
 });

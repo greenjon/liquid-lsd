@@ -94,7 +94,17 @@ export function nextLine(shows, now, opts = {}) {
  * update_meta({...}). A script needs no CORS header, and /playing sends none, so fetch() can't read it.
  * The file is static and always calls update_meta, whatever ?callback= says. Resolves with the raw object.
  */
+// One request at a time: update_meta is a single global, so a second script loaded while the first is out (a quick
+// power off/on) would take the first one's answer and leave it to time out. A call while one is out shares it.
+let playingInFlight = null;
 export function loadPlayingJsonp(url = 'https://radio.spaz.org/streams/playing-jsonp', timeoutMs = 8000) {
+  if (!playingInFlight) {
+    playingInFlight = requestPlayingJsonp(url, timeoutMs);
+    playingInFlight.then(() => { playingInFlight = null; }, () => { playingInFlight = null; });
+  }
+  return playingInFlight;
+}
+function requestPlayingJsonp(url, timeoutMs) {
   return new Promise((resolve, reject) => {
     const s = document.createElement('script');
     let settled = false;

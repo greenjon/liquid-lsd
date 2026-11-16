@@ -88,7 +88,7 @@ export function installEmbedApi(hooks) {
 
     // --- Controls (the VJ app). Spaz Radio uses none of these. Each returns what it did; every one does
     // nothing during a live broadcast (state().live), as on the TV. The state is pushed after each. ---
-    /** What can be chosen: {scenes: [{channel, name, tags, source, pinnedChain, skipped, runnable}], backgrounds:
+    /** What can be chosen: {complete, scenes: [{channel, name, tags, source, pinnedChain, skipped, runnable}], backgrounds:
      *  [{index, name, source, tags, runnable}], fxChains: [{id, name, inRotation}], transitions: [{id, name, inRotation}]}. */
     catalog: () => contentCatalog(),
     /** What is on air and how the controls are set (the object LSDHost.state receives). */
@@ -151,5 +151,7 @@ export function installEmbedApi(hooks) {
     return result;
   }
   window.addEventListener('lsd-now-showing', () => setTimeout(push, 0));
+  // The catalog is final (every preset's source known, backgrounds in): state().catalogComplete turns true.
+  window.addEventListener('lsd-catalog-ready', () => setTimeout(push, 0));
   setInterval(push, 1000);
 }

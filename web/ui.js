@@ -17,7 +17,7 @@ import { scheduleState, refreshSchedule, setShows, groupByDay, upcoming, parsePl
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v46';
+export const TV_VERSION = 'v47';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -264,7 +264,7 @@ export function initUI() {
       ? 'Click the power button (PWR) to turn the TV off\nPress ? for about and keyboard shortcuts'
       : 'Click the TV to turn it on\nPress ? for about and keyboard shortcuts';
     canvas.title = powerState.on
-      ? 'Click for info (press I or INFO to keep it on screen)\nDouble-click for fullscreen (or press S)\nPress ? for about and keyboard shortcuts'
+      ? 'Click for info (press I or INFO to keep it on screen)\nDouble-click for fullscreen (or press F)\nPress ? for about and keyboard shortcuts'
       : 'Click the TV to turn it on\nPress ? for about and keyboard shortcuts';
   };
   updatePowerTitles();
@@ -1015,7 +1015,7 @@ export function initUI() {
     showLook(undefined, 3000, true);
   });
 
-  // --- Fullscreen: double-click the picture, S, or MENU (the OSD comes along) ---
+  // --- Fullscreen: double-click the picture, F, or MENU (the OSD comes along) ---
   canvas.addEventListener('dblclick', toggleFullscreen);
 
   // --- Phone lock screen / media keys: play-pause is the power switch, next/previous change the scene ---
@@ -1194,15 +1194,20 @@ function updateMediaSession() {
 // Wake lock: a laptop or phone used as a TV must not dim and lock while the TV is on. The browser drops
 // the lock when the page is hidden, so it is taken again when the page comes back.
 // -------------------------------------------------------
-let wakeLock = null;
+let wakeLock = null, wakeLockPending = false;
 async function holdScreenAwake() {
   if (embed) return;
-  if (!powerState.on || wakeLock || !navigator.wakeLock || document.visibilityState !== 'visible') return;
+  if (!powerState.on || wakeLock || wakeLockPending || !navigator.wakeLock || document.visibilityState !== 'visible') return;
+  wakeLockPending = true;
   try {
-    wakeLock = await navigator.wakeLock.request('screen');
+    const lock = await navigator.wakeLock.request('screen');
+    // Powered off (or hidden) while the request was pending: give the lock straight back
+    if (!powerState.on || document.visibilityState !== 'visible') { lock.release().catch(() => {}); return; }
+    wakeLock = lock;
     viewerState.awake = true;
-    wakeLock.addEventListener('release', () => { wakeLock = null; viewerState.awake = false; });
+    lock.addEventListener('release', () => { if (wakeLock === lock) wakeLock = null; viewerState.awake = false; });
   } catch { /* denied (battery saver, unsupported): the screen may sleep */ }
+  finally { wakeLockPending = false; }
 }
 function letScreenSleep() {
   wakeLock?.release().catch(() => {});

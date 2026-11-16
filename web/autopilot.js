@@ -84,6 +84,7 @@ const fgHistory = [];      // scenes that have been on air, newest last (a chann
 const HISTORY_MAX = 50;
 let fgStarted = false;     // startup is over: a scene is on air, or there is no playlist to tune to (nowShowing().tuning)
 let tagsReady = false;     // every playlist preset's tags and source are known (loadPresetTags)
+let catalogComplete = false; // ...and the background playlist is in: contentCatalog() is final (`lsd-catalog-ready`)
 
 let bgPlaylist = [];
 let bgPlaylistIdx = 0;
@@ -223,13 +224,31 @@ async function loadContent(file) {
   }
 }
 
+// A preset that could not be fetched is left out of the picks for a while (playable()), rather than going
+// on air as a default Mandala under its name.
+const UNAVAILABLE_MS = 60000;
+const unavailable = new Map(); // preset name -> performance.now() it failed
+const markUnavailable = (name) => unavailable.set(name, performance.now());
+const isUnavailable = (name) => {
+  const at = unavailable.get(name);
+  if (at === undefined) return false;
+  if (performance.now() - at < UNAVAILABLE_MS) return true;
+  unavailable.delete(name);
+  return false;
+};
+
 /**
  * A playlist line `preset` or `preset | fxchain` -> deck state: the preset's source and
  * parameters plus an FX chain (the pinned one, else the next in the settings rotation).
+ * Rejects if the preset can't be fetched (and marks it unavailable for a while).
  */
 async function buildDeck(line, background = false) {
   const [presetName, pinned] = line.split('|').map((p) => p.trim());
   const raw = await fetchPreset(presetName);
+  if (!raw) {
+    markUnavailable(presetName);
+    throw new Error(`preset '${presetName}' is unavailable`);
+  }
   const deck = parseDeckPreset(raw, Math.random, { mandalaRecipes });
   deck.raw = raw;    // the preset as stored, for ROLL
   deck.tags = raw?.tags ?? [];
@@ -347,7 +366,7 @@ export function tickAutopilot(dt, beats, music = {}) {
         if (bgMode === 'off') break;
         if (!bgNext && !bgPreparing) {
           const back = bgPlaylist.indexOf(bgResume);
-          prepareBackground(back >= 0 ? back : null);
+          prepareBackground(back >= 0 && playable(bgResume) ? back : null);
         }
         if (bgNext) {
           autopilotState.deckBG = bgNext.deck;
@@ -414,12 +433,14 @@ function prepareForeground(line = null) {
     const pick = weights ? weightedPick(fgPlaylist, weights, fgPlaylistIdx) : -1;
     fgPlaylistIdx = pick >= 0 ? pick : nextPlayable(fgPlaylistIdx, fgPlaylist, order);
     line = fgPlaylist[fgPlaylistIdx];
+    if (isUnavailable(presetName(line))) { fgPreparing = false; return null; } // nothing else to try yet: wait
   }
   return buildLook(line).then((look) => {
     if (token !== fgPrepareToken) return;
     fgNext = look;
     prewarm(look.deck, look.transition);
-  }).finally(() => { if (token === fgPrepareToken) fgPreparing = false; });
+  }).catch((err) => console.warn(`[autopilot] ${err.message}`))
+    .finally(() => { if (token === fgPrepareToken) fgPreparing = false; });
 }
 
 async function buildLook(line) {
@@ -445,7 +466,7 @@ let galleryAllowed = true;
 const runnable = (line) => (heavyAllowed || !autopilotSettings.heavySources.includes(presetSource.get(line)))
   && (galleryAllowed || presetSource.get(line) !== 'gallery')
   && !(reducedMotion && (presetTags.get(line) ?? []).some((t) => CALM_SKIP_LOOK_TAGS.includes(t)));
-const playable = (line) => runnable(line) && !skipped.has(presetName(line));
+const playable = (line) => runnable(line) && !skipped.has(presetName(line)) && !isUnavailable(presetName(line));
 const presetName = (line) => (line ?? '').split('|')[0].trim();
 
 // -------------------------------------------------------
@@ -516,7 +537,7 @@ function followSections(beats, { section = 'normal', drops = 0 }) {
           if (flash) look.transition = flash;
           dropLook = look;
           prewarm(look.deck, look.transition);
-        });
+        }).catch((err) => console.warn(`[autopilot] ${err.message}`));
       }
       console.log('[autopilot] Breakdown');
     }
@@ -556,7 +577,7 @@ async function dropTransition() {
 async function learnPreset(line) {
   if (presetSource.has(line)) return true;
   const raw = await fetchPreset(presetName(line));
-  if (!raw) return false;
+  if (!raw) { markUnavailable(presetName(line)); return false; }
   presetTags.set(line, raw.tags ?? []);
   presetSource.set(line, raw.visualSourceType ?? null);
   return true;
@@ -597,12 +618,14 @@ function prepareBackground(idx = null) {
   bgPreparing = true;
   bgPlaylistIdx = idx ?? nextPlayable(bgPlaylistIdx, bgPlaylist, autopilotSettings.bgPlaybackOrder);
   const line = bgPlaylist[bgPlaylistIdx];
+  if (idx === null && isUnavailable(presetName(line))) { bgPreparing = false; return null; } // nothing else to try yet
   return buildDeck(line, true).then((deck) => {
     if (token !== bgPrepareToken) return false;
     bgNext = { line, deck };
     prewarm(deck, null);
     return true;
-  }).finally(() => { if (token === bgPrepareToken) bgPreparing = false; });
+  }).catch((err) => { console.warn(`[autopilot] ${err.message}`); return false; })
+    .finally(() => { if (token === bgPrepareToken) bgPreparing = false; });
 }
 
 let bgFadeLen = 8;          // beats this background change takes (a dip to black and back)
@@ -693,7 +716,8 @@ async function changeChannel(dir) {
   const start = from < 0 ? fgPlaylistIdx : from;
   const order = Array.from({ length: n }, (_, k) => (((start + dir * (k + 1)) % n) + n) % n);
   const idx = order.find((i) => tagsReady && playable(fgPlaylist[i])) ?? await firstPlayable(order);
-  return tuneChannel(idx >= 0 ? idx : order[0]);
+  // A preset that can't be fetched is now marked unavailable: the next press-worth of channels is tried.
+  if (await tuneChannel(idx >= 0 ? idx : order[0]) === 'failed' && order.some((i) => playable(fgPlaylist[i]))) return changeChannel(dir);
 }
 
 /** R: a playable channel picked at random, never the one on air (or being tuned to). */
@@ -704,15 +728,17 @@ async function randomChannel(rand = Math.random) {
   if (!tagsReady) {
     // Some sources still unknown: try a random order, learning as it goes.
     const idx = await firstPlayable(shuffled([...fgPlaylist.keys()].filter((i) => fgPlaylist[i] !== current)));
-    return idx >= 0 ? tuneChannel(idx) : undefined;
+    if (idx < 0) return;
+    if (await tuneChannel(idx) === 'failed') return randomChannel(rand);
+    return;
   }
   const choices = [];
   for (let i = 0; i < n; i++) if (fgPlaylist[i] !== current && playable(fgPlaylist[i])) choices.push(i);
   if (!choices.length) return;
-  return tuneChannel(choices[Math.floor(rand() * choices.length)]);
+  if (await tuneChannel(choices[Math.floor(rand() * choices.length)]) === 'failed') return randomChannel(rand);
 }
 
-/** Puts playlist line `idx` on air now (shared by CH up / down and R). */
+/** Puts playlist line `idx` on air now (shared by CH up / down and R); 'failed' if its preset can't be had. */
 async function tuneChannel(idx) {
   const line = fgPlaylist[idx];
   fgPlaylistIdx = idx;
@@ -735,6 +761,7 @@ async function tuneChannel(idx) {
     await prepareForeground(line);
     if (fgTuning !== line) return; // a later press took over
     fgTuning = null;
+    if (fgNext?.line !== line && isUnavailable(presetName(line))) return 'failed';
   }
   settleCrossfade();
   if (fgNext?.line === line && !autopilotState.isLiveBroadcast) startForegroundCrossfade(lastBeats);
@@ -996,6 +1023,10 @@ export function contentCatalog() {
   };
   const rotation = new Set(autopilotSettings.fxChains);
   return {
+    // false while the presets' tags and sources are still loading: backgrounds may be missing, and a scene whose
+    // source is not known yet (source null) reports runnable even if it is a heavy one. `lsd-catalog-ready` fires
+    // (and an embed host gets a state push with catalogComplete) when it turns true.
+    complete: catalogComplete,
     scenes: fgPlaylist.map(scene),
     backgrounds: bgPlaylist.map((line, i) => ({ index: i, name: presetName(line), source: presetSource.get(line) ?? null, tags: presetTags.get(line) ?? [], runnable: runnable(line) })),
     fxChains: catalog.fxChains.map((c) => ({ id: c.id, name: c.name, inRotation: rotation.has(c.id) })),
@@ -1006,7 +1037,7 @@ export function contentCatalog() {
 /** The controls' settings, for a host's display (nowShowing has what is on air). */
 export function controlState() {
   return { hold: autopilotState.hold, holdBars: autopilotSettings.fgHoldBars, autoRollBars: autopilotSettings.autoRollBars,
-    follow: followMusic, effects: effectsOn, bgMode, lockedChain, lockedTransition,
+    follow: followMusic, effects: effectsOn, bgMode, lockedChain, lockedTransition, catalogComplete,
     live: autopilotState.isLiveBroadcast, broadcaster: autopilotState.broadcaster ?? null };
 }
 
@@ -1059,6 +1090,16 @@ export function tuneTo(n) {
   return 'ok';
 }
 
+// The autopilot's picture (decks, mixer, background) while a live broadcast has the screen: put aside on the
+// first full snapshot, back when the broadcast ends, so the viewer does not keep the broadcaster's master FX,
+// levels and background.
+let autopilotPicture = null;
+function setAutopilotBackground(deck) {
+  if (autopilotPicture) { autopilotPicture.deckBG = deck; autopilotPicture.bgAlpha = 1.0; return; } // the broadcast has the screen
+  autopilotState.deckBG = deck;
+  autopilotState.bgAlpha = 1.0;
+}
+
 /** Applies one relay message (state_full / state_delta / broadcaster_offline) to the live state. */
 export function handleRelayMessage(msg) {
   if (tapeHold) { noteStationAir(msg); return; }
@@ -1071,6 +1112,10 @@ export function handleRelayMessage(msg) {
       const wasLive = autopilotState.isLiveBroadcast;
       autopilotState.isLiveBroadcast = true;
       noteClock(msg.clock);
+      if (!autopilotPicture) {
+        const { deckA, deckB, deckBG, mixer, bgAlpha } = autopilotState;
+        autopilotPicture = { deckA, deckB, deckBG, mixer, bgAlpha };
+      }
       if (msg.preset) {
         autopilotState.deckA = msg.preset.deckA || null;
         autopilotState.deckB = msg.preset.deckB || null;
@@ -1097,6 +1142,7 @@ export function handleRelayMessage(msg) {
         autopilotState.isLiveBroadcast = false;
         autopilotState.broadcaster = null;
         autopilotState.clock.reset();
+        if (autopilotPicture) { Object.assign(autopilotState, autopilotPicture); autopilotPicture = null; }
         broadcastStatus(false);
         console.log('[autopilot] Broadcaster offline — returning to autopilot');
         // Pick the autopilot up again at the next bar line (planned on the next tick, from the current beat).
@@ -1260,13 +1306,20 @@ export async function startAutopilot() {
     const pick = await firstPlayable(shuffled([...fgPlaylist.keys()]));
     const idx = pick >= 0 ? pick : Math.floor(Math.random() * fgPlaylist.length);
     const first = fgPlaylist[idx];
-    const deck = await buildDeck(first);
+    // No preset could be had at all (offline with nothing cached): the default scene, rather than nothing.
+    const deck = await buildDeck(first).catch(() => {
+      const d = parseDeckPreset(null, Math.random, { mandalaRecipes });
+      applyChain(d, null);
+      return Object.assign(d, { raw: null, tags: [], dominant: null, pinned: null, background: false, fxStripped: !effectsOn });
+    });
     // A CH press while this was loading has already put the viewer's pick on air: it stays.
     if (!fgHistory.length) {
       fgPlaylistIdx = idx;
-      autopilotState.deckA = deck;
-      autopilotState.deckB = await buildDeck(first);
-      autopilotState.mixer.balance = 0.0;
+      const deckB = await buildDeck(first).catch(() => deck);
+      const target = autopilotPicture ?? autopilotState; // an embed host's live broadcast may already have the screen
+      target.deckA = deck;
+      target.deckB = deckB;
+      target.mixer.balance = 0.0;
       fgActiveDeck = 'A';
       fgHistory.push({ line: first, deck, transition: {} });
       fgSwitchAt = nextSwitchBeat(lastBeats, autopilotSettings.fgHoldBars, autopilotSettings.fgFadeBeats);
@@ -1295,14 +1348,21 @@ async function startBackground() {
   }
   if (list.length > 0) {
     // The first background line (the TV starts on the gallery), or the first one this build can show.
-    const first = Math.max(0, list.findIndex((l) => runnable(l)));
-    const deck = await buildDeck(list[first], true);
+    const first = list.findIndex((l) => playable(l));
+    const deck = first >= 0 ? await buildDeck(list[first], true).catch(() => null) : null;
     bgPlaylist = list;
-    bgPlaylistIdx = first;
-    autopilotState.deckBG = deck;
-    bgOnAir = list[first];
-    autopilotState.bgAlpha = 1.0;
-    bgSwitchAt = nextSwitchBeat(lastBeats, autopilotSettings.bgHoldBars, autopilotSettings.bgFadeBeats);
-    announceBackground();
+    if (deck) {
+      bgPlaylistIdx = first;
+      setAutopilotBackground(deck);
+      bgOnAir = list[first];
+      bgSwitchAt = nextSwitchBeat(lastBeats, autopilotSettings.bgHoldBars, autopilotSettings.bgFadeBeats);
+      announceBackground();
+    } else {
+      // None could be had yet: dark, and the rotation fades one in when it can (the 'off' state).
+      bgPlaylistIdx = list.length - 1;
+      bgTransitionState = 'off';
+    }
   }
+  catalogComplete = true;
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('lsd-catalog-ready'));
 }

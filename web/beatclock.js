@@ -51,7 +51,7 @@ export class BeatFlywheel {
   /** Beats at `nowMs` from the last anchor, without the forward-only smoothing of `read`. */
   predict(nowMs) { return this.#predict(nowMs); }
 
-  /** Total beats at `nowMs`; call once per frame. Never steps backward by less than the snap window. */
+  /** Total beats at `nowMs`; call once per frame (several readers share `beatsAt`). Never steps backward by less than the snap window. */
   read(nowMs) {
     const raw = this.#predict(nowMs);
     let out = raw;
@@ -61,5 +61,16 @@ export class BeatFlywheel {
     this.lastOut = out;
     this.lastOutAt = nowMs;
     return out;
+  }
+
+  /**
+   * Total beats at `nowMs` on the smoothed output, safe to call several times a frame and for past times:
+   * a time newer than the last read advances the flywheel (`read`), an older one is counted back from the
+   * last output at the current tempo without touching the smoothing. So the picture's `now - SYNC` and the
+   * undelayed `now` read in the same frame stay exactly SYNC apart.
+   */
+  beatsAt(nowMs) {
+    if (nowMs > this.lastOutAt) return this.read(nowMs);
+    return this.lastOut - ((this.lastOutAt - nowMs) / 1000) * (this.bpm / 60);
   }
 }

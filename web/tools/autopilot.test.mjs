@@ -64,3 +64,20 @@ test('with a tape in, a broadcast is noted but does not take the picture', () =>
   handleRelayMessage({ type: 'broadcaster_offline' });
   setTapeHold(false);
 });
+
+test('after a broadcast the autopilot\'s own decks, mixer and background come back', () => {
+  const deckA = { source: 'mine' }, deckBG = { source: 'gallery' };
+  Object.assign(autopilotState, { deckA, deckB: deckA, deckBG, bgAlpha: 1 });
+  autopilotState.mixer = { mode: 0, balance: 0, alpha: 1 };
+  const mixer = autopilotState.mixer;
+  handleRelayMessage({ type: 'state_full', v: PROTOCOL_VERSION, clock: { beats: 1, bpm: 128 },
+    preset: { deckA: { source: 'theirs' }, deckB: null, deckBG: null, mixer: { balance: 1, alpha: 0.5, levelA: 0.3, fxDryWet: 0.7 } } });
+  handleRelayMessage({ type: 'state_delta', clock: { beats: 2, bpm: 128 }, patch: { mixer: { levelB: 0.2 } } });
+  assert.equal(autopilotState.deckA.source, 'theirs');
+  handleRelayMessage({ type: 'broadcaster_offline' });
+  assert.equal(autopilotState.isLiveBroadcast, false);
+  assert.equal(autopilotState.deckA, deckA);
+  assert.equal(autopilotState.deckBG, deckBG);
+  assert.equal(autopilotState.mixer, mixer);
+  assert.deepEqual(mixer, { mode: 0, balance: 0, alpha: 1 }, 'none of the broadcaster\'s mixer stays');
+});

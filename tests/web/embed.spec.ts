@@ -16,6 +16,10 @@ async function openEmbed(page: Page) {
   await page.goto(`${ORIGIN}/index.html?embed`);
   await page.waitForFunction(() => (window as any).__ready || (window as any).__failed, null, { timeout: 30000 });
   await page.waitForFunction(() => (window as any).LSD.catalog().scenes.length > 0 && (window as any).LSD.state().name, null, { timeout: 30000 });
+  // The first scene comes before every preset's tags and the backgrounds (the fast start): wait for the final catalog,
+  // which the host hears about as a state push with catalogComplete.
+  await page.waitForFunction(() => (window as any).LSD.catalog().complete, null, { timeout: 60000 });
+  await page.waitForFunction(() => (window as any).__states.some((s: any) => s.catalogComplete), null, { timeout: 5000 });
   return errors;
 }
 const L = <T>(page: Page, f: string) => page.evaluate(`(async () => (${f}))()`) as Promise<T>;
@@ -137,4 +141,21 @@ test('embed: a build with no photos never shows the gallery background; maxPixel
   note('embed_nophotos', { background: st.background, before, after, errors });
   expect(after[0] * after[1]).toBeGreaterThan(before[0] * before[1]);
   expect(errors).toEqual([]);
+});
+
+test('embed: a lost WebGL context tells the host, and the page comes back when the context is restored', async ({ page, context }) => {
+  only('chromium'); test.setTimeout(90_000);
+  await sealOff(context);
+  await openEmbed(page);
+  await page.evaluate(() => {
+    const w = window as any;
+    w.__lose = (document.getElementById('glCanvas') as HTMLCanvasElement).getContext('webgl2')!.getExtension('WEBGL_lose_context');
+    w.__lose.loseContext();
+  });
+  await page.waitForFunction(() => (window as any).__failed, null, { timeout: 5000 });
+  const reloaded = page.waitForEvent('load', { timeout: 15000 });
+  await page.evaluate(() => (window as any).__lose.restoreContext());
+  await reloaded;
+  await page.waitForFunction(() => (window as any).__ready, null, { timeout: 30000 });
+  expect(await page.evaluate(() => (window as any).__failed ?? null)).toBeNull();
 });
