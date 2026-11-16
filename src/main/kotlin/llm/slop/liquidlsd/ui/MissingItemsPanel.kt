@@ -31,6 +31,7 @@ class MissingItemsPanel(private val fileBrowser: ImGuiFileBrowser = ImGuiFileBro
                         browserOpenForItem = path
                         fileBrowser.open(ImGuiFileBrowser.Mode.LOAD, startDir = File("library"))
                     }
+                    itemTooltip("Pick the file to use in place of the missing one.")
                 }
             }
 
@@ -40,6 +41,7 @@ class MissingItemsPanel(private val fileBrowser: ImGuiFileBrowser = ImGuiFileBro
                 session.presetManager.sessionState = session.presetManager.sessionState.copy(unresolvedItems = emptyList())
                 ImGui.closeCurrentPopup()
             }
+            itemTooltip("Close this list without locating the rest.")
             ImGui.endPopup()
         }
 

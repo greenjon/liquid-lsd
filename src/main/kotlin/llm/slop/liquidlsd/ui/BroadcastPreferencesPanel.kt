@@ -78,6 +78,7 @@ object BroadcastPreferencesPanel {
         CustomRangeSlider.drawCompactSlider(
             session = session,
             label = "Rate Limit",
+            description = "Maximum rate to dispatch parameter delta packets to the relay.",
             currentValue = llm.slop.liquidlsd.broadcast.BroadcastPreferences.targetFps.toFloat(),
             minLimit = 5f,
             maxLimit = 60f,
@@ -92,7 +93,6 @@ object BroadcastPreferencesPanel {
                 llm.slop.liquidlsd.broadcast.BroadcastPreferences.savePreferences()
             }
         )
-        itemTooltip("Maximum rate to dispatch parameter delta packets to the relay.")
 
         ImGui.spacing()
 
@@ -162,9 +162,9 @@ object BroadcastPreferencesPanel {
                 }
             }
             ImGui.popStyleColor(3)
+            itemTooltip(if (canConnect) "Connect to the relay server and start broadcasting." else "Fill in the Relay Server URL and Broadcaster Secret Token above first.", allowWhenDisabled = true)
             if (!canConnect) {
                 ImGui.endDisabled()
-                itemTooltip("Relay Server URL and Broadcaster Secret Token must both be configured in Preferences.")
             }
         }
 

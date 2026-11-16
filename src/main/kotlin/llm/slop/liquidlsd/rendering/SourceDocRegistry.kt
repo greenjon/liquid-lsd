@@ -60,8 +60,7 @@ object SourceDocRegistry {
     )
 
     /**
-     * Per-parameter descriptions keyed by "<sourceId>/<paramName>", "view/<paramName>" or "mixer/<paramName>"
-     * or "mixer/<paramName>".
+     * Per-parameter descriptions keyed by "<sourceId>/<paramName>", "view/<paramName>" or "mixer/<paramName>".
      */
     val paramDescriptions: Map<String, String> = mapOf(
 
@@ -853,21 +852,27 @@ object SourceDocRegistry {
         // Mixer
         "mixer/crossfade" to "Crossfade position between Deck A and Deck B.",
         "mixer/masterLevel" to "Master output level. 0 = black; 1 = full output.",
-        "mixer/xfadeSpeed" to "Auto-crossfade transition speed when queue playback is active.",
-        "mixer/queuePrev" to "Trigger: steps the play queue backward by one preset.",
-        "mixer/queueNext" to "Trigger: steps the play queue forward by one preset.",
-        "mixer/bgQueuePrev" to "Trigger: steps the background queue backward by one preset.",
-        "mixer/bgQueueNext" to "Trigger: steps the background queue forward by one preset.",
-        "mixer/fxQueuePrev" to "Trigger: steps the A/B FX queue backward by one chain.",
-        "mixer/fxQueueNext" to "Trigger: steps the A/B FX queue forward by one chain.",
-        "mixer/fxBgQueuePrev" to "Trigger: steps the background FX queue backward by one chain.",
-        "mixer/fxBgQueueNext" to "Trigger: steps the background FX queue forward by one chain.",
-        "mixer/tapTempo" to "Trigger: taps in BPM tempo and synchronizes beat phase.",
-        "mixer/randDeckA" to "Trigger: randomises all modulation values on Deck A.",
-        "mixer/randDeckB" to "Trigger: randomises all modulation values on Deck B.",
-        "mixer/randDeckBG" to "Trigger: randomises all modulation values on Deck BG.",
-        "mixer/randDeckPV" to "Trigger: randomises all modulation values on Deck PV.",
-        "mixer/randAll" to "Trigger: randomises all modulation values on all decks simultaneously.",
+        "mixer/levelA" to "Level of Deck A in the mix (the deck's fader).",
+        "mixer/levelB" to "Level of Deck B in the mix (the deck's fader).",
+        "mixer/levelBG" to "Level of Deck BG in the mix (the deck's fader).",
+        "mixer/levelPV" to "Level of Deck PV in the mix (the deck's fader).",
+        "mixer/xfadeSpeed" to "How long an automatic crossfade takes, in seconds: the AUTO button and A/B Queue changes both fade over this time.",
+        "mixer/queuePrev" to "Trigger: previous item in the A/B Queue.",
+        "mixer/queueNext" to "Trigger: next item in the A/B Queue.",
+        "mixer/bgQueuePrev" to "Trigger: previous item in the BG Queue.",
+        "mixer/bgQueueNext" to "Trigger: next item in the BG Queue.",
+        "mixer/transQueuePrev" to "Trigger: previous transition in the Transition Queue.",
+        "mixer/transQueueNext" to "Trigger: next transition in the Transition Queue.",
+        "mixer/fxQueuePrev" to "Trigger: previous item in the A/B FX Queue, applied to whichever of Deck A/B the crossfader favours. A single effect replaces the whole chain.",
+        "mixer/fxQueueNext" to "Trigger: next item in the A/B FX Queue, applied to whichever of Deck A/B the crossfader favours. A single effect replaces the whole chain.",
+        "mixer/fxBgQueuePrev" to "Trigger: previous item in the BG FX Queue, applied to Deck BG.",
+        "mixer/fxBgQueueNext" to "Trigger: next item in the BG FX Queue, applied to Deck BG.",
+        "mixer/tapTempo" to "Trigger: tap the beat to set the tempo and line up the beat clock.",
+        "mixer/randDeckA" to "Trigger: randomize Deck A's parameters and modulators, its effects included.",
+        "mixer/randDeckB" to "Trigger: randomize Deck B's parameters and modulators, its effects included.",
+        "mixer/randDeckBG" to "Trigger: randomize Deck BG's parameters and modulators, its effects included.",
+        "mixer/randDeckPV" to "Trigger: randomize Deck PV's parameters and modulators, its effects included.",
+        "mixer/randAll" to "Trigger: randomize all decks and their effects, the Master parameters and FX, and the transition.",
     )
 
     /** Returns the source description, or an empty string if none is registered. */

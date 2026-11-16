@@ -274,6 +274,7 @@ object ParameterGridHeaders {
             // 1. MIDI
             val midiVal = imgui.type.ImBoolean(session.uiTheme.midiEnabled)
             val midiToggled = ImGui.checkbox("MIDI Column##grid_col_kebab", midiVal)
+            itemTooltip("Show the MIDI column. This turns MIDI input on or off for the whole app.")
             llm.slop.liquidlsd.tour.WidgetRegistry.note { "grid_col_midi" }
             if (midiToggled) {
                 val nextVal = midiVal.get()
@@ -297,6 +298,7 @@ object ParameterGridHeaders {
             // 2. LFO
             val lfoVal = imgui.type.ImBoolean(session.uiTheme.showLfoCol)
             val lfoToggled = ImGui.checkbox("LFO Column##grid_col_kebab", lfoVal)
+            itemTooltip("Show the LFO column.")
             llm.slop.liquidlsd.tour.WidgetRegistry.note { "grid_col_lfo" }
             if (lfoToggled) {
                 session.uiTheme.showLfoCol = lfoVal.get()
@@ -314,6 +316,7 @@ object ParameterGridHeaders {
             // 3. SEQ
             val seqVal = imgui.type.ImBoolean(session.uiTheme.sequencerEnabled)
             val seqToggled = ImGui.checkbox("Step Sequencer (SEQ)##grid_col_kebab", seqVal)
+            itemTooltip("Show the SEQ column.")
             llm.slop.liquidlsd.tour.WidgetRegistry.note { "grid_col_seq" }
             if (seqToggled) {
                 session.uiTheme.sequencerEnabled = seqVal.get()
@@ -331,6 +334,7 @@ object ParameterGridHeaders {
             // 4. AUD
             val audioVal = imgui.type.ImBoolean(session.uiTheme.audioEngineEnabled)
             val audioToggled = ImGui.checkbox("Audio Engine (AUD)##grid_col_kebab", audioVal)
+            itemTooltip("Show the AUD column. This starts or stops the audio engine for the whole app.")
             llm.slop.liquidlsd.tour.WidgetRegistry.note { "grid_col_audio" }
             if (audioToggled) {
                 val nextVal = audioVal.get()
@@ -376,6 +380,7 @@ object ParameterGridHeaders {
                     }
                     AppPreferencesStore.savePreferences()
                 }
+                itemTooltip("Turn on every column this deck's modulators use.")
             }
 
             popOpenDropdownFont()

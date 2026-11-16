@@ -66,6 +66,7 @@ object MidiModulatorSection {
                 if (ButtonChrome.button("Clear MIDI Modulator##midi_unbind")) {
                     onUnbind()
                 }
+                itemTooltip("Remove this parameter's MIDI modulator.")
             }
             ImGui.spacing()
         }

@@ -7,7 +7,7 @@ import kotlin.test.assertTrue
 
 /**
  * Architecture guard: ui depends on midi/ and control/ through interfaces, never the reverse; midi/ may not grow
- * new control/ or rendering/ dependencies.
+ * new control/ or rendering/ dependencies. macro/ may not reference ui/ either.
  */
 class LayerDependencyTest {
     private val root = File("src/main/kotlin/llm/slop/liquidlsd")
@@ -31,6 +31,12 @@ class LayerDependencyTest {
     fun controlDoesNotDependOnUi() {
         val v = violations("control")
         assertTrue(v.isEmpty(), "control/ must not reference ui/: $v")
+    }
+
+    @Test
+    fun macroDoesNotDependOnUi() {
+        val v = violations("macro")
+        assertTrue(v.isEmpty(), "macro/ must not reference ui/: $v")
     }
 
     /**

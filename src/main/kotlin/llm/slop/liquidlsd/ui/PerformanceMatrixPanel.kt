@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui
 
+import llm.slop.liquidlsd.rendering.isf.ParamLabels
 import llm.slop.liquidlsd.midi.MidiLearnTarget
 import imgui.ImGui
 import imgui.flag.ImDrawFlags
@@ -198,7 +199,7 @@ class PerformanceMatrixPanel {
     private val learnIdCache = TipCache()
     private val clipRect = FloatArray(4)
 
-    /** One "edit in Deep Edit" callback per bank, reused across frames (rebuilt if the ParametersState changes). */
+    /** One "open in Edit" callback per bank, reused across frames (rebuilt if the ParametersState changes). */
     private val openDeepEditByBank = HashMap<String, () -> Unit>()
     private var openDeepEditOwner: ParametersState? = null
     private fun openDeepEditFor(parametersState: ParametersState, bankId: String): () -> Unit {

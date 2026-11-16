@@ -46,8 +46,8 @@ object ShortcutManager {
         register(ShortcutAction("properties.step_value", ShortcutCategory.PROPERTIES, "Step Numeric Value (Focused Input)", "Increments/decrements focused number box (\u00B10.001 fine, Shift \u00B10.01, Ctrl+Shift \u00B10.1).", KeyCombination(GLFW_KEY_UP), allowConflict = true))
 
         // 4. Library & Asset Browser
-        register(ShortcutAction("library.queue_ab", ShortcutCategory.LIBRARY, "Add to Queue", "Appends the selection to the current tab's queue: the A/B Queue (Sources), the A/B FX Queue (FX) or the Transition Queue (Transitions).", KeyCombination(GLFW_KEY_Q)))
-        register(ShortcutAction("library.queue_bg", ShortcutCategory.LIBRARY, "Add to BG Queue", "Appends selected preset to the BG Queue (BG).", KeyCombination(GLFW_KEY_Q, GLFW_MOD_SHIFT)))
+        register(ShortcutAction("library.queue_ab", ShortcutCategory.LIBRARY, "Add to Queue", "Appends the selection (on the tree, the playlist under the cursor) to the current tab's queue: the A/B Queue (Sources) or the A/B FX Queue (FX). On Transitions it appends the transition under the cursor to the Transition Queue.", KeyCombination(GLFW_KEY_Q)))
+        register(ShortcutAction("library.queue_bg", ShortcutCategory.LIBRARY, "Add to BG Queue", "Appends the selection (on the tree, the playlist under the cursor) to the BG Queue (Sources tab) or the BG FX Queue (FX tab).", KeyCombination(GLFW_KEY_Q, GLFW_MOD_SHIFT)))
         register(ShortcutAction("library.navigate", ShortcutCategory.LIBRARY, "Navigate List Items", "Moves focus selection across presets, playlists, and queue items.", KeyCombination(GLFW_KEY_UP), allowConflict = true))
         register(ShortcutAction("library.delete_asset", ShortcutCategory.LIBRARY, "Delete Preset / Remove Queue Item", "Deletes selected user preset or removes item from queue.", KeyCombination(GLFW_KEY_DELETE), allowConflict = true))
 

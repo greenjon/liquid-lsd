@@ -228,7 +228,7 @@ object FxMacroSync {
                 val entry = paramEntries[paramIdx]
                 val paramName = entry.key
                 val param = entry.value
-                val label = llm.slop.liquidlsd.ui.ParamLabels.of(slot?.header, paramName).uppercase()
+                val label = llm.slop.liquidlsd.rendering.isf.ParamLabels.of(slot?.header, paramName).uppercase()
                 // Time/frequency-like parameters get the same exponential response the Metaknob auto-mapping uses, so the
                 // useful low end isn't squeezed into the first few degrees. Not for stepped or bipolar (negative) ranges.
                 val curve = if (param.steps == null && param.minClamp >= 0f &&

@@ -102,7 +102,7 @@ object ModulatorHeaderRow {
             }
             llm.slop.liquidlsd.tour.WidgetRegistry.note { "mod_power_$idx" }
         }
-        itemTooltip(if (bypassed) "Turn this modulator on" else "Bypass this modulator")
+        itemTooltip(if (bypassed) "Unmute this modulator" else "Mute this modulator")
         ImGui.popStyleColor(4)
 
         // 2. Dice icon (Randomize button)

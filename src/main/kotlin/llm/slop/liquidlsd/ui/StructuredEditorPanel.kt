@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui
 
+import llm.slop.liquidlsd.rendering.isf.ParamLabels
 import imgui.ImGui
 import imgui.flag.ImGuiTreeNodeFlags
 import llm.slop.liquidlsd.rendering.DynamicVisualSource
@@ -58,11 +59,13 @@ object StructuredEditorPanel {
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.getColorU32(imgui.flag.ImGuiCol.Text))
             }
             if (ButtonChrome.button(t.label, (ImGui.calcTextSize(t.label).x + 12f).coerceAtLeast(26f), h)) selected[deckLabel] = t.id
+            itemTooltip("Show this page of the editor.")
             ImGui.popStyleColor(4)
         }
         editor.addTabLabel()?.let { label ->
             ImGui.sameLine()
             if (ImGui.button(label)) editor.addEditorTab()?.let { selected[deckLabel] = it }
+            itemTooltip("Add the next hidden transform and show its page.")
         }
         drawKeepStar(deckLabel, mixer, h, source)
         ImGui.popStyleVar()
@@ -88,6 +91,7 @@ object StructuredEditorPanel {
                     }
                     ImGui.endCombo()
                 }
+                itemTooltip("Pick by name (the list is alphabetical).", allowWhenDisabled = true)
                 if (locked) ImGui.endDisabled()
             }
             for (name in section.params) {

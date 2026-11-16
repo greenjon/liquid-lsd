@@ -308,7 +308,7 @@ object PreferencesPanel {
                 }
             }
         }
-        itemTooltip("Transforms the laptop trackpad into an SCS.3m virtual console when CapsLock is engaged.\nBottom 28%: Crossfader cut/stutter; Top 55%: Deck A/BG/B Level faders.\nDisables cursor movement and gestures while active.")
+        itemTooltip("Transforms the laptop trackpad into an SCS.3m virtual console when CapsLock is engaged.\nBottom 28%: Crossfader cut/stutter; Top 55%: Deck A/BG/B Level faders.\nDisables cursor movement and gestures while active.\nLinux only for now.")
 
         ImGui.sameLine(0f, 15f)
         val controller = session.touchConsoleController
@@ -333,7 +333,7 @@ object PreferencesPanel {
                 ImGui.textDisabled("Touchpad Status: No hardware trackpad detected")
             }
             TouchBackendState.DISABLED -> {
-                ImGui.textDisabled("Touchpad Status: Disabled on this platform")
+                ImGui.textDisabled(if (llm.slop.liquidlsd.ui.shortcuts.KeyCombination.isMacOs()) "Touchpad Status: Not supported on macOS yet" else "Touchpad Status: Not supported on this platform")
             }
         }
 
@@ -379,6 +379,7 @@ object PreferencesPanel {
                 if (ButtonChrome.button("View Update##preferences_update", 120f, 0f)) {
                     UpdatePromptModal.request(lastResult.latestRelease, lastResult.currentVersion)
                 }
+                itemTooltip("Show this release's notes and how to update.")
             }
             is llm.slop.liquidlsd.update.UpdateCheckResult.UpToDate -> {
                 ImGui.spacing()
@@ -411,6 +412,7 @@ object PreferencesPanel {
             session.uiTheme.startupBehavior = startupBehaviors[currentStartupIdx.get()]
             AppPreferencesStore.savePreferences()
         }
+        itemTooltip("What the app opens with: the session you had when you quit, or empty decks.")
 
         ImGui.spacing()
         val fxLinkOptions = FxLinkDefault.values()

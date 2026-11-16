@@ -167,6 +167,7 @@ object VideoExportModal {
                 extensions = listOf(".wav", ".mp3", ".flac", ".ogg", ".m4a", ".aac")
             )
         }
+        itemTooltip("Pick the audio file the export renders to.")
         session.uiTheme.caption("Select an audio track (.wav, .mp3, .flac, .ogg, .m4a, .aac)")
         ImGui.spacing()
 
@@ -182,10 +183,12 @@ object VideoExportModal {
                 extensions = listOf(".lsd", ".json", ".lsdplay")
             )
         }
+        itemTooltip("Pick a preset or playlist to render instead of the current session.")
         ImGui.sameLine()
         if (ButtonChrome.button("Clear##Preset")) {
             presetPath.set("")
         }
+        itemTooltip("Clear the preset, so the export renders the current session.")
         session.uiTheme.caption("Leave blank to render current live session, or select a .lsd preset / .lsdplay playlist.")
         ImGui.spacing()
 
@@ -203,6 +206,7 @@ object VideoExportModal {
                 extensions = listOf(".mp4", ".mov")
             )
         }
+        itemTooltip("Choose where to save the video.")
         ImGui.spacing()
 
         // 4. Resolution Preset
@@ -210,18 +214,22 @@ object VideoExportModal {
         val resolutionLabels = arrayOf("Match Project Canvas (%dx%d)".format(session.uiTheme.renderWidth, session.uiTheme.renderHeight)) +
                 resolutionPresets.map { it.label }.toTypedArray()
         ImGui.combo("##Resolution", selectedResolutionIdx, resolutionLabels)
+        itemTooltip("Size of the exported video.")
         ImGui.spacing()
 
         // 5. Framerate & Codec
         session.uiTheme.body("Framerate & Codec:")
         ImGui.combo("##Framerate", selectedFpsIdx, fpsOptionLabels)
+        itemTooltip("Frames per second of the exported video.")
         ImGui.sameLine()
         ImGui.combo("##Codec", selectedCodecIdx, codecOptionLabels)
+        itemTooltip("Video codec of the exported file.")
         ImGui.spacing()
 
         // 6. Motion Blur / Super-Sampling
         session.uiTheme.body("Temporal Super-Sampling (Motion Blur):")
         ImGui.combo("##SuperSampling", selectedSamplingIdx, samplingOptionLabels)
+        itemTooltip("Sub-frames rendered and blended per output frame. More gives smoother motion trails and a slower export.")
         session.uiTheme.caption("Renders multiple sub-frames per output frame to create smooth, natural motion trails.")
         ImGui.spacing()
 
@@ -242,6 +250,7 @@ object VideoExportModal {
 
         ImGui.beginDisabled(awaitingPresetLoad)
         val startClicked = ButtonChrome.button("Start Export", 140f, 32f)
+        itemTooltip("Render the audio file to the destination video.", allowWhenDisabled = true)
         ImGui.endDisabled()
         if (startClicked) {
             val audioFile = File(audioPath.get().trim())

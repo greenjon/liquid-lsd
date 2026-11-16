@@ -57,7 +57,7 @@ object TransitionMacroSync {
             }
             val range = param.maxClamp - param.minClamp
             // Whole and readable like the FX row's captions; the row shortens it with "..." only when too narrow.
-            control.label = llm.slop.liquidlsd.ui.ParamLabels.of(trans?.header, name).uppercase()
+            control.label = llm.slop.liquidlsd.rendering.isf.ParamLabels.of(trans?.header, name).uppercase()
             control.bindings.add(
                 MacroBinding(
                     parameterId = "Mixer/Transition/$name",

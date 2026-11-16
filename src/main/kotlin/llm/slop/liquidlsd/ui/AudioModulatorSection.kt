@@ -25,6 +25,12 @@ object AudioModulatorSection {
     private val RMS_SOURCES = llm.slop.liquidlsd.cv.AudioSignals.LEVELS
     private val FLUX_SOURCES = llm.slop.liquidlsd.cv.AudioSignals.TRANSIENTS
     private val SECTION_SOURCES = llm.slop.liquidlsd.cv.AudioSignals.SECTIONS
+    private val FOLLOWER_MODES = AudioFollowerMode.values()
+    private val FOLLOWER_MODE_LABELS = FOLLOWER_MODES.map { it.label }.toTypedArray()
+    /** Combo buffers, set from the modulator before each combo (ImGui buffers are fields, not per-frame locals). */
+    private val bandIdx = ImInt()
+    private val modeIdx = ImInt()
+    private val sectionIdx = ImInt()
     private val SECTION_LABELS = arrayOf("Energy (vs. the song)", "Bass Energy", "Mid Energy", "Hi-Mid Energy", "High Energy", "Drop (4-bar hit)")
 
     /** Title for an Audio-tab source in modulator headers, or null for any other source. */
@@ -89,7 +95,7 @@ object AudioModulatorSection {
         session.uiTheme.body("Frequency Band:")
         ImGui.sameLine(0f, 8f * fontScale)
         ImGui.pushItemWidth(180f * fontScale)
-        val bandIdxWrapper = ImInt(currentBandIdx)
+        val bandIdxWrapper = bandIdx.apply { set(currentBandIdx) }
         val bandChanged = ImGui.combo("##band_${existing.id}", bandIdxWrapper, BAND_LABELS)
         llm.slop.liquidlsd.tour.WidgetRegistry.note { "aud_band" }
         if (bandChanged) {
@@ -106,10 +112,10 @@ object AudioModulatorSection {
         session.uiTheme.body("Response Profile:")
         ImGui.sameLine(0f, 8f * fontScale)
 
-        val modes = AudioFollowerMode.values()
-        val modeLabels = modes.map { it.label }.toTypedArray()
+        val modes = FOLLOWER_MODES
+        val modeLabels = FOLLOWER_MODE_LABELS
         val currentModeIdx = modes.indexOf(existing.followerMode).coerceAtLeast(0)
-        val modeIdxWrapper = ImInt(currentModeIdx)
+        val modeIdxWrapper = modeIdx.apply { set(currentModeIdx) }
 
         ImGui.pushItemWidth(180f * fontScale)
         val profileChanged = ImGui.combo("##follower_mode_${existing.id}", modeIdxWrapper, modeLabels)
@@ -224,7 +230,7 @@ object AudioModulatorSection {
         session.uiTheme.body("Signal:")
         ImGui.sameLine(0f, 8f * fontScale)
         ImGui.pushItemWidth(180f * fontScale)
-        val idx = ImInt(SECTION_SOURCES.indexOf(existing.sourceId).coerceAtLeast(0))
+        val idx = sectionIdx.apply { set(SECTION_SOURCES.indexOf(existing.sourceId).coerceAtLeast(0)) }
         if (ImGui.combo("##section_${existing.id}", idx, SECTION_LABELS)) {
             onReplace(existing.copy(sourceId = SECTION_SOURCES[idx.get().coerceIn(0, SECTION_SOURCES.size - 1)]))
         }

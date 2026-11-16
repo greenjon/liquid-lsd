@@ -23,6 +23,24 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 object ParametersRenderer {
+    /**
+     * The SourceDocRegistry description for a grid row. [paramKey] is "Mixer/<param>" for the mixer's own rows,
+     * "Deck A/<param>" for a deck parameter, or "Deck A/<Source Name>/<param>" for a source parameter; [label] is
+     * the row label, used as the parameter name when the key has no third segment.
+     */
+    internal fun paramDescription(paramKey: String, label: String): String {
+        val keyParts = paramKey.split("/")
+        if (keyParts.size == 2 && keyParts[0] == "Mixer") return SourceDocRegistry.getMixerParamDescription(keyParts[1])
+        val sourceId = when {
+            keyParts.size < 2 -> ""
+            keyParts.size == 2 && keyParts[0].startsWith("Deck") -> "deck"
+            // Map the display-name segment back to a source id
+            else -> keyParts[1].lowercase().replace(" ", "_")
+        }
+        val paramName = if (keyParts.size >= 3) keyParts.drop(2).joinToString("/") else label
+        return SourceDocRegistry.getParamDescription(sourceId, paramName)
+    }
+
 
     /**
      * The rows [drawParamRow] drew since [RowScan.begin]: the Edit bay reads it after the grid to pre-select a
@@ -166,8 +184,7 @@ object ParametersRenderer {
             ImGui.sameLine(0f, 4f)
         }
         if (isMacroBound || isMetaDriven) {
-            val linked = if (TangoPalette.isLightTheme) floatArrayOf(0.00f, 0.38f, 0.52f) else floatArrayOf(0.2f, 0.85f, 1.0f)
-            session.uiTheme.tooltipColored(linked[0], linked[1], linked[2], 1.0f, label)
+            session.uiTheme.tooltipColored(TangoPalette.LINKED_TEXT.u32(), label)
         } else {
             session.uiTheme.tooltip(label)
         }
@@ -199,27 +216,14 @@ object ParametersRenderer {
                 val minVal = param.minClamp
                 val maxVal = param.maxClamp
 
-                // Derive deckLabel and sourceId from paramKey (format: "Deck A/SourceName/ParamName")
-                val keyParts = paramKey.split("/")
-                val deckLabel = if (keyParts.size >= 1) keyParts[0] else ""
-                val sourceId = if (keyParts.size >= 2) {
-                    // Map the display-name segment back to a source id ("mixer" stays as is); "Deck A/Gain" is a deck parameter
-                    if (keyParts.size == 2 && keyParts[0].startsWith("Deck")) "deck" else keyParts[1].lowercase().replace(" ", "_")
-                } else ""
-                val paramName = if (keyParts.size >= 3) keyParts.drop(2).joinToString("/") else label
+                val deckLabel = paramKey.substringBefore('/')
 
                 val fmtAbs: (Float) -> String = { v ->
                     if (param.isAngle) "${"%,.1f".format(v * 180f / PI.toFloat())}°"
                     else ValueFormat.format(v, ValueFormat.scaleFor(param.minClamp, param.maxClamp))
                 }
 
-                val description = descriptionOverride ?: when (sourceId) {
-                    "mixer" -> {
-                        val mixerKey = if (keyParts.size >= 2) keyParts[1] else paramName
-                        SourceDocRegistry.getMixerParamDescription(mixerKey)
-                    }
-                    else -> SourceDocRegistry.getParamDescription(sourceId, paramName)
-                }
+                val description = descriptionOverride ?: paramDescription(paramKey, label)
                 val userNote = NotesManager.getParamNote(deckLabel, paramKey)
 
                 ImGui.text(label)
@@ -565,7 +569,7 @@ object ParametersRenderer {
                     if (it.sourceId.startsWith("midi_note_")) "Note " + it.sourceId.removePrefix("midi_note_")
                     else "CC " + it.sourceId.removePrefix("midi_cc_")
                 }
-                "Mapped to MIDI: $targets\nClick to edit MIDI settings in the Modulation column. Middle-click to toggle bypass."
+                "Mapped to MIDI: $targets\nClick to edit MIDI settings in the Modulation column. Middle-click to mute or unmute."
             } else if (isMidiTarget) {
                 "Waiting for MIDI Note/CC... Move a knob, fader, or press a pad."
             } else {
@@ -1035,6 +1039,7 @@ object ParametersRenderer {
             if (drawDiceButton(session, "dice_$groupKey", gridStartX, y, diceScale, btnWidth, btnHeight)) {
                 onRandomize()
             }
+            itemTooltip("Randomize this group's parameters.")
             ImGui.sameLine(0f, 6f)
         }
         var textH = 0f

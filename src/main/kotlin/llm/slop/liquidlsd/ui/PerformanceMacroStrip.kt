@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui
 
+import llm.slop.liquidlsd.rendering.isf.ParamLabels
 import imgui.ImGui
 import imgui.type.ImString
 import llm.slop.liquidlsd.SessionContext
@@ -138,7 +139,7 @@ internal object PerformanceMacroStrip {
                 val clicked = ButtonChrome.button(chipLabels[i] + chipIds[i], chipW, ctrlH)
                 if (!binding.enabled) ImGui.popStyleColor()
                 if (selected) ImGui.popStyleColor(3)
-                itemTooltip(targetLabel(binding) + "\nClick to edit and jump to it.")
+                itemTooltip(labels(binding).tip)
                 if (clicked) {
                     MacroLearnState.selectBinding(control, i)
                     MacroBindingNav.navTargetFor(binding.parameterId)?.let { MacroBindingNav.navigateTo(binding, it, parametersState, mixer) }
@@ -272,9 +273,24 @@ internal object PerformanceMacroStrip {
     private fun metaEdit(state: ParametersState, bankId: String, mixer: Mixer, fx: ISFFilter): FxMetaBindingEditor.Edit =
         FxMetaBindingEditor.editFor(state, bankId, mixer, fx)
 
-    private fun targetLabel(binding: MacroBinding): String =
-        if (binding.targetType == MacroTargetType.PARAM_BASE_VALUE) binding.parameterId
-        else "${binding.parameterId} [${llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.formatPropertyLabel(-1, binding.propertyName).removePrefix("Mod ")}]"
+    private fun targetLabel(binding: MacroBinding): String = labels(binding).label
+
+    /** A binding's target label and chip tooltip, built once per binding (its target fields are vals). */
+    private class BindingLabels(val label: String, val tip: String)
+    private val bindingLabels = java.util.IdentityHashMap<MacroBinding, BindingLabels>()
+    private fun labels(binding: MacroBinding): BindingLabels {
+        bindingLabels[binding]?.let { return it }
+        if (bindingLabels.size > 512) bindingLabels.clear()
+        val label = if (binding.targetType == MacroTargetType.PARAM_BASE_VALUE) binding.parameterId
+            else "${binding.parameterId} [${propertyShortLabel(binding.propertyName)}]"
+        return BindingLabels(label, "$label\nClick to edit and jump to it.").also { bindingLabels[binding] = it }
+    }
+
+    private val propertyShortLabels = HashMap<String, String>()
+    /** A modulator property's short label ("Depth", "Subdivision") for target captions, cached per property name. */
+    internal fun propertyShortLabel(propertyName: String): String = propertyShortLabels.getOrPut(propertyName) {
+        llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.formatPropertyLabel(-1, propertyName).removePrefix("Mod ")
+    }
     private fun openRename(control: MacroControl) {
         renameBuf.set(control.label)
         ImGui.openPopup(RENAME_POPUP)

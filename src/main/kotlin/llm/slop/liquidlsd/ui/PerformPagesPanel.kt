@@ -145,6 +145,7 @@ object PerformPagesPanel {
                 }
                 ImGui.endCombo()
             }
+            itemTooltip("The row shown at this position on the page. Click to pick another.")
         }
     }
 

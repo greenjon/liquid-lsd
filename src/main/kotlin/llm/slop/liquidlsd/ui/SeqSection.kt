@@ -202,6 +202,7 @@ object SeqSection {
         CustomRangeSlider.drawCompactSlider(
             session = session,
             label = "Length",
+            description = "Pattern length, 1 to 32 steps. Steps past the end are kept, so lengthening again brings them back.",
             currentValue = stepCount.toFloat(),
             minLimit = 1f,
             maxLimit = SeqPatterns.MAX_STEPS.toFloat(),
@@ -217,7 +218,6 @@ object SeqSection {
                 }
             }
         )
-        itemTooltip("Pattern length, 1 to 32 steps. Steps past the end are kept, so lengthening again brings them back.")
 
         val phaseCbs = cvModulatorSlider(
             existing = existing,
@@ -233,6 +233,7 @@ object SeqSection {
             session = session,
             idPrefix = "${id}_phase",
             label = "Phase",
+            description = "Start the pattern part-way through. Useful to offset several sequencers against each other.",
             themeColor = themeColor,
             paramKey = paramKey, modulatorIndex = modulatorIndex, propertyName = "phaseOffset",
             currentValue = existing.phaseOffset,
@@ -248,7 +249,6 @@ object SeqSection {
             onRangeChanged = phaseCbs.onRangeChanged,
             onValueChanged = phaseCbs.onValueChanged,
         )
-        itemTooltip("Start the pattern part-way through. Useful to offset several sequencers against each other.")
     }
 
     // ── Pattern toolbar ─────────────────────────────────────────────────────────────────────
@@ -322,7 +322,9 @@ object SeqSection {
         if (ImGui.beginPopup("seq_euclid_$id")) {
             ImGui.pushItemWidth(160f)
             ImGui.sliderInt("Hits##seq_euclid_hits_$id", euclidHits, 0, stepCount)
+            itemTooltip("How many steps get a hit, spread as evenly as the length allows.")
             ImGui.sliderInt("Rotate##seq_euclid_rot_$id", euclidRotation, 0, maxOf(0, stepCount - 1))
+            itemTooltip("Shift the pattern this many steps later.")
             ImGui.popItemWidth()
             val pattern = SeqPatterns.euclid(steps, stepCount, euclidHits[0], euclidRotation[0])
             val dl = ImGui.getWindowDrawList()
@@ -339,6 +341,7 @@ object SeqSection {
                 edit(pattern)
                 ImGui.closeCurrentPopup()
             }
+            itemTooltip("Write this pattern into the step values.")
             ImGui.endPopup()
         }
 
@@ -564,6 +567,7 @@ object SeqSection {
             session = session,
             idPrefix = "${id}_hold",
             label = "Step Hold",
+            description = "How much of each step is held flat before gliding to the next.\n100% = instant jumps (no glide).\n0% = continuous glide over the whole step.\n50% = hold half the step, glide the rest.",
             themeColor = themeColor,
             paramKey = paramKey, modulatorIndex = modulatorIndex, propertyName = "seqHold",
             currentValue = existing.seqHold,
@@ -585,7 +589,6 @@ object SeqSection {
             onRangeChanged = holdCbs.onRangeChanged,
             onValueChanged = holdCbs.onValueChanged,
         )
-        itemTooltip("How much of each step is held flat before gliding to the next.\n100% = instant jumps (no glide).\n0% = continuous glide over the whole step.\n50% = hold half the step, glide the rest.")
 
         val gliding = existing.seqHold < 0.999f
         if (!gliding) ImGui.beginDisabled()
@@ -650,6 +653,7 @@ object SeqSection {
             session = session,
             idPrefix = "${id}_off",
             label = "Offset",
+            description = "Added to the pattern after Depth, shifting the whole sequence up or down.",
             themeColor = themeColor,
             paramKey = paramKey, modulatorIndex = modulatorIndex, propertyName = "dcOffset",
             currentValue = existing.dcOffset,
@@ -665,7 +669,6 @@ object SeqSection {
             onRangeChanged = offCbs.onRangeChanged,
             onValueChanged = offCbs.onValueChanged,
         )
-        itemTooltip("Added to the pattern after Depth, shifting the whole sequence up or down.")
         ImGui.spacing()
     }
 }

@@ -669,4 +669,12 @@ object UITheme {
             ImGui.textUnformatted(text)
             ImGui.popStyleColor()
         }
+
+    /** [tooltipColored] with a packed U32 colour (a [TangoPalette.Role]'s `u32()`), so the caller allocates nothing. */
+    fun tooltipColored(color: Int, text: String) =
+        withFont(FontLevel.TOOLTIP) {
+            ImGui.pushStyleColor(ImGuiCol.Text, color)
+            ImGui.textUnformatted(text)
+            ImGui.popStyleColor()
+        }
 }

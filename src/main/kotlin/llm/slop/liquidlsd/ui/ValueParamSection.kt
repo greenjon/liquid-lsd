@@ -128,6 +128,7 @@ object ValueParamSection {
                         maxVal = param.maxClamp
                     )
                 }
+                itemTooltip("Make this parameter's base value a target of the armed macro knob.")
                 ImGui.popStyleColor(3)
                 ImGui.spacing()
             }
@@ -246,6 +247,7 @@ object ValueParamSection {
                         param.baseMin = newVal
                         param.baseMax = newVal
                     }
+                    itemTooltip("Set the point count to this value.")
 
 
                     startLine = false
@@ -286,6 +288,7 @@ object ValueParamSection {
                             param.baseMax = newVal
                         }
                     }
+                    itemTooltip("Set the lobe count to this value.")
 
 
                     startLine = false
@@ -321,6 +324,7 @@ object ValueParamSection {
                         param.baseMax = newVal
                     }
                 }
+                itemTooltip("Previous recipe for this lobe count.", allowWhenDisabled = true)
                 if (!canPrev) ImGui.endDisabled()
 
                 ImGui.sameLine()
@@ -339,6 +343,7 @@ object ValueParamSection {
                         param.baseMax = newVal
                     }
                 }
+                itemTooltip("Next recipe for this lobe count.", allowWhenDisabled = true)
                 if (!canNext) ImGui.endDisabled()
 
                 if (count > 0) {
@@ -359,6 +364,7 @@ object ValueParamSection {
                         param.baseMax = newVal
                     }
                 }
+                itemTooltip("Pick this parameter's value by name.")
                 ImGui.popItemWidth()
 
                 ImGui.spacing()

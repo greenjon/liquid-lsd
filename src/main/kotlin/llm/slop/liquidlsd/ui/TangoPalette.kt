@@ -173,6 +173,8 @@ object TangoPalette {
     val TAB_IDLE_PRESS     = Role(c(0.35f, 0.35f, 0.35f, 1f), lightSlot = ImGuiCol.ButtonActive)
     /** Labels of rows a macro knob or Metaknob drives (electric cyan; a deep teal on light surfaces). */
     val LINKED_TEXT        = Role(c(0.2f, 0.85f, 1.0f, 1f), light = c(0.00f, 0.38f, 0.52f, 1f))
+    /** The far end of "more contrast" against the theme's surfaces: white on dark, black on light (alternate row shading). */
+    val CONTRAST_INK       = Role(c(1f, 1f, 1f, 1f), light = c(0f, 0f, 0f, 1f))
     /** Empty track behind a level bar (the Value tab's static initial value). */
     val BAR_TRACK          = Role(c(0.15f, 0.15f, 0.15f, 1f), lightSlot = ImGuiCol.FrameBg)
     val PANEL_BG           = Role(c(0.10f, 0.10f, 0.12f, 0.60f), lightSlot = ImGuiCol.ChildBg)
@@ -219,6 +221,9 @@ object TangoPalette {
     // FX slot / param cells (flat dark cells, same in both themes)
     /** RGB of the cell backdrop; alpha varies with filled/empty so it is applied by the caller via [u32]. */
     val FX_CELL_BG_RGB     = floatArrayOf(0.08f, 0.09f, 0.11f)
+    /** An FX slot cell's backdrop, filled or empty. Light theme: a light surface (a dark wash over white came out mid-grey under grey text). */
+    val FX_SLOT_CELL_BG       = Role(c(0.08f, 0.09f, 0.11f, 0.45f), lightSlot = ImGuiCol.FrameBg)
+    val FX_SLOT_CELL_BG_EMPTY = Role(c(0.08f, 0.09f, 0.11f, 0.25f), lightSlot = ImGuiCol.FrameBg)
     val FX_PLACEHOLDER     = Role(c(0.40f, 0.42f, 0.48f, 0.6f))
     val FX_PARAM_NAME      = Role(c(0.85f, 0.88f, 0.92f, 0.95f), light = c(0.10f, 0.11f, 0.13f, 1f))
     val FX_SLOT_NAME       = Role(c(0.85f, 0.85f, 0.88f, 0.95f), light = c(0.10f, 0.11f, 0.13f, 1f))
