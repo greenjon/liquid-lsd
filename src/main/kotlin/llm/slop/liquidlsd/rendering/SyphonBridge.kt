@@ -111,7 +111,12 @@ class SyphonBridge {
     private fun nsString(s: String): Pointer? = cls("NSString")?.let { obj(it, "stringWithUTF8String:", s) }
     private fun utf8(nsString: Pointer?): String = nsString?.let { obj(it, "UTF8String") }?.getString(0, "UTF-8") ?: ""
     /** The value of an `extern NSString * const` key exported by the framework. */
-    private fun key(name: String): Pointer? = try { syphon?.getGlobalVariableAddress(name)?.getPointer(0) } catch (e: Throwable) { null }
+    private fun key(name: String): Pointer? = try {
+        syphon?.getGlobalVariableAddress(name)?.getPointer(0)
+    } catch (e: Throwable) {
+        logger.debug { "Syphon key $name not found: ${e.message}" }
+        null
+    }
 
     // --- Server ---------------------------------------------------------------------------------
 
@@ -160,7 +165,12 @@ class SyphonBridge {
     /** Server labels; throws if a runtime call fails (the smoke test wants to know). */
     fun serverNames(): List<String> = pooled { descriptions().map { it.first } }
 
-    fun getAvailableServers(): List<String> = try { serverNames() } catch (e: Throwable) { emptyList() }
+    fun getAvailableServers(): List<String> = try {
+        serverNames()
+    } catch (e: Throwable) {
+        logger.debug { "Syphon server list failed: ${e.message}" }
+        emptyList()
+    }
 
     // --- Client -----------------------------------------------------------------------------------
 

@@ -569,8 +569,10 @@ class BeatTrackerEngine(
         for (d in minDelay + 1 until maxDelay) {
             val score = scoreTable[d]
             if (score <= scoreTable[d - 1] || score < scoreTable[d + 1]) continue
-            var slot = if (count < METRE_CANDIDATES) count++ else METRE_CANDIDATES - 1
-            if (slot == METRE_CANDIDATES - 1 && count == METRE_CANDIDATES && candidateDelays[slot] != 0 && score <= scoreTable[candidateDelays[slot]]) continue
+            // Test fullness before counting this peak: the last slot may still hold a lag from an earlier estimate.
+            val full = count == METRE_CANDIDATES
+            if (full && score <= scoreTable[candidateDelays[METRE_CANDIDATES - 1]]) continue
+            var slot = if (full) METRE_CANDIDATES - 1 else count++
             while (slot > 0 && scoreTable[candidateDelays[slot - 1]] < score) {
                 candidateDelays[slot] = candidateDelays[slot - 1]
                 slot--

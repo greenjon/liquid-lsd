@@ -5,14 +5,12 @@ import java.nio.file.AccessDeniedException
 import java.nio.file.AtomicMoveNotSupportedException
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
+import mu.KotlinLogging
+
+private val logger = KotlinLogging.logger {}
 
 /** Saving a user's file without ever leaving it half written. */
 object AtomicFile {
-    /**
-     * Writes [text] to a temp file beside [target] then moves it into place, so a crash or a full disk never leaves a
-     * truncated file: the old one stays until the new one is complete. A [target] made read-only is refused (a move would
-     * replace it), as a plain write would.
-     */
     /**
      * Keeps a copy of a user file that couldn't be read as `<name>.unreadable` beside it (no loader picks that up), and
      * tells the user, before the app falls back to defaults and later saves over the original. Empty files aren't kept.
@@ -31,6 +29,8 @@ object AtomicFile {
             copy
         }
     } catch (e: Exception) {
+        logger.warn(e) { "Couldn't keep a copy of unreadable ${file.path}" }
+        UserNotice.post("Couldn't read $what, and couldn't keep a copy of it (${e.message ?: e.javaClass.simpleName}); it will be replaced on the next save")
         null
     }
 
@@ -55,6 +55,11 @@ object AtomicFile {
         }
     }
 
+    /**
+     * Writes [text] to a temp file beside [target] then moves it into place, so a crash or a full disk never leaves a
+     * truncated file: the old one stays until the new one is complete. A [target] made read-only is refused (a move would
+     * replace it), as a plain write would.
+     */
     fun write(target: File, text: String) {
         if (target.exists() && !target.canWrite()) throw AccessDeniedException(target.path, null, "file is read-only")
         val dir = target.absoluteFile.parentFile
@@ -63,10 +68,20 @@ object AtomicFile {
         try {
             tmp.writeText(text)
             // A temp file is private (rw-------). Keep the permissions the file had; a new file gets what the user's umask
-            // gives (creating it empty first applies the umask, which Java can't read directly).
+            // gives, read from an empty probe file (creating a file applies the umask, which Java can't read directly).
+            // The probe has its own name, so a crash never leaves an empty [target].
             try {
-                if (!target.exists()) Files.createFile(target.toPath())
-                Files.setPosixFilePermissions(tmp.toPath(), Files.getPosixFilePermissions(target.toPath()))
+                if (target.exists()) {
+                    Files.setPosixFilePermissions(tmp.toPath(), Files.getPosixFilePermissions(target.toPath()))
+                } else {
+                    val probe = File(dir, ".${target.name}.${System.nanoTime()}.probe").toPath()
+                    try {
+                        Files.createFile(probe)
+                        Files.setPosixFilePermissions(tmp.toPath(), Files.getPosixFilePermissions(probe))
+                    } finally {
+                        Files.deleteIfExists(probe)
+                    }
+                }
             } catch (e: UnsupportedOperationException) {
                 // Windows: no POSIX permissions.
             } catch (e: java.io.IOException) {

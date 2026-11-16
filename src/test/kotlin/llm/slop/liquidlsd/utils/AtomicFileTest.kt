@@ -75,5 +75,7 @@ class AtomicFileTest {
         AtomicFile.write(fresh, "c")
         assertEquals(Files.getPosixFilePermissions(plain.toPath()), Files.getPosixFilePermissions(fresh.toPath()))
         assertEquals("c", fresh.readText())
+        // The umask probe is gone too.
+        assertEquals(setOf("shared.lsd", "plain.lsd", "new.lsd"), dir.list()!!.toSet())
     }
 }

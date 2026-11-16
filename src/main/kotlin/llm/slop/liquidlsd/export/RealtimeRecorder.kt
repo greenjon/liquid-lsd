@@ -10,6 +10,7 @@ import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import mu.KotlinLogging
+import llm.slop.liquidlsd.utils.UserNotice
 
 private val logger = KotlinLogging.logger {}
 
@@ -426,19 +427,26 @@ object RealtimeRecorder {
     var isFinishing = false
         private set
 
+    @Volatile
     private var finishThread: Thread? = null
 
     /**
      * Stops live recording. Only the GL readback is torn down here (it must be, on the GL thread); flushing the
      * encoder and muxing the audio, which takes minutes for a long set, run on a background thread so the output
      * never freezes ([isFinishing] meanwhile). [waitForFinish] blocks until the file is complete (app exit).
+     *
+     * The wait happens outside this object's lock: the finish thread takes that lock ([resetAudioPool]), so joining it
+     * while holding the lock deadlocked (quitting while recording hung the app).
      */
-    @Synchronized
     fun stopRecording(waitForFinish: Boolean = false): Boolean {
-        if (!isRecording && ffmpegPipe == null && pboPipeline == null) {
-            if (waitForFinish) awaitFinish()
-            return true
-        }
+        val result = beginStop()
+        if (waitForFinish) awaitFinish()
+        return result
+    }
+
+    @Synchronized
+    private fun beginStop(): Boolean {
+        if (!isRecording && ffmpegPipe == null && pboPipeline == null) return true
         logger.info { "Stopping live recording. Total frames: $totalFramesCount, Dropped: $droppedFramesCount (${"%.2f".format(droppedPercentage)}%)" }
 
         isRecording = false
@@ -476,11 +484,10 @@ object RealtimeRecorder {
         }, "RealtimeRecorder-Finish")
         finishThread = t
         t.start()
-        if (waitForFinish) awaitFinish()
         return true
     }
 
-    /** Waits for a stopped recording to be written out. */
+    /** Waits for a stopped recording to be written out. Never call it while holding this object's lock. */
     fun awaitFinish(timeoutMs: Long = 0) {
         finishThread?.join(timeoutMs)
     }
@@ -535,16 +542,29 @@ object RealtimeRecorder {
                 tempVid.delete()
                 tempAud.delete()
             } else {
-                // Keep both halves rather than lose the audio.
-                logger.warn { "Muxing failed; keeping the video as ${finalOut.name} and the audio as ${tempAud.name}." }
+                // Keep both halves rather than lose the audio, the sound under a visible name next to the video.
                 finalOut.delete()
                 tempVid.renameTo(finalOut)
+                val keptAud = visibleAudioName(finalOut)
+                val audName = if (tempAud.renameTo(keptAud)) keptAud.name else tempAud.name
+                logger.warn { "Muxing failed; keeping the video as ${finalOut.name} and the audio as $audName." }
+                UserNotice.post("Couldn't add the sound to ${finalOut.name}; the sound is saved beside it as $audName")
             }
         } else if (tempVid != null && finalOut != null && tempVid != finalOut && tempVid.exists()) {
             tempVid.renameTo(finalOut)
             tempAud?.delete()
         }
         logger.info { "Recording saved: ${finalOut?.absolutePath} (encoder ok: $videoSuccess)" }
+        if (!videoSuccess) UserNotice.post("The video encoder reported an error; ${finalOut?.name ?: "the recording"} may be incomplete (see log)")
+    }
+
+    /** `<name>.wav` beside [video], or `<name> (2).wav` and so on when that is taken. */
+    private fun visibleAudioName(video: File): File {
+        val dir = video.absoluteFile.parentFile
+        var f = File(dir, "${video.nameWithoutExtension}.wav")
+        var n = 2
+        while (f.exists()) f = File(dir, "${video.nameWithoutExtension} (${n++}).wav")
+        return f
     }
 
     private fun writeWavHeader(raf: RandomAccessFile, sampleRate: Int, channels: Int, bitsPerSample: Int, totalAudioBytes: Long) {
