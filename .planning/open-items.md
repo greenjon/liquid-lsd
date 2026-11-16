@@ -12,15 +12,12 @@ Milestones and v1.1 features are in `ROADMAP.md`.
 - Plain queue appends (`LibraryNavigation.enqueue`, Q) bypass `QueueOps` and push no undo (documented as such). (audit-2026-10-29)
 - `rendering.md` and `ui.md` were patched item by item, never re-read end to end; the ARCHITECTURE.md "Unverified" list is unchanged. (audit-2026-10-29)
 - FX queue transport commands (`fx.queue_next/prev`, `fx.bg_queue_next/prev`) have no free button in the built-in Twister profile; Chain Link Part B (free a Twister button) is the same problem. (v1-polish-handoff, midi-controller-handoff)
-- Every-ISF binding audit (a v1.0 scope item). (v1-polish-handoff)
-- Twister send-knob ring brightness: a ring-brightness output in `ControllerFeedback` (indicator channel, default 6), dim send knobs, full brightness elsewhere. (twister-led-midi-notes)
 - Saved FX, chains and transitions have no subfolder convention, so the browser tree shows them flat. (unified-browser-pane-plan)
 
 ## Light theme
 
 What remained of the 2026-10-07 colour audit (`theme-color-audit.md`):
-- `CvTheme` has no light variant: the neon signal colours of modulation graphs and grid cells are low-contrast on light panels.
-- Literals still in code: `AudioEnginePanel` meters/slider `themeColor`, `DropdownStyleHelper` selected text, the rest of the `ParametersRenderer` fills and `(0.2)` grey border, the grey button triple `(0.15/0.25/0.35)` in `PropertiesPanel` / `AudioModulatorSection` / `ParametersTabs` / `ModulatorHeaderRow`, `MenuBar`, the `MacroBindingEditor` mini-slider, `TempoSyncPanel`. `TourRunner` overlays stay literal by design.
+- Literals still in code (re-checked 2026-11-15): `AudioEnginePanel` meters, `ParametersRenderer` fills and `(0.2)` grey, `ModulatorHeaderRow` delete button, `TempoSyncPanel` dim colour. `TourRunner` overlays stay literal by design.
 - The die button and fader are copy-pasted between `MixerPanel` and `DeckControlPanel` with the same literals; move both to the existing `RANDOM_*` / `SPEED_*` / `BUTTON_*` Roles.
 
 ## Naming (needs the owner)
@@ -35,7 +32,6 @@ From the 2026-10-04 naming sweep, the decisions never made:
 
 - Not built: the post stage (`post_X` at weight w gives `w * X(sum of the regular variations)`), `pre_curl`, `pre_crop`/`post_crop`. (flame-blackbox-handoff)
 - Missing variations, by use in the JWildfire set: `nblur` (random), `line`, `scry2`, `epispiral`, `glynnia`, `ecollide`, `bswirl`, `sphericaln`, `julian2`, `bubble2`, `voron`, `shredlin`. Random ones need statistics in `extract_points.py`. Then re-run `curateFlames` and compare `variation-survival.csv`. (flame-blackbox-handoff)
-- Garden Keep: UI, strategy persistence and thumbnails were open after the slice 3 backend. (flame-source-handoff)
 - Quality knobs (`Points`/`Passes`/`Kernel`) as a device setting; re-measure Tier H on the RTX A2000. (flame-source-handoff)
 - Owner only, recorded in the clean-room ledger: where the first AI's code description is and which program it read; what the `a7cba2b` amendments of `secant2`, `twintrian`, `cross` were based on; which beat-tracker papers to cite (BTrack, Stark, Davies and Plumbley 2009; Ellis 2007?); trademark search for Fractal Flame / Garden / Breed and a legal review of the ledger before selling. (flame-blackbox-handoff)
 
@@ -43,8 +39,8 @@ From the 2026-10-04 naming sweep, the decisions never made:
 
 - Tapes, later steps: `/tv/?tape=<id>&t=1h12m` share links and WATCH links on spaz.org/radio/archives/; peaks-driven scene timing (cut just ahead of a known drop); a rerun channel timed from the clock. (web-tv-tapes-plan)
 - Rolled looks: 4 scenes came out too bright in the render check (build-drop-fluid, gyroid-kick, icosa-build, rd-hard); narrow their spans if they look washed out. Nobody measured how many scenes are opaque, so the background never shows behind them. (web-tv-viewer-controls-plan)
-- Channels (C6) and share/kiosk (C7) from the upgrade plan were still open. (web-tv-upgrade-plan)
-- Gallery background: the Android app needs an absolute `https://spaz.org/tv/gallery/` base plus CORS to show the photos when it syncs; Android data use is about one 130 kB photo per 20 s; a live endpoint for new uploads; music reaction (beat zoom, energy to turn speed, drop to a new photo) as a possible step 2. (spaz-gallery-bg-trial)
+- Channels (C6) and share links (C7) from the upgrade plan; `?kiosk` (the other half of C7) is built. (web-tv-upgrade-plan)
+- Gallery background ideas: a live endpoint for new uploads; music reaction (beat zoom, energy to turn speed, drop to a new photo). (spaz-gallery-bg-trial)
 
 ## Tours
 
