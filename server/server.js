@@ -86,6 +86,8 @@ wss.on('connection', (ws, req) => {
     fanOut(JSON.stringify({ type: 'broadcaster_online' }), ws);
 
     ws.on('message', (data) => {
+      // A replaced broadcaster's socket may still deliver a few frames before it closes: drop them
+      if (broadcaster !== ws) return;
       const str = data.toString();
       try {
         // Keep the merged state current so viewers joining mid-session get it, not a stale snapshot
@@ -99,6 +101,8 @@ wss.on('connection', (ws, req) => {
     });
 
     ws.on('close', () => {
+      // A replaced broadcaster closes after its successor connected: that is not the end of the broadcast
+      if (broadcaster !== ws) return;
       broadcaster  = null;
       state.reset();
       console.log('[relay] Broadcaster disconnected');

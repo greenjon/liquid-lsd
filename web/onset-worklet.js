@@ -6,9 +6,11 @@
 //  - The tempo bands: RMS level through the same three filters as the desktop's tracker (`AudioEngine`: a low
 //    pass at 150 Hz, a band pass at 1 kHz and a high pass at 5 kHz); each band's rise since the previous
 //    hop. Finds how fast the beat is.
-// Posted in batches of 10 with the context time of the first one.
+// Posted in batches of 10 with the context time of the first one. Nothing is allocated on the audio thread:
+// the batch arrays and the message are made once and reused (postMessage copies them).
 
 const HOP_SEC = 0.01;
+const BATCH = 10;
 const FILTER_Q = 0.707;
 
 /** Biquad coefficients, as BiquadFilter.kt computes them. */
@@ -37,9 +39,10 @@ class OnsetProcessor extends AudioWorkletProcessor {
     this.prevLow = 0;
     this.prevFull = 0;
     this.filters = [biquad('low', 150, sampleRate), biquad('band', 1000, sampleRate), biquad('high', 5000, sampleRate)];
-    this.values = [];
-    this.bands = [];
-    this.t0 = 0;
+    this.values = new Float64Array(BATCH);
+    this.bands = Array.from({ length: BATCH }, () => new Float64Array(3));
+    this.count = 0;
+    this.msg = { t0: 0, hop: this.hop / sampleRate, values: this.values, bands: this.bands };
   }
 
   process(inputs, outputs) {
@@ -52,7 +55,8 @@ class OnsetProcessor extends AudioWorkletProcessor {
         this.lp2 += this.a * (this.lp1 - this.lp2);
         this.low += this.lp2 * this.lp2;
         this.full += x * x;
-        for (const f of this.filters) {
+        for (let k = 0; k < 3; k++) {
+          const f = this.filters[k];
           const y = f.b0 * x + f.z1;
           f.z1 = f.b1 * x - f.a1 * y + f.z2;
           f.z2 = f.b2 * x - f.a2 * y;
@@ -64,22 +68,21 @@ class OnsetProcessor extends AudioWorkletProcessor {
         const v = 2 * Math.max(0, low - this.prevLow) + Math.max(0, full - this.prevFull);
         this.prevLow = low;
         this.prevFull = full;
-        const rises = this.filters.map((f) => {
+        const rises = this.bands[this.count];
+        for (let k = 0; k < 3; k++) {
+          const f = this.filters[k];
           const level = Math.sqrt(f.energy / this.hop);
-          const rise = Math.max(0, level - f.prev);
+          rises[k] = Math.max(0, level - f.prev);
           f.prev = level;
           f.energy = 0;
-          return rise;
-        });
-        if (this.values.length === 0) this.t0 = currentTime + (i + 1) / sampleRate;
-        this.values.push(v);
-        this.bands.push(rises);
+        }
+        if (this.count === 0) this.msg.t0 = currentTime + (i + 1) / sampleRate;
+        this.values[this.count++] = v;
         this.low = this.full = 0;
         this.n = 0;
-        if (this.values.length >= 10) {
-          this.port.postMessage({ t0: this.t0, hop: this.hop / sampleRate, values: this.values, bands: this.bands });
-          this.values = [];
-          this.bands = [];
+        if (this.count >= BATCH) {
+          this.port.postMessage(this.msg);
+          this.count = 0;
         }
       }
     }

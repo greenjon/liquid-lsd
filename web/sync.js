@@ -8,7 +8,12 @@ import { autopilotState } from './autopilot.js';
 
 /** Beat position the viewer hears at `nowMs`: the live (desktop) or standalone clock, `syncMs` earlier. */
 export function heardBeats(nowMs, syncMs) {
-  if (autopilotState.isLiveBroadcast && autopilotState.clock.valid) return autopilotState.clock.read(nowMs - syncMs);
+  if (autopilotState.isLiveBroadcast && autopilotState.clock.valid) {
+    // The flywheel advances once, at the newest time read; the SYNC delay is counted back from there, so
+    // readers at now and at now - SYNC in the same frame do not fight its forward-only smoothing.
+    const clock = autopilotState.clock;
+    return clock.beatsAt(nowMs) - (syncMs / 1000) * (clock.bpm / 60);
+  }
   const bpm = cvState.bpm || 120;
   return cvState.totalBeats + ((nowMs - (cvState.beatsAtMs ?? nowMs)) - syncMs) / 1000 * bpm / 60;
 }

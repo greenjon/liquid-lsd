@@ -45,6 +45,19 @@ test('after a small backward correction the output returns to the true beat, nev
   assert.ok(Math.abs(prev - f.predict(last)) < 1e-6, 'never caught up');
 });
 
+test('readers at now and now - SYNC in the same frame stay SYNC apart (beatsAt)', () => {
+  const f = new BeatFlywheel();
+  f.anchor(0, 126, 0);
+  const perMs = 126 / 60000;
+  for (let t = 16; t < 3000; t += 16) {
+    if (t % 96 === 0) f.anchor(t * perMs, 126, t);
+    const undelayed = f.beatsAt(t);
+    const delayed = f.beatsAt(t - 50);
+    assert.ok(Math.abs(undelayed - delayed - 50 * perMs) < 1e-9, `at ${t}: ${(undelayed - delayed) / perMs} ms apart`);
+    assert.ok(Math.abs(f.beatsAt(t + 2) - (undelayed + 2 * perMs)) < 0.01); // a later reader (the beat light) moves on
+  }
+});
+
 test('a large disagreement snaps, a tempo change takes effect', () => {
   const f = new BeatFlywheel();
   f.anchor(0, 120, 0);

@@ -69,6 +69,15 @@ async function init() {
     alert('WebGL 2 is not supported in this browser.');
     throw new Error('WebGL 2 not supported');
   }
+  // Context loss (GPU reset, driver update, a phone reclaiming the tab's GPU): every program, texture and target
+  // is gone and each draw does nothing. Asking for it back (preventDefault) and reloading once it is restored
+  // rebuilds them all; an embed host hears `failed` meanwhile and can show its own visuals.
+  canvas.addEventListener('webglcontextlost', (e) => {
+    e.preventDefault();
+    console.warn('[lsd] WebGL context lost; reloading when it is restored');
+    if (embed) window.LSDHost?.failed?.('WebGL context lost');
+  });
+  canvas.addEventListener('webglcontextrestored', () => location.reload());
 
   const extFloat = gl.getExtension('EXT_color_buffer_float');
   const fmt = { internalFormat: gl.RGBA16F, format: gl.RGBA, type: gl.HALF_FLOAT };
@@ -176,6 +185,9 @@ async function init() {
   const AUDIO_KEYS = ['audio_amp', 'audio_bass', 'audio_mid', 'audio_himid', 'audio_high', 'audio_flux_amp', 'audio_flux_bass', 'audio_flux_mid', 'audio_flux_himid', 'audio_flux_high',
     'audio_energy', 'audio_energy_bass', 'audio_energy_mid', 'audio_energy_himid', 'audio_energy_high'];
   const drop = new DropEnvelope();
+  const REACT_KEYS = AUDIO_KEYS.slice(0, 10), SECTION_KEYS = AUDIO_KEYS.slice(10);
+  let reactK = 1;
+  const react = (v) => Math.min(1, v * reactK);
   function updateEvalContext() {
     // Live broadcast: the desktop's beat clock (phase-locked flywheel). Standalone: the web's own
     // beat detector (dsp.js) integrates tempo into total beats, so a tempo change never jumps the phase.
@@ -184,8 +196,10 @@ async function init() {
     // SYNC (sync.js): the beat and the audio signals the picture reads are those the viewer hears now.
     const now = performance.now();
     const beats = heardBeats(now, viewerState.syncMs);
-    audioDelay.push(now, Object.fromEntries(AUDIO_KEYS.map((key) => [key, cvState[key]])));
-    const heard = { ...audioDelay.read(now, viewerState.syncMs) };
+    const values = {};
+    for (const key of AUDIO_KEYS) values[key] = cvState[key];
+    audioDelay.push(now, values);
+    const heard = audioDelay.read(now, viewerState.syncMs); // read only: no copy
     drop.report(cvState.drops, cvState.dropLag, heardBeats(now, 0), bpm); // dated in analysis time, read at the heard beat
     evalCtx.time = elapsedTime;
     evalCtx.beats = beats;
@@ -194,18 +208,15 @@ async function init() {
     evalCtx.bpm = bpm;
     // REACT dial: scales every audio signal (not the beat) after auto gain and clamps to 0..1, like the
     // desktop's Audio Response, so the dial is about taste, not the stream's level.
-    const k = viewerState.reducedNow ? Math.min(viewerState.react, 0.6) : viewerState.react; // reduced motion caps it
-    const r = (v) => Math.min(1, v * k);
-    evalCtx.cv = {
-      audio_amp: r(heard.audio_amp), audio_bass: r(heard.audio_bass),
-      audio_mid: r(heard.audio_mid), audio_himid: r(heard.audio_himid), audio_high: r(heard.audio_high),
-      audio_flux_amp: r(heard.audio_flux_amp), audio_flux_bass: r(heard.audio_flux_bass),
-      audio_flux_mid: r(heard.audio_flux_mid), audio_flux_himid: r(heard.audio_flux_himid), audio_flux_high: r(heard.audio_flux_high),
-      // Song sections are not scaled by REACT (like Audio Response on the desktop); reduced motion softens the hit.
-      audio_energy: heard.audio_energy ?? 0, audio_energy_bass: heard.audio_energy_bass ?? 0, audio_energy_mid: heard.audio_energy_mid ?? 0,
-      audio_energy_himid: heard.audio_energy_himid ?? 0, audio_energy_high: heard.audio_energy_high ?? 0, audio_drop: drop.value(beats) * (viewerState.reducedNow ? 0.6 : 1),
-      beatSine: Math.sin(beats * 2 * Math.PI), bpm,
-    };
+    reactK = viewerState.reducedNow ? Math.min(viewerState.react, 0.6) : viewerState.react; // reduced motion caps it
+    // One object, filled in place each frame (no per-frame garbage on phones).
+    const cv = evalCtx.cv;
+    for (const key of REACT_KEYS) cv[key] = react(heard[key]);
+    // Song sections are not scaled by REACT (like Audio Response on the desktop); reduced motion softens the hit.
+    for (const key of SECTION_KEYS) cv[key] = heard[key] ?? 0;
+    cv.audio_drop = drop.value(beats) * (viewerState.reducedNow ? 0.6 : 1);
+    cv.beatSine = Math.sin(beats * 2 * Math.PI);
+    cv.bpm = bpm;
   }
   updateEvalContext();
 
