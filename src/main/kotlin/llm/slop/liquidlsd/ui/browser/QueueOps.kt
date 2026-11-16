@@ -147,6 +147,13 @@ object QueueOps {
     }
 
     /**
+     * Appends [files] to the end of [queue] as one undo step, expanding playlists into their entries, and flashes the queue (the Q
+     * key, the toolbar enqueue buttons, the controller's add-to-queue). Returns how many items went in.
+     */
+    fun append(queue: Queue, files: List<File>, state: ParametersState?): Int =
+        insert(queue, items(queue).size, files.flatMap { QueueDrop.expandForQueue(queue, it) }, state)
+
+    /**
      * Puts [files] (already expanded, of the queue's kind) after row [index] (-1: at the top; past the end: appended), moves the
      * cursor onto the last of them and flashes the queue. With [index] on the playing item they play next. Returns how many went in.
      */

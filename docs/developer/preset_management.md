@@ -228,7 +228,7 @@ Unifies the formerly separate `FXPresetListPanel` (single `.lsdfx` presets) and 
 ## 11. Queue Edits (`ui/browser/QueueOps.kt`, `QueueDrop.kt`, `QueueSplit.kt`)
 
 - `QueueOps` edits any of the five queues by index (cursor, play now, move, remove, `insert`, `clear`, `edit`) and pushes one restore-only undo step per edit (items, playing position, shuffle history). Callers: each queue panel's Clear, drops from the browser onto a queue (`QueueDrop`, which also refuses items of the wrong kind), the playlist menu's play now / insert / append, the controller's queue knobs (`QueueKnobs`).
-- Not through `QueueOps`: plain appends (`LibraryNavigation.enqueue`, the Q key, toolbar enqueue) still call the queue managers and push no undo.
+- Appends go through `QueueOps.append` (expands playlists, one undo step, flash): `LibraryNavigation.enqueue` (Q / Shift+Q, toolbar, controller), `BrowserPane.enqueueCursorPlaylist`, and the browser and queue panels' Add to … Queue menu items. Not through `QueueOps`: relinking a missing item (`MissingItemsPanel`) and the queue managers' own play-now paths.
 - `QueueSplit` shows the five queues (`QueuesPane`) under the browser in Library FULL; a browser row dragged onto a queue lands at the drop position.
 
 ## 12. Fractal Flame Garden and Imports (`presets/Garden.kt`, `GardenThumbnails.kt`, `FlameImportOps.kt`)

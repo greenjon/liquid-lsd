@@ -240,7 +240,7 @@ The A/B Queue drives the main crossfader automatically, sequencing through prese
 - **Transport controls** — `<` (previous), `▶/⏸` (play/pause), `>` (next).
 - **Loop / Shuffle** — `🔁` for continuous looping, `🔀` for random order.
 - **Add to queue** — Select a preset in the browser and press `Q`, or right-click and choose **Add to A/B Queue**.
-- **Export / Clear** — The **⋮** menu at the right of the queue's caption has **Export as playlist...** (saves an improvised live queue as a permanent playlist file) and **Clear queue**. Ctrl+Z undoes a Clear, a drop onto the queue, and a playlist's Play Now / Insert / Append, like any other queue edit. Every queue column has the same header: a caption naming the queue with the menu, then one row of icon buttons (hover for a tooltip).
+- **Export / Clear** — The **⋮** menu at the right of the queue's caption has **Export as playlist...** (saves an improvised live queue as a permanent playlist file) and **Clear queue**. Ctrl+Z undoes a Clear, a drop onto the queue, adding to it (Q, Shift+Q, the toolbar and the right-click Add to … Queue items, the Twister), and a playlist's Play Now / Insert / Append, like any other queue edit. Every queue column has the same header: a caption naming the queue with the menu, then one row of icon buttons (hover for a tooltip).
 
 When the queue is playing, the crossfader moves automatically between decks as presets transition. Grabbing the crossfader manually immediately pauses Auto-VJ so you have direct control.
 

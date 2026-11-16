@@ -8,7 +8,6 @@ import imgui.flag.ImGuiPopupFlags
 import imgui.flag.ImGuiStyleVar
 import imgui.flag.ImGuiWindowFlags
 import llm.slop.liquidlsd.SessionContext
-import llm.slop.liquidlsd.presets.TransitionQueueManager
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.ui.LibraryNavigation
 import llm.slop.liquidlsd.ui.LibraryPanel
@@ -203,7 +202,7 @@ object BrowserDock {
         } else if (LibraryPanel.viewMode == LibraryViewMode.TRANS) {
             // Transitions: Q enqueues, Up/Down step.
             if (isQueueAB && activeFile != null) {
-                TransitionQueueManager.appendToQueue(activeFile)
+                QueueOps.append(QueueDrop.Queue.TRANS, listOf(activeFile), session.parametersState)
                 LibraryPanel.shouldReclaimFocus = true
             } else if (isNavUp) {
                 LibraryPanel.navigateSelection(-1, session, mixer)

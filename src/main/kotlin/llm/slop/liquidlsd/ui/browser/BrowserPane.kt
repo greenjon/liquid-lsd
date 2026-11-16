@@ -223,12 +223,12 @@ object BrowserPane {
 
     fun enqueueCursorPlaylist(session: SessionContext, kind: BrowseKind, bg: Boolean): Boolean {
         val playlist = treeCursorOf(kind) as? BrowseScope.Playlist ?: return false
-        val file = File(playlist.path)
-        when (kind) {
-            BrowseKind.SRC -> if (bg) BgQueueManager.appendPlaylistToQueue(file) else session.playQueueManager.appendPlaylistToQueue(file)
-            BrowseKind.FX -> if (bg) FXBgQueueManager.appendToQueue(file) else FXQueueManager.appendToQueue(file)
-            BrowseKind.TRANS -> TransitionQueueManager.appendToQueue(file)
+        val queue = when (kind) {
+            BrowseKind.SRC -> if (bg) QueueDrop.Queue.BG else QueueDrop.Queue.AB
+            BrowseKind.FX -> if (bg) QueueDrop.Queue.FX_BG else QueueDrop.Queue.FX_AB
+            BrowseKind.TRANS -> QueueDrop.Queue.TRANS
         }
+        QueueOps.append(queue, listOf(File(playlist.path)), session.parametersState)
         return true
     }
 

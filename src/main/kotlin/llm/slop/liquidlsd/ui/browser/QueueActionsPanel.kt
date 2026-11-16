@@ -213,10 +213,7 @@ object QueueActionsPanel {
                 }
                 val bgLabel = if (count > 1) "Add $count Presets to BG Queue" else "Add to BG Queue"
                 if (ImGui.menuItem(bgLabel)) {
-                    targetIndices.forEach { idx ->
-                        val f = session.playQueueManager.queue.getOrNull(idx)
-                        if (f != null) llm.slop.liquidlsd.presets.BgQueueManager.appendToQueue(f)
-                    }
+                    QueueOps.append(QueueDrop.Queue.BG, targetIndices.mapNotNull { session.playQueueManager.queue.getOrNull(it) }, session.parametersState)
                 }
                 ImGui.separator()
                 val remLabel = if (count > 1) "Remove $count presets from queue" else "Remove from queue"

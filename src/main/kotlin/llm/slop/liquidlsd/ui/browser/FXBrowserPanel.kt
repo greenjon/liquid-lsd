@@ -7,8 +7,6 @@ import imgui.flag.ImGuiKey
 import imgui.type.ImBoolean
 import imgui.type.ImString
 import llm.slop.liquidlsd.SessionContext
-import llm.slop.liquidlsd.presets.FXBgQueueManager
-import llm.slop.liquidlsd.presets.FXQueueManager
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.presets.FxOps
@@ -202,7 +200,7 @@ object FXBrowserPanel {
                 contextExtras(asset)
                 ImGui.separator()
             }
-            if (selection.count > 1 && selection.isSelected(asset)) drawMultiMenu(rows) else drawContextMenu(session, mixer, asset)
+            if (selection.count > 1 && selection.isSelected(asset)) drawMultiMenu(session, rows) else drawContextMenu(session, mixer, asset)
             popOpenDropdownFont()
             ImGui.endPopup()
         }
@@ -216,7 +214,7 @@ object FXBrowserPanel {
     }
 
     /** The row menu while several rows are selected: queue, playlist and delete for the saved FX among them (stock filters load one at a time). */
-    private fun drawMultiMenu(rows: List<AssetItem>) {
+    private fun drawMultiMenu(session: SessionContext, rows: List<AssetItem>) {
         val saved = selection.getSelectedInOrder(rows).filter { it.type != AssetType.FX_STOCK }
         ImGui.textDisabled("${selection.count} FX Selected")
         ImGui.separator()
@@ -225,8 +223,8 @@ object FXBrowserPanel {
             return
         }
         val n = if (saved.size > 1) "${saved.size} FX" else "1 FX"
-        if (ImGui.menuItem("Add $n to A/B FX Queue")) saved.forEach { FXQueueManager.appendToQueue(File(it.path)) }
-        if (ImGui.menuItem("Add $n to BG FX Queue")) saved.forEach { FXBgQueueManager.appendToQueue(File(it.path)) }
+        if (ImGui.menuItem("Add $n to A/B FX Queue")) QueueOps.append(QueueDrop.Queue.FX_AB, saved.map { File(it.path) }, session.parametersState)
+        if (ImGui.menuItem("Add $n to BG FX Queue")) QueueOps.append(QueueDrop.Queue.FX_BG, saved.map { File(it.path) }, session.parametersState)
         PlaylistMenu.draw(BrowseKind.FX, saved.map { it.path })
         ImGui.separator()
         if (ImGui.menuItem("Delete $n...")) BrowserPopupHandler.openDeleteConfirmation(saved)
@@ -317,7 +315,7 @@ object FXBrowserPanel {
             AssetType.FX_PRESET -> {
                 drawSlotMenus(chains) { chain, s -> FxOps.loadSlot(session, file, chain, s, undoable = true); BrowseRecents.note(asset) }
                 ImGui.separator()
-                drawSavedItems(asset, file)
+                drawSavedItems(session, asset, file)
             }
             AssetType.FX_CHAIN -> {
                 for ((chainLabel, chain) in chains) {
@@ -327,7 +325,7 @@ object FXBrowserPanel {
                     }
                 }
                 ImGui.separator()
-                drawSavedItems(asset, file)
+                drawSavedItems(session, asset, file)
             }
             else -> {}
         }
@@ -346,12 +344,12 @@ object FXBrowserPanel {
     }
 
     /** The queue, playlist and file items every saved FX file shares (same words as the Sources and Transitions menus). */
-    private fun drawSavedItems(asset: AssetItem, file: File) {
+    private fun drawSavedItems(session: SessionContext, asset: AssetItem, file: File) {
         if (ImGui.menuItem("Add to A/B FX Queue")) {
-            FXQueueManager.appendToQueue(file)
+            QueueOps.append(QueueDrop.Queue.FX_AB, listOf(file), session.parametersState)
         }
         if (ImGui.menuItem("Add to BG FX Queue")) {
-            FXBgQueueManager.appendToQueue(file)
+            QueueOps.append(QueueDrop.Queue.FX_BG, listOf(file), session.parametersState)
         }
         PlaylistMenu.draw(BrowseKind.FX, listOf(asset.path))
         ImGui.separator()

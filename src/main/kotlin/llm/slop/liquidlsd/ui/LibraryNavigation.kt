@@ -193,20 +193,12 @@ internal object LibraryNavigation {
         }
         // On the unified pane's tree the cursor row is a folder; a playlist there enqueues as a whole.
         if (LibraryPanel.activeSelectionSource == SelectionSource.TREE) {
-            return unifiedKind()?.let { BrowserPane.enqueueCursorPlaylist(session, it, bg) }?.also { if (it) QueueDrop.flash(queue) } ?: false
+            return unifiedKind()?.let { BrowserPane.enqueueCursorPlaylist(session, it, bg) } ?: false
         }
         val files = enqueueTargets(session)
         if (files.isEmpty()) return false
-        when (queue) {
-            QueueDrop.Queue.FX_AB -> files.forEach { FXQueueManager.appendToQueue(it) }
-            QueueDrop.Queue.FX_BG -> files.forEach { FXBgQueueManager.appendToQueue(it) }
-            QueueDrop.Queue.AB -> files.forEach { session.playQueueManager.appendToQueue(it) }
-            QueueDrop.Queue.BG -> files.forEach { BgQueueManager.appendToQueue(it) }
-            QueueDrop.Queue.TRANS -> files.forEach { TransitionQueueManager.appendToQueue(it) }
-        }
-        // Where they went, for when the queues are on screen (the Queues tab, or under the browser).
-        QueueDrop.flash(queue)
-        return true
+        // One undo step; QueueOps flashes the queue so you see where they went when the queues are on screen.
+        return QueueOps.append(queue, files, session.parametersState) > 0
     }
 
     /** Loads a Sources-list item (preset file or stock generator) to the deck the crossfader is moving away from. */

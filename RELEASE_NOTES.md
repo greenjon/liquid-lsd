@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Queue Undo
+- **Fixed: adding to a queue couldn't be undone.** Q, Shift+Q, the toolbar's enqueue buttons, the right-click Add to … Queue items and the Twister's add-to-queue now each make one Ctrl+Z step, like dropping onto a queue already did.
+
 ### Web TV: Audit Fixes, November 2026 (`web/autopilot.js`, `web/beatclock.js`, `web/sync.js`, `web/renderer.js`, `web/ui.js`, `web/embed.js`, `server/server.js`)
 - **Fixed: after a live broadcast ended, the TV kept the broadcaster's mix**, effects and background. It now goes back to its own scenes.
 - **Fixed: a broadcaster that reconnected knocked viewers off the live show.**

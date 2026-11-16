@@ -9,9 +9,8 @@ Milestones and v1.1 features are in `ROADMAP.md`.
 
 ## Code and docs
 
-- Plain queue appends (`LibraryNavigation.enqueue`, Q) bypass `QueueOps` and push no undo (documented as such). (audit-2026-10-29)
 - `rendering.md` and `ui.md` were patched item by item, never re-read end to end; the ARCHITECTURE.md "Unverified" list is unchanged. (audit-2026-10-29)
-- FX queue transport commands (`fx.queue_next/prev`, `fx.bg_queue_next/prev`) have no free button in the built-in Twister profile; Chain Link Part B (free a Twister button) is the same problem. (v1-polish-handoff, midi-controller-handoff)
+- FX queue transport commands (`fx.queue_next/prev`, `fx.bg_queue_next/prev`) have no free button in the built-in Twister profile: all six side buttons, plain and shifted, are taken. (Chain Link Part B is done: the stride-6 layout is now the default profile.) (v1-polish-handoff, midi-controller-handoff)
 - Saved FX, chains and transitions have no subfolder convention, so the browser tree shows them flat. (unified-browser-pane-plan)
 
 ## Light theme

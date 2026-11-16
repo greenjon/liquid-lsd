@@ -323,11 +323,11 @@ object PresetListPanel {
                     }
                     val abLabel = if (count > 1) "Add $count Presets to A/B Queue" else "Add to A/B Queue"
                     if (ImGui.menuItem(abLabel)) {
-                        targets.forEach { session.playQueueManager.appendToQueue(File(it.path)) }
+                        QueueOps.append(QueueDrop.Queue.AB, targets.map { File(it.path) }, parametersState)
                     }
                     val bgLabel = if (count > 1) "Add $count Presets to BG Queue" else "Add to BG Queue"
                     if (ImGui.menuItem(bgLabel)) {
-                        targets.forEach { llm.slop.liquidlsd.presets.BgQueueManager.appendToQueue(File(it.path)) }
+                        QueueOps.append(QueueDrop.Queue.BG, targets.map { File(it.path) }, parametersState)
                     }
                     PlaylistMenu.draw(BrowseKind.SRC, targets.map { it.path })
                     ImGui.separator()

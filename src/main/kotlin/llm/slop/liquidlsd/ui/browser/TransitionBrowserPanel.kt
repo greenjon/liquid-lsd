@@ -9,7 +9,6 @@ import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.models.FXSlotDto
 import llm.slop.liquidlsd.models.toDto
 import llm.slop.liquidlsd.presets.TransitionOps
-import llm.slop.liquidlsd.presets.TransitionQueueManager
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.isf.ISFFilter
 import llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry
@@ -148,7 +147,7 @@ object TransitionBrowserPanel {
                 contextExtras(asset)
                 ImGui.separator()
             }
-            if (selection.count > 1 && selection.isSelected(asset)) drawMultiMenu(rows) else drawContextMenu(session, mixer, asset)
+            if (selection.count > 1 && selection.isSelected(asset)) drawMultiMenu(session, rows) else drawContextMenu(session, mixer, asset)
             popOpenDropdownFont()
             ImGui.endPopup()
         }
@@ -162,12 +161,12 @@ object TransitionBrowserPanel {
     }
 
     /** The row menu while several rows are selected: queue and playlist for all of them, delete for the saved ones. */
-    private fun drawMultiMenu(rows: List<AssetItem>) {
+    private fun drawMultiMenu(session: SessionContext, rows: List<AssetItem>) {
         val selected = selection.getSelectedInOrder(rows)
         val n = "${selected.size} Transitions"
         ImGui.textDisabled("$n Selected")
         ImGui.separator()
-        if (ImGui.menuItem("Add $n to Transition Queue")) selected.forEach { TransitionQueueManager.appendToQueue(fileFor(it)) }
+        if (ImGui.menuItem("Add $n to Transition Queue")) QueueOps.append(QueueDrop.Queue.TRANS, selected.map { fileFor(it) }, session.parametersState)
         PlaylistMenu.draw(BrowseKind.TRANS, selected.map { fileFor(it).path })
         val saved = selected.filter { it.type == AssetType.TRANSITION_PRESET }
         if (saved.isNotEmpty()) {
@@ -206,7 +205,7 @@ object TransitionBrowserPanel {
         }
         ImGui.separator()
         if (ImGui.menuItem("Add to Transition Queue")) {
-            TransitionQueueManager.appendToQueue(fileFor(asset))
+            QueueOps.append(QueueDrop.Queue.TRANS, listOf(fileFor(asset)), session.parametersState)
         }
         PlaylistMenu.draw(BrowseKind.TRANS, listOf(fileFor(asset).path))
 

@@ -202,10 +202,7 @@ object BgQueueActionsPanel {
                 }
                 val abLabel = if (count > 1) "Add $count Presets to A/B Queue" else "Add to A/B Queue"
                 if (ImGui.menuItem(abLabel)) {
-                    targetIndices.forEach { idx ->
-                        val f = BgQueueManager.queue.getOrNull(idx)
-                        if (f != null) session.playQueueManager.appendToQueue(f)
-                    }
+                    QueueOps.append(QueueDrop.Queue.AB, targetIndices.mapNotNull { BgQueueManager.queue.getOrNull(it) }, session.parametersState)
                 }
                 ImGui.separator()
                 val remLabel = if (count > 1) "Remove $count presets from BG queue" else "Remove from BG queue"

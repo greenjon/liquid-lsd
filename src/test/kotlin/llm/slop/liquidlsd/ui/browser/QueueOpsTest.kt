@@ -11,6 +11,7 @@ import llm.slop.liquidlsd.ui.browser.QueueDrop.Queue
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
 class QueueOpsTest {
@@ -31,6 +32,29 @@ class QueueOpsTest {
     private fun names(queue: Queue) = QueueOps.items(queue).map { it.nameWithoutExtension }
 
     private fun undo() = state.popUndoState()!!.restore!!.invoke()
+
+    @Test
+    fun `append adds to the end of every queue as one undo step`() {
+        for (q in Queue.entries) {
+            fill(q, "a")
+            val added = QueueOps.append(q, listOf(File("/l/b.${ext(q)}"), File("/l/c.${ext(q)}")), state)
+            assertEquals(2, added, "$q count")
+            assertEquals(listOf("a", "b", "c"), names(q), "$q appended")
+            undo()
+            assertEquals(listOf("a"), names(q), "$q undone in one step")
+        }
+    }
+
+    @Test
+    fun `append expands a playlist into its entries`(@TempDir dir: File) {
+        val b = File(dir, "b.lsd").apply { writeText("{}") }
+        val c = File(dir, "c.lsd").apply { writeText("{}") }
+        val playlist = File(dir, "set.lsdplay").apply { writeText("${b.name}\n${c.name}\n") }
+        assertEquals(2, QueueOps.append(Queue.AB, listOf(playlist), state))
+        assertEquals(listOf("b", "c"), names(Queue.AB))
+        undo()
+        assertEquals(emptyList<String>(), names(Queue.AB))
+    }
 
     @Test
     fun `move puts the row at the index, both ways, in every queue, and the cursor follows it`() {
