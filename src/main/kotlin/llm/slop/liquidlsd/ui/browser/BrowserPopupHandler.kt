@@ -22,6 +22,7 @@ import llm.slop.liquidlsd.ui.AssetType
 import llm.slop.liquidlsd.ui.FileSystemManager
 import llm.slop.liquidlsd.ui.PlaylistManager
 import llm.slop.liquidlsd.ui.SavePresetModal
+import llm.slop.liquidlsd.ui.ToastOverlay
 import mu.KotlinLogging
 import java.io.File
 
@@ -70,6 +71,10 @@ object BrowserPopupHandler {
     private var newPlaylistKind: BrowseKind? = null
     private var newPlaylistDir: File? = null
     private var newPlaylistAdd: List<String> = emptyList()
+    private var newPlaylistDirKey: Any? = null
+    private var newPlaylistResolvedDir: File? = null
+    private var newPlaylistTakenKey: String? = null
+    private var newPlaylistTaken = false
 
     /** Opens New Playlist for [kind], creating it in [dir] (null: the top of the kind's playlists) and then adding [addPaths] to it. */
     fun openNewPlaylist(kind: BrowseKind, dir: File? = null, addPaths: List<String> = emptyList()) {
@@ -360,7 +365,14 @@ object BrowserPopupHandler {
                 else -> BrowseKind.SRC
             }
             val root = LibraryFolders.rootOf(kind, BrowseSection.PLAYLISTS)!!
-            val dir = newPlaylistDir?.takeIf { LibraryFolders.isInside(it, root) } ?: root
+            // Worked out when the request or the typed name changes, not every frame (canonical paths and a stat touch the disk).
+            val dirKey = Triple(kind, newPlaylistDir, root)
+            if (dirKey != newPlaylistDirKey) {
+                newPlaylistDirKey = dirKey
+                newPlaylistResolvedDir = newPlaylistDir?.takeIf { LibraryFolders.isInside(it, root) } ?: root
+                newPlaylistTakenKey = null
+            }
+            val dir = newPlaylistResolvedDir ?: root
             ImGui.text(when (kind) {
                 BrowseKind.TRANS -> "Create New Transition Playlist"
                 BrowseKind.FX -> "Create New FX Playlist"
@@ -373,15 +385,22 @@ object BrowserPopupHandler {
             ImGui.inputText("Name", newPlaylistNameBuffer)
             val name = newPlaylistNameBuffer.get().trim()
             val ext = LibraryFolders.extensionOf(kind, BrowseSection.PLAYLISTS)!!
-            val taken = name.isNotEmpty() && File(dir, "$name.$ext").exists()
+            val takenKey = "$name.$ext"
+            if (takenKey != newPlaylistTakenKey) {
+                newPlaylistTakenKey = takenKey
+                newPlaylistTaken = name.isNotEmpty() && File(dir, takenKey).exists()
+            }
+            val taken = newPlaylistTaken
             if (taken) ImGui.textDisabled("A playlist with that name is already here.")
             val nameOk = llm.slop.liquidlsd.ui.NameCheck.ok(newPlaylistNameBuffer.get()) && !taken
             val keyAnswer = ModalKeys.answer()
             if ((ButtonChrome.button("Create", 120f, 0f) || keyAnswer == true) && nameOk) {
-                if (name.isNotBlank()) createPlaylist(kind, dir, name)?.let { file ->
-                    if (newPlaylistAdd.isNotEmpty()) PlaylistMenu.add(kind, file, newPlaylistAdd) else LibraryPanel.refreshAssets()
+                val add = newPlaylistAdd
+                if (name.isNotBlank()) createPlaylist(kind, dir, name) { file ->
+                    if (add.isNotEmpty()) PlaylistMenu.add(kind, file, add) else LibraryPanel.refreshPlaylists()
                 }
                 newPlaylistNameBuffer.set("")
+                newPlaylistTakenKey = null
                 clearNewPlaylistRequest()
                 ImGui.closeCurrentPopup()
             }
@@ -398,32 +417,41 @@ object BrowserPopupHandler {
         newPlaylistKind = null
         newPlaylistDir = null
         newPlaylistAdd = emptyList()
+        newPlaylistDirKey = null
+        newPlaylistTakenKey = null
     }
 
-    /** Creates the empty playlist [name] of [kind] in [dir] and selects it in the tree; null (logged) when it can't. */
-    private fun createPlaylist(kind: BrowseKind, dir: File, name: String): File? {
-        if (kind == BrowseKind.SRC) {
-            return PlaylistManager.createPlaylist(name, dir.apply { mkdirs() }).map { pl ->
-                LibraryPanel.selectedPlaylistFile = File(pl.filePath)
-                LibraryPanel.activePlaylistData = pl
-                File(pl.filePath)
-            }.onFailure { logger.error(it) { "Failed to create playlist $name" } }.getOrNull()
-        }
+    /**
+     * Creates the empty playlist [name] of [kind] in [dir] on the preset IO thread; back on the render thread it is selected in
+     * the tree and [then] runs with its file. A failure is logged and shown in a toast.
+     */
+    private fun createPlaylist(kind: BrowseKind, dir: File, name: String, then: (File) -> Unit) {
         val ext = LibraryFolders.extensionOf(kind, BrowseSection.PLAYLISTS)!!
-        val file = File(dir, "$name.$ext")
-        if (!FileSystemManager.isManagedAssetPath(file) || file.exists()) {
-            logger.error { "Refusing to create playlist $file" }
-            return null
-        }
-        return try {
-            val text = if (kind == BrowseKind.FX) json.encodeToString(FXPlaylistDto.serializer(), FXPlaylistDto(name = name))
-                else json.encodeToString(TransitionPlaylistDto.serializer(), TransitionPlaylistDto(name = name))
-            llm.slop.liquidlsd.utils.AtomicFile.write(file, text)
-            if (kind == BrowseKind.FX) LibraryPanel.selectedFxPlaylistFile = file else LibraryPanel.selectedTransitionPlaylistFile = file
-            file
-        } catch (e: Exception) {
-            logger.error(e) { "Failed to create playlist $file" }
-            null
+        llm.slop.liquidlsd.presets.LibraryIo.run({
+            if (kind == BrowseKind.SRC) {
+                val pl = PlaylistManager.createPlaylist(name, dir.apply { mkdirs() }).getOrThrow()
+                File(pl.filePath) to pl
+            } else {
+                val file = File(dir, "$name.$ext")
+                require(FileSystemManager.isManagedAssetPath(file)) { "not a playlists folder" }
+                require(!file.exists()) { "it already exists" }
+                val text = if (kind == BrowseKind.FX) json.encodeToString(FXPlaylistDto.serializer(), FXPlaylistDto(name = name))
+                    else json.encodeToString(TransitionPlaylistDto.serializer(), TransitionPlaylistDto(name = name))
+                llm.slop.liquidlsd.utils.AtomicFile.write(file, text)
+                file to null
+            }
+        }) { result ->
+            result.onSuccess { (file, pl) ->
+                when (kind) {
+                    BrowseKind.SRC -> { LibraryPanel.selectedPlaylistFile = file; LibraryPanel.activePlaylistData = pl }
+                    BrowseKind.FX -> LibraryPanel.selectedFxPlaylistFile = file
+                    BrowseKind.TRANS -> LibraryPanel.selectedTransitionPlaylistFile = file
+                }
+                then(file)
+            }.onFailure {
+                logger.error(it) { "Failed to create playlist $name" }
+                ToastOverlay.show("Couldn't create playlist '$name': ${it.message ?: "see the log"}")
+            }
         }
     }
 

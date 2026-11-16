@@ -58,9 +58,9 @@ object BgQueueActionsPanel {
                     BgQueueManager.initializeShuffle()
                 }
             },
-            exportTooltip = "Export: save current background queue sequence as a new playlist.",
+            exportTooltip = "Export: save the current BG Queue sequence as a new playlist.",
             onExport = { ImGui.openPopup("Export BG Queue##ExportBgQueuePopup") },
-            clearTooltip = "Clear: empty the background queue.",
+            clearTooltip = "Clear: empty the BG Queue.",
             onClear = { QueueOps.clear(QueueDrop.Queue.BG, session.parametersState) },
             trailing = { BrowserPopupHandler.drawExportBgQueuePopup() }
         ))

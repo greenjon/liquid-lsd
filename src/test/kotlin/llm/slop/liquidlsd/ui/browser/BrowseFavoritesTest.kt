@@ -8,6 +8,10 @@ import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
 class BrowseFavoritesTest {
+    // Saves are written on the preset IO thread: let them land before the temp folder goes.
+    @org.junit.jupiter.api.AfterEach
+    fun awaitSaves() = llm.slop.liquidlsd.presets.PresetManager.awaitIo()
+
     @Test
     fun `toggle stars and unstars, bumps version and persists`(@TempDir dir: File) {
         val file = File(dir, "src_favorites.json")

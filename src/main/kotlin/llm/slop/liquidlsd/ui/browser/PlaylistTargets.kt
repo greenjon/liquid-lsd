@@ -1,8 +1,5 @@
 package llm.slop.liquidlsd.ui.browser
 
-import kotlinx.serialization.json.Json
-import llm.slop.liquidlsd.models.FXPlaylistDto
-import llm.slop.liquidlsd.models.TransitionPlaylistDto
 import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.PlaylistManager
 import java.io.File
@@ -12,7 +9,6 @@ import java.io.File
  * `.lsdfxplay`, `.lsdtransplay`), so a menu add stores the same entries a drag does. Pure apart from the files; unit tested.
  */
 object PlaylistTargets {
-    private val json = Json { ignoreUnknownKeys = true; prettyPrint = true }
 
     /** One folder level of a playlists root: its playlists and its subfolders, each sorted case-insensitively. */
     class Level(val playlists: List<File>, val folders: List<File>) {
@@ -41,11 +37,7 @@ object PlaylistTargets {
     fun appendTokens(kind: BrowseKind, file: File, paths: List<String>, roots: List<File> = PlaylistItems.savedRoots(kind)): Result<Int> = runCatching {
         require(kind != BrowseKind.SRC) { "Sources playlists are not token lists" }
         val tokens = paths.map { token(kind, it, roots) }
-        val text = when (kind) {
-            BrowseKind.FX -> json.decodeFromString<FXPlaylistDto>(file.readText()).let { json.encodeToString(FXPlaylistDto.serializer(), it.copy(items = it.items + tokens)) }
-            else -> json.decodeFromString<TransitionPlaylistDto>(file.readText()).let { json.encodeToString(TransitionPlaylistDto.serializer(), it.copy(items = it.items + tokens)) }
-        }
-        llm.slop.liquidlsd.utils.AtomicFile.write(file, text)
+        llm.slop.liquidlsd.utils.AtomicFile.write(file, PlaylistItems.withItems(kind, file.readText()) { it + tokens })
         tokens.size
     }
 
@@ -60,19 +52,35 @@ object PlaylistTargets {
     }
 
     /**
-     * Appends [paths] to the playlist [file] of [kind]. A Sources playlist open in the Library is edited in place so its list updates;
-     * every listing is re-read afterwards.
+     * Appends [paths] to the playlist [file] of [kind] and calls [done] with how many were added, on the render thread a frame or
+     * so later: the file is read and written on the preset IO thread. A Sources playlist open in the Library is edited in place
+     * at once so its list updates (and put back if the save fails); the playlist listings are re-read afterwards.
      */
-    fun append(kind: BrowseKind, file: File, paths: List<String>): Result<Int> {
-        val result = when (kind) {
-            BrowseKind.SRC -> {
-                val open = LibraryPanel.activePlaylistData?.takeIf { File(it.filePath).absoluteFile == file.absoluteFile }
-                (open?.let { Result.success(it) } ?: PlaylistManager.loadPlaylist(file)).mapCatching { appendPresets(it, paths).getOrThrow() }
-            }
-            else -> appendTokens(kind, file, paths)
+    fun append(kind: BrowseKind, file: File, paths: List<String>, done: (Result<Int>) -> Unit) {
+        val finish = { result: Result<Int> ->
+            if (result.isSuccess) LibraryPanel.refreshPlaylists()
+            done(result)
         }
-        if (result.isSuccess) LibraryPanel.refreshAssets()
-        return result
+        val open = LibraryPanel.activePlaylistData?.takeIf { kind == BrowseKind.SRC && File(it.filePath).absoluteFile == file.absoluteFile }
+        when {
+            open != null -> {
+                val before = open.presets.toList()
+                for (p in paths) PlaylistManager.insertPreset(open, p, open.presets.size, autoSave = false)
+                val after = open.presets.toList()
+                PlaylistManager.savePlaylistLater(open) { result ->
+                    // Put the list back only if nothing else has changed it since.
+                    if (result.isFailure && open.presets == after) { open.presets.clear(); open.presets.addAll(before) }
+                    finish(result.map { paths.size })
+                }
+            }
+            kind == BrowseKind.SRC -> llm.slop.liquidlsd.presets.LibraryIo.run({
+                PlaylistManager.loadPlaylist(file).mapCatching { appendPresets(it, paths).getOrThrow() }.getOrThrow()
+            }, finish)
+            else -> {
+                val roots = PlaylistItems.savedRoots(kind)
+                llm.slop.liquidlsd.presets.LibraryIo.run({ appendTokens(kind, file, paths, roots).getOrThrow() }, finish)
+            }
+        }
     }
 
     /** The playlist of [kind] selected in the Library tree, which the menu offers as a one-click item. */

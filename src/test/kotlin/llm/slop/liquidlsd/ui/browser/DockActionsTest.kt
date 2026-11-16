@@ -10,6 +10,10 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class DockActionsTest {
+    // Recents are written on the preset IO thread: let them land before the temp folder goes.
+    @org.junit.jupiter.api.AfterEach
+    fun awaitSaves() = llm.slop.liquidlsd.presets.PresetManager.awaitIo()
+
     private val asset = AssetItem(path = "/x/a.lsdpreset", name = "a", type = AssetType.PRESET)
 
     private fun target(applied: MutableList<String>) = ApplyTarget(

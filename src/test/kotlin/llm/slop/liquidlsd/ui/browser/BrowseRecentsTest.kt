@@ -8,6 +8,10 @@ import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
 class BrowseRecentsTest {
+    // Saves are written on the preset IO thread: let them land before the temp folder goes.
+    @org.junit.jupiter.api.AfterEach
+    fun awaitSaves() = llm.slop.liquidlsd.presets.PresetManager.awaitIo()
+
     @Test
     fun `note moves to the top, drops duplicates, caps the list and persists`(@TempDir dir: File) {
         val file = File(dir, "fx_recent.json")

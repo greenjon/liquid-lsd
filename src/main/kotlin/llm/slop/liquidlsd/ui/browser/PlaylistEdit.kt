@@ -3,10 +3,15 @@ package llm.slop.liquidlsd.ui.browser
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
 import llm.slop.liquidlsd.models.FXPlaylistDto
 import llm.slop.liquidlsd.models.TransitionPlaylistDto
 import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.PlaylistManager
+import llm.slop.liquidlsd.ui.ToastOverlay
 import mu.KotlinLogging
 import java.io.File
 
@@ -63,6 +68,22 @@ object PlaylistItems {
         return path
     }
 
+    private val json = Json { ignoreUnknownKeys = true; prettyPrint = true }
+
+    /**
+     * [text], an FX or transition playlist file, with its `items` replaced by [change] of them. Every other field, known to
+     * this build or not, is kept as it was (like [LibraryTags.write]). Throws when [text] isn't a playlist of [kind].
+     */
+    fun withItems(kind: BrowseKind, text: String, change: (List<String>) -> List<String>): String {
+        val obj = json.parseToJsonElement(text).jsonObject
+        val items = when (kind) {
+            BrowseKind.FX -> json.decodeFromJsonElement(FXPlaylistDto.serializer(), obj).items
+            else -> json.decodeFromJsonElement(TransitionPlaylistDto.serializer(), obj).items
+        }
+        val updated = JsonObject(LinkedHashMap(obj).apply { put("items", JsonArray(change(items).map(::JsonPrimitive))) })
+        return json.encodeToString(JsonObject.serializer(), updated)
+    }
+
     /** The saved roots playlist tokens of [kind] are relative to. */
     fun savedRoots(kind: BrowseKind): List<File> = when (kind) {
         BrowseKind.FX -> listOfNotNull(LibraryFolders.rootOf(kind, BrowseSection.SINGLE), LibraryFolders.rootOf(kind, BrowseSection.CHAIN))
@@ -80,22 +101,34 @@ interface PlaylistEdit {
     fun remove(indices: Collection<Int>)
 }
 
-/** `.lsdplay` playlists, edited through [PlaylistManager] (which saves on every change). */
+/** `.lsdplay` playlists, edited in memory through [PlaylistManager] and saved on the preset IO thread after every change. */
 class PresetPlaylistEdit(private val playlist: PlaylistManager.Playlist) : PlaylistEdit {
     override val size get() = playlist.presets.size
-    override fun move(from: Int, to: Int) { PlaylistManager.movePreset(playlist, from, to) }
+    override fun move(from: Int, to: Int) {
+        if (PlaylistManager.movePreset(playlist, from, to, autoSave = false).isSuccess) save()
+    }
     override fun insertPaths(paths: List<String>, at: Int) {
         var slot = at
+        val before = playlist.presets.size
         for (path in paths) {
             if (File(path).extension == "lsdplay") {
-                PlaylistManager.unpackPlaylistInto(playlist, path, slot)
+                PlaylistManager.unpackPlaylistInto(playlist, path, slot, autoSave = false)
             } else {
-                PlaylistManager.insertPreset(playlist, path, slot)
+                PlaylistManager.insertPreset(playlist, path, slot, autoSave = false)
                 slot++
             }
         }
+        if (playlist.presets.size != before) save()
     }
-    override fun remove(indices: Collection<Int>) { indices.sortedDescending().forEach { PlaylistManager.removePreset(playlist, it) } }
+    override fun remove(indices: Collection<Int>) {
+        indices.sortedDescending().forEach { PlaylistManager.removePreset(playlist, it, autoSave = false) }
+        save()
+    }
+
+    private fun save() = PlaylistManager.savePlaylistLater(playlist) { result ->
+        result.onSuccess { LibraryPanel.refreshPlaylists() }
+            .onFailure { ToastOverlay.show("Couldn't save playlist '${playlist.name}' (see the log)") }
+    }
 }
 
 /** `.lsdfxplay` / `.lsdtransplay` playlists: a JSON file holding a token list, rewritten on every change. */
@@ -122,17 +155,22 @@ class TokenPlaylistEdit(private val kind: BrowseKind, private val file: File, pr
         return true
     }
 
+    /**
+     * Takes [updated] at once and writes it on the preset IO thread; until that lands, [open] hands out [updated] instead of
+     * the file, so the next edit builds on this one. Only `items` is rewritten: other fields in the file stay as they are.
+     */
     private fun save(updated: List<String>) {
-        try {
-            val text = when (kind) {
-                BrowseKind.FX -> json.encodeToString(FXPlaylistDto.serializer(), json.decodeFromString<FXPlaylistDto>(file.readText()).copy(items = updated))
-                else -> json.encodeToString(TransitionPlaylistDto.serializer(), json.decodeFromString<TransitionPlaylistDto>(file.readText()).copy(items = updated))
+        items = updated
+        val key = file.absolutePath
+        pending[key] = updated
+        llm.slop.liquidlsd.presets.LibraryIo.run({
+            llm.slop.liquidlsd.utils.AtomicFile.write(file, PlaylistItems.withItems(kind, file.readText()) { updated })
+        }) { result ->
+            pending.remove(key, updated)
+            result.onSuccess { LibraryPanel.refreshPlaylists() }.onFailure {
+                logger.error(it) { "Failed to save playlist ${file.name}" }
+                ToastOverlay.show("Couldn't save playlist '${file.nameWithoutExtension}' (see the log)")
             }
-            llm.slop.liquidlsd.utils.AtomicFile.write(file, text)
-            items = updated
-            LibraryPanel.refreshAssets()
-        } catch (e: Exception) {
-            logger.error(e) { "Failed to save playlist ${file.name}" }
         }
     }
 
@@ -140,7 +178,10 @@ class TokenPlaylistEdit(private val kind: BrowseKind, private val file: File, pr
         private val logger = KotlinLogging.logger {}
         private val json = Json { ignoreUnknownKeys = true; prettyPrint = true }
 
-        fun open(kind: BrowseKind, file: File): TokenPlaylistEdit? = try {
+        /** Playlists saved on the IO thread but not written yet, by absolute path. Render thread only. */
+        private val pending = HashMap<String, List<String>>()
+
+        fun open(kind: BrowseKind, file: File): TokenPlaylistEdit? = pending[file.absolutePath]?.let { TokenPlaylistEdit(kind, file, it) } ?: try {
             val items = when (kind) {
                 BrowseKind.FX -> json.decodeFromString<FXPlaylistDto>(file.readText()).items
                 else -> json.decodeFromString<TransitionPlaylistDto>(file.readText()).items

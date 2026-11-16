@@ -12,6 +12,10 @@ import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
 class LibraryTagsTest {
+    // Favorites and recents are written on the preset IO thread: let them land before the temp folder goes.
+    @org.junit.jupiter.api.AfterEach
+    fun awaitSaves() = llm.slop.liquidlsd.presets.PresetManager.awaitIo()
+
     @Test
     fun `typed tags are trimmed, lowercased and deduplicated`() {
         assertEquals(listOf("dark", "slow"), LibraryTags.parse(" Dark, slow ,dark,, "))

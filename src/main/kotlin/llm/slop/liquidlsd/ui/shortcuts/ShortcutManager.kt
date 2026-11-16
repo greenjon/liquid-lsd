@@ -205,7 +205,8 @@ object ShortcutManager {
                 sb.append("\n")
             }
             sb.append("}\n")
-            llm.slop.liquidlsd.utils.AtomicFile.write(configFile, sb.toString())
+            // Built here, written on the preset IO thread so a rebind never waits on the disk.
+            llm.slop.liquidlsd.presets.LibraryIo.writeLater(configFile, sb.toString(), "keybindings")
         } catch (e: Exception) {
             logger.warning("Failed to save keybindings to ${configFile.absolutePath}: ${e.message}")
         }

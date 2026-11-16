@@ -122,6 +122,21 @@ object PresetManager {
 
     fun clearActive(slot: DeckSlot) = setActive(slot, null, null)
 
+    /** Everything [setActive] sets for one deck, the macro-bank baseline included, so a failed save can put it all back. */
+    class ActiveState internal constructor(val name: String?, val dto: DeckPresetDto?, val file: File?, internal val bank: BankBaseline?)
+
+    fun activeState(slot: DeckSlot): ActiveState =
+        ActiveState(activePreset(slot), cachedDto(slot), activeFiles[slot.index], bankBaselines[slot.index])
+
+    /**
+     * Puts back what [activeState] took. Unlike [setActive], the macro-bank baseline is the one taken then, not a fresh
+     * snapshot of the live bank, so bank edits made before a failed save still count as unsaved.
+     */
+    fun restoreActive(slot: DeckSlot, state: ActiveState) {
+        setActive(slot, state.name, state.dto, state.file)
+        bankBaselines[slot.index] = state.bank
+    }
+
     /**
      * Points every deck loaded from [old] at [new] after a rename or move, so saving writes back to the file where it now is.
      * A rename also renames the deck's preset and its baseline; whether the deck has unsaved changes is kept as it was.

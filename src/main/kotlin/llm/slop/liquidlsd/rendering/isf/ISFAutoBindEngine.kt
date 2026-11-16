@@ -57,6 +57,10 @@ object ISFAutoBindEngine {
     var overridesDir: File = FileSystemManager.getIsfOverridesRoot()
     private val overrideCache = ConcurrentHashMap<String, FxDefaultDto>()
 
+    /** When each hash was last found to have no override file, so a miss (every stock effect) isn't a file stat per lookup. */
+    private val overrideMisses = ConcurrentHashMap<String, Long>()
+    private const val MISS_RECHECK_MS = 5_000L
+
     // Semantic name candidates in priority order — first match on a float input wins.
     private val SEMANTIC_CANDIDATES = listOf(
         "amount", "intensity", "level", "mix", "strength", "drywet",
@@ -174,8 +178,15 @@ object ISFAutoBindEngine {
 
     private fun loadOverride(hash: String): FxDefaultDto? {
         overrideCache[hash]?.let { return it }
+        val now = System.currentTimeMillis()
+        // A file put there by hand is still found within a few seconds.
+        overrideMisses[hash]?.let { if (now - it < MISS_RECHECK_MS) return null }
         val file = File(overridesDir, "$hash.json")
-        if (!file.exists()) return null
+        if (!file.exists()) {
+            overrideMisses[hash] = now
+            return null
+        }
+        overrideMisses.remove(hash)
         return try {
             val text = file.readText()
             val dto = try {
@@ -208,6 +219,7 @@ object ISFAutoBindEngine {
             if (!overridesDir.exists()) overridesDir.mkdirs()
             llm.slop.liquidlsd.utils.AtomicFile.write(File(overridesDir, "$hash.json"), json.encodeToString(FxDefaultDto.serializer(), dto))
             overrideCache[hash] = dto
+            overrideMisses.remove(hash)
             logger.info { "Saved ISF filter default for ${filter.displayName} (hash: $hash)" }
         } catch (e: Exception) {
             logger.error(e) { "Failed to save ISF filter default for hash $hash" }
@@ -229,6 +241,7 @@ object ISFAutoBindEngine {
     /** Removes a user override, reverting that shader's Metaknob to curated/heuristic resolution. */
     fun deleteOverride(contentHash: String) {
         overrideCache.remove(contentHash)
+        overrideMisses.remove(contentHash)
         val file = File(overridesDir, "$contentHash.json")
         if (file.exists()) file.delete()
     }

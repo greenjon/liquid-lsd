@@ -415,6 +415,22 @@ class DeckOpsTest {
     }
 
     @Test
+    fun aFailedSaveKeepsUnsavedBankEditsUnsaved() {
+        loadClean("p")
+        bank(DeckSlot.A).knobs[0].label = "RENAMED"
+        assertTrue(DeckOps.isDirty(a.deck, mixer))
+
+        // What DeckPresetController.saveDeckPreset does: mark it saved up front, put it back when the write fails.
+        val before = PresetManager.activeState(DeckSlot.A)
+        PresetManager.setActive(DeckSlot.A, "p copy", PresetManager.cachedDto(DeckSlot.A)!!.copy(name = "p copy"))
+        assertFalse(DeckOps.isDirty(a.deck, mixer))
+        PresetManager.restoreActive(DeckSlot.A, before)
+
+        assertEquals("p", PresetManager.activePreset(DeckSlot.A))
+        assertTrue(DeckOps.isDirty(a.deck, mixer), "the bank edit was never written, so it is still unsaved")
+    }
+
+    @Test
     fun onResultReportsAppliedAfterTheDrain() {
         var result: Boolean? = null
         DeckOps.request(DeckSlot.A, DeckChange.Eject) { result = it }
