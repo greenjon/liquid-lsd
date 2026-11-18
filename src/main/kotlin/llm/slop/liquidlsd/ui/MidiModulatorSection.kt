@@ -9,7 +9,7 @@ import llm.slop.liquidlsd.parameters.ModulatableParameter
 
 /**
  * Dedicated UI section for MIDI CC modulators (midi_cc_<channel>_<cc>).
- * Renders the mapped channel/CC readout, DC Offset, and Depth controls.
+ * Renders the mapped channel/CC readout and the Min/Max range (knob at 0 = Min, at 127 = Max).
  */
 object MidiModulatorSection {
 
@@ -19,6 +19,7 @@ object MidiModulatorSection {
         cell: ParameterCellId,
         param: ModulatableParameter,
         existing: CvModulator,
+        modulatorIndex: Int? = null,
         themeColor: Int,
         onReplace: (CvModulator) -> Unit,
         onUnbind: () -> Unit
@@ -71,66 +72,19 @@ object MidiModulatorSection {
             ImGui.spacing()
         }
 
-        // 1. DC Offset Slider
-        val dcOffsetCbs = cvModulatorSlider(
-            existing = existing,
-            getValue = { dcOffset }, getMin = { dcOffsetMin }, getMax = { dcOffsetMax },
-            minLimit = -1f, maxLimit = 1f,
-            copyWithRandomize = { enabled, nMin, nMax -> copy(randomizeDcOffset = enabled, dcOffsetMin = nMin, dcOffsetMax = nMax) },
-            copyWithRange   = { sMin, sMax, v -> copy(dcOffsetMin = sMin, dcOffsetMax = sMax, dcOffset = v) },
-            copyWithValue   = { v -> copy(dcOffset = v, dcOffsetMin = v, dcOffsetMax = v) },
-            randomizeNow    = { randomizeDcOffset() },
-            onReplace = onReplace,
-        )
-        CustomRangeSlider.drawCustomRangeSlider(
+        CustomRangeSlider.drawModulatorRange(
             session = session,
-            idPrefix = existing.id,
-            label = "DC Offset",
-            themeColor = themeColor,
-            currentValue = existing.dcOffset,
-            currentMin = existing.dcOffsetMin,
-            currentMax = existing.dcOffsetMax,
-            minLimit = -1f, maxLimit = 1f, defaultValue = 0f,
-            isRandomizable = existing.randomizeDcOffset,
+            label = "Modulation Range",
+            mod = existing,
+            unipolar = existing.unipolarOn(param),
             isRandomizeDisabled = param.isRandomizeDisabled,
-            randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
-            formatValue = ValueFormat.AUTO,
-            onRandomizableChanged = dcOffsetCbs.onRandomizableChanged,
-            onRandomizeNow        = dcOffsetCbs.onRandomizeNow,
-            onRangeChanged        = dcOffsetCbs.onRangeChanged,
-            onValueChanged        = dcOffsetCbs.onValueChanged,
-        )
-        ImGui.spacing()
-
-        // 2. Depth Slider
-        val depthCbs = cvModulatorSlider(
-            existing = existing,
-            getValue = { depth }, getMin = { depthMin }, getMax = { depthMax },
-            minLimit = 0f, maxLimit = 1f,
-            copyWithRandomize = { enabled, nMin, nMax -> copy(randomizeDepth = enabled, depthMin = nMin, depthMax = nMax) },
-            copyWithRange   = { sMin, sMax, v -> copy(depthMin = sMin, depthMax = sMax, depth = v) },
-            copyWithValue   = { v -> copy(depth = v, depthMin = v, depthMax = v) },
-            randomizeNow    = { randomizeDepth() },
+            themeColor = themeColor,
             onReplace = onReplace,
+            modulatorIndex = modulatorIndex,
+            // No paramKey: a MIDI modulator's own range is not bindable (a controller driving a controller; DECISIONS.md).
+            paramKey = null,
+            tooltip = "Where the controller takes this parameter, measured from its set value: knob at 0 gives Min, at 127 gives Max.\n" +
+                "Drag between the handles (or Shift-drag) to slide the whole range."
         )
-        CustomRangeSlider.drawCustomRangeSlider(
-            session = session,
-            idPrefix = existing.id,
-            label = "Depth",
-            themeColor = themeColor,
-            currentValue = existing.depth,
-            currentMin = existing.depthMin,
-            currentMax = existing.depthMax,
-            minLimit = 0f, maxLimit = 1f, defaultValue = 1f,
-            isRandomizable = existing.randomizeDepth,
-            isRandomizeDisabled = param.isRandomizeDisabled,
-            randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
-            formatValue = ValueFormat.AUTO,
-            onRandomizableChanged = depthCbs.onRandomizableChanged,
-            onRandomizeNow        = depthCbs.onRandomizeNow,
-            onRangeChanged        = depthCbs.onRangeChanged,
-            onValueChanged        = depthCbs.onValueChanged,
-        )
-        ImGui.spacing()
     }
 }

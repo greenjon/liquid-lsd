@@ -145,7 +145,7 @@ object ClipboardManager {
         
         val depthScale = if (srcRange != 0f) destRange / srcRange else 1f
         
-        val mappedMods = data.parameter.modulators.map { modDto ->
+        val mappedMods = data.parameter.modulators.map { it.normalized() }.map { modDto ->
             val depthVal = if (modDto.operator == "ADD") modDto.depth * depthScale else modDto.depth
             val depthMinVal = if (modDto.operator == "ADD") modDto.depthMin * depthScale else modDto.depthMin
             val depthMaxVal = if (modDto.operator == "ADD") modDto.depthMax * depthScale else modDto.depthMax
@@ -154,10 +154,17 @@ object ClipboardManager {
             val dcOffsetMinVal = if (modDto.operator == "ADD") modDto.dcOffsetMin * depthScale else modDto.dcOffsetMin
             val dcOffsetMaxVal = if (modDto.operator == "ADD") modDto.dcOffsetMax * depthScale else modDto.dcOffsetMax
 
+            fun scaleEnd(v: Float) = (if (modDto.operator == "ADD") v * depthScale else v).coerceIn(-1f, 1f)
+
+            // Amount reaches 2 on unipolar sources (Min -1, Max 1), so it is not capped at 1.
             modDto.copy(
-                depth = depthVal.coerceIn(0f, 1f),
-                depthMin = depthMinVal.coerceIn(0f, 1f),
-                depthMax = depthMaxVal.coerceIn(0f, 1f),
+                depth = depthVal.coerceIn(0f, 2f),
+                depthMin = depthMinVal.coerceIn(0f, 2f),
+                depthMax = depthMaxVal.coerceIn(0f, 2f),
+                lfoMinRollMin = scaleEnd(modDto.lfoMinRollMin),
+                lfoMinRollMax = scaleEnd(modDto.lfoMinRollMax),
+                lfoMaxRollMin = scaleEnd(modDto.lfoMaxRollMin),
+                lfoMaxRollMax = scaleEnd(modDto.lfoMaxRollMax),
                 dcOffset = dcOffsetVal.coerceIn(-1f, 1f),
                 dcOffsetMin = dcOffsetMinVal.coerceIn(-1f, 1f),
                 dcOffsetMax = dcOffsetMaxVal.coerceIn(-1f, 1f)

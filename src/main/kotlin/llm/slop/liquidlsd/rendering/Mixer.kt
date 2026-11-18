@@ -414,7 +414,7 @@ class Mixer(
         deckBG.randomizeModulators()
         deckPV.randomizeModulators()
         listOf(crossfade, masterLevel).forEach { param ->
-            val randomized = param.modulators.map { it.randomizeActiveValues() }
+            val randomized = param.modulators.map { it.randomizeActiveValues(seqBipolar = param.minClamp < 0f) }
             param.modulators.clear()
             param.modulators.addAll(randomized)
             param.randomizeBaseValue()

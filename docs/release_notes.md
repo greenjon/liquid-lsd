@@ -1,5 +1,13 @@
 ## [Unreleased]
 
+### Modulation Range: Slide, Base/Amount, and How the Dice Rolls (`parameters/CvModulator.kt`, `ui/CustomRangeSlider.kt`, `ui/SeqSection.kt`, `ui/MidiModulatorSection.kt`, `models/PresetModels.kt`)
+- **New: drag the bar between a range's handles (or Shift-drag) to slide the whole range** without changing its size. It stops at the ends of the track.
+- **New: Base and Amount captions above an LFO, audio or sequencer range.** Right-click either for MIDI or OSC Learn, or click it while a macro knob is learning: a knob on Base moves the range, a knob on Amount opens or closes it. A controller on Base or Amount can push the range past the end of the track; the parameter's limit clamps the result.
+- **New: pick what the range dice rolls.** The button under the range's name switches between **Ends** (Min and Max each roll in their own row) and **Base·Amt** (Base and Amount roll separately). A lock on each row pins it, so you can keep a range centred and roll only its size.
+- **Changed: the step sequencer and MIDI modulators use the same Min/Max range row** as LFOs and audio, instead of separate Depth and Offset sliders. On a MIDI modulator the knob at 0 gives Min and at 127 gives Max. Their existing settings and rolls are unchanged.
+- **Changed: "Depth" and "DC Offset" are now called Amount and Base** in mapping lists and badges. Existing MIDI, OSC and macro mappings keep working.
+- **Fixed: a reloaded preset rolled an LFO or audio range differently** from how it was set up: the Min and Max roll ranges were read back as Base and Amount ranges. Presets saved before this fix now roll as they were set up.
+
 ### Web TV: Tape Share Links (`web/tapes.js`, `web/tapedeck.js`, `web/ui.js`)
 - **New: LINK on a tape's transport strip** copies a link to that moment of the show (`spaz.org/tv/?tape=<show>&t=1h2m`). Opening it cues the show there; turning the TV on plays it.
 

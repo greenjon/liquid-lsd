@@ -141,26 +141,24 @@ object PresetDependencyAnalyzer {
     }
 
     private fun isModulatorRandomized(mod: ModulatorDto): Boolean {
-        return (mod.randomizeDepth && mod.depthMin != mod.depthMax) ||
+        return mod.hasRangeVariation ||
             (mod.randomizeSubdivision && mod.subdivisionMin != mod.subdivisionMax) ||
             (mod.randomizePhaseOffset && mod.phaseOffsetMin != mod.phaseOffsetMax) ||
             (mod.randomizeSlope && mod.slopeMin != mod.slopeMax) ||
             (mod.randomizeMorph && mod.morphMin != mod.morphMax) ||
             (mod.randomizeHold && mod.holdMin != mod.holdMax) ||
-            (mod.randomizeDcOffset && mod.dcOffsetMin != mod.dcOffsetMax) ||
             (mod.randomizeAttackMs && mod.attackMsMin != mod.attackMsMax) ||
             (mod.randomizeDecayMs && mod.decayMsMin != mod.decayMsMax) ||
             (mod.randomizeSeqHold && mod.seqHoldMin != mod.seqHoldMax)
     }
 
     private fun isModulatorRandomized(mod: CvModulator): Boolean {
-        return (mod.randomizeDepth && mod.depthMin != mod.depthMax) ||
+        return mod.hasRangeVariation ||
             (mod.randomizeSubdivision && mod.subdivisionMin != mod.subdivisionMax) ||
             (mod.randomizePhaseOffset && mod.phaseOffsetMin != mod.phaseOffsetMax) ||
             (mod.randomizeSlope && mod.slopeMin != mod.slopeMax) ||
             (mod.randomizeMorph && mod.morphMin != mod.morphMax) ||
             (mod.randomizeHold && mod.holdMin != mod.holdMax) ||
-            (mod.randomizeDcOffset && mod.dcOffsetMin != mod.dcOffsetMax) ||
             (mod.randomizeAttackMs && mod.attackMsMin != mod.attackMsMax) ||
             (mod.randomizeDecayMs && mod.decayMsMin != mod.decayMsMax) ||
             (mod.randomizeSeqHold && mod.seqHoldMin != mod.seqHoldMax)

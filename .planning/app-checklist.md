@@ -213,6 +213,10 @@ The web TV's 124 `web-*` presets and 35 `web-*` chains now ship as the desktop's
 - [ ] After the app has run 15+ minutes: sweep a Time-clocked LFO's period (and a sequencer's Time interval) by hand and from a macro. It speeds up or slows down, never jumps. A preset morph between two different LFO periods glides too (2026-10-23).
 - [ ] Ctrl+Z undoes sequencer, LFO, Audio and MIDI CC edits (one step per drag).
   auto: sequencer and LFO edits undo one step at a time. Fixed 2026-11-07: one Ctrl+Z undid two steps in the pair view and Chain view, and Reset Parameter to Default couldn't be undone. Left for you: Audio, MIDI CC.
+- [ ] (2026-11-18) Modulation Range on an LFO, an audio modulator, a sequencer and a MIDI modulator: same Min/Max row on all four (sequencer and MIDI no longer show Depth/Offset). Drag between the handles and Shift-drag slide the range with its size kept and stop at the track ends; dragging near a handle still moves just that handle.
+- [ ] (2026-11-18) Base and Amount captions above the track: right-click gives MIDI/OSC Learn, a macro in learn mode binds on click. A Twister knob on Base slides the range, on Amount opens it; pushed past the end, the handle sits at the track end and the parameter clamps. Ring feedback follows when you drag the range by mouse.
+- [ ] (2026-11-18) Range dice: the Ends / Base·Amt button under the name switches roll rows; locks pin a row (the pinned row edits the live value). Base·Amt with Base pinned keeps the range centred while it rolls. Right-click dice rolls now. The deck die and Rand morph follow both modes.
+- [ ] (2026-11-18) An older preset with a rolled LFO or audio range loads in Ends with the same Min/Max roll rows it had, and does not load as unsaved. A sequencer on a 0-to-1 parameter shows Min 0 / Max 1 with Amount 100.
 
 ## 9b. Audio response (2026-10-25)
 

@@ -109,7 +109,20 @@ data class CvModulator(
     /** When true, global/deck randomization re-rolls the whole step pattern too. */
     val randomizeSeqSteps: Boolean = false,
 
-    val lfoMinMaxMode: Boolean = false,
+    /**
+     * Which pair the range dice rolls. In [RollSpace.BASE_AMOUNT] the roll ranges are
+     * `dcOffsetMin/Max` (Base) and `depthMin/Max` (Amount), flagged by [randomizeDcOffset] / [randomizeDepth].
+     * In [RollSpace.ENDS] they are the `lfoMinRoll*` / `lfoMaxRoll*` fields below.
+     */
+    val rollSpace: RollSpace = RollSpace.ENDS,
+    /** ENDS roll range for the Min end. */
+    var lfoMinRollMin: Float = 0f,
+    var lfoMinRollMax: Float = 0f,
+    /** ENDS roll range for the Max end. */
+    var lfoMaxRollMin: Float = 0f,
+    var lfoMaxRollMax: Float = 0f,
+    val randomizeLfoMin: Boolean = false,
+    val randomizeLfoMax: Boolean = false,
 
     val id: String = llm.slop.liquidlsd.utils.DeterministicRandom.uuid()
 ) {
@@ -120,30 +133,129 @@ data class CvModulator(
     private val halfRange: Boolean
         get() = sourceId != "seq" && !llm.slop.liquidlsd.cv.AudioSignals.isEnergy(sourceId) && !llm.slop.liquidlsd.cv.isCvSourceBipolar(sourceId)
 
+    /** The source's own polarity (the sequencer counts as bipolar here; see [unipolarOn]). */
+    val sourceUnipolar: Boolean get() = halfRange
+
+    /**
+     * Whether Min/Max map onto Base/Amount as Base..Base+Amount (true) or Base±Amount (false) on a parameter
+     * of the given polarity. Only the sequencer depends on the parameter: its step grid is 0..1 on unipolar
+     * parameters and -1..1 on bipolar ones.
+     */
+    fun unipolarOn(paramBipolar: Boolean): Boolean = if (sourceId == "seq") !paramBipolar else halfRange
+
+    /** [unipolarOn] for [param]. */
+    fun unipolarOn(param: ModulatableParameter): Boolean = unipolarOn(param.minClamp < 0f)
+
     /** Applies [invert] to a source value: 1 - cv for unipolar sources, -cv for bipolar ones. */
     fun polarize(cv: Float): Float = if (!invert) cv else if (halfRange) 1f - cv else -cv
 
     /** Modulator output before the operator scalar: cv * depth + dcOffset. */
     fun lfoShape(cv: Float): Float = cv * depth + dcOffset
 
-    fun getLfoMin(): Float = if (halfRange) dcOffset else dcOffset - depth
-    fun getLfoMax(): Float = dcOffset + depth
+    fun getLfoMin(unipolar: Boolean = halfRange): Float = if (unipolar) dcOffset else dcOffset - depth
+    fun getLfoMax(unipolar: Boolean = halfRange): Float = dcOffset + depth
 
-    /** Splits a min/max range into (depth, dcOffset) for this source's polarity. */
-    private fun depthAndOffset(min: Float, max: Float): Pair<Float, Float> =
-        if (halfRange) Pair(max - min, min) else Pair((max - min) / 2f, (max + min) / 2f)
+    /** Splits a min/max range into (depth, dcOffset) for the given polarity. */
+    private fun depthAndOffset(min: Float, max: Float, unipolar: Boolean): Pair<Float, Float> =
+        if (unipolar) Pair(max - min, min) else Pair((max - min) / 2f, (max + min) / 2f)
 
-    fun withLfoRange(min: Float, max: Float): CvModulator {
-        val (d, o) = depthAndOffset(min, max)
-        return this.copy(
-            depth = d,
-            dcOffset = o,
-            depthMin = if (!lfoMinMaxMode) d else depthMin,
-            depthMax = if (!lfoMinMaxMode) d else depthMax,
-            dcOffsetMin = if (!lfoMinMaxMode) o else dcOffsetMin,
-            dcOffsetMax = if (!lfoMinMaxMode) o else dcOffsetMax
-        )
+    /** Sets Base/Amount from a Min/Max pair (roll ranges are left alone). */
+    fun withLfoRange(min: Float, max: Float, unipolar: Boolean = halfRange): CvModulator {
+        val (d, o) = depthAndOffset(min, max, unipolar)
+        return this.copy(depth = d, dcOffset = o)
     }
+
+    /** True when the range dice rolls anything in the current [rollSpace]. */
+    val rollsRange: Boolean
+        get() = when (rollSpace) {
+            RollSpace.ENDS -> randomizeLfoMin || randomizeLfoMax
+            RollSpace.BASE_AMOUNT -> randomizeDepth || randomizeDcOffset
+        }
+
+    /** A roll can change [depth] (an ENDS roll of either end moves both depth and dcOffset). */
+    val rollsDepth: Boolean get() = if (rollSpace == RollSpace.ENDS) rollsRange else randomizeDepth
+
+    /** A roll can change [dcOffset]. */
+    val rollsDcOffset: Boolean get() = if (rollSpace == RollSpace.ENDS) rollsRange else randomizeDcOffset
+
+    /** True when a range roll can produce a different result (some rolled range is wider than a point). */
+    val hasRangeVariation: Boolean
+        get() = when (rollSpace) {
+            RollSpace.ENDS -> (randomizeLfoMin && lfoMinRollMin != lfoMinRollMax) || (randomizeLfoMax && lfoMaxRollMin != lfoMaxRollMax)
+            RollSpace.BASE_AMOUNT -> (randomizeDepth && depthMin != depthMax) || (randomizeDcOffset && dcOffsetMin != dcOffsetMax)
+        }
+
+    private fun roll(lo: Float, hi: Float, random: kotlin.random.Random): Float =
+        if (lo == hi) lo else random.nextFloat() * (hi - lo) + lo
+
+    /**
+     * Rolls the Min/Max range in [rollSpace]: in ENDS each rolled end lands in its own range (the result may be
+     * inverted, Min above Max); in BASE_AMOUNT Base and Amount roll separately, either one can stay pinned.
+     */
+    fun rollRange(
+        random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng,
+        unipolar: Boolean = halfRange
+    ): CvModulator = when (rollSpace) {
+        RollSpace.ENDS -> {
+            if (!randomizeLfoMin && !randomizeLfoMax) this
+            else {
+                val mn = if (randomizeLfoMin) roll(lfoMinRollMin, lfoMinRollMax, random) else getLfoMin(unipolar)
+                val mx = if (randomizeLfoMax) roll(lfoMaxRollMin, lfoMaxRollMax, random) else getLfoMax(unipolar)
+                val (d, o) = depthAndOffset(mn, mx, unipolar)
+                copy(depth = d, dcOffset = o)
+            }
+        }
+        RollSpace.BASE_AMOUNT -> {
+            if (!randomizeDepth && !randomizeDcOffset) this
+            else {
+                val d = if (randomizeDepth) roll(depthMin, depthMax, random) else depth
+                val o = if (randomizeDcOffset) roll(dcOffsetMin, dcOffsetMax, random) else dcOffset
+                copy(depth = d, dcOffset = o)
+            }
+        }
+    }
+
+    /**
+     * Turns range rolling on or off for the current [rollSpace]. Turning it on opens each collapsed roll range
+     * to a small window around the current value so the first roll does something.
+     */
+    fun withRangeRolling(enabled: Boolean, unipolar: Boolean = halfRange): CvModulator = when (rollSpace) {
+        RollSpace.ENDS -> {
+            val mn = getLfoMin(unipolar); val mx = getLfoMax(unipolar)
+            copy(
+                randomizeLfoMin = enabled, randomizeLfoMax = enabled,
+                lfoMinRollMin = if (!enabled || lfoMinRollMin == lfoMinRollMax) (if (enabled) (mn - 0.1f).coerceAtLeast(-1f) else mn) else lfoMinRollMin,
+                lfoMinRollMax = if (!enabled || lfoMinRollMin == lfoMinRollMax) (if (enabled) (mn + 0.1f).coerceAtMost(1f) else mn) else lfoMinRollMax,
+                lfoMaxRollMin = if (!enabled || lfoMaxRollMin == lfoMaxRollMax) (if (enabled) (mx - 0.1f).coerceAtLeast(-1f) else mx) else lfoMaxRollMin,
+                lfoMaxRollMax = if (!enabled || lfoMaxRollMin == lfoMaxRollMax) (if (enabled) (mx + 0.1f).coerceAtMost(1f) else mx) else lfoMaxRollMax
+            )
+        }
+        RollSpace.BASE_AMOUNT -> {
+            val amountLimit = amountLimit(unipolar)
+            copy(
+                randomizeDcOffset = enabled, randomizeDepth = enabled,
+                dcOffsetMin = if (!enabled || dcOffsetMin == dcOffsetMax) (if (enabled) (dcOffset - 0.1f).coerceAtLeast(-1f) else dcOffset) else dcOffsetMin,
+                dcOffsetMax = if (!enabled || dcOffsetMin == dcOffsetMax) (if (enabled) (dcOffset + 0.1f).coerceAtMost(1f) else dcOffset) else dcOffsetMax,
+                depthMin = if (!enabled || depthMin == depthMax) (if (enabled) (depth - 0.1f).coerceAtLeast(0f) else depth) else depthMin,
+                depthMax = if (!enabled || depthMin == depthMax) (if (enabled) (depth + 0.1f).coerceAtMost(amountLimit) else depth) else depthMax
+            )
+        }
+    }
+
+    /** Switches [rollSpace], carrying the dice state over (rolling stays on or off); the old space's flags go off. */
+    fun withRollSpace(space: RollSpace, unipolar: Boolean = halfRange): CvModulator {
+        if (space == rollSpace) return this
+        val wasRolling = rollsRange
+        val cleared = when (rollSpace) {
+            RollSpace.ENDS -> copy(randomizeLfoMin = false, randomizeLfoMax = false)
+            RollSpace.BASE_AMOUNT -> copy(randomizeDepth = false, randomizeDcOffset = false)
+        }
+        val switched = cleared.copy(rollSpace = space)
+        return if (wasRolling) switched.withRangeRolling(true, unipolar) else switched
+    }
+
+    /** The largest Amount that still lets the range cover the whole -1..1 track. */
+    fun amountLimit(unipolar: Boolean = halfRange): Float = if (unipolar) 2f else 1f
     private fun isDiscreteSubdivision(): Boolean {
         return sourceId == "beatPhase" || sourceId == "sampleAndHold" || 
                (sourceId == "lfo" && genUnit == GenUnit.BEAT)
@@ -153,26 +265,10 @@ data class CvModulator(
         random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng,
         seqBipolar: Boolean = seqSteps.any { it < 0f }
     ): CvModulator {
-        val (newDepth, newDcOffset) = if (lfoMinMaxMode) {
-            val rMin = if (randomizeDcOffset) {
-                if (dcOffsetMin == dcOffsetMax) dcOffsetMin else random.nextFloat() * (dcOffsetMax - dcOffsetMin) + dcOffsetMin
-            } else getLfoMin()
-
-            val rMax = if (randomizeDepth) {
-                if (depthMin == depthMax) depthMin else random.nextFloat() * (depthMax - depthMin) + depthMin
-            } else getLfoMax()
-
-            depthAndOffset(rMin, rMax)
-        } else {
-            val d = if (randomizeDepth) {
-                if (depthMin == depthMax) depthMin else random.nextFloat() * (depthMax - depthMin) + depthMin
-            } else depth
-
-            val o = if (randomizeDcOffset) {
-                if (dcOffsetMin == dcOffsetMax) dcOffsetMin else random.nextFloat() * (dcOffsetMax - dcOffsetMin) + dcOffsetMin
-            } else dcOffset
-            Pair(d, o)
-        }
+        val unipolar = unipolarOn(seqBipolar)
+        val ranged = rollRange(random, unipolar)
+        val newDepth = ranged.depth
+        val newDcOffset = ranged.dcOffset
 
         val newPhase = if (randomizePhaseOffset) {
             if (phaseOffsetMin == phaseOffsetMax) phaseOffsetMin else random.nextFloat() * (phaseOffsetMax - phaseOffsetMin) + phaseOffsetMin
@@ -280,28 +376,6 @@ data class CvModulator(
             seqHold = newSeqHold,
             seqSteps = newSeqSteps
         )
-    }
-
-    fun randomizeDepth(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng): CvModulator {
-        if (!randomizeDepth) return this
-        if (lfoMinMaxMode) {
-            val rMax = if (depthMin == depthMax) depthMin else random.nextFloat() * (depthMax - depthMin) + depthMin
-            val (d, o) = depthAndOffset(getLfoMin(), rMax)
-            return this.copy(depth = d, dcOffset = o)
-        }
-        val newDepth = if (depthMin == depthMax) depthMin else random.nextFloat() * (depthMax - depthMin) + depthMin
-        return this.copy(depth = newDepth)
-    }
-
-    fun randomizeDcOffset(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng): CvModulator {
-        if (!randomizeDcOffset) return this
-        if (lfoMinMaxMode) {
-            val rMin = if (dcOffsetMin == dcOffsetMax) dcOffsetMin else random.nextFloat() * (dcOffsetMax - dcOffsetMin) + dcOffsetMin
-            val (d, o) = depthAndOffset(rMin, getLfoMax())
-            return this.copy(depth = d, dcOffset = o)
-        }
-        val newDcOffset = if (dcOffsetMin == dcOffsetMax) dcOffsetMin else random.nextFloat() * (dcOffsetMax - dcOffsetMin) + dcOffsetMin
-        return this.copy(dcOffset = newDcOffset)
     }
 
     fun randomizeSeqHold(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng): CvModulator {
@@ -417,6 +491,13 @@ data class CvModulator(
     }
 
     companion object {
+        /**
+         * Roll space for a modulator loaded from a file saved before [rollSpace] existed: Seq and MIDI were
+         * edited as Depth/Offset (BASE_AMOUNT), every other source in the Min/Max editor (ENDS).
+         */
+        fun legacyRollSpace(sourceId: String): RollSpace =
+            if (sourceId == "seq" || sourceId.startsWith("midi_")) RollSpace.BASE_AMOUNT else RollSpace.ENDS
+
         /** Upper bound (inclusive) for LFO/CV modulation frame-subdivision step counts (GenUnit.FRAME). */
         const val MAX_FRAME_SUBDIVISION = 10000
     }

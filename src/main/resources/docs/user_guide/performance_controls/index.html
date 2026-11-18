@@ -2291,7 +2291,7 @@ for how they work and where to edit them.</p>
 <p>You can map any parameter, internal modulator variable, matrix CV modulator, or global performance action:</p>
 <ol>
 <li><strong>In-Situ Right-Click Learn (Fastest)</strong>:</li>
-<li>Right-click any slider or variable label in the UI — including an LFO's <strong>Speed / Subdivision</strong>, <strong>Depth</strong>, <strong>Min/Max bounds</strong>, <strong>Asymmetry (Slope)</strong>, <strong>Morph</strong>, <strong>Hold</strong>, or a parameter's <strong>Initial Range (Base Value)</strong>.</li>
+<li>Right-click any slider or variable label in the UI — including an LFO's <strong>Speed / Subdivision</strong>, a modulator's range (<strong>Min</strong>, <strong>Max</strong>, <strong>Base</strong> and <strong>Amount</strong>, from the captions above it), <strong>Asymmetry (Slope)</strong>, <strong>Morph</strong>, <strong>Hold</strong>, or a parameter's <strong>Initial Range (Base Value)</strong>.</li>
 <li>Select <strong>MIDI Learn (...)</strong> from the context menu. This is a controller mapping: it sets the value itself and is saved in your controller profile, not in the preset. The slider will pulse in cyan/blue while awaiting hardware input.</li>
 <li>Move a knob, fader, or press a pad on your MIDI controller. Liquid LSD immediately maps the control, preserves your configured min/max limits, and saves the mapping to the active profile.</li>
 <li>If a macro knob currently drives that value (its slider shows the cyan lock and a <code>[K#]</code> badge), <strong>MIDI Learn</strong> is greyed out as "locked by K#": the knob rewrites the value every frame, so a mapping would do nothing. Release the target first (uncheck it in the macro editor), or map a different value.</li>
@@ -2630,7 +2630,7 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <p>You can map OSC controls either in-situ from the UI or manually from Preferences:</p>
 <ol>
 <li><strong>In-Situ Right-Click Learn (Fastest)</strong>:</li>
-<li>Right-click any slider or variable label in the UI — including an LFO's <strong>Speed / Subdivision</strong>, <strong>Depth</strong>, <strong>Min/Max bounds</strong>, <strong>Asymmetry</strong>, a parameter's <strong>Initial Range (Base Value)</strong>, the crossfader, fade speed, or a deck/transition queue's <code>&lt;</code>/<code>&gt;</code> buttons.</li>
+<li>Right-click any slider or variable label in the UI — including an LFO's <strong>Speed / Subdivision</strong>, a modulator's range (<strong>Min</strong>, <strong>Max</strong>, <strong>Base</strong> and <strong>Amount</strong>, from the captions above it), <strong>Asymmetry</strong>, a parameter's <strong>Initial Range (Base Value)</strong>, the crossfader, fade speed, or a deck/transition queue's <code>&lt;</code>/<code>&gt;</code> buttons.</li>
 <li>Select <strong>OSC Learn (...)</strong> from the context menu. The control will pulse in amber while awaiting input.</li>
 <li>Move a fader, knob, or XY pad on your TouchOSC surface. Liquid LSD ignores the first packet from a new address (guarding against a controller's connect-time sync burst) and maps once a later packet actually moves the value, preserving your configured min/max limits and saving the mapping to the active profile.</li>
 <li>As with MIDI, <strong>OSC Learn</strong> is greyed out as "locked by K#" while an enabled macro knob target drives that value.</li>

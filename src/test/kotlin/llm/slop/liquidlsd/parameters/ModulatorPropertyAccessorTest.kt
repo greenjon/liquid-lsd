@@ -51,7 +51,7 @@ class ModulatorPropertyAccessorTest {
     @Test
     fun testFormatPropertyLabel() {
         assertEquals("LFO 1 Speed", ModulatorPropertyAccessor.formatPropertyLabel(0, "subdivision"))
-        assertEquals("LFO 1 Depth", ModulatorPropertyAccessor.formatPropertyLabel(0, "depth"))
+        assertEquals("LFO 1 Amount", ModulatorPropertyAccessor.formatPropertyLabel(0, "depth"))
         assertEquals("LFO 2 Morph", ModulatorPropertyAccessor.formatPropertyLabel(1, "morph"))
         assertEquals("LFO 2 Speed", ModulatorPropertyAccessor.formatPropertyLabel(1, "modSubdivision"))
         assertEquals("Mod 3 Phase", ModulatorPropertyAccessor.formatPropertyLabel(2, "phaseOffset"))

@@ -30,18 +30,19 @@ class CvModulatorTest {
         assertEquals(0.0f, mod.depthMax)
         assertFalse(mod.randomizeDepth)
 
-        // If randomizeDepth is false, randomizeDepth() should be a no-op
-        val unchanged = mod.randomizeDepth(Random(42))
+        // With nothing rolling, rollRange() is a no-op
+        val unchanged = mod.rollRange(Random(42))
         assertEquals(0.0f, unchanged.depth)
 
-        // When enabled, randomizeDepth() samples between depthMin and depthMax
+        // In BASE_AMOUNT, rollRange() samples Amount between depthMin and depthMax
         val modRange = mod.copy(
+            rollSpace = RollSpace.BASE_AMOUNT,
             depth = 0.5f,
             depthMin = 0.2f,
             depthMax = 0.8f,
             randomizeDepth = true
         )
-        val randomized = modRange.randomizeDepth(Random(42))
+        val randomized = modRange.rollRange(Random(42))
         assertTrue(randomized.depth in 0.2f..0.8f, "Randomized depth should be within [0.2, 0.8]")
     }
 
@@ -476,18 +477,21 @@ class CvModulatorTest {
         assertEquals(0.75f, dto.depthMax, 0.0001f)
         assertTrue(dto.randomizeDepth)
 
+        // A legacy LFO (no rollSpace) was authored in the Min/Max editor: depthMin/Max held the Max end's roll range.
         val domain = dto.toDomain()
         assertEquals(0.65f, domain.depth, 0.0001f)
-        assertEquals(0.25f, domain.depthMin, 0.0001f)
-        assertEquals(0.75f, domain.depthMax, 0.0001f)
-        assertTrue(domain.randomizeDepth)
+        assertEquals(RollSpace.ENDS, domain.rollSpace)
+        assertEquals(0.25f, domain.lfoMaxRollMin, 0.0001f)
+        assertEquals(0.75f, domain.lfoMaxRollMax, 0.0001f)
+        assertTrue(domain.randomizeLfoMax)
+        assertFalse(domain.randomizeDepth)
 
         val backDto = domain.toDto()
         val encoded = json.encodeToString(ModulatorDto.serializer(), backDto)
         assertTrue(encoded.contains("\"depth\":0.65"), "Encoded JSON should contain 'depth' key")
-        assertTrue(encoded.contains("\"depthMin\":0.25"), "Encoded JSON should contain 'depthMin' key")
-        assertTrue(encoded.contains("\"depthMax\":0.75"), "Encoded JSON should contain 'depthMax' key")
-        assertTrue(encoded.contains("\"randomizeDepth\":true"), "Encoded JSON should contain 'randomizeDepth' key")
+        assertTrue(encoded.contains("\"lfoMaxRollMin\":0.25"), "Encoded JSON should contain 'lfoMaxRollMin' key")
+        assertTrue(encoded.contains("\"lfoMaxRollMax\":0.75"), "Encoded JSON should contain 'lfoMaxRollMax' key")
+        assertTrue(encoded.contains("\"randomizeLfoMax\":true"), "Encoded JSON should contain 'randomizeLfoMax' key")
     }
 
     @Test

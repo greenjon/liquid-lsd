@@ -106,30 +106,49 @@ monopolar parameter was remapped to `[0, 1]` first; stock presets and recipes we
 Every continuously-valued field has a `Min`/`Max` pair and a `randomize*` flag:
 
 ```
-depthMin / depthMax / randomizeDepth
+depthMin / depthMax / randomizeDepth          (Amount; BASE_AMOUNT roll space only)
 subdivisionMin / subdivisionMax / randomizeSubdivision
 phaseOffsetMin / phaseOffsetMax / randomizePhaseOffset
 slopeMin / slopeMax / randomizeSlope
 morphMin / morphMax / randomizeMorph
 holdMin / holdMax / randomizeHold
-dcOffsetMin / dcOffsetMax / randomizeDcOffset
+dcOffsetMin / dcOffsetMax / randomizeDcOffset (Base; BASE_AMOUNT roll space only)
+lfoMinRollMin / lfoMinRollMax / randomizeLfoMin  (Min end; ENDS roll space only)
+lfoMaxRollMin / lfoMaxRollMax / randomizeLfoMax  (Max end; ENDS roll space only)
 ```
 
 When the preset randomize action fires, `randomizeActiveValues()` samples uniformly within each
 `[min, max]` range. For beat-based subdivision the sample is drawn from a discrete set of musical
 values `{1/8, 1/4, 1/2, 1, 2, 4, 8 … 256}`. For frame-based subdivision, it samples discrete integers in `[min, max]`.
 
-### Modulation Range Bounds (Min/Max Mode)
+### Modulation Range: Min/Max over Base/Amount
 
-For LFO 1 and Audio followers, the UI presents human-readable **Min Value** and **Max Value** modulation bounds rather than abstract `depth` (amplitude) and `dcOffset` (center).
+Storage is `depth` (Amount) and `dcOffset` (Base); every modulator's UI draws them as **Min/Max**
+(`CustomRangeSlider.drawModulatorRange`, used by `Lfo1Section`, `AudioModulatorSection`, `SeqSection`, `MidiModulatorSection`).
+The evaluator and the web port only read `depth`/`dcOffset`.
 
-- **Mapping**:
-  - $\text{Min} = \text{dcOffset} - \text{depth}$
-  - $\text{Max} = \text{dcOffset} + \text{depth}$
-  - $\text{depth} = (\text{Max} - \text{Min}) / 2$
-  - $\text{dcOffset} = (\text{Max} + \text{Min}) / 2$
-- **Methods**: `CvModulator.getLfoMin()`, `CvModulator.getLfoMax()`, `CvModulator.withLfoRange(min, max)`.
-- **Randomization Range Storage**: When `lfoMinMaxMode` is true, the two-tier randomization sliders store the bounds for the Minimum limit in `dcOffsetMin` / `dcOffsetMax` (with flag `randomizeDcOffset`) and the bounds for the Maximum limit in `depthMin` / `depthMax` (with flag `randomizeDepth`). This ensures complete preset serialization compatibility without altering the underlying DTO schema.
+- **Mapping** depends on polarity (`CvModulator.unipolarOn(param)`): unipolar (audio, trigger, MIDI, and the
+  sequencer on a parameter with `minClamp >= 0`, whose step grid is 0..1) is `Min = dcOffset`,
+  `Max = dcOffset + depth`; bipolar is `Min = dcOffset - depth`, `Max = dcOffset + depth`.
+- **Methods**: `getLfoMin(unipolar)`, `getLfoMax(unipolar)`, `withLfoRange(min, max, unipolar)`, `amountLimit(unipolar)`
+  (2 unipolar, 1 bipolar: the Amount that spans the whole -1..1 track).
+- **Bindings** target a property, never the display: `lfoMin`, `lfoMax`, `dcOffset` (Base), `depth` (Amount), and the
+  roll bounds. `ModulatorPropertyAccessor.set/get` take the parameter so Min/Max resolve with the sequencer's polarity;
+  `MidiMappingManager`, `OscMappingManager` and `MacroEngine` pass it. Base and Amount are written unclamped (a
+  controller may push an end past ±1; the parameter clamps its output). The UI clamps: the slide gesture stops at the
+  track ends, and the handles are drawn at the track ends when a controller has pushed them past.
+- **Roll space** (`CvModulator.rollSpace`, `RollSpace` in `Enums.kt`): `ENDS` rolls Min and Max within
+  `lfoMinRoll*` / `lfoMaxRoll*`; `BASE_AMOUNT` rolls Base and Amount within `dcOffsetMin/Max` / `depthMin/Max`.
+  Each pair has its own flags, so a row can be pinned (flag off). `rollRange(random, unipolar)` does the roll (also
+  called from `randomizeActiveValues`), `withRangeRolling` is the dice, `withRollSpace` the switch (carries the dice
+  state, clears the old space's flags). `rollsRange` / `rollsDepth` / `rollsDcOffset` / `hasRangeVariation` answer
+  "can a roll move this" for `MorphState`, `PresetDependencyAnalyzer` and the header dice.
+- **Legacy files** have no `rollSpace` key. `ModulatorDto.normalized()` migrates them: before 2026-11-18 the Min/Max editor
+  (LFO, audio) stored the Min end's roll range in `dcOffsetMin/Max` and the Max end's in `depthMin/Max` under an
+  in-memory `lfoMinMaxMode` flag that was never saved, so a reloaded preset rolled them as Base/Amount. Non-seq, non-MIDI
+  sources now load as `ENDS` with those ranges moved; seq and MIDI (edited as Depth/Offset) load as `BASE_AMOUNT`
+  unchanged (`CvModulator.legacyRollSpace`). `equals`/`hashCode` compare normalized forms, so a legacy preset does not
+  load dirty.
 
 ### Audio Envelope Followers — applies when `isAudioSource(sourceId)`
 

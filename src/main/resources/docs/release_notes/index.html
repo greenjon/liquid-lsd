@@ -1290,6 +1290,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#modulation-range-slide-baseamount-and-how-the-dice-rolls-parameterscvmodulatorkt-uicustomrangesliderkt-uiseqsectionkt-uimidimodulatorsectionkt-modelspresetmodelskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modulation Range: Slide, Base/Amount, and How the Dice Rolls (parameters/CvModulator.kt, ui/CustomRangeSlider.kt, ui/SeqSection.kt, ui/MidiModulatorSection.kt, models/PresetModels.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#web-tv-tape-share-links-webtapesjs-webtapedeckjs-webuijs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web TV: Tape Share Links (web/tapes.js, web/tapedeck.js, web/ui.js)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#queue-undo" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7879,6 +7901,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#modulation-range-slide-baseamount-and-how-the-dice-rolls-parameterscvmodulatorkt-uicustomrangesliderkt-uiseqsectionkt-uimidimodulatorsectionkt-modelspresetmodelskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modulation Range: Slide, Base/Amount, and How the Dice Rolls (parameters/CvModulator.kt, ui/CustomRangeSlider.kt, ui/SeqSection.kt, ui/MidiModulatorSection.kt, models/PresetModels.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#web-tv-tape-share-links-webtapesjs-webtapedeckjs-webuijs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web TV: Tape Share Links (web/tapes.js, web/tapedeck.js, web/ui.js)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#queue-undo" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -14419,6 +14463,19 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="modulation-range-slide-baseamount-and-how-the-dice-rolls-parameterscvmodulatorkt-uicustomrangesliderkt-uiseqsectionkt-uimidimodulatorsectionkt-modelspresetmodelskt">Modulation Range: Slide, Base/Amount, and How the Dice Rolls (<code>parameters/CvModulator.kt</code>, <code>ui/CustomRangeSlider.kt</code>, <code>ui/SeqSection.kt</code>, <code>ui/MidiModulatorSection.kt</code>, <code>models/PresetModels.kt</code>)</h3>
+<ul>
+<li><strong>New: drag the bar between a range's handles (or Shift-drag) to slide the whole range</strong> without changing its size. It stops at the ends of the track.</li>
+<li><strong>New: Base and Amount captions above an LFO, audio or sequencer range.</strong> Right-click either for MIDI or OSC Learn, or click it while a macro knob is learning: a knob on Base moves the range, a knob on Amount opens or closes it. A controller on Base or Amount can push the range past the end of the track; the parameter's limit clamps the result.</li>
+<li><strong>New: pick what the range dice rolls.</strong> The button under the range's name switches between <strong>Ends</strong> (Min and Max each roll in their own row) and <strong>Base·Amt</strong> (Base and Amount roll separately). A lock on each row pins it, so you can keep a range centred and roll only its size.</li>
+<li><strong>Changed: the step sequencer and MIDI modulators use the same Min/Max range row</strong> as LFOs and audio, instead of separate Depth and Offset sliders. On a MIDI modulator the knob at 0 gives Min and at 127 gives Max. Their existing settings and rolls are unchanged.</li>
+<li><strong>Changed: "Depth" and "DC Offset" are now called Amount and Base</strong> in mapping lists and badges. Existing MIDI, OSC and macro mappings keep working.</li>
+<li><strong>Fixed: a reloaded preset rolled an LFO or audio range differently</strong> from how it was set up: the Min and Max roll ranges were read back as Base and Amount ranges. Presets saved before this fix now roll as they were set up.</li>
+</ul>
+<h3 id="web-tv-tape-share-links-webtapesjs-webtapedeckjs-webuijs">Web TV: Tape Share Links (<code>web/tapes.js</code>, <code>web/tapedeck.js</code>, <code>web/ui.js</code>)</h3>
+<ul>
+<li><strong>New: LINK on a tape's transport strip</strong> copies a link to that moment of the show (<code>spaz.org/tv/?tape=&lt;show&gt;&amp;t=1h2m</code>). Opening it cues the show there; turning the TV on plays it.</li>
+</ul>
 <h3 id="queue-undo">Queue Undo</h3>
 <ul>
 <li><strong>Fixed: adding to a queue couldn't be undone.</strong> Q, Shift+Q, the toolbar's enqueue buttons, the right-click Add to … Queue items and the Twister's add-to-queue now each make one Ctrl+Z step, like dropping onto a queue already did.</li>

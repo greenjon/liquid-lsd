@@ -338,7 +338,7 @@ object MidiMappingManager {
         fun getCurrentValue(): Float {
             return if (modRef != null && propertyName != null) {
                 llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.findByPathRef(param, modRef)?.let {
-                    llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.get(it, propertyName)
+                    llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.get(it, propertyName, param)
                 } ?: param.baseValue
             } else {
                 param.baseValue
@@ -348,7 +348,7 @@ object MidiMappingManager {
         fun applyValue(value: Float) {
             if (modRef != null && propertyName != null) {
                 llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.findByPathRef(param, modRef)?.let {
-                    llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.set(it, propertyName, value)
+                    llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.set(it, propertyName, value, param)
                 }
             } else {
                 param.baseValue = value

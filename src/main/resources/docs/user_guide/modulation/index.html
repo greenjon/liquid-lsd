@@ -704,10 +704,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#depth-and-offset" class="md-nav__link">
+  <a href="#range" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Depth and Offset
+        Range
       
     </span>
   </a>
@@ -716,6 +716,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-modulation-range" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Modulation Range
+      
+    </span>
+  </a>
   
 </li>
       
@@ -1865,10 +1876,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#depth-and-offset" class="md-nav__link">
+  <a href="#range" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Depth and Offset
+        Range
       
     </span>
   </a>
@@ -1877,6 +1888,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-modulation-range" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Modulation Range
+      
+    </span>
+  </a>
   
 </li>
       
@@ -2097,7 +2119,7 @@
 <h3 id="range-min-max">Range (Min / Max)</h3>
 <p>The dual-handled range slider at the bottom sets the floor and ceiling of the modulation output. For example, if you want bass energy to push Lobes between 3 and 8, set Min to 3 and Max to 8.</p>
 <p>Min and Max are measured from the parameter's set value, and moving one never moves the other. Audio sources only push upward from silence, so Min is the resting offset and Max is the loudest peak. Section <strong>Energy</strong> is the exception: it swings both ways, so it rests halfway between Min and Max, with Min the depth of a breakdown and Max a much louder passage.</p>
-<p>Enabling randomization adds independent drift sliders for the Min and Max bounds, so the range itself wanders gently over time.</p>
+<p>The range row works the same on every modulator (audio, LFO, step sequencer, MIDI); see <a href="#the-modulation-range">The Modulation Range</a> below for sliding it, Base and Amount, and how its dice rolls.</p>
 <h3 id="invert">Invert</h3>
 <p><strong>Invert</strong> (just above the range) flips the signal: silence drives the parameter to Max and loud hits pull it toward Min. Inverted Section <strong>Energy</strong> rises in a breakdown and sinks when the song gets louder; inverted <strong>Drop</strong> dips on the drop and recovers over 4 bars. The response profile still sets how fast it reacts, so with Punchy the parameter drops on each kick and eases back up.</p>
 <p>On <strong>MUL</strong>, an inverted modulator ducks the parameter on every hit, like sidechain pumping: for example, Brightness that dims a little on each kick. Two parameters on the same band, one inverted, move in opposite directions. With no audio at all (input muted, stream stopped), an inverted modulator sits at Max, so the parameter can look stuck until the music comes back.</p>
@@ -2135,7 +2157,7 @@
 <li><strong>Morph</strong> — Softens sharp corners. At 0.0 you get a pure triangle; at 1.0 you get a smooth sine-like curve.</li>
 <li><strong>Hold</strong> — Compresses the transition into a shorter moment and adds a plateau at the peak.</li>
 </ul>
-<p><strong>Range (Min / Max):</strong> Sets the output range directly. No need to think in terms of depth and offset — just say "I want this to move between 2.0 and 6.0" and set those values. Min and Max are the lowest and highest the LFO reaches, whatever the parameter's own range, and moving one leaves the other where it is. (The LFO swings evenly either side of the midpoint, so on a 0-to-1 parameter a Min below the set value pulls the parameter down as well as up; the result is clamped at the parameter's limits.)</p>
+<p><strong>Range (Min / Max):</strong> Sets the output range directly: say "I want this to move between 2.0 and 6.0" and set those values. Min and Max are the lowest and highest the LFO reaches, whatever the parameter's own range, and moving one leaves the other where it is. (The LFO swings evenly either side of the midpoint, so on a 0-to-1 parameter a Min below the set value pulls the parameter down as well as up; the result is clamped at the parameter's limits.) See <a href="#the-modulation-range">The Modulation Range</a> for sliding the range and for Base and Amount.</p>
 <h3 id="secondary-modulator-lfo-2">Secondary Modulator (LFO 2)</h3>
 <p>LFO 2 modulates LFO 1 to add movement and complexity:</p>
 <ul>
@@ -2182,8 +2204,20 @@
 <li><strong>Step Hold</strong> slider — At 100% the value jumps instantly and holds flat for the full step. At 0% it glides smoothly from one step to the next over the whole duration. In between you get a hold then glide. It has a dice to randomize within a range, like the other sliders.</li>
 <li><strong>Glide Curve</strong> — Linear is a straight ramp; Smooth is an S-curve with gentle acceleration and deceleration. Greyed out while Step Hold is 100%, since nothing glides.</li>
 </ul>
-<h3 id="depth-and-offset">Depth and Offset</h3>
-<p><strong>Depth</strong> scales the pattern and <strong>Offset</strong> shifts it up or down before it is applied to the parameter. Both can be randomized.</p>
+<h3 id="range">Range</h3>
+<p>The <strong>Modulation Range</strong> row sets where the bottom and the top of the step grid land on the parameter: a step at the bottom of the grid gives Min, a step at the top gives Max. It works like every other modulator's range; see <a href="#the-modulation-range">The Modulation Range</a>.</p>
+<hr />
+<h2 id="the-modulation-range">The Modulation Range</h2>
+<p>Every modulator (audio, LFO, step sequencer, MIDI) ends in the same <strong>Modulation Range</strong> row: two handles for <strong>Min</strong> and <strong>Max</strong>, measured from the parameter's set value. On a MIDI modulator the knob at 0 gives Min and at 127 gives Max.</p>
+<p><strong>Slide the whole range:</strong> drag the bar between the handles, or hold <strong>Shift</strong> and drag anywhere on the track. The span stays the same and the range stops where an end meets the end of the track.</p>
+<p><strong>Base and Amount:</strong> the same range can be described as a <strong>Base</strong> and an <strong>Amount</strong>. For modulators that swing both ways (LFOs, the sequencer on a parameter that goes negative), Base is the middle of the range and Amount how far it reaches either side. For modulators that only push up from rest (audio, MIDI, the sequencer on a 0-to-1 parameter), Base is where it rests (the bottom) and Amount how far it reaches up. Right-click the <strong>Base</strong> or <strong>Amount</strong> caption above the track for MIDI Learn and OSC Learn, or click it while a macro knob is learning. (A MIDI modulator's own range can't be mapped: that would be a controller driving a controller.) A control on Base moves the range without changing its size; a control on Amount opens or closes it. Min and Max can be learned the same way, from their own captions. Because a mapping is tied to Base, Amount, Min or Max, never to what the row shows, it keeps working however you edit the range on screen.</p>
+<p>From the screen the range stays on the track. A controller can push it further: Base near the top with a large Amount sends Max past the end, and the parameter's own limit then clamps the result.</p>
+<p><strong>Rolling the range:</strong> turn on the row's dice and the row splits into two roll rows. The button under the row's name picks what is rolled:</p>
+<ul>
+<li><strong>Ends</strong> rolls Min and Max separately, each somewhere in its own row. Good when any range will do and you want the most variety.</li>
+<li><strong>Base·Amt</strong> rolls Base and Amount separately. Pin Base (the lock in its row) to keep the range centred where it is while its size varies; pin Amount to keep the size and move it around.</li>
+</ul>
+<p>In either mode the lock at the left of a row pins that row: rolls leave it alone, and the row then edits its current value. Right-click the dice to roll now. A preset made before this change keeps rolling the way it did: audio and LFO ranges in Ends, sequencer and MIDI ranges in Base·Amt.</p>
 <hr />
 <h2 id="modulation-operators">Modulation Operators</h2>
 <p>When you set up a modulator, you also choose how it combines with the base value:</p>

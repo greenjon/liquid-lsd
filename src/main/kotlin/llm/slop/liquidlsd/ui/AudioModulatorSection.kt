@@ -264,53 +264,15 @@ object AudioModulatorSection {
         ImGui.spacing()
 
         // -- Modulation Range (Min/Max) ---------------------------
-        CustomRangeSlider.drawMinMaxRangeSlider(
+        CustomRangeSlider.drawModulatorRange(
             session = session,
             label = "Modulation Range",
-            currentMin = existing.getLfoMin(),
-            currentMax = existing.getLfoMax(),
-            minRangeMin = existing.dcOffsetMin,
-            minRangeMax = existing.dcOffsetMax,
-            maxRangeMin = existing.depthMin,
-            maxRangeMax = existing.depthMax,
-            minLimit = -1f,
-            maxLimit = 1f,
-            isRandomizable = existing.randomizeDcOffset || existing.randomizeDepth,
+            mod = existing,
+            unipolar = existing.unipolarOn(param),
             isRandomizeDisabled = param.isRandomizeDisabled,
             themeColor = themeColor,
-            idPrefix = existing.id,
-            onRandomizableChanged = { enabled ->
-                val rMin = existing.dcOffsetMin
-                val rMax = existing.dcOffsetMax
-                val dMin = existing.depthMin
-                val dMax = existing.depthMax
-                val curMin = existing.getLfoMin()
-                val curMax = existing.getLfoMax()
-
-                onReplace(existing.copy(
-                    lfoMinMaxMode = true,
-                    randomizeDcOffset = enabled,
-                    randomizeDepth = enabled,
-                    dcOffsetMin = if (enabled && rMin == rMax) (curMin - 0.1f).coerceAtLeast(-1f) else if (!enabled) curMin else rMin,
-                    dcOffsetMax = if (enabled && rMin == rMax) (curMin + 0.1f).coerceAtMost(1f) else if (!enabled) curMin else rMax,
-                    depthMin = if (enabled && dMin == dMax) (curMax - 0.1f).coerceAtLeast(-1f) else if (!enabled) curMax else dMin,
-                    depthMax = if (enabled && dMin == dMax) (curMax + 0.1f).coerceAtMost(1f) else if (!enabled) curMax else dMax
-                ))
-            },
-            onRandomizeNow = {
-                onReplace(existing.randomizeDcOffset().randomizeDepth())
-            },
-            onMinMaxChanged = { min, max ->
-                onReplace(existing.withLfoRange(min, max).copy(lfoMinMaxMode = true))
-            },
-            onMinRangeChanged = { rMin, rMax ->
-                onReplace(existing.copy(lfoMinMaxMode = true, dcOffsetMin = rMin, dcOffsetMax = rMax))
-            },
-            onMaxRangeChanged = { rMin, rMax ->
-                onReplace(existing.copy(lfoMinMaxMode = true, depthMin = rMin, depthMax = rMax))
-            },
+            onReplace = onReplace,
             modulatorIndex = modulatorIndex,
-            modulatorId = existing.id,
             paramKey = paramKey
         )
         ImGui.spacing()

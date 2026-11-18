@@ -1,6 +1,7 @@
 package llm.slop.liquidlsd.rendering
 
 import llm.slop.liquidlsd.parameters.CvModulator
+import llm.slop.liquidlsd.parameters.RollSpace
 import llm.slop.liquidlsd.parameters.MeterType
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import kotlin.math.PI
@@ -49,6 +50,7 @@ class MorphStateTest {
             sourceId = "lfo",
             depth = 0.3f,
             subdivision = 1.0f,
+            rollSpace = RollSpace.BASE_AMOUNT,
             randomizeDepth = true,
             depthMin = 0.0f,
             depthMax = 1.0f
@@ -189,6 +191,7 @@ class MorphStateTest {
             depth = 0.4f,
             subdivision = 2.0f,
             slope = 0.5f,
+            rollSpace = RollSpace.BASE_AMOUNT,
             randomizeDepth = true,
             randomizeSubdivision = false,
             randomizeSlope = false

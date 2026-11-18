@@ -92,7 +92,7 @@ The dual-handled range slider at the bottom sets the floor and ceiling of the mo
 
 Min and Max are measured from the parameter's set value, and moving one never moves the other. Audio sources only push upward from silence, so Min is the resting offset and Max is the loudest peak. Section **Energy** is the exception: it swings both ways, so it rests halfway between Min and Max, with Min the depth of a breakdown and Max a much louder passage.
 
-Enabling randomization adds independent drift sliders for the Min and Max bounds, so the range itself wanders gently over time.
+The range row works the same on every modulator (audio, LFO, step sequencer, MIDI); see [The Modulation Range](#the-modulation-range) below for sliding it, Base and Amount, and how its dice rolls.
 
 ### Invert
 
@@ -139,7 +139,7 @@ Clicking an **LFO** cell opens the LFO config. Each cell has a primary oscillato
 - **Morph** — Softens sharp corners. At 0.0 you get a pure triangle; at 1.0 you get a smooth sine-like curve.
 - **Hold** — Compresses the transition into a shorter moment and adds a plateau at the peak.
 
-**Range (Min / Max):** Sets the output range directly. No need to think in terms of depth and offset — just say "I want this to move between 2.0 and 6.0" and set those values. Min and Max are the lowest and highest the LFO reaches, whatever the parameter's own range, and moving one leaves the other where it is. (The LFO swings evenly either side of the midpoint, so on a 0-to-1 parameter a Min below the set value pulls the parameter down as well as up; the result is clamped at the parameter's limits.)
+**Range (Min / Max):** Sets the output range directly: say "I want this to move between 2.0 and 6.0" and set those values. Min and Max are the lowest and highest the LFO reaches, whatever the parameter's own range, and moving one leaves the other where it is. (The LFO swings evenly either side of the midpoint, so on a 0-to-1 parameter a Min below the set value pulls the parameter down as well as up; the result is clamped at the parameter's limits.) See [The Modulation Range](#the-modulation-range) for sliding the range and for Base and Amount.
 
 ### Secondary Modulator (LFO 2)
 
@@ -194,9 +194,28 @@ Changing the clock unit keeps the same step duration where it can. Changing a Ti
 - **Step Hold** slider — At 100% the value jumps instantly and holds flat for the full step. At 0% it glides smoothly from one step to the next over the whole duration. In between you get a hold then glide. It has a dice to randomize within a range, like the other sliders.
 - **Glide Curve** — Linear is a straight ramp; Smooth is an S-curve with gentle acceleration and deceleration. Greyed out while Step Hold is 100%, since nothing glides.
 
-### Depth and Offset
+### Range
 
-**Depth** scales the pattern and **Offset** shifts it up or down before it is applied to the parameter. Both can be randomized.
+The **Modulation Range** row sets where the bottom and the top of the step grid land on the parameter: a step at the bottom of the grid gives Min, a step at the top gives Max. It works like every other modulator's range; see [The Modulation Range](#the-modulation-range).
+
+---
+
+## The Modulation Range
+
+Every modulator (audio, LFO, step sequencer, MIDI) ends in the same **Modulation Range** row: two handles for **Min** and **Max**, measured from the parameter's set value. On a MIDI modulator the knob at 0 gives Min and at 127 gives Max.
+
+**Slide the whole range:** drag the bar between the handles, or hold **Shift** and drag anywhere on the track. The span stays the same and the range stops where an end meets the end of the track.
+
+**Base and Amount:** the same range can be described as a **Base** and an **Amount**. For modulators that swing both ways (LFOs, the sequencer on a parameter that goes negative), Base is the middle of the range and Amount how far it reaches either side. For modulators that only push up from rest (audio, MIDI, the sequencer on a 0-to-1 parameter), Base is where it rests (the bottom) and Amount how far it reaches up. Right-click the **Base** or **Amount** caption above the track for MIDI Learn and OSC Learn, or click it while a macro knob is learning. (A MIDI modulator's own range can't be mapped: that would be a controller driving a controller.) A control on Base moves the range without changing its size; a control on Amount opens or closes it. Min and Max can be learned the same way, from their own captions. Because a mapping is tied to Base, Amount, Min or Max, never to what the row shows, it keeps working however you edit the range on screen.
+
+From the screen the range stays on the track. A controller can push it further: Base near the top with a large Amount sends Max past the end, and the parameter's own limit then clamps the result.
+
+**Rolling the range:** turn on the row's dice and the row splits into two roll rows. The button under the row's name picks what is rolled:
+
+- **Ends** rolls Min and Max separately, each somewhere in its own row. Good when any range will do and you want the most variety.
+- **Base·Amt** rolls Base and Amount separately. Pin Base (the lock in its row) to keep the range centred where it is while its size varies; pin Amount to keep the size and move it around.
+
+In either mode the lock at the left of a row pins that row: rolls leave it alone, and the row then edits its current value. Right-click the dice to roll now. A preset made before this change keeps rolling the way it did: audio and LFO ranges in Ends, sequencer and MIDI ranges in Base·Amt.
 
 ---
 

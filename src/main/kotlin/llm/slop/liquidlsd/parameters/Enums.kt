@@ -22,6 +22,16 @@ enum class GenUnit {
     TIME, BEAT, FRAME
 }
 
+/**
+ * How a modulator's Min/Max range is rolled by the dice.
+ * ENDS rolls the Min and Max ends each within its own range; BASE_AMOUNT rolls Base (dcOffset) and
+ * Amount (depth), so Base can stay pinned while Amount varies.
+ */
+@Serializable
+enum class RollSpace {
+    ENDS, BASE_AMOUNT
+}
+
 @Serializable
 enum class GeneratorModMode {
     NONE, AM, PM, ADD

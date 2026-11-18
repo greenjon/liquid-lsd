@@ -20,6 +20,7 @@ object ModulatorHeaderRow {
         hasAdvanced: Boolean,
         isRandomizeDisabled: Boolean = false,
         randomizeDisabledTooltip: String? = null,
+        paramBipolar: Boolean = true,
         onReplace: (CvModulator) -> Unit,
         onReset: () -> Unit
     ) {
@@ -119,8 +120,7 @@ object ModulatorHeaderRow {
                 session.uiTheme.withFont(UITheme.FontLevel.BODY) {
                     if (ButtonChrome.button("${Icons.DICES}##rand_bar_$idx", btnWidth, btnHeight)) {
                         val randomized = existing
-                            .randomizeDepth()
-                            .randomizeDcOffset()
+                            .rollRange(unipolar = existing.unipolarOn(paramBipolar))
                             .randomizeSubdivision()
                             .randomizePhaseOffset()
                             .randomizeSlope()

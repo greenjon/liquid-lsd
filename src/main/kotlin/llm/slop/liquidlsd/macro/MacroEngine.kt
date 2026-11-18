@@ -426,7 +426,7 @@ object MacroEngine {
                     // the same modulator after binding it.
                     val mod = ModulatorPropertyAccessor.findById(rb.param, rb.binding.modulatorId)
                     if (mod != null) {
-                        ModulatorPropertyAccessor.set(mod, rb.binding.propertyName, mapped)
+                        ModulatorPropertyAccessor.set(mod, rb.binding.propertyName, mapped, rb.param)
                     }
                 }
             }

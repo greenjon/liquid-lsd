@@ -271,7 +271,7 @@ class OscMappingManagerTest {
     fun testFormatDisplayPath() {
         assertEquals("Mixer/crossfade", OscMappingManager.formatDisplayPath("Mixer/crossfade"))
         assertEquals("Deck A/zoom [LFO 1 Speed]", OscMappingManager.formatDisplayPath("Deck A/zoom:mod/0/subdivision"))
-        assertEquals("Deck B/zoom [LFO 1 Depth]", OscMappingManager.formatDisplayPath("Deck B/zoom:mod/0/depth"))
+        assertEquals("Deck B/zoom [LFO 1 Amount]", OscMappingManager.formatDisplayPath("Deck B/zoom:mod/0/depth"))
         assertEquals("Deck A/color [LFO 2 Morph]", OscMappingManager.formatDisplayPath("Deck A/color:mod/1/morph"))
     }
 }

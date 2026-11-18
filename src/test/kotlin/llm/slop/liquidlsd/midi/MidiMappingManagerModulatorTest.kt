@@ -43,7 +43,7 @@ class MidiMappingManagerModulatorTest {
     fun testFormatDisplayPath() {
         assertEquals("Mixer/crossfade", MidiMappingManager.formatDisplayPath("Mixer/crossfade"))
         assertEquals("Deck A/zoom [LFO 1 Speed]", MidiMappingManager.formatDisplayPath("Deck A/zoom:mod/0/subdivision"))
-        assertEquals("Deck B/zoom [LFO 1 Depth]", MidiMappingManager.formatDisplayPath("Deck B/zoom:mod/0/depth"))
+        assertEquals("Deck B/zoom [LFO 1 Amount]", MidiMappingManager.formatDisplayPath("Deck B/zoom:mod/0/depth"))
         assertEquals("Deck A/color [LFO 2 Morph]", MidiMappingManager.formatDisplayPath("Deck A/color:mod/1/morph"))
         assertEquals("Deck A/color [Mod 3 Hold]", MidiMappingManager.formatDisplayPath("Deck A/color:mod/2/hold"))
     }

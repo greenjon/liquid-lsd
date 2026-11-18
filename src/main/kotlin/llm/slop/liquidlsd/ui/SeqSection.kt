@@ -105,7 +105,7 @@ object SeqSection {
         ImGui.spacing()
 
         drawGlide(session, param, existing, paramKey, modulatorIndex, themeColor, onReplace)
-        drawDepthOffset(session, param, existing, paramKey, modulatorIndex, themeColor, onReplace)
+        drawRange(session, param, existing, paramKey, modulatorIndex, themeColor, onReplace)
     }
 
     // ── Timing ──────────────────────────────────────────────────────────────────────────────
@@ -609,65 +609,22 @@ object SeqSection {
         ImGui.spacing()
     }
 
-    private fun drawDepthOffset(
+    private fun drawRange(
         session: SessionContext, param: ModulatableParameter, existing: CvModulator,
         paramKey: String, modulatorIndex: Int, themeColor: Int, onReplace: (CvModulator) -> Unit
     ) {
-        val id = existing.id
-        CustomRangeSlider.drawCustomRangeSlider(
+        CustomRangeSlider.drawModulatorRange(
             session = session,
-            idPrefix = id,
-            label = "Depth",
-            themeColor = themeColor,
-            currentValue = existing.depth,
-            currentMin = existing.depthMin,
-            currentMax = existing.depthMax,
-            minLimit = 0f,
-            maxLimit = 1f,
-            defaultValue = 1f,
-            isRandomizable = existing.randomizeDepth,
+            label = "Modulation Range",
+            mod = existing,
+            unipolar = existing.unipolarOn(param),
             isRandomizeDisabled = param.isRandomizeDisabled,
-            randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
-            formatValue = ValueFormat.AUTO,
-            onRandomizableChanged = { checked -> onReplace(existing.copy(randomizeDepth = checked)) },
-            onRandomizeNow = { onReplace(existing.randomizeDepth()) },
-            onRangeChanged = { min, max -> onReplace(existing.copy(depthMin = min, depthMax = max)) },
-            onValueChanged = { v -> onReplace(existing.copy(depth = v, depthMin = v, depthMax = v)) },
-            paramKey = paramKey,
-            modulatorIndex = modulatorIndex,
-            modulatorId = id,
-            propertyName = "depth"
-        )
-
-        val offCbs = cvModulatorSlider(
-            existing = existing,
-            getValue = { dcOffset }, getMin = { dcOffsetMin }, getMax = { dcOffsetMax },
-            minLimit = -1f, maxLimit = 1f, defaultOffset = 0.2f,
-            copyWithRandomize = { enabled, nMin, nMax -> copy(randomizeDcOffset = enabled, dcOffsetMin = nMin, dcOffsetMax = nMax) },
-            copyWithRange = { sMin, sMax, v -> copy(dcOffsetMin = sMin, dcOffsetMax = sMax, dcOffset = v) },
-            copyWithValue = { v -> copy(dcOffset = v, dcOffsetMin = v, dcOffsetMax = v) },
-            randomizeNow = { randomizeDcOffset() },
+            themeColor = themeColor,
             onReplace = onReplace,
-        )
-        CustomRangeSlider.drawCustomRangeSlider(
-            session = session,
-            idPrefix = "${id}_off",
-            label = "Offset",
-            description = "Added to the pattern after Depth, shifting the whole sequence up or down.",
-            themeColor = themeColor,
-            paramKey = paramKey, modulatorIndex = modulatorIndex, propertyName = "dcOffset",
-            currentValue = existing.dcOffset,
-            currentMin = existing.dcOffsetMin,
-            currentMax = existing.dcOffsetMax,
-            minLimit = -1f, maxLimit = 1f, defaultValue = 0f,
-            isRandomizable = existing.randomizeDcOffset,
-            isRandomizeDisabled = param.isRandomizeDisabled,
-            randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
-            formatValue = ValueFormat.AUTO,
-            onRandomizableChanged = offCbs.onRandomizableChanged,
-            onRandomizeNow = offCbs.onRandomizeNow,
-            onRangeChanged = offCbs.onRangeChanged,
-            onValueChanged = offCbs.onValueChanged,
+            modulatorIndex = modulatorIndex,
+            paramKey = paramKey,
+            tooltip = "Where the bottom and top of the step grid land on this parameter, measured from its set value.\n" +
+                "Drag between the handles (or Shift-drag) to slide the whole range; right-click Base or Amount above the track to learn those instead."
         )
         ImGui.spacing()
     }

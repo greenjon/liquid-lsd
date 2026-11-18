@@ -70,11 +70,54 @@ data class ModulatorDto(
     val seqCurveSmooth: Boolean = false,
     val randomizeSeqSteps: Boolean = false,
 
+    /** Range roll space ("ENDS" / "BASE_AMOUNT"); null in files saved before it existed (see [toDomain]). */
+    val rollSpace: String? = null,
+    val lfoMinRollMin: Float = 0f,
+    val lfoMinRollMax: Float = 0f,
+    val lfoMaxRollMin: Float = 0f,
+    val lfoMaxRollMax: Float = 0f,
+    val randomizeLfoMin: Boolean = false,
+    val randomizeLfoMax: Boolean = false,
+
     val id: String? = null
 ) {
+    /**
+     * This DTO in the current schema. Files saved before [rollSpace] existed carry no roll space: their
+     * LFO/audio range rolls were authored in the Min/Max editor, which kept the Min end's roll range in
+     * dcOffsetMin/Max and the Max end's in depthMin/Max, so those move to the ENDS fields. Seq and MIDI
+     * modulators were authored as Depth/Offset and become BASE_AMOUNT unchanged.
+     */
+    fun normalized(): ModulatorDto {
+        if (rollSpace != null) return this
+        return when (CvModulator.legacyRollSpace(sourceId)) {
+            RollSpace.BASE_AMOUNT -> copy(rollSpace = RollSpace.BASE_AMOUNT.name)
+            RollSpace.ENDS -> copy(
+                rollSpace = RollSpace.ENDS.name,
+                lfoMinRollMin = dcOffsetMin, lfoMinRollMax = dcOffsetMax, randomizeLfoMin = randomizeDcOffset,
+                lfoMaxRollMin = depthMin, lfoMaxRollMax = depthMax, randomizeLfoMax = randomizeDepth,
+                dcOffsetMin = dcOffset, dcOffsetMax = dcOffset, randomizeDcOffset = false,
+                depthMin = depth, depthMax = depth, randomizeDepth = false
+            )
+        }
+    }
+
+    /** Same as [CvModulator.hasRangeVariation]. */
+    val hasRangeVariation: Boolean
+        get() {
+            val n = normalized()
+            return if (n.rollSpace == RollSpace.ENDS.name) n.endsVary
+            else (n.randomizeDepth && n.depthMin != n.depthMax) || (n.randomizeDcOffset && n.dcOffsetMin != n.dcOffsetMax)
+        }
+
+    /** ENDS rolls can land on different depth/dcOffset values, so those are not compared for dirty state. */
+    private val endsVary: Boolean
+        get() = rollSpace == RollSpace.ENDS.name &&
+            ((randomizeLfoMin && lfoMinRollMin != lfoMinRollMax) || (randomizeLfoMax && lfoMaxRollMin != lfoMaxRollMax))
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is ModulatorDto) return false
+        if (rollSpace == null || other.rollSpace == null) return normalized().equals(other.normalized())
         
         if (sourceId != other.sourceId) return false
         if (operator != other.operator) return false
@@ -98,10 +141,18 @@ data class ModulatorDto(
         if (randomizePhaseOffset != other.randomizePhaseOffset) return false
         if (randomizeSlope != other.randomizeSlope) return false
         if (randomizeDcOffset != other.randomizeDcOffset) return false
+        if (rollSpace != other.rollSpace) return false
+        if (lfoMinRollMin != other.lfoMinRollMin) return false
+        if (lfoMinRollMax != other.lfoMinRollMax) return false
+        if (lfoMaxRollMin != other.lfoMaxRollMin) return false
+        if (lfoMaxRollMax != other.lfoMaxRollMax) return false
+        if (randomizeLfoMin != other.randomizeLfoMin) return false
+        if (randomizeLfoMax != other.randomizeLfoMax) return false
+        val eitherEndsVary = endsVary || other.endsVary
         
         // Exclude instantaneous values from equality check if they are subject to active randomization
         val isDepthRandom = (randomizeDepth && depthMin != depthMax) || depthMin != other.depthMin || depthMax != other.depthMax
-        if (!isDepthRandom && depth != other.depth) return false
+        if (!isDepthRandom && !eitherEndsVary && depth != other.depth) return false
         
         val isSubRandom = (randomizeSubdivision && subdivisionMin != subdivisionMax) || subdivisionMin != other.subdivisionMin || subdivisionMax != other.subdivisionMax
         if (!isSubRandom && subdivision != other.subdivision) return false
@@ -113,7 +164,7 @@ data class ModulatorDto(
         if (!isSlopeRandom && slope != other.slope) return false
         
         val isDcRandom = (randomizeDcOffset && dcOffsetMin != dcOffsetMax) || dcOffsetMin != other.dcOffsetMin || dcOffsetMax != other.dcOffsetMax
-        if (!isDcRandom && dcOffset != other.dcOffset) return false
+        if (!isDcRandom && !eitherEndsVary && dcOffset != other.dcOffset) return false
 
         if (randomizeSeqSteps != other.randomizeSeqSteps) return false
         if (!randomizeSeqSteps && seqSteps != other.seqSteps) return false
@@ -129,6 +180,7 @@ data class ModulatorDto(
     }
 
     override fun hashCode(): Int {
+        if (rollSpace == null) return normalized().hashCode()
         var result = sourceId.hashCode()
         result = 31 * result + operator.hashCode()
         result = 31 * result + bypassed.hashCode()
@@ -151,9 +203,16 @@ data class ModulatorDto(
         result = 31 * result + randomizePhaseOffset.hashCode()
         result = 31 * result + randomizeSlope.hashCode()
         result = 31 * result + randomizeDcOffset.hashCode()
+        result = 31 * result + rollSpace.hashCode()
+        result = 31 * result + lfoMinRollMin.hashCode()
+        result = 31 * result + lfoMinRollMax.hashCode()
+        result = 31 * result + lfoMaxRollMin.hashCode()
+        result = 31 * result + lfoMaxRollMax.hashCode()
+        result = 31 * result + randomizeLfoMin.hashCode()
+        result = 31 * result + randomizeLfoMax.hashCode()
 
         val isDepthRandom = randomizeDepth && depthMin != depthMax
-        if (!isDepthRandom) result = 31 * result + depth.hashCode()
+        if (!isDepthRandom && !endsVary) result = 31 * result + depth.hashCode()
         
         val isSubRandom = randomizeSubdivision && subdivisionMin != subdivisionMax
         if (!isSubRandom) result = 31 * result + subdivision.hashCode()
@@ -165,7 +224,7 @@ data class ModulatorDto(
         if (!isSlopeRandom) result = 31 * result + slope.hashCode()
         
         val isDcRandom = randomizeDcOffset && dcOffsetMin != dcOffsetMax
-        if (!isDcRandom) result = 31 * result + dcOffset.hashCode()
+        if (!isDcRandom && !endsVary) result = 31 * result + dcOffset.hashCode()
 
         result = 31 * result + randomizeSeqSteps.hashCode()
         if (!randomizeSeqSteps) result = 31 * result + seqSteps.hashCode()
@@ -394,10 +453,19 @@ fun CvModulator.toDto(): ModulatorDto = ModulatorDto(
     randomizeSeqHold = randomizeSeqHold,
     seqCurveSmooth = seqCurveSmooth,
     randomizeSeqSteps = randomizeSeqSteps,
+    rollSpace = rollSpace.name,
+    lfoMinRollMin = lfoMinRollMin,
+    lfoMinRollMax = lfoMinRollMax,
+    lfoMaxRollMin = lfoMaxRollMin,
+    lfoMaxRollMax = lfoMaxRollMax,
+    randomizeLfoMin = randomizeLfoMin,
+    randomizeLfoMax = randomizeLfoMax,
     id = id
 )
 
-fun ModulatorDto.toDomain(): CvModulator = CvModulator(
+fun ModulatorDto.toDomain(): CvModulator = normalized().toDomainNormalized()
+
+private fun ModulatorDto.toDomainNormalized(): CvModulator = CvModulator(
     sourceId = sourceId,
     operator = ModulationOperator.valueOf(operator),
     depth = depth,
@@ -451,6 +519,13 @@ fun ModulatorDto.toDomain(): CvModulator = CvModulator(
     randomizeSeqHold = randomizeSeqHold,
     seqCurveSmooth = seqCurveSmooth,
     randomizeSeqSteps = randomizeSeqSteps,
+    rollSpace = rollSpace?.let { runCatching { RollSpace.valueOf(it) }.getOrNull() } ?: RollSpace.ENDS,
+    lfoMinRollMin = lfoMinRollMin,
+    lfoMinRollMax = lfoMinRollMax,
+    lfoMaxRollMin = lfoMaxRollMin,
+    lfoMaxRollMax = lfoMaxRollMax,
+    randomizeLfoMin = randomizeLfoMin,
+    randomizeLfoMax = randomizeLfoMax,
     id = id ?: llm.slop.liquidlsd.utils.DeterministicRandom.uuid()
 )
 

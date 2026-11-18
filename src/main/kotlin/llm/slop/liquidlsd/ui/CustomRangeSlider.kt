@@ -103,6 +103,10 @@ object CustomRangeSlider {
     private var draggingMax = false
     private var activeSliderLabel: String? = null
     private var clickMouseX = 0f
+    /** Dragging the whole range of a slidable dual slider; the range at the start of the drag. */
+    private var draggingBoth = false
+    private var slideStartMin = 0f
+    private var slideStartMax = 0f
 
     var isAnySliderHovered = false
 
@@ -254,43 +258,50 @@ object CustomRangeSlider {
     private fun minMaxLock(paramKey: String?, modulatorId: String?, prop: String): llm.slop.liquidlsd.macro.MacroBindingInfo? =
         if (paramKey != null && modulatorId != null) llm.slop.liquidlsd.macro.MacroEngine.lockingBindingInfo(paramKey, modulatorId, prop) else null
 
-    fun drawMinMaxRangeSlider(
+    /**
+     * The Min/Max range row every modulator shows (LFO, audio, sequencer, MIDI). Storage is Base (`dcOffset`)
+     * and Amount (`depth`); Min/Max is how they are drawn. Dragging the bar between the handles, or Shift-dragging,
+     * slides the whole range with its span locked (stopping at the track ends). The captions offer MIDI/OSC/macro
+     * Learn for Min, Max, Base and Amount, whichever way the row is drawn (none without a [paramKey]).
+     *
+     * With the dice on, two roll rows replace it: the Min and Max ends ([RollSpace.ENDS]) or Base and Amount
+     * ([RollSpace.BASE_AMOUNT]). Each row has a pin: a pinned row keeps its current value (and edits it) while
+     * the other rolls.
+     */
+    fun drawModulatorRange(
         session: llm.slop.liquidlsd.SessionContext,
         label: String,
-        currentMin: Float,
-        currentMax: Float,
-        minRangeMin: Float,
-        minRangeMax: Float,
-        maxRangeMin: Float,
-        maxRangeMax: Float,
-        minLimit: Float,
-        maxLimit: Float,
-        isRandomizable: Boolean,
+        mod: llm.slop.liquidlsd.parameters.CvModulator,
+        unipolar: Boolean,
         isRandomizeDisabled: Boolean = false,
         themeColor: Int,
-        idPrefix: String,
-        formatValue: (Float) -> String = ValueFormat.AUTO,
-        onRandomizableChanged: (Boolean) -> Unit,
-        onRandomizeNow: () -> Unit,
-        onMinMaxChanged: (Float, Float) -> Unit,
-        onMinRangeChanged: (Float, Float) -> Unit,
-        onMaxRangeChanged: (Float, Float) -> Unit,
+        onReplace: (llm.slop.liquidlsd.parameters.CvModulator) -> Unit,
         modulatorIndex: Int? = null,
-        modulatorId: String? = null,
-        paramKey: String? = null
+        paramKey: String? = null,
+        tooltip: String = "The lowest and highest the modulator takes this parameter, measured from its set value.\n" +
+            "Drag between the handles (or Shift-drag) to slide the whole range; right-click Base or Amount above the track to learn those instead."
     ) {
-        val effectiveIsRandomizable = if (isRandomizeDisabled) false else (isRandomizable && session.uiTheme.randomizationEnabled)
+        val idPrefix = mod.id
+        val modulatorId = mod.id
+        val minLimit = -1f
+        val maxLimit = 1f
+        val amountLimit = mod.amountLimit(unipolar)
+        val curMin = mod.getLfoMin(unipolar)
+        val curMax = mod.getLfoMax(unipolar)
+        val rolling = mod.rollsRange
+        val effectiveIsRandomizable = if (isRandomizeDisabled) false else (rolling && session.uiTheme.randomizationEnabled)
         val fontScale = 0.95f
         val buttonSize = ImGui.getFrameHeight()
         val w = ImGui.getContentRegionAvailX()
         val startX = ImGui.getCursorScreenPosX()
         val startY = ImGui.getCursorScreenPosY()
+        val formatValue = ValueFormat.AUTO
+        val displayScale = ValueFormat.scaleFor(minLimit, maxLimit)
 
         ImGui.pushID("${idPrefix}_$label")
 
-        // 1. Header Row (Label + Dice)
-        val labelColW = if (label.isEmpty()) 0f else (110f * fontScale)
-        val textBoxesStartX = startX + labelColW + (if (label.isEmpty()) 0f else (10f * fontScale))
+        val labelColW = 110f * fontScale
+        val textBoxesStartX = startX + labelColW + 10f * fontScale
         val boxWidth = 44f * fontScale
         val boxSpacing = 8f
         val sliderStartX = textBoxesStartX + (boxWidth * 2f + boxSpacing) + 15f
@@ -299,11 +310,10 @@ object CustomRangeSlider {
 
         ImGui.setCursorScreenPos(startX, startY + (buttonSize - session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() }) / 2f)
         session.uiTheme.body(label)
-        if (label.isNotEmpty()) itemTooltip("The lowest and highest the modulator takes this parameter, measured from its set value.\nMoving Max never moves Min, and the other way round.")
+        itemTooltip(tooltip)
 
         if (session.uiTheme.randomizationEnabled) {
-            val randBtnX = startX + labelColW - buttonSize
-            ImGui.setCursorScreenPos(randBtnX, startY)
+            ImGui.setCursorScreenPos(startX + labelColW - buttonSize, startY)
             if (isRandomizeDisabled) {
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, TangoPalette.TEXT_FAINT.u32())
                 session.uiTheme.withFont(UITheme.FontLevel.BODY) {
@@ -312,101 +322,133 @@ object CustomRangeSlider {
                 ImGui.popStyleColor()
                 itemTooltip(llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
             } else {
-                if (!effectiveIsRandomizable) {
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, TangoPalette.TEXT_DIM.u32())
-                }
+                if (!effectiveIsRandomizable) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, TangoPalette.TEXT_DIM.u32())
                 session.uiTheme.withFont(UITheme.FontLevel.BODY) {
                     if (ButtonChrome.button("${Icons.DICES}##rand_toggle", buttonSize, buttonSize)) {
-                        onRandomizableChanged(!effectiveIsRandomizable)
+                        onReplace(mod.withRangeRolling(!effectiveIsRandomizable, unipolar))
                     }
                 }
                 if (!effectiveIsRandomizable) ImGui.popStyleColor()
                 if (ImGui.isItemClicked(1)) {
-                    if (!effectiveIsRandomizable) onRandomizableChanged(true)
-                    onRandomizeNow()
+                    val on = if (!effectiveIsRandomizable) mod.withRangeRolling(true, unipolar) else mod
+                    onReplace(on.rollRange(unipolar = unipolar))
                 }
                 itemTooltip(if (effectiveIsRandomizable) RANDOM_RANGE_ON_TIP else RANDOM_RANGE_OFF_TIP)
             }
         }
 
-        // 2. Sliders
+        val isMacroBindable = paramKey != null
+        val isMacroLearning = isMacroBindable && llm.slop.liquidlsd.macro.MacroLearnState.isLearning()
+        val bind = { propertyName: String, lo: Float, hi: Float ->
+            llm.slop.liquidlsd.macro.MacroLearnState.bindTarget(
+                bank = llm.slop.liquidlsd.macro.MacroEngine.bankForParamPath(paramKey!!),
+                targetType = llm.slop.liquidlsd.macro.MacroTargetType.MODULATOR_PROPERTY,
+                parameterId = paramKey,
+                modulatorId = modulatorId,
+                propertyName = propertyName,
+                minVal = lo,
+                maxVal = hi
+            )
+        }
+        fun caption(text: String, x: Float, y: Float, cw: Float, prop: String, lo: Float, hi: Float, about: String) =
+            drawMinMaxBoundLabel(session, text, isMacroLearning, x, y, cw, paramKey, modulatorIndex, modulatorId, prop, lo, hi, about = about) { bind(prop, lo, hi) }
+
         if (!effectiveIsRandomizable) {
-            // SINGLE track for Min/Max
             val labelY = startY - 14f
-            val isMacroBindable = modulatorId != null && paramKey != null
-            val isMacroLearning = isMacroBindable && llm.slop.liquidlsd.macro.MacroLearnState.isLearning()
-            drawMinMaxBoundLabel(session, "Min", isMacroLearning, textBoxesStartX, labelY, boxWidth, paramKey, modulatorIndex, modulatorId, "lfoMin", minLimit, maxLimit) {
-                llm.slop.liquidlsd.macro.MacroLearnState.bindTarget(
-                    bank = llm.slop.liquidlsd.macro.MacroEngine.bankForParamPath(paramKey!!),
-                    targetType = llm.slop.liquidlsd.macro.MacroTargetType.MODULATOR_PROPERTY,
-                    parameterId = paramKey!!,
-                    modulatorId = modulatorId,
-                    propertyName = "lfoMin",
-                    minVal = minLimit,
-                    maxVal = maxLimit
-                )
-            }
-            drawMinMaxBoundLabel(session, "Max", isMacroLearning, textBoxesStartX + boxWidth + boxSpacing, labelY, boxWidth, paramKey, modulatorIndex, modulatorId, "lfoMax", minLimit, maxLimit) {
-                llm.slop.liquidlsd.macro.MacroLearnState.bindTarget(
-                    bank = llm.slop.liquidlsd.macro.MacroEngine.bankForParamPath(paramKey!!),
-                    targetType = llm.slop.liquidlsd.macro.MacroTargetType.MODULATOR_PROPERTY,
-                    parameterId = paramKey!!,
-                    modulatorId = modulatorId,
-                    propertyName = "lfoMax",
-                    minVal = minLimit,
-                    maxVal = maxLimit
-                )
-            }
+            caption("Min", textBoxesStartX, labelY, boxWidth, "lfoMin", minLimit, maxLimit, "Where the swing bottoms out.")
+            caption("Max", textBoxesStartX + boxWidth + boxSpacing, labelY, boxWidth, "lfoMax", minLimit, maxLimit, "Where the swing tops out.")
+            if (paramKey != null) caption("Base", sliderStartX, labelY, 40f, "dcOffset", minLimit, maxLimit,
+                if (unipolar) "Where the range sits with no signal (its bottom). Moving Base slides the whole range." else "The centre of the range. Moving Base slides the whole range.")
+            if (paramKey != null) caption("Amount", sliderStartX + 48f, labelY, 56f, "depth", 0f, amountLimit,
+                if (unipolar) "How far the range reaches up from Base." else "How far the range reaches either side of Base.")
 
-            val minLock = minMaxLock(paramKey, modulatorId, "lfoMin")
-            val maxLock = minMaxLock(paramKey, modulatorId, "lfoMax")
-            drawTextInput(session, "${idPrefix}_min", currentMin, minLimit, maxLimit, textBoxesStartX, startY, boxWidth, null, { onMinMaxChanged(it, maxOf(it, currentMax)) }, formatValue, macroBindingInfo = minLock, displayScale = if (formatValue === ValueFormat.AUTO) ValueFormat.scaleFor(minLimit, maxLimit) else 1f, tourKey = "range_${label}_min")
-            drawTextInput(session, "${idPrefix}_max", currentMax, minLimit, maxLimit, textBoxesStartX + boxWidth + boxSpacing, startY, boxWidth, null, { onMinMaxChanged(minOf(it, currentMin), it) }, formatValue, macroBindingInfo = maxLock, displayScale = if (formatValue === ValueFormat.AUTO) ValueFormat.scaleFor(minLimit, maxLimit) else 1f, tourKey = "range_${label}_max")
-
-            renderInternalDualSlider(idPrefix + label + "_single", currentMin, currentMax, minLimit, maxLimit, sliderStartX, startY, lineWidth, themeColor, onMinMaxChanged, locked = minLock ?: maxLock)
+            val minLock = minMaxLock(paramKey, modulatorId, "lfoMin") ?: minMaxLock(paramKey, modulatorId, "dcOffset")
+            val maxLock = minMaxLock(paramKey, modulatorId, "lfoMax") ?: minMaxLock(paramKey, modulatorId, "depth")
+            val setRange = { lo: Float, hi: Float -> onReplace(mod.withLfoRange(lo, hi, unipolar)) }
+            drawTextInput(session, "${idPrefix}_min", curMin, minLimit, maxLimit, textBoxesStartX, startY, boxWidth, null, { setRange(it, maxOf(it, curMax)) }, formatValue, macroBindingInfo = minLock, displayScale = displayScale, tourKey = "range_${label}_min")
+            drawTextInput(session, "${idPrefix}_max", curMax, minLimit, maxLimit, textBoxesStartX + boxWidth + boxSpacing, startY, boxWidth, null, { setRange(minOf(it, curMin), it) }, formatValue, macroBindingInfo = maxLock, displayScale = displayScale, tourKey = "range_${label}_max")
+            renderInternalDualSlider(idPrefix + label + "_single", curMin, curMax, minLimit, maxLimit, sliderStartX, startY, lineWidth, themeColor, setRange, locked = minLock ?: maxLock, slidable = true)
         } else {
-            // DOUBLE tracks (Top for Min, Bottom for Max)
             val rowLabelH = 14f
             val row2Y = startY + buttonSize + 4f + rowLabelH
+            val ends = mod.rollSpace == llm.slop.liquidlsd.parameters.RollSpace.ENDS
 
-            val isMacroBindable = modulatorId != null && paramKey != null
-            val isMacroLearning = isMacroBindable && llm.slop.liquidlsd.macro.MacroLearnState.isLearning()
-            val bindRangeBound = { propertyName: String ->
-                llm.slop.liquidlsd.macro.MacroLearnState.bindTarget(
-                    bank = llm.slop.liquidlsd.macro.MacroEngine.bankForParamPath(paramKey!!),
-                    targetType = llm.slop.liquidlsd.macro.MacroTargetType.MODULATOR_PROPERTY,
-                    parameterId = paramKey!!,
-                    modulatorId = modulatorId,
-                    propertyName = propertyName,
-                    minVal = minLimit,
-                    maxVal = maxLimit
-                )
+            // Roll-space switch under the label, in the second row's label column.
+            val switchW = labelColW - 6f
+            ImGui.setCursorScreenPos(startX, row2Y)
+            session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+                if (ButtonChrome.button(if (ends) "Ends##roll_space" else "Base·Amt##roll_space", switchW, buttonSize)) {
+                    onReplace(mod.withRollSpace(if (ends) llm.slop.liquidlsd.parameters.RollSpace.BASE_AMOUNT else llm.slop.liquidlsd.parameters.RollSpace.ENDS, unipolar))
+                }
             }
+            itemTooltip(if (ends)
+                "Rolling the ends: Min and Max each land somewhere in their own row.\nClick to roll Base and Amount instead (pin Base to keep the range centred while its size varies)."
+            else
+                "Rolling Base and Amount: pin Base to keep the range where it is while its size varies.\nClick to roll the Min and Max ends instead.")
 
-            val dcMinLock = minMaxLock(paramKey, modulatorId, "dcOffsetMin")
-            val dcMaxLock = minMaxLock(paramKey, modulatorId, "dcOffsetMax")
-            val depthMinLock = minMaxLock(paramKey, modulatorId, "depthMin")
-            val depthMaxLock = minMaxLock(paramKey, modulatorId, "depthMax")
+            data class Row(
+                val name: String, val prop: String, val lo: Float, val hi: Float, val limitLo: Float, val limitHi: Float,
+                val rolls: Boolean, val value: Float,
+                val setRange: (Float, Float) -> Unit, val setValue: (Float) -> Unit, val togglePin: () -> Unit
+            )
+            val rows = if (ends) listOf(
+                Row("Min", "lfoMinRoll", mod.lfoMinRollMin, mod.lfoMinRollMax, minLimit, maxLimit, mod.randomizeLfoMin, curMin,
+                    { a, b -> onReplace(mod.copy(lfoMinRollMin = a, lfoMinRollMax = b)) },
+                    { v -> onReplace(mod.withLfoRange(v, curMax, unipolar)) },
+                    { onReplace(mod.copy(randomizeLfoMin = !mod.randomizeLfoMin).let { if (it.randomizeLfoMin && it.lfoMinRollMin == it.lfoMinRollMax) it.copy(lfoMinRollMin = (curMin - 0.1f).coerceAtLeast(minLimit), lfoMinRollMax = (curMin + 0.1f).coerceAtMost(maxLimit)) else it }) }),
+                Row("Max", "lfoMaxRoll", mod.lfoMaxRollMin, mod.lfoMaxRollMax, minLimit, maxLimit, mod.randomizeLfoMax, curMax,
+                    { a, b -> onReplace(mod.copy(lfoMaxRollMin = a, lfoMaxRollMax = b)) },
+                    { v -> onReplace(mod.withLfoRange(curMin, v, unipolar)) },
+                    { onReplace(mod.copy(randomizeLfoMax = !mod.randomizeLfoMax).let { if (it.randomizeLfoMax && it.lfoMaxRollMin == it.lfoMaxRollMax) it.copy(lfoMaxRollMin = (curMax - 0.1f).coerceAtLeast(minLimit), lfoMaxRollMax = (curMax + 0.1f).coerceAtMost(maxLimit)) else it }) })
+            ) else listOf(
+                Row("Base", "dcOffset", mod.dcOffsetMin, mod.dcOffsetMax, minLimit, maxLimit, mod.randomizeDcOffset, mod.dcOffset,
+                    { a, b -> onReplace(mod.copy(dcOffsetMin = a, dcOffsetMax = b)) },
+                    { v -> onReplace(mod.copy(dcOffset = v)) },
+                    { onReplace(mod.copy(randomizeDcOffset = !mod.randomizeDcOffset).let { if (it.randomizeDcOffset && it.dcOffsetMin == it.dcOffsetMax) it.copy(dcOffsetMin = (mod.dcOffset - 0.1f).coerceAtLeast(minLimit), dcOffsetMax = (mod.dcOffset + 0.1f).coerceAtMost(maxLimit)) else it }) }),
+                Row("Amt", "depth", mod.depthMin, mod.depthMax, 0f, amountLimit, mod.randomizeDepth, mod.depth,
+                    { a, b -> onReplace(mod.copy(depthMin = a, depthMax = b)) },
+                    { v -> onReplace(mod.copy(depth = v)) },
+                    { onReplace(mod.copy(randomizeDepth = !mod.randomizeDepth).let { if (it.randomizeDepth && it.depthMin == it.depthMax) it.copy(depthMin = (mod.depth - 0.1f).coerceAtLeast(0f), depthMax = (mod.depth + 0.1f).coerceAtMost(amountLimit)) else it }) })
+            )
 
-            // Labels for columns (Top row: dcOffset randomization bounds)
-            val labelY = startY - 14f
-            drawMinMaxBoundLabel(session, "Min Bound Range", isMacroLearning, textBoxesStartX, labelY, boxWidth, minLimit = minLimit, maxLimit = maxLimit, paramKey = paramKey, modulatorIndex = modulatorIndex, modulatorId = modulatorId, propertyName = "dcOffsetMin") { bindRangeBound("dcOffsetMin") }
-            drawMinMaxBoundLabel(session, "Max Bound Range", isMacroLearning, textBoxesStartX + boxWidth + boxSpacing, labelY, boxWidth, minLimit = minLimit, maxLimit = maxLimit, paramKey = paramKey, modulatorIndex = modulatorIndex, modulatorId = modulatorId, propertyName = "dcOffsetMax") { bindRangeBound("dcOffsetMax") }
+            val rowTrackX = sliderStartX + buttonSize + 10f
+            val rowTrackW = (lineEndX - rowTrackX).coerceAtLeast(1f)
+            rows.forEachIndexed { i, row ->
+                val y = if (i == 0) startY else row2Y
+                // The pin sits at the start of the row's track, so the label column keeps its width.
+                ImGui.setCursorScreenPos(sliderStartX, y)
+                if (!row.rolls) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, TangoPalette.u32(TangoPalette.SYNC.normal, 1f))
+                session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                    if (ButtonChrome.button("${if (row.rolls) Icons.UNLOCK else Icons.LOCK}##pin_${row.prop}", buttonSize, buttonSize)) row.togglePin()
+                }
+                if (!row.rolls) ImGui.popStyleColor()
+                itemTooltip(if (row.rolls) "${row.name} rolls within this row. Click to pin it at its current value."
+                    else "${row.name} is pinned: rolls leave it alone and this row edits its value. Click to roll it.")
 
-            // Top: Min range
-            drawTextInput(session, "${idPrefix}_min_r_min", minRangeMin, minLimit, maxLimit, textBoxesStartX, startY, boxWidth, null, { onMinRangeChanged(it, maxOf(it, minRangeMax)) }, formatValue, macroBindingInfo = dcMinLock, displayScale = if (formatValue === ValueFormat.AUTO) ValueFormat.scaleFor(minLimit, maxLimit) else 1f)
-            drawTextInput(session, "${idPrefix}_min_r_max", minRangeMax, minLimit, maxLimit, textBoxesStartX + boxWidth + boxSpacing, startY, boxWidth, null, { onMinRangeChanged(minOf(it, minRangeMin), it) }, formatValue, macroBindingInfo = dcMaxLock, displayScale = if (formatValue === ValueFormat.AUTO) ValueFormat.scaleFor(minLimit, maxLimit) else 1f)
-            renderInternalDualSlider(idPrefix + label + "_min_r", minRangeMin, minRangeMax, minLimit, maxLimit, sliderStartX, startY, lineWidth, themeColor, onMinRangeChanged, locked = dcMinLock ?: dcMaxLock)
-
-            // Labels for columns (Bottom row: depth randomization bounds)
-            val labelY2 = row2Y - 14f
-            drawMinMaxBoundLabel(session, "Min Bound Range", isMacroLearning, textBoxesStartX, labelY2, boxWidth, minLimit = minLimit, maxLimit = maxLimit, paramKey = paramKey, modulatorIndex = modulatorIndex, modulatorId = modulatorId, propertyName = "depthMin") { bindRangeBound("depthMin") }
-            drawMinMaxBoundLabel(session, "Max Bound Range", isMacroLearning, textBoxesStartX + boxWidth + boxSpacing, labelY2, boxWidth, minLimit = minLimit, maxLimit = maxLimit, paramKey = paramKey, modulatorIndex = modulatorIndex, modulatorId = modulatorId, propertyName = "depthMax") { bindRangeBound("depthMax") }
-
-            // Bottom: Max range
-            drawTextInput(session, "${idPrefix}_max_r_min", maxRangeMin, minLimit, maxLimit, textBoxesStartX, row2Y, boxWidth, null, { onMaxRangeChanged(it, maxOf(it, maxRangeMax)) }, formatValue, macroBindingInfo = depthMinLock, displayScale = if (formatValue === ValueFormat.AUTO) ValueFormat.scaleFor(minLimit, maxLimit) else 1f)
-            drawTextInput(session, "${idPrefix}_max_r_max", maxRangeMax, minLimit, maxLimit, textBoxesStartX + boxWidth + boxSpacing, row2Y, boxWidth, null, { onMaxRangeChanged(minOf(it, maxRangeMin), it) }, formatValue, macroBindingInfo = depthMaxLock, displayScale = if (formatValue === ValueFormat.AUTO) ValueFormat.scaleFor(minLimit, maxLimit) else 1f)
-            renderInternalDualSlider(idPrefix + label + "_max_r", maxRangeMin, maxRangeMax, minLimit, maxLimit, sliderStartX, row2Y, lineWidth, themeColor, onMaxRangeChanged, locked = depthMinLock ?: depthMaxLock)
+                val labelY = y - 14f
+                val (loProp, hiProp) = when (row.prop) {
+                    "dcOffset" -> "dcOffsetMin" to "dcOffsetMax"
+                    "depth" -> "depthMin" to "depthMax"
+                    else -> "${row.prop}Min" to "${row.prop}Max"
+                }
+                if (row.rolls) {
+                    caption(row.name, textBoxesStartX, labelY, boxWidth, loProp, row.limitLo, row.limitHi, "The lowest a roll can put ${row.name}.")
+                    caption("to", textBoxesStartX + boxWidth + boxSpacing, labelY, boxWidth, hiProp, row.limitLo, row.limitHi, "The highest a roll can put ${row.name}.")
+                    val loLock = minMaxLock(paramKey, modulatorId, loProp)
+                    val hiLock = minMaxLock(paramKey, modulatorId, hiProp)
+                    drawTextInput(session, "${idPrefix}_${row.prop}_r_lo", row.lo, row.limitLo, row.limitHi, textBoxesStartX, y, boxWidth, null, { row.setRange(it, maxOf(it, row.hi)) }, formatValue, macroBindingInfo = loLock, displayScale = displayScale)
+                    drawTextInput(session, "${idPrefix}_${row.prop}_r_hi", row.hi, row.limitLo, row.limitHi, textBoxesStartX + boxWidth + boxSpacing, y, boxWidth, null, { row.setRange(minOf(it, row.lo), it) }, formatValue, macroBindingInfo = hiLock, displayScale = displayScale)
+                    renderInternalDualSlider(idPrefix + label + "_" + row.prop + "_r", row.lo, row.hi, row.limitLo, row.limitHi, rowTrackX, y, rowTrackW, themeColor, row.setRange, locked = loLock ?: hiLock, slidable = true)
+                } else {
+                    val valueProp = when (row.prop) { "lfoMinRoll" -> "lfoMin"; "lfoMaxRoll" -> "lfoMax"; else -> row.prop }
+                    caption(row.name, textBoxesStartX, labelY, boxWidth, valueProp, row.limitLo, row.limitHi, "Pinned: rolls leave ${row.name} at this value.")
+                    val lock = minMaxLock(paramKey, modulatorId, valueProp)
+                    drawTextInput(session, "${idPrefix}_${row.prop}_pin", row.value, row.limitLo, row.limitHi, textBoxesStartX, y, boxWidth, null, row.setValue, formatValue, macroBindingInfo = lock, displayScale = displayScale)
+                    val dim = TangoPalette.u32(TangoPalette.SYNC.normal, 0.6f)
+                    renderInternalDualSlider(idPrefix + label + "_" + row.prop + "_pin", row.value, row.value, row.limitLo, row.limitHi, rowTrackX, y, rowTrackW, dim,
+                        { a, _ -> row.setValue(a) }, locked = lock, singleValue = true)
+                }
+            }
 
             ImGui.setCursorPosY(ImGui.getCursorPosY() + buttonSize + 4f)
         }
@@ -431,6 +473,7 @@ object CustomRangeSlider {
         macroKey: String? = paramKey,
         macroModId: String? = modulatorId,
         macroProp: String? = propertyName,
+        about: String? = null,
         onBind: () -> Unit
     ) {
         val captionHeight = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() }
@@ -526,7 +569,7 @@ object CustomRangeSlider {
         }
         if (isHovered) {
             labelTooltip(text, null, if (isMacroLearning) null else macroInfo, isMacroLearning, isOscLearningThis, isMidiLearningThis,
-                learnable = targetPath != null, resettable = false)
+                learnable = targetPath != null, resettable = false, about = about)
         }
     }
 
@@ -541,7 +584,10 @@ object CustomRangeSlider {
         lineWidth: Float,
         themeColor: Int,
         onChanged: (Float, Float) -> Unit,
-        locked: llm.slop.liquidlsd.macro.MacroBindingInfo? = null
+        locked: llm.slop.liquidlsd.macro.MacroBindingInfo? = null,
+        slidable: Boolean = false,
+        /** One value drawn as a collapsed range: dragging and the wheel move it, reported as (v, v). */
+        singleValue: Boolean = false
     ) {
         val buttonSize = ImGui.getFrameHeight()
         val centerY = startY + buttonSize / 2f
@@ -553,8 +599,9 @@ object CustomRangeSlider {
         val toPct = { v: Float -> (v - minLimit) / (maxLimit - minLimit) }
         val toVal = { p: Float -> minLimit + p * (maxLimit - minLimit) }
 
-        val minPct = toPct(curMin)
-        val maxPct = toPct(curMax)
+        // A Base/Amount driven from MIDI can push the ends past the track: draw them at the track ends.
+        val minPct = toPct(curMin).coerceIn(0f, 1f)
+        val maxPct = toPct(curMax).coerceIn(0f, 1f)
         val minHandleX = lineStartX + minPct * lineWidth
         val maxHandleX = lineStartX + maxPct * lineWidth
 
@@ -565,9 +612,22 @@ object CustomRangeSlider {
         val isTrackActive = ImGui.isItemActive()
         val isTrackActivated = ImGui.isItemActivated() && locked == null
 
-        if (isTrackActivated) {
+        val loHandleX = minOf(minHandleX, maxHandleX)
+        val hiHandleX = maxOf(minHandleX, maxHandleX)
+        val overBar = slidable && hiHandleX - loHandleX > 16f && mouseX > loHandleX + 6f && mouseX < hiHandleX - 6f
+        if (isTrackHovered && locked == null && (overBar || (slidable && io.keyShift))) {
+            ImGui.setMouseCursor(imgui.flag.ImGuiMouseCursor.ResizeEW)
+        }
+
+        if (isTrackActivated && (overBar || (slidable && io.keyShift))) {
             activeSliderLabel = id
             clickMouseX = mouseX
+            draggingBoth = true; draggingMin = false; draggingMax = false
+            slideStartMin = curMin; slideStartMax = curMax
+        } else if (isTrackActivated) {
+            activeSliderLabel = id
+            clickMouseX = mouseX
+            draggingBoth = false
             val isOverlapping = kotlin.math.abs(minHandleX - maxHandleX) < 4f
             if (isOverlapping) {
                 if (mouseX < minHandleX - 5f) { draggingMin = true; draggingMax = false }
@@ -583,7 +643,16 @@ object CustomRangeSlider {
         if (locked == null && isTrackActive && activeSliderLabel == id) {
             val pct = ((mouseX - lineStartX) / lineWidth).coerceIn(0f, 1f)
             val rawVal = toVal(pct)
-            if (!draggingMin && !draggingMax) {
+            if (singleValue) {
+                onChanged(rawVal, rawVal)
+            } else if (draggingBoth) {
+                // Slide with the span locked; stop where either end meets the track end.
+                val lo = minOf(slideStartMin, slideStartMax)
+                val hi = maxOf(slideStartMin, slideStartMax)
+                val delta = ((mouseX - clickMouseX) / lineWidth * (maxLimit - minLimit))
+                    .coerceIn(minOf(0f, minLimit - lo), maxOf(0f, maxLimit - hi))
+                onChanged(slideStartMin + delta, slideStartMax + delta)
+            } else if (!draggingMin && !draggingMax) {
                 if (mouseX > clickMouseX + 2f) { draggingMax = true; onChanged(curMin, rawVal.coerceIn(curMin, maxLimit)) }
                 else if (mouseX < clickMouseX - 2f) { draggingMin = true; onChanged(rawVal.coerceIn(minLimit, curMax), curMax) }
             } else if (draggingMin) {
@@ -592,7 +661,7 @@ object CustomRangeSlider {
                 onChanged(curMin, rawVal.coerceIn(curMin, maxLimit))
             }
         } else if (!isTrackActive && activeSliderLabel == id) {
-            draggingMin = false; draggingMax = false; activeSliderLabel = null
+            draggingMin = false; draggingMax = false; draggingBoth = false; activeSliderLabel = null
         }
 
         // Draw
@@ -622,10 +691,11 @@ object CustomRangeSlider {
                 val delta = io.mouseWheel * (if (io.keyCtrl && io.keyShift) 0.1f else if (io.keyShift) 0.01f else 0.001f)
                 val dMin = kotlin.math.abs(mouseX - minHandleX)
                 val dMax = kotlin.math.abs(mouseX - maxHandleX)
-                if (dMin < dMax) onChanged((curMin + delta).coerceIn(minLimit, curMax), curMax)
+                if (singleValue) { val v = (curMin + delta).coerceIn(minLimit, maxLimit); onChanged(v, v) }
+                else if (dMin < dMax) onChanged((curMin + delta).coerceIn(minLimit, curMax), curMax)
                 else onChanged(curMin, (curMax + delta).coerceIn(curMin, maxLimit))
             }
-            if (locked == null && ImGui.isMouseClicked(2)) onChanged(minLimit, maxLimit)
+            if (locked == null && !singleValue && ImGui.isMouseClicked(2)) onChanged(minLimit, maxLimit)
         }
     }
 

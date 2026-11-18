@@ -16,23 +16,36 @@ object ModulatorPropertyAccessor {
         return null
     }
 
+    /** Min/Max polarity of [mod] on [param]; without a parameter the source's own polarity is used. */
+    private fun unipolar(mod: CvModulator, param: ModulatableParameter?): Boolean =
+        param?.let { mod.unipolarOn(it) } ?: mod.sourceUnipolar
+
     /**
-     * Mutates the matching `var` field on [mod].
+     * Mutates the matching `var` field on [mod]. [param] (the parameter [mod] sits on) decides how Min/Max map
+     * onto Base/Amount for the sequencer; pass it whenever it is known.
+     * Base (`dcOffset`) and Amount (`depth`) are written unclamped, so a controller can push the swing past
+     * the -1..1 track; the parameter clamps its final value.
      * Unrecognized property names are a silent no-op — never throw.
      */
-    fun set(mod: CvModulator, propertyName: String, value: Float) {
+    fun set(mod: CvModulator, propertyName: String, value: Float, param: ModulatableParameter? = null) {
         when (propertyName) {
             "depth" -> mod.depth = value
             "lfoMin" -> {
-                val r = mod.withLfoRange(value, mod.getLfoMax())
+                val u = unipolar(mod, param)
+                val r = mod.withLfoRange(value, mod.getLfoMax(u), u)
                 mod.dcOffset = r.dcOffset
                 mod.depth = r.depth
             }
             "lfoMax" -> {
-                val r = mod.withLfoRange(mod.getLfoMin(), value)
+                val u = unipolar(mod, param)
+                val r = mod.withLfoRange(mod.getLfoMin(u), value, u)
                 mod.dcOffset = r.dcOffset
                 mod.depth = r.depth
             }
+            "lfoMinRollMin" -> mod.lfoMinRollMin = value
+            "lfoMinRollMax" -> mod.lfoMinRollMax = value
+            "lfoMaxRollMin" -> mod.lfoMaxRollMin = value
+            "lfoMaxRollMax" -> mod.lfoMaxRollMax = value
             "subdivision" -> mod.subdivision = value
             "phaseOffset" -> mod.phaseOffset = value
             "slope" -> mod.slope = value
@@ -59,11 +72,15 @@ object ModulatorPropertyAccessor {
     /**
      * Reads the current value of the matching property on [mod], or null if unrecognized.
      */
-    fun get(mod: CvModulator, propertyName: String): Float? {
+    fun get(mod: CvModulator, propertyName: String, param: ModulatableParameter? = null): Float? {
         return when (propertyName) {
             "depth" -> mod.depth
-            "lfoMin" -> mod.getLfoMin()
-            "lfoMax" -> mod.getLfoMax()
+            "lfoMin" -> mod.getLfoMin(unipolar(mod, param))
+            "lfoMax" -> mod.getLfoMax(unipolar(mod, param))
+            "lfoMinRollMin" -> mod.lfoMinRollMin
+            "lfoMinRollMax" -> mod.lfoMinRollMax
+            "lfoMaxRollMin" -> mod.lfoMaxRollMin
+            "lfoMaxRollMax" -> mod.lfoMaxRollMax
             "subdivision" -> mod.subdivision
             "phaseOffset" -> mod.phaseOffset
             "slope" -> mod.slope
@@ -112,12 +129,16 @@ object ModulatorPropertyAccessor {
         }
         val propLabel = when (propertyName) {
             "subdivision" -> "Speed"
-            "depth" -> "Depth"
+            "depth" -> "Amount"
             "phaseOffset" -> "Phase"
             "slope" -> "Asymmetry"
             "morph" -> "Morph"
             "hold" -> "Hold"
-            "dcOffset" -> "DC Offset"
+            "dcOffset" -> "Base"
+            "dcOffsetMin", "dcOffsetMax" -> "Base Roll"
+            "depthMin", "depthMax" -> "Amount Roll"
+            "lfoMinRollMin", "lfoMinRollMax" -> "Min Roll"
+            "lfoMaxRollMin", "lfoMaxRollMax" -> "Max Roll"
             "lfoMin" -> "Min"
             "lfoMax" -> "Max"
             "attackMs" -> "Attack"

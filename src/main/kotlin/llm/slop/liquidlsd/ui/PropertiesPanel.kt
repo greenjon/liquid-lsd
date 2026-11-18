@@ -352,6 +352,7 @@ object PropertiesPanel {
                         hasAdvanced = hasAdvanced,
                         isRandomizeDisabled = param.isRandomizeDisabled,
                         randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
+                        paramBipolar = param.minClamp < 0f,
                         onReplace = undoableReplace,
                         onReset = {
                             if (cvId == "audio") {
@@ -426,6 +427,7 @@ object PropertiesPanel {
                                 cell = cell,
                                 param = param,
                                 existing = existing,
+                                modulatorIndex = globalModIndex,
                                 themeColor = currentThemeColor,
                                 onReplace = undoableReplace,
                                 onUnbind = {

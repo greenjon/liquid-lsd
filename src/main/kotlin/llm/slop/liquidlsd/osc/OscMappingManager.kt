@@ -268,10 +268,10 @@ object OscMappingManager {
             val propName = remainder.substringAfter("/")
             val param = ParameterResolver.findParameterByPath(mixer, baseParamPath) ?: return null
             val getter: () -> Float? = {
-                llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.findByPathRef(param, modRef)?.let { llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.get(it, propName) }
+                llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.findByPathRef(param, modRef)?.let { llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.get(it, propName, param) }
             }
             val setter: (Float) -> Unit = { v ->
-                llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.findByPathRef(param, modRef)?.let { llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.set(it, propName, v) }
+                llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.findByPathRef(param, modRef)?.let { llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.set(it, propName, v, param) }
             }
             return Pair(getter, setter)
         } else {

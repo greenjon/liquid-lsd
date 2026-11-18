@@ -376,7 +376,7 @@ class DeckMorphController(
                 val m0 = snap0.modulators[i]
                 val m1 = snap1.modulators[i]
 
-                if (mod.randomizeDepth) {
+                if (mod.rollsDepth) {
                     mod.depth = MorphMath.lerp(m0.depth, m1.depth, v)
                 } else {
                     m0.depth = mod.depth
@@ -418,7 +418,7 @@ class DeckMorphController(
                     m1.hold = mod.hold
                 }
 
-                if (mod.randomizeDcOffset) {
+                if (mod.rollsDcOffset) {
                     mod.dcOffset = MorphMath.lerp(m0.dcOffset, m1.dcOffset, v)
                 } else {
                     m0.dcOffset = mod.dcOffset
@@ -536,13 +536,13 @@ class DeckMorphController(
                 val m0 = snap0.modulators[i]
                 val m1 = snap1?.modulators?.getOrNull(i)
 
-                if (mod.randomizeDepth) mod.depth = m0.depth else { m0.depth = mod.depth; m1?.depth = mod.depth }
+                if (mod.rollsDepth) mod.depth = m0.depth else { m0.depth = mod.depth; m1?.depth = mod.depth }
                 if (mod.randomizeSubdivision) mod.subdivision = m0.subdivision else { m0.subdivision = mod.subdivision; m1?.subdivision = mod.subdivision }
                 if (mod.randomizePhaseOffset) mod.phaseOffset = m0.phaseOffset else { m0.phaseOffset = mod.phaseOffset; m1?.phaseOffset = mod.phaseOffset }
                 if (mod.randomizeSlope) mod.slope = m0.slope else { m0.slope = mod.slope; m1?.slope = mod.slope }
                 if (mod.randomizeMorph) mod.morph = m0.morph else { m0.morph = mod.morph; m1?.morph = mod.morph }
                 if (mod.randomizeHold) mod.hold = m0.hold else { m0.hold = mod.hold; m1?.hold = mod.hold }
-                if (mod.randomizeDcOffset) mod.dcOffset = m0.dcOffset else { m0.dcOffset = mod.dcOffset; m1?.dcOffset = mod.dcOffset }
+                if (mod.rollsDcOffset) mod.dcOffset = m0.dcOffset else { m0.dcOffset = mod.dcOffset; m1?.dcOffset = mod.dcOffset }
                 if (mod.randomizeModSubdivision) mod.modSubdivision = m0.modSubdivision else { m0.modSubdivision = mod.modSubdivision; m1?.modSubdivision = mod.modSubdivision }
                 if (mod.randomizeModPhaseOffset) mod.modPhaseOffset = m0.modPhaseOffset else { m0.modPhaseOffset = mod.modPhaseOffset; m1?.modPhaseOffset = mod.modPhaseOffset }
                 if (mod.randomizeModSlope) mod.modSlope = m0.modSlope else { m0.modSlope = mod.modSlope; m1?.modSlope = mod.modSlope }
