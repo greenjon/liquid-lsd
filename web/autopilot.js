@@ -7,6 +7,9 @@ import { BeatFlywheel } from './beatclock.js';
 import { chainFits, chainAnswers, dominantBand } from './pairing.js';
 import { MandalaRecipes } from './mandala.js';
 
+// Array.at / findLast need Safari 15.4; the TV supports Safari 15.0 (tools/compat.test.mjs).
+const last = (a) => a[a.length - 1];
+
 const RELAY_URL = 'wss://spaz.org/lsd-relay';
 let relayEnabled = !embed;   // embed mode starts with it off (the host app turns it on with the `live` option)
 let relaySocket = null;
@@ -510,7 +513,7 @@ let dropLook = null;          // hard scene built when the breakdown starts, rea
 
 /** A random line from both playlists whose preset has one of `tags`, not the scene on air. */
 function pickLine(tags) {
-  const current = fgHistory.at(-1)?.line;
+  const current = last(fgHistory)?.line;
   const pool = [...new Set([...fgPlaylist, ...bgPlaylist])]
     .filter((l) => l !== current && playable(l) && (presetTags.get(l) ?? []).some((t) => tags.includes(t)));
   return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
@@ -683,7 +686,7 @@ function replanForeground() {
 /** What is on air, for the on-screen display: {name, chain, channel, channels}. Fires `lsd-now-showing`. */
 export function nowShowing() {
   const deck = fgActiveDeck === 'A' ? autopilotState.deckA : autopilotState.deckB;
-  const line = fgHistory.at(-1)?.line ?? fgPlaylist[fgPlaylistIdx] ?? '';
+  const line = last(fgHistory)?.line ?? fgPlaylist[fgPlaylistIdx] ?? '';
   const name = line.split('|')[0].trim();
   const background = bgOnAir.split('|')[0].trim() || null;
   const backgroundPicked = (bgPicked ?? bgOnAir).split('|')[0].trim() || null;   // BACKGROUND's row: where a step is going
@@ -712,7 +715,7 @@ let fgTuning = null;       // the line a channel change is building, so quick pr
 async function changeChannel(dir) {
   const n = fgPlaylist.length;
   if (autopilotState.isLiveBroadcast || n === 0) return;
-  const from = fgPlaylist.indexOf(fgTuning ?? fgHistory.at(-1)?.line);
+  const from = fgPlaylist.indexOf(fgTuning ?? last(fgHistory)?.line);
   const start = from < 0 ? fgPlaylistIdx : from;
   const order = Array.from({ length: n }, (_, k) => (((start + dir * (k + 1)) % n) + n) % n);
   const idx = order.find((i) => tagsReady && playable(fgPlaylist[i])) ?? await firstPlayable(order);
@@ -724,7 +727,7 @@ async function changeChannel(dir) {
 async function randomChannel(rand = Math.random) {
   const n = fgPlaylist.length;
   if (autopilotState.isLiveBroadcast || n === 0) return;
-  const current = fgTuning ?? fgHistory.at(-1)?.line;
+  const current = fgTuning ?? last(fgHistory)?.line;
   if (!tagsReady) {
     // Some sources still unknown: try a random order, learning as it goes.
     const idx = await firstPlayable(shuffled([...fgPlaylist.keys()].filter((i) => fgPlaylist[i] !== current)));
@@ -748,8 +751,8 @@ async function tuneChannel(idx) {
     fgPreparing = false;
     fgTuning = null;
   }
-  if (line === fgHistory.at(-1)?.line) return; // back to the one on air (or the only channel)
-  const seen = fgHistory.findLast((h) => h.line === line);
+  if (line === last(fgHistory)?.line) return; // back to the one on air (or the only channel)
+  const seen = [...fgHistory].reverse().find((h) => h.line === line);
   if (seen) {
     // Back with the chain it had, but a fresh transition (reduced motion may have come on since).
     fgNext = { ...seen, transition: await pickTransition() };
@@ -1062,7 +1065,7 @@ export function prunedSkips() { const live = new Set(fgPlaylist.map(presetName))
  */
 export function toggleSkip() {
   if (autopilotState.isLiveBroadcast) return { action: 'none' };
-  const line = fgTuning ?? fgHistory.at(-1)?.line;
+  const line = fgTuning ?? last(fgHistory)?.line;
   if (!line) return { action: 'none' };
   const name = presetName(line), channel = fgPlaylist.indexOf(line) + 1;
   if (skipped.has(name)) { skipped.delete(name); announce(); return { action: 'restored', channel, name }; }

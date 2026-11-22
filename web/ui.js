@@ -3,6 +3,7 @@
 // on-screen display, keyboard and touch. Viewer controls are locked while the desktop broadcasts live.
 import { startAudio, stopAudio, setVolume, setMic, isMicOn, micAvailable, cvState, tapeStatus, setEq, eqGains, EQ_MIN_DB, EQ_MAX_DB } from './dsp.js';
 import { embed } from './embedmode.js';
+import { liteState, liteNext, setVisuals } from './lite.js';
 import { autopilotState, advanceForeground, previousForeground, randomForeground, nextFxChain, setHold, setHoldBars, nowShowing, setHeavyAllowed, setReducedMotion,
   rollScene, setAutoRollBars, setEffects, setFollowMusic, setBackgroundMode, stepBackground,
   setSkipped, skippedChannels, prunedSkips, toggleSkip, restoreChannel, restoreAllChannels, tuneTo, SKIP_FLOOR } from './autopilot.js';
@@ -17,7 +18,7 @@ import { scheduleState, refreshSchedule, setShows, groupByDay, upcoming, parsePl
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v48';
+export const TV_VERSION = 'v49';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -106,7 +107,12 @@ let streamKnown = false; // the last read of that flag worked (else the schedule
 let playingRetryAt = 0;
 function showLook(info = nowShowing(), ms = 4000, brand = false) {
   if (!powerState.on) return;
-  if (autopilotState.isLiveBroadcast) {
+  if (liteState.on) {
+    // Lite mode (lite.js): the photo slideshow, no scenes.
+    flash('osd-ch', 'LITE', ms);
+    flash('osd-name', 'SCENE: SPAZ RADIO PHOTOS', ms);
+    unflash('osd-bg'); unflash('osd-chain');
+  } else if (autopilotState.isLiveBroadcast) {
     flash('osd-ch', 'LIVE', ms);
     if (autopilotState.broadcaster) flash('osd-name', autopilotState.broadcaster, ms);
     unflash('osd-bg'); unflash('osd-chain'); // the desktop's scene is not ours to name
@@ -133,6 +139,8 @@ const message = (text, ms = 1500) => flash('osd-msg', text, ms);
 const TUNING_MS = 120000;  // TUNING… stays up until the first scene is on air (lsd-now-showing takes it down)
 /** The TV is on and the first scene is still loading: TUNING… on screen. */
 function showTuning() {
+  // Lite mode the browser chose (no WebGL 2, or the visuals failed): say so at power-on.
+  if (liteState.on) { if (liteState.reason !== 'chosen') showLook(); return; }
   if (powerState.on && !autopilotState.isLiveBroadcast && nowShowing().tuning) flash('osd-ch', 'TUNING\u2026', TUNING_MS);
 }
 
@@ -249,10 +257,18 @@ export function initUI() {
   const holdBtn = document.getElementById('holdBtn');
 
   const live = () => autopilotState.isLiveBroadcast;
-  /** Runs a viewer control unless the desktop is live (then says why nothing happened). */
-  const control = (fn) => (...args) => {
+  /** The scene controls do nothing: the desktop is live, or lite mode shows photos, not scenes. */
+  const noScenes = () => live() || liteState.on;
+  /** Runs a viewer control unless the desktop is live (then says why nothing happened). In lite mode it runs
+   *  `liteFn` instead, or says the control needs the full visuals. */
+  const control = (fn, liteFn) => (...args) => {
     if (!powerState.on) return;
     if (live()) { message('LIVE · CONTROLS LOCKED', 2000); return; }
+    if (liteState.on) {
+      if (liteFn) liteFn(...args);
+      else message('LITE PICTURE · MENU › TV › VISUALS', 2500);
+      return;
+    }
     fn(...args);
   };
 
@@ -370,9 +386,9 @@ export function initUI() {
   };
 
   // --- Channel rocker, FX, HOLD ---
-  const next = control(() => { lastUserChange = performance.now(); showTuning(); advanceForeground(); });
-  const prev = control(() => { lastUserChange = performance.now(); showTuning(); previousForeground(); });
-  const random = control(() => { lastUserChange = performance.now(); showTuning(); randomForeground(); });
+  const next = control(() => { lastUserChange = performance.now(); showTuning(); advanceForeground(); }, liteNext);
+  const prev = control(() => { lastUserChange = performance.now(); showTuning(); previousForeground(); }, liteNext);
+  const random = control(() => { lastUserChange = performance.now(); showTuning(); randomForeground(); }, liteNext);
   const fx = control(async () => {
     lastUserChange = performance.now();
     if (await nextFxChain() === 'off') message('EFFECTS OFF \u00B7 MENU', 2000);
@@ -445,7 +461,7 @@ export function initUI() {
   const timeDial = makeDial(document.getElementById('timeDial'), {
     initial: TIME_STEPS.indexOf(savedBars) / (TIME_STEPS.length - 1),
     steps: TIME_STEPS.length,
-    locked: () => live(),
+    locked: noScenes,
     onChange: (v) => {
       const bars = TIME_STEPS[Math.round(v * (TIME_STEPS.length - 1))];
       setHoldBars(bars);
@@ -462,7 +478,7 @@ export function initUI() {
   });
   document.getElementById('timeDial').addEventListener('click', () => {
     if (timeDial.dragged()) return;
-    if (live()) return control(() => {})();
+    if (noScenes()) return control(() => {})();
     const i = Math.round(timeDial.get() * (TIME_STEPS.length - 1));
     timeDial.set(((i + 1) % TIME_STEPS.length) / (TIME_STEPS.length - 1));
   });
@@ -472,7 +488,7 @@ export function initUI() {
   viewerState.react = Math.max(REACT_MIN, Math.min(REACT_MAX, Number(load(REACT_KEY, REACT_DEFAULT)) || REACT_DEFAULT));
   const reactDial = makeDial(document.getElementById('reactDial'), {
     initial: toDial(viewerState.react),
-    locked: () => live(),
+    locked: noScenes,
     onChange: (v) => {
       viewerState.react = REACT_MIN + v * (REACT_MAX - REACT_MIN);
       save(REACT_KEY, viewerState.react);
@@ -546,28 +562,28 @@ export function initUI() {
   const onOff = (b) => (b ? 'ON' : 'OFF');
   const pages = [
     { name: 'SCENES', rows: [
-      { label: 'TIME', locked: live, help: 'How long each scene stays before the next one, in bars of the music.', value: () => timeLabel.textContent,
+      { label: 'TIME', locked: noScenes, help: 'How long each scene stays before the next one, in bars of the music.', value: () => timeLabel.textContent,
         step: (dir) => {
           const i = Math.round(timeDial.get() * (TIME_STEPS.length - 1));
           timeDial.set(Math.max(0, Math.min(TIME_STEPS.length - 1, i + dir)) / (TIME_STEPS.length - 1));
         } },
-      { label: 'AUTO ROLL', locked: live, value: () => (viewerState.autoRoll ? `EVERY ${viewerState.autoRoll} BARS` : 'OFF'),
+      { label: 'AUTO ROLL', locked: noScenes, value: () => (viewerState.autoRoll ? `EVERY ${viewerState.autoRoll} BARS` : 'OFF'),
         step: (dir) => applyAutoRoll(stepIn(AUTO_ROLL_STEPS, viewerState.autoRoll, dir)),
         help: 'Rolls a new variation of the scene on air every few bars, like pressing ROLL (R). Best with HOLD on: the scene stays and keeps changing.' },
-      { label: 'FOLLOW MUSIC', locked: live, value: () => onOff(viewerState.follow),
+      { label: 'FOLLOW MUSIC', locked: noScenes, value: () => onOff(viewerState.follow),
         step: () => applyFollow(!viewerState.follow),
         help: 'On: a calm scene comes in for a breakdown, a hard one cuts in on the drop, and the tempo leans the picks. Off: the scenes just take turns.' },
-      { label: 'EFFECTS', locked: live, value: () => (viewerState.effects ? 'AUTO' : 'OFF'),
+      { label: 'EFFECTS', locked: noScenes, value: () => (viewerState.effects ? 'AUTO' : 'OFF'),
         step: () => applyEffects(!viewerState.effects),
         help: 'Auto: every scene and background gets an FX chain that suits it (FX or E picks another). Off: the scenes play clean.' },
-      { label: 'BACKGROUND', needsPower: true, locked: () => live() || viewerState.bgMode === 'off',
+      { label: 'BACKGROUND', needsPower: true, locked: () => noScenes() || viewerState.bgMode === 'off',
         value: () => (viewerState.bgMode === 'off' ? 'OFF' : prettyName(nowShowing().backgroundPicked ?? '') || '---'),
         step: (dir) => stepBackground(dir).then(() => menu.refresh()),
         help: 'The picture behind the scene, which shows through wherever the scene is dark or see-through: the Spaz Radio photo gallery to start with. ◀ ▶ or B pick another one now.' },
-      { label: 'BG CHANGES', locked: live, value: () => BG_MODE_LABELS[viewerState.bgMode],
+      { label: 'BG CHANGES', locked: noScenes, value: () => BG_MODE_LABELS[viewerState.bgMode],
         step: (dir) => applyBgMode(BG_MODES[(BG_MODES.indexOf(viewerState.bgMode) + dir + BG_MODES.length) % BG_MODES.length]),
         help: 'Hold (the default): the background stays until you change it. With scenes: a new one every two scenes (TIME). Off: no background, just the scene.' },
-      { label: 'SKIP THIS CHANNEL', needsPower: true, locked: live, value: () => (nowShowing().skipped ? 'SKIPPED' : `CH ${String(nowShowing().channel).padStart(3, '0')}`),
+      { label: 'SKIP THIS CHANNEL', needsPower: true, locked: noScenes, value: () => (nowShowing().skipped ? 'SKIPPED' : `CH ${String(nowShowing().channel).padStart(3, '0')}`),
         run: () => skip(),
         help: 'Skipped channels never come up by themselves (X does this too). Type a channel number to watch one again; X there restores it.' },
       { label: 'SKIPPED', value: () => { const n = skippedChannels().length; return n ? `${n} CHANNEL${n === 1 ? '' : 'S'}` : 'NONE'; },
@@ -578,7 +594,7 @@ export function initUI() {
       { label: 'AUDIO INPUT', needsPower: true, locked: live, value: () => (isMicOn() ? 'MICROPHONE' : deck?.current ? 'TAPE' : 'RADIO'),
         help: 'What the picture listens to. Radio: the Spaz Radio stream, or the tape if one is in. Microphone: the sound in the room, also offline (the browser asks first; it is analysed only, never played back).',
         step: () => toggleMic() },
-      { label: 'REACT', locked: live, help: 'How strongly the picture moves with the music. Raise it for quiet shows, lower it if it is too busy.', value: () => `${Math.round(viewerState.react * 100)}%`,
+      { label: 'REACT', locked: noScenes, help: 'How strongly the picture moves with the music. Raise it for quiet shows, lower it if it is too busy.', value: () => `${Math.round(viewerState.react * 100)}%`,
         step: (dir) => reactDial.set(toDial(Math.max(REACT_MIN, Math.min(REACT_MAX, viewerState.react + dir * 0.05)))) },
       { label: 'SYNC', help: 'Delay the picture so its beats line up with what you hear (Bluetooth speakers are often 150-250 ms late).', value: () => `${viewerState.syncMs > 0 ? '+' : ''}${viewerState.syncMs} MS`,
         step: (dir) => {
@@ -604,13 +620,20 @@ export function initUI() {
       ...(kiosk ? [] : [{ label: 'THEME', value: () => viewerState.theme.toUpperCase(),
         step: () => applyTheme(viewerState.theme === 'dark' ? 'light' : 'dark'),
         help: 'The TV’s cabinet and the room around it: light, a 1970s hi-fi in brushed aluminium and walnut (the default), or dark plastic. The picture is the same in both.' }]),
+      { label: 'VISUALS',
+        value: () => (!liteState.on ? 'FULL' : liteState.reason === 'chosen' ? 'LITE' : 'LITE (NO FULL HERE)'),
+        step: () => {
+          if (liteState.on && liteState.reason !== 'chosen') { message('THIS BROWSER CAN\u2019T DRAW THE FULL VISUALS', 3000); return; }
+          setVisuals(liteState.on ? 'full' : 'lite');
+        },
+        help: 'Full: the Liquid LSD visuals. Lite: the Spaz Radio photo gallery, for older or slower phones and computers (less battery and data). Changing it reloads the page.' },
       { label: 'ANNOUNCE SCENES', value: () => onOff(viewerState.announce),
         step: () => { viewerState.announce = !viewerState.announce; save('lsd.announce', viewerState.announce); },
         help: 'Show the name of each new scene, its background and its effects when it comes on, and the background when it changes. Off: only when you click the picture (or turn INFO on).' },
       { label: 'REDUCED MOTION', help: 'Gentler: no flashes, no hard scenes, slower changes. Auto follows your system setting.',
         value: () => (viewerState.reducedMode === 'auto' ? `AUTO (${onOff(viewerState.reduced)})` : viewerState.reducedMode.toUpperCase()),
         step: (dir) => { viewerState.reducedMode = cycle(viewerState.reducedMode, dir); save('lsd.reduced', viewerState.reducedMode); applyReduced(); } },
-      { label: 'BIG GPU SCENES', locked: live,
+      { label: 'BIG GPU SCENES', locked: noScenes,
         help: 'The most demanding 3D fractals and simulations. Auto: on if your graphics card passed a quick test at power-on. On: always (may stutter on laptops and phones). Off: never, for a smoother picture.',
         value: () => {
           if (viewerState.heavyMode !== 'auto') return viewerState.heavyMode.toUpperCase();
@@ -1109,6 +1132,10 @@ export function initUI() {
     }
     menu.refresh();   // MENU › BACKGROUND names the new one
   });
+  // Lite mode started (lite.js): the scene buttons do nothing, and the OSD says what is on.
+  const liteButtons = () => { for (const id of ['fxBtn', 'rollBtn', 'holdBtn']) document.getElementById(id).setAttribute('aria-disabled', 'true'); };
+  if (liteState.on) liteButtons();
+  window.addEventListener('lsd-lite', () => { liteButtons(); menu.refresh(); if (powerState.on) showLook(); });
   window.addEventListener('lsd-broadcast-status', (e) => {
     tvBody.classList.toggle('live', e.detail.live);
     updateBadge();

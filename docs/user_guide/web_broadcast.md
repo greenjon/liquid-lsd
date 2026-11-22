@@ -102,6 +102,8 @@ Point at the picture with the mouse, or click or tap it, to show the channel, th
 
 **Install as an app:** use your browser's Install / Add to Home Screen; it opens fullscreen like a TV app.
 
+**Lite picture (older and slower devices):** when your browser can't draw the visuals, the TV shows the **Spaz Radio photo gallery** instead: the listeners' photos fading in over each other while they slowly turn and grow, as on the old radio page. Everything else works as usual (the radio, MENU, the schedule, the chat, tapes); CH ▲▼ brings the next photo, and the scene controls (FX, ROLL, HOLD, TIME, REACT) rest. On any device, MENU › TV › **VISUALS** switches between *Full* and *Lite* (the page reloads); lite saves battery and data, about 4 MB of photos in all, loaded one at a time while the TV is on. The full picture needs Safari 15 (iOS 15) or a 2021 or newer Chrome, Firefox or Edge with WebGL 2.
+
 **Offline:** after one visit with a network, the TV keeps every scene, effect and transition, and the last 60 gallery photos it showed, so it opens and changes scenes with no connection at all. The radio needs the network, so offline the screen says `OFFLINE · A FOR MICROPHONE` (on a phone, MENU › SOUND): turn the microphone on and the TV runs on the sound in the room. Live broadcasts, the chat, the schedule and tapes come back with the network (the TAPES list still opens offline, from the last copy). To play archive shows offline, download them in the Spaz Radio app for Android.
 
 **Kiosk mode:** `index.html?kiosk` shows only the picture (no TV body), turns itself on and hides the mouse pointer; use the keyboard or swipes. Browsers that refuse to start sound on their own get a "click or press a key for sound" prompt.

@@ -5,6 +5,8 @@
 // (audio signals cannot be read from the future, so they are not advanced).
 import { cvState } from './dsp.js';
 import { autopilotState } from './autopilot.js';
+// Array.at / findLast need Safari 15.4; the TV supports Safari 15.0 (tools/compat.test.mjs).
+const last = (a) => a[a.length - 1];
 
 /** Beat position the viewer hears at `nowMs`: the live (desktop) or standalone clock, `syncMs` earlier. */
 export function heardBeats(nowMs, syncMs) {
@@ -30,7 +32,7 @@ export class DelayLine {
   /** The newest entry at least `delayMs` old (the oldest kept if none is), or null when empty. */
   read(t, delayMs) {
     if (!this.items.length) return null;
-    if (delayMs <= 0) return this.items.at(-1).values;
+    if (delayMs <= 0) return last(this.items).values;
     const due = t - delayMs;
     for (let i = this.items.length - 1; i >= 0; i--) if (this.items[i].t <= due) return this.items[i].values;
     return this.items[0].values;
@@ -51,6 +53,6 @@ export function tapOffset(tapTimes, beatsAt, bpm, earliestMs = -100) {
   }).sort((a, b) => a - b);
   const m = Math.floor(errs.length / 2);
   const ms = errs.length % 2 ? errs[m] : (errs[m - 1] + errs[m]) / 2;
-  const spread = errs.length > 3 ? errs[errs.length - 2] - errs[1] : errs.at(-1) - errs[0];
+  const spread = errs.length > 3 ? errs[errs.length - 2] - errs[1] : last(errs) - errs[0];
   return { ms, spread };
 }

@@ -11,7 +11,10 @@ visuals (by hand in a file manager, or in the preview), then build the TV's copi
                                                  # left in gallery-curate/ one by one with its name on screen:
                                                  # Delete rejects the photo on top (moved to gallery-curate/_rejected/),
                                                  # U puts the last one back, . brings the next one in now
-    python3 scripts/gallery_curate.py build      # what is left -> web/gallery/ (1024 px JPEGs) + web/gallery.json
+    python3 scripts/gallery_curate.py build      # what is left -> web/gallery/ (1024 px JPEGs) + web/gallery.json,
+                                                 # then `lite`
+    python3 scripts/gallery_curate.py lite       # web/gallery/ at 512 px -> web/gallery/lite/ (about 35 KB each),
+                                                 # for the TV's lite mode (web/lite.js); adds "lite" to gallery.json
     python3 scripts/gallery_curate.py export DIR [SIDE]
                                                  # web/gallery/ scaled to SIDE px (default 768) -> DIR/gallery/ +
                                                  # DIR/gallery.json: the Spaz Radio app's bundled copy (its
@@ -42,6 +45,8 @@ SOURCE = 'https://spaz.org/images/ground/'
 UA = {'User-Agent': 'liquid-lsd-gallery-curate'}
 IMAGE_EXT = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'}
 MAX_SIDE = 1024
+LITE_DIR = OUT_DIR / 'lite'
+LITE_SIDE, LITE_QUALITY = 512, 70
 
 
 def photos():
@@ -204,7 +209,7 @@ def build():
             print(f'{name}: skipped ({e})')
     keep = set(out)
     for stale in OUT_DIR.iterdir():
-        if stale.name not in keep:
+        if stale.is_file() and stale.name not in keep:
             stale.unlink()
     OUT_JSON.write_text(json.dumps({
         'source': RADIO,
@@ -212,8 +217,33 @@ def build():
         'note': 'Curated with scripts/gallery_curate.py (not in git; publish_web_tv.sh uploads it).',
         'images': out,
     }, indent=1) + '\n')
-    size = sum(p.stat().st_size for p in OUT_DIR.iterdir())
+    size = sum(p.stat().st_size for p in OUT_DIR.iterdir() if p.is_file())
     print(f'{len(out)} photos -> {OUT_DIR} ({size // 2**20} MB) and {OUT_JSON}')
+    lite()
+
+
+# ------------------------------------------------------------------ lite
+def lite():
+    """Small copies of the built gallery for the TV's lite mode (old or slow devices: web/lite.js)."""
+    from PIL import Image
+    if not OUT_JSON.exists():
+        sys.exit(f'no {OUT_JSON}: run "{sys.argv[0]} build" first')
+    manifest = json.loads(OUT_JSON.read_text())
+    LITE_DIR.mkdir(exist_ok=True)
+    names = [n for n in manifest['images'] if (OUT_DIR / n).is_file()]
+    for name in names:
+        with Image.open(OUT_DIR / name) as im:
+            im = im.convert('RGB')
+            im.thumbnail((LITE_SIDE, LITE_SIDE), Image.LANCZOS)
+            im.save(LITE_DIR / name, 'JPEG', quality=LITE_QUALITY, optimize=True, progressive=True)
+    keep = set(names)
+    for stale in LITE_DIR.iterdir():
+        if stale.name not in keep:
+            stale.unlink()
+    manifest['lite'] = 'gallery/lite/'
+    OUT_JSON.write_text(json.dumps(manifest, indent=1) + '\n')
+    size = sum(p.stat().st_size for p in LITE_DIR.iterdir())
+    print(f'{len(names)} photos at {LITE_SIDE} px -> {LITE_DIR} ({size / 2**20:.1f} MB)')
 
 
 # ------------------------------------------------------------------ export
@@ -236,7 +266,8 @@ def export(dest, side=768):
     for stale in out_dir.iterdir():
         if stale.name not in keep:
             stale.unlink()
-    (dest / 'gallery.json').write_text(json.dumps(dict(manifest, base='gallery/', images=names), indent=1) + '\n')
+    app = {k: v for k, v in manifest.items() if k != 'lite'}   # the app bundles no lite copies
+    (dest / 'gallery.json').write_text(json.dumps(dict(app, base='gallery/', images=names), indent=1) + '\n')
     size = sum(p.stat().st_size for p in out_dir.iterdir())
     print(f'{len(names)} photos at {side} px -> {out_dir} ({size / 2**20:.1f} MB)')
 
@@ -249,6 +280,8 @@ if __name__ == '__main__':
         preview(int(sys.argv[2]) if len(sys.argv) > 2 else 8000)
     elif cmd == 'build':
         build()
+    elif cmd == 'lite':
+        lite()
     elif cmd == 'export' and len(sys.argv) > 2:
         export(sys.argv[2], int(sys.argv[3]) if len(sys.argv) > 3 else 768)
     else:

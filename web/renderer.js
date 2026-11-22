@@ -11,6 +11,7 @@ import { heardBeats, DelayLine } from './sync.js';
 import { DropEnvelope } from './energy.js';
 import { installEmbedApi } from './embed.js';
 import { embed } from './embedmode.js';
+import { startLite, visualsChoice } from './lite.js';
 
 async function loadText(url) {
   const res = await fetchTimed(url);
@@ -55,7 +56,16 @@ function getUniformLocations(gl, program, names) {
   return locs;
 }
 
+/** The photo slideshow instead of the visuals (lite.js). Embedded, the host app shows its own visuals instead. */
+function goLite(reason) {
+  if (embed) return false;
+  startLite(reason, { powerState, viewerState });
+  return true;
+}
+
 async function init() {
+  // Lite picked (MENU › TV › VISUALS or ?lite=1): no WebGL context, and none of the shaders or scenes are fetched.
+  if (!embed && visualsChoice() === 'lite') { goLite('chosen'); return; }
   const canvas = document.getElementById('glCanvas');
   const gl = canvas.getContext('webgl2', {
     alpha: false,
@@ -66,7 +76,7 @@ async function init() {
   });
 
   if (!gl) {
-    alert('WebGL 2 is not supported in this browser.');
+    if (goLite('no-webgl')) return;
     throw new Error('WebGL 2 not supported');
   }
   // Context loss (GPU reset, driver update, a phone reclaiming the tab's GPU): every program, texture and target
@@ -540,5 +550,6 @@ window.addEventListener('DOMContentLoaded', () => {
   init().catch((err) => {
     console.error('Liquid LSD WebGL2 init error:', err);
     window.LSDHost?.failed?.(String(err));   // embed: the host falls back to its own visuals
+    goLite('error');                         // standalone: the photo slideshow
   });
 });

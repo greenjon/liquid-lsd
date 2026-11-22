@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Web TV: Lite Picture for Older and Slower Devices (`web/lite.js`, `web/renderer.js`, `web/ui.js`, `web/autopilot.js`, `web/sync.js`, `web/schedule.js`, `scripts/gallery_curate.py`)
+- **New: a lite picture.** When the browser can't draw the visuals (no WebGL 2, or they fail to start), the TV shows the Spaz Radio photo gallery instead: listener photos fading in over each other while they slowly turn and grow, like the old radio page. Before, the screen stayed black behind a "WebGL 2 is not supported" alert. The radio, menu, schedule, chat and tapes work as usual; CH ▲▼ brings the next photo.
+- **New: MENU › TV › VISUALS** switches between *Full* and *Lite* on any device (the page reloads). Lite uses less battery and data: small copies of the photos (about 4 MB for all of them), fetched one at a time and only while the TV is on. `?lite=1` in the address does the same for one visit.
+- **Fixed: on iPhone 6s and 7, iPad Air 2, iPad mini 4 and other devices on iOS 15, the TV stayed black.** Their browser can draw the visuals, but the page used newer calls it lacks; it no longer does (TV v49).
+
 ### Modulation Range: Slide, Base/Amount, and How the Dice Rolls (`parameters/CvModulator.kt`, `ui/CustomRangeSlider.kt`, `ui/SeqSection.kt`, `ui/MidiModulatorSection.kt`, `models/PresetModels.kt`)
 - **New: drag the bar between a range's handles (or Shift-drag) to slide the whole range** without changing its size. It stops at the ends of the track.
 - **New: Base and Amount captions above an LFO, audio or sequencer range.** Right-click either for MIDI or OSC Learn, or click it while a macro knob is learning: a knob on Base moves the range, a knob on Amount opens or closes it. A controller on Base or Amount can push the range past the end of the track; the parameter's limit clamps the result.

@@ -9,6 +9,8 @@ export const SCHEDULE_URL = 'https://radio.spaz.org/djdash/droid';
 export const SCHEDULE_REFRESH_MS = 60 * 60 * 1000; // hourly while the TV is on (like the app)
 export const SCHEDULE_STALE_MS = 10 * 60 * 1000;   // opening the page refetches a list older than this
 
+// Array.at / findLast need Safari 15.4; the TV supports Safari 15.0 (tools/compat.test.mjs).
+const last = (a) => a[a.length - 1];
 const NAMED = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
 
 /** `Spukkin Faceship&#039;s` -> `Spukkin Faceship's`. The result is text: put it in with textContent. */
@@ -75,8 +77,8 @@ export function groupByDay(shows, now, opts = {}) {
   const days = [];
   for (const s of upcoming(shows, now)) {
     const day = dayLabel(s.start, now, opts);
-    if (days.at(-1)?.day !== day) days.push({ day, shows: [] });
-    days.at(-1).shows.push({ time: `${timeLabel(s.start, opts)} – ${timeLabel(s.end, opts)}`, name: s.name, onAir: s.onAir });
+    if (last(days)?.day !== day) days.push({ day, shows: [] });
+    last(days).shows.push({ time: `${timeLabel(s.start, opts)} – ${timeLabel(s.end, opts)}`, name: s.name, onAir: s.onAir });
   }
   return days;
 }

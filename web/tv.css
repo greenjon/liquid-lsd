@@ -171,6 +171,33 @@ body {
   cursor: crosshair;
 }
 
+/* Lite mode (lite.js): the photo slideshow over the (unused) canvas. Clicks go through to the canvas, which
+   carries the picture's handlers. Static scanlines and a vignette stand in for the CRT shader. */
+#lite-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: #000;
+  opacity: 1;
+  transition: opacity 0.8s ease;
+}
+#lite-layer img {
+  position: absolute;
+  max-width: none;
+  will-change: transform, opacity;
+}
+#lite-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.55) 100%),
+    repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.16) 0 1px, transparent 1px 3px);
+}
+#tv-body:not(.powered-on) #lite-layer { opacity: 0; }
+
 /* Screen-off overlay — solid black shown when TV is off */
 #screen-off-overlay {
   position: absolute;
