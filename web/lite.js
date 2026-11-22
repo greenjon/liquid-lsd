@@ -25,9 +25,17 @@ const FAIL_WAIT_MS = 20000;    // after a run of failed photos (offline), wait t
 
 const rand = (a, b) => a + Math.random() * (b - a);
 
-/** Lite mode: `on` once started; `reason` 'chosen' (the viewer's pick), 'slow' (renderer.js measured it, now or on
- *  an earlier visit), 'no-webgl' or 'error'. */
+/** Lite mode: `on` while the slideshow is the picture; `reason` 'chosen' (the viewer's pick), 'slow' (renderer.js
+ *  measured it, now or on an earlier visit), 'no-webgl' or 'error'. */
 export const liteState = { on: false, reason: null };
+
+// Set by renderer.js (initLite): ui.js's power and viewer state (ui.js imports this module, so they are passed
+// in), and the visuals' pause() / run() (run starts them the first time, resumes them after).
+let deps = null;
+export function initLite(d) { deps = d; }
+
+/** Switching is possible here: the visuals can run (only the browser's own fallbacks cannot go back). */
+export const canSwitch = () => !liteState.on || liteState.reason === 'chosen' || liteState.reason === 'slow';
 
 /** 'full', 'lite' or 'lite-auto': the address (?lite=1 / ?lite=0) first, then the saved choice; 'full' by default.
  *  index.html's startup preloads read the same (inline, before the modules). */
@@ -46,30 +54,47 @@ export function rememberSlow() {
   try { localStorage.setItem(KEY, JSON.stringify('lite-auto')); } catch { /* not remembered */ }
 }
 
-/** Saves the viewer's pick and reloads the page, which then starts the picture that was picked. */
+/** The viewer's pick (MENU › TV › VISUALS), saved and switched to at once: the sound plays on, the TV stays on. */
 export function setVisuals(choice) {
   try { localStorage.setItem(KEY, JSON.stringify(choice)); } catch { /* private window: this visit only */ }
-  const url = new URL(location.href);
-  url.searchParams.delete('lite');   // the address would override the pick
-  location.replace(url.href);
+  const parts = location.search.slice(1).split('&').filter(Boolean);
+  const kept = parts.filter((p) => !/^lite(=|$)/.test(p));
+  if (kept.length !== parts.length) {     // the address would override the pick on a reload
+    history.replaceState(history.state, '', `${location.pathname}${kept.length ? `?${kept.join('&')}` : ''}${location.hash}`);
+  }
+  if (choice === 'lite') startLite('chosen');
+  else stopLite();
 }
 
 let show = null;
 
-/** Starts lite mode. `powerState` and `viewerState` come from ui.js (passed in: ui.js imports this module). */
-export function startLite(reason, { powerState, viewerState }) {
+/** Starts the slideshow and pauses the visuals (if they ever ran). */
+export function startLite(reason) {
   if (liteState.on) return;
   liteState.on = true;
   liteState.reason = reason;
+  deps.pause?.();
   document.body.classList.add('lite');
   const screen = document.getElementById('tv-screen-area');
   const layer = document.createElement('div');
   layer.id = 'lite-layer';
   layer.setAttribute('aria-hidden', 'true');
   screen.querySelector('#glCanvas').after(layer);
-  show = new Slideshow(layer, powerState, viewerState);
+  show = new Slideshow(layer, deps.powerState, deps.viewerState);
   show.start();
-  window.dispatchEvent(new CustomEvent('lsd-lite', { detail: { reason } }));
+  window.dispatchEvent(new CustomEvent('lsd-lite', { detail: { on: true, reason } }));
+}
+
+/** Back to the visuals: the slideshow goes, and the visuals start (the first time) or carry on. */
+export function stopLite() {
+  if (!liteState.on || !canSwitch()) return;
+  liteState.on = false;
+  liteState.reason = null;
+  show.stop();
+  show = null;
+  document.body.classList.remove('lite');
+  window.dispatchEvent(new CustomEvent('lsd-lite', { detail: { on: false } }));
+  deps.run();
 }
 
 /** CH ▲▼ in lite mode: the next photo now. */
@@ -92,9 +117,14 @@ class Slideshow {
     this.offAt = 0;
   }
 
+  stop() {
+    clearInterval(this.timer);
+    this.layer.remove();   // its photos and their animations go with it
+  }
+
   async start() {
     let last = performance.now();
-    setInterval(() => {
+    this.timer = setInterval(() => {
       const now = performance.now();
       tick(Math.min((now - last) / 1000, 0.25));
       last = now;

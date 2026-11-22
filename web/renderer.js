@@ -11,7 +11,7 @@ import { heardBeats, DelayLine } from './sync.js';
 import { DropEnvelope } from './energy.js';
 import { installEmbedApi } from './embed.js';
 import { embed } from './embedmode.js';
-import { startLite, visualsChoice, rememberSlow } from './lite.js';
+import { startLite, visualsChoice, rememberSlow, initLite, liteState } from './lite.js';
 
 async function loadText(url) {
   const res = await fetchTimed(url);
@@ -59,15 +59,25 @@ function getUniformLocations(gl, program, names) {
 /** The photo slideshow instead of the visuals (lite.js). Embedded, the host app shows its own visuals instead. */
 function goLite(reason) {
   if (embed) return false;
-  startLite(reason, { powerState, viewerState });
+  startLite(reason);
   return true;
 }
+
+// The visuals once init() has set them up: pause() while lite mode is the picture, resume() after.
+let visuals = null;
+let starting = false;       // init() is setting the visuals up (asked again meanwhile, it still runs once)
+initLite({
+  powerState, viewerState,
+  pause: () => visuals?.pause(),
+  run: () => { if (visuals) visuals.resume(); else if (!starting) init().catch(initFailed); },   // lite -> full
+});
 
 async function init() {
   // Lite picked (MENU › TV › VISUALS or ?lite=1), or this device was too slow on an earlier visit: no WebGL
   // context, and none of the shaders or scenes are fetched.
   const choice = embed ? 'full' : visualsChoice();
   if (choice !== 'full') { goLite(choice === 'lite-auto' ? 'slow' : 'chosen'); return; }
+  starting = true;
   const canvas = document.getElementById('glCanvas');
   const gl = canvas.getContext('webgl2', {
     alpha: false,
@@ -371,7 +381,7 @@ async function init() {
   const mixerPipe = new MixerPipeline(ctx, renderW, renderH);
 
   window.LSD = { cvState, audioFrame, autopilotState, powerState, viewerState, library: ctx.library, handleRelayMessage, advanceForeground,
-    renderSize: () => [renderW, renderH, SCALES[adapt.idx]], gpu };
+    renderSize: () => [renderW, renderH, SCALES[adapt.idx]], gpu, frames: () => frameCount };
 
   function frameInfo() {
     return { time: elapsedTime, dt: frameDt, index: frameCount };
@@ -439,6 +449,19 @@ async function init() {
   // tries again). At 1 fps that is about 30 s after power-on: ~12 s for the scaler to step down, then 16 s.
   const SLOW_WINDOW_MS = 8000, SLOW_GRACE_MS = 5000, SLOW_FPS = 12, SLOW_WINDOWS = 2, GAP_MS = 3000;
   const speed = { since: 0, frames: 0, last: 0, onAt: 0, slowWindows: 0 };
+  let liteHold = liteState.on;   // lite mode is the picture (maybe picked again while this loaded): the loop
+                                 // rests, everything stays ready to come back
+  visuals = {
+    pause() { liteHold = true; },
+    resume() {
+      if (!liteHold) return;
+      liteHold = false;
+      lastTime = performance.now();
+      speed.onAt = 0; speed.since = 0; speed.slowWindows = 0;   // measure afresh
+      forceResize = true;
+      requestAnimationFrame(render);
+    },
+  };
   const forcedFull = new URLSearchParams(location.search).get('lite') === '0';   // ?lite=0: full, however slow
   function tooSlow(now) {
     if (forcedFull) return false;
@@ -456,16 +479,14 @@ async function init() {
     return speed.slowWindows >= SLOW_WINDOWS;
   }
   function handOver() {
-    stopped = true;
     console.warn('[lsd] too slow for the visuals here; switching to the lite picture');
-    if (embed) { window.LSDHost?.failed?.('too slow'); return; }   // the app shows its own visuals
+    if (embed) { stopped = true; window.LSDHost?.failed?.('too slow'); return; }   // the app shows its own visuals
     rememberSlow();
-    gl.getExtension('WEBGL_lose_context')?.loseContext();          // give the GPU back
-    goLite('slow');
+    goLite('slow');   // pauses the loop (visuals.pause); VISUALS › FULL resumes it
   }
 
   function render(now) {
-    if (paused || stopped) return;
+    if (paused || stopped || liteHold) return;
     if (tooSlow(now)) { handOver(); return; }
     const frameMs = now - lastTime;
     const dt = Math.min(frameMs / 1000, 0.1);
@@ -565,7 +586,7 @@ async function init() {
     isPaused: () => paused,
     pause() { if (paused) return; paused = true; suspendAudio(); },
     resume() {
-      if (!paused || stopped) return;
+      if (!paused || stopped || liteHold) return;
       paused = false;
       lastTime = performance.now();
       resumeAudio();
@@ -586,10 +607,11 @@ async function init() {
   });
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  init().catch((err) => {
-    console.error('Liquid LSD WebGL2 init error:', err);
-    window.LSDHost?.failed?.(String(err));   // embed: the host falls back to its own visuals
-    goLite('error');                         // standalone: the photo slideshow
-  });
-});
+function initFailed(err) {
+  starting = false;
+  console.error('Liquid LSD WebGL2 init error:', err);
+  window.LSDHost?.failed?.(String(err));   // embed: the host falls back to its own visuals
+  goLite('error');                         // standalone: the photo slideshow
+}
+
+window.addEventListener('DOMContentLoaded', () => init().catch(initFailed));

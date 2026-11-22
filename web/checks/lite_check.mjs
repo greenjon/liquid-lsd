@@ -2,7 +2,7 @@
 // Serves web/ and drives the real page with Playwright (repo node_modules): ?lite=1 in Chromium and Firefox, a
 // browser without WebGL 2 (getContext('webgl2') -> null), the full picture (which must not go lite), and a
 // device too slow for it (requestAnimationFrame slowed to ~3 fps: lite takes over and the next visit starts
-// lite; embedded, the host hears `failed`).
+// lite; embedded, the host hears `failed`), and switching in place both ways (MENU › TV › VISUALS).
 // Lite must start the photo slideshow, fetch no shaders or scenes, show LITE on the OSD, and step photos on CH.
 // Needs the local gallery build (web/gallery/lite/: scripts/gallery_curate.py lite).
 import http from 'node:http';
@@ -113,7 +113,7 @@ for (const [engine, name] of [[chromium, 'chromium'], [firefox, 'firefox']]) {
 // 4. Too slow: lite takes over, says so, and the next visit starts lite without the visuals' files.
 {
   const r = await run(chromium, 'chromium', '?nolive', { slow: true });
-  await r.page.waitForTimeout(32000);   // the scaler steps down (~12 s), then two 8 s windows
+  await r.page.waitForTimeout(45000);   // the scaler steps down (~12 s), then two 8 s windows (a stall restarts them)
   const s = await r.page.evaluate(async () => ({
     imgs: document.querySelectorAll('#lite-layer img').length,
     reason: (await import('./lite.js')).liteState.reason,
@@ -136,9 +136,52 @@ for (const [engine, name] of [[chromium, 'chromium'], [firefox, 'firefox']]) {
 // 5. Too slow, embedded: the host app hears `failed` (it shows its own visuals); no lite slideshow.
 {
   const r = await run(chromium, 'chromium', '?embed&nolive', { slow: true, host: true });
-  await r.page.waitForTimeout(32000);
+  await r.page.waitForTimeout(45000);   // a software-rendered shader compile over 3 s restarts the count
   const s = await r.page.evaluate(() => ({ failed: window.hostFailed, layer: !!document.getElementById('lite-layer') }));
   ok(s.failed.includes('too slow') && !s.layer, 'too slow, embedded: the host hears failed', JSON.stringify(s));
+  await r.browser.close();
+}
+
+// 6. Switching in place (MENU › TV › VISUALS): no reload, the TV stays on, the visuals pause and carry on.
+{
+  const r = await run(chromium, 'chromium', '?nolive&lite=0');
+  const p = r.page;
+  const frames = () => p.evaluate(() => window.LSD.frames());
+  await p.evaluate(() => { window.sameVisit = true; });
+  await p.evaluate(async () => (await import('./lite.js')).setVisuals('lite'));
+  await p.waitForTimeout(2000);
+  const f1 = await frames();
+  await p.waitForTimeout(1000);
+  const s = await p.evaluate(() => ({ same: window.sameVisit, on: window.LSD.powerState.on, imgs: document.querySelectorAll('#lite-layer img').length,
+    saved: localStorage.getItem('lsd.visuals'), msg: document.getElementById('osd-msg')?.textContent }));
+  ok(s.same && s.on && s.imgs >= 1, 'switch to lite: in place, TV still on, photos up', JSON.stringify(s));
+  ok((await frames()) === f1, 'switch to lite: the visuals rest');
+  ok(s.saved === '"lite"', 'switch to lite: remembered', s.saved);
+  await p.evaluate(async () => (await import('./lite.js')).setVisuals('full'));
+  await p.waitForTimeout(1500);
+  const f2 = await frames();
+  await p.waitForTimeout(1000);
+  const t = await p.evaluate(() => ({ same: window.sameVisit, on: window.LSD.powerState.on, layer: !!document.getElementById('lite-layer') }));
+  ok(t.same && t.on && !t.layer, 'switch to full: in place, TV still on, photos gone', JSON.stringify(t));
+  ok((await frames()) > f2, 'switch to full: the visuals carry on');
+  ok(r.errors.length === 0, 'switching: no page errors', r.errors.join(' | '));
+  await r.browser.close();
+}
+
+// 7. Started in lite, switched to full: the visuals start from scratch, in place.
+{
+  const r = await run(chromium, 'chromium', '?lite=1&nolive');
+  const p = r.page;
+  await p.evaluate(() => { window.sameVisit = true; });
+  await p.evaluate(async () => (await import('./lite.js')).setVisuals('full'));
+  await p.waitForTimeout(8000);
+  const s = await p.evaluate(() => ({ same: window.sameVisit, on: window.LSD?.powerState.on, frames: window.LSD?.frames(),
+    layer: !!document.getElementById('lite-layer'), url: location.search }));
+  await p.waitForTimeout(1000);
+  const later = await p.evaluate(() => window.LSD?.frames());
+  ok(s.same && s.on && later > s.frames && !s.layer, 'lite -> full: the visuals start in place', JSON.stringify({ ...s, later }));
+  ok(!s.url.includes('lite='), 'lite -> full: ?lite=1 leaves the address', s.url);
+  ok(r.errors.length === 0, 'lite -> full: no page errors', r.errors.join(' | '));
   await r.browser.close();
 }
 

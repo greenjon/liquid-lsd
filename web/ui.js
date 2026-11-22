@@ -3,7 +3,7 @@
 // on-screen display, keyboard and touch. Viewer controls are locked while the desktop broadcasts live.
 import { startAudio, stopAudio, setVolume, setMic, isMicOn, micAvailable, cvState, tapeStatus, setEq, eqGains, EQ_MIN_DB, EQ_MAX_DB } from './dsp.js';
 import { embed } from './embedmode.js';
-import { liteState, liteNext, setVisuals } from './lite.js';
+import { liteState, liteNext, setVisuals, canSwitch } from './lite.js';
 import { autopilotState, advanceForeground, previousForeground, randomForeground, nextFxChain, setHold, setHoldBars, nowShowing, setHeavyAllowed, setReducedMotion,
   rollScene, setAutoRollBars, setEffects, setFollowMusic, setBackgroundMode, stepBackground,
   setSkipped, skippedChannels, prunedSkips, toggleSkip, restoreChannel, restoreAllChannels, tuneTo, SKIP_FLOOR } from './autopilot.js';
@@ -18,7 +18,7 @@ import { scheduleState, refreshSchedule, setShows, groupByDay, upcoming, parsePl
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v50';
+export const TV_VERSION = 'v51';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -623,10 +623,10 @@ export function initUI() {
       { label: 'VISUALS',
         value: () => (!liteState.on ? 'FULL' : { chosen: 'LITE', slow: 'LITE (TOO SLOW HERE)' }[liteState.reason] ?? 'LITE (NO FULL HERE)'),
         step: () => {
-          if (liteState.on && !['chosen', 'slow'].includes(liteState.reason)) { message('THIS BROWSER CAN\u2019T DRAW THE FULL VISUALS', 3000); return; }
+          if (!canSwitch()) { message('THIS BROWSER CAN\u2019T DRAW THE FULL VISUALS', 3000); return; }
           setVisuals(liteState.on ? 'full' : 'lite');
         },
-        help: 'Full: the Liquid LSD visuals. Lite: the Spaz Radio photo gallery, for older or slower phones and computers (less battery and data). The TV picks Lite by itself where the visuals run too slowly, and remembers it on this device. Changing it reloads the page.' },
+        help: 'Full: the Liquid LSD visuals. Lite: the Spaz Radio photo gallery, for older or slower phones and computers (less battery and data). The TV picks Lite by itself where the visuals run too slowly, and remembers it on this device.' },
       { label: 'ANNOUNCE SCENES', value: () => onOff(viewerState.announce),
         step: () => { viewerState.announce = !viewerState.announce; save('lsd.announce', viewerState.announce); },
         help: 'Show the name of each new scene, its background and its effects when it comes on, and the background when it changes. Off: only when you click the picture (or turn INFO on).' },
@@ -1132,14 +1132,22 @@ export function initUI() {
     }
     menu.refresh();   // MENU › BACKGROUND names the new one
   });
-  // Lite mode started (lite.js): the scene buttons do nothing, and the OSD says what is on.
-  const liteButtons = () => { for (const id of ['fxBtn', 'rollBtn', 'holdBtn']) document.getElementById(id).setAttribute('aria-disabled', 'true'); };
+  // Lite mode on or off (lite.js), switched in place: in lite the scene buttons do nothing; the OSD says what is on.
+  const liteButtons = () => {
+    const off = liteState.on || live();
+    for (const id of ['fxBtn', 'rollBtn', 'holdBtn']) document.getElementById(id).setAttribute('aria-disabled', String(off));
+  };
   if (liteState.on) liteButtons();
   window.addEventListener('lsd-lite', (e) => {
     liteButtons(); menu.refresh();
     if (!powerState.on) return;
-    showLook();
-    if (e.detail.reason === 'slow') message('TOO SLOW HERE FOR THE VISUALS \u00B7 PHOTOS INSTEAD', 5000);
+    if (e.detail.on) {
+      showLook();
+      message(e.detail.reason === 'slow' ? 'TOO SLOW HERE FOR THE VISUALS \u00B7 PHOTOS INSTEAD' : 'VISUALS: LITE', e.detail.reason === 'slow' ? 5000 : 2000);
+    } else {
+      message('VISUALS: FULL', 2000);
+      if (nowShowing().tuning) showTuning(); else showLook();
+    }
   });
   window.addEventListener('lsd-broadcast-status', (e) => {
     tvBody.classList.toggle('live', e.detail.live);
