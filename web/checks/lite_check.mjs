@@ -1,6 +1,8 @@
 // Lite mode check: node web/checks/lite_check.mjs [--shots DIR]
 // Serves web/ and drives the real page with Playwright (repo node_modules): ?lite=1 in Chromium and Firefox, a
-// browser without WebGL 2 (getContext('webgl2') -> null), and the full picture (which must not go lite).
+// browser without WebGL 2 (getContext('webgl2') -> null), the full picture (which must not go lite), and a
+// device too slow for it (requestAnimationFrame slowed to ~3 fps: lite takes over and the next visit starts
+// lite; embedded, the host hears `failed`).
 // Lite must start the photo slideshow, fetch no shaders or scenes, show LITE on the OSD, and step photos on CH.
 // Needs the local gallery build (web/gallery/lite/: scripts/gallery_curate.py lite).
 import http from 'node:http';
@@ -25,15 +27,14 @@ const base = `http://127.0.0.1:${server.address().port}/`;
 let bad = 0;
 const ok = (cond, name, detail = '') => { if (!cond) bad++; console.log(`${cond ? 'ok  ' : 'FAIL'} ${name}${!cond && detail ? ` (${detail})` : ''}`); };
 
-async function run(engine, label, query, { noWebgl = false } = {}) {
+async function run(engine, label, query, { noWebgl = false, slow = false, host = false } = {}) {
   const browser = await engine.launch();
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   const heavy = [];
   const errors = [];
   let dialogs = 0;
-  // The scenes, their FX and the scene shaders (index.html's <link rel=preload> of the six core shaders and the
-  // startup JSON, ~64 KB, still loads in lite mode).
-  page.on('request', (r) => { if (/\/(presets|content|fxchains)\/|\/shaders\/(?!(blit|mandala|mixer|crt_post)\.)/.test(r.url())) heavy.push(r.url()); });
+  // The scenes, their FX, the shaders and the startup files (none of them in lite mode).
+  page.on('request', (r) => { if (/\/(presets|content|fxchains|shaders|playlists)\/|catalog\.json|settings\.json|mandala_recipes\.json/.test(r.url())) heavy.push(r.url()); });
   page.on('pageerror', (e) => errors.push(String(e)));
   page.on('dialog', (d) => { dialogs++; d.dismiss(); });
   if (noWebgl) {
@@ -42,11 +43,22 @@ async function run(engine, label, query, { noWebgl = false } = {}) {
       HTMLCanvasElement.prototype.getContext = function (type, ...rest) { return type === 'webgl2' ? null : get.call(this, type, ...rest); };
     });
   }
+  if (slow) {
+    await page.addInitScript(() => {
+      window.requestAnimationFrame = (cb) => setTimeout(() => cb(performance.now()), 300);
+    });
+  }
+  if (host) {
+    await page.addInitScript(() => {
+      window.hostFailed = [];
+      window.LSDHost = { ready() {}, failed(why) { window.hostFailed.push(why); } };
+    });
+  }
   await page.goto(base + query);
   await page.waitForTimeout(1500);
-  await page.click('#powerSwitch');
+  if (!host) await page.click('#powerSwitch');   // embedded, the TV comes on by itself
   await page.waitForTimeout(7000);   // past the ident (4.6 s): the OSD says what is on
-  await page.click('#glCanvas');     // a click on the picture brings up what is on
+  if (!host) await page.click('#glCanvas');      // a click on the picture brings up what is on
   await page.waitForTimeout(300);
   const state = await page.evaluate(() => ({
     layer: !!document.getElementById('lite-layer'),
@@ -95,6 +107,38 @@ for (const [engine, name] of [[chromium, 'chromium'], [firefox, 'firefox']]) {
   const r = await run(chromium, 'chromium', '?nolive&lite=0');
   ok(!r.state.layer, 'full: no lite layer');
   ok(r.heavy.length > 0, 'full: scenes load');
+  await r.browser.close();
+}
+
+// 4. Too slow: lite takes over, says so, and the next visit starts lite without the visuals' files.
+{
+  const r = await run(chromium, 'chromium', '?nolive', { slow: true });
+  await r.page.waitForTimeout(32000);   // the scaler steps down (~12 s), then two 8 s windows
+  const s = await r.page.evaluate(async () => ({
+    imgs: document.querySelectorAll('#lite-layer img').length,
+    reason: (await import('./lite.js')).liteState.reason,
+    saved: localStorage.getItem('lsd.visuals'),
+  }));
+  ok(s.reason === 'slow' && s.imgs >= 1, 'too slow: the lite slideshow takes over', JSON.stringify(s));
+  ok(s.saved === '"lite-auto"', 'too slow: remembered on this device', s.saved);
+  ok(r.errors.length === 0, 'too slow: no page errors', r.errors.join(' | '));
+  r.heavy.length = 0;
+  await r.page.reload();
+  await r.page.waitForTimeout(1500);
+  await r.page.click('#powerSwitch');
+  await r.page.waitForTimeout(3000);
+  const again = await r.page.evaluate(async () => (await import('./lite.js')).liteState.reason);
+  ok(again === 'slow', 'too slow: the next visit starts lite', again);
+  ok(r.heavy.length === 0, 'too slow: the next visit fetches none of the visuals\' files', r.heavy.slice(0, 3).join(' '));
+  await r.browser.close();
+}
+
+// 5. Too slow, embedded: the host app hears `failed` (it shows its own visuals); no lite slideshow.
+{
+  const r = await run(chromium, 'chromium', '?embed&nolive', { slow: true, host: true });
+  await r.page.waitForTimeout(32000);
+  const s = await r.page.evaluate(() => ({ failed: window.hostFailed, layer: !!document.getElementById('lite-layer') }));
+  ok(s.failed.includes('too slow') && !s.layer, 'too slow, embedded: the host hears failed', JSON.stringify(s));
   await r.browser.close();
 }
 

@@ -57,16 +57,23 @@
   <link rel="modulepreload" href="pairing.js">
   <link rel="modulepreload" href="preset.js">
   <link rel="modulepreload" href="tapes.js">
-  <link rel="preload" href="settings.json" as="fetch" crossorigin>
-  <link rel="preload" href="catalog.json" as="fetch" crossorigin>
-  <link rel="preload" href="mandala_recipes.json" as="fetch" crossorigin>
-  <link rel="preload" href="playlists/default.lsdplay" as="fetch" crossorigin>
-  <link rel="preload" href="shaders/blit.vert" as="fetch" crossorigin>
-  <link rel="preload" href="shaders/blit.frag" as="fetch" crossorigin>
-  <link rel="preload" href="shaders/mandala.vert" as="fetch" crossorigin>
-  <link rel="preload" href="shaders/mandala.frag" as="fetch" crossorigin>
-  <link rel="preload" href="shaders/mixer.frag" as="fetch" crossorigin>
-  <link rel="preload" href="shaders/crt_post.frag" as="fetch" crossorigin>
+  <!-- The startup files (settings, catalog, Mandala table, the foreground playlist, the renderer's core shaders),
+       asked for at once; not in lite mode, which uses none of them (lite.js visualsChoice: ?lite=1, or
+       lsd.visuals saved as lite / lite-auto). tools/preload.test.mjs checks the list. -->
+  <script>
+    (function () {
+      var STARTUP_FILES = ['settings.json', 'catalog.json', 'mandala_recipes.json', 'playlists/default.lsdplay', 'shaders/blit.vert', 'shaders/blit.frag', 'shaders/mandala.vert', 'shaders/mandala.frag', 'shaders/mixer.frag', 'shaders/crt_post.frag'];
+      var q = new URLSearchParams(location.search), v = null;
+      try { v = JSON.parse(localStorage.getItem('lsd.visuals')); } catch (e) { /* no storage */ }
+      var lite = !q.has('embed') && (q.get('lite') === '1' || (q.get('lite') !== '0' && (v === 'lite' || v === 'lite-auto')));
+      if (lite) return;
+      STARTUP_FILES.forEach(function (f) {
+        var l = document.createElement('link');
+        l.rel = 'preload'; l.href = f; l.as = 'fetch'; l.crossOrigin = 'anonymous';
+        document.head.appendChild(l);
+      });
+    })();
+  </script>
 </head>
 <body>
   <!-- Kiosk / embed classes before the first paint: ui.js (a module, so deferred) would add them only after

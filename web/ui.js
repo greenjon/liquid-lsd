@@ -18,7 +18,7 @@ import { scheduleState, refreshSchedule, setShows, groupByDay, upcoming, parsePl
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v49';
+export const TV_VERSION = 'v50';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -621,12 +621,12 @@ export function initUI() {
         step: () => applyTheme(viewerState.theme === 'dark' ? 'light' : 'dark'),
         help: 'The TV’s cabinet and the room around it: light, a 1970s hi-fi in brushed aluminium and walnut (the default), or dark plastic. The picture is the same in both.' }]),
       { label: 'VISUALS',
-        value: () => (!liteState.on ? 'FULL' : liteState.reason === 'chosen' ? 'LITE' : 'LITE (NO FULL HERE)'),
+        value: () => (!liteState.on ? 'FULL' : { chosen: 'LITE', slow: 'LITE (TOO SLOW HERE)' }[liteState.reason] ?? 'LITE (NO FULL HERE)'),
         step: () => {
-          if (liteState.on && liteState.reason !== 'chosen') { message('THIS BROWSER CAN\u2019T DRAW THE FULL VISUALS', 3000); return; }
+          if (liteState.on && !['chosen', 'slow'].includes(liteState.reason)) { message('THIS BROWSER CAN\u2019T DRAW THE FULL VISUALS', 3000); return; }
           setVisuals(liteState.on ? 'full' : 'lite');
         },
-        help: 'Full: the Liquid LSD visuals. Lite: the Spaz Radio photo gallery, for older or slower phones and computers (less battery and data). Changing it reloads the page.' },
+        help: 'Full: the Liquid LSD visuals. Lite: the Spaz Radio photo gallery, for older or slower phones and computers (less battery and data). The TV picks Lite by itself where the visuals run too slowly, and remembers it on this device. Changing it reloads the page.' },
       { label: 'ANNOUNCE SCENES', value: () => onOff(viewerState.announce),
         step: () => { viewerState.announce = !viewerState.announce; save('lsd.announce', viewerState.announce); },
         help: 'Show the name of each new scene, its background and its effects when it comes on, and the background when it changes. Off: only when you click the picture (or turn INFO on).' },
@@ -1135,7 +1135,12 @@ export function initUI() {
   // Lite mode started (lite.js): the scene buttons do nothing, and the OSD says what is on.
   const liteButtons = () => { for (const id of ['fxBtn', 'rollBtn', 'holdBtn']) document.getElementById(id).setAttribute('aria-disabled', 'true'); };
   if (liteState.on) liteButtons();
-  window.addEventListener('lsd-lite', () => { liteButtons(); menu.refresh(); if (powerState.on) showLook(); });
+  window.addEventListener('lsd-lite', (e) => {
+    liteButtons(); menu.refresh();
+    if (!powerState.on) return;
+    showLook();
+    if (e.detail.reason === 'slow') message('TOO SLOW HERE FOR THE VISUALS \u00B7 PHOTOS INSTEAD', 5000);
+  });
   window.addEventListener('lsd-broadcast-status', (e) => {
     tvBody.classList.toggle('live', e.detail.live);
     updateBadge();

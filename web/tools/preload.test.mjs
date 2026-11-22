@@ -45,7 +45,10 @@ test('index.html preloads every imported module, and nothing else', () => {
 
 test('the startup files index.html preloads are the ones startup fetches', () => {
   const settings = JSON.parse(fs.readFileSync(path.join(web, 'settings.json'), 'utf8'));
-  const fetched = [...html.matchAll(/<link rel="preload" href="([^"]+)" as="fetch" crossorigin>/g)].map((m) => m[1]);
+  // An inline script adds them (not in lite mode): the STARTUP_FILES list.
+  const list = html.match(/var STARTUP_FILES = \[([^\]]+)\]/);
+  assert.ok(list, 'STARTUP_FILES not found in index.html');
+  const fetched = [...list[1].matchAll(/'([^']+)'/g)].map((m) => m[1]);
   const renderer = fs.readFileSync(path.join(web, 'renderer.js'), 'utf8');
   const shaders = [...renderer.matchAll(/loadText\('([^']+)'\)/g)].map((m) => m[1]);
   assert.ok(shaders.length >= 6, 'renderer.js core shaders not found');

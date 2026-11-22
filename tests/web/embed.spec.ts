@@ -13,7 +13,7 @@ async function openEmbed(page: Page) {
     w.__states = [];
     w.LSDHost = { ready() { w.__ready = true; }, failed(r: string) { w.__failed = r; }, state(j: string) { w.__states.push(JSON.parse(j)); } };
   });
-  await page.goto(`${ORIGIN}/index.html?embed`);
+  await page.goto(`${ORIGIN}/index.html?embed&lite=0`);
   await page.waitForFunction(() => (window as any).__ready || (window as any).__failed, null, { timeout: 30000 });
   await page.waitForFunction(() => (window as any).LSD.catalog().scenes.length > 0 && (window as any).LSD.state().name, null, { timeout: 30000 });
   // The first scene comes before every preset's tags and the backgrounds (the fast start): wait for the final catalog,

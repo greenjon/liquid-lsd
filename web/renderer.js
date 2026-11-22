@@ -11,7 +11,7 @@ import { heardBeats, DelayLine } from './sync.js';
 import { DropEnvelope } from './energy.js';
 import { installEmbedApi } from './embed.js';
 import { embed } from './embedmode.js';
-import { startLite, visualsChoice } from './lite.js';
+import { startLite, visualsChoice, rememberSlow } from './lite.js';
 
 async function loadText(url) {
   const res = await fetchTimed(url);
@@ -64,8 +64,10 @@ function goLite(reason) {
 }
 
 async function init() {
-  // Lite picked (MENU › TV › VISUALS or ?lite=1): no WebGL context, and none of the shaders or scenes are fetched.
-  if (!embed && visualsChoice() === 'lite') { goLite('chosen'); return; }
+  // Lite picked (MENU › TV › VISUALS or ?lite=1), or this device was too slow on an earlier visit: no WebGL
+  // context, and none of the shaders or scenes are fetched.
+  const choice = embed ? 'full' : visualsChoice();
+  if (choice !== 'full') { goLite(choice === 'lite-auto' ? 'slow' : 'chosen'); return; }
   const canvas = document.getElementById('glCanvas');
   const gl = canvas.getContext('webgl2', {
     alpha: false,
@@ -275,6 +277,8 @@ async function init() {
     const k = cap * SCALES[adapt.idx];
     return [Math.max(1, Math.round(w * k)), Math.max(1, Math.round(h * k))];
   }
+  // `dt`: the real frame time, up to 0.5 s (not the 0.1 s the animation clamps to), so a device at 1-2 fps
+  // steps down every STEP_GAP_MS like any other, instead of after minutes.
   function adaptScale(dt, now) {
     adapt.ema += (dt - adapt.ema) * 0.05;
     if (now - adapt.lastChange < STEP_GAP_MS) return false;
@@ -425,10 +429,46 @@ async function init() {
 
   let noSignal = 0;
   let paused = false;       // embed mode: the host hid the picture
+  let stopped = false;      // too slow: lite.js (or, embedded, the host app) took over for good
   let forceResize = false;
+
+  // Too slow for the visuals: frames are counted over 8 s windows of wall time, with the TV on and the page
+  // visible, from 5 s after power-on (the warm-up, the first shaders and the GPU probe stutter). Two windows
+  // in a row under 12 fps at the coarsest render step (one could be a shader compiling) and the device cannot
+  // run the visuals: the photo slideshow takes over, and the next visit starts with it (MENU › TV › VISUALS
+  // tries again). At 1 fps that is about 30 s after power-on: ~12 s for the scaler to step down, then 16 s.
+  const SLOW_WINDOW_MS = 8000, SLOW_GRACE_MS = 5000, SLOW_FPS = 12, SLOW_WINDOWS = 2, GAP_MS = 3000;
+  const speed = { since: 0, frames: 0, last: 0, onAt: 0, slowWindows: 0 };
+  const forcedFull = new URLSearchParams(location.search).get('lite') === '0';   // ?lite=0: full, however slow
+  function tooSlow(now) {
+    if (forcedFull) return false;
+    if (!powerState.on || document.hidden) { speed.since = 0; speed.onAt = 0; speed.slowWindows = 0; return false; }
+    if (!speed.onAt) speed.onAt = now;
+    if (now - speed.last > GAP_MS) { speed.since = 0; speed.slowWindows = 0; }   // hidden or stalled: start over
+    speed.last = now;
+    if (now - speed.onAt < SLOW_GRACE_MS) return false;
+    if (!speed.since) { speed.since = now; speed.frames = 0; return false; }
+    speed.frames++;
+    if (now - speed.since < SLOW_WINDOW_MS) return false;
+    const fps = (speed.frames * 1000) / (now - speed.since);
+    speed.since = now; speed.frames = 0;
+    speed.slowWindows = fps < SLOW_FPS && adapt.idx === SCALES.length - 1 ? speed.slowWindows + 1 : 0;
+    return speed.slowWindows >= SLOW_WINDOWS;
+  }
+  function handOver() {
+    stopped = true;
+    console.warn('[lsd] too slow for the visuals here; switching to the lite picture');
+    if (embed) { window.LSDHost?.failed?.('too slow'); return; }   // the app shows its own visuals
+    rememberSlow();
+    gl.getExtension('WEBGL_lose_context')?.loseContext();          // give the GPU back
+    goLite('slow');
+  }
+
   function render(now) {
-    if (paused) return;
-    const dt = Math.min((now - lastTime) / 1000, 0.1);
+    if (paused || stopped) return;
+    if (tooSlow(now)) { handOver(); return; }
+    const frameMs = now - lastTime;
+    const dt = Math.min(frameMs / 1000, 0.1);
     lastTime = now;
     elapsedTime += dt;
     frameDt = dt;
@@ -462,7 +502,7 @@ async function init() {
     const displayH = canvas.clientHeight || window.innerHeight;
     const targetW  = Math.max(1, Math.floor(displayW * (window.devicePixelRatio || 1)));
     const targetH  = Math.max(1, Math.floor(displayH * (window.devicePixelRatio || 1)));
-    const rescaled = powerState.on && adaptScale(dt, now);
+    const rescaled = powerState.on && adaptScale(Math.min(frameMs / 1000, 0.5), now);
     if (canvas.width !== targetW || canvas.height !== targetH || rescaled || forceResize) {
       forceResize = false;
       canvas.width  = targetW;
@@ -525,7 +565,7 @@ async function init() {
     isPaused: () => paused,
     pause() { if (paused) return; paused = true; suspendAudio(); },
     resume() {
-      if (!paused) return;
+      if (!paused || stopped) return;
       paused = false;
       lastTime = performance.now();
       resumeAudio();

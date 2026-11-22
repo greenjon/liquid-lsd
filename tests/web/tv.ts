@@ -23,7 +23,7 @@ export async function openTV(page: Page, q = '', { track = 'dance128', sess = se
   const errors: string[] = [];
   page.on("pageerror", (e) => { if (!NOISE.test(e.message)) errors.push("pageerror: " + e.message); });
   page.on('console', (m) => { if (m.type() === 'error' && !NOISE.test(m.text())) errors.push('console: ' + m.text()); });
-  await page.goto(`${ORIGIN}/index.html?st=${sess}&track=${track}${q ? '&' + q : ''}`);
+  await page.goto(`${ORIGIN}/index.html?lite=0&st=${sess}&track=${track}${q ? '&' + q : ''}`);
   await page.waitForFunction(() => (window as any).LSD, null, { timeout: 30000 });
   const lsd = <T>(f: string) => page.evaluate(f) as Promise<T>;
   return { page, session: sess, errors, lsd, on: async () => {

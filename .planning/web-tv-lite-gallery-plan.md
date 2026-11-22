@@ -1,6 +1,6 @@
 # Web TV lite mode: gallery fallback for weak devices (plan, 2026-11-22)
 
-Status: phase 1 built 2026-11-22 (uncommitted, unpublished, TV v49): lite.js, manual VISUALS row, no-WebGL/error fallback, Safari 15 floor (compat.test.mjs). Next: phase 2 (slow-device auto-switch, remembered per device; embed hands off via failed()). Old-browser bootstrap dropped (user: no 2017-2020 support).
+Status: phase 1 committed 90416f6 and published as TV v49 (2026-11-22). Phase 2 built 2026-11-22, uncommitted (TV v50): renderer.js tooSlow/handOver (2 x 8 s windows < 12 fps at the coarsest scale, 5 s grace), lite-auto remembered, embed -> LSDHost.failed, scaler reads real frame time, startup preloads skipped in lite, ?lite=0 disables the watch (all headless checks use it). Old-browser bootstrap and logos dropped.
 
 ## Problem
 

@@ -1,6 +1,7 @@
 // lite.js — the TV's lite picture: the Spaz Radio photo gallery without WebGL, for devices that cannot run
 // the visuals (no WebGL 2, or the renderer failed to start) and for viewers who pick it (MENU › TV › VISUALS,
-// or ?lite=1 / ?lite=0 in the address, which wins over the saved choice).
+// or ?lite=1 / ?lite=0 in the address, which wins over the saved choice; ?lite=0 also keeps the visuals on a
+// device renderer.js finds too slow, which otherwise switches to lite by itself and remembers it).
 //
 // The look is gallery.js's (itself the old spaz.org/radio page's groundCycler, smoothed): photos fade in over
 // each other while each one slowly turns and grows around a point off its middle, newest on top. Here every
@@ -17,22 +18,32 @@
 
 import { tick, cvState } from './dsp.js';
 
-const KEY = 'lsd.visuals';     // 'lite' | 'full' (ui.js save(): JSON)
+const KEY = 'lsd.visuals';     // 'full' | 'lite' (picked) | 'lite-auto' (too slow on an earlier visit); JSON
 const MAX_LAYERS = 3;          // photos on screen at once
 const TICK_MS = 50;            // audio analysis rate without a render loop
 const FAIL_WAIT_MS = 20000;    // after a run of failed photos (offline), wait this long
 
 const rand = (a, b) => a + Math.random() * (b - a);
 
-/** Lite mode: `on` once started; `reason` 'chosen' (the viewer's pick), 'no-webgl' or 'error'. */
+/** Lite mode: `on` once started; `reason` 'chosen' (the viewer's pick), 'slow' (renderer.js measured it, now or on
+ *  an earlier visit), 'no-webgl' or 'error'. */
 export const liteState = { on: false, reason: null };
 
-/** 'lite' or 'full': the address (?lite=1 / ?lite=0) first, then the saved choice; 'full' by default. */
+/** 'full', 'lite' or 'lite-auto': the address (?lite=1 / ?lite=0) first, then the saved choice; 'full' by default.
+ *  index.html's startup preloads read the same (inline, before the modules). */
 export function visualsChoice() {
   const q = new URLSearchParams(globalThis.location?.search ?? '').get('lite');
   if (q === '1') return 'lite';
   if (q === '0') return 'full';
-  try { return JSON.parse(localStorage.getItem(KEY)) === 'lite' ? 'lite' : 'full'; } catch { return 'full'; }
+  try {
+    const v = JSON.parse(localStorage.getItem(KEY));
+    return v === 'lite' || v === 'lite-auto' ? v : 'full';
+  } catch { return 'full'; }
+}
+
+/** This device was too slow for the visuals: start the next visit in lite mode (until VISUALS › FULL). */
+export function rememberSlow() {
+  try { localStorage.setItem(KEY, JSON.stringify('lite-auto')); } catch { /* not remembered */ }
 }
 
 /** Saves the viewer's pick and reloads the page, which then starts the picture that was picked. */
