@@ -3,6 +3,11 @@
 ### Web TV: Save the Show (`web/ui.js`, `web/schedule.js`, `web/index.html`, `web/tv.css`)
 - **New: ⤓ SAVE at the end of the track line** (top left of the picture, with the info) downloads the show that is playing: the jukebox's archive show, or the tape in. It is not there during a live show, which has no file yet. Its tooltip gives the format and size. `D` does the same from the keyboard (TV v53).
 
+### Web TV: Spaz Logos Background and a Three-Layer Lite Collage (`web/gallery.js`, `web/lite.js`, `web/renderer.js`, `web/autopilot.js`, `web/preset.js`, `web/presets/spaz-logos.lsd`, `scripts/gallery_curate.py`)
+- **Changed: the background now starts with the Spaz Radio logos** from the old radio page: one or two see-through emblems at a time, slowly turning and drifting, so the scene in front stays clear. The listener photos come next in the background rotation (`B` or MENU › BACKGROUND). Logos that came on a plain black or white square have that square cut away (TV v54).
+- **Changed: the lite picture is now a collage in the old radio page's three layers:** skies at the back, listener photos drifting over them (smaller than the screen, so the sky shows round them) and a Spaz logo turning in front.
+- **New: `gallery_curate.py --set logo` and `--set sky`** download, preview (a click-to-reject grid on a checkerboard) and build the old page's logo and sky folders.
+
 ### Web TV: Lite Picture for Older and Slower Devices (`web/lite.js`, `web/renderer.js`, `web/ui.js`, `web/autopilot.js`, `web/sync.js`, `web/schedule.js`, `scripts/gallery_curate.py`)
 - **New: a lite picture.** When the browser can't draw the visuals (no WebGL 2, or they fail to start), the TV shows the Spaz Radio photo gallery instead: listener photos fading in over each other while they slowly turn and grow, like the old radio page. Before, the screen stayed black behind a "WebGL 2 is not supported" alert. The radio, menu, schedule, chat and tapes work as usual; CH ▲▼ brings the next photo.
 - **New: MENU › TV › VISUALS** switches between *Full* and *Lite* on any device, at once: the sound plays on and the TV stays on (TV v51). Lite uses less battery and data: small copies of the photos (about 4 MB for all of them), fetched one at a time and only while the TV is on. `?lite=1` in the address does the same for one visit.

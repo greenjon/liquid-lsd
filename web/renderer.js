@@ -397,7 +397,8 @@ async function init() {
     pipe.blank = false;
     const srcType = (deckData.source || 'mandala').toLowerCase();
     if (srcType === 'mandala') renderMandala(deckData, pipe.clean);
-    else if (srcType === 'gallery') gallery.render(pipe.clean, { dt: frameDt, bpm: evalCtx.bpm, beats: evalCtx.beats, calm: viewerState.reducedNow });
+    else if (srcType === 'gallery') (deckData.gallerySet === 'logo' ? logos : gallery)
+      .render(pipe.clean, { dt: frameDt, bpm: evalCtx.bpm, beats: evalCtx.beats, calm: viewerState.reducedNow });
     else if (!ctx.library.has('sources', srcType)) pipe.clean.clear(); // a source the web cannot draw
     else if (!pipe.renderSource(deckData, frameInfo())) return null; // still loading
     return pipe.renderFx(deckData, frameInfo());
@@ -411,6 +412,7 @@ async function init() {
   const UNIT_SPEC = { min: 0, max: 1, steps: null };
   const mandalaRecipes = new MandalaRecipes(mandalaTable);
   const gallery = new Gallery(gl, quadVAO);   // the Spaz Radio photo gallery (gallery.js); loads on first use
+  const logos = new Gallery(gl, quadVAO, { set: 'logo' });   // ...and its logos (preset gallerySet "logo")
 
   function renderMandala(deckData, target) {
     target.bind();

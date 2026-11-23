@@ -163,7 +163,7 @@ try {
   key('m'); downTo('BACKGROUND'); key('ArrowLeft');
   const bgRow = d.querySelector('#tv-menu .menu-row.sel')?.textContent ?? '';
   await sleep(2500);
-  check('BACKGROUND ◀ goes back to the background B left', st.deckBG?.source === bg0?.source && /spaz gallery/i.test(bgRow), `${st.deckBG?.source} / ${bgRow}`);
+  check('BACKGROUND ◀ goes back to the background B left', st.deckBG?.source === bg0?.source && /spaz logos/i.test(bgRow), `${st.deckBG?.source} / ${bgRow}`);
   key('Escape');
   key('m'); downTo('EFFECTS'); key('ArrowRight'); key('Escape');
   check('MENU › EFFECTS OFF takes the FX off the scene', w.LSD.viewerState.effects === false && !onAir().fx.some(Boolean));

@@ -1,17 +1,19 @@
-// lite.js — the TV's lite picture: the Spaz Radio photo gallery without WebGL, for devices that cannot run
+// lite.js — the TV's lite picture: a Spaz Radio collage without WebGL, for devices that cannot run
 // the visuals (no WebGL 2, or the renderer failed to start) and for viewers who pick it (MENU › TV › VISUALS,
 // or ?lite=1 / ?lite=0 in the address, which wins over the saved choice; ?lite=0 also keeps the visuals on a
 // device renderer.js finds too slow, which otherwise switches to lite by itself and remembers it).
 //
-// The look is gallery.js's (itself the old spaz.org/radio page's groundCycler, smoothed): photos fade in over
-// each other while each one slowly turns and grows around a point off its middle, newest on top. Here every
-// photo is an <img> moved only by the Web Animations API on `transform` and `opacity`, so the browser's
-// compositor animates it and the script wakes only to start the next photo. Each <img> is laid out at the
-// photo's own size and scaled up by the transform, so the GPU holds a small bitmap, not a screen-sized one.
+// The look is the old spaz.org/radio page's three layers, smoothed: skies at the back (slow, screen-filling,
+// long crossfades), listener photos over them (smaller than the screen, so the sky shows around them; each
+// turns and grows around a point off its middle, as gallery.js's photos do) and Spaz logos in front (turning
+// around their middles). Every picture is an <img> moved only by the Web Animations API on `transform` and
+// `opacity`, so the browser's compositor animates it and the script wakes only to start the next one. Each
+// <img> is laid out at the picture's own size and scaled by the transform, so the GPU holds a small bitmap.
 //
-// Bandwidth: the photos come from gallery.json's `lite` folder (512 px JPEGs, about 35 KB each, built by
-// scripts/gallery_curate.py lite), falling back to the full-size `base`. One photo is fetched only when the
-// next one is due, and none while the TV is off or the tab is hidden.
+// Bandwidth: everything comes from gallery.json (scripts/gallery_curate.py): photos from its `lite` folder
+// (512 px JPEGs, about 35 KB each), skies from sky.lite, logos from logo.base (512 px PNGs), falling back to
+// the full-size folders. A layer fetches one picture only when its next one is due, and none while the TV is
+// off or the tab is hidden. A gallery.json without skies or logos just leaves that layer empty.
 //
 // No renderer runs in lite mode, so this also ticks the audio analysis (dsp.js `tick`: stream watchdog, beat
 // tracking for the beat LED and tempo) and stands in for the renderer's power-on/off bookkeeping.
@@ -19,7 +21,6 @@
 import { tick, cvState } from './dsp.js';
 
 const KEY = 'lsd.visuals';     // 'full' | 'lite' (picked) | 'lite-auto' (too slow on an earlier visit); JSON
-const MAX_LAYERS = 3;          // photos on screen at once
 const TICK_MS = 50;            // audio analysis rate without a render loop
 const FAIL_WAIT_MS = 20000;    // after a run of failed photos (offline), wait this long
 
@@ -100,26 +101,70 @@ export function stopLite() {
 /** CH ▲▼ in lite mode: the next photo now. */
 export function liteNext() { show?.spawnNow(); }
 
+/**
+ * How each layer moves, in beats. `look(W, H, nw, nh, calm)` places one picture: its height on screen at the
+ * start (screen heights), growth, turn and the point it turns around.
+ */
+const LANES = {
+  sky: {
+    max: 2,
+    gap: () => rand(24, 48),
+    times: () => [rand(12, 24), rand(48, 96), rand(12, 24)],
+    look: (W, H, pa, calm) => ({
+      s0: Math.max(1, (W / H) / pa) * rand(1.2, 1.4),       // always covers the screen
+      grow: rand(0.001, 0.003) * (calm ? 0.5 : 1),
+      turn: (calm ? 0.4 : 1) * rand(0.3, 0.8) * (Math.random() < 0.5 ? -1 : 1),
+      u: rand(0.4, 0.6), v: rand(0.4, 0.6),
+      px: rand(-0.1, 0.1), py: rand(-0.1, 0.1), drift: 0.001,
+    }),
+  },
+  photo: {
+    max: 2,
+    gap: () => rand(4, 10),
+    times: () => [rand(6, 16), rand(24, 48), rand(6, 16)],
+    look: (W, H, pa, calm) => ({
+      s0: Math.min(rand(0.55, 0.85), 0.9 * (W / H) / pa),   // smaller than the screen: the sky shows round it
+      grow: rand(0.004, 0.01) * (calm ? 0.5 : 1),
+      turn: (calm ? 0.4 : 1) * rand(1.5, 4) * (Math.random() < 0.5 ? -1 : 1),
+      u: rand(0.3, 0.7), v: rand(0.3, 0.7),
+      px: rand(-0.5, 0.5), py: rand(-0.4, 0.4), drift: 0.004,
+    }),
+  },
+  logo: {
+    max: 1,
+    gap: () => rand(12, 24),
+    times: () => [rand(4, 8), rand(16, 32), rand(4, 8)],
+    look: (W, H, pa, calm) => ({
+      s0: Math.min(rand(0.3, 0.55), 0.8 * (W / H) / pa),
+      grow: rand(0.002, 0.006) * (calm ? 0.5 : 1),
+      turn: (calm ? 0.4 : 1) * rand(3, 8) * (Math.random() < 0.5 ? -1 : 1),
+      u: 0.5, v: 0.5,                                        // around its middle, like the old page's logos
+      px: rand(-0.6, 0.6), py: rand(-0.55, 0.55), drift: 0.003,
+    }),
+  },
+};
+
 class Slideshow {
   constructor(layer, powerState, viewerState) {
     this.layer = layer;
     this.power = powerState;
     this.viewer = viewerState;
-    this.urls = [];         // shuffled
-    this.next = 0;
-    this.ready = null;      // a decoded <img> waiting to go on screen
-    this.loading = false;
-    this.failures = 0;
+    this.lanes = ['sky', 'photo', 'logo'].map((name) => {   // back to front
+      const el = document.createElement('div');
+      el.className = `lite-lane lite-${name}`;
+      layer.appendChild(el);
+      return new Lane(name, el, LANES[name], viewerState);
+    });
+    this.photos = this.lanes[1];
+    this.listed = false;
     this.retryAt = 0;
-    this.layers = [];       // { el, fade } on screen, oldest first
-    this.spawnAt = 0;       // performance.now() from which the next photo comes in
     this.wasOn = false;
     this.offAt = 0;
   }
 
   stop() {
     clearInterval(this.timer);
-    this.layer.remove();   // its photos and their animations go with it
+    this.layer.remove();   // its pictures and their animations go with it
   }
 
   async start() {
@@ -137,13 +182,11 @@ class Slideshow {
     try {
       const r = await fetch('gallery.json', { cache: 'no-cache' });
       const m = await r.json();
-      const base = m.lite || m.base;
-      const urls = m.images.map((n) => base + encodeURIComponent(n));
-      for (let i = urls.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [urls[i], urls[j]] = [urls[j], urls[i]];
-      }
-      this.urls = urls;
+      const list = (part, base) => (part?.images ?? []).map((n) => base + encodeURIComponent(n));
+      this.lanes[0].setUrls(list(m.sky, m.sky?.lite || m.sky?.base));
+      this.lanes[1].setUrls(list(m, m.lite || m.base));
+      this.lanes[2].setUrls(list(m.logo, m.logo?.base));
+      this.listed = true;
     } catch (err) {
       console.warn('[lite] no gallery list; trying again in 20 s', err);
       this.retryAt = performance.now() + FAIL_WAIT_MS;
@@ -161,10 +204,43 @@ class Slideshow {
       document.getElementById('tv-body')?.classList.remove('shutting-down');
     }
     if (!on || document.hidden) return;
-    if (this.urls.length === 0) {
+    if (!this.listed) {
       if (now >= this.retryAt && this.retryAt) { this.retryAt = 0; this.loadManifest(); }
       return;
     }
+    for (const lane of this.lanes) lane.update(now);
+  }
+
+  spawnNow() { this.photos.spawnNow(); }
+}
+
+/** One layer of the collage: its own picture list, one picture fetched ahead, its pictures on screen. */
+class Lane {
+  constructor(name, el, profile, viewer) {
+    this.name = name;
+    this.el = el;
+    this.profile = profile;
+    this.viewer = viewer;
+    this.urls = [];         // shuffled
+    this.next = 0;
+    this.ready = null;      // a decoded <img> waiting to go on screen
+    this.loading = false;
+    this.failures = 0;
+    this.retryAt = 0;
+    this.layers = [];       // { el, fade, leaving } on screen, oldest first
+    this.spawnAt = 0;       // performance.now() from which the next picture comes in
+  }
+
+  setUrls(urls) {
+    for (let i = urls.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [urls[i], urls[j]] = [urls[j], urls[i]];
+    }
+    this.urls = urls;
+  }
+
+  update(now) {
+    if (this.urls.length === 0) return;
     if (!this.ready && !this.loading && now >= this.retryAt) this.fetchNext();
     const showing = this.layers.some((l) => !l.leaving);
     if (this.ready && (!showing || now >= this.spawnAt)) this.spawn(now);
@@ -198,35 +274,31 @@ class Slideshow {
     const bpm = Math.min(180, Math.max(60, cvState.bpm || 120));
     const beat = 60 / bpm;                                  // seconds
     const live = this.layers.filter((l) => !l.leaving);
-    if (live.length >= MAX_LAYERS) this.leave(live[0], rand(4, 8) * beat);
+    if (live.length >= this.profile.max) this.leave(live[0], rand(4, 8) * beat);
 
-    const W = this.layer.clientWidth || 1, H = this.layer.clientHeight || 1;
-    const nw = img.naturalWidth, nh = img.naturalHeight, pa = nw / nh;
-    // gallery.js's motion, in beats: cover the screen at the start, then grow and turn around an off-centre point.
-    const fadeIn = rand(6, 16), life = rand(24, 48), fadeOut = rand(6, 16);
+    const W = this.el.clientWidth || 1, H = this.el.clientHeight || 1;
+    const nw = img.naturalWidth, nh = img.naturalHeight;
+    const [fadeIn, life, fadeOut] = this.profile.times();
     const total = fadeIn + life + fadeOut;
-    const s0 = Math.max(1, (W / H) / pa) * rand(1.15, 1.5);       // photo height in screen heights
-    const grow = rand(0.006, 0.014) * (calm ? 0.5 : 1);           // log-scale growth per beat
-    const turn = (calm ? 0.4 : 1) * rand(1.5, 4) * (Math.random() < 0.5 ? -1 : 1);   // degrees per beat
+    const k = this.profile.look(W, H, nw / nh, calm);
+    const px = W / 2 + k.px * W / 2, py = H / 2 + k.py * H / 2;      // where the turning point sits
+    const dx = rand(-k.drift, k.drift) * total * W / 2, dy = rand(-k.drift, k.drift) * total * H / 2;
+    const k0 = (k.s0 * H) / nh;
     const a0 = rand(-180, 180);
-    const u = rand(0.25, 0.75), v = rand(0.25, 0.75);             // the turning point on the photo
-    const px = W / 2 + rand(-0.35, 0.35) * W / 2, py = H / 2 + rand(-0.35, 0.35) * H / 2;   // ...and on screen
-    const dx = rand(-0.004, 0.004) * total * W / 2, dy = rand(-0.004, 0.004) * total * H / 2;
-    const k0 = (s0 * H) / nh;
 
     const st = img.style;
     st.width = `${nw}px`;
     st.height = `${nh}px`;
-    st.left = `${px - u * nw}px`;
-    st.top = `${py - v * nh}px`;
-    st.transformOrigin = `${u * 100}% ${v * 100}%`;
+    st.left = `${px - k.u * nw}px`;
+    st.top = `${py - k.v * nh}px`;
+    st.transformOrigin = `${k.u * 100}% ${k.v * 100}%`;
     st.opacity = '0';
-    this.layer.appendChild(img);   // newest on top
+    this.el.appendChild(img);   // newest on top
 
     const ms = total * beat * 1000;
     img.animate([
       { transform: `translate(0px, 0px) rotate(${a0}deg) scale(${k0})` },
-      { transform: `translate(${dx}px, ${dy}px) rotate(${a0 + turn * total}deg) scale(${k0 * Math.exp(grow * total)})` },
+      { transform: `translate(${dx}px, ${dy}px) rotate(${a0 + k.turn * total}deg) scale(${k0 * Math.exp(k.grow * total)})` },
     ], { duration: ms, easing: 'linear', fill: 'forwards' });
     const fade = img.animate([
       { opacity: 0 },
@@ -237,10 +309,10 @@ class Slideshow {
     const layer = { el: img, fade, leaving: false };
     fade.onfinish = () => this.remove(layer);
     this.layers.push(layer);
-    this.spawnAt = now + rand(3, 9) * (calm ? 2 : 1) * beat * 1000;
+    this.spawnAt = now + this.profile.gap() * (calm ? 2 : 1) * beat * 1000;
   }
 
-  /** Fades a photo out early (too many on screen), from wherever its fade is now. */
+  /** Fades a picture out early (too many on screen), from wherever its fade is now. */
   leave(layer, seconds) {
     layer.leaving = true;
     const from = Number(getComputedStyle(layer.el).opacity) || 0;

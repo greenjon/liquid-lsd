@@ -3,8 +3,8 @@
 // browser without WebGL 2 (getContext('webgl2') -> null), the full picture (which must not go lite), and a
 // device too slow for it (requestAnimationFrame slowed to ~3 fps: lite takes over and the next visit starts
 // lite; embedded, the host hears `failed`), and switching in place both ways (MENU › TV › VISUALS).
-// Lite must start the photo slideshow, fetch no shaders or scenes, show LITE on the OSD, and step photos on CH.
-// Needs the local gallery build (web/gallery/lite/: scripts/gallery_curate.py lite).
+// Lite must start the collage (sky, photos, logos), fetch no shaders or scenes, show LITE on the OSD, and step photos on CH.
+// Needs the local gallery build (web/gallery/lite/, sky/, logo/: scripts/gallery_curate.py lite, --set sky|logo build).
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -77,12 +77,15 @@ for (const [engine, name] of [[chromium, 'chromium'], [firefox, 'firefox']]) {
   ok(r.state.ch === 'LITE', `${name} ?lite=1: OSD says LITE`, r.state.ch);
   ok(r.heavy.length === 0, `${name} ?lite=1: no shaders or scenes fetched`, r.heavy.slice(0, 3).join(' '));
   ok(r.errors.length === 0, `${name} ?lite=1: no page errors`, r.errors.join(' | '));
-  const before = r.state.imgs;
-  const srcs = await r.page.evaluate(() => [...document.querySelectorAll('#lite-layer img')].map((i) => i.src));
-  ok(srcs.every((s) => s.includes('/gallery/lite/')), `${name} ?lite=1: small photos`, srcs[0]);
+  const srcs = await r.page.evaluate(() => [...document.querySelectorAll('#lite-layer .lite-photo img')].map((i) => i.src));
+  ok(srcs.length >= 1 && srcs.every((s) => s.includes('/gallery/lite/')), `${name} ?lite=1: small photos`, srcs[0]);
+  const lanes = await r.page.evaluate(() => ['sky', 'photo', 'logo'].map((n) => [...document.querySelectorAll(`#lite-layer .lite-${n} img`)].map((i) => i.src)));
+  ok(lanes[0].length >= 1 && lanes[0].every((s) => s.includes('/gallery/sky/lite/')), `${name} ?lite=1: a small sky behind`, lanes[0][0]);
+  ok(lanes[2].length >= 1 && lanes[2].every((s) => s.includes('/gallery/logo/')), `${name} ?lite=1: a logo in front`, lanes[2][0]);
   await r.page.click('#chUp');
   await r.page.waitForTimeout(400);
-  const after = await r.page.evaluate(() => [...document.querySelectorAll('#lite-layer img')].map((i) => i.src));
+  const before = srcs.length;
+  const after = await r.page.evaluate(() => [...document.querySelectorAll('#lite-layer .lite-photo img')].map((i) => i.src));
   ok(after.length > before || after.at(-1) !== srcs.at(-1), `${name} ?lite=1: CH ▲ brings the next photo`, `${before} -> ${after.length}`);
   if (shots) {
     fs.mkdirSync(shots, { recursive: true });

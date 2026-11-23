@@ -459,15 +459,19 @@ const CALM_TAGS = ['ambient', 'build'];
 const DROP_TAGS = ['hard', 'bass-gated'];
 const presetTags = new Map(); // playlist line -> preset tags
 const presetSource = new Map(); // playlist line -> source id
+const presetGallerySet = new Map(); // playlist line -> 'logo' for the gallery source's logos (spaz-logos)
 
 // Heavy sources stay out until the GPU probe says this machine can take them (setHeavyAllowed).
 let heavyAllowed = false;
 export function setHeavyAllowed(on) { heavyAllowed = !!on; }
 // A build without photos (an app that bundles the engine without the gallery: gallery.json lists none) never
-// picks the photo-gallery background.
+// picks the photo-gallery background; one without see-through logos (gallery.json "logo") never the logos.
 let galleryAllowed = true;
+let logosAllowed = true;
+const galleryOk = (line) => presetSource.get(line) !== 'gallery'
+  || (presetGallerySet.get(line) === 'logo' ? logosAllowed : galleryAllowed);
 const runnable = (line) => (heavyAllowed || !autopilotSettings.heavySources.includes(presetSource.get(line)))
-  && (galleryAllowed || presetSource.get(line) !== 'gallery')
+  && galleryOk(line)
   && !(reducedMotion && (presetTags.get(line) ?? []).some((t) => CALM_SKIP_LOOK_TAGS.includes(t)));
 const playable = (line) => runnable(line) && !skipped.has(presetName(line)) && !isUnavailable(presetName(line));
 const presetName = (line) => (line ?? '').split('|')[0].trim();
@@ -583,6 +587,7 @@ async function learnPreset(line) {
   if (!raw) { markUnavailable(presetName(line)); return false; }
   presetTags.set(line, raw.tags ?? []);
   presetSource.set(line, raw.visualSourceType ?? null);
+  if (raw.gallerySet) presetGallerySet.set(line, raw.gallerySet);
   return true;
 }
 
@@ -930,7 +935,7 @@ export function setFollowMusic(on) {
 // Background: B or MENU › BACKGROUND changes it now; BG CHANGES picks 'scenes' (every 2x TIME), 'hold'
 // (stays until changed by hand) or 'off' (faded out and not rendered).
 // -------------------------------------------------------
-let bgMode = 'hold';      // the default: the gallery (first background line) stays
+let bgMode = 'hold';      // the default: the logos (first background line) stay
 export function setBackgroundMode(mode) {
   if (!['scenes', 'hold', 'off'].includes(mode) || mode === bgMode) return;
   bgMode = mode;
@@ -1345,12 +1350,15 @@ async function startBackground() {
   tagsReady = true;
   try {
     const res = await fetchTimed('gallery.json');
-    galleryAllowed = res.ok && ((await res.json()).images?.length ?? 0) > 0;
+    const m = res.ok ? await res.json() : {};
+    galleryAllowed = (m.images?.length ?? 0) > 0;
+    const opaque = new Set(m.logo?.opaque ?? []);
+    logosAllowed = (m.logo?.images ?? []).some((n) => !opaque.has(n));
   } catch (e) {
-    galleryAllowed = true; // offline web TV with no cached list: gallery.js copes by itself
+    galleryAllowed = logosAllowed = true; // offline web TV with no cached list: gallery.js copes by itself
   }
   if (list.length > 0) {
-    // The first background line (the TV starts on the gallery), or the first one this build can show.
+    // The first background line (the TV starts on the logos), or the first one this build can show.
     const first = list.findIndex((l) => playable(l));
     const deck = first >= 0 ? await buildDeck(list[first], true).catch(() => null) : null;
     bgPlaylist = list;

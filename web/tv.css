@@ -171,7 +171,7 @@ body {
   cursor: crosshair;
 }
 
-/* Lite mode (lite.js): the photo slideshow over the (unused) canvas. Clicks go through to the canvas, which
+/* Lite mode (lite.js): the Spaz collage over the (unused) canvas. Clicks go through to the canvas, which
    carries the picture's handlers. Static scanlines and a vignette stand in for the CRT shader. */
 #lite-layer {
   position: absolute;
@@ -181,6 +181,10 @@ body {
   background: #000;
   opacity: 1;
   transition: opacity 0.8s ease;
+}
+#lite-layer .lite-lane {   /* sky, photos, logos: back to front */
+  position: absolute;
+  inset: 0;
 }
 #lite-layer img {
   position: absolute;

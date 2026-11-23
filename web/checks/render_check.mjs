@@ -68,7 +68,7 @@ const fittingChain = (f) => {
 };
 fs.readdirSync(path.join(web, 'presets')).sort().filter((f) => f.endsWith('.lsd')).forEach((f) => {
   sources.push({ name: 'preset_' + f.replace('.lsd', ''), preset: '/presets/' + f, chain: pins[f.replace('.lsd', '')] ?? fittingChain(f), roll: 'base',
-    settleMs: f.includes('gallery') ? 7000 : 2500 }); // the gallery fetches its photos from spaz.org first
+    settleMs: f.startsWith('spaz-') ? 7000 : 2500 }); // the gallery fetches its pictures from spaz.org first
 });
 // Desktop-shipped Mandala presets, unmodified (Lobes / Recipe Select / the recipe table)
 for (const f of ['mandala-7', 'mandala-10']) {

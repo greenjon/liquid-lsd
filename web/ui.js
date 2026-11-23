@@ -18,7 +18,7 @@ import { scheduleState, refreshSchedule, setShows, groupByDay, upcoming, parsePl
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v53';
+export const TV_VERSION = 'v54';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -38,7 +38,7 @@ export const viewerState = {
   reducedMode: 'auto', // Reduced motion: 'auto' (follows the system setting), 'on', 'off'
   heavyMode: 'auto',   // Heavy scenes: 'auto' (the GPU probe decides), 'on', 'off'
   autoRoll: 0,         // AUTO ROLL: bars between rolls of the scene on air (0 = off)
-  bgMode: 'hold',      // BG CHANGES: 'scenes' (every 2x TIME), 'hold' (the default: the photo gallery stays), 'off'
+  bgMode: 'hold',      // BG CHANGES: 'scenes' (every 2x TIME), 'hold' (the default: the Spaz logos stay), 'off'
   effects: true,       // EFFECTS: AUTO (true) or OFF
   follow: true,        // FOLLOW MUSIC: breakdowns and drops pick the scene
   theme: 'light',      // THEME: the cabinet and the room, 'dark' or 'light' (tv.css)
@@ -110,9 +110,9 @@ let playingRetryAt = 0;
 function showLook(info = nowShowing(), ms = 4000, brand = false) {
   if (!powerState.on) return;
   if (liteState.on) {
-    // Lite mode (lite.js): the photo slideshow, no scenes.
+    // Lite mode (lite.js): the Spaz collage, no scenes.
     flash('osd-ch', 'LITE', ms);
-    flash('osd-name', 'SCENE: SPAZ RADIO PHOTOS', ms);
+    flash('osd-name', 'SCENE: SPAZ RADIO COLLAGE', ms);
     unflash('osd-bg'); unflash('osd-chain');
   } else if (autopilotState.isLiveBroadcast) {
     flash('osd-ch', 'LIVE', ms);
@@ -309,7 +309,7 @@ export function initUI() {
   const holdBtn = document.getElementById('holdBtn');
 
   const live = () => autopilotState.isLiveBroadcast;
-  /** The scene controls do nothing: the desktop is live, or lite mode shows photos, not scenes. */
+  /** The scene controls do nothing: the desktop is live, or lite mode shows the collage, not scenes. */
   const noScenes = () => live() || liteState.on;
   /** Runs a viewer control unless the desktop is live (then says why nothing happened). In lite mode it runs
    *  `liteFn` instead, or says the control needs the full visuals. */
@@ -631,7 +631,7 @@ export function initUI() {
       { label: 'BACKGROUND', needsPower: true, locked: () => noScenes() || viewerState.bgMode === 'off',
         value: () => (viewerState.bgMode === 'off' ? 'OFF' : prettyName(nowShowing().backgroundPicked ?? '') || '---'),
         step: (dir) => stepBackground(dir).then(() => menu.refresh()),
-        help: 'The picture behind the scene, which shows through wherever the scene is dark or see-through: the Spaz Radio photo gallery to start with. ◀ ▶ or B pick another one now.' },
+        help: 'The picture behind the scene, which shows through wherever the scene is dark or see-through: the Spaz Radio logos to start with, then the listener photos. ◀ ▶ or B pick another one now.' },
       { label: 'BG CHANGES', locked: noScenes, value: () => BG_MODE_LABELS[viewerState.bgMode],
         step: (dir) => applyBgMode(BG_MODES[(BG_MODES.indexOf(viewerState.bgMode) + dir + BG_MODES.length) % BG_MODES.length]),
         help: 'Hold (the default): the background stays until you change it. With scenes: a new one every two scenes (TIME). Off: no background, just the scene.' },
@@ -678,7 +678,7 @@ export function initUI() {
           if (!canSwitch()) { message('THIS BROWSER CAN\u2019T DRAW THE FULL VISUALS', 3000); return; }
           setVisuals(liteState.on ? 'full' : 'lite');
         },
-        help: 'Full: the Liquid LSD visuals. Lite: the Spaz Radio photo gallery, for older or slower phones and computers (less battery and data). The TV picks Lite by itself where the visuals run too slowly, and remembers it on this device.' },
+        help: 'Full: the Liquid LSD visuals. Lite: a Spaz Radio collage of skies, listener photos and logos, for older or slower phones and computers (less battery and data). The TV picks Lite by itself where the visuals run too slowly, and remembers it on this device.' },
       { label: 'ANNOUNCE SCENES', value: () => onOff(viewerState.announce),
         step: () => { viewerState.announce = !viewerState.announce; save('lsd.announce', viewerState.announce); },
         help: 'Show the name of each new scene, its background and its effects when it comes on, and the background when it changes. Off: only when you click the picture (or turn INFO on).' },
@@ -1217,7 +1217,7 @@ export function initUI() {
     if (!powerState.on) return;
     if (e.detail.on) {
       showLook();
-      message(e.detail.reason === 'slow' ? 'TOO SLOW HERE FOR THE VISUALS \u00B7 PHOTOS INSTEAD' : 'VISUALS: LITE', e.detail.reason === 'slow' ? 5000 : 2000);
+      message(e.detail.reason === 'slow' ? 'TOO SLOW HERE FOR THE VISUALS \u00B7 COLLAGE INSTEAD' : 'VISUALS: LITE', e.detail.reason === 'slow' ? 5000 : 2000);
     } else {
       message('VISUALS: FULL', 2000);
       if (nowShowing().tuning) showTuning(); else showLook();

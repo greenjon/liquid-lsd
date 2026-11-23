@@ -1,5 +1,7 @@
 # Liquid LSD Web TV - Background Playlist
-# The first line is the background the TV starts with: the Spaz Radio photo gallery (gallery.js).
+# The first line is the background the TV starts with: the Spaz Radio logos (gallery.js, gallerySet "logo");
+# the photos come next.
+spaz-logos
 spaz-gallery
 web-ambient-cymatics
 web-ambient-nebula
