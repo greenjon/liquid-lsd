@@ -563,6 +563,20 @@ body {
   opacity: 1 !important;
 }
 #osd-radio > div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* The track line is a row: the title gives way (…) before SAVE does */
+#osd-radio > #osd-track { display: flex; align-items: baseline; gap: 0.6em; text-overflow: clip; }
+#osd-track-text { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+#osd-save {
+  flex: none;
+  color: inherit;
+  opacity: 0.6;
+  text-decoration: none;
+  pointer-events: auto;   /* the one thing on the OSD that takes a click */
+  cursor: pointer;
+}
+#osd-save:hover, #osd-save:focus-visible { opacity: 1; text-decoration: underline; }
+#osd-save[hidden] { display: none; }
+#osd-track:not(.show) #osd-save { pointer-events: none; } /* a faded line has nothing to click */
 
 #osd-msg {
   position: absolute;

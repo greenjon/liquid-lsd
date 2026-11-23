@@ -530,14 +530,28 @@ try {
   check('A live show: the track line starts [LIVE!], as in the app', osd('osd-track').text.includes('[LIVE!] Stub Show'), osd('osd-track').text);
   await sleep(1100); // the badge updates once a second
   check('A live show: the source badge says LIVE SHOW', source() === 'LIVE SHOW', source());
+  const saveEl = d.getElementById('osd-save');
+  check('A live show: no SAVE on the track line (no file yet)', saveEl.hidden, saveEl.getAttribute('href'));
+  key('d');
+  check('A live show: D says there is nothing to save', osd('osd-msg').text === 'LIVE: NOTHING TO SAVE YET', osd('osd-msg').text);
   // The station says nothing is live: the badge is JUKEBOX even with a show on the schedule's clock.
-  w.LSD.viewerState.readPlaying = async () => ({ playing: 'Archive Show - 2019', listeners: 3, live: 'false' });
+  w.LSD.viewerState.readPlaying = async () => ({ playing: 'Archive Show - 2019', listeners: 3, live: 'false', download: 'archives/imports/2019-archive_show.ogg' });
   d.getElementById('powerSwitch').click();
   await sleep(100);
   d.getElementById('powerSwitch').click();
   for (let i = 0; i < 40 && !osd('osd-track').text.includes('Archive Show'); i++) await sleep(100);
   await sleep(1100);
   check('Not live per the station: the source badge says JUKEBOX', source() === 'JUKEBOX', source());
+  const showFile = 'https://spaz.org/archives/imports/2019-archive_show.ogg';
+  check('The jukebox: SAVE on the track line, with the show\'s file', !saveEl.hidden && saveEl.getAttribute('href') === showFile && saveEl.hasAttribute('download'), saveEl.getAttribute('href'));
+  check('SAVE is the one thing on the OSD that takes a click (while the line is up)',
+    getComputedStyle(saveEl).pointerEvents === 'auto' && getComputedStyle(d.getElementById('osd-track')).pointerEvents === 'none', getComputedStyle(saveEl).pointerEvents);
+  let saved = null;
+  const holdSave = (e) => { saved = saveEl.getAttribute('href'); e.preventDefault(); }; // no real download in the check
+  saveEl.addEventListener('click', holdSave);
+  key('d');
+  check('D saves the jukebox show', saved === showFile && osd('osd-msg').text === 'SAVING THE SHOW', `${saved} ${osd('osd-msg').text}`);
+  saveEl.removeEventListener('click', holdSave);
   w.LSD.viewerState.readPlaying = null;
   // CHAT: the blackboard, on a fake broker and log (?nolive never starts the real room).
   const board = d.getElementById('chalkboard'), chatBtn = d.getElementById('chatBtn');

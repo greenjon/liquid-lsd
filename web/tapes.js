@@ -6,7 +6,7 @@
 import { decodeName } from './schedule.js';
 
 export const TAPES_FEED_URL = 'https://spaz.org/archives/archives.rss';
-// The Spaz Radio Android app downloads shows to play offline, which the TV does not. On Android, spaz.org/go/
+// The Spaz Radio Android app downloads shows to play offline; the TV only offers SAVE on the track line (ui.js). On Android, spaz.org/go/
 // offers Google Play or the APK; anywhere else it would send the viewer back to the TV, so they get the Play page.
 const APP_GO_URL = 'https://spaz.org/go/';
 const APP_PLAY_URL = 'https://play.google.com/store/apps/details?id=llm.slop.spazradio';

@@ -18,7 +18,7 @@ import { scheduleState, refreshSchedule, setShows, groupByDay, upcoming, parsePl
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v51';
+export const TV_VERSION = 'v53';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -91,6 +91,7 @@ function flash(id, text, ms = 3000) {
   el.classList.add('show');
   clearTimeout(osdTimers[id]);
   if (viewerState.info && INFO_IDS.includes(id)) return; // INFO on: the info lines stay up
+  if (id === 'osd-track' && saveHover) return;           // the pointer is on SAVE: the line waits for it to leave
   osdTimers[id] = setTimeout(() => el.classList.remove('show'), ms);
 }
 /** Takes an OSD line down now. */
@@ -102,6 +103,7 @@ function unflash(id) {
 const INFO_IDS = ['osd-ch', 'osd-name', 'osd-bg', 'osd-chain', 'osd-track', 'osd-next', 'osd-brand'];
 
 let nowPlaying = '';
+let nowFile = '';        // the jukebox show's file on spaz.org (radio.spaz.org/playing's `download`), '' when unknown or live
 let streamLive = false;  // the server says the show on the stream is live, in real time
 let streamKnown = false; // the last read of that flag worked (else the schedule stands in for it)
 let playingRetryAt = 0;
@@ -128,8 +130,8 @@ function showLook(info = nowShowing(), ms = 4000, brand = false) {
     else unflash('osd-bg');
     flash('osd-chain', `FX: ${!info.effects ? 'OFF' : info.chain ? prettyName(info.chain) : 'NONE'}`, ms);
   }
-  if (deck?.current) flash('osd-track', tapeLine(), ms);
-  else if (nowPlaying) flash('osd-track', `♪ ${nowPlaying}`, ms);
+  if (deck?.current) flashTrack(tapeLine(), ms);
+  else if (nowPlaying) flashTrack(`♪ ${nowPlaying}`, ms);
   flashNext(ms);
   deck?.showStrip(ms);
   if (brand) flash('osd-brand', undefined, ms); // asked for (I, a click on the picture): who made this
@@ -150,6 +152,56 @@ function showListeners(n) {
   if (el) el.textContent = n > 0 ? `${n} ${n === 1 ? 'mutant' : 'mutants'} watching TV.` : '';
 }
 const tapeLine = () => `\u25B6 ${deck.current.title}${deck.current.date ? ` \u00B7 ${deck.current.date}` : ''}`;
+
+// -------------------------------------------------------
+// SAVE: the show's file, at the end of the track line (and D). The tape in, else the jukebox's show; nothing
+// while the radio is live, which has no file yet. The TV and the archive are both on spaz.org, so the link's
+// `download` saves the file; from anywhere else the browser opens it in a new tab instead.
+// -------------------------------------------------------
+let saveHover = false;     // the pointer is on SAVE (its line doesn't fade under it)
+const fileSizes = new Map(); // url -> bytes (0: asked, unknown)
+/** A show on the schedule's clock, when the station's live flag can't be read (the badge's fallback). */
+const scheduledOnAir = () => (streamKnown ? null : upcoming(scheduleState.shows, Date.now()).find((s) => s.onAir)?.name ?? null);
+/** The radio is a live show: a broadcast, the station's flag, or the schedule standing in for it. */
+const radioLive = () => autopilotState.isLiveBroadcast || streamLive || !!scheduledOnAir();
+/** The file SAVE saves, or null. */
+function saveFile() {
+  if (deck?.current) return deck.current.url || null;
+  return radioLive() ? null : nowFile || null;
+}
+function saveTitle(url) {
+  const ext = (url.match(/\.([a-z0-9]{2,4})(?:[?#]|$)/i)?.[1] ?? '').toUpperCase();
+  const bytes = fileSizes.get(url);
+  const size = !bytes ? '' : bytes >= 1e9 ? `${(bytes / 1e9).toFixed(1)} GB` : `${Math.max(1, Math.round(bytes / 1e6))} MB`;
+  return ['Save this show', ext, size].filter(Boolean).join(' \u00B7 ') + ' (D)';
+}
+/** Puts SAVE in step with what is playing: shown with the show's file, hidden with none. */
+function updateSave() {
+  const a = document.getElementById('osd-save');
+  if (!a) return;
+  const url = saveFile();
+  a.hidden = !url;
+  if (!url) { a.removeAttribute('href'); return; }
+  if (a.getAttribute('href') !== url) a.setAttribute('href', url);
+  a.title = saveTitle(url);
+}
+/** The size for the tooltip: one HEAD request per file (the archive sends Content-Length and a CORS header). */
+async function askSize(url) {
+  if (fileSizes.has(url)) return;
+  fileSizes.set(url, 0);
+  try {
+    const res = await fetch(url, { method: 'HEAD' });
+    const n = res.ok ? Number(res.headers.get('content-length')) : 0;
+    if (n > 0) { fileSizes.set(url, n); updateSave(); }
+  } catch { /* no size: the tooltip goes without */ }
+}
+/** The track line (the jukebox's \u266A or the tape's \u25B6), with SAVE after it. */
+function flashTrack(text, ms) {
+  const el = document.getElementById('osd-track-text');
+  if (el) el.textContent = text;
+  updateSave();
+  flash('osd-track', undefined, ms);
+}
 
 /** Under the track line: the next show on Spaz Radio, when the schedule knows one. */
 function flashNext(ms) {
@@ -995,7 +1047,7 @@ export function initUI() {
       '-': () => stepReact(-1), '=': () => stepReact(1), '+': () => stepReact(1),
       Escape: () => document.fullscreenElement && document.exitFullscreen().catch(console.error),
       f: toggleFullscreen, F: toggleFullscreen, a: toggleMic, A: toggleMic,
-      i: pressInfo, I: pressInfo,
+      i: pressInfo, I: pressInfo, d: saveShow, D: saveShow,
       ...(deck && powerState.on ? {
         k: deck.togglePause, K: deck.togglePause, l: deck.backToRadio, L: deck.backToRadio,
         ',': () => deck.seekBy(-30), '.': () => deck.seekBy(30), '<': () => deck.seekBy(-300), '>': () => deck.seekBy(300),
@@ -1032,6 +1084,27 @@ export function initUI() {
     touch = null;
   });
   canvas.addEventListener('click', () => showLook(undefined, 4000, true));
+  // SAVE on the track line: the line stays up while the pointer is on it; the size comes in on the way.
+  const saveLink = document.getElementById('osd-save');
+  saveLink.addEventListener('pointerenter', () => {
+    saveHover = true;
+    clearTimeout(osdTimers['osd-track']);
+    const url = saveFile();
+    if (url) askSize(url);
+  });
+  saveLink.addEventListener('pointerleave', () => {
+    saveHover = false;
+    if (document.getElementById('osd-track').classList.contains('show')) flash('osd-track', undefined, 2000);
+  });
+  saveLink.addEventListener('click', () => message('SAVING THE SHOW'));
+  /** D: SAVE from the keyboard, with the track line up to say which show. */
+  const saveShow = () => {
+    if (!powerState.on) return;
+    if (!saveFile()) { message(!deck?.current && radioLive() ? 'LIVE: NOTHING TO SAVE YET' : 'NOTHING TO SAVE'); return; }
+    showLook();
+    updateSave();
+    saveLink.click();
+  };
   // Pointing at the picture shows the same (and a tape's strip, with EJECT), as long as the mouse moves.
   let hoverAt = 0;
   canvas.addEventListener('pointermove', (e) => {
@@ -1098,7 +1171,8 @@ export function initUI() {
   // JUKEBOX, the station playing archive shows at random. The schedule stands in only when the flag can't be read.
   const sourceEl = document.getElementById('source-badge');
   const updateSource = () => {
-    const scheduled = streamKnown ? null : upcoming(scheduleState.shows, Date.now()).find((s) => s.onAir)?.name;
+    updateSave(); // a show that goes live takes SAVE away
+    const scheduled = scheduledOnAir();
     const [text, title] = isMicOn() ? ['MIC', 'Listening to your microphone']
       : deck?.current ? ['TAPE', deck.airName ? `Playing a tape. Live now: ${deck.airName} (eject or L to listen)` : `Playing a tape: ${deck.current.title}`]
       : live() || streamLive || scheduled ? ['LIVE SHOW', `Live on Spaz Radio: ${autopilotState.broadcaster || scheduled || nowPlaying.replace('[LIVE!] ', '') || 'a live show'}`]
@@ -1270,14 +1344,14 @@ async function readPlayingFeed() {
 }
 /** The server's title, with [LIVE!] when it is live, or '' when it can't be read. */
 async function readPlaying() {
-  if (!viewerState.readPlaying) { streamLive = streamKnown = false; return ''; }
+  if (!viewerState.readPlaying) { streamLive = streamKnown = false; nowFile = ''; return ''; }
   if (performance.now() < playingRetryAt) return '';
   try {
-    const { title, live } = parsePlaying(await viewerState.readPlaying());
-    streamLive = live; streamKnown = true;
+    const { title, live, download } = parsePlaying(await viewerState.readPlaying());
+    streamLive = live; streamKnown = true; nowFile = download;
     return title;
   } catch {
-    streamLive = streamKnown = false;
+    streamLive = streamKnown = false; nowFile = '';
     playingRetryAt = performance.now() + PLAYING_RETRY_MS;
     return '';
   }
@@ -1300,7 +1374,7 @@ async function pollNowPlaying() {
       nowPlaying = title;
       updateMediaSession();
       if (!deck?.current) { // on a tape, the track line is the tape's
-        flash('osd-track', `♪ ${nowPlaying}`, 6000);
+        flashTrack(`♪ ${nowPlaying}`, 6000);
         flashNext(6000);
       }
     }

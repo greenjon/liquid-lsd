@@ -85,6 +85,8 @@ try {
   check('On a tape: TAPES lit', lit(tapesBtn));
   check('The strip comes up', strip.classList.contains('show'));
   check('The track line names the tape', d.getElementById('osd-track').textContent.includes('Fixture <b>One</b>'), d.getElementById('osd-track').textContent);
+  const saveEl = d.getElementById('osd-save');
+  check('SAVE on the track line saves the tape\'s file', !saveEl.hidden && saveEl.getAttribute('href') === FIX, saveEl.getAttribute('href'));
   check('The audio element plays the tape', onFixture(), audio.src);
   await sleep(2500);
   check('The tape is really playing', !audio.paused && audio.currentTime > 0.5, `${audio.paused} ${audio.currentTime} err=${audio.error?.message}`);

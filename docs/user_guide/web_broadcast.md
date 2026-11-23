@@ -129,7 +129,7 @@ Settings are remembered in this browser. REACT, TIME, Auto roll, the background,
 
 **TAPES:** the TAPES key or `T` opens the Spaz Radio archive over the picture. Type to search by name or date, use the arrows and Enter or click a show to play it, and Esc or the **✕** to close. **RANDOM TAPE** picks any show, **ON THIS DAY** finds today's date in every year, and **RESUME** goes back to the show you last stopped. The TV keeps the show list in the browser, so TAPES opens at once on later visits and checks for new shows at most once an hour.
 
-To download shows and play them offline, use the Spaz Radio app for Android: the link at the bottom of TAPES, or on the `?` page, opens its download page (Google Play on other devices).
+To save the tape that is playing, use **⤓ SAVE** at the end of its track line (or `D`). To download shows and play them offline, use the Spaz Radio app for Android: the link at the bottom of TAPES, or on the `?` page, opens its download page (Google Play on other devices).
 
 The picture follows the tape as it follows the radio, and the display reads `TAPE`. Point at or tap the picture for the transport strip along the bottom (INFO keeps it up): eject, 30 seconds back and forward, pause, and the show's waveform to click or drag. Keys: `K` or `Space` pause, `,` and `.` 30 seconds, `<` and `>` 5 minutes.
 
@@ -150,7 +150,7 @@ The board is open on your first visit. The **X** in its top corner closes it, an
 
 **Power:** click anywhere on the TV to turn it on (the browser needs that click to start the sound). The piano keys (OFF, INFO, MENU, SCHED, TAPES, ?) and CHAT work without turning it on, and picking a tape turns it on and plays the tape. Once it's on, only the PWR switch turns it off: clicks on the cabinet are ignored, a click that just misses a button presses the nearest one, and clicks on the picture show the info.
 
-**The info panel:** point at or click the picture, or press **I**, to see it. Top left: what Spaz Radio is playing and the next show. Bottom left: **SCENE** (the scene on air), **BACKGROUND** (what plays behind it: the photo gallery, or with BG changes *With scenes*, a scene that changes on its own clock, twice the scene length) and **FX** (the scene's effects). With MENU › **ANNOUNCE SCENES** on, the panel comes up by itself for each new scene, and the BACKGROUND line when the background changes. Control messages (HOLD, BARS, SYNC…) come up in the middle of the picture.
+**The info panel:** point at or click the picture, or press **I**, to see it. Top left: what Spaz Radio is playing and the next show. **⤓ SAVE** at the end of the track line downloads that show (or the tape that is playing) as an OGG file; point at it for its size. It isn't there during a live show, which has no file yet. `D` does the same. Bottom left: **SCENE** (the scene on air), **BACKGROUND** (what plays behind it: the photo gallery, or with BG changes *With scenes*, a scene that changes on its own clock, twice the scene length) and **FX** (the scene's effects). With MENU › **ANNOUNCE SCENES** on, the panel comes up by itself for each new scene, and the BACKGROUND line when the background changes. Control messages (HOLD, BARS, SYNC…) come up in the middle of the picture.
 
 **About:** the `?` page (also MENU › TV › **ABOUT**) links the Liquid LSD website, with a QR code for your phone, and **I** shows a Liquid LSD line with the info.
 

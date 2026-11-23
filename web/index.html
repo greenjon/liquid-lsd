@@ -112,7 +112,8 @@
             <div id="osd-ch"></div>
             <!-- Top left: what Spaz Radio is playing, and the next show -->
             <div id="osd-radio">
-              <div id="osd-track"></div>
+              <!-- The track line, and SAVE: the show's file (jukebox or tape; none while live) -->
+              <div id="osd-track"><span id="osd-track-text"></span><a id="osd-save" download target="_blank" rel="noopener" tabindex="-1" hidden>&#x2913; SAVE</a></div>
               <div id="osd-next"></div>
             </div>
             <!-- Centre: control feedback (HOLD, BARS, SYNC, NO SIGNAL...) -->
@@ -171,6 +172,7 @@
                     <dt>U</dt><dd>MUTE / <b>U</b>NMUTE</dd>
                     <dt>- =</dt><dd>REACTION</dd>
                     <dt>A</dt><dd><b>A</b>UDIO INPUT</dd>
+                    <dt>D</dt><dd><b>D</b>OWNLOAD THE SHOW</dd>
                   </dl>
                 </div>
               </div>

@@ -127,11 +127,24 @@ function requestPlayingJsonp(url, timeoutMs) {
   });
 }
 
-/** radio.spaz.org/playing -> { title, live }. The server decides what is live, and puts `[LIVE!] ` before the title. */
+/** radio.spaz.org/playing -> { title, live, download }. The server decides what is live, and puts `[LIVE!] ` before
+ * the title. `download` is the show's file on spaz.org (the server sends a path, `archives/imports/<id>.ogg`), or ''
+ * while the show is live: a live show has no file yet. */
 export function parsePlaying(raw) {
   const live = raw?.live === true || raw?.live === 'true';
   const title = decodeName(raw?.playing);
-  return { title: live && title && !title.startsWith('[LIVE!]') ? `[LIVE!] ${title}` : title, live };
+  return {
+    title: live && title && !title.startsWith('[LIVE!]') ? `[LIVE!] ${title}` : title,
+    live,
+    download: live || !raw?.download ? '' : archiveFileUrl(raw.download),
+  };
+}
+/** A path or URL from the server as an http(s) URL on spaz.org's terms, or '' for anything else. */
+function archiveFileUrl(path) {
+  try {
+    const url = new URL(String(path), 'https://spaz.org/');
+    return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : '';
+  } catch { return ''; }
 }
 
 // -------------------------------------------------------

@@ -99,8 +99,18 @@ test('a failed fetch keeps the last good list', async () => {
 
 test('parsePlaying: the server\'s title and live flag', async () => {
   const { parsePlaying } = await import('../schedule.js');
-  assert.deepEqual(parsePlaying({ playing: "[LIVE!] Spukkin Faceship&#039;s - bass", live: 'true' }), { title: "[LIVE!] Spukkin Faceship's - bass", live: true });
-  assert.deepEqual(parsePlaying({ playing: 'Show', live: true }), { title: '[LIVE!] Show', live: true });
-  assert.deepEqual(parsePlaying({ playing: 'Rerun', live: 'false' }), { title: 'Rerun', live: false });
-  assert.deepEqual(parsePlaying(null), { title: '', live: false });
+  assert.deepEqual(parsePlaying({ playing: "[LIVE!] Spukkin Faceship&#039;s - bass", live: 'true' }), { title: "[LIVE!] Spukkin Faceship's - bass", live: true, download: '' });
+  assert.deepEqual(parsePlaying({ playing: 'Show', live: true }), { title: '[LIVE!] Show', live: true, download: '' });
+  assert.deepEqual(parsePlaying({ playing: 'Rerun', live: 'false' }), { title: 'Rerun', live: false, download: '' });
+  assert.deepEqual(parsePlaying(null), { title: '', live: false, download: '' });
+});
+
+test('parsePlaying: the jukebox show\'s file, none while live', async () => {
+  const { parsePlaying } = await import('../schedule.js');
+  const raw = { playing: '2026-10-22 - collages', live: null, download: 'archives/imports/2026-10-22-collages.ogg' };
+  assert.equal(parsePlaying(raw).download, 'https://spaz.org/archives/imports/2026-10-22-collages.ogg');
+  assert.equal(parsePlaying({ ...raw, download: 'https://spaz.org/archives/imports/x.ogg' }).download, 'https://spaz.org/archives/imports/x.ogg');
+  assert.equal(parsePlaying({ ...raw, live: 'true' }).download, '', 'a live show has no file');
+  assert.equal(parsePlaying({ ...raw, download: null }).download, '');
+  assert.equal(parsePlaying({ ...raw, download: 'javascript:alert(1)' }).download, '', 'only http(s)');
 });
