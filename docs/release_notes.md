@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Web TV: The Held Background Changes Its Effects (`web/autopilot.js`)
+- **Fixed: with BG CHANGES on *Hold* (the default), the background's effects never changed.** The background (the Spaz logos to start with) picked one FX chain when it came on and kept it until you changed the background. It now stays the same background but takes the next chain from the rotation every two scenes (twice TIME), coming in through the usual short dip to black. A background line with its own chain keeps it (TV v56).
+
 ### Web TV: The Lite Picture Moves With the Music (`web/lite.js`, `web/gallery.js`, `web/dsp.js`, `web/tv.css`)
 - **New: the lite picture follows the music.** While the beat is locked, each layer gives a small pulse on every beat (stronger on the bar, as the music gets louder, and for a few bars after a drop), new photos come in on the beat, and new skies and logos on the bar. A drop brings in a logo straight away. The skies brighten when the music is loud and dim in quiet parts. With reduced motion on, the pulses rest (TV v55).
 - **Changed: in lite, the skies never show their edges.** They are zoomed in far enough to fill the screen however far they turn, and use the full-size sky pictures so the zoom stays sharp (about 100 KB per sky, one a minute or so).

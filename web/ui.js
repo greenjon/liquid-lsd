@@ -18,7 +18,7 @@ import { scheduleState, refreshSchedule, setShows, groupByDay, upcoming, parsePl
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v55';
+export const TV_VERSION = 'v56';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -38,7 +38,7 @@ export const viewerState = {
   reducedMode: 'auto', // Reduced motion: 'auto' (follows the system setting), 'on', 'off'
   heavyMode: 'auto',   // Heavy scenes: 'auto' (the GPU probe decides), 'on', 'off'
   autoRoll: 0,         // AUTO ROLL: bars between rolls of the scene on air (0 = off)
-  bgMode: 'hold',      // BG CHANGES: 'scenes' (every 2x TIME), 'hold' (the default: the Spaz logos stay), 'off'
+  bgMode: 'hold',      // BG CHANGES: 'scenes' (every 2x TIME), 'hold' (the default: the Spaz logos stay, new FX every 2x TIME), 'off'
   effects: true,       // EFFECTS: AUTO (true) or OFF
   follow: true,        // FOLLOW MUSIC: breakdowns and drops pick the scene
   theme: 'light',      // THEME: the cabinet and the room, 'dark' or 'light' (tv.css)
@@ -634,7 +634,7 @@ export function initUI() {
         help: 'The picture behind the scene, which shows through wherever the scene is dark or see-through: the Spaz Radio logos to start with, then the listener photos. ◀ ▶ or B pick another one now.' },
       { label: 'BG CHANGES', locked: noScenes, value: () => BG_MODE_LABELS[viewerState.bgMode],
         step: (dir) => applyBgMode(BG_MODES[(BG_MODES.indexOf(viewerState.bgMode) + dir + BG_MODES.length) % BG_MODES.length]),
-        help: 'Hold (the default): the background stays until you change it. With scenes: a new one every two scenes (TIME). Off: no background, just the scene.' },
+        help: 'Hold (the default): the background stays until you change it, with new effects every two scenes (TIME). With scenes: a new one every two scenes (TIME). Off: no background, just the scene.' },
       { label: 'SKIP THIS CHANNEL', needsPower: true, locked: noScenes, value: () => (nowShowing().skipped ? 'SKIPPED' : `CH ${String(nowShowing().channel).padStart(3, '0')}`),
         run: () => skip(),
         help: 'Skipped channels never come up by themselves (X does this too). Type a channel number to watch one again; X there restores it.' },

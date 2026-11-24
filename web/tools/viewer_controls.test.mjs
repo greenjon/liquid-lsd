@@ -116,6 +116,23 @@ test('BG CHANGES OFF fades the background out and stops rendering it; back on, o
   ap.setBackgroundMode('scenes');
 });
 
+test('BG CHANGES HOLD keeps the background but gives it new effects every 2x TIME', async () => {
+  ap.setBackgroundMode('hold');
+  ap.setHoldBars(2);                // the background: a new chain every 4 bars
+  await runTo(beats + 20);
+  const line = ap.nowShowing().background;
+  const decks = new Set(), chains = new Set();
+  for (let end = beats + 240; beats < end;) {   // the first change is still due on the old TIME
+    await runTo(beats + 1);
+    assert.equal(ap.nowShowing().background, line, 'the same background stays');
+    if (autopilotState.deckBG) { decks.add(autopilotState.deckBG); chains.add(autopilotState.deckBG.chainName); }
+  }
+  ap.setHoldBars(16);
+  assert.ok(decks.size >= 3, `rebuilt on its own clock (${decks.size} decks over 60 bars)`);
+  assert.ok(chains.size >= 2, `its chain changed (${[...chains].join(', ')})`);
+  ap.setBackgroundMode('scenes');
+});
+
 test('X skips the channel on air (it changes on), keeps it out of the rotation, and typing its number reaches it', async () => {
   ap.setHold(false);
   const ch = ap.nowShowing().channel;

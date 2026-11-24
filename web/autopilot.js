@@ -361,6 +361,7 @@ export function tickAutopilot(dt, beats, music = {}) {
     const half = Math.max(0.25, bgFadeLen * 0.5);
     switch (bgTransitionState) {
       case 'hold':
+        if (bgMode === 'hold' && beats >= bgSwitchAt && bgRefreshDue()) { refreshHeldBackground(); break; }
         prepareBackground();
         if (bgMode === 'scenes' && beats >= bgSwitchAt && bgNext) startBackgroundChange(beats, autopilotSettings.bgFadeBeats);
         break;
@@ -634,6 +635,25 @@ function prepareBackground(idx = null) {
     return true;
   }).catch((err) => { console.warn(`[autopilot] ${err.message}`); return false; })
     .finally(() => { if (token === bgPrepareToken) bgPreparing = false; });
+}
+
+// HOLD keeps the background but not its effects: every 2x TIME the line on air is built again (the next FX
+// chain from the rotation, its random values rolled) and comes back in through the usual dip to black. A
+// line with its own chain (`preset | chain`, or `| none`) would come back the same, so it is left alone.
+let bgRefresh = false;   // a rebuild of the background on air is being fetched
+const bgRefreshDue = () => effectsOn && !!bgOnAir && !bgPicked && !bgOnAir.includes('|') && !bgRefresh;
+function refreshHeldBackground() {
+  const idx = bgPlaylist.indexOf(bgOnAir);
+  const later = () => { bgSwitchAt = nextSwitchBeat(lastBeats, autopilotSettings.bgHoldBars, autopilotSettings.bgFadeBeats); };
+  if (idx < 0) { later(); return; }
+  bgRefresh = true;
+  bgNext = null;   // the next line the rotation queued; it is queued again after
+  Promise.resolve(prepareBackground(idx)).then((ok) => {
+    bgRefresh = false;
+    if (ok && bgMode === 'hold' && bgTransitionState === 'hold' && bgNext?.line === bgOnAir && !autopilotState.isLiveBroadcast) {
+      startBackgroundChange(lastBeats, autopilotSettings.bgFadeBeats);
+    } else later();
+  });
 }
 
 let bgFadeLen = 8;          // beats this background change takes (a dip to black and back)
@@ -933,7 +953,7 @@ export function setFollowMusic(on) {
 
 // -------------------------------------------------------
 // Background: B or MENU › BACKGROUND changes it now; BG CHANGES picks 'scenes' (every 2x TIME), 'hold'
-// (stays until changed by hand) or 'off' (faded out and not rendered).
+// (stays until changed by hand, with new effects every 2x TIME: refreshHeldBackground) or 'off' (faded out and not rendered).
 // -------------------------------------------------------
 let bgMode = 'hold';      // the default: the logos (first background line) stay
 export function setBackgroundMode(mode) {
