@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Web TV: The Lite Picture Moves With the Music (`web/lite.js`, `web/gallery.js`, `web/dsp.js`, `web/tv.css`)
+- **New: the lite picture follows the music.** While the beat is locked, each layer gives a small pulse on every beat (stronger on the bar, as the music gets louder, and for a few bars after a drop), new photos come in on the beat, and new skies and logos on the bar. A drop brings in a logo straight away. The skies brighten when the music is loud and dim in quiet parts. With reduced motion on, the pulses rest (TV v55).
+- **Changed: in lite, the skies never show their edges.** They are zoomed in far enough to fill the screen however far they turn, and use the full-size sky pictures so the zoom stays sharp (about 100 KB per sky, one a minute or so).
+- **Changed: in lite, the photos fade out towards their edges** instead of showing a hard border over the sky.
+- **Changed: the Spaz logos are two to four times bigger**, in the lite picture and in the Spaz logos background, often reaching past the screen's edges. The one logo on its own solid square keeps its old size in lite, so it doesn't cover everything.
+- Internal: lite mode no longer computes the shaders' spectrum, which it never drew.
+
 ### Web TV: Save the Show (`web/ui.js`, `web/schedule.js`, `web/index.html`, `web/tv.css`)
 - **New: ⤓ SAVE at the end of the track line** (top left of the picture, with the info) downloads the show that is playing: the jukebox's archive show, or the tape in. It is not there during a live show, which has no file yet. Its tooltip gives the format and size. `D` does the same from the keyboard (TV v53).
 

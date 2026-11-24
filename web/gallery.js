@@ -273,14 +273,13 @@ export class Gallery {
   }
 
   /**
-   * A logo: the old page spun its logos fast and blew them up past the screen; here one or two at a time, a
-   * third to two thirds of the screen high, each turning steadily around its own middle while it drifts and
-   * slowly grows, so the branding is there without crowding the scene in front.
+   * A logo: the old page spun its logos fast and blew them up past the screen; here one or two at a time, from
+   * about two thirds of the screen high to well past its edges (two to four times the old size here), each
+   * turning steadily around its own middle while it drifts and slowly grows.
    */
   spawnLogo(photo, aspect, calm) {
     const live = this.layers.filter((l) => l.outAt > this.clock);
     if (live.length >= LOGO_LAYERS) live[0].outAt = this.clock;
-    const fit = Math.min(1, aspect / photo.aspect);              // a wide logo still fits across
     const fadeIn = rand(4, 8);
     this.layers.push({
       photo,
@@ -288,7 +287,7 @@ export class Gallery {
       fadeIn,
       outAt: this.clock + fadeIn + rand(16, 32),
       fadeOut: rand(4, 8),
-      scale0: fit * rand(0.33, 0.6),                             // half height, screen half-heights
+      scale0: rand(0.33, 0.6) * rand(2, 4),                      // half height, screen half-heights: past the edges
       grow: rand(0.002, 0.006) * (calm ? 0.5 : 1),
       angle0: rand(-Math.PI, Math.PI),
       turn: (calm ? 0.4 : 1) * rand(3, 8) * (Math.random() < 0.5 ? -1 : 1) * Math.PI / 180,

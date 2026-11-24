@@ -80,7 +80,7 @@ for (const [engine, name] of [[chromium, 'chromium'], [firefox, 'firefox']]) {
   const srcs = await r.page.evaluate(() => [...document.querySelectorAll('#lite-layer .lite-photo img')].map((i) => i.src));
   ok(srcs.length >= 1 && srcs.every((s) => s.includes('/gallery/lite/')), `${name} ?lite=1: small photos`, srcs[0]);
   const lanes = await r.page.evaluate(() => ['sky', 'photo', 'logo'].map((n) => [...document.querySelectorAll(`#lite-layer .lite-${n} img`)].map((i) => i.src)));
-  ok(lanes[0].length >= 1 && lanes[0].every((s) => s.includes('/gallery/sky/lite/')), `${name} ?lite=1: a small sky behind`, lanes[0][0]);
+  ok(lanes[0].length >= 1 && lanes[0].every((s) => /\/gallery\/sky\/[^/]+$/.test(s)), `${name} ?lite=1: a full-size sky behind`, lanes[0][0]);
   ok(lanes[2].length >= 1 && lanes[2].every((s) => s.includes('/gallery/logo/')), `${name} ?lite=1: a logo in front`, lanes[2][0]);
   await r.page.click('#chUp');
   await r.page.waitForTimeout(400);
@@ -185,6 +185,56 @@ for (const [engine, name] of [[chromium, 'chromium'], [firefox, 'firefox']]) {
   ok(s.same && s.on && later > s.frames && !s.layer, 'lite -> full: the visuals start in place', JSON.stringify({ ...s, later }));
   ok(!s.url.includes('lite='), 'lite -> full: ?lite=1 leaves the address', s.url);
   ok(r.errors.length === 0, 'lite -> full: no page errors', r.errors.join(' | '));
+  await r.browser.close();
+}
+
+// 8. The sound: with the beat held locked (the analysis can't overwrite it), each layer pulses on the beats;
+// skies cover the screen at every moment (no edge in any corner); logos come larger than the screen's third.
+{
+  const r = await run(chromium, 'chromium', '?lite=1&nolive');
+  const p = r.page;
+  await p.evaluate(async () => {
+    const { cvState } = await import('./dsp.js');
+    const pin = (k, v) => Object.defineProperty(cvState, k, { get: () => v, set() {}, configurable: true });
+    pin('beatLocked', true); pin('noSignal', false); pin('bpm', 120); pin('audio_energy', 0.4);
+    window.pulses = { sky: 0, photo: 0, logo: 0 };
+    for (const n of Object.keys(window.pulses)) {
+      const el = document.querySelector(`#lite-layer .lite-${n}`);
+      const animate = el.animate.bind(el);
+      el.animate = (...a) => { window.pulses[n]++; return animate(...a); };
+    }
+  });
+  const covered = () => p.evaluate(() => {
+    const lane = document.querySelector('#lite-layer .lite-sky');
+    const W = lane.clientWidth, H = lane.clientHeight;
+    const out = [];
+    for (const img of lane.querySelectorAll('img')) {
+      const cs = getComputedStyle(img);
+      const inv = new DOMMatrix(cs.transform).inverse();
+      const [ox, oy] = cs.transformOrigin.split(' ').map(parseFloat);
+      for (const [X, Y] of [[0, 0], [W, 0], [0, H], [W, H]]) {
+        const q = inv.transformPoint({ x: X - img.offsetLeft - ox, y: Y - img.offsetTop - oy });
+        const x = q.x + ox, y = q.y + oy;
+        if (x < 0 || y < 0 || x > img.naturalWidth || y > img.naturalHeight) out.push(`${img.src.split('/').pop()} corner ${X},${Y} -> ${x | 0},${y | 0}`);
+      }
+    }
+    return { n: lane.querySelectorAll('img').length, out };
+  });
+  const c1 = await covered();
+  await p.waitForTimeout(5000);
+  const c2 = await covered();
+  const seen = await p.evaluate(() => ({ ...window.pulses }));
+  ok(c1.n >= 1 && c1.out.length === 0 && c2.out.length === 0, 'sound: skies cover every corner', JSON.stringify([c1, c2]));
+  ok(seen.photo >= 8 && seen.photo <= 12 && seen.sky === seen.photo && seen.logo === seen.photo, 'sound: a pulse per beat on each layer (120 BPM, 5 s)', JSON.stringify(seen));
+  const logo = await p.evaluate(() => {
+    const img = document.querySelector('#lite-layer .lite-logo img');
+    if (!img) return null;
+    const m = new DOMMatrix(getComputedStyle(img).transform);
+    return { h: Math.hypot(m.b, m.d) * img.naturalHeight / img.parentElement.clientHeight, opaque: img.dataset.opaque === '1' };
+  });
+  ok(logo && (logo.opaque || logo.h >= 0.6), 'sound: the logo is two to four times its old size', JSON.stringify(logo));
+  ok(r.errors.length === 0, 'sound: no page errors', r.errors.join(' | '));
+  if (shots) await p.screenshot({ path: path.join(shots, 'lite-sound.png') });
   await r.browser.close();
 }
 

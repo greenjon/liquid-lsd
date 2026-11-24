@@ -191,6 +191,18 @@ body {
   max-width: none;
   will-change: transform, opacity;
 }
+/* Photos fade out towards their edges, so no hard border shows over the sky (prefixed for Safari 15 and
+   Chrome before 120; the standard pair wins where both are known). */
+#lite-layer .lite-photo img {
+  -webkit-mask-image:
+    linear-gradient(to right, transparent, #000 12%, #000 88%, transparent),
+    linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to right, transparent, #000 12%, #000 88%, transparent),
+    linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+  mask-composite: intersect;
+}
 #lite-layer::after {
   content: "";
   position: absolute;

@@ -471,9 +471,10 @@ function updateAudioFrame(dt) {
   audioFrame.spectrum.set(spectrum.spectrum);
 }
 
-export function tick(dt) {
+/** One step of the analysis. `spectrum: false` skips the shaders' spectrum and waveform (lite mode draws none). */
+export function tick(dt, { spectrum = true } = {}) {
   updateSignal(dt);
-  updateAudioFrame(dt);
+  if (spectrum) updateAudioFrame(dt);
   if (analysisReady) {
     updateAmplitudes(dt);
     // Sections come from auto gain's own watch (updated in updateAmplitudes), fed the fixed-scale levels.
