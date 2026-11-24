@@ -51,6 +51,8 @@ try {
   check('The search box says how many shows', box.placeholder.includes('4,002'), box.placeholder);
   check('Only the rows in view exist', page.querySelectorAll('.tp-row').length < 80, page.querySelectorAll('.tp-row').length);
   check('RANDOM TAPE and ON THIS DAY come first', page.querySelector('.tp-row').textContent.includes('RANDOM TAPE') && page.querySelectorAll('.tp-row')[1].textContent.includes('ON THIS DAY'));
+  const dl = [...page.querySelectorAll('a.tp-dl')];
+  check('Each show has a download link to its file, and action rows have none', dl.length > 5 && dl.every((a) => a.hasAttribute('download') && /\.ogg$/.test(a.href)) && !page.querySelector('.tp-row.tp-action a.tp-dl'), dl[0]?.href);
   check('Names are text, not markup', page.textContent.includes('<b>One</b>') && !page.querySelector('.tp-title b'));
   const list = page.querySelector('.tp-list');
   list.scrollTop = list.scrollHeight;

@@ -129,7 +129,7 @@ Settings are remembered in this browser. REACT, TIME, Auto roll, the background,
 
 **TAPES:** the TAPES key or `T` opens the Spaz Radio archive over the picture. Type to search by name or date, use the arrows and Enter or click a show to play it, and Esc or the **✕** to close. **RANDOM TAPE** picks any show, **ON THIS DAY** finds today's date in every year, and **RESUME** goes back to the show you last stopped. The TV keeps the show list in the browser, so TAPES opens at once on later visits and checks for new shows at most once an hour.
 
-To save the tape that is playing, use **⤓ SAVE** at the end of its track line (or `D`). To download shows and play them offline, use the Spaz Radio app for Android: the link at the bottom of TAPES, or on the `?` page, opens its download page (Google Play on other devices).
+Each show in the list has a **⤓** before its name: click it to download that show as an OGG file without playing it. To save the tape that is playing, use **⤓ SAVE** at the end of its track line (or `D`). To download shows and play them offline, use the Spaz Radio app for Android: the link at the bottom of TAPES, or on the `?` page, opens its download page (Google Play on other devices).
 
 The picture follows the tape as it follows the radio, and the display reads `TAPE`. Point at or tap the picture for the transport strip along the bottom (INFO keeps it up): eject, 30 seconds back and forward, pause, and the show's waveform to click or drag. Keys: `K` or `Space` pause, `,` and `.` 30 seconds, `<` and `>` 5 minutes.
 

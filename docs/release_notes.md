@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Web TV: Download Any Show From TAPES (`web/tapedeck.js`, `web/tv.css`)
+- **New: every show in the TAPES list has a ⤓ download button** before its name. It saves the show's OGG file without playing it, like the download button on each show in the Spaz Radio app's archive (TV v57).
+
 ### Web TV: The Held Background Changes Its Effects (`web/autopilot.js`)
 - **Fixed: with BG CHANGES on *Hold* (the default), the background's effects never changed.** The background (the Spaz logos to start with) picked one FX chain when it came on and kept it until you changed the background. It now stays the same background but takes the next chain from the rotation every two scenes (twice TIME), coming in through the usual short dip to black. A background line with its own chain keeps it (TV v56).
 

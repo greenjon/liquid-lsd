@@ -1190,6 +1190,9 @@ body.embed #schedule, body.embed #keys, body.embed #tv-menu { display: none !imp
 .tp-row.tp-action { color: #d9c2ff; text-shadow: 0 0 8px rgba(160,90,255,0.8); }
 .tp-row.tp-action.sel { background: #d9c2ff; color: #102; text-shadow: none; }
 .tp-date { flex: 0 0 7.5em; white-space: nowrap; overflow: hidden; }
+.tp-dl { flex: 0 0 1.4em; align-self: stretch; display: flex; align-items: center; justify-content: center; margin: 0 -0.5em; color: inherit; text-decoration: none; opacity: 0.55; }
+.tp-row:hover a.tp-dl, .tp-row.sel a.tp-dl { opacity: 0.85; }
+a.tp-dl:hover, a.tp-dl:focus-visible { opacity: 1; background: rgba(140,255,140,0.3); }
 .tp-title { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tp-len { flex: none; white-space: nowrap; opacity: 0.85; }
 .tp-empty { margin-top: 1em; opacity: 0.8; }

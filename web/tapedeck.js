@@ -90,22 +90,36 @@ export function createTapeDeck({ page, strip, button, storage = null, isOn = () 
   }
 
   function makeRow(item, i) {
-    const row = el('button', 'tp-row' + (i === sel ? ' sel' : ''));
-    row.type = 'button';
+    // A div, not a button: each show's row holds its download link, and a link can't sit inside a button.
+    const row = el('div', 'tp-row' + (i === sel ? ' sel' : ''));
     row.setAttribute('role', 'option');
     row.setAttribute('aria-selected', String(i === sel));
     if (item.show) {
       const saved = resume.get(item.show.id);
       if (current?.id === item.show.id) row.classList.add('current');
-      row.append(el('span', 'tp-date', item.show.date),
+      row.append(el('span', 'tp-date', item.show.date), downloadLink(item.show),
         el('span', 'tp-title', (current?.id === item.show.id ? '▶ ' : '') + item.show.title),
         el('span', 'tp-len', saved ? `${formatClock(saved)} / ${formatClock(item.show.seconds)}` : formatClock(item.show.seconds)));
     } else {
       row.classList.add('tp-action');
-      row.append(el('span', 'tp-date', item.action), el('span', 'tp-title', item.label), el('span', 'tp-len', item.value));
+      row.append(el('span', 'tp-date', item.action), el('span', 'tp-dl'), el('span', 'tp-title', item.label), el('span', 'tp-len', item.value));
     }
     row.addEventListener('click', () => { sel = i; pick(); });
     return row;
+  }
+
+  /** ⤓ before the show's name: saves its file (the TV and the archive are both on spaz.org, so `download` works). */
+  function downloadLink(show) {
+    const a = el('a', 'tp-dl', '\u2913');
+    a.href = show.url;
+    a.download = '';
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.tabIndex = -1;
+    a.title = `Save this show \u00B7 ${show.title}`;
+    a.setAttribute('aria-label', `Save ${show.title}`);
+    a.addEventListener('click', (e) => e.stopPropagation()); // saving doesn't also play it
+    return a;
   }
 
   function renderRows() {
