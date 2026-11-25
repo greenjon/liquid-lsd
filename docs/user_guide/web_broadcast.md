@@ -90,7 +90,7 @@ Press `?` (or the **?** key) for the about and keys page: Liquid LSD at the top,
 
 Point at the picture with the mouse, or click or tap it, to show the channel, the scene, its FX chain, the track playing on the radio and the next show on Spaz Radio for a few seconds. **INFO** (or `I`) keeps them on screen, updating as they change, until you turn it off; the TV remembers it. TIME, REACT, INFO, the MENU settings and your skipped channels are remembered in the browser. The display window on the right shows the channel on air (`SPAZ RADIO • CH.042`), or LIVE during a live broadcast. Under it, while the TV is on, is how many people are on the Spaz Radio stream right now, in any player (`12 mutants watching TV.`); the line is blank when the count is zero or can't be read.
 
-**No signal:** if the radio stream drops or goes quiet, the screen shows snow and NO SIGNAL, and the TV reconnects by itself.
+**No signal:** if the radio stream drops or goes quiet, the screen shows snow and NO SIGNAL; when the stream has stopped, the TV reconnects by itself. On iPhone and iPad, Safari keeps the live radio's sound from the page, so the TV listens to a second copy of the stream for the picture (it downloads the radio twice there).
 
 **Big GPU scenes:** the most demanding 3D fractals and simulations only play on computers fast enough for them (the TV checks at power-on; MENU › Big GPU scenes overrides it). Add `?heavy=1` to the address to force them on, `?heavy=0` to keep them off.
 

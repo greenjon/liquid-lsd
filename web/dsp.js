@@ -5,6 +5,7 @@ import { BeatTracker, BeatClock } from './beattrack.js';
 import { EnergyWatch } from './energy.js';
 import { embed } from './embedmode.js';
 import { SpectrumAnalyzer, audioFrame, BINS } from './audiotex.js';
+import { startSideFeed } from './sidefeed.js';
 
 export const cvState = {
   // The audio_* signals are normalised exactly as the desktop's AudioEngine publishes them (auto gain,
@@ -34,6 +35,7 @@ export const cvState = {
   audio_energy_himid: 0.0,
   audio_energy_high: 0.0,
   noSignal:       false, // the TV is on but the stream is down or silent (renderer shows snow)
+  sideFeed:       '',    // the live radio's second copy for the picture (sidefeed.js): '' when not used, else its status
   glitchUntil:    0,     // performance.now() until which the picture rolls: a tape going in or out (renderer)
   isLive:         false, // true once AudioContext is running and stream is connected
 };
@@ -325,22 +327,62 @@ function updateBeat() {
 
 // Per-frame tick called from renderer.js rAF loop
 // No signal: the TV is on but the stream failed, stalled or has been silent for 4 s. The renderer
-// fades to analog snow; every 10 s the stream is reconnected. `?nostatic` (headless checks, which have
-// no audio) turns this off.
+// fades to analog snow. The stream is reconnected (every 10 s at most) only when its playhead has stopped:
+// a playing stream that the analysis hears as silence is not fixed by reloading it, and each reload is a
+// hiccup in the sound. `?nostatic` (headless checks, which have no audio) turns this off.
 const STREAM_URL = 'https://radio.spaz.org:8060/radio.ogg';
 const SILENT_AMP = 0.004;
+const STUCK_S = 4;         // the playhead has not moved for this long: the stream is down
+const DEAF_S = 2;          // the playhead moves but the analysis hears exact zeros for this long: see below
 let wantAudio = false;
 let quietFor = 0;
 let lastRetryMs = 0;
-const noStatic = typeof location !== 'undefined' && new URLSearchParams(location.search).has('nostatic');
+const params = typeof location !== 'undefined' ? new URLSearchParams(location.search) : new URLSearchParams();
+const noStatic = params.has('nostatic');
+
+// Safari plays the live stream out loud but hands createMediaElementSource only zeros (a tape's file comes
+// through). Once that is seen, the live radio's sound reaches the analysis from a second copy of the stream
+// decoded in sidefeed.js instead, for the rest of the visit. `?sidefeed` uses it from the start (to test it).
+let elementDeaf = params.has('sidefeed');
+let deafFor = 0;
+let sideFeed = null;
+let lastPlayhead = -1;
+let playheadStill = 0;     // s since the <audio> element's playhead last moved
+
+function stopSideFeed() {
+  sideFeed?.stop();
+  sideFeed = null;
+  cvState.sideFeed = elementDeaf ? 'stopped' : '';
+}
 
 function updateSignal(dt) {
   if (embed) { cvState.noSignal = false; return; } // the host plays the radio; silence is just a quiet picture
   if (tape && !micOn) { updateTapeSignal(dt); return; }
+  const audioEl = document.getElementById('lsdAudio');
+  const t = audioEl?.currentTime ?? -1;
+  playheadStill = wantAudio && !micOn && (!audioEl || audioEl.paused || t === lastPlayhead) ? playheadStill + dt : 0;
+  lastPlayhead = t;
+  const playing = wantAudio && !micOn && playheadStill < 1; // currentTime may update only a few times a second
+
+  if (!elementDeaf) {
+    deafFor = playing && analysisReady && cvState.raw.audio_amp === 0 ? deafFor + dt : 0;
+    if (deafFor > DEAF_S) {
+      elementDeaf = true;
+      console.warn('[dsp] the stream plays but the analysis hears silence: decoding a second copy for the picture');
+    }
+  }
+  if (elementDeaf && playing && !sideFeed && audioCtx) {
+    sideFeed = startSideFeed(audioCtx, analysisIn, STREAM_URL);
+    quietFor = 0;
+  }
+  if (sideFeed) cvState.sideFeed = sideFeed.status;
+
   quietFor = analysisReady && cvState.raw.audio_amp > SILENT_AMP ? 0 : quietFor + dt;
-  cvState.noSignal = wantAudio && !noStatic && quietFor > 4;
+  // The second copy cannot be decoded here: the sound plays, so a still picture, not snow.
+  const blind = sideFeed?.status === 'unsupported' && playing;
+  cvState.noSignal = wantAudio && !noStatic && quietFor > 4 && !blind;
   const now = performance.now();
-  if (cvState.noSignal && !micOn && now - lastRetryMs > 10000) {
+  if (cvState.noSignal && !micOn && playheadStill > STUCK_S && now - lastRetryMs > 10000) {
     lastRetryMs = now;
     reconnect();
   }
@@ -417,6 +459,7 @@ function resetAnalysis() {
 export function insertTape(url, startAt = 0) {
   tape = { url, pos: startAt, paused: false, ready: false, stuck: 0, lastT: 0 };
   releaseMic();
+  stopSideFeed();
   resetAnalysis();
   if (wantAudio) loadTape().catch((err) => console.warn('[dsp] tape did not start:', err.message)); // TV off: power-on starts it
 }
@@ -531,6 +574,7 @@ export async function setMic(on) {
     if (audioCtx.state === 'suspended') await audioCtx.resume().catch(() => {});
     stream.getAudioTracks()[0]?.addEventListener('ended', () => { if (micStream === stream) setMic(false).catch(() => {}); });
     document.getElementById('lsdAudio')?.pause();
+    stopSideFeed();
     tracker.reset();
     quietFor = 0;
     window.dispatchEvent(new CustomEvent('lsd-mic', { detail: true }));
@@ -706,6 +750,7 @@ export async function startAudio() {
 export async function stopAudio() {
   wantAudio = false;
   releaseMic();
+  stopSideFeed();
   if (tape) tape.ready = false; // it stays in, at tape.pos
   cvState.noSignal = false;
   const audioEl = document.getElementById('lsdAudio');

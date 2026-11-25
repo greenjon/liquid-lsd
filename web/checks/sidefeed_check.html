@@ -1,0 +1,72 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>side feed check</title>
+<script type="module">
+// Driven by sidefeed_check.mjs in headless Firefox. Cuts checks/stream_fixture.ogg into the side feed's
+// files, decodes them as the TV does, and checks the pieces join up into the same sound as decoding the
+// whole file; then plays /stream (the fixture, sent at about real time like Icecast) through startSideFeed.
+import { OggPages, OggChunker, startSideFeed } from '../sidefeed.js';
+
+const results = [];
+const check = (name, ok, detail = '') => results.push({ name, ok: !!ok, detail: String(detail) });
+const report = (extra = {}) => fetch('/report', { method: 'POST', body: JSON.stringify({ results, ...extra }) });
+
+try {
+  const ctx = new AudioContext({ sampleRate: 44100 });
+  const bytes = new Uint8Array(await (await fetch('stream_fixture.ogg')).arrayBuffer());
+  const whole = (await ctx.decodeAudioData(bytes.slice().buffer)).getChannelData(0);
+
+  // Join mid-stream, as a listener does: the header pages, then pages from the fourth audio page on.
+  const pages = new OggPages().push(bytes);
+  const chunker = new OggChunker(1);
+  const files = [...pages.slice(0, 2), ...pages.slice(5)].map((p) => chunker.push(p)).filter(Boolean);
+  check('the stream is cut into files', files.length >= 3, files.length);
+
+  const pieces = [];
+  for (const f of files) {
+    const buf = await ctx.decodeAudioData(f.file.slice().buffer);
+    const keep = f.keep ? Math.round(f.keep * ctx.sampleRate / f.rate) : buf.length;
+    check(`a file decodes with enough audio (${keep} new samples of ${buf.length})`, buf.length >= keep, `${buf.length} < ${keep}`);
+    pieces.push(buf.getChannelData(0).slice(Math.max(0, buf.length - keep)));
+  }
+  // After the first file, the joined pieces must be the whole file's sound, sample for sample (nearly).
+  const tail = pieces.slice(1).reduce((n, p) => n + p.length, 0);
+  const joined = new Float32Array(tail);
+  let o = 0;
+  for (const p of pieces.slice(1)) { joined.set(p, o); o += p.length; }
+  const ref = whole.subarray(whole.length - tail);
+  let maxDiff = 0, peak = 0;
+  for (let i = 0; i < tail; i++) { maxDiff = Math.max(maxDiff, Math.abs(joined[i] - ref[i])); peak = Math.max(peak, Math.abs(ref[i])); }
+  check(`the pieces join into the same sound (max difference ${maxDiff.toFixed(5)}, peak ${peak.toFixed(3)})`, maxDiff < 0.01 && peak > 0.2, maxDiff);
+
+  // Live: the feed plays the stream into an analyser.
+  const an = ctx.createAnalyser();
+  an.fftSize = 2048;
+  const mute = ctx.createGain();
+  mute.gain.value = 0;
+  an.connect(mute); mute.connect(ctx.destination);
+  await ctx.resume();
+  const feed = startSideFeed(ctx, an, '/stream');
+  const buf = new Float32Array(an.fftSize);
+  let loud = 0, frames = 0;
+  const t0 = performance.now();
+  await new Promise((done) => {
+    const step = () => {
+      if (performance.now() - t0 > 2500) {
+        an.getFloatTimeDomainData(buf);
+        const rms = Math.sqrt(buf.reduce((s, v) => s + v * v, 0) / buf.length);
+        frames++;
+        if (rms > 0.01) loud++; // the fixture: a quiet tone under a click every 0.5 s
+      }
+      if (performance.now() - t0 < 5000) setTimeout(step, 50); else done();
+    };
+    step();
+  });
+  check(`the feed plays (${feed.status}, ${feed.files} files)`, feed.status === 'playing' && feed.files >= 2, feed.status);
+  check(`the analysis hears it (${loud} of ${frames} samples loud)`, loud > frames * 0.9, `${loud}/${frames}`);
+  feed.stop();
+  report();
+} catch (err) {
+  report({ fatal: String(err?.stack || err) });
+}
+</script>

@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Web TV: Pictures During Live Shows on iPhone (`web/sidefeed.js`, `web/dsp.js`)
+- **Fixed: on iPhone and iPad (Safari), the picture showed NO SIGNAL during the live radio while the music played**, and the sound hiccuped every 10 s or so. Safari plays the live stream out loud but gives the page's sound analysis only silence (a tape's file does come through, which is why TAPES worked). When the TV sees the stream playing while the analysis hears exact silence, it now opens a second copy of the same stream, decodes it itself in one-second pieces and feeds that to the picture only; nothing extra is heard. It stays on for the rest of the visit. On such a browser the live radio downloads twice (about 128 kbit/s more).
+- **Fixed: the TV no longer reloads a stream that is still playing.** It reconnects only when the stream has stopped moving for 4 s, not when it is merely quiet, so a quiet stream no longer hiccups (TV v58).
+
 ### Web TV: Download Any Show From TAPES (`web/tapedeck.js`, `web/tv.css`)
 - **New: every show in the TAPES list has a ⤓ download button** before its name. It saves the show's OGG file without playing it, like the download button on each show in the Spaz Radio app's archive (TV v57).
 

@@ -18,7 +18,7 @@ const SHELL = [
   'shaders/blit.vert', 'shaders/blit.frag', 'shaders/mandala.vert', 'shaders/mandala.frag', 'shaders/mixer.frag',
   'shaders/crt_post.frag',
   'audiotex.js', 'sync.js', 'embed.js', 'embedmode.js', 'menu.js', 'schedule.js',
-  'tapes.js', 'tapedeck.js', 'mqtt.js', 'chat.js', 'chatboard.js', 'fonts/caveat-latin.woff2', 'fonts/caveat-latin-ext.woff2',
+  'sidefeed.js', 'tapes.js', 'tapedeck.js', 'mqtt.js', 'chat.js', 'chatboard.js', 'fonts/caveat-latin.woff2', 'fonts/caveat-latin-ext.woff2',
 ];
 
 self.addEventListener('install', (e) => {
