@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Web TV: Show Names on Two Lines (`web/tv.css`)
+- **Changed: the show playing and the next show now get two lines each on the info panel** (top left), so most names fit whole. A name still too long for two lines ends in …. ⤓ SAVE sits at the end of the show's last line (TV v62).
+
 ### Web TV: Autoplay (`web/ui.js`, `web/index.html`, `web/tv.css`)
 - **New: the TV can turn itself on when you open the page.** A click anywhere still turns it on. A little after you do, the TV asks once: *Turn on by itself next time?* YES or NO. Your answer is remembered on that device; no answer, and it asks again next visit (after three visits without an answer it stops asking). MENU › TV › **AUTOPLAY** (*Ask*, *On*, *Off*) changes it any time, and RESET puts it back to *Ask*. PWR still turns the TV off. The sound starts with it where the browser allows sound on spaz.org (as on the old radio page); where it doesn't, the picture starts and the screen says CLICK OR PRESS A KEY FOR SOUND until you do. Before, a browser that refused sound to `?kiosk` could leave the TV silent with no message (TV v61).
 

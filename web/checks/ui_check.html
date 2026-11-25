@@ -576,6 +576,20 @@ try {
   key('d');
   check('D saves the jukebox show', saved === showFile && osd('osd-msg').text === 'SAVING THE SHOW', `${saved} ${osd('osd-msg').text}`);
   saveEl.removeEventListener('click', holdSave);
+  // Long names wrap to two lines, then end in …; SAVE stays on screen beside the title.
+  {
+    const trackText = d.getElementById('osd-track-text'), nextEl = d.getElementById('osd-next');
+    const [oldTrack, oldNext] = [trackText.textContent, nextEl.textContent];
+    const long = 'Spukkin Faceship\'s Extremely Long Show Name Featuring Many Guests And A Subtitle That Goes On And On And On Forever - 2019';
+    trackText.textContent = `♪ ${long}`; nextEl.textContent = `NEXT: ${long} · SAT 8:00 PM`;
+    const lh = (el) => { const v = parseFloat(getComputedStyle(el).lineHeight); return Number.isFinite(v) ? v : parseFloat(getComputedStyle(el).fontSize) * 1.2; };
+    const rows = (el) => Math.round(el.getBoundingClientRect().height / lh(el));
+    const radio = d.getElementById('osd-radio').getBoundingClientRect(), save = saveEl.getBoundingClientRect();
+    check('A long show name wraps to two lines on the OSD', rows(trackText) === 2 && trackText.scrollHeight > trackText.clientHeight, `${rows(trackText)} rows`);
+    check('A long next show wraps to two lines on the OSD', rows(nextEl) === 2, `${rows(nextEl)} rows`);
+    check('SAVE stays inside the track area beside a long name', save.width > 0 && save.right <= radio.right + 1, `${save.right} > ${radio.right}`);
+    trackText.textContent = oldTrack; nextEl.textContent = oldNext;
+  }
   w.LSD.viewerState.readPlaying = null;
   // CHAT: the blackboard, on a fake broker and log (?nolive never starts the real room).
   const board = d.getElementById('chalkboard'), chatBtn = d.getElementById('chatBtn');

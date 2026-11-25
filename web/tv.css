@@ -578,10 +578,21 @@ body {
   right: 30%;  /* clear of CH nn */
   opacity: 1 !important;
 }
-#osd-radio > div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-/* The track line is a row: the title gives way (…) before SAVE does */
-#osd-radio > #osd-track { display: flex; align-items: baseline; gap: 0.6em; text-overflow: clip; }
-#osd-track-text { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+/* The show now and the next show: each wraps to two lines, then gives way (…) */
+#osd-radio > div { overflow: hidden; }
+#osd-track-text, #osd-next {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  line-height: 1.25;   /* room above each line, so no top of a hidden third line shows */
+  max-height: 2.5em;   /* two lines */
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+/* The track line is a row: the title gives way before SAVE does; SAVE sits by its last line */
+#osd-radio > #osd-track { display: flex; align-items: baseline; align-items: last baseline; gap: 0.6em; }
+#osd-track-text { flex: 0 1 auto; min-width: 0; }
 #osd-save {
   flex: none;
   color: inherit;
