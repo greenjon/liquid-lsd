@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Web TV: No Gaps After a Reload (`web/dsp.js`)
+- **Fixed: after reloading the page, the sound could play for a few seconds, go silent, then come back.** Firefox replayed the bit of the stream it had kept from before the reload, then had nothing until the live stream caught up. The TV now asks for a fresh copy of the stream every time it turns on (TV v63).
+
 ### Web TV: Show Names on Two Lines (`web/tv.css`)
 - **Changed: the show playing and the next show now get two lines each on the info panel** (top left), so most names fit whole. A name still too long for two lines ends in …. ⤓ SAVE sits at the end of the show's last line (TV v62).
 

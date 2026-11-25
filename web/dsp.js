@@ -601,8 +601,10 @@ export async function startAudio() {
   wantAudio = true;
   quietFor = 0;
   lastRetryMs = performance.now(); // the first reconnect waits for this attempt to fail
-  // Set stream src on user gesture (embed mode: the host app plays the radio and feeds us instead)
-  if (!embed && !tape) audioEl.src = STREAM_URL;
+  // Set stream src on user gesture (embed mode: the host app plays the radio and feeds us instead). A fresh
+  // address each time, as in reconnect(): with the same one, Firefox replays the bytes it kept from the last
+  // visit (a reload), so the sound starts at once, then goes silent while the live stream catches up.
+  if (!embed && !tape) audioEl.src = `${STREAM_URL}?t=${Date.now()}`;
 
   if (!audioCtx) {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
