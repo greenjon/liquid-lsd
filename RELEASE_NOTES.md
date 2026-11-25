@@ -1,7 +1,7 @@
 ## [Unreleased]
 
-### Web TV: Saving the Jukebox Show Works Again (`web/schedule.js`)
-- **Fixed: ⤓ SAVE (and `D`) often gave a 404 for the jukebox show on the radio.** The radio plays from copies on its own server, and for many shows it reported a file address that spaz.org does not serve (`archives/olde/`). The TV now saves the same file from the archive (`archives/imports/`), where TAPES already gets it (TV v59).
+### Web TV: Saving the Jukebox Show Works Again (`web/ui.js`, `web/tapes.js`)
+- **Fixed: ⤓ SAVE (and `D`) often gave a 404 for the jukebox show on the radio.** The radio reports where its copy of the show came from (`archives/olde/`), and spaz.org serves only some of those files. The TV now checks that address first; when it isn't there, it finds the show in the TAPES archive list by its file name and saves the archive's copy (`archives/imports/`), loading the list if TAPES hasn't been opened yet. When neither has the show, SAVE is hidden instead of leading to a 404, and `D` says the show is not in the archive (TV v59, v60).
 
 ### Web TV: Pictures During Live Shows on iPhone (`web/sidefeed.js`, `web/dsp.js`)
 - **Fixed: on iPhone and iPad (Safari), the picture showed NO SIGNAL during the live radio while the music played**, and the sound hiccuped every 10 s or so. Safari plays the live stream out loud but gives the page's sound analysis only silence (a tape's file does come through, which is why TAPES worked). When the TV sees the stream playing while the analysis hears exact silence, it now opens a second copy of the same stream, decodes it itself in one-second pieces and feeds that to the picture only; nothing extra is heard. It stays on for the rest of the visit. On such a browser the live radio downloads twice (about 128 kbit/s more).

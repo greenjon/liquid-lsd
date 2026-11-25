@@ -209,6 +209,29 @@ export function setTapes(shows, fetchedAt = Date.now(), modified = '') {
   tapesState.failed = false;
 }
 
+/**
+ * The archive's copy of the jukebox show's file (radio.spaz.org/playing's `download`), or null when the archive
+ * list has no show by that file name. The radio plays from a batch copied into `archives/olde/`, which spaz.org
+ * does not serve; most of those files are in `archives/imports/` under the same name, and the list knows which.
+ * (Files the station took from `archives/imported/<uploader>/<folders>/` are not in the list, and their path is
+ * lost in the copy, so they have none.) A file already in `imports/` is its own copy.
+ */
+export function archiveFileFor(url, shows = tapesState.shows) {
+  if (!url) return null;
+  if (url.startsWith(FILE_PREFIX)) return url;
+  let name;
+  try { name = decodeURIComponent(new URL(url).pathname.split('/').pop()); } catch { return null; }
+  const id = name.replace(/\.ogg$/i, '');
+  if (!id || id === name) return null;
+  return showIndex(shows).get(id)?.url ?? null;
+}
+let indexOf = null, index = null;
+/** id -> show, rebuilt when the list is replaced. */
+function showIndex(shows) {
+  if (indexOf !== shows) { index = new Map(shows.map((s) => [s.id, s])); indexOf = shows; }
+  return index;
+}
+
 export const tapesStale = (now = Date.now()) => now - tapesState.fetchedAt > FEED_STALE_MS;
 
 /** Shows -> the kept form: [id, title, date, seconds] each (the URL and search text follow from them). */

@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { parseFeed, parseDuration, formatClock, tidyTitle, searchShows, randomShow, onThisDayQuery, createResumeStore, reducePeaks, peaksUrl, fetchPeaks, refreshTapes, restoreTapes, createListStore, packShows, unpackShows, tapesState, setTapes, LIST_CACHE, parseLinkTime, formatLinkTime, parseTapeLink, showForLink, tapeLinkUrl } from '../tapes.js';
+import { parseFeed, parseDuration, formatClock, tidyTitle, searchShows, randomShow, onThisDayQuery, createResumeStore, reducePeaks, peaksUrl, fetchPeaks, refreshTapes, restoreTapes, createListStore, packShows, unpackShows, tapesState, setTapes, archiveFileFor, LIST_CACHE, parseLinkTime, formatLinkTime, parseTapeLink, showForLink, tapeLinkUrl } from '../tapes.js';
 
 const item = (title, file, duration, pubDate) => `<item><title>${title}</title><link>https://spaz.org/archives/imports/${file}</link><comments>http://spaz.org/radio</comments><pubDate>${pubDate}</pubDate><duration>${duration}</duration><image><url>https://spaz.org/x.png</url><title>nested image title</title><link>http://spaz.org/radio</link></image></item>`;
 const FEED = `<?xml version="1.0"?><rss><channel><title>SPAZ Radio Archives</title><link>http://spaz.org/radio</link>
@@ -264,4 +264,15 @@ test('share links: the link drops the page options and a time near the start', (
   assert.equal(tapeLinkUrl('https://spaz.org/tv/', '2025-05-09-Portland', 3), 'https://spaz.org/tv/?tape=2025-05-09-Portland');
   const back = parseTapeLink(new URL(tapeLinkUrl('https://spaz.org/tv/', '2025-05-09-Portland', 600)).search);
   assert.deepEqual(back, { id: '2025-05-09-Portland', at: 600 });
+});
+
+test('archiveFileFor: the jukebox file found in the archive list by name', () => {
+  const shows = parseFeed(FEED);
+  const imp = 'https://spaz.org/archives/imports/2025-05-09-Portland.ogg';
+  assert.equal(archiveFileFor('https://spaz.org/archives/olde/2025-05-09-Portland.ogg', shows), imp, 'olde/ -> imports/');
+  assert.equal(archiveFileFor('https://spaz.org/archives/imports/whatever.ogg', shows), 'https://spaz.org/archives/imports/whatever.ogg', 'imports/ is its own copy');
+  assert.equal(archiveFileFor('https://spaz.org/archives/olde/not-in-the-list.ogg', shows), null, 'not in the archive: no SAVE');
+  assert.equal(archiveFileFor('https://spaz.org/archives/olde/2025-05-09-Portland.mp3', shows), null, 'only Ogg names');
+  assert.equal(archiveFileFor('https://spaz.org/archives/olde/2025-05-09-Portland.ogg', []), null, 'no list yet');
+  assert.equal(archiveFileFor('', shows), null);
 });

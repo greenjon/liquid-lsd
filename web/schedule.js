@@ -128,8 +128,9 @@ function requestPlayingJsonp(url, timeoutMs) {
 }
 
 /** radio.spaz.org/playing -> { title, live, download }. The server decides what is live, and puts `[LIVE!] ` before
- * the title. `download` is the show's file on spaz.org (the server sends a path, `archives/olde/<id>.ogg` or
- * `archives/imports/<id>.ogg`; both come back under imports/), or ''
+ * the title. `download` is the show's file on spaz.org as the server names it: often
+ * `archives/olde/<id>.ogg`, the radio's own copy, which spaz.org does not serve; `archiveFileFor` in tapes.js
+ * finds the archive's copy), or ''
  * while the show is live: a live show has no file yet. */
 export function parsePlaying(raw) {
   const live = raw?.live === true || raw?.live === 'true';
@@ -140,13 +141,10 @@ export function parsePlaying(raw) {
     download: live || !raw?.download ? '' : archiveFileUrl(raw.download),
   };
 }
-/** A path or URL from the server as an http(s) URL on spaz.org's terms, or '' for anything else. The jukebox plays
- * from a batch the radio VM copies into `archives/olde/`, which spaz.org does not serve (404); the same file, under
- * the same name, is in `archives/imports/`, so the path is pointed there. */
+/** A path or URL from the server as an http(s) URL on spaz.org's terms, or '' for anything else. */
 function archiveFileUrl(path) {
   try {
     const url = new URL(String(path), 'https://spaz.org/');
-    if (url.hostname === 'spaz.org') url.pathname = url.pathname.replace(/^\/archives\/olde\//, '/archives/imports/');
     return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : '';
   } catch { return ''; }
 }

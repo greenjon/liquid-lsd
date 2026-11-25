@@ -12,13 +12,13 @@ import { heardBeats, tapOffset } from './sync.js';
 import { createChat } from './chat.js';
 import { createChatboard } from './chatboard.js';
 import { createTapeDeck } from './tapedeck.js';
-import { appUrl, parseTapeLink } from './tapes.js';
+import { appUrl, parseTapeLink, archiveFileFor, tapesState, restoreTapes, refreshTapes, tapesStale } from './tapes.js';
 import { scheduleState, refreshSchedule, setShows, groupByDay, upcoming, parsePlaying, loadPlayingJsonp, zoneLabel, nextLine, SCHEDULE_REFRESH_MS, SCHEDULE_STALE_MS } from './schedule.js';
 
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v59';
+export const TV_VERSION = 'v60';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -103,7 +103,7 @@ function unflash(id) {
 const INFO_IDS = ['osd-ch', 'osd-name', 'osd-bg', 'osd-chain', 'osd-track', 'osd-next', 'osd-brand'];
 
 let nowPlaying = '';
-let nowFile = '';        // the jukebox show's file on spaz.org (radio.spaz.org/playing's `download`), '' when unknown or live
+let nowFile = '';        // the jukebox show's file as radio.spaz.org/playing names it (`download`), '' when unknown or live
 let streamLive = false;  // the server says the show on the stream is live, in real time
 let streamKnown = false; // the last read of that flag worked (else the schedule stands in for it)
 let playingRetryAt = 0;
@@ -164,10 +164,45 @@ const fileSizes = new Map(); // url -> bytes (0: asked, unknown)
 const scheduledOnAir = () => (streamKnown ? null : upcoming(scheduleState.shows, Date.now()).find((s) => s.onAir)?.name ?? null);
 /** The radio is a live show: a broadcast, the station's flag, or the schedule standing in for it. */
 const radioLive = () => autopilotState.isLiveBroadcast || streamLive || !!scheduledOnAir();
-/** The file SAVE saves, or null. */
+/** The file SAVE saves, or null. The jukebox's file as the server names it when it is there (often it is not:
+ * `archives/olde/` holds only some of what the radio plays), else the archive's copy (see archiveFileFor), else
+ * none: SAVE hides rather than offer a 404. */
 function saveFile() {
   if (deck?.current) return deck.current.url || null;
-  return radioLive() ? null : nowFile || null;
+  if (radioLive() || !nowFile) return null;
+  return fileThere.get(nowFile) === true ? nowFile : archiveFileFor(nowFile);
+}
+const fileThere = new Map(); // jukebox file -> true (served) / false (404 or unreachable); absent: not asked yet
+/** One HEAD request per jukebox file: is it served where the server says? (Same origin on spaz.org; elsewhere a
+ * 404 carries no CORS header, so a failed request counts as not there.) */
+async function checkFileThere(url) {
+  if (fileThere.has(url)) return fileThere.get(url);
+  fileThere.set(url, false);
+  try {
+    const res = await fetch(url, { method: 'HEAD' });
+    fileThere.set(url, res.ok);
+    const n = res.ok ? Number(res.headers.get('content-length')) : 0;
+    if (n > 0) fileSizes.set(url, n);
+  } catch { /* not there */ }
+  return fileThere.get(url);
+}
+let lookedUp = '';         // the jukebox file the archive list was last fetched for
+let lookingUp = false;     // the archive list is coming in for the jukebox's file
+/** Finds where the jukebox's file can be saved from: where the server says (one HEAD request), else the archive
+ * list: the kept copy first, then the feed (316 KB gzipped) if there is none, or if the kept one is stale and lacks
+ * the show. Once per file, so a show that is nowhere does not fetch the feed on every poll. */
+async function lookUpNowFile() {
+  const file = nowFile;
+  if (!file || file.startsWith('https://spaz.org/archives/imports/') || fileThere.has(file)) return;
+  lookingUp = true;
+  try {
+    if (await checkFileThere(file)) return;
+    await restoreTapes();
+    if (file === nowFile && !archiveFileFor(file) && lookedUp !== file && (!tapesState.shows.length || tapesStale())) {
+      lookedUp = file;
+      await refreshTapes();
+    }
+  } finally { lookingUp = false; updateSave(); }
 }
 function saveTitle(url) {
   const ext = (url.match(/\.([a-z0-9]{2,4})(?:[?#]|$)/i)?.[1] ?? '').toUpperCase();
@@ -1100,7 +1135,11 @@ export function initUI() {
   /** D: SAVE from the keyboard, with the track line up to say which show. */
   const saveShow = () => {
     if (!powerState.on) return;
-    if (!saveFile()) { message(!deck?.current && radioLive() ? 'LIVE: NOTHING TO SAVE YET' : 'NOTHING TO SAVE'); return; }
+    if (!saveFile()) {
+      const live = !deck?.current && radioLive();
+      message(live ? 'LIVE: NOTHING TO SAVE YET' : !deck?.current && nowFile ? (lookingUp ? 'FINDING THE SHOW IN THE ARCHIVE…' : 'THIS SHOW IS NOT IN THE ARCHIVE') : 'NOTHING TO SAVE');
+      return;
+    }
     showLook();
     updateSave();
     saveLink.click();
@@ -1349,6 +1388,7 @@ async function readPlaying() {
   try {
     const { title, live, download } = parsePlaying(await viewerState.readPlaying());
     streamLive = live; streamKnown = true; nowFile = download;
+    lookUpNowFile();
     return title;
   } catch {
     streamLive = streamKnown = false; nowFile = '';

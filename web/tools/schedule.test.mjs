@@ -110,8 +110,7 @@ test('parsePlaying: the jukebox show\'s file, none while live', async () => {
   const raw = { playing: '2026-10-22 - collages', live: null, download: 'archives/imports/2026-10-22-collages.ogg' };
   assert.equal(parsePlaying(raw).download, 'https://spaz.org/archives/imports/2026-10-22-collages.ogg');
   assert.equal(parsePlaying({ ...raw, download: 'https://spaz.org/archives/imports/x.ogg' }).download, 'https://spaz.org/archives/imports/x.ogg');
-  assert.equal(parsePlaying({ ...raw, download: 'archives/olde/2020-12-17-show.ogg' }).download, 'https://spaz.org/archives/imports/2020-12-17-show.ogg', 'olde/ is not served; imports/ has the same file');
-  assert.equal(parsePlaying({ ...raw, download: 'https://spaz.org/archives/olde/y.ogg' }).download, 'https://spaz.org/archives/imports/y.ogg');
+  assert.equal(parsePlaying({ ...raw, download: 'archives/olde/y.ogg' }).download, 'https://spaz.org/archives/olde/y.ogg', 'as the server names it; tapes.js finds the archive copy');
   assert.equal(parsePlaying({ ...raw, live: 'true' }).download, '', 'a live show has no file');
   assert.equal(parsePlaying({ ...raw, download: null }).download, '');
   assert.equal(parsePlaying({ ...raw, download: 'javascript:alert(1)' }).download, '', 'only http(s)');
