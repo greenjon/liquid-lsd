@@ -41,6 +41,7 @@ export const cvState = {
 };
 
 // Analysis nodes and pre-allocated buffers
+const RESUME_WAIT_MS = 1500; // startAudio: how long a suspended context gets to resume before play() decides
 let audioCtx = null;
 let gainNode = null;
 let eqNodes = null; // [bass, mid, treble, trim] between the volume and the speakers
@@ -733,14 +734,24 @@ export async function startAudio() {
     himidBuf = new Float32Array(himidAnalyser.fftSize);
   }
 
+  // Without a click (AUTOPLAY, ?kiosk), a browser that blocks sound leaves resume() pending instead of
+  // failing, so it gets a moment; the radio's play() below then says whether sound is allowed.
   if (audioCtx.state === 'suspended') {
-    await audioCtx.resume();
+    await Promise.race([audioCtx.resume(), new Promise((r) => setTimeout(r, RESUME_WAIT_MS))]);
   }
 
   if (embed) { /* the host app plays the radio */ }
   else if (micOn) audioEl.pause();  // the microphone is the input; the radio waits
   else if (tape) { tape.paused = false; await loadTape(); }
   else await audioEl.play();
+  if (audioCtx.state === 'suspended') {
+    // The element plays but the context it is routed through does not: nothing would be heard.
+    await Promise.race([audioCtx.resume(), new Promise((r) => setTimeout(r, RESUME_WAIT_MS))]);
+    if (audioCtx.state === 'suspended') {
+      if (!embed) audioEl.pause();
+      throw new DOMException('The browser wants a click before sound', 'NotAllowedError');
+    }
+  }
 
   cvState.isLive = true;
   analysisReady = true;

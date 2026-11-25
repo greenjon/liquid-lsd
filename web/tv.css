@@ -766,6 +766,33 @@ body.kiosk #tv-screen-area { padding-bottom: 0; width: 100vw; height: 100vh; bor
 body.kiosk #tv-controls { display: none; }
 body.kiosk.idle, body.kiosk.idle #tv-screen-area canvas { cursor: none; }
 
+/* --- AUTOPLAY's question (ui.js): a small green box low on the picture; the pages cover it --- */
+#autoplay-ask {
+  position: absolute;
+  left: 50%;
+  top: 70%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  max-width: 88%;
+  box-sizing: border-box;
+  padding: 0.5em 1.2em 0.45em;
+  background: rgba(0, 8, 0, 0.78);
+  border: 1px solid rgba(140,255,140,0.5);
+  color: #8cff8c;
+  font-family: "VT323", "Courier New", monospace;
+  font-weight: bold;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-shadow: 0 0 6px rgba(80,255,80,0.8);
+  font-size: clamp(11px, 1.7vw, 24px);
+}
+#autoplay-ask[hidden] { display: none; }
+.menu-open #autoplay-ask, .card-up #autoplay-ask { visibility: hidden; }
+#autoplay-ask .aa-buttons { display: flex; justify-content: center; gap: 1.2em; margin: 0.35em 0 0.3em; }
+#autoplay-ask button { background: none; border: 1px solid #8cff8c; color: inherit; font: inherit; text-shadow: inherit; padding: 0.05em 1em; cursor: pointer; }
+#autoplay-ask button:hover, #autoplay-ask button:focus-visible { background: #8cff8c; color: #021; text-shadow: none; }
+#autoplay-ask .aa-note { font-size: 0.6em; opacity: 0.7; }
+
 /* --- Service menu (menu.js): phosphor-green rows over a darkened picture --- */
 #tv-menu {
   position: absolute;

@@ -133,6 +133,12 @@
           <div id="ident" aria-hidden="true"><img src="icon-512.png" alt=""><div class="id-name">LIQUID LSD</div><div class="id-by">VISUALS BY GREENJON</div></div>
           <!-- Station bumper, about every 30 minutes -->
           <div id="bumper" aria-live="polite"></div>
+          <!-- AUTOPLAY's question (ui.js), once a visit while MENU › TV › AUTOPLAY is on ASK -->
+          <div id="autoplay-ask" role="alertdialog" aria-label="Autoplay" title="" hidden>
+            <div class="aa-q">TURN ON BY ITSELF NEXT TIME?</div>
+            <div class="aa-buttons"><button data-autoplay="on">YES</button><button data-autoplay="off">NO</button></div>
+            <div class="aa-note">CHANGE IT ANY TIME: MENU › TV › AUTOPLAY</div>
+          </div>
           <!-- SCHEDULE: Spaz Radio's upcoming shows (schedule.js), in the viewer's local time -->
           <div id="schedule" title="" hidden>
             <div class="sc-head"><span class="sc-name">SPAZ RADIO &middot; SCHEDULE</span><span class="sc-zone"></span></div>

@@ -18,7 +18,7 @@ import { scheduleState, refreshSchedule, setShows, groupByDay, upcoming, parsePl
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v60';
+export const TV_VERSION = 'v61';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -312,6 +312,11 @@ function announceLook(info) {
 let identShown = false;    // the Liquid LSD ident plays at the first power-on of a visit
 let lastBumper = 0;        // performance.now() of the last bumper (or the power-on)
 const BUMPER_EVERY_MS = 30 * 60 * 1000;
+const AUTOPLAY_MODES = ['ask', 'on', 'off'];
+const AUTOPLAY_ASK_AFTER_MS = 12000;  // the question waits for the ident and the power-on lines to go
+const AUTOPLAY_ASK_FOR_MS = 20000;    // unanswered, it goes and comes back next visit
+const AUTOPLAY_RETRY_MS = 5000;       // a page is over the picture: try again this much later
+const AUTOPLAY_MAX_UNANSWERED = 3;    // visits without an answer before it stops asking (and stays off)
 
 /** A title card (ident, LIVE) is up for `ms`: the OSD steps aside so the two don't overlap. */
 let cardTimer = null;
@@ -393,6 +398,7 @@ export function initUI() {
       tvBody.classList.remove('powered-on');
       tvBody.classList.add('shutting-down');
       powerSwitch.classList.remove('active');
+      hideAutoplayAsk();
       try { await stopAudio(); } catch (err) { console.error('Audio stop failed:', err); }
     } else {
       powerState.on = true;
@@ -417,6 +423,7 @@ export function initUI() {
       pollSchedule();
       holdScreenAwake();
       updateMediaSession();
+      scheduleAutoplayAsk();
       try {
         await startAudio();
         audioBlocked = false;
@@ -707,6 +714,9 @@ export function initUI() {
       ...(kiosk ? [] : [{ label: 'THEME', value: () => viewerState.theme.toUpperCase(),
         step: () => applyTheme(viewerState.theme === 'dark' ? 'light' : 'dark'),
         help: 'The TV’s cabinet and the room around it: light, a 1970s hi-fi in brushed aluminium and walnut (the default), or dark plastic. The picture is the same in both.' }]),
+      ...(kiosk ? [] : [{ label: 'AUTOPLAY', value: () => autoplay.toUpperCase(),
+        step: (dir) => setAutoplay(AUTOPLAY_MODES[(AUTOPLAY_MODES.indexOf(autoplay) + dir + AUTOPLAY_MODES.length) % AUTOPLAY_MODES.length]),
+        help: 'On: the TV turns itself on when you open this page (if the browser won’t start the sound by itself, the screen asks for a click). Off: it waits for your click. Ask: it asks you, a little while after you turn it on. PWR turns it off either way.' }]),
       { label: 'VISUALS',
         value: () => (!liteState.on ? 'FULL' : { chosen: 'LITE', slow: 'LITE (TOO SLOW HERE)' }[liteState.reason] ?? 'LITE (NO FULL HERE)'),
         step: () => {
@@ -734,7 +744,7 @@ export function initUI() {
         viewerState.heavyMode = 'auto'; save('lsd.heavy', 'auto'); applyHeavy();
         viewerState.announce = false; save('lsd.announce', false);
         applyEq(EQ_FLAT);
-        if (!kiosk) applyTheme('light');
+        if (!kiosk) { applyTheme('light'); setAutoplay('ask'); }
         if (!live()) {
           reactDial.set(toDial(REACT_DEFAULT)); timeDial.set(TIME_STEPS.indexOf(16) / (TIME_STEPS.length - 1));
           applyAutoRoll(0); applyBgMode('hold'); applyEffects(true); applyFollow(true);
@@ -1191,6 +1201,57 @@ export function initUI() {
     wake();
     setTimeout(() => { if (!powerState.on) powerSwitch.click(); }, 300);
   }
+
+  // --- AUTOPLAY (MENU › TV): the TV turns itself on when the page opens, as under ?kiosk; where the browser
+  // wants a click before sound, the picture plays and asks for one (CLICK OR PRESS A KEY FOR SOUND). Unset
+  // ('ask'), the TV asks once a visit, a little after you turn it on; three visits unanswered count as no. ---
+  let autoplay = load('lsd.autoplay', 'ask');
+  if (!AUTOPLAY_MODES.includes(autoplay)) autoplay = 'ask';
+  viewerState.autoplay = autoplay;
+  let autoplayAsked = false; // asked this visit
+  let askTimer = null;
+  const askEl = document.getElementById('autoplay-ask');
+  askEl.addEventListener('click', (e) => {
+    e.stopPropagation(); // not the cabinet's click
+    const v = e.target.closest('button')?.dataset.autoplay;
+    if (!v) return;
+    setAutoplay(v);
+    message(v === 'on' ? 'AUTOPLAY ON · MENU › TV' : 'AUTOPLAY OFF · MENU › TV', 2500);
+  });
+  function setAutoplay(v) {
+    autoplay = viewerState.autoplay = v;
+    save('lsd.autoplay', v);
+    save('lsd.autoplay.unanswered', 0);
+    hideAutoplayAsk();
+    menu.refresh();
+  }
+  function hideAutoplayAsk() {
+    clearTimeout(askTimer);
+    askEl.hidden = true;
+  }
+  /** At a power-on with AUTOPLAY on ASK: the question comes up once the ident and the first lines are gone. */
+  function scheduleAutoplayAsk() {
+    if (kiosk || autoplay !== 'ask' || autoplayAsked) return;
+    clearTimeout(askTimer);
+    const tryAsk = () => {
+      if (!powerState.on || autoplay !== 'ask') return;
+      // A page over the picture: wait until it is closed.
+      if (pageKey()) {
+        askTimer = setTimeout(tryAsk, AUTOPLAY_RETRY_MS);
+        return;
+      }
+      autoplayAsked = true;
+      askEl.hidden = false;
+      askTimer = setTimeout(() => {
+        askEl.hidden = true;
+        const n = load('lsd.autoplay.unanswered', 0) + 1;
+        if (n >= AUTOPLAY_MAX_UNANSWERED) setAutoplay('off');
+        else save('lsd.autoplay.unanswered', n);
+      }, AUTOPLAY_ASK_FOR_MS);
+    };
+    askTimer = setTimeout(tryAsk, AUTOPLAY_ASK_AFTER_MS);
+  }
+  if (!kiosk && autoplay === 'on') setTimeout(() => { if (!powerState.on) powerSwitch.click(); }, 300);
 
   // --- Installable app: the service worker (sw.js) caches the app shell; not in the headless checks ---
   if (!embed && 'serviceWorker' in navigator && !new URLSearchParams(location.search).has('nolive')) {

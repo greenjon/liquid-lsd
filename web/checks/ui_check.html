@@ -34,6 +34,11 @@ try {
   const source = () => d.getElementById('source-badge').textContent;
   const osd = (id) => ({ text: d.getElementById(id).textContent, shown: d.getElementById(id).classList.contains('show') });
 
+  // AUTOPLAY's question: watched from the start, since it comes up a while after the first power-on.
+  const askEl = d.getElementById('autoplay-ask');
+  let askShown = false;
+  new w.MutationObserver(() => { if (!askEl.hidden) askShown = true; }).observe(askEl, { attributes: true });
+  check('AUTOPLAY: no question with the TV off', askEl.hidden);
   // The whole TV is a power target: a click on the screen of a TV that is off turns it on.
   d.getElementById('tv-screen-area').click();
   await sleep(1500);
@@ -320,6 +325,25 @@ try {
   key('m'); downTo('RESET'); key('Enter');
   check('RESET puts the theme back to dark', rootEl.getAttribute('data-theme') === 'dark' && w.localStorage.getItem('lsd.theme') === '"dark"', rootEl.getAttribute('data-theme'));
   key('Escape');
+
+  // AUTOPLAY: ASK by default; the question came up after the click that turned the TV on; YES saves ON;
+  // the menu row cycles it; RESET puts it back to ASK.
+  check('AUTOPLAY: ASK by default', w.LSD.viewerState.autoplay === 'ask' || askShown, w.LSD.viewerState.autoplay);
+  for (let i = 0; i < 100 && !askShown; i++) await sleep(200);
+  check('AUTOPLAY: the TV asks after a power-on', askShown);
+  if (!askEl.hidden) {
+    askEl.querySelector('[data-autoplay="on"]').click();
+    check('AUTOPLAY: YES turns it on and is remembered', askEl.hidden && w.LSD.powerState.on && w.localStorage.getItem('lsd.autoplay') === '"on"', w.localStorage.getItem('lsd.autoplay'));
+  }
+  key('m'); downTo('AUTOPLAY');
+  const apRow = () => menuEl.querySelector('.menu-row.sel')?.textContent ?? '';
+  const apBefore = w.LSD.viewerState.autoplay;
+  key('ArrowRight');
+  const apAfter = w.LSD.viewerState.autoplay;
+  check('AUTOPLAY: the menu row steps it', apAfter !== apBefore && apRow().includes(apAfter.toUpperCase()) && w.localStorage.getItem('lsd.autoplay') === JSON.stringify(apAfter), `${apBefore} -> ${apAfter} ${apRow()}`);
+  key('Escape');
+  key('m'); downTo('RESET'); key('Enter'); key('Escape');
+  check('AUTOPLAY: RESET puts it back to ASK', w.LSD.viewerState.autoplay === 'ask', w.LSD.viewerState.autoplay);
 
   // The listener count under the badge
   const listeners = d.getElementById('listeners');
