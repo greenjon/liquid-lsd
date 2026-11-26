@@ -18,10 +18,13 @@ import { scheduleState, refreshSchedule, setShows, groupByDay, upcoming, parsePl
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v68';
+export const TV_VERSION = 'v69';
 // Channel numbers (badge, OSD, INFO, tuning by digits) are hidden: a number names only the scene, not the
 // background and FX on with it, so it can't bring a look back. Kept behind this switch in case they return.
 const SHOW_CHANNELS = false;
+// The scene, background and FX lines (INFO, a click on the picture, CH / FX / B presses) are hidden too: INFO is
+// about the radio now. Kept behind this switch in case they return.
+const SHOW_SCENE_INFO = false;
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -34,7 +37,6 @@ export const viewerState = {
   // Reads radio.spaz.org/playing ([LIVE!]). Null under ?nolive, where the headless check puts in a stub.
   readPlaying: new URLSearchParams(globalThis.location?.search ?? '').has('nolive') ? null : readPlayingFeed,
   react: 1.0,
-  announce: false,     // show the scene and its FX on every change (off: only when asked, or after a control)
   info: false,         // INFO: the info lines stay on screen
   awake: false,        // a screen wake lock is held
   syncMs: 0,           // SYNC: how late the sound reaches the viewer (speakers, Bluetooth), in ms
@@ -118,7 +120,7 @@ function showLook(info = nowShowing(), ms = 4000, brand = false) {
   if (liteState.on) {
     // Lite mode (lite.js): the Spaz collage, no scenes.
     flash('osd-ch', 'LITE', ms);
-    flash('osd-name', 'SCENE: SPAZ RADIO COLLAGE', ms);
+    if (SHOW_SCENE_INFO) flash('osd-name', 'SCENE: SPAZ RADIO COLLAGE', ms); else unflash('osd-name');
     unflash('osd-bg'); unflash('osd-chain');
   } else if (autopilotState.isLiveBroadcast) {
     flash('osd-ch', 'LIVE', ms);
@@ -132,10 +134,12 @@ function showLook(info = nowShowing(), ms = 4000, brand = false) {
     // Bottom left, one size: the scene, the background behind it, the scene's FX chain.
     if (SHOW_CHANNELS && info.channel > 0) flash('osd-ch', `CH ${String(info.channel).padStart(3, '0')}`, ms);
     else unflash('osd-ch');
-    flash('osd-name', `SCENE: ${prettyName(info.name)}`, ms);
-    if (info.background) flash('osd-bg', `BACKGROUND: ${prettyName(info.background)}`, ms);
-    else unflash('osd-bg');
-    flash('osd-chain', `FX: ${!info.effects ? 'OFF' : info.chain ? prettyName(info.chain) : 'NONE'}`, ms);
+    if (SHOW_SCENE_INFO) {
+      flash('osd-name', `SCENE: ${prettyName(info.name)}`, ms);
+      if (info.background) flash('osd-bg', `BACKGROUND: ${prettyName(info.background)}`, ms);
+      else unflash('osd-bg');
+      flash('osd-chain', `FX: ${!info.effects ? 'OFF' : info.chain ? prettyName(info.chain) : 'NONE'}`, ms);
+    } else { unflash('osd-name'); unflash('osd-bg'); unflash('osd-chain'); }
   }
   if (deck?.current) flashTrack(tapeLine(), ms);
   else if (nowPlaying) flashTrack(`♪ ${nowPlaying}`, ms);
@@ -311,10 +315,10 @@ function makeDial(el, { initial, onChange, steps = 0, locked = () => false }) {
 // Setup
 // -------------------------------------------------------
 let audioBlocked = false;  // the browser refused to start audio without a click
-let lastUserChange = -Infinity; // a viewer's CH / FX press: its result is announced even with ANNOUNCE off
-/** A new scene is on: show it if INFO or ANNOUNCE SCENES is on, or if the viewer just asked for the change. */
+let lastUserChange = -Infinity; // a viewer's CH / FX press: with SHOW_SCENE_INFO its result is named on screen
+/** A new scene is on: refresh the INFO lines if INFO is on; with SHOW_SCENE_INFO, also name a change the viewer asked for. */
 function announceLook(info) {
-  if (viewerState.info || viewerState.announce || performance.now() - lastUserChange < 4000) showLook(info);
+  if (viewerState.info || (SHOW_SCENE_INFO && performance.now() - lastUserChange < 4000)) showLook(info);
 }
 let identShown = false;    // the Liquid LSD ident plays at the first power-on of a visit
 let lastBumper = 0;        // performance.now() of the last bumper (or the power-on)
@@ -511,12 +515,6 @@ export function initUI() {
   });
   // ROLL: a new variation of the scene on air (autopilot.rollScene glides it in on the next bar).
   const roll = control(() => message(rollScene() ? 'ROLL' : 'NOTHING TO ROLL HERE'));
-  // B: the next background now.
-  const nextBackground = control(async () => {
-    const r = await stepBackground(1);
-    if (r === 'off') message('BACKGROUND OFF \u00B7 MENU', 2000);
-    else if (r && !['live', 'none', 'superseded'].includes(r)) { message(`BACKGROUND: ${prettyName(r.split('|')[0])}`, 2500); menu.refresh(); }
-  });
   // 0-9 (only with SHOW_CHANNELS): tune by number, like a remote: three digits tune at once, fewer after a pause.
   let digits = '', digitTimer = null;
   const tuneDigits = () => {
@@ -598,7 +596,6 @@ export function initUI() {
 
   // --- Service MENU (menu.js): four pages, SCENES, SOUND, EQ and TV (no EQ in embed: the host app plays the sound) ---
   viewerState.syncMs = Math.max(SYNC_MIN, Math.min(SYNC_MAX, Number(load('lsd.sync', 0)) || 0));
-  viewerState.announce = load('lsd.announce', false) === true;
   viewerState.reducedMode = MODES.includes(load('lsd.reduced', 'auto')) ? load('lsd.reduced', 'auto') : 'auto';
   viewerState.heavyMode = MODES.includes(load('lsd.heavy', 'auto')) ? load('lsd.heavy', 'auto') : 'auto';
   viewerState.autoRoll = AUTO_ROLL_STEPS.includes(load('lsd.autoRoll', 0)) ? load('lsd.autoRoll', 0) : 0;
@@ -619,7 +616,8 @@ export function initUI() {
   setEffects(viewerState.effects);
   setFollowMusic(viewerState.follow);
   // Channel skip (X, MENU › SKIPPED) is gone: forget any skips a viewer stored, so every scene comes up again.
-  try { localStorage.removeItem('lsd.skipped'); } catch { /* no storage */ }
+  // ANNOUNCE SCENES went with the scene lines: drop its stored setting too.
+  try { localStorage.removeItem('lsd.skipped'); localStorage.removeItem('lsd.announce'); } catch { /* no storage */ }
   const stepIn = (list, v, dir) => list[Math.max(0, Math.min(list.length - 1, list.indexOf(v) + dir))];
   const applyAutoRoll = (bars) => { viewerState.autoRoll = bars; save('lsd.autoRoll', bars); setAutoRollBars(bars); };
   const applyBgMode = (mode) => { viewerState.bgMode = mode; save('lsd.bgMode', mode); setBackgroundMode(mode); };
@@ -678,7 +676,7 @@ export function initUI() {
       { label: 'BACKGROUND', needsPower: true, locked: () => noScenes() || viewerState.bgMode === 'off',
         value: () => (viewerState.bgMode === 'off' ? 'OFF' : prettyName(nowShowing().backgroundPicked ?? '') || '---'),
         step: (dir) => stepBackground(dir).then(() => menu.refresh()),
-        help: 'The picture behind the scene, which shows through wherever the scene is dark or see-through: the listener photos to start with, then slow ambient scenes. ◀ ▶ or B pick another one now.' },
+        help: 'The picture behind the scene, which shows through wherever the scene is dark or see-through: the listener photos to start with, then slow ambient scenes. ◀ ▶ pick another one now.' },
       { label: 'BG CHANGES', locked: noScenes, value: () => BG_MODE_LABELS[viewerState.bgMode],
         step: (dir) => applyBgMode(BG_MODES[(BG_MODES.indexOf(viewerState.bgMode) + dir + BG_MODES.length) % BG_MODES.length]),
         help: 'With scenes (the default): a new background every two scenes (TIME). Hold: the background stays until you change it, with new effects every two scenes. Off: no background, just the scene (and the logos).' },
@@ -727,9 +725,6 @@ export function initUI() {
           setVisuals(liteState.on ? 'full' : 'lite');
         },
         help: 'Full: the Liquid LSD visuals. Lite: a Spaz Radio collage of skies, listener photos and logos, for older or slower phones and computers (less battery and data). The TV picks Lite by itself where the visuals run too slowly, and remembers it on this device.' },
-      { label: 'ANNOUNCE SCENES', value: () => onOff(viewerState.announce),
-        step: () => { viewerState.announce = !viewerState.announce; save('lsd.announce', viewerState.announce); },
-        help: 'Show the name of each new scene, its background and its effects when it comes on, and the background when it changes. Off: only when you click the picture (or turn INFO on).' },
       { label: 'REDUCED MOTION', help: 'Gentler: no flashes, no hard scenes, slower changes. Auto follows your system setting.',
         value: () => (viewerState.reducedMode === 'auto' ? `AUTO (${onOff(viewerState.reduced)})` : viewerState.reducedMode.toUpperCase()),
         step: (dir) => { viewerState.reducedMode = cycle(viewerState.reducedMode, dir); save('lsd.reduced', viewerState.reducedMode); applyReduced(); } },
@@ -745,7 +740,6 @@ export function initUI() {
         viewerState.syncMs = 0; save('lsd.sync', 0);
         viewerState.reducedMode = 'auto'; save('lsd.reduced', 'auto'); applyReduced();
         viewerState.heavyMode = 'auto'; save('lsd.heavy', 'auto'); applyHeavy();
-        viewerState.announce = false; save('lsd.announce', false);
         applyLogos(true);
         applyEq(EQ_FLAT);
         if (!kiosk) { applyTheme('light'); setAutoplay('ask'); }
@@ -1014,7 +1008,7 @@ export function initUI() {
       ArrowUp: () => stepVolume(1), ArrowDown: () => stepVolume(-1), u: toggleMute, U: toggleMute,
       e: fx, E: fx, h: hold, H: hold,
       ' ': deck?.current && powerState.on ? deck.togglePause : hold, // a tape in: Space pauses it, as on any player; H still holds
-      r: roll, R: roll, b: nextBackground, B: nextBackground,
+      r: roll, R: roll,
       ...(SHOW_CHANNELS ? Object.fromEntries([...'0123456789'].map((d) => [d, () => digit(d)])) : {}),
       '[': () => stepTime(-1), ']': () => stepTime(1),
       '-': () => stepReact(-1), '=': () => stepReact(1), '+': () => stepReact(1),
@@ -1224,9 +1218,9 @@ export function initUI() {
     announceLook(e.detail); updateMediaSession(); updateBadge(e.detail);
     menu.refresh();
   });
-  // The background changes on its own clock: with ANNOUNCE SCENES on, only its line comes up.
+  // The background changes on its own clock: with INFO on (and SHOW_SCENE_INFO), only its line comes up.
   window.addEventListener('lsd-background', (e) => {
-    if ((viewerState.announce || viewerState.info) && powerState.on && !autopilotState.isLiveBroadcast && e.detail.background) {
+    if (SHOW_SCENE_INFO && viewerState.info && powerState.on && !autopilotState.isLiveBroadcast && e.detail.background) {
       flash('osd-bg', `BACKGROUND: ${prettyName(e.detail.background)}`, 4000);
     }
     menu.refresh();   // MENU › BACKGROUND names the new one
@@ -1312,7 +1306,8 @@ export function initUI() {
 function updateMediaSession() {
   if (embed) return;
   if (!('mediaSession' in navigator) || typeof MediaMetadata === 'undefined') return;
-  const look = autopilotState.isLiveBroadcast ? 'LIVE' : prettyName(nowShowing().name).toUpperCase();
+  // The album line names Liquid LSD (and LIVE during a desktop broadcast), not the scene (SHOW_SCENE_INFO).
+  const look = autopilotState.isLiveBroadcast ? 'LIVE' : SHOW_SCENE_INFO ? prettyName(nowShowing().name).toUpperCase() : '';
   navigator.mediaSession.metadata = new MediaMetadata({
     title: deck?.current?.title || nowPlaying || 'Spaz Radio',
     artist: deck?.current ? `Spaz Radio archive${deck.current.date ? ` \u00B7 ${deck.current.date}` : ''}` : 'Spaz Radio',

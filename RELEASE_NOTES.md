@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Web TV: INFO Is About the Radio (`web/ui.js`, `web/index.html`, `web/tv.css`, `web/checks/ui_check.html`)
+- **Changed: INFO and the info panel no longer name the scene, background or FX.** The panel now shows what Spaz Radio is playing and the next show, and those two lines use the full width of the picture. They only stop short of the top-right corner while TUNING…, LIVE or LITE is showing there. Changing the scene or FX no longer brings up the panel (TV v69).
+- **Removed: MENU › TV › ANNOUNCE SCENES**, and its stored setting.
+- **Removed: the `B` key (next background).** MENU › SCENES › **Background** still changes it. The phone lock screen and media keys show the show and *Liquid LSD*, not the scene.
+- Internal: the scene lines are hidden behind `SHOW_SCENE_INFO` in `ui.js`, as the channel numbers are behind `SHOW_CHANNELS`.
+
 ### Web TV: No More Channel Numbers or Channel Skip (`web/ui.js`, `web/index.html`, `web/tv.css`, `web/checks/ui_check.html`)
 - **Changed: the web TV no longer shows channel numbers.** A number only named the scene, not the background, FX and logos on with it, so it couldn't bring back a look you liked. The display window now says just `SPAZ RADIO`, INFO and the scene-change lines leave out the `CH ###` line, and typing digits no longer tunes. CH ▲▼ and `J` still change the scene (TV v68).
 - **Removed: channel skip.** `X`, MENU › SCENES › **Skip this channel** and **Skipped** are gone, and any skips stored in the browser are forgotten, so every scene comes up again.

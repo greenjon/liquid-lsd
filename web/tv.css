@@ -580,9 +580,11 @@ body {
   position: absolute;
   top: 5%;
   left: 5%;
-  right: 30%;  /* clear of CH nn */
+  right: 5%;   /* the full width: the show names get it all */
   opacity: 1 !important;
 }
+/* ...except while the top-right line is up (TUNING…, LIVE, LITE, or CH nn with SHOW_CHANNELS): keep clear of it */
+#osd:has(#osd-ch.show) #osd-radio { right: 30%; }
 /* The show now and the next show: each wraps to two lines, then gives way (…) */
 #osd-radio > div { overflow: hidden; }
 #osd-track-text, #osd-next {

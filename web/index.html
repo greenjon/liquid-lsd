@@ -108,7 +108,7 @@
       <div id="tv-screen-border">
         <div id="tv-screen-area">
           <canvas id="glCanvas"></canvas>
-          <!-- On-screen display: channel and scene on every change, control feedback, now playing -->
+          <!-- On-screen display: what's playing on the radio, control feedback -->
           <div id="osd" aria-live="polite">
             <div id="osd-ch"></div>
             <!-- Top left: what Spaz Radio is playing, and the next show -->
@@ -119,7 +119,7 @@
             </div>
             <!-- Centre: control feedback (HOLD, BARS, SYNC, NO SIGNAL...) -->
             <div id="osd-msg"></div>
-            <!-- Bottom left: the scene, the background behind it, the scene's FX -->
+            <!-- Bottom left: the scene, background and FX (hidden: SHOW_SCENE_INFO in ui.js), the Liquid LSD line -->
             <div id="osd-info">
               <div id="osd-name"></div>
               <div id="osd-bg"></div>
@@ -166,7 +166,6 @@
                   <dl class="ky-list">
                     <dt>R</dt><dd><b>R</b>OLL A VARIATION</dd>
                     <dt>E</dt><dd><b>E</b>FFECTS: NEXT FX</dd>
-                    <dt>B</dt><dd>NEXT <b>B</b>ACKGROUND</dd>
                     <dt>H &middot; SPACE</dt><dd><b>H</b>OLD</dd>
                     <dt>[ ]</dt><dd>SCENE LENGTH</dd>
                   </dl>
@@ -300,7 +299,7 @@
                Pressing the key that is down lets it back up. ui.js keeps the keys in step with the pages. -->
           <div id="key-bank" role="group" aria-label="What shows over the picture">
             <button id="offBtn" class="bank-key" title="Off: nothing over the picture; closes the menu, schedule, tapes or keys and turns INFO off" aria-pressed="true">OFF</button>
-            <button id="infoBtn" class="bank-key" title="Info: keep the scene, background, FX, track and next show on screen (I). Off: point at or tap the picture to see them for a few seconds" aria-pressed="false">INFO</button>
+            <button id="infoBtn" class="bank-key" title="Info: keep the show playing and the next show on screen (I). Off: point at or tap the picture to see them for a few seconds" aria-pressed="false">INFO</button>
             <button id="menuBtn" class="bank-key" title="Menu: scene, sound and TV settings (M)" aria-pressed="false">MENU</button>
             <button id="scheduleBtn" class="bank-key" title="Spaz Radio's upcoming shows, in your local time (S)" aria-label="Schedule" aria-pressed="false">SCHED</button>
             <button id="tapesBtn" class="bank-key kiosk-off" title="Tapes: play shows from the Spaz Radio archive; the picture follows them (T). Its light is on while a tape is in" aria-label="Tapes" aria-pressed="false"><span class="key-led"></span>TAPES</button>

@@ -77,7 +77,6 @@ The standalone browser client (`web/index.html`) presents the visualizer in a re
 | *(jump)* | A scene picked at random, now | `J` |
 | **FX** | Puts the next FX chain on the scene on air | `E` |
 | **ROLL** | A new variation of the scene on air: its settings and its effects' roll new values, gliding in to land on the next bar line | `R` |
-| *(background)* | The next background, now (MENU › BACKGROUND steps either way) | `B` |
 | **HOLD** | Keeps the current scene until you press it again (the background keeps changing); its light is on while it holds | `H`, or `Space` when no tape is in; long-press the picture |
 | **TIME** | How long each scene holds: 8, 16, 32 or 64 bars (drag, scroll or click) | `[` `]` |
 | **REACT** | How strongly the picture reacts to the music, 25-200%, 100% to start (double-click for 100%). The TV levels quiet and loud shows itself, so this is about taste, not volume | `-` `=` |
@@ -86,7 +85,7 @@ The standalone browser client (`web/index.html`) presents the visualizer in a re
 
 Press `?` (or the **?** key) for the about and keys page: Liquid LSD at the top, every key below, and in the corner a link to the Liquid LSD website (with a QR code for your phone) and to the Spaz Radio app for Android. MENU › TV › **ABOUT** opens the same page. Any key, or a click anywhere but the links, closes it. With the menu open, `?`, `I`, `S` and `T` still work (they close it first), and `C` opens or closes the chat.
 
-Point at the picture with the mouse, or click or tap it, to show the scene, the background, its FX chain, the track playing on the radio and the next show on Spaz Radio for a few seconds. **INFO** (or `I`) keeps them on screen, updating as they change, until you turn it off; the TV remembers it. TIME, REACT, INFO and the MENU settings are remembered in the browser. The display window on the right shows `SPAZ RADIO`. Under it, while the TV is on, is how many people are on the Spaz Radio stream right now, in any player (`12 mutants watching TV.`); the line is blank when the count is zero or can't be read.
+Point at the picture with the mouse, or click or tap it, to show the track playing on the radio and the next show on Spaz Radio for a few seconds. **INFO** (or `I`) keeps them on screen, updating as they change, until you turn it off; the TV remembers it. TIME, REACT, INFO and the MENU settings are remembered in the browser. The display window on the right shows `SPAZ RADIO`. Under it, while the TV is on, is how many people are on the Spaz Radio stream right now, in any player (`12 mutants watching TV.`); the line is blank when the count is zero or can't be read.
 
 **No signal:** if the radio stream drops or goes quiet, the screen shows snow and NO SIGNAL; when the stream has stopped, the TV reconnects by itself. On iPhone and iPad, Safari keeps the live radio's sound from the page, so the TV listens to a second copy of the stream for the picture (it downloads the radio twice there).
 
@@ -96,7 +95,7 @@ Point at the picture with the mouse, or click or tap it, to show the scene, the 
 
 **Screen:** while the TV is on, your computer or phone won't dim or lock (in browsers that support it).
 
-**Lock screen and media keys:** your phone's lock screen and your keyboard's media keys show the show and the scene; play/pause is the power switch, next/previous change the scene.
+**Lock screen and media keys:** your phone's lock screen and your keyboard's media keys show the show; play/pause is the power switch, next/previous change the scene.
 
 **Install as an app:** use your browser's Install / Add to Home Screen; it opens fullscreen like a TV app.
 
@@ -111,13 +110,13 @@ Point at the picture with the mouse, or click or tap it, to show the scene, the 
 - **SCENES:** **Time**, **Auto roll**, **Follow music**, **Effects**, **Background**, **BG changes**, **Spaz logos**.
 - **SOUND:** **Audio input** (radio or microphone), **REACT**, **SYNC** (how late the sound reaches you, for Bluetooth and other delayed speakers), **TAP SYNC**.
 - **EQ:** **Equalizer** on or off (off by default), **Bass**, **Mid** and **Treble** (±12 dB each), **Flat**. It changes only what you hear from the radio or a tape, never what the picture reacts to. Boosting a band turns the overall volume down by the same amount so loud songs don't distort. Safari plays the live radio past the EQ, so there it works only on tapes.
-- **TV:** **Fullscreen**, **Theme** (the cabinet and the room around it: light, a 1970s hi-fi receiver in brushed aluminium and walnut, the default; or dark plastic), **Announce scenes** (name each new scene on screen; off by default), **Reduced motion** (Auto follows your system setting), **Big GPU scenes** (Auto lets the GPU check decide), **Reset**, **About**.
+- **TV:** **Fullscreen**, **Theme** (the cabinet and the room around it: light, a 1970s hi-fi receiver in brushed aluminium and walnut, the default; or dark plastic), **Reduced motion** (Auto follows your system setting), **Big GPU scenes** (Auto lets the GPU check decide), **Reset**, **About**.
 
 Settings are remembered in this browser. REACT, TIME, Auto roll, the background, effects and follow-music rows, Audio input and Big GPU scenes are locked during a live broadcast. RESET puts every setting back, including turning the EQ off and flat.
 
 **Variations:** no scene looks exactly the same twice. Each one's settings roll within a narrow span around the values it was tuned with whenever it comes on, and again on **ROLL** (`R`). Settings that come in steps (a colour mode, a number of petals, Mandala's shape) change on the bar line; the rest glide over it. MENU › **Auto roll** rolls the scene on air every 4, 8 or 16 bars, which goes well with HOLD.
 
-**Background:** the background plays behind the scene and shows wherever the scene is dark or see-through. It starts as the **photo gallery**: the photos listeners added to the old radio page (spaz.org/radio), fading in on the beat and slowly turning and growing, as they did there. Slow ambient scenes come after it. `B` or MENU › **Background** changes it now (to the other backgrounds, and back). MENU › **BG changes**: *With scenes* (a new one every two scenes, the default), *Hold* (stays until you change it; its effects still change every two scenes) or *Off* (no background).
+**Background:** the background plays behind the scene and shows wherever the scene is dark or see-through. It starts as the **photo gallery**: the photos listeners added to the old radio page (spaz.org/radio), fading in on the beat and slowly turning and growing, as they did there. Slow ambient scenes come after it. MENU › **Background** changes it now (to the other backgrounds, and back). MENU › **BG changes**: *With scenes* (a new one every two scenes, the default), *Hold* (stays until you change it; its effects still change every two scenes) or *Off* (no background).
 
 **Spaz logos:** the **Spaz Radio logos** from the old radio page sit between the background and the scene: one at a time, large (often past the edges of the screen), see-through and a little dimmed, slowly turning and fading over whatever background is on. Like the background, they show wherever the scene is dark or see-through. MENU › **Spaz logos** turns them on (the default) or off; in the lite picture it does the same for the logos at the front. They are left out during a live show from the desktop.
 
@@ -148,7 +147,7 @@ The board is open on your first visit. The **X** in its top corner closes it, an
 
 **Power:** click anywhere on the TV to turn it on (the browser needs that click to start the sound). The piano keys (OFF, INFO, MENU, SCHED, TAPES, ?) and CHAT work without turning it on, and picking a tape turns it on and plays the tape. Once it's on, only the PWR switch turns it off: clicks on the cabinet are ignored, a click that just misses a button presses the nearest one, and clicks on the picture show the info.
 
-**The info panel:** point at or click the picture, or press **I**, to see it. Top left: what Spaz Radio is playing and the next show, each on up to two lines. **⤓ SAVE** at the end of the track line downloads that show (or the tape that is playing) as an OGG file; point at it for its size. It isn't there during a live show, which has no file yet, or for the few jukebox shows the archive doesn't have. `D` does the same. Bottom left: **SCENE** (the scene on air), **BACKGROUND** (what plays behind it, changing on its own clock, twice the scene length, unless BG changes is on *Hold*) and **FX** (the scene's effects). With MENU › **ANNOUNCE SCENES** on, the panel comes up by itself for each new scene, and the BACKGROUND line when the background changes. Control messages (HOLD, BARS, SYNC…) come up in the middle of the picture.
+**The info panel:** point at or click the picture, or press **I**, to see it. Top left, across the full width of the picture: what Spaz Radio is playing and the next show, each on up to two lines (they stop short of the top-right corner while TUNING…, LIVE or LITE is up there). **⤓ SAVE** at the end of the track line downloads that show (or the tape that is playing) as an OGG file; point at it for its size. It isn't there during a live show, which has no file yet, or for the few jukebox shows the archive doesn't have. `D` does the same. The panel doesn't name the scene, background or effects. Control messages (HOLD, BARS, SYNC…) come up in the middle of the picture.
 
 **About:** the `?` page (also MENU › TV › **ABOUT**) links the Liquid LSD website, with a QR code for your phone, and **I** shows a Liquid LSD line with the info.
 

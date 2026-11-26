@@ -46,20 +46,22 @@ try {
   await sleep(1500);
   check('First power-on plays the Liquid LSD ident', d.getElementById('ident').classList.contains('show'));
   await sleep(3800);
-  check('ANNOUNCE SCENES is off by default: no scene name after power on', !osd('osd-name').shown, JSON.stringify(osd('osd-name')));
+  check('No scene name after power on', !osd('osd-name').shown, JSON.stringify(osd('osd-name')));
+  check('The show names get the full width with nothing top right', getComputedStyle(d.getElementById('osd-radio')).right === getComputedStyle(d.getElementById('osd-radio')).left || osd('osd-ch').shown,
+    `${getComputedStyle(d.getElementById('osd-radio')).left} / ${getComputedStyle(d.getElementById('osd-radio')).right}`);
   check('REACT starts at 100%', w.LSD.viewerState.react === 1, w.LSD.viewerState.react);
   key('i');
   check('I shows no channel number', !osd('osd-ch').shown, JSON.stringify(osd('osd-ch')));
-  check('I names the scene', /^SCENE: \S/.test(osd('osd-name').text), osd('osd-name').text);
-  check('I names the background', osd('osd-bg').shown && /^BACKGROUND: \S/.test(osd('osd-bg').text), JSON.stringify(osd('osd-bg')));
-  check('I names the FX', osd('osd-chain').shown && /^FX: \S/.test(osd('osd-chain').text), JSON.stringify(osd('osd-chain')));
+  check('I shows no scene, background or FX lines', !osd('osd-name').shown && !osd('osd-bg').shown && !osd('osd-chain').shown,
+    `${osd('osd-name').text} / ${osd('osd-bg').text} / ${osd('osd-chain').text}`);
+  check('I shows the Liquid LSD line', osd('osd-brand').shown);
   check('I turns INFO on, its light too', w.LSD.viewerState.info && d.getElementById('infoBtn').getAttribute('aria-pressed') === 'true');
   await sleep(4500);
-  check('INFO keeps the info on screen', osd('osd-name').shown);
+  check('INFO keeps the info on screen', osd('osd-brand').shown);
   d.getElementById('infoBtn').click();
-  check('The INFO button turns it off and the info goes', !w.LSD.viewerState.info && !osd('osd-name').shown && d.getElementById('infoBtn').getAttribute('aria-pressed') === 'false');
+  check('The INFO button turns it off and the info goes', !w.LSD.viewerState.info && !osd('osd-brand').shown && d.getElementById('infoBtn').getAttribute('aria-pressed') === 'false');
   d.getElementById('glCanvas').dispatchEvent(new w.PointerEvent('pointermove', { pointerType: 'mouse', clientX: 50, clientY: 50, bubbles: true }));
-  check('Pointing at the picture shows the info', osd('osd-name').shown);
+  check('Pointing at the picture shows no scene line', !osd('osd-name').shown);
   for (const id of ['osd-ch', 'osd-name', 'osd-bg', 'osd-chain', 'osd-track', 'osd-next', 'osd-brand']) d.getElementById(id).classList.remove('show');
   d.getElementById('glCanvas').dispatchEvent(new w.PointerEvent('pointermove', { pointerType: 'touch', clientX: 60, clientY: 60, bubbles: true }));
   check('...a finger moving over it does not', !osd('osd-name').shown);
@@ -95,7 +97,7 @@ try {
   check('Double-click puts REACT back to 100%', w.LSD.viewerState.react === 1, w.LSD.viewerState.react);
   check('Screen kept awake while on (where the browser has wake lock)', !('wakeLock' in w.navigator) || w.LSD.viewerState.awake);
   const meta = w.navigator.mediaSession?.metadata;
-  check('Lock screen shows the station and the scene', !w.navigator.mediaSession || (meta?.artist === 'Spaz Radio' && /Liquid LSD/.test(meta.album)), meta ? `${meta.title} / ${meta.album}` : 'none');
+  check('Lock screen shows the station, not the scene', !w.navigator.mediaSession || (meta?.artist === 'Spaz Radio' && meta.album === 'Liquid LSD'), meta ? `${meta.title} / ${meta.album}` : 'none');
 
   // GPU probe at power-on: heavy sources only rotate when it is fast enough.
   const gpu = w.LSD.gpu;
@@ -155,20 +157,22 @@ try {
   key('j');
   await sleep(3000);
   check('J tunes a random other channel', onAir() !== beforeRandom);
-  // ROLL, B, EFFECTS.
+  // ROLL, BACKGROUND, EFFECTS.
   key('r'); await sleep(100);
   check('R rolls the scene on air', osd('osd-msg').text === 'ROLL', osd('osd-msg').text);
   d.getElementById('rollBtn').click();
   check('ROLL rolls the scene on air', osd('osd-msg').text === 'ROLL', osd('osd-msg').text);
   const bg0 = st.deckBG;
-  key('b'); await sleep(2500);
-  check('B changes the background', st.deckBG && st.deckBG !== bg0);
+  key('b'); await sleep(300);
+  check('B no longer changes the background', st.deckBG === bg0);
+  key('m'); downTo('BACKGROUND'); key('ArrowRight'); key('Escape'); await sleep(2500);
+  check('MENU › BACKGROUND ▶ changes the background', st.deckBG && st.deckBG !== bg0);
   // BACKGROUND ◀ steps back from the one on screen (not from the one the rotation has queued), and its row
   // names where it is going straight away.
   key('m'); downTo('BACKGROUND'); key('ArrowLeft');
   const bgRow = d.querySelector('#tv-menu .menu-row.sel')?.textContent ?? '';
   await sleep(2500);
-  check('BACKGROUND ◀ goes back to the background B left', st.deckBG?.source === bg0?.source && /spaz gallery/i.test(bgRow), `${st.deckBG?.source} / ${bgRow}`);
+  check('BACKGROUND ◀ goes back to the background ▶ left', st.deckBG?.source === bg0?.source && /spaz gallery/i.test(bgRow), `${st.deckBG?.source} / ${bgRow}`);
   key('Escape');
   check('BG CHANGES starts on With scenes, SPAZ LOGOS on', w.LSD.viewerState.bgMode === 'scenes' && w.LSD.viewerState.logos === true,
     `${w.LSD.viewerState.bgMode} / ${w.LSD.viewerState.logos}`);
@@ -181,7 +185,7 @@ try {
   check('SPAZ LOGOS back on', w.LSD.viewerState.logos === true);
   check('EFFECTS starts on RANDOM', w.LSD.viewerState.effects === 'random' && onAir().fx.some(Boolean), String(w.LSD.viewerState.effects));
   key('e'); await sleep(800);
-  check('E with RANDOM puts a chain on', osd('osd-chain').text.startsWith('FX:') && onAir().fx.some(Boolean), osd('osd-chain').text);
+  check('E with RANDOM puts a chain on', onAir().fx.some(Boolean));
   key('m'); downTo('EFFECTS'); key('ArrowRight');
   const fxRow = d.querySelector('#tv-menu .menu-row.sel')?.textContent ?? '';
   key('Escape'); await sleep(300);
@@ -296,13 +300,10 @@ try {
   check('EQ: FLAT puts the bands back to 0', vs.eq.on && vs.eq.bass === 0 && vs.eq.treble === 0, JSON.stringify(vs.eq));
   downTo('MID'); key('ArrowRight'); downTo('RESET'); key('Enter');
   check('EQ: RESET turns it off and flat', !vs.eq.on && vs.eq.mid === 0, JSON.stringify(vs.eq));
-  downTo('ANNOUNCE SCENES');
-  check('Menu: the selected row explains itself', /name of each new scene/.test(menuEl.querySelector('.menu-hint').textContent), menuEl.querySelector('.menu-hint').textContent);
-  key('ArrowRight');
-  check('Menu: ANNOUNCE SCENES turns on', w.LSD.viewerState.announce === true);
-  key('ArrowRight');
-  check('Menu: ANNOUNCE SCENES turns off', w.LSD.viewerState.announce === false);
-  menuEl.querySelector('.menu-row.sel .menu-label').click(); // ANNOUNCE SCENES: re-renders the menu under the click
+  check('Menu: no ANNOUNCE SCENES row', row('ANNOUNCE SCENES') < 0);
+  downTo('REDUCED MOTION');
+  check('Menu: the selected row explains itself', /Gentler/.test(menuEl.querySelector('.menu-hint').textContent), menuEl.querySelector('.menu-hint').textContent);
+  menuEl.querySelector('.menu-row.sel .menu-label').click(); // a label click: re-renders the menu under the click
   check('Menu: clicking a row label leaves the TV on', w.LSD.powerState.on);
   check('Menu: clicking a row label keeps the menu open', !menuEl.hidden);
   key('Escape');
@@ -588,6 +589,10 @@ try {
     const radio = d.getElementById('osd-radio').getBoundingClientRect(), save = saveEl.getBoundingClientRect();
     check('A long show name wraps to two lines on the OSD', rows(trackText) === 2 && trackText.scrollHeight > trackText.clientHeight, `${rows(trackText)} rows`);
     check('A long next show wraps to two lines on the OSD', rows(nextEl) === 2, `${rows(nextEl)} rows`);
+    const osdBox = d.getElementById('osd').getBoundingClientRect(), chUp = osd('osd-ch').shown;
+    check('Both show lines span the picture (5% margins) unless the top-right line is up',
+      chUp || (Math.abs((osdBox.right - radio.right) - (radio.left - osdBox.left)) < 2 && nextEl.getBoundingClientRect().right > osdBox.left + osdBox.width * 0.9),
+      `osd ${osdBox.left}-${osdBox.right}, radio ${radio.left}-${radio.right}, top-right ${chUp}`);
     check('SAVE stays inside the track area beside a long name', save.width > 0 && save.right <= radio.right + 1, `${save.right} > ${radio.right}`);
     trackText.textContent = oldTrack; nextEl.textContent = oldNext;
   }
