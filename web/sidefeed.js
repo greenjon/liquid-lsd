@@ -14,6 +14,13 @@ const CHUNK_S = 1.0;      // seconds of new audio per decoded file
 const OVERLAP_PAGES = 2;  // earlier pages put in front of each file, so its first new samples decode whole
 const MAX_AHEAD_S = 30;   // more than this scheduled ahead (should not happen): drop, to catch up
 const RETRY_MS = 5000;
+const RETRY_MAX_MS = 60000;
+
+/** Reconnect delay after `attempt` failures in a row (0 = the first): doubles from `base` up to `max`, with +-25% jitter. */
+export function backoffMs(attempt, base = RETRY_MS, max = RETRY_MAX_MS, rand = Math.random) {
+  const nominal = Math.min(max, base * 2 ** Math.min(attempt, 20));
+  return Math.min(max, Math.round(nominal * (0.75 + 0.5 * rand())));
+}
 
 // --- Ogg pages ---------------------------------------------------------------------------------------
 
@@ -189,11 +196,19 @@ export function startSideFeed(ctx, dest, url) {
   let stopped = false;
   let next = 0;          // context time the next decoded piece starts at
   let decoding = Promise.resolve();
+  const scheduled = new Set(); // sources started or waiting to start: stop() silences them
+  let attempt = 0;             // failed connections in a row, for the backoff
 
   function stop() {
     stopped = true;
     feed.status = 'stopped';
     abort?.abort();
+    for (const src of scheduled) {
+      src.onended = null;
+      try { src.stop(); } catch { /* not started */ }
+      src.disconnect();
+    }
+    scheduled.clear();
   }
 
   function play(buffer, keepSeconds) {
@@ -207,7 +222,8 @@ export function startSideFeed(ctx, dest, url) {
     const src = ctx.createBufferSource();
     src.buffer = buffer;
     src.connect(dest);
-    src.onended = () => src.disconnect();
+    scheduled.add(src);
+    src.onended = () => { scheduled.delete(src); src.disconnect(); };
     src.start(next, startAt, dur);
     next += dur;
   }
@@ -217,6 +233,7 @@ export function startSideFeed(ctx, dest, url) {
       if (stopped) return;
       try {
         const buffer = await ctx.decodeAudioData(file.buffer);
+        if (stopped) return;
         feed.files++;
         feed.status = 'playing';
         play(buffer, keep / rate);
@@ -244,6 +261,7 @@ export function startSideFeed(ctx, dest, url) {
         for (;;) {
           const { done, value } = await reader.read();
           if (done || stopped) break;
+          attempt = 0;
           for (const page of pages.push(value)) {
             const piece = chunker.push(page);
             if (piece) decode(piece);
@@ -255,7 +273,7 @@ export function startSideFeed(ctx, dest, url) {
       }
       if (stopped) return;
       feed.status = 'retrying';
-      await new Promise((r) => setTimeout(r, RETRY_MS));
+      await new Promise((r) => setTimeout(r, backoffMs(attempt++)));
     }
   }
 
