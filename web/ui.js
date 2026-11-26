@@ -18,7 +18,7 @@ import { timeoutSignal, scheduleState, refreshSchedule, setShows, groupByDay, up
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v70';
+export const TV_VERSION = 'v71';
 // Channel numbers (badge, OSD, INFO, tuning by digits) are hidden: a number names only the scene, not the
 // background and FX on with it, so it can't bring a look back. Kept behind this switch in case they return.
 const SHOW_CHANNELS = false;

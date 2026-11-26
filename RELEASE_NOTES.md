@@ -1,5 +1,28 @@
 ## [Unreleased]
 
+### Web TV: Audit Fixes, Audio (`web/dsp.js`, `web/sidefeed.js`)
+- **Fixed: the microphone could stay open** if you turned the TV off, put a tape in, or pressed `A` again while the browser's permission prompt was up (TV v71).
+- **Fixed: on Mac Safari the radio no longer plays at full volume for the first seconds.** The volume dial applies from the start.
+- **Fixed: the second copy of the stream used for the picture (the side feed) only starts in Safari,** and is silenced the moment it stops.
+- **Changed: when the stream stays down, reconnects slow down:** every 10 s for the first minute, as before, then growing to once a minute (the side feed: 5 s up to 1 minute).
+
+### Web TV: Audit Fixes, Network and Tapes (`web/ui.js`, `web/tapes.js`, `web/tapedeck.js`, `web/schedule.js`, `web/gallery.js`, `web/lite.js`)
+- **Fixed: one stalled request could freeze part of the TV for the rest of your visit.** Now-playing, the schedule, the archive list and the photo lists time out after 10-20 s, so a stall no longer stops the listener count, the track line, the schedule or TAPES. A quick TV off and on no longer starts a second now-playing poll (TV v71).
+- **Fixed: a tape link to a show that isn't on the server** says SHOW NOT FOUND and goes back to the radio, instead of loading forever.
+- **Changed: on iPhone and Safari the listener count no longer counts your own second connection** (the side feed).
+- **Fixed: fullscreen works in browsers that only have the webkit-prefixed version** (older Safari, iPad).
+- **Changed: RESET's help lists what it resets and what it leaves alone.**
+
+### Web TV: Audit Fixes, Chat (`web/chat.js`, `web/chatboard.js`, `web/mqtt.js`, `web/ui.js`)
+- **Fixed: a malformed or hostile chat message could freeze the board for everyone.** Received times, names and text are now checked and capped, and once the board holds 300 lines it no longer redraws them all for each new one (TV v71).
+- **Fixed: a chat connection whose handshake never completes** times out after 15 s and tries again.
+- **Changed: the chat connects the first time the board is open** (it is open by default on a first visit), not at page load for viewers who closed it.
+
+### Web TV: Audit Fixes, Picture and Relay (`web/frameloop.js`, `web/renderer.js`, `web/gallery.js`, `web/ui.js`, `server/server.js`)
+- **Fixed: in the Spaz Radio app, the picture's render loop could double** after the app was paused and resumed or VISUALS was switched. Fewer per-frame allocations as well, so less garbage collection (TV v71).
+- **Fixed: SPAZ LOGOS stops asking again for the photo list when none are listed,** and with the TV off the beat light no longer redraws every frame.
+- **Changed (relay, for whoever runs it):** `server/server.js` now limits message size, total and per-address viewers, pings connections to drop dead ones, drops viewers that stop reading, and ignores patch keys that could damage the merged state. It takes effect when the relay on the VPS is redeployed. See `docs/developer/web_subsystem.md` for the new `LSD_*` settings.
+
 ### Web TV: INFO Is About the Radio (`web/ui.js`, `web/index.html`, `web/tv.css`, `web/checks/ui_check.html`)
 - **Changed: INFO and the info panel no longer name the scene, background or FX.** The panel now shows what Spaz Radio is playing and the next show, and those two lines use the full width of the picture. They only stop short of the top-right corner while TUNING…, LIVE or LITE is showing there. Changing the scene or FX no longer brings up the panel (TV v69).
 - **Removed: MENU › TV › ANNOUNCE SCENES**, and its stored setting.
@@ -82,7 +105,7 @@
 - **Fixed: a reloaded preset rolled an LFO or audio range differently** from how it was set up: the Min and Max roll ranges were read back as Base and Amount ranges. Presets saved before this fix now roll as they were set up.
 
 ### Web TV: Tape Share Links (`web/tapes.js`, `web/tapedeck.js`, `web/ui.js`)
-- **New: LINK on a tape's transport strip** copies a link to that moment of the show (`spaz.org/tv/?tape=<show>&t=1h2m`). Opening it cues the show there; turning the TV on plays it.
+- **New: LINK on a tape's transport strip** copies a link to that moment of the show (`spaz.org/tv/?tape=<show>&t=1h2m`). Opening it cues the show there; turning the TV on plays it. (TV v48)
 
 ### Queue Undo
 - **Fixed: adding to a queue couldn't be undone.** Q, Shift+Q, the toolbar's enqueue buttons, the right-click Add to … Queue items and the Twister's add-to-queue now each make one Ctrl+Z step, like dropping onto a queue already did.

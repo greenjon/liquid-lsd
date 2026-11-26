@@ -29,6 +29,7 @@ A full audit covers the TV, so its tag also counts as a TV baseline.
 | Audit | Baseline tag | TV version at close | Notes |
 |---|---|---|---|
 | 2026-11-15 (full, lane 6) | `audit-2026-11-15` | v47 | report at `.planning/audit-2026-11-15.md`, findings L6-1..16 |
+| 2026-11-26 (TV only) | `tv-audit-2026-11-26` | v71 | report at `.planning/tv-audit-2026-11-26.md` |
 
 Scope a run with `git log --oneline <tag>..HEAD -- web server scripts/publish_web_tv.sh scripts/make_content_manifest.py tests/web playwright.config.ts`
 and list the TV versions it spans (`git log --oneline <tag>..HEAD | grep -o 'TV v[0-9]*'`).
@@ -67,7 +68,7 @@ Read every changed file under `web/` and `server/`, in full where the change tou
 | Firefox desktop | Playwright `firefox` | autoplay prefs are opened up in the config, so autoplay blocking is untested there |
 | Phone (Pixel 7 profile) | Playwright `phone` | Chromium with a phone viewport and touch, not a real phone |
 | WebKit / Safari | Playwright `webkit`, only with `WEBKIT=1` | does not launch on this Fedora machine (L8-2), so in practice untested |
-| Safari 15 (the floor) | none | no syntax or API newer than Safari 15.0 |
+| Safari 15 (the floor) | `web/tools/compat.test.mjs` (JS and `tv.css`) | the JS uses no API newer than Safari 15.0 without a fallback; CSS features newer than 15.0 must degrade gracefully and be allow-listed in `compat.test.mjs` |
 | iPhone Safari | owner's device | side feed (v58), autoplay, fullscreen |
 | Spaz Radio app (Android WebView) | `embed.spec.ts`, `web/checks/embed_check.mjs`, owner's phone | see W7 |
 
@@ -100,23 +101,36 @@ Read every changed file under `web/` and `server/`, in full where the change tou
 For each service, check what the viewer sees when it is down, slow, returns 404, or returns malformed data. Each
 should fail visibly, retry with backoff, and leave the rest of the TV working.
 
-| Service | Used by | Notes |
+| Endpoint | Used by | Notes |
 |---|---|---|
-| Icecast streams and status on `radio.spaz.org` | `dsp.js`, `sidefeed.js`, listener count | listener count sums every mount |
-| `streams/playing-jsonp` | now-playing, [LIVE!] | JSONP: served as `text/javascript`? (L6-13, spaz.org admin) |
-| Schedule | `schedule.js` | |
-| Show archive (`olde/`, `archives/imports/`) | `tapes.js`, `tapedeck.js` | `olde/` paths often 404 |
-| MQTT chat broker `wss://radio.spaz.org:1885/mqtt` | `chat.js`, `chatboard.js` | |
-| Live relay `wss://spaz.org/lsd-relay` | `autopilot.js`, `sync.js` | runs `server/server.js` on the VPS |
-| Content manifest `/tv/update/` | Spaz Radio app | see W6 and W7 |
+| `radio.spaz.org:8060/radio.ogg?t=<now>` (Icecast stream) | `dsp.js` (`<audio>`) | stall or silence shows NO SIGNAL; reloads only when the playhead has stopped, backing off 10 s up to 1 minute |
+| same mount, `?feed=<now>` | `sidefeed.js`, Safari only | needs CORS; second listener, so the count subtracts one; backoff 5 s up to 1 minute |
+| `radio.spaz.org:8060/status-json.xsl` | `ui.js`, every 30 s while on | needs CORS; listener count sums every mount; times out after 10 s |
+| `radio.spaz.org/streams/playing-jsonp` | `schedule.js`, `ui.js` | JSONP, runs the server's script (L6-13: served with no Content-Type) |
+| `radio.spaz.org/playing` | `ui.js`, fallback after JSONP fails | sends no CORS header, so the fallback cannot work |
+| `radio.spaz.org/djdash/droid` (schedule) | `schedule.js` | needs CORS; keeps the last good list |
+| `radio.spaz.org/djdash/chatlog` | `chat.js`, at start and on each reconnect | needs CORS; failure is ignored |
+| `wss://radio.spaz.org:1885/mqtt` (chat broker) | `mqtt.js`, via `chat.js` | backoff 1 s to 30 s with jitter; 15 s handshake timeout |
+| `wss://spaz.org/lsd-relay` (live relay) | `autopilot.js` (not `sync.js`, which has no network code) | runs `server/server.js` on the VPS; fixed 5 s reconnect |
+| `spaz.org/archives/archives.rss` (6 MB) | `tapes.js` | same origin; the last good list is kept in Cache Storage |
+| `spaz.org/archives/imports/<id>.ogg`, `archives/peaks/<id>.json` | `dsp.js`, `tapedeck.js`, `tapes.js`, `ui.js` | same origin; a show that is not there ejects with SHOW NOT FOUND |
+| the jukebox file named by `/playing` (often `archives/olde/`, often 404) | `ui.js`, HEAD requests for SAVE | 404 falls back to the archive copy, else SAVE is hidden |
+| same-origin `/tv/` content (settings, catalog, playlists, presets, fxchains, shaders, gallery, photos) | `autopilot.js` (`fetchTimed`), `graph.js`, `gallery.js`, `lite.js`, `sw.js` | retried; `sw.js` serves the last copy offline |
+| `curate/*` | `gallery.js`, only with `?gallery=curate` | developer tool, 404 on spaz.org |
+| `/tv/update/manifest.json(.sig)` | the Spaz Radio app only (`ContentUpdates.kt`), never the TV | see W6 and W7 |
 
-- Nothing relies on CORS headers we don't control. No mixed content.
+Links only, with no request: `spaz.org/go/`, `play.google.com` and `liquid-lsd.greenjon.com`.
+
+- CORS only from spaz.org and radio.spaz.org, each endpoint listed with the header it needs. The TV relies on
+  radio.spaz.org's `Access-Control-Allow-Origin: *` for four endpoints: `status-json.xsl`, the side-feed stream
+  (`radio.ogg?feed=`), `djdash/droid` and `djdash/chatlog`. The station's admin controls that, not us: re-check it each audit
+  (`curl -D - -H 'Origin: https://spaz.org' <url>`). No mixed content.
 - No requests to hosts other than the ones in this table (fonts and libraries are local). A new host is a finding.
 
 ### W5. Security and privacy
 
 - **Chat:** text from the broker is never put into the page as HTML. Check every `innerHTML` in `web/` and confirm its
-  input is our own. Nickname and message length are capped. A flood of messages cannot freeze the page.
+  input is our own. Nickname and message length are capped, on received lines too, and a malformed time cannot stall the board. A flood of messages cannot freeze the page. The chat connects when the board is first opened, not at page load.
 - **URL parameters:** every parameter (`?tape`, `?t`, `?embed`, and any added since the baseline) is validated. A bad
   value falls back to the default and cannot reach a URL, a selector or HTML unescaped.
 - **Host bridge:** `window.LSD` and `window.LSDHost` (`embed.js`) do only what the app needs. Nothing a page or chat
@@ -135,8 +149,9 @@ should fail visibly, retry with backoff, and leave the rest of the TV working.
   published an uncommitted working tree (the script uploads the working tree as it is) or forgot to publish.
 - `TV_VERSION` in `web/ui.js` was bumped once for each publish that changed code. Every `TV vN` in the commit log
   appears once.
-- `CACHE` in `web/sw.js` was bumped whenever the set of files the service worker caches changed. An installed copy
-  of the TV picks up the new version.
+- `sw.js` is network-first, so an installed copy picks up a new version without a `CACHE` bump. `SHELL` in `web/sw.js`
+  lists every module the page imports (and `index.html` `modulepreload`s it), so the TV opens offline. Bump `CACHE` only
+  to drop old cached copies.
 - `scripts/publish_web_tv.sh --dry-run --delete` lists server files the TV no longer uses. Decide whether to remove them.
 - The content manifest on the server is valid, signed, and lists only files that are on the server.
 - The relay running on the VPS is the `server/server.js` in the repo. The owner checks this, since it is deployed by hand.
@@ -160,6 +175,7 @@ The app (`~/projects/spazradio`) loads the TV in a WebView with `?embed`, drives
   and `scripts/sync_web.py` leaves no diff.
 - Desktop files listed under `monitored_sources` in `web/sync_manifest.json` (the tempo tracker included) have not
   changed since the web port last caught up, or the web port has a matching change.
+- A shader the web deliberately changes (today `mixer.frag`, which adds the Spaz logos layer) has `"mode": "web_extension"` in `web/sync_manifest.json`: `sync_web.py --check` only confirms both files exist and `--apply` never overwrites it. Review it by hand when the desktop's copy changes.
 - Factory content the desktop ships from the web (`web-*` presets and chains) is the same on both sides.
 
 ### W9. Text, docs and release notes
@@ -168,7 +184,7 @@ The app (`~/projects/spazradio`) loads the TV in a WebView with `?embed`, drives
   `docs/release_notes.md`.
 - Every viewer control has a hover hint that matches what it does now. Removed controls and keys are gone from hints,
   menus and the about/keys page (v68 removed channel skip; v69 removed the B key and ANNOUNCE SCENES).
-- The about/keys page (`?`) matches the actual key map, and each key matches its button's first letter.
+- The about/keys page (`?`) matches the actual key map, and each key matches its button's first letter, except K, L, D and E (media-player habit, download, effects), which the keys page spells out.
 - The dark and light themes both define every colour token in `web/tv.css`.
 - The banned terms from the full audit's lane 5 do not appear in web UI text.
 - `docs/developer/web_subsystem.md` matches the code, and the user docs about the web TV match the current menu.
@@ -224,7 +240,9 @@ second audit. The rule is the same as in the full audit.
 | `checks.py tv_release_notes` | a `TV vN` in the commit log with no release-notes entry | proposed |
 | `checks.py tv_theme_tokens` | a colour token defined in one theme and not the other | proposed |
 | `checks.py web_ui_terms` | banned terms in web UI strings | proposed |
-| Safari 15 syntax check | language features newer than the floor (e.g. a parser set to the Safari 15 target) | proposed |
+| Safari 15 syntax check | language features newer than the floor, in JS and `tv.css` | exists (`web/tools/compat.test.mjs`) |
+| Content-removal check in `publish_web_tv.sh` | publish warns when content an older app engine relied on is deleted (or a playlist shrinks) without a `CONTENT_ENGINE` bump (W7-1) | proposed |
+| Fetch without timeout | a `fetch` in `web/` with no timeout or abort signal (W4-1, W1-5, L6-13) | proposed |
 | Publish refuses a dirty tree | uncommitted changes going live | proposed (in `publish_web_tv.sh`) |
 | `checkWebSync` in the build, covering `catalog.json` and `mandala_recipes.json` | desktop↔web drift (L6-15) | proposed, open since 2026-11-15 |
 | `node --test web/tools/content.test.mjs` | broken content before publishing | exists (run by `publish_web_tv.sh`) |

@@ -11,3 +11,6 @@ org.jetbrains.kotlin | Kotlin standard library | Apache-2.0 | https://github.com
 org.jetbrains.kotlinx | kotlinx.coroutines and kotlinx.serialization | Apache-2.0 | https://github.com/Kotlin
 org.lwjgl | LWJGL | BSD-3-Clause | https://github.com/LWJGL/lwjgl3
 org.slf4j | SLF4J | MIT | https://github.com/qos-ch/slf4j
+# Web TV and relay, not in the desktop classpath (so not printed in THIRD_PARTY_NOTICES.txt); recorded here for the licensing record.
+ws | ws (relay server, server/package.json) | MIT | https://github.com/websockets/ws
+Caveat font | Caveat (web TV chat board, web/fonts) | SIL OFL 1.1, text in web/fonts/OFL.txt | https://github.com/googlefonts/caveat

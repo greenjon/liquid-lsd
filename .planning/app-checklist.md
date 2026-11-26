@@ -414,6 +414,17 @@ auto 2026-11-06, headless Firefox, local web/ (TV v26, same version as live): ui
 - [ ] Spot-check the new OSC/MIDI preferences, Video Export and Go Live tooltips (Go Live in both states).
 - [ ] Mac: Preferences says "Not supported on macOS yet"; Caps Lock does nothing.
 
+## 16d. Web TV audit fixes (2026-11-26, TV v71)
+
+- [ ] Mic: press A and, before answering the browser's prompt, turn the TV off (once more: press A twice). After you answer, the recording indicator goes away; no second stream.
+- [ ] Mac Safari, live radio, dial low: no loud burst at power-on; EQ still greys out once the TV notices Safari bypasses it. Put a tape in and eject, mic on/off right after power-on: no radio bleeds into the picture.
+- [ ] iPhone (side feed running): the `mutants watching` count is one lower than before, never below 1. Fullscreen works on iPad/older Safari.
+- [ ] A `?tape=` link with a made-up id: SHOW NOT FOUND, then the radio. With radio.spaz.org unreachable for a bit, the schedule and TAPES list recover once it's back; retries come every 10 s for a minute, then slow down to about once a minute.
+- [ ] Chat: close the board, reload: you don't show up in the room until you press C / CHAT, then lines and names fill in. In a busy room past 300 lines the oldest drop off the top without flicker.
+- [ ] Spaz Radio app (once it embeds TV v71): several background/foreground cycles and VISUALS lite↔full switches; frame rate and heat stay at one loop's level.
+- [ ] MENU › TV › RESET help reads right.
+- [ ] VPS: after redeploying `server/server.js` + `state.js` (`pm2 restart lsd-relay`), a live broadcast reaches viewers and `/health` shows the viewer count. If viewers are refused, Apache isn't passing `X-Forwarded-For`: raise `LSD_MAX_PER_IP`.
+
 ## 17. Before release
 
 - [ ] Walkthrough videos re-rendered where `scripts/tour_staleness.py` says (much of the UI they show changed).

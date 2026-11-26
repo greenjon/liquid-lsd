@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.2">
     
     
       
@@ -1283,6 +1283,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/audit_web_tv/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web TV Audit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1537,8 +1565,8 @@ Each viewer's browser — renders the visuals locally using WebGL
 <hr />
 <h2 id="the-web-player">The web player</h2>
 <p>The standalone browser client (<code>web/index.html</code>) presents the visualizer in a retro CRT television shell.</p>
-<p><strong>Power switch:</strong> Click it (or anywhere on the TV) to turn the visualizer on. The browser requires this interaction to start Web Audio (standard browser security policy). Turning the TV on triggers a CRT warmup animation; turning it off plays a vintage beam-collapse animation.</p>
-<p><strong>Volume dial:</strong> Drag the rotary dial up or down to adjust volume. The curve is tuned to feel perceptually linear — small moves at the bottom, bigger moves at the top.</p>
+<p><strong>Power switch:</strong> Click it (or anywhere on the TV) to turn the visualizer on. The browser requires this interaction to start Web Audio (standard browser security policy). Turning the TV on triggers a CRT warmup animation; turning it off plays a vintage beam-collapse animation. <strong>Autoplay:</strong> a little after you turn the TV on, it asks <em>Turn on by itself next time?</em> Answer YES and it comes on by itself whenever you open the page (with sound, if your browser lets spaz.org play sound by itself; if not, the screen asks for one click or key). MENU › TV › <strong>Autoplay</strong> (<em>Ask</em>, <em>On</em>, <em>Off</em>) changes your answer later; PWR turns the TV off either way.</p>
+<p><strong>Volume dial:</strong> Drag the rotary dial up or down to adjust volume. The curve is tuned to feel perceptually linear — small moves at the bottom, bigger moves at the top. In Safari on iPhone and iPad, the device's buttons set the volume of the live radio and the dial is greyed out (it works on tapes).</p>
 <p><strong>Fullscreen:</strong> Double-click the TV screen, press <code>F</code>, or choose MENU › <strong>Fullscreen</strong> to expand to full-screen (the on-screen display comes along). Do any of them again, or press <code>Esc</code>, to go back to the TV shell. Choosing it from the MENU closes the menu. In Chrome and Edge, <code>Esc</code> closes the menu first if it is open (hold <code>Esc</code> to leave full screen right away); other browsers always leave full screen on <code>Esc</code>.</p>
 <p><strong>Version:</strong> the MENU title shows the TV's version (v1, v2, …) on the right. If it is older than the one just announced, reload the page to get the latest.</p>
 <p><strong>Microphone:</strong> press <code>A</code> or choose MENU › <strong>Audio Input</strong> to make the picture follow your microphone instead of the radio, for a room playing its own music. Your browser asks permission the first time; the sound is only analysed, never played through the speakers. Press <code>A</code> again for the radio. Turning the TV off also puts the radio back. It works offline too. Locked during a live broadcast.</p>
@@ -1559,12 +1587,12 @@ Each viewer's browser — renders the visuals locally using WebGL
 </tr>
 <tr>
 <td><strong>CH ▲ / ▼</strong></td>
-<td>The next / previous channel, now (a channel you've seen keeps the FX chain it had; the autopilot itself still picks channels at random)</td>
+<td>The next / previous scene, now (a scene you've seen keeps the FX chain it had; the autopilot itself still picks scenes at random)</td>
 <td><code>→</code> <code>N</code> / <code>←</code> <code>P</code>; swipe left / right on the picture</td>
 </tr>
 <tr>
 <td><em>(jump)</em></td>
-<td>A channel picked at random, now</td>
+<td>A scene picked at random, now</td>
 <td><code>J</code></td>
 </tr>
 <tr>
@@ -1576,21 +1604,6 @@ Each viewer's browser — renders the visuals locally using WebGL
 <td><strong>ROLL</strong></td>
 <td>A new variation of the scene on air: its settings and its effects' roll new values, gliding in to land on the next bar line</td>
 <td><code>R</code></td>
-</tr>
-<tr>
-<td><em>(background)</em></td>
-<td>The next background, now (MENU › BACKGROUND steps either way)</td>
-<td><code>B</code></td>
-</tr>
-<tr>
-<td><em>(tune by number)</em></td>
-<td>Type a channel's digits, like a remote: three digits tune at once, fewer after a short pause</td>
-<td><code>0</code>-<code>9</code></td>
-</tr>
-<tr>
-<td><em>(channel skip)</em></td>
-<td>Skips the channel on air and moves on; <code>X</code> again within 5 s undoes it; <code>X</code> on a skipped channel restores it</td>
-<td><code>X</code></td>
 </tr>
 <tr>
 <td><strong>HOLD</strong></td>
@@ -1611,41 +1624,42 @@ Each viewer's browser — renders the visuals locally using WebGL
 </table>
 <p><strong>The controls:</strong> PWR, VOL and CH on the left; the scene panel (FX, ROLL, HOLD, BARS and REACT) in the middle; and on the right the radio face, a display window over a row of piano keys, like a car radio's. The keys choose what shows over the picture: <strong>OFF · INFO · MENU · SCHED · TAPES · ?</strong>. One key is down at a time, and its label lights. Press the key that is down to let it back up. <strong>OFF</strong> clears the picture: it closes whatever page is open and turns INFO off. INFO is the key the others rest on: open MENU, SCHED, TAPES or <code>?</code> with INFO on and INFO pops up, then goes back down when you close the page. <strong>CHAT</strong> sits beside the keys.</p>
 <p>Press <code>?</code> (or the <strong>?</strong> key) for the about and keys page: Liquid LSD at the top, every key below, and in the corner a link to the Liquid LSD website (with a QR code for your phone) and to the Spaz Radio app for Android. MENU › TV › <strong>ABOUT</strong> opens the same page. Any key, or a click anywhere but the links, closes it. With the menu open, <code>?</code>, <code>I</code>, <code>S</code> and <code>T</code> still work (they close it first), and <code>C</code> opens or closes the chat.</p>
-<p>Point at the picture with the mouse, or click or tap it, to show the channel, the scene, its FX chain, the track playing on the radio and the next show on Spaz Radio for a few seconds. <strong>INFO</strong> (or <code>I</code>) keeps them on screen, updating as they change, until you turn it off; the TV remembers it. TIME, REACT, INFO, the MENU settings and your skipped channels are remembered in the browser. The display window on the right shows the channel on air (<code>SPAZ RADIO • CH.042</code>), or LIVE during a live broadcast. Under it, while the TV is on, is how many people are on the Spaz Radio stream right now, in any player (<code>12 mutants watching TV.</code>); the line is blank when the count is zero or can't be read.</p>
-<p><strong>No signal:</strong> if the radio stream drops or goes quiet, the screen shows snow and NO SIGNAL, and the TV reconnects by itself.</p>
+<p>Point at the picture with the mouse, or click or tap it, to show the track playing on the radio and the next show on Spaz Radio for a few seconds. <strong>INFO</strong> (or <code>I</code>) keeps them on screen, updating as they change, until you turn it off; the TV remembers it. TIME, REACT, INFO and the MENU settings are remembered in the browser. The display window on the right shows <code>SPAZ RADIO</code>. Under it, while the TV is on, is how many people are on the Spaz Radio stream right now, in any player (<code>12 mutants watching TV.</code>); the line is blank when the count is zero or can't be read.</p>
+<p><strong>No signal:</strong> if the radio stream drops or goes quiet, the screen shows snow and NO SIGNAL; when the stream has stopped, the TV reconnects by itself. On iPhone and iPad, Safari keeps the live radio's sound from the page, so the TV listens to a second copy of the stream for the picture (it downloads the radio twice there).</p>
 <p><strong>Big GPU scenes:</strong> the most demanding 3D fractals and simulations only play on computers fast enough for them (the TV checks at power-on; MENU › Big GPU scenes overrides it). Add <code>?heavy=1</code> to the address to force them on, <code>?heavy=0</code> to keep them off.</p>
-<p><strong>Display:</strong> the display window always shows the channel. The small box before it says what the TV is listening to: <code>LIVE SHOW</code> (a desktop broadcast, or a show the station says is live, which also gets <code>[LIVE!]</code> before its title), <code>JUKEBOX</code> (no live show: Spaz Radio is playing shows from the archive at random), <code>TAPE</code> (a show you picked from TAPES) or <code>MIC</code>. Hover it for the show's name.</p>
+<p><strong>Display:</strong> the small box before <code>SPAZ RADIO</code> in the display window says what the TV is listening to: <code>LIVE SHOW</code> (a desktop broadcast, or a show the station says is live, which also gets <code>[LIVE!]</code> before its title), <code>JUKEBOX</code> (no live show: Spaz Radio is playing shows from the archive at random), <code>TAPE</code> (a show you picked from TAPES) or <code>MIC</code>. Hover it for the show's name.</p>
 <p><strong>Screen:</strong> while the TV is on, your computer or phone won't dim or lock (in browsers that support it).</p>
-<p><strong>Lock screen and media keys:</strong> your phone's lock screen and your keyboard's media keys show the show and the scene; play/pause is the power switch, next/previous change the scene.</p>
+<p><strong>Lock screen and media keys:</strong> your phone's lock screen and your keyboard's media keys show the show; play/pause is the power switch, next/previous change the scene.</p>
 <p><strong>Install as an app:</strong> use your browser's Install / Add to Home Screen; it opens fullscreen like a TV app.</p>
+<p><strong>Lite picture (older and slower devices):</strong> when your browser can't draw the visuals, the TV shows a <strong>Spaz Radio collage</strong> instead, in the old radio page's three layers: skies at the back, the listeners' photos drifting over them as they slowly turn and grow, and large Spaz logos turning in front. It moves with the music too: once the TV has the beat, the pictures pulse on each beat (more as the music gets louder, and after a drop), new pictures arrive on the beat or the bar, and the skies brighten with loud music and dim in quiet parts. Everything else works as usual (the radio, MENU, the schedule, the chat, tapes); CH ▲▼ brings the next photo, and the scene controls (FX, ROLL, HOLD, TIME, REACT) rest. Where the visuals run too slowly (under 12 frames a second even at the lowest resolution), the TV switches to lite by itself and remembers it on that device. On any device, MENU › TV › <strong>VISUALS</strong> switches between <em>Full</em> and <em>Lite</em> (at once, with the sound playing on; <em>Full</em> tries the visuals again); lite saves battery and data, about 12 MB of pictures in all, loaded one at a time while the TV is on. The full picture needs Safari 15 (iOS 15) or a 2021 or newer Chrome, Firefox or Edge with WebGL 2.</p>
 <p><strong>Offline:</strong> after one visit with a network, the TV keeps every scene, effect and transition, and the last 60 gallery photos it showed, so it opens and changes scenes with no connection at all. The radio needs the network, so offline the screen says <code>OFFLINE · A FOR MICROPHONE</code> (on a phone, MENU › SOUND): turn the microphone on and the TV runs on the sound in the room. Live broadcasts, the chat, the schedule and tapes come back with the network (the TAPES list still opens offline, from the last copy). To play archive shows offline, download them in the Spaz Radio app for Android.</p>
 <p><strong>Kiosk mode:</strong> <code>index.html?kiosk</code> shows only the picture (no TV body), turns itself on and hides the mouse pointer; use the keyboard or swipes. Browsers that refuse to start sound on their own get a "click or press a key for sound" prompt.</p>
 <p><strong>MENU:</strong> the MENU button or <code>M</code> opens the service menu, on the page you used last. <code>←</code> <code>→</code> or <code>Tab</code> change page, or click a tab; <code>↓</code> goes into the rows, where the arrows or clicks change a setting. The mouse wheel changes a value with the cursor directly on it, and scrolls anywhere else. <code>Esc</code>, <code>M</code> or the <strong>✕</strong> close it. The line at the bottom explains the selected row, or the one under the cursor.</p>
 <ul>
-<li><strong>SCENES:</strong> <strong>Time</strong>, <strong>Auto roll</strong>, <strong>Follow music</strong>, <strong>Effects</strong>, <strong>Background</strong>, <strong>BG changes</strong>, <strong>Skip this channel</strong>, <strong>Skipped</strong>.</li>
+<li><strong>SCENES:</strong> <strong>Time</strong>, <strong>Auto roll</strong>, <strong>Follow music</strong>, <strong>Effects</strong>, <strong>Background</strong>, <strong>BG changes</strong>, <strong>Spaz logos</strong>.</li>
 <li><strong>SOUND:</strong> <strong>Audio input</strong> (radio or microphone), <strong>REACT</strong>, <strong>SYNC</strong> (how late the sound reaches you, for Bluetooth and other delayed speakers), <strong>TAP SYNC</strong>.</li>
-<li><strong>EQ:</strong> <strong>Equalizer</strong> on or off (off by default), <strong>Bass</strong>, <strong>Mid</strong> and <strong>Treble</strong> (±12 dB each), <strong>Flat</strong>. It changes only what you hear from the radio or a tape, never what the picture reacts to. Boosting a band turns the overall volume down by the same amount so loud songs don't distort.</li>
-<li><strong>TV:</strong> <strong>Fullscreen</strong>, <strong>Theme</strong> (the cabinet and the room around it: light, a 1970s hi-fi receiver in brushed aluminium and walnut, the default; or dark plastic), <strong>Announce scenes</strong> (name each new scene on screen; off by default), <strong>Reduced motion</strong> (Auto follows your system setting), <strong>Big GPU scenes</strong> (Auto lets the GPU check decide), <strong>Reset</strong>, <strong>About</strong>.</li>
+<li><strong>EQ:</strong> <strong>Equalizer</strong> on or off (off by default), <strong>Bass</strong>, <strong>Mid</strong> and <strong>Treble</strong> (±12 dB each), <strong>Flat</strong>. It changes only what you hear from the radio or a tape, never what the picture reacts to. Boosting a band turns the overall volume down by the same amount so loud songs don't distort. Safari plays the live radio past the EQ, so there it works only on tapes.</li>
+<li><strong>TV:</strong> <strong>Fullscreen</strong>, <strong>Theme</strong> (the cabinet and the room around it: light, a 1970s hi-fi receiver in brushed aluminium and walnut, the default; or dark plastic), <strong>Autoplay</strong> (<em>Ask</em>, <em>On</em> or <em>Off</em>: whether the TV turns itself on when you open the page), <strong>Visuals</strong> (<em>Full</em> or <em>Lite</em>), <strong>Reduced motion</strong> (Auto follows your system setting), <strong>Big GPU scenes</strong> (Auto lets the GPU check decide), <strong>Reset</strong>, <strong>About</strong>.</li>
 </ul>
-<p>Settings are remembered in this browser. REACT, TIME, Auto roll, the background, effects and follow-music rows, Audio input and Big GPU scenes are locked during a live broadcast. RESET puts every setting back, including turning the EQ off and flat, but leaves skipped channels skipped.</p>
+<p>Settings are remembered in this browser. REACT, TIME, Auto roll, the background, effects and follow-music rows, Audio input and Big GPU scenes are locked during a live broadcast. RESET puts the menu settings back to their defaults (including turning the EQ off and flat, Autoplay to <em>Ask</em> and Spaz logos on). It leaves the Visuals choice, the INFO display, the chat and any tape alone.</p>
 <p><strong>Variations:</strong> no scene looks exactly the same twice. Each one's settings roll within a narrow span around the values it was tuned with whenever it comes on, and again on <strong>ROLL</strong> (<code>R</code>). Settings that come in steps (a colour mode, a number of petals, Mandala's shape) change on the bar line; the rest glide over it. MENU › <strong>Auto roll</strong> rolls the scene on air every 4, 8 or 16 bars, which goes well with HOLD.</p>
-<p><strong>Background:</strong> the background plays behind the scene and shows wherever the scene is dark or see-through. It starts as the <strong>Spaz Radio photo gallery</strong>: the photos listeners added to the old radio page (spaz.org/radio), fading in on the beat and slowly turning and growing, as they did there. <code>B</code> or MENU › <strong>Background</strong> changes it now (to the other backgrounds, and back). MENU › <strong>BG changes</strong>: <em>Hold</em> (stays until you change it, the default), <em>With scenes</em> (a new one every two scenes) or <em>Off</em> (no background).</p>
-<p><strong>Effects and following the music:</strong> MENU › <strong>Effects</strong> <em>Off</em> plays the scenes and backgrounds without FX chains (the info panel says <code>FX: OFF</code>). MENU › <strong>Follow music</strong> <em>Off</em> stops the calm scene for a breakdown, the hard cut on the drop and the tempo-weighted picks.</p>
-<p><strong>Channel skip:</strong> don't like a channel? <code>X</code> skips it (or MENU › <strong>Skip this channel</strong> on a touch screen). It keeps its number but never comes up by itself again: not from the autopilot, <code>J</code>, CH up or down. MENU › <strong>Skipped</strong> lists the channels you skipped; pick one to watch it, and <code>X</code> there brings it back into the rotation. At least 8 channels always stay.</p>
+<p><strong>Background:</strong> the background plays behind the scene and shows wherever the scene is dark or see-through. It starts as the <strong>photo gallery</strong>: the photos listeners added to the old radio page (spaz.org/radio), fading in on the beat and slowly turning and growing, as they did there. Slow ambient scenes come after it. MENU › <strong>Background</strong> changes it now (to the other backgrounds, and back). MENU › <strong>BG changes</strong>: <em>With scenes</em> (a new one every two scenes, the default), <em>Hold</em> (stays until you change it; its effects still change every two scenes) or <em>Off</em> (no background).</p>
+<p><strong>Spaz logos:</strong> the <strong>Spaz Radio logos</strong> from the old radio page sit between the background and the scene: one at a time, large (often past the edges of the screen), see-through and a little dimmed, slowly turning and fading over whatever background is on. Like the background, they show wherever the scene is dark or see-through. MENU › <strong>Spaz logos</strong> turns them on (the default) or off; in the lite picture it does the same for the logos at the front. They are left out during a live show from the desktop.</p>
+<p><strong>Effects and following the music:</strong> MENU › <strong>Effects</strong> <em>Random</em> (the default) lets any FX chain land on any scene or background: more variety, and sometimes a muddier picture. <em>Auto</em> gives each one only a chain that suits it, from the next chain on (or FX / <code>E</code> now). <em>Off</em> plays the scenes and backgrounds without FX chains. MENU › <strong>Follow music</strong> <em>Off</em> stops the calm scene for a breakdown, the hard cut on the drop and the tempo-weighted picks.</p>
 <p><strong>SCHEDULE:</strong> the SCHED key or <code>S</code> lays Spaz Radio's upcoming shows over the picture, grouped by day (Today, Tomorrow, then the date), in your own time zone (shown at the top). The show playing now is marked ON AIR. Any key or a click closes it. It works during a live broadcast too. When the track name comes up on screen, the next show comes up under it (<code>NEXT: &lt;show&gt; · &lt;time&gt;</code>). If the station's schedule can't be reached, the page says so and the TV keeps the last copy it had.</p>
 <p><strong>TAPES:</strong> the TAPES key or <code>T</code> opens the Spaz Radio archive over the picture. Type to search by name or date, use the arrows and Enter or click a show to play it, and Esc or the <strong>✕</strong> to close. <strong>RANDOM TAPE</strong> picks any show, <strong>ON THIS DAY</strong> finds today's date in every year, and <strong>RESUME</strong> goes back to the show you last stopped. The TV keeps the show list in the browser, so TAPES opens at once on later visits and checks for new shows at most once an hour.</p>
-<p>To download shows and play them offline, use the Spaz Radio app for Android: the link at the bottom of TAPES, or on the <code>?</code> page, opens its download page (Google Play on other devices).</p>
+<p>Each show in the list has a <strong>⤓</strong> before its name: click it to download that show as an OGG file without playing it. To save the tape that is playing, use <strong>⤓ SAVE</strong> at the end of its track line (or <code>D</code>). To download shows and play them offline, use the Spaz Radio app for Android: the link at the bottom of TAPES, or on the <code>?</code> page, opens its download page (Google Play on other devices).</p>
 <p>The picture follows the tape as it follows the radio, and the display reads <code>TAPE</code>. Point at or tap the picture for the transport strip along the bottom (INFO keeps it up): eject, 30 seconds back and forward, pause, and the show's waveform to click or drag. Keys: <code>K</code> or <code>Space</code> pause, <code>,</code> and <code>.</code> 30 seconds, <code>&lt;</code> and <code>&gt;</code> 5 minutes.</p>
 <p><strong>LINK</strong> on the strip copies a link to this moment of the show, such as <code>https://spaz.org/tv/?tape=2026-06-19-Portland_s_Most_Unwanted&amp;t=1h2m</code>. Whoever opens it gets the TV with that show cued at that point; turning the TV on plays it. (Where the browser won't copy, the link goes into the address bar to copy from there.) Leave <code>&amp;t=…</code> off to start from the top; it also takes <code>72m</code>, <code>90s</code> or <code>1:12:03</code>.</p>
 <p><strong>EJECT</strong> on the strip, or <code>L</code>, takes the tape out and goes back to the radio. The small light on the TAPES key is on while a tape is in or its list is open. If a live show starts during a tape, the tape keeps playing, the <code>TAPE</code> box pulses red, and <code>LIVE NOW: &lt;name&gt; · EJECT OR L</code> comes up once with the strip; a broadcast's picture does not take over until you go back. The chat stays on the live room, with a note on the board that you're on a tape.</p>
 <p>Your place in each show is remembered in this browser. Turning the TV off and on keeps the tape in; a reload starts on the radio, with RESUME in the list. At the end of a show, the TV goes back to the radio.</p>
 <p><strong>CHAT:</strong> the Spaz Radio chat hangs beside the TV on a blackboard: the same room as the Spaz Radio Android app and spaz.org/radio. You can read the recent conversation and see who is here straight away (the list at the top; click it to see every name). To say something, write your name in chalk on the bottom line, press Enter, then write and press Enter to send. Your name is remembered in this browser; click it to change it. Each name is always the same colour of chalk, and yours is the only yellow one. Times are in your own time zone. Links open in a new tab.
-The board is open on your first visit. The <strong>X</strong> in its top corner closes it, and the TV grows back to full size; the CHAT button or <code>C</code> brings it back. The CHAT button's light is on while the board is open; while it is closed, the light blinks when someone says something. Keys typed on the board stay on the board (Esc leaves the line). The chat runs whether the TV is on or off, works during a live broadcast, and stays out of fullscreen. On a phone, or any narrow or upright window, the board hangs under the TV: scroll down to it. If the connection drops, the board says "offline · reconnecting…" and fills in what was said meanwhile when it's back. Kiosk mode and the picture inside the Spaz Radio app (which has its own chat) leave it out.</p>
+The board is open on your first visit. The <strong>X</strong> in its top corner closes it, and the TV grows back to full size; the CHAT button or <code>C</code> brings it back. The CHAT button's light is on while the board is open; while it is closed, the light blinks when someone says something. Keys typed on the board stay on the board (Esc leaves the line). The chat connects the first time the board is open (so straight away on a first visit, and not at all for someone who closes it and never brings it back), and then runs whether the TV is on or off, works during a live broadcast, and stays out of fullscreen. On a phone, or any narrow or upright window, the board hangs under the TV: scroll down to it. If the connection drops, the board says "offline · reconnecting…" and fills in what was said meanwhile when it's back. Kiosk mode and the picture inside the Spaz Radio app (which has its own chat) leave it out.</p>
 <p><strong>SYNC:</strong> if the picture's pulses come before the beat you hear (Bluetooth speakers are often 150-250 ms late), open MENU › <strong>TAP SYNC</strong> and tap Space or the picture on 8 beats; or set <strong>SYNC</strong> by hand. It needs the beat light to be green (or a live broadcast).</p>
 <p><strong>Reduced motion:</strong> follows your system's "reduce motion" setting (or MENU › Reduced motion): gentler reaction, no hard scenes, no flashes or glitch effects, no cut on the drop, slower changes.</p>
 <p><strong>Going live:</strong> when the desktop starts broadcasting, viewers see a LIVE title card with the broadcaster's name (if one is set in the desktop's Web Broadcast preferences).</p>
 <p><strong>Power:</strong> click anywhere on the TV to turn it on (the browser needs that click to start the sound). The piano keys (OFF, INFO, MENU, SCHED, TAPES, ?) and CHAT work without turning it on, and picking a tape turns it on and plays the tape. Once it's on, only the PWR switch turns it off: clicks on the cabinet are ignored, a click that just misses a button presses the nearest one, and clicks on the picture show the info.</p>
-<p><strong>The info panel:</strong> point at or click the picture, or press <strong>I</strong>, to see it. Top left: what Spaz Radio is playing and the next show. Bottom left: <strong>SCENE</strong> (the scene on air), <strong>BACKGROUND</strong> (what plays behind it: the photo gallery, or with BG changes <em>With scenes</em>, a scene that changes on its own clock, twice the scene length) and <strong>FX</strong> (the scene's effects). With MENU › <strong>ANNOUNCE SCENES</strong> on, the panel comes up by itself for each new scene, and the BACKGROUND line when the background changes. Control messages (HOLD, BARS, SYNC…) come up in the middle of the picture.</p>
+<p><strong>The info panel:</strong> point at or click the picture, or press <strong>I</strong>, to see it. Top left, across the full width of the picture: what Spaz Radio is playing and the next show, each on up to two lines (they stop short of the top-right corner while TUNING…, LIVE or LITE is up there). <strong>⤓ SAVE</strong> at the end of the track line downloads that show (or the tape that is playing) as an OGG file; point at it for its size. It isn't there during a live show, which has no file yet, or for the few jukebox shows the archive doesn't have. <code>D</code> does the same. The panel doesn't name the scene, background or effects. Control messages (HOLD, BARS, SYNC…) come up in the middle of the picture.</p>
 <p><strong>About:</strong> the <code>?</code> page (also MENU › TV › <strong>ABOUT</strong>) links the Liquid LSD website, with a QR code for your phone, and <strong>I</strong> shows a Liquid LSD line with the info.</p>
 <p><strong>Beat light:</strong> the beat light in the display window blinks on every beat: green when the TV has locked onto the music's beat, amber while it keeps time on its own (quiet passages, or before it has found the beat).</p>
 <p><strong>What viewers see.</strong> Each deck's source and its parameters, the deck FX chains and the master FX chain, the transition and crossfader, the channel levels and the beat all go over the wire, so the web TV follows your mix closely. A few things stay desktop-only: external video sources (Spout, Syphon and PipeWire, webcams included) show as nothing, and anything the web player does not have (a custom shader you added to your own library) is skipped. Viewers join in the middle of a broadcast on the right beat.</p>

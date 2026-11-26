@@ -1,0 +1,2263 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for the Liquid LSD real-time graphics and audio workstation.">
+      
+      
+      
+      
+        <link rel="prev" href="../audit/">
+      
+      
+        <link rel="next" href="../ops_tuning/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.2">
+    
+    
+      
+        <title>Web TV Audit - Liquid LSD</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="dark" data-md-color-primary="teal" data-md-color-accent="cyan">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#web-tv-audit" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Liquid LSD" class="md-header__button md-logo" aria-label="Liquid LSD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Liquid LSD
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Web TV Audit
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="dark" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/greenjon/liquid-lsd" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Liquid LSD" class="md-nav__button md-logo" aria-label="Liquid LSD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Liquid LSD
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/greenjon/liquid-lsd" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting_started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/your_workspace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Your Workspace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/visual_sources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visual Sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/modulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/presets_and_library/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Presets & Library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/output_and_recording/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output & Recording
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/performance_controls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance Controls
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/macros_and_rack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Macro Controls & the Perform View
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/web_broadcast/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Broadcast
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/cli_usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command Line Usage & Startup Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../audio_dsp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Real-Time Audio & DSP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../beat_sync/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Beat Sync & Stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rendering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenGL Rendering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../export_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Media Export & Recording Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../web_subsystem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Subsystem & Broadcast Protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../flame_source/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fractal Flame Source
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../clean_room_provenance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clean-Room Provenance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UI Architecture & ImGui
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../imgui_upgrade_guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ImGui Version & ARM64 Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../preset_management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preset & Queue Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../build_arm64_linux/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Build for ARM64 Linux
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../unified_control_mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Unified Control Mapping Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_and_screenshot_automation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI & Automated Screen Capture Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tour_renderer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tour Renderer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit Blueprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web TV Audit
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web TV Audit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#when-to-run-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to run it
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Baseline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lanes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lanes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Lanes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#w1-correctness-and-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        W1. Correctness and lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#w2-browsers-and-devices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        W2. Browsers and devices
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#w3-audio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        W3. Audio
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#w4-network-and-external-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        W4. Network and external services
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#w5-security-and-privacy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        W5. Security and privacy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#w6-publishing-and-the-live-copy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        W6. Publishing and the live copy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#w7-the-spaz-radio-app-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        W7. The Spaz Radio app contract
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#w8-parity-with-the-desktop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        W8. Parity with the desktop
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#w9-text-docs-and-release-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        W9. Text, docs and release notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#w10-health-and-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        W10. Health and performance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#w11-licensing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        W11. Licensing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checks-only-the-owner-can-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Checks only the owner can run
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#who-runs-what" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Who runs what
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#automatic-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automatic checks
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ops_tuning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations & Tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release_notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../licenses/SHADERS_LICENSE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Licenses & Credits
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#when-to-run-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to run it
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Baseline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lanes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lanes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Lanes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#w1-correctness-and-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        W1. Correctness and lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#w2-browsers-and-devices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        W2. Browsers and devices
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#w3-audio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        W3. Audio
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#w4-network-and-external-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        W4. Network and external services
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#w5-security-and-privacy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        W5. Security and privacy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#w6-publishing-and-the-live-copy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        W6. Publishing and the live copy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#w7-the-spaz-radio-app-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        W7. The Spaz Radio app contract
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#w8-parity-with-the-desktop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        W8. Parity with the desktop
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#w9-text-docs-and-release-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        W9. Text, docs and release notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#w10-health-and-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        W10. Health and performance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#w11-licensing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        W11. Licensing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checks-only-the-owner-can-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Checks only the owner can run
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#who-runs-what" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Who runs what
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#automatic-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automatic checks
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="web-tv-audit">Web TV Audit</h1>
+<p>How we audit the web TV at https://spaz.org/tv/. It covers <code>web/</code>, <code>server/</code>, <code>scripts/publish_web_tv.sh</code>,
+<code>scripts/make_content_manifest.py</code>, <code>tests/web/</code> and <code>playwright.config.ts</code>. This is lane 6 of the
+<a href="../audit/">Audit Blueprint</a>, written out as a page of its own because the TV ships on its own schedule: about twenty
+TV versions went out between the 2026-11-15 audit and the next one.</p>
+<h2 id="when-to-run-it">When to run it</h2>
+<ul>
+<li>As lane 6 of every full audit.</li>
+<li>On its own, every ten TV versions or so (compare <code>TV_VERSION</code> in <code>web/ui.js</code> with the last baseline).</li>
+<li>Before every Spaz Radio app release, since the app embeds the TV and fetches its content (see W7).</li>
+<li>After a change that touches the audio path, the relay or the service worker, whatever the version count.</li>
+</ul>
+<p>A standalone run uses the same goal, finding format, severity levels and method steps as the full audit
+(<a href="../audit/">audit.md</a>). Only the lanes, the baseline tag and the agent split differ.</p>
+<h2 id="baseline">Baseline</h2>
+<p>The TV baseline is the newest of the full-audit tags (<code>audit-YYYY-MM-DD</code>) and the TV-only tags (<code>tv-audit-YYYY-MM-DD</code>):</p>
+<pre><code>git describe --tags --match 'audit-*' --match 'tv-audit-*' --abbrev=0
+</code></pre>
+<p>TV-only tags start with <code>tv-</code> so that the full audit's own <code>--match 'audit-*'</code> lookup does not pick them up.
+A full audit covers the TV, so its tag also counts as a TV baseline.</p>
+<table>
+<thead>
+<tr>
+<th>Audit</th>
+<th>Baseline tag</th>
+<th>TV version at close</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2026-11-15 (full, lane 6)</td>
+<td><code>audit-2026-11-15</code></td>
+<td>v47</td>
+<td>report at <code>.planning/audit-2026-11-15.md</code>, findings L6-1..16</td>
+</tr>
+<tr>
+<td>2026-11-26 (TV only)</td>
+<td><code>tv-audit-2026-11-26</code></td>
+<td>v71</td>
+<td>report at <code>.planning/tv-audit-2026-11-26.md</code></td>
+</tr>
+</tbody>
+</table>
+<p>Scope a run with <code>git log --oneline &lt;tag&gt;..HEAD -- web server scripts/publish_web_tv.sh scripts/make_content_manifest.py tests/web playwright.config.ts</code>
+and list the TV versions it spans (<code>git log --oneline &lt;tag&gt;..HEAD | grep -o 'TV v[0-9]*'</code>).</p>
+<h2 id="lanes">Lanes</h2>
+<p>Each lane has a fixed checklist. As in the full audit, the reviewer works through every item and records the clean
+ones too, so we can tell "checked and clean" apart from "not looked at". Findings are numbered <code>W&lt;lane&gt;-&lt;n&gt;</code>
+(<code>L6-&lt;n&gt;</code> when the run is part of a full audit).</p>
+<h3 id="w1-correctness-and-lifecycle">W1. Correctness and lifecycle</h3>
+<p>Read every changed file under <code>web/</code> and <code>server/</code>, in full where the change touches control flow.</p>
+<ul>
+<li><strong>Audio thread:</strong> <code>feed-worklet.js</code> and <code>onset-worklet.js</code> allocate nothing in <code>process()</code>: no arrays, closures or
+  string building. Messages to and from the worklet are not sent every block.</li>
+<li><strong>Per frame:</strong> no allocation in the render loop (<code>renderer.js</code>, <code>graph.js</code>, <code>gallery.js</code>, <code>lite.js</code>, <code>mandala.js</code>):
+  no <code>new Float32Array</code>, array literals, <code>map</code>/<code>filter</code>, template strings or object spreads per frame.</li>
+<li><strong>Timers and listeners:</strong> every <code>setInterval</code>, <code>setTimeout</code> chain, <code>requestAnimationFrame</code> loop, event listener,
+  <code>MediaSource</code>/<code>&lt;audio&gt;</code> element and WebSocket is released when the TV powers off, switches VISUALS in place, goes to
+  the lite picture, or is paused by the host app. Look for a second copy running after an off/on cycle.</li>
+<li><strong>Power off:</strong> the loop idles once the screen is black (TV v67), and the wake lock is released (L6-8).</li>
+<li><strong>WebGL:</strong> context loss and restore are handled (L6-7). A shader that fails to compile or a preset that fails to
+  load is skipped, not aired under its own name (L6-9).</li>
+<li><strong>Promises:</strong> no unhandled rejections. Every <code>fetch</code> has a timeout or an abort path and a visible failure state.</li>
+<li><strong>Stored settings:</strong> values read from <code>localStorage</code> survive old, missing or corrupt entries, and a new setting
+  keeps a choice the viewer already made (the v66 EFFECTS change is the pattern).</li>
+<li><strong>Relay (<code>server/</code>):</strong> the same checks for the Node side: closed sockets are dropped, a replaced broadcaster's late
+  <code>close</code> does not drop the new one (L6-1), and memory does not grow with connections.</li>
+</ul>
+<h3 id="w2-browsers-and-devices">W2. Browsers and devices</h3>
+<table>
+<thead>
+<tr>
+<th>Target</th>
+<th>How it is covered</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Chromium desktop</td>
+<td>Playwright <code>chromium</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Firefox desktop</td>
+<td>Playwright <code>firefox</code></td>
+<td>autoplay prefs are opened up in the config, so autoplay blocking is untested there</td>
+</tr>
+<tr>
+<td>Phone (Pixel 7 profile)</td>
+<td>Playwright <code>phone</code></td>
+<td>Chromium with a phone viewport and touch, not a real phone</td>
+</tr>
+<tr>
+<td>WebKit / Safari</td>
+<td>Playwright <code>webkit</code>, only with <code>WEBKIT=1</code></td>
+<td>does not launch on this Fedora machine (L8-2), so in practice untested</td>
+</tr>
+<tr>
+<td>Safari 15 (the floor)</td>
+<td><code>web/tools/compat.test.mjs</code> (JS and <code>tv.css</code>)</td>
+<td>the JS uses no API newer than Safari 15.0 without a fallback; CSS features newer than 15.0 must degrade gracefully and be allow-listed in <code>compat.test.mjs</code></td>
+</tr>
+<tr>
+<td>iPhone Safari</td>
+<td>owner's device</td>
+<td>side feed (v58), autoplay, fullscreen</td>
+</tr>
+<tr>
+<td>Spaz Radio app (Android WebView)</td>
+<td><code>embed.spec.ts</code>, <code>web/checks/embed_check.mjs</code>, owner's phone</td>
+<td>see W7</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>List every new language feature and web API since the baseline and check it against Safari 15.0 and the Android
+  System WebView versions the app supports. Features that arrived in Safari 15.4 or later (<code>Array.prototype.at</code>,
+  <code>structuredClone</code>, <code>:has()</code>, <code>dialog</code>) need a fallback or must not be used.</li>
+<li>The lite picture takes over on devices too slow for the visuals (v50), and MENU › TV › VISUALS switches both ways
+  without a reload (v51).</li>
+<li>Layout holds at 400px wide, in portrait and landscape phone sizes, at 1280×720 and at 4K, in fullscreen and in the
+  embed.</li>
+<li>Touch: every control works without hover, and no hover-only hint hides needed information.</li>
+</ul>
+<h3 id="w3-audio">W3. Audio</h3>
+<ul>
+<li><strong>Autoplay:</strong> MENU › TV › AUTOPLAY <em>Ask</em>, <em>On</em> and <em>Off</em> each behave as documented in Chromium, Firefox (with
+  autoplay blocking on) and Safari. A blocked start shows a way to start, never silence with no prompt.</li>
+<li><strong>Live stream:</strong> every power-on asks for a fresh stream address (v63). A stalled or dropped stream reconnects with
+  backoff and shows its state. No tight retry loops.</li>
+<li><strong>Safari:</strong> the side feed lets the picture hear the live radio on iPhone (v58). The volume dial sets the stream's
+  own volume, and MENU › EQ is greyed out on live radio (v64).</li>
+<li><strong>Tapes:</strong> play, seek, share links (<code>?tape=&lt;id&gt;&amp;t=</code>) and ⤓ SAVE (including the <code>archives/imports/</code> and <code>olde/</code>
+  path fallback, v59/v60).</li>
+<li><strong>Microphone:</strong> <code>getUserMedia</code> (<code>dsp.js</code>) is only called after an explicit viewer action, never in the embed, and
+  the stream is stopped when the viewer leaves mic mode. No other capture device is touched.</li>
+<li><strong>Signals:</strong> audio gain, hits and tempo still feed the picture after each audio-path change (<code>beat_check</code>,
+  <code>tempo_report.mjs</code>).</li>
+</ul>
+<h3 id="w4-network-and-external-services">W4. Network and external services</h3>
+<p>For each service, check what the viewer sees when it is down, slow, returns 404, or returns malformed data. Each
+should fail visibly, retry with backoff, and leave the rest of the TV working.</p>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Used by</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>radio.spaz.org:8060/radio.ogg?t=&lt;now&gt;</code> (Icecast stream)</td>
+<td><code>dsp.js</code> (<code>&lt;audio&gt;</code>)</td>
+<td>stall or silence shows NO SIGNAL; reloads only when the playhead has stopped, backing off 10 s up to 1 minute</td>
+</tr>
+<tr>
+<td>same mount, <code>?feed=&lt;now&gt;</code></td>
+<td><code>sidefeed.js</code>, Safari only</td>
+<td>needs CORS; second listener, so the count subtracts one; backoff 5 s up to 1 minute</td>
+</tr>
+<tr>
+<td><code>radio.spaz.org:8060/status-json.xsl</code></td>
+<td><code>ui.js</code>, every 30 s while on</td>
+<td>needs CORS; listener count sums every mount; times out after 10 s</td>
+</tr>
+<tr>
+<td><code>radio.spaz.org/streams/playing-jsonp</code></td>
+<td><code>schedule.js</code>, <code>ui.js</code></td>
+<td>JSONP, runs the server's script (L6-13: served with no Content-Type)</td>
+</tr>
+<tr>
+<td><code>radio.spaz.org/playing</code></td>
+<td><code>ui.js</code>, fallback after JSONP fails</td>
+<td>sends no CORS header, so the fallback cannot work</td>
+</tr>
+<tr>
+<td><code>radio.spaz.org/djdash/droid</code> (schedule)</td>
+<td><code>schedule.js</code></td>
+<td>needs CORS; keeps the last good list</td>
+</tr>
+<tr>
+<td><code>radio.spaz.org/djdash/chatlog</code></td>
+<td><code>chat.js</code>, at start and on each reconnect</td>
+<td>needs CORS; failure is ignored</td>
+</tr>
+<tr>
+<td><code>wss://radio.spaz.org:1885/mqtt</code> (chat broker)</td>
+<td><code>mqtt.js</code>, via <code>chat.js</code></td>
+<td>backoff 1 s to 30 s with jitter; 15 s handshake timeout</td>
+</tr>
+<tr>
+<td><code>wss://spaz.org/lsd-relay</code> (live relay)</td>
+<td><code>autopilot.js</code> (not <code>sync.js</code>, which has no network code)</td>
+<td>runs <code>server/server.js</code> on the VPS; fixed 5 s reconnect</td>
+</tr>
+<tr>
+<td><code>spaz.org/archives/archives.rss</code> (6 MB)</td>
+<td><code>tapes.js</code></td>
+<td>same origin; the last good list is kept in Cache Storage</td>
+</tr>
+<tr>
+<td><code>spaz.org/archives/imports/&lt;id&gt;.ogg</code>, <code>archives/peaks/&lt;id&gt;.json</code></td>
+<td><code>dsp.js</code>, <code>tapedeck.js</code>, <code>tapes.js</code>, <code>ui.js</code></td>
+<td>same origin; a show that is not there ejects with SHOW NOT FOUND</td>
+</tr>
+<tr>
+<td>the jukebox file named by <code>/playing</code> (often <code>archives/olde/</code>, often 404)</td>
+<td><code>ui.js</code>, HEAD requests for SAVE</td>
+<td>404 falls back to the archive copy, else SAVE is hidden</td>
+</tr>
+<tr>
+<td>same-origin <code>/tv/</code> content (settings, catalog, playlists, presets, fxchains, shaders, gallery, photos)</td>
+<td><code>autopilot.js</code> (<code>fetchTimed</code>), <code>graph.js</code>, <code>gallery.js</code>, <code>lite.js</code>, <code>sw.js</code></td>
+<td>retried; <code>sw.js</code> serves the last copy offline</td>
+</tr>
+<tr>
+<td><code>curate/*</code></td>
+<td><code>gallery.js</code>, only with <code>?gallery=curate</code></td>
+<td>developer tool, 404 on spaz.org</td>
+</tr>
+<tr>
+<td><code>/tv/update/manifest.json(.sig)</code></td>
+<td>the Spaz Radio app only (<code>ContentUpdates.kt</code>), never the TV</td>
+<td>see W6 and W7</td>
+</tr>
+</tbody>
+</table>
+<p>Links only, with no request: <code>spaz.org/go/</code>, <code>play.google.com</code> and <code>liquid-lsd.greenjon.com</code>.</p>
+<ul>
+<li>CORS only from spaz.org and radio.spaz.org, each endpoint listed with the header it needs. The TV relies on
+  radio.spaz.org's <code>Access-Control-Allow-Origin: *</code> for four endpoints: <code>status-json.xsl</code>, the side-feed stream
+  (<code>radio.ogg?feed=</code>), <code>djdash/droid</code> and <code>djdash/chatlog</code>. The station's admin controls that, not us: re-check it each audit
+  (<code>curl -D - -H 'Origin: https://spaz.org' &lt;url&gt;</code>). No mixed content.</li>
+<li>No requests to hosts other than the ones in this table (fonts and libraries are local). A new host is a finding.</li>
+</ul>
+<h3 id="w5-security-and-privacy">W5. Security and privacy</h3>
+<ul>
+<li><strong>Chat:</strong> text from the broker is never put into the page as HTML. Check every <code>innerHTML</code> in <code>web/</code> and confirm its
+  input is our own. Nickname and message length are capped, on received lines too, and a malformed time cannot stall the board. A flood of messages cannot freeze the page. The chat connects when the board is first opened, not at page load.</li>
+<li><strong>URL parameters:</strong> every parameter (<code>?tape</code>, <code>?t</code>, <code>?embed</code>, and any added since the baseline) is validated. A bad
+  value falls back to the default and cannot reach a URL, a selector or HTML unescaped.</li>
+<li><strong>Host bridge:</strong> <code>window.LSD</code> and <code>window.LSDHost</code> (<code>embed.js</code>) do only what the app needs. Nothing a page or chat
+  message can reach calls into the host.</li>
+<li><strong>Content:</strong> presets, playlists, FX chains and shaders fetched from the server are treated as data. A broken file
+  is skipped. The content manifest is signed, and the app checks the signature.</li>
+<li><strong>Relay:</strong> who may broadcast, message size limits, and per-connection caps in <code>server/server.js</code>. A viewer cannot
+  push state to other viewers.</li>
+<li><strong>Stored data:</strong> <code>localStorage</code> and the service worker caches hold settings and public files only.</li>
+<li><strong>Privacy:</strong> the Spaz Radio app's privacy policy still describes what the TV does (chat, mic, downloads, stored
+  settings).</li>
+</ul>
+<h3 id="w6-publishing-and-the-live-copy">W6. Publishing and the live copy</h3>
+<ul>
+<li>Live matches the repo: <code>scripts/publish_web_tv.sh --dry-run</code> lists no changed files. Any difference means someone
+  published an uncommitted working tree (the script uploads the working tree as it is) or forgot to publish.</li>
+<li><code>TV_VERSION</code> in <code>web/ui.js</code> was bumped once for each publish that changed code. Every <code>TV vN</code> in the commit log
+  appears once.</li>
+<li><code>sw.js</code> is network-first, so an installed copy picks up a new version without a <code>CACHE</code> bump. <code>SHELL</code> in <code>web/sw.js</code>
+  lists every module the page imports (and <code>index.html</code> <code>modulepreload</code>s it), so the TV opens offline. Bump <code>CACHE</code> only
+  to drop old cached copies.</li>
+<li><code>scripts/publish_web_tv.sh --dry-run --delete</code> lists server files the TV no longer uses. Decide whether to remove them.</li>
+<li>The content manifest on the server is valid, signed, and lists only files that are on the server.</li>
+<li>The relay running on the VPS is the <code>server/server.js</code> in the repo. The owner checks this, since it is deployed by hand.</li>
+</ul>
+<h3 id="w7-the-spaz-radio-app-contract">W7. The Spaz Radio app contract</h3>
+<p>The app (<code>~/projects/spazradio</code>) loads the TV in a WebView with <code>?embed</code>, drives it through <code>window.LSD</code>
+(<code>feed</code>, <code>pause</code>, <code>resume</code>, <code>catalog</code>, <code>state</code>), and fetches new presets and playlists from the content manifest.</p>
+<ul>
+<li>Every <code>window.LSD</code> call the app makes still exists with the same arguments and result shape. Grep the app for
+  <code>LSD.</code> to get the current list.</li>
+<li>Content published since the baseline still loads in the oldest app version people are using: the engine
+  vendored in that release, not the current <code>web/</code> code. Content that needs a newer engine must not be in the
+  manifest. An old app already lost its logos this way after a content update.</li>
+<li><code>embed.spec.ts</code> and <code>web/checks/embed_check.mjs</code> pass.</li>
+<li>Changes the app should copy are listed in the app's next-release to-dos (for example the v60 archive-download fallback).</li>
+</ul>
+<h3 id="w8-parity-with-the-desktop">W8. Parity with the desktop</h3>
+<ul>
+<li>The evaluator, DSP and tempo code behave like the desktop's. Golden vectors are current (<code>UPDATE_WEB_VECTORS=1</code>),
+  and <code>scripts/sync_web.py</code> leaves no diff.</li>
+<li>Desktop files listed under <code>monitored_sources</code> in <code>web/sync_manifest.json</code> (the tempo tracker included) have not
+  changed since the web port last caught up, or the web port has a matching change.</li>
+<li>A shader the web deliberately changes (today <code>mixer.frag</code>, which adds the Spaz logos layer) has <code>"mode": "web_extension"</code> in <code>web/sync_manifest.json</code>: <code>sync_web.py --check</code> only confirms both files exist and <code>--apply</code> never overwrites it. Review it by hand when the desktop's copy changes.</li>
+<li>Factory content the desktop ships from the web (<code>web-*</code> presets and chains) is the same on both sides.</li>
+</ul>
+<h3 id="w9-text-docs-and-release-notes">W9. Text, docs and release notes</h3>
+<ul>
+<li>Every TV version since the baseline has an entry, tagged <code>(TV vN)</code>, in both <code>RELEASE_NOTES.md</code> and
+  <code>docs/release_notes.md</code>.</li>
+<li>Every viewer control has a hover hint that matches what it does now. Removed controls and keys are gone from hints,
+  menus and the about/keys page (v68 removed channel skip; v69 removed the B key and ANNOUNCE SCENES).</li>
+<li>The about/keys page (<code>?</code>) matches the actual key map, and each key matches its button's first letter, except K, L, D and E (media-player habit, download, effects), which the keys page spells out.</li>
+<li>The dark and light themes both define every colour token in <code>web/tv.css</code>.</li>
+<li>The banned terms from the full audit's lane 5 do not appear in web UI text.</li>
+<li><code>docs/developer/web_subsystem.md</code> matches the code, and the user docs about the web TV match the current menu.</li>
+</ul>
+<h3 id="w10-health-and-performance">W10. Health and performance</h3>
+<ul>
+<li><code>node --test web/tools/*.test.mjs</code> and the Playwright suite (<code>npx playwright test</code>; <code>LONG=1</code> adds the long and radio
+  tests). Record pass/fail counts, the slowest tests and anything flaky.</li>
+<li>Light checks: <code>web/checks/ui_check.mjs</code>, <code>shader_check.mjs</code>, <code>lite_check.mjs</code>, <code>embed_check.mjs</code>,
+  <code>sidefeed_check.mjs</code>, <code>tape_check.mjs</code>, <code>beat_check.mjs</code>. <code>render_check.mjs</code> overheats the laptop: run it only
+  with the owner's OK, and narrow it with <code>RC_ONLY</code>.</li>
+<li><code>web/checks/gpu_bench.mjs</code> against the last recorded numbers, if a renderer or shader change is in scope.</li>
+<li>Memory over a long run (<code>long.spec.ts</code>) does not grow without bound. CPU is near zero with the TV off.</li>
+<li>First load: how much is fetched before the first scene shows (fast start, v37).</li>
+</ul>
+<h3 id="w11-licensing">W11. Licensing</h3>
+<ul>
+<li>Every font, image, gallery photo, shader and npm package added under <code>web/</code> or <code>server/</code> since the baseline has a
+  license record (<code>docs/licenses/</code>, <code>web/fonts/OFL.txt</code>) and keeps its attribution.</li>
+<li>Gallery photos and logos: permission from Spaz is on record.</li>
+<li>Shaders under <code>web/shaders/</code> have the same provenance status as their desktop copies.</li>
+</ul>
+<h2 id="checks-only-the-owner-can-run">Checks only the owner can run</h2>
+<p>These need real devices or server access. List them in <code>.planning/app-checklist.md</code> under the web TV, merged with
+what is already there:</p>
+<ul>
+<li>iPhone Safari: live radio with picture (side feed), autoplay prompt, fullscreen.</li>
+<li>Mac Safari: volume dial and greyed-out EQ on live radio.</li>
+<li>The Spaz Radio app on a phone, after the content manifest is published.</li>
+<li>The VPS: the deployed <code>server/server.js</code> matches the repo, and <code>playing-jsonp</code> is served as <code>text/javascript</code>.</li>
+</ul>
+<h2 id="who-runs-what">Who runs what</h2>
+<table>
+<thead>
+<tr>
+<th>Work</th>
+<th>Agent type</th>
+<th>Model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>W1 + W3 (code correctness and audio)</td>
+<td><code>general-purpose</code></td>
+<td>session model (Opus)</td>
+</tr>
+<tr>
+<td>W4 + W5 (network and security)</td>
+<td><code>general-purpose</code></td>
+<td>session model (Opus)</td>
+</tr>
+<tr>
+<td>W2, W8, W9, W11</td>
+<td><code>audit-docs</code></td>
+<td>Sonnet</td>
+</tr>
+<tr>
+<td>W6, W7, W10 (scripts, git and test runs)</td>
+<td>run directly</td>
+<td>none</td>
+</tr>
+<tr>
+<td>Fix groups</td>
+<td><code>audit-fixer</code></td>
+<td>Sonnet</td>
+</tr>
+</tbody>
+</table>
+<p>When the diff since the baseline is small (a few TV versions), one Opus reviewer can take W1, W3, W4 and W5 together.</p>
+<h2 id="automatic-checks">Automatic checks</h2>
+<p>Checks that would catch the findings above without a reviewer. Build each one when its finding shows up in a
+second audit. The rule is the same as in the full audit.</p>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Catches</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>checks.py tv_version</code></td>
+<td><code>web/</code> code changed in a commit range with no <code>TV_VERSION</code> bump</td>
+<td>proposed</td>
+</tr>
+<tr>
+<td><code>checks.py tv_release_notes</code></td>
+<td>a <code>TV vN</code> in the commit log with no release-notes entry</td>
+<td>proposed</td>
+</tr>
+<tr>
+<td><code>checks.py tv_theme_tokens</code></td>
+<td>a colour token defined in one theme and not the other</td>
+<td>proposed</td>
+</tr>
+<tr>
+<td><code>checks.py web_ui_terms</code></td>
+<td>banned terms in web UI strings</td>
+<td>proposed</td>
+</tr>
+<tr>
+<td>Safari 15 syntax check</td>
+<td>language features newer than the floor, in JS and <code>tv.css</code></td>
+<td>exists (<code>web/tools/compat.test.mjs</code>)</td>
+</tr>
+<tr>
+<td>Content-removal check in <code>publish_web_tv.sh</code></td>
+<td>publish warns when content an older app engine relied on is deleted (or a playlist shrinks) without a <code>CONTENT_ENGINE</code> bump (W7-1)</td>
+<td>proposed</td>
+</tr>
+<tr>
+<td>Fetch without timeout</td>
+<td>a <code>fetch</code> in <code>web/</code> with no timeout or abort signal (W4-1, W1-5, L6-13)</td>
+<td>proposed</td>
+</tr>
+<tr>
+<td>Publish refuses a dirty tree</td>
+<td>uncommitted changes going live</td>
+<td>proposed (in <code>publish_web_tv.sh</code>)</td>
+</tr>
+<tr>
+<td><code>checkWebSync</code> in the build, covering <code>catalog.json</code> and <code>mandala_recipes.json</code></td>
+<td>desktop↔web drift (L6-15)</td>
+<td>proposed, open since 2026-11-15</td>
+</tr>
+<tr>
+<td><code>node --test web/tools/content.test.mjs</code></td>
+<td>broken content before publishing</td>
+<td>exists (run by <code>publish_web_tv.sh</code>)</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>

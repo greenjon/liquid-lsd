@@ -338,14 +338,17 @@ const DEAF_S = 2;          // the playhead moves but the analysis hears exact ze
 let wantAudio = false;
 let quietFor = 0;
 let lastRetryMs = 0;
-// Reconnects back off: 10 s, 20 s, 40 s, then every minute or so (with jitter), until the stream plays again.
+// Reconnects: every 10 s for the first minute, so a short drop comes back as quickly as before; after that
+// they back off (20 s, 40 s, then every minute or so, with jitter) until the stream plays again.
 const RETRY_BASE_MS = 10000;
 const RETRY_CAP_MS = 60000;
+const RETRY_FLAT = 6;      // attempts at the plain 10 s before backing off
 let retryAttempt = 0;
 let retryWaitMs = RETRY_BASE_MS;
 function noteRetry(now) {
   lastRetryMs = now;
-  retryWaitMs = backoffMs(retryAttempt++, RETRY_BASE_MS, RETRY_CAP_MS);
+  retryWaitMs = retryAttempt < RETRY_FLAT ? RETRY_BASE_MS : backoffMs(retryAttempt - RETRY_FLAT + 1, RETRY_BASE_MS, RETRY_CAP_MS);
+  retryAttempt++;
 }
 function resetRetry() { retryAttempt = 0; retryWaitMs = RETRY_BASE_MS; }
 const params = typeof location !== 'undefined' ? new URLSearchParams(location.search) : new URLSearchParams();

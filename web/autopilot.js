@@ -1287,8 +1287,13 @@ function noteClock(clock) {
   }
 }
 
+// Keys a patch may never write: they would reach Object.prototype (audit W5-5; the relay has the same guard).
+const UNSAFE_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
 function applyPatch(target, patch) {
+  if (typeof patch !== 'object' || patch === null || Array.isArray(patch)) return;
   for (const [key, val] of Object.entries(patch)) {
+    if (UNSAFE_KEYS.has(key)) continue;
     if (
       typeof val === 'object' && val !== null && !Array.isArray(val) &&
       typeof target[key] === 'object' && target[key] !== null
