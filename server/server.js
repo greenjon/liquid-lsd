@@ -21,6 +21,17 @@ const PORT            = parseInt(process.env.LSD_PORT  || '9004', 10);
 const HOST            = process.env.LSD_HOST           || '0.0.0.0';
 const BROADCAST_TOKEN = process.env.LSD_TOKEN;
 
+const envInt = (name, def) => {
+  const n = parseInt(process.env[name] || '', 10);
+  return Number.isFinite(n) && n >= 0 ? n : def;
+};
+const MAX_PAYLOAD     = envInt('LSD_MAX_PAYLOAD',     1024 * 1024); // bytes per incoming message
+const MAX_VIEWERS     = envInt('LSD_MAX_VIEWERS',     500);         // total viewer sockets
+const MAX_PER_IP      = envInt('LSD_MAX_PER_IP',      20);          // viewer sockets per client address
+const HEARTBEAT_MS    = envInt('LSD_HEARTBEAT_MS',    30000);       // ping interval; 0 disables
+const MAX_BUFFERED    = envInt('LSD_MAX_BUFFERED',    1024 * 1024); // viewer send backlog before it is dropped
+const TRUST_PROXY     = process.env.LSD_TRUST_PROXY !== '0';        // read client IP from X-Forwarded-For
+
 if (!BROADCAST_TOKEN) {
   console.error('[relay] LSD_TOKEN is not set. Set it to a private secret, e.g. LSD_TOKEN=$(openssl rand -hex 16) node server.js');
   process.exit(1);
@@ -44,7 +55,7 @@ const httpServer = createServer((req, res) => {
   res.end();
 });
 
-const wss = new WebSocketServer({ server: httpServer });
+const wss = new WebSocketServer({ server: httpServer, maxPayload: MAX_PAYLOAD });
 
 // -------------------------------------------------------
 // State
@@ -52,6 +63,17 @@ const wss = new WebSocketServer({ server: httpServer });
 let broadcaster  = null;   // single active broadcaster socket
 const state      = new RelayState(); // merged broadcast state (for viewers joining mid-session)
 const viewers    = new Set();
+const perIp      = new Map(); // client address -> viewer count
+
+function clientIp(req) {
+  if (TRUST_PROXY) {
+    const xff = req.headers['x-forwarded-for'];
+    if (typeof xff === 'string' && xff) return xff.split(',').pop().trim(); // the entry the proxy appended
+  }
+  return req.socket.remoteAddress || 'unknown';
+}
+
+function markAlive() { this.isAlive = true; }
 
 // -------------------------------------------------------
 // Connection handler
@@ -80,6 +102,8 @@ wss.on('connection', (ws, req) => {
       broadcaster.close(4000, 'Replaced by new broadcaster');
     }
     broadcaster = ws;
+    ws.isAlive = true;
+    ws.on('pong', markAlive);
     console.log('[relay] Broadcaster connected');
 
     // Tell existing viewers that a live broadcast has started
@@ -117,6 +141,16 @@ wss.on('connection', (ws, req) => {
   }
 
   // --- Viewer ---
+  const ip = clientIp(req);
+  if (viewers.size >= MAX_VIEWERS || (perIp.get(ip) || 0) >= MAX_PER_IP) {
+    ws.close(1013, 'Too many connections');
+    return;
+  }
+  perIp.set(ip, (perIp.get(ip) || 0) + 1);
+  ws.isAlive = true;
+  ws.on('pong', markAlive);
+  // Viewers never send anything; a viewer that does is misbehaving
+  ws.on('message', () => ws.close(1008, 'Viewers cannot send'));
   viewers.add(ws);
   console.log(`[relay] Viewer connected (total: ${viewers.size})`);
 
@@ -125,6 +159,8 @@ wss.on('connection', (ws, req) => {
 
   ws.on('close', () => {
     viewers.delete(ws);
+    const left = (perIp.get(ip) || 1) - 1;
+    if (left > 0) perIp.set(ip, left); else perIp.delete(ip);
     console.log(`[relay] Viewer disconnected (total: ${viewers.size})`);
   });
 
@@ -139,6 +175,12 @@ wss.on('connection', (ws, req) => {
 function fanOut(message, except) {
   for (const viewer of viewers) {
     if (viewer !== except && viewer.readyState === WebSocket.OPEN) {
+      if (viewer.bufferedAmount > MAX_BUFFERED) {
+        // Not reading: drop it rather than queue every frame in relay memory
+        console.warn('[relay] Dropping slow viewer');
+        viewer.terminate();
+        continue;
+      }
       try {
         viewer.send(message);
       } catch (err) {
@@ -146,6 +188,20 @@ function fanOut(message, except) {
       }
     }
   }
+}
+
+// -------------------------------------------------------
+// Heartbeat: terminate sockets that did not answer the last ping
+// -------------------------------------------------------
+if (HEARTBEAT_MS > 0) {
+  const timer = setInterval(() => {
+    for (const ws of [...viewers, ...(broadcaster ? [broadcaster] : [])]) {
+      if (ws.isAlive === false) { ws.terminate(); continue; }
+      ws.isAlive = false;
+      try { ws.ping(); } catch { /* socket closing */ }
+    }
+  }, HEARTBEAT_MS);
+  timer.unref();
 }
 
 // -------------------------------------------------------

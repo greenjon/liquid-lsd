@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test state.test.js"
+    "test": "node --test state.test.js server.test.js"
   },
   "dependencies": {
     "ws": "^8.18.0"
