@@ -198,7 +198,7 @@ class Slideshow {
     let last = performance.now();
     this.timer = setInterval(() => {
       const now = performance.now();
-      tick(Math.min((now - last) / 1000, 0.25), { spectrum: false });
+      tick(Math.min((now - last) / 1000, 0.25), false);
       last = now;
       this.update(now);
     }, TICK_MS);

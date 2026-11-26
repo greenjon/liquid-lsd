@@ -12,6 +12,7 @@ import { DropEnvelope } from './energy.js';
 import { installEmbedApi } from './embed.js';
 import { embed } from './embedmode.js';
 import { startLite, visualsChoice, rememberSlow, initLite, liteState } from './lite.js';
+import { createFrameLoop } from './frameloop.js';
 
 async function loadText(url) {
   const res = await fetchTimed(url);
@@ -385,9 +386,12 @@ async function init() {
   window.LSD = { cvState, audioFrame, autopilotState, powerState, viewerState, library: ctx.library, handleRelayMessage, advanceForeground,
     renderSize: () => [renderW, renderH, SCALES[adapt.idx]], gpu, frames: () => frameCount };
 
+  const frameInfoObj = { time: 0, dt: 0, index: 0 };   // reused every call: the frame loop allocates nothing
   function frameInfo() {
-    return { time: elapsedTime, dt: frameDt, index: frameCount };
+    frameInfoObj.time = elapsedTime; frameInfoObj.dt = frameDt; frameInfoObj.index = frameCount;
+    return frameInfoObj;
   }
+  const logoOpts = { dt: 0, bpm: 0, beats: 0, calm: false };
 
   // Draws a deck's source (ISF via the graph, or mandala here) then runs its FX chain.
   // Returns the deck's final texture.
@@ -452,6 +456,7 @@ async function init() {
   // tries again). At 1 fps that is about 30 s after power-on: ~12 s for the scaler to step down, then 16 s.
   const SLOW_WINDOW_MS = 8000, SLOW_GRACE_MS = 5000, SLOW_FPS = 12, SLOW_WINDOWS = 2, GAP_MS = 3000;
   const speed = { since: 0, frames: 0, last: 0, onAt: 0, slowWindows: 0 };
+  const loop = createFrameLoop(render);   // the only place a frame is requested: start() cancels a pending one first
   let liteHold = liteState.on;   // lite mode is the picture (maybe picked again while this loaded): the loop
                                  // rests, everything stays ready to come back
   visuals = {
@@ -462,7 +467,7 @@ async function init() {
       lastTime = performance.now();
       speed.onAt = 0; speed.since = 0; speed.slowWindows = 0;   // measure afresh
       forceResize = true;
-      requestAnimationFrame(render);
+      loop.start();
     },
   };
   const forcedFull = new URLSearchParams(location.search).get('lite') === '0';   // ?lite=0: full, however slow
@@ -496,7 +501,7 @@ async function init() {
   let darkDrawn = false;
   function nextFrame(off) {
     if (off) offTimer = setTimeout(() => { offTimer = 0; render(performance.now()); }, OFF_TICK_MS);
-    else requestAnimationFrame(render);
+    else loop.start();
   }
 
   function render(now) {
@@ -569,7 +574,10 @@ async function init() {
       // picture (the desktop's own). A toggle fades them over about half a second; off, they are not drawn.
       const logosWanted = viewerState.logos && !autopilotState.isLiveBroadcast;
       logoLevel = logosWanted ? Math.min(1, logoLevel + frameDt * 2) : Math.max(0, logoLevel - frameDt * 2);
-      if (logoLevel > 0) logos.render(logoTarget, { dt: frameDt, bpm: evalCtx.bpm, beats: evalCtx.beats, calm: viewerState.reducedNow });
+      if (logoLevel > 0) {
+        logoOpts.dt = frameDt; logoOpts.bpm = evalCtx.bpm; logoOpts.beats = evalCtx.beats; logoOpts.calm = viewerState.reducedNow;
+        logos.render(logoTarget, logoOpts);
+      }
       const mix = autopilotState.mixer || {};
       finalTex = mixerPipe.render(
         mix, texA, texB, texBG ?? pipeBG.clean.tex,
@@ -605,7 +613,7 @@ async function init() {
     nextFrame(false);
   }
 
-  requestAnimationFrame(render);
+  loop.start();
 
   installEmbedApi({
     frames: () => frameCount,
@@ -616,7 +624,7 @@ async function init() {
       paused = false;
       lastTime = performance.now();
       resumeAudio();
-      requestAnimationFrame(render);
+      loop.start();
     },
     // Quality floor: the render scale never goes finer than SCALES[index]'s step (0 = adaptive over all steps).
     setQuality(index) {
