@@ -100,16 +100,9 @@ Menu items get a tooltip only when the label alone does not say what will happen
 
 ### 6. Web TV
 
-Covers `web/`, `server/`, `scripts/publish_web_tv.sh` and `tests/web/`.
-
-- Run the same correctness checklist as lane 1, adapted to the web: AudioWorklet and audio-thread allocation, per-frame
-  allocation in render loops, leaked timers and listeners, `fetch` failures handled, no CORS assumptions about
-  spaz.org endpoints.
-- **Parity:** the evaluator, DSP and tempo code behaves like the desktop. Golden vectors are current
-  (`UPDATE_WEB_VECTORS=1`), and `scripts/sync_web.py` leaves no diff.
-- `TV_VERSION` in `web/ui.js` was bumped for every code publish. The about/keys page matches the actual key map.
-- `docs/developer/web_subsystem.md` matches the code.
-- Each viewer control has a hover hint, and the dark and light themes both define every token.
+Covers `web/`, `server/`, `scripts/publish_web_tv.sh` and `tests/web/`. The checklist is its own page,
+[Web TV Audit](audit_web_tv.md) (lanes W1 to W11), because the TV is also audited on its own between full audits.
+In a full audit, run all of it and number the findings `L6-<n>`.
 
 ### 7. Licensing and provenance
 
@@ -156,7 +149,8 @@ Agent definitions live in `.claude/agents/`. Pick the cheapest model that fits t
 
 | Work | Agent type | Model |
 |---|---|---|
-| Lanes 1, 2, 6 (correctness, rules, web review) | `general-purpose` | session model (Opus) |
+| Lanes 1, 2 (correctness, rules) | `general-purpose` | session model (Opus) |
+| Lane 6 (web TV) | split as in [Web TV Audit](audit_web_tv.md#who-runs-what) | Opus and Sonnet |
 | Lanes 3, 4, 5, 7 and the docs pass | `audit-docs` | Sonnet |
 | Fix groups (step 5) | `audit-fixer` | Sonnet |
 | Lane 8 | run directly | none |
