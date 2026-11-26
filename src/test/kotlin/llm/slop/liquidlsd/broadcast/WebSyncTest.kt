@@ -62,6 +62,8 @@ class WebSyncTest {
             val obj = elem.jsonObject
             val desktopRel = obj["desktop"]?.jsonPrimitive?.content ?: continue
             val webRel = obj["web"]?.jsonPrimitive?.content ?: continue
+            // Deliberate web-only extension (e.g. the Spaz logos layer in mixer.frag): reviewed by hand.
+            if (obj["mode"]?.jsonPrimitive?.content == "web_extension") continue
 
             val desktopFile = File(projectRoot, desktopRel)
             val webFile = File(projectRoot, webRel)

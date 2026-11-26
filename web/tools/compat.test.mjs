@@ -49,6 +49,50 @@ test('the page uses nothing newer than Safari 15.0', () => {
   assert.deepEqual(problems, [], `\n${problems.join('\n')}\n`);
 });
 
+// CSS newer than Safari 15.0. A browser that does not know a selector or value drops the whole rule, so a use
+// is only allowed when the page still works without that rule, and it is named in CSS_ALLOWED with the reason.
+// [pattern, id, what it is, the Safari version that has it]
+const CSS_BANNED = [
+  [/:has\(/, ':has', ':has()', '15.4'],
+  [/:focus-visible/, ':focus-visible', ':focus-visible', '15.4'],
+  [/overflow-wrap:\s*anywhere/, 'overflow-wrap-anywhere', 'overflow-wrap: anywhere', '15.4'],
+  [/\b\d*\.?\d+(dvh|svh|lvh|dvw|svw|lvw)\b/, 'viewport-units', 'dvh/svh/lvh units', '15.4'],
+  [/@layer\b/, '@layer', '@layer', '15.4'],
+  [/accent-color\s*:/, 'accent-color', 'accent-color', '15.4'],
+  [/last baseline/, 'last-baseline', 'last baseline alignment', '16'],
+  [/@container\b/, '@container', '@container', '16'],
+  [/\bsubgrid\b/, 'subgrid', 'subgrid', '16'],
+  [/color-mix\(/, 'color-mix', 'color-mix()', '16.2'],
+  [/@property\b/, '@property', '@property', '16.4'],
+  [/\blight-dark\(/, 'light-dark', 'light-dark()', '18'],
+  [/text-wrap\s*:/, 'text-wrap', 'text-wrap', '17.4'],
+];
+// pattern id -> why web/tv.css may use it anyway: each is a rule that only polishes, older Safari drops it
+// and the page stays usable. An entry tv.css no longer uses fails the test, so the list stays honest.
+const CSS_ALLOWED = {
+  ':has': 'the OSD radio block shifts left only while a channel badge shows (hidden since TV v68); below 15.4 it keeps its default place',
+  ':focus-visible': 'keyboard focus rings; below 15.4 the rule is dropped and the browser default focus ring applies',
+  'overflow-wrap-anywhere': 'long track titles may wrap at any character; below 15.4 they wrap at spaces as normal',
+  'last-baseline': 'a second declaration after a plain baseline one, so below 16 the first value stands',
+};
+
+/** CSS with comments removed. */
+const css = (src) => src.replace(/\/\*[\s\S]*?\*\//g, '');
+
+test('the stylesheet uses nothing newer than Safari 15.0 unless allowed with a reason', () => {
+  const problems = [], used = new Set();
+  const src = css(fs.readFileSync(path.join(web, 'tv.css'), 'utf8'));
+  src.split('\n').forEach((line, i) => {
+    for (const [re, id, what, safari] of CSS_BANNED) {
+      if (!re.test(line)) continue;
+      used.add(id);
+      if (!CSS_ALLOWED[id]) problems.push(`tv.css:${i + 1}: ${what} (Safari ${safari}) is not in CSS_ALLOWED: ${line.trim()}`);
+    }
+  });
+  for (const id of Object.keys(CSS_ALLOWED)) if (!used.has(id)) problems.push(`CSS_ALLOWED has "${id}" but tv.css no longer uses it: remove it`);
+  assert.deepEqual(problems, [], `\n${problems.join('\n')}\n`);
+});
+
 // Lite mode is for old and slow devices, often on slow or metered connections: its photos stay small.
 // (web/gallery/ is not in git; this checks the local build that publish_web_tv.sh uploads.)
 test('the lite photos stay small', { skip: !fs.existsSync(path.join(web, 'gallery', 'lite')) && 'no web/gallery/lite (gallery_curate.py lite)' }, () => {
