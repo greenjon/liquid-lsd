@@ -280,13 +280,14 @@ export function restoreTapes(store = listStore()) {
 }
 
 /** Fetches the feed (one retry after 2 s), keeping the last good list if it fails. Returns tapesState. */
+const feedSignal = (ms) => (typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(ms) : undefined);
 export function refreshTapes(fetchImpl = fetch, store = listStore()) {
   if (tapesState.loading) return tapesState.loading;
   tapesState.failed = false;
   tapesState.loading = (async () => {
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
-        const res = await fetchImpl(TAPES_FEED_URL, { cache: 'no-cache' });
+        const res = await fetchImpl(TAPES_FEED_URL, { cache: 'no-cache', signal: feedSignal(20000) });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const modified = res.headers?.get?.('last-modified') ?? '';
         if (modified && modified === tapesState.modified && tapesState.shows.length) {

@@ -13,7 +13,7 @@ import { createChat } from './chat.js';
 import { createChatboard } from './chatboard.js';
 import { createTapeDeck } from './tapedeck.js';
 import { appUrl, parseTapeLink, archiveFileFor, tapesState, restoreTapes, refreshTapes, tapesStale } from './tapes.js';
-import { scheduleState, refreshSchedule, setShows, groupByDay, upcoming, parsePlaying, loadPlayingJsonp, zoneLabel, nextLine, SCHEDULE_REFRESH_MS, SCHEDULE_STALE_MS } from './schedule.js';
+import { timeoutSignal, scheduleState, refreshSchedule, setShows, groupByDay, upcoming, parsePlaying, loadPlayingJsonp, zoneLabel, nextLine, SCHEDULE_REFRESH_MS, SCHEDULE_STALE_MS } from './schedule.js';
 
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
@@ -158,7 +158,10 @@ function showTuning() {
 }
 
 /** Under the badge: everyone on the stream. Nothing when the count is unknown or zero, as in the Spaz Radio app. */
-function showListeners(n) {
+function showListeners(n, fromStatus = false) {
+  // The Safari side feed (sidefeed.js) is this viewer's second connection to the same mount: don't count it.
+  // (Reads cvState.sideFeed, dsp.js's status string: '' when no side feed is in use.) Never below 1 for ourselves.
+  if (fromStatus && n > 0 && cvState.sideFeed === 'playing') n = Math.max(1, n - 1);
   const el = document.getElementById('listeners');
   if (el) el.textContent = n > 0 ? `${n} ${n === 1 ? 'mutant' : 'mutants'} watching TV.` : '';
 }
@@ -710,7 +713,7 @@ export function initUI() {
         help: 'Put all three bands back to 0. Boosting a band turns the overall volume down a little so loud songs don’t distort.' },
     ] }]),
     { name: 'TV', rows: [
-      { label: 'FULLSCREEN', value: () => (document.fullscreenElement ? 'ON' : 'OFF'), step: () => toggleFullscreen(), run: () => toggleFullscreen(),
+      { label: 'FULLSCREEN', value: () => ((document.fullscreenElement ?? document.webkitFullscreenElement) ? 'ON' : 'OFF'), step: () => toggleFullscreen(), run: () => toggleFullscreen(),
         help: 'The picture and its on-screen display fill the screen. Double-click the picture or press F to toggle; Esc leaves.' },
       ...(kiosk ? [] : [{ label: 'THEME', value: () => viewerState.theme.toUpperCase(),
         step: () => applyTheme(viewerState.theme === 'dark' ? 'light' : 'dark'),
@@ -736,7 +739,7 @@ export function initUI() {
           return gpu?.state === 'done' ? `AUTO (${onOff(gpu.heavy)}, ${gpu.ms.toFixed(0)} MS)` : `AUTO (${onOff(gpu?.heavy)})`;
         },
         step: (dir) => { viewerState.heavyMode = cycle(viewerState.heavyMode, dir); save('lsd.heavy', viewerState.heavyMode); applyHeavy(); } },
-      { label: 'RESET', help: 'Put every setting back to its default.', run: () => {
+      { label: 'RESET', help: 'Puts the menu settings back to their defaults: sync, equalizer, theme, autoplay, SPAZ LOGOS, reduced motion, big GPU scenes and, when the TV picks the scenes, react, time, auto roll, follow music, effects and BG changes. It leaves the VISUALS choice (full or lite), the INFO display, the chat and any tape alone.', run: () => {
         viewerState.syncMs = 0; save('lsd.sync', 0);
         viewerState.reducedMode = 'auto'; save('lsd.reduced', 'auto'); applyReduced();
         viewerState.heavyMode = 'auto'; save('lsd.heavy', 'auto'); applyHeavy();
@@ -766,19 +769,25 @@ export function initUI() {
     menu.refresh();
   });
   function toggleFullscreen() {
-    if (!screen.requestFullscreen) { message('FULLSCREEN NOT AVAILABLE HERE', 3000); return; }
-    if (!document.fullscreenElement) {
+    const request = screen.requestFullscreen ?? screen.webkitRequestFullscreen;
+    if (!request) { message('FULLSCREEN NOT AVAILABLE HERE', 3000); return; }
+    if (!fullscreenNow()) {
       // Going full screen from the menu closes it, so the Esc that would close it can't also leave full screen.
       menu.hide();
       // Where the browser allows it (Chromium), keep Esc for the page: a tap closes the menu or leaves full
       // screen through the keyboard handler below, and holding it still leaves full screen.
-      screen.requestFullscreen().then(() => navigator.keyboard?.lock?.(['Escape'])).catch(console.error);
-    } else document.exitFullscreen().catch(console.error);
+      Promise.resolve(request.call(screen)).then(() => navigator.keyboard?.lock?.(['Escape'])).catch(console.error);
+    } else exitFullscreen();
   }
-  document.addEventListener('fullscreenchange', () => {
-    if (!document.fullscreenElement) navigator.keyboard?.unlock?.();
+  // Safari before 16.4 (and iPad) only has the webkit-prefixed fullscreen API.
+  function fullscreenNow() { return document.fullscreenElement ?? document.webkitFullscreenElement ?? null; }
+  function exitFullscreen() { return Promise.resolve((document.exitFullscreen ?? document.webkitExitFullscreen)?.call(document)).catch(console.error); }
+  const onFullscreenChange = () => {
+    if (!fullscreenNow()) navigator.keyboard?.unlock?.();
     menu.refresh();
-  });
+  };
+  document.addEventListener('fullscreenchange', onFullscreenChange);
+  document.addEventListener('webkitfullscreenchange', onFullscreenChange);
   window.addEventListener('lsd-mic', () => menu.refresh());
 
   // TAP SYNC: tap Space (or the picture) on 8 beats you hear; the median lateness against the locked beat
@@ -1012,7 +1021,7 @@ export function initUI() {
       ...(SHOW_CHANNELS ? Object.fromEntries([...'0123456789'].map((d) => [d, () => digit(d)])) : {}),
       '[': () => stepTime(-1), ']': () => stepTime(1),
       '-': () => stepReact(-1), '=': () => stepReact(1), '+': () => stepReact(1),
-      Escape: () => document.fullscreenElement && document.exitFullscreen().catch(console.error),
+      Escape: () => fullscreenNow() && exitFullscreen(),
       f: toggleFullscreen, F: toggleFullscreen, a: toggleMic, A: toggleMic,
       i: pressInfo, I: pressInfo, d: saveShow, D: saveShow,
       ...(deck && powerState.on ? {
@@ -1286,6 +1295,8 @@ export function initUI() {
   const noSignalText = () => (navigator.onLine || isMicOn() || !micAvailable() ? 'NO SIGNAL'
     : coarse ? 'OFFLINE \u00B7 MIC: MENU \u203A SOUND' : 'OFFLINE \u00B7 A FOR MICROPHONE');
   (function blink() {
+    // TV off: the LED is dark and nothing here changes fast, so wake four times a second instead of every frame.
+    const idle = !powerState.on && !audioBlocked;
     // Standing notices only fill the message line when nothing else (HOLD, REACT...) is showing there.
     const msgFree = !document.getElementById('osd-msg').classList.contains('show');
     if (audioBlocked && powerState.on) { if (msgFree) message('CLICK OR PRESS A KEY FOR SOUND', 1500); noSignalShown = true; }
@@ -1295,7 +1306,7 @@ export function initUI() {
     const beats = heardBeats(performance.now(), viewerState.syncMs);
     beatLed.classList.toggle('on', powerState.on && ((beats % 1) + 1) % 1 < 0.15);
     beatLed.classList.toggle('locked', isLive || cvState.beatLocked);
-    requestAnimationFrame(blink);
+    if (idle) setTimeout(blink, 250); else requestAnimationFrame(blink);
   })();
 }
 
@@ -1355,10 +1366,11 @@ document.addEventListener('visibilitychange', holdScreenAwake);
 // Now playing (Icecast status), refreshed while the TV is on
 // -------------------------------------------------------
 let pollTimer = null;
+let pollGen = 0; // one poll chain at a time: a chain that was overtaken (TV off and on during its requests) ends
 /** radio.spaz.org/playing's raw object: the JSONP copy, else fetch() (if the server ever sends a CORS header). */
 async function readPlayingFeed() {
   try { return await loadPlayingJsonp(); } catch { /* fall through */ }
-  const res = await fetch(PLAYING_URL, { cache: 'no-store' });
+  const res = await fetch(PLAYING_URL, { cache: 'no-store', signal: timeoutSignal(10000) });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
@@ -1380,13 +1392,14 @@ async function readPlaying() {
 async function pollNowPlaying() {
   if (embed) return;
   clearTimeout(pollTimer);
+  const gen = ++pollGen;
   if (!powerState.on) return;
   try {
-    const res = await fetch(STREAM_STATUS_URL, { cache: 'no-store' });
+    const res = await fetch(STREAM_STATUS_URL, { cache: 'no-store', signal: timeoutSignal(10000) });
     const sources = [].concat((await res.json())?.icestats?.source ?? []);
     // Every mount (the app's low-bandwidth stream too) makes the number the app shows from radio.spaz.org/playing.
     // The TV can't read that one itself: it sends no CORS header, and this status does.
-    showListeners(sources.reduce((n, s) => n + (Number(s.listeners) || 0), 0));
+    showListeners(sources.reduce((n, s) => n + (Number(s.listeners) || 0), 0), true);
     const src = sources.find((s) => String(s.listenurl || '').endsWith(STREAM_MOUNT)) ?? sources[0];
     // The Ogg mount sends artist and title separately; the title alone may be just a date.
     const artist = String(src?.artist ?? ''), name = String(src?.title ?? '');
@@ -1399,7 +1412,8 @@ async function pollNowPlaying() {
         flashNext(6000);
       }
     }
-  } catch { showListeners(0); /* status unavailable: no track line, no count */ }
+  } catch { if (gen === pollGen) showListeners(0); /* status unavailable (or timed out): no track line, no count; the next poll still comes */ }
+  if (gen !== pollGen) return;
   pollTimer = setTimeout(pollNowPlaying, 30000);
 }
 

@@ -159,13 +159,16 @@ export const scheduleState = {
   loading: null,    // the fetch in flight
 };
 
+/** An abort signal that fires after `ms` (none where the browser lacks AbortSignal.timeout): a hung request must not hold its poller. */
+export const timeoutSignal = (ms) => (typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(ms) : undefined);
+
 /** Fetches the feed (one retry after 2 s). Keeps the last good list if it fails. Returns scheduleState. */
 export function refreshSchedule(fetchImpl = fetch) {
   if (scheduleState.loading) return scheduleState.loading;
   scheduleState.loading = (async () => {
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
-        const res = await fetchImpl(SCHEDULE_URL, { cache: 'no-store' });
+        const res = await fetchImpl(SCHEDULE_URL, { cache: 'no-store', signal: timeoutSignal(10000) });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         setShows(parseSchedule(await res.json()));
         return scheduleState;

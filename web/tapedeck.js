@@ -430,6 +430,15 @@ export function createTapeDeck({ page, strip, button, storage = null, isOn = () 
     eject('END OF TAPE');
     resume.clear(id); // eject remembered the last position; a finished show starts from the top next time
   });
+  // A tape whose file is not there (a mistyped or stale share link, a show taken off the server): the element
+  // reports it, and the viewer gets a message and the radio instead of LOADING TAPE... for good.
+  document.getElementById('lsdAudio')?.addEventListener('error', (e) => {
+    const err = e.target?.error;
+    if (!current || !err || err.code !== 4) return; // 4: MEDIA_ERR_SRC_NOT_SUPPORTED (a 404 or a non-audio reply)
+    const { id } = current;
+    eject('SHOW NOT FOUND');
+    resume.clear(id); // nothing was heard: don't offer to resume a show that isn't there
+  });
   window.addEventListener('pagehide', save);
 
   return {
