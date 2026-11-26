@@ -345,6 +345,12 @@ const noStatic = params.has('nostatic');
 // through). Once that is seen, the live radio's sound reaches the analysis from a second copy of the stream
 // decoded in sidefeed.js instead, for the rest of the visit. `?sidefeed` uses it from the start (to test it).
 let elementDeaf = params.has('sidefeed');
+// Safari also plays that stream straight to the speakers, past the volume and the EQ below, so the volume
+// dial sets the element's own volume instead (macOS; on an iPhone or iPad only the device's buttons can) and
+// the EQ is unavailable on the live radio. Only WebKit does this: elsewhere exact zeros could be real dead air.
+const webkit = typeof navigator !== 'undefined' && /AppleWebKit/.test(navigator.userAgent)
+  && !/Chrome\/|Chromium\/|Edg\/|Android/.test(navigator.userAgent);
+let elementBypass = false;
 let deafFor = 0;
 let sideFeed = null;
 let lastPlayhead = -1;
@@ -370,6 +376,7 @@ function updateSignal(dt) {
     if (deafFor > DEAF_S) {
       elementDeaf = true;
       console.warn('[dsp] the stream plays but the analysis hears silence: decoding a second copy for the picture');
+      if (webkit) { elementBypass = true; soundPathChanged(); }
     }
   }
   if (elementDeaf && playing && !sideFeed && audioCtx) {
@@ -462,6 +469,7 @@ export function insertTape(url, startAt = 0) {
   releaseMic();
   stopSideFeed();
   resetAnalysis();
+  soundPathChanged(); // a tape's file goes through the graph, even in Safari
   if (wantAudio) loadTape().catch((err) => console.warn('[dsp] tape did not start:', err.message)); // TV off: power-on starts it
 }
 
@@ -471,6 +479,7 @@ export function ejectTape() {
   tape = null;
   resetAnalysis();
   cvState.noSignal = false;
+  soundPathChanged();
   if (wantAudio && !micOn) reconnect();
 }
 
@@ -804,6 +813,33 @@ export function setVolume(volume) {
   if (gainNode && audioCtx) {
     gainNode.gain.setTargetAtTime(volume * volume, audioCtx.currentTime, 0.05);
   }
+  applyElementVolume();
+}
+
+/** The live radio is heard straight from the <audio> element (Safari), past the volume gain and the EQ. */
+export const radioBypassesGraph = () => elementBypass && !tape && !micOn && !embed;
+
+let volumeFixed = null;
+/** The page cannot set an element's volume (iPhone, iPad: the device's buttons do). */
+export function elementVolumeFixed() {
+  if (volumeFixed === null) {
+    try { const a = new Audio(); a.volume = 0.5; volumeFixed = a.volume !== 0.5; } catch { volumeFixed = false; }
+  }
+  return volumeFixed;
+}
+
+/** The dial's volume on the element while the radio bypasses the graph, else 1 (the gain node has it). */
+function applyElementVolume() {
+  const audioEl = typeof document !== 'undefined' ? document.getElementById('lsdAudio') : null;
+  if (!audioEl) return;
+  const v = radioBypassesGraph() ? currentVolumeRatio * currentVolumeRatio : 1;
+  if (audioEl.volume !== v) audioEl.volume = v;
+}
+
+/** The radio started or stopped bypassing the graph: the element's volume follows, and the UI (lsd-sound-path). */
+function soundPathChanged() {
+  applyElementVolume();
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('lsd-sound-path', { detail: radioBypassesGraph() }));
 }
 
 // -------------------------------------------------------

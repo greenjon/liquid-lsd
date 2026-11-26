@@ -536,6 +536,9 @@ body {
   cursor: not-allowed;
 }
 
+/* iPhone/iPad Safari, live radio: only the device's buttons set the volume (ui.js volumeFixed) */
+#volumeDial.fixed { opacity: 0.35; cursor: not-allowed; }
+
 /* Beat LED: lit on each beat; green = locked to the music, amber = keeping time on its own */
 /* The flash lasts 15% of a beat, shorter than the .led fade, so it lights at once and fades out */
 .beat-led.on { background: #ffaa00; box-shadow: 0 0 6px rgba(255,170,0,0.8); transition: none; }

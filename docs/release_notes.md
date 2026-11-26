@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Web TV: Volume and EQ in Safari (`web/dsp.js`, `web/ui.js`, `web/menu.js`, `web/tv.css`)
+- **Fixed: in Safari, the volume dial did nothing on the live radio.** Safari plays the live stream straight to the speakers, past the page's own volume and EQ (the same Safari quirk that once gave the picture NO SIGNAL). Once the TV notices this, a couple of seconds after the sound starts, the dial sets the stream's own volume instead. On iPhone and iPad, Safari lets only the device's buttons set that volume, so the dial is greyed out on the live radio and says to use the device buttons. Tapes are not affected: the dial works on them everywhere.
+- **Changed: in Safari, the EQ is unavailable on the live radio.** For the same reason, it can't reach the live stream: MENU › EQ shows *NOT ON SAFARI LIVE* and its rows are greyed out. It still works on tapes, and your settings are kept (TV v64).
+
 ### Web TV: No Gaps After a Reload (`web/dsp.js`)
 - **Fixed: after reloading the page, the sound could play for a few seconds, go silent, then come back.** Firefox replayed the bit of the stream it had kept from before the reload, then had nothing until the live stream caught up. The TV now asks for a fresh copy of the stream every time it turns on (TV v63).
 

@@ -1,7 +1,7 @@
 // ui.js
 // The TV's controls: power, volume, the viewer controls (channel rocker, FX, HOLD, TIME, REACT), the
 // on-screen display, keyboard and touch. Viewer controls are locked while the desktop broadcasts live.
-import { startAudio, stopAudio, setVolume, setMic, isMicOn, micAvailable, cvState, tapeStatus, setEq, eqGains, EQ_MIN_DB, EQ_MAX_DB } from './dsp.js';
+import { startAudio, stopAudio, setVolume, setMic, isMicOn, micAvailable, cvState, tapeStatus, setEq, eqGains, EQ_MIN_DB, EQ_MAX_DB, radioBypassesGraph, elementVolumeFixed } from './dsp.js';
 import { embed } from './embedmode.js';
 import { liteState, liteNext, setVisuals, canSwitch } from './lite.js';
 import { autopilotState, advanceForeground, previousForeground, randomForeground, nextFxChain, setHold, setHoldBars, nowShowing, setHeavyAllowed, setReducedMotion,
@@ -18,7 +18,7 @@ import { scheduleState, refreshSchedule, setShows, groupByDay, upcoming, parsePl
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v63';
+export const TV_VERSION = 'v64';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -463,15 +463,31 @@ export function initUI() {
   });
 
   // --- Volume ---
+  // Safari on an iPhone or iPad plays the live radio past the page's volume, and the page cannot set the
+  // element's own (dsp.radioBypassesGraph): only the device's buttons can. The dial is greyed out then.
+  const volumeFixed = () => radioBypassesGraph() && elementVolumeFixed();
+  const volumeLocked = () => {
+    if (!volumeFixed()) return false;
+    if (powerState.on) message('VOLUME: USE THE DEVICE BUTTONS', 2500);
+    return true;
+  };
   const volumeDial = makeDial(document.getElementById('volumeDial'), {
     initial: 0.8,
+    locked: volumeLocked,
     onChange: (v) => { setVolume(v); if (powerState.on) message(`VOL ${Math.round(v * 100)}%`); },
   });
   setVolume(0.8);
-  const stepVolume = (dir) => volumeDial.set(volumeDial.get() + dir * 0.05);
+  const soundPathChanged = () => {
+    document.getElementById('volumeDial').classList.toggle('fixed', volumeFixed());
+    menu.refresh(); // the EQ rows
+  };
+  window.addEventListener('lsd-sound-path', soundPathChanged);
+  window.addEventListener('lsd-mic', soundPathChanged);
+  const stepVolume = (dir) => { if (!volumeLocked()) volumeDial.set(volumeDial.get() + dir * 0.05); };
   // U: the dial goes to zero and back to where it was (if it is still at zero).
   let unmuted = 0.8;
   const toggleMute = () => {
+    if (volumeLocked()) return;
     if (volumeDial.get() > 0) {
       unmuted = volumeDial.get();
       volumeDial.set(0);
@@ -650,7 +666,10 @@ export function initUI() {
   applyEq(savedEq && typeof savedEq === 'object' ? savedEq : {}, false);
   viewerState.eqGains = eqGains; // for the headless check
   const dbLabel = (db) => `${db > 0 ? '+' : ''}${db} DB`;
-  const eqBand = (label, key, help) => ({ label, help, locked: () => !viewerState.eq.on, value: () => dbLabel(viewerState.eq[key]),
+  // Safari plays the live radio past the EQ (dsp.radioBypassesGraph): its rows are locked then; a tape has it.
+  const EQ_SAFARI_HELP = 'Safari plays the live radio straight to the speakers, so the EQ can’t reach it. It works on tapes.';
+  const eqLocked = () => !viewerState.eq.on || radioBypassesGraph();
+  const eqBand = (label, key, help) => ({ label, help: () => (radioBypassesGraph() ? EQ_SAFARI_HELP : help), locked: eqLocked, value: () => dbLabel(viewerState.eq[key]),
     step: (dir) => applyEq({ [key]: viewerState.eq[key] + dir }) });
   const cycle = (mode, dir) => MODES[(MODES.indexOf(mode) + dir + MODES.length) % MODES.length];
   const onOff = (b) => (b ? 'ON' : 'OFF');
@@ -699,12 +718,13 @@ export function initUI() {
         help: 'Press Enter, then tap Space or the picture on 8 beats you hear: sets SYNC for you.' },
     ] },
     ...(embed ? [] : [{ name: 'EQ', rows: [
-      { label: 'EQUALIZER', value: () => onOff(viewerState.eq.on), step: () => applyEq({ on: !viewerState.eq.on }), run: () => applyEq({ on: !viewerState.eq.on }),
-        help: 'Shapes the sound you hear from the radio or a tape. The picture still reacts to the music as broadcast.' },
+      { label: 'EQUALIZER', locked: radioBypassesGraph, value: () => (radioBypassesGraph() ? 'NOT ON SAFARI LIVE' : onOff(viewerState.eq.on)),
+        step: () => applyEq({ on: !viewerState.eq.on }), run: () => applyEq({ on: !viewerState.eq.on }),
+        help: () => (radioBypassesGraph() ? EQ_SAFARI_HELP : 'Shapes the sound you hear from the radio or a tape. The picture still reacts to the music as broadcast.') },
       eqBand('BASS', 'bass', 'Low end: kick and bass (120 Hz and below), up or down 12 dB.'),
       eqBand('MID', 'mid', 'The middle: voices and most instruments (around 1 kHz).'),
       eqBand('TREBLE', 'treble', 'Top end: hi-hats and air (6 kHz and above).'),
-      { label: 'FLAT', locked: () => !viewerState.eq.on, value: () => ((viewerState.eq.bass || viewerState.eq.mid || viewerState.eq.treble) ? 'RESET' : 'FLAT'),
+      { label: 'FLAT', locked: eqLocked, value: () => ((viewerState.eq.bass || viewerState.eq.mid || viewerState.eq.treble) ? 'RESET' : 'FLAT'),
         run: () => applyEq({ bass: 0, mid: 0, treble: 0 }),
         help: 'Put all three bands back to 0. Boosting a band turns the overall volume down a little so loud songs don’t distort.' },
     ] }]),

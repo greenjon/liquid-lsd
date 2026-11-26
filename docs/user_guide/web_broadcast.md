@@ -60,7 +60,7 @@ The standalone browser client (`web/index.html`) presents the visualizer in a re
 
 **Power switch:** Click it (or anywhere on the TV) to turn the visualizer on. The browser requires this interaction to start Web Audio (standard browser security policy). Turning the TV on triggers a CRT warmup animation; turning it off plays a vintage beam-collapse animation. **Autoplay:** a little after you turn the TV on, it asks *Turn on by itself next time?* Answer YES and it comes on by itself whenever you open the page (with sound, if your browser lets spaz.org play sound by itself; if not, the screen asks for one click or key). MENU › TV › **Autoplay** (*Ask*, *On*, *Off*) changes your answer later; PWR turns the TV off either way.
 
-**Volume dial:** Drag the rotary dial up or down to adjust volume. The curve is tuned to feel perceptually linear — small moves at the bottom, bigger moves at the top.
+**Volume dial:** Drag the rotary dial up or down to adjust volume. The curve is tuned to feel perceptually linear — small moves at the bottom, bigger moves at the top. In Safari on iPhone and iPad, the device's buttons set the volume of the live radio and the dial is greyed out (it works on tapes).
 
 **Fullscreen:** Double-click the TV screen, press `F`, or choose MENU › **Fullscreen** to expand to full-screen (the on-screen display comes along). Do any of them again, or press `Esc`, to go back to the TV shell. Choosing it from the MENU closes the menu. In Chrome and Edge, `Esc` closes the menu first if it is open (hold `Esc` to leave full screen right away); other browsers always leave full screen on `Esc`.
 
@@ -112,7 +112,7 @@ Point at the picture with the mouse, or click or tap it, to show the channel, th
 
 - **SCENES:** **Time**, **Auto roll**, **Follow music**, **Effects**, **Background**, **BG changes**, **Skip this channel**, **Skipped**.
 - **SOUND:** **Audio input** (radio or microphone), **REACT**, **SYNC** (how late the sound reaches you, for Bluetooth and other delayed speakers), **TAP SYNC**.
-- **EQ:** **Equalizer** on or off (off by default), **Bass**, **Mid** and **Treble** (±12 dB each), **Flat**. It changes only what you hear from the radio or a tape, never what the picture reacts to. Boosting a band turns the overall volume down by the same amount so loud songs don't distort.
+- **EQ:** **Equalizer** on or off (off by default), **Bass**, **Mid** and **Treble** (±12 dB each), **Flat**. It changes only what you hear from the radio or a tape, never what the picture reacts to. Boosting a band turns the overall volume down by the same amount so loud songs don't distort. Safari plays the live radio past the EQ, so there it works only on tapes.
 - **TV:** **Fullscreen**, **Theme** (the cabinet and the room around it: light, a 1970s hi-fi receiver in brushed aluminium and walnut, the default; or dark plastic), **Announce scenes** (name each new scene on screen; off by default), **Reduced motion** (Auto follows your system setting), **Big GPU scenes** (Auto lets the GPU check decide), **Reset**, **About**.
 
 Settings are remembered in this browser. REACT, TIME, Auto roll, the background, effects and follow-music rows, Audio input and Big GPU scenes are locked during a live broadcast. RESET puts every setting back, including turning the EQ off and flat, but leaves skipped channels skipped.

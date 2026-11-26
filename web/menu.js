@@ -7,7 +7,7 @@
 // Enter runs it. The wheel anywhere else scrolls the rows. Esc, M or ✕ closes. While open it owns the keyboard.
 //
 // Pages: [{ name, rows }]. Rows: { label, value(): string, step?(dir), run?(), locked?(): bool, needsPower?: bool,
-// help?: string }. ui.js builds them. `help` explains the row, on the line at the bottom, for the selected row or
+// help?: string | () => string }. ui.js builds them. `help` explains the row, on the line at the bottom, for the selected row or
 // the one under the cursor. `needsPower` rows act on the picture or the sound, so they lock while the TV is off.
 
 const OFF_HELP = 'TURN THE TV ON TO USE THIS.';
@@ -60,7 +60,7 @@ export function createMenu(screen, pages, { version = '', isOn = () => true, onO
   const rows = () => pages[page].rows;
   const off = (row) => row.needsPower && !isOn();
   const isLocked = (row) => off(row) || !!row.locked?.();
-  const helpFor = (row) => (off(row) ? OFF_HELP : row.help);
+  const helpFor = (row) => (off(row) ? OFF_HELP : typeof row.help === 'function' ? row.help() : row.help);
 
   // The wheel changes a value only with the cursor on it (delegated: render() replaces the rows under the cursor).
   rowsEl.addEventListener('wheel', (e) => {
