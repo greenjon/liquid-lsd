@@ -1,7 +1,13 @@
-// Headless render check: node web/checks/render_check.mjs [outDir]
-// Serves web/, drives the app in headless Firefox through every ISF source plus mandala,
+// Render check: node web/checks/render_check.mjs [outDir]
+// Serves web/, drives the app in Firefox through every ISF source plus mandala,
 // writes PNGs to outDir (default /tmp/lsd-render-check) and fails on console errors or
-// blank frames.
+// blank frames. The full run is about 300 cases and 15-30 minutes; it keeps a CPU core busy.
+//   RC_ONLY=fx,preset_web-lava   only some cases: a group name (below) or any part of a case's name
+//   RC_HEADED=1                  a visible Firefox window instead of headless: no faster (the settle times set the
+//                                pace) but about a third less CPU. Keep it on screen: a minimised window may stop drawing.
+// Groups: source (every catalog source + mandala), fx (each filter), trans (each transition), master (master FX),
+// live (relay replays), preset (shipped web presets), desktop (desktop Mandala presets), chain (FX chains),
+// transpreset (transition presets).
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -15,18 +21,18 @@ const outDir = process.argv[2] || '/tmp/lsd-render-check';
 fs.mkdirSync(outDir, { recursive: true });
 // Every catalog source at its defaults, plus mandala (drawn outside the ISF graph).
 const catalog = JSON.parse(fs.readFileSync(path.join(web, 'catalog.json'), 'utf8'));
-const sources = [{ name: 'mandala', deck: { source: 'mandala' } },
-  ...catalog.sources.map((s) => ({ name: s.id, deck: { source: s.id } }))];
+const sources = [{ name: 'mandala', group: 'source', deck: { source: 'mandala' } },
+  ...catalog.sources.map((s) => ({ name: s.id, group: 'source', deck: { source: s.id } }))];
 
 // Every catalog filter over a bright source, and every transition at the midpoint between two.
 for (const f of catalog.filters) {
-  sources.push({ name: 'fx_' + f.id, deck: { source: 'domain_warp_fluid', fx: [{ id: f.id, enabled: true, dryWet: 1, params: {} }] }, settleMs: 900 });
+  sources.push({ name: 'fx_' + f.id, group: 'fx', deck: { source: 'domain_warp_fluid', fx: [{ id: f.id, enabled: true, dryWet: 1, params: {} }] }, settleMs: 900 });
 }
 for (const t of catalog.transitions) {
-  sources.push({ name: 'trans_' + t.id, deck: { source: 'domain_warp_fluid' }, deckB: { source: 'chladni_cymatics' },
+  sources.push({ name: 'trans_' + t.id, group: 'trans', deck: { source: 'domain_warp_fluid' }, deckB: { source: 'chladni_cymatics' },
     mixer: { balance: 0.5, transition: t.id }, settleMs: 900 });
 }
-sources.push({ name: 'master_fx', deck: { source: 'domain_warp_fluid' },
+sources.push({ name: 'master_fx', group: 'master', deck: { source: 'domain_warp_fluid' },
   mixer: { balance: 0, fx: [{ id: 'invert', enabled: true, dryWet: 1, params: {} }, null, null] }, settleMs: 900 });
 
 // Live-broadcast replays: wire protocol v2 messages shaped like WebPresetSerializer output.
@@ -42,14 +48,14 @@ const clock = { beats: 8, bpm: 126 };
 const full = (deckA, deckB, mixer) => ({ type: 'state_full', v: 2, clock,
   preset: { deckA, deckB, deckBG: { empty: true }, mixer: { balance: 0, alpha: 1, levelA: 1, levelB: 1, levelBG: 1,
     transition: 'linear_crossfade', transitionParams: {}, fxDryWet: 1, fx: { 0: null, 1: null, 2: null }, ...mixer } } });
-sources.push({ name: 'live_spiral_fx', wire: [full(spiral, { empty: true })], settleMs: 1500 });
-sources.push({ name: 'live_mandala', wire: [full(mandala, { empty: true })], settleMs: 1200 });
-sources.push({ name: 'live_delta_fx_and_crossfade', settleMs: 1500, wire: [
+sources.push({ name: 'live_spiral_fx', group: 'live', wire: [full(spiral, { empty: true })], settleMs: 1500 });
+sources.push({ name: 'live_mandala', group: 'live', wire: [full(mandala, { empty: true })], settleMs: 1200 });
+sources.push({ name: 'live_delta_fx_and_crossfade', group: 'live', settleMs: 1500, wire: [
   full(spiral, mandala),
   { type: 'state_delta', clock, patch: { mixer: { balance: 0.5, fx: { 0: slot('invert', {}) } },
     deckA: { fx: { 0: { params: { fbDecay: 0.9 } } } } } },
 ] });
-sources.push({ name: 'live_wrong_version_ignored', settleMs: 600, wire: [
+sources.push({ name: 'live_wrong_version_ignored', group: 'live', settleMs: 600, wire: [
   { type: 'state_full', v: 1, preset: { deckA: { source: 'mandala' } } }] });
 
 // Every shipped autopilot preset, loaded the way autopilot.js loads it.
@@ -67,24 +73,24 @@ const fittingChain = (f) => {
   return ids.find((id) => chainAnswers(dto.tags, dominantBand(dto), chainDto(id))) ?? ids.find((id) => chainFits(dto.tags, chainDto(id)));
 };
 fs.readdirSync(path.join(web, 'presets')).sort().filter((f) => f.endsWith('.lsd')).forEach((f) => {
-  sources.push({ name: 'preset_' + f.replace('.lsd', ''), preset: '/presets/' + f, chain: pins[f.replace('.lsd', '')] ?? fittingChain(f), roll: 'base',
+  sources.push({ name: 'preset_' + f.replace('.lsd', ''), group: 'preset', preset: '/presets/' + f, chain: pins[f.replace('.lsd', '')] ?? fittingChain(f), roll: 'base',
     settleMs: f.startsWith('spaz-') ? 7000 : 2500 }); // the gallery fetches its pictures from spaz.org first
 });
 // Desktop-shipped Mandala presets, unmodified (Lobes / Recipe Select / the recipe table)
 for (const f of ['mandala-7', 'mandala-10']) {
-  sources.push({ name: 'desktop_' + f, preset: `/repo/defaults/presets/${f}.lsd`, settleMs: 1500 });
+  sources.push({ name: 'desktop_' + f, group: 'desktop', preset: `/repo/defaults/presets/${f}.lsd`, settleMs: 1500 });
 }
 // Every FX chain and transition preset the catalog lists
 for (const c of catalog.fxChains) {
-  sources.push({ name: 'chain_' + c.id, deck: { source: 'domain_warp_fluid' }, chain: c.id, settleMs: 2000 });
+  sources.push({ name: 'chain_' + c.id, group: 'chain', deck: { source: 'domain_warp_fluid' }, chain: c.id, settleMs: 2000 });
 }
 for (const t of catalog.transitionPresets) {
-  sources.push({ name: 'transpreset_' + t.id, deck: { source: 'domain_warp_fluid' }, deckB: { source: 'chladni_cymatics' },
+  sources.push({ name: 'transpreset_' + t.id, group: 'transpreset', deck: { source: 'domain_warp_fluid' }, deckB: { source: 'chladni_cymatics' },
     mixer: { balance: 0.5 }, transitionPreset: t.id, settleMs: 1100 });
 }
 
 // Authoring aids: RC_EXTRA=file.json appends specs ({name, deck: {source, params}, chain?, settleMs?});
-// RC_ONLY=substr,substr keeps only specs whose name contains one of them (skips the library/autopilot asserts).
+// RC_ONLY=a,b keeps only specs in group a or b, or whose name contains a or b (see the top of the file).
 // RC_LOUD=1 also renders every preset and chain with the audio signals held high (`<name>_loud`), so the
 // silent and loud frames side by side show how much a preset reacts.
 // Presets render at their tuned values. RC_ROLL=n also renders each n times rolled as on air (`_roll1`..),
@@ -95,7 +101,9 @@ for (const s of sources.filter((x) => x.preset && ROLLS)) {
 }
 if (process.env.RC_EXTRA) sources.push(...JSON.parse(fs.readFileSync(process.env.RC_EXTRA, 'utf8')));
 const only = process.env.RC_ONLY ? process.env.RC_ONLY.split(',') : null;
-if (only) sources.splice(0, sources.length, ...sources.filter((s) => only.some((o) => s.name.includes(o))));
+const groups = new Set(sources.map((s) => s.group));   // a group name picks that group only, not every name containing it
+if (only) sources.splice(0, sources.length, ...sources.filter((s) => only.some((o) => (groups.has(o) ? s.group === o : s.name.includes(o)))));
+if (only) console.log(`RC_ONLY: ${sources.length} cases`);
 const LOUD = { audio_amp: 0.7, audio_bass: 0.9, audio_mid: 0.6, audio_high: 0.6,
   audio_flux_amp: 0.8, audio_flux_bass: 0.8, audio_flux_mid: 0.5, audio_flux_high: 0.6 };
 if (process.env.RC_LOUD) {
@@ -127,7 +135,8 @@ const server = http.createServer((req, res) => {
 });
 await new Promise((r) => server.listen(0, '127.0.0.1', r));
 const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'lsd-ff-'));
-const ff = spawn('firefox', ['--headless', '--no-remote', '--profile', profile,
+const headed = !!process.env.RC_HEADED;
+const ff = spawn('firefox', [...(headed ? [] : ['--headless']), '--no-remote', '--profile', profile,
   `http://127.0.0.1:${server.address().port}/checks/render_check.html`], { stdio: 'ignore' });
 // About 300 cases at 1-2.5 s each, plus a PNG per case: well over 10 minutes with today's library.
 // RENDER_CHECK_TIMEOUT_S overrides the limit.

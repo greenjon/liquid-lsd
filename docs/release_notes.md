@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Web TV: Turning the TV Off Saves Power (`web/renderer.js`, `web/checks/render_check.mjs`)
+- **Fixed: the web TV kept the graphics card busy while it was off.** It kept drawing a black screen as fast as the display refreshed. Now, once the switch-off animation ends, it stops drawing until you turn it back on. In the meantime it only keeps the clock and the scene rotation going, ten times a second (TV v67).
+- Internal: `render_check.mjs` takes group names in `RC_ONLY` (`source`, `fx`, `trans`, `master`, `live`, `preset`, `desktop`, `chain`, `transpreset`), so a change can be checked on just the cases it touches. `RC_HEADED=1` runs Firefox in a visible window, which uses less CPU than headless.
+
 ### Web TV: Random Effects by Default, Quieter Logos (`web/autopilot.js`, `web/ui.js`, `web/embed.js`, `web/gallery.js`)
 - **Changed: MENU › EFFECTS now starts on *Random*:** any FX chain can land on any scene or background. *Auto* (only chains that suit the scene) and *Off* are one step away, and RESET goes back to *Random*. If you already picked a setting, it is kept. In the app, turning effects on means *Random* too (TV v66).
 - **Changed: the Spaz logos stay in the background more.** One logo at a time instead of two, sometimes with a pause of none. Each is see-through (55%) and dimmed (75%), and fades in over 8-16 beats and out over 16-32. The next logo comes in while the last one fades out.
