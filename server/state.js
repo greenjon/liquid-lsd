@@ -12,12 +12,16 @@ const PROTOCOL_VERSION = 2;
 
 const isObject = (v) => typeof v === 'object' && v !== null && !Array.isArray(v);
 
-/** Recursive merge. A null in the patch deletes the key. */
+const UNSAFE_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
+/** Recursive merge. A null in the patch deletes the key. Keys that could pollute Object.prototype are skipped. */
 function applyPatch(target, patch) {
+  if (!isObject(target) || !isObject(patch)) return target;
   for (const [key, val] of Object.entries(patch)) {
+    if (UNSAFE_KEYS.has(key)) continue;
     if (val === null) {
       delete target[key];
-    } else if (isObject(val) && isObject(target[key])) {
+    } else if (isObject(val) && isObject(target[key]) && Object.prototype.hasOwnProperty.call(target, key)) {
       applyPatch(target[key], val);
     } else {
       target[key] = val;

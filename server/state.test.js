@@ -55,3 +55,17 @@ test('the broadcaster name rides in the preset: late joiners get it, a null clea
   s.ingest({ type: 'state_delta', patch: { broadcaster: null } });
   assert.equal(JSON.parse(s.snapshotMessage()).preset.broadcaster, undefined);
 });
+
+test('applyPatch ignores prototype-polluting keys and non-object patches', () => {
+  const t = { a: { b: 1 } };
+  applyPatch(t, JSON.parse('{"__proto__":{"polluted":1},"constructor":{"prototype":{"polluted":2}},"a":{"__proto__":{"polluted":3},"b":2}}'));
+  assert.equal({}.polluted, undefined);
+  assert.equal(t.a.b, 2);
+  assert.deepEqual(Object.keys(t), ['a']);
+  assert.deepEqual(applyPatch({ x: 1 }, 'nope'), { x: 1 });
+  const s = new RelayState();
+  assert.ok(s.ingest(full({ mixer: {} })));
+  assert.equal(s.ingest({ type: 'state_delta', patch: [1] }), false);
+  assert.equal(s.ingest({ type: 'state_delta', patch: JSON.parse('{"__proto__":{"p":1}}') }), true);
+  assert.equal({}.p, undefined);
+});
