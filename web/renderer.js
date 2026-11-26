@@ -488,7 +488,19 @@ async function init() {
     goLite('slow');   // pauses the loop (visuals.pause); VISUALS › FULL resumes it
   }
 
+  // Off: once the shutdown animation has drawn its last (black) frame the screen stays as it is, so nothing
+  // is drawn and the loop slows to OFF_TICK_MS (the radio clock and the autopilot still move along).
+  // Power-on is picked up at the next tick; any requestAnimationFrame(render) (resume) takes the timer over.
+  const OFF_TICK_MS = 100;
+  let offTimer = 0;
+  let darkDrawn = false;
+  function nextFrame(off) {
+    if (off) offTimer = setTimeout(() => { offTimer = 0; render(performance.now()); }, OFF_TICK_MS);
+    else requestAnimationFrame(render);
+  }
+
   function render(now) {
+    if (offTimer) { clearTimeout(offTimer); offTimer = 0; }
     if (paused || stopped || liteHold) return;
     if (tooSlow(now)) { handOver(); return; }
     const frameMs = now - lastTime;
@@ -521,6 +533,10 @@ async function init() {
         }
       }
     }
+
+    const dark = !powerState.on && powerState.shutdownProgress >= 1.0;
+    if (dark && darkDrawn) { nextFrame(true); return; }
+    darkDrawn = dark;
 
     const displayW = canvas.clientWidth  || window.innerWidth;
     const displayH = canvas.clientHeight || window.innerHeight;
@@ -586,7 +602,7 @@ async function init() {
 
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-    requestAnimationFrame(render);
+    nextFrame(false);
   }
 
   requestAnimationFrame(render);
