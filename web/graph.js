@@ -299,7 +299,7 @@ export class MixerPipeline {
 
   resize(w, h) { this.blend.resize(w, h); this.composite.resize(w, h); this.fx.resize(w, h); }
 
-  render(mixer, texA, texB, texBG, bgAlpha, masterLevel, frame) {
+  render(mixer, texA, texB, texBG, bgAlpha, texLogo, logoAlpha, masterLevel, frame) {
     const { ctx } = this;
     const { gl } = ctx;
     const progress = Math.min(1, Math.max(0, ctx.scalar(mixer.balance, 0)));
@@ -326,7 +326,7 @@ export class MixerPipeline {
       });
     }
 
-    // Composite over BG with levels
+    // Composite over the logos and BG, with levels
     this.composite.bind();
     gl.clearColor(0, 0, 0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -339,13 +339,19 @@ export class MixerPipeline {
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, texBG);
     gl.uniform1i(m.uTexBG, 1);
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D, texLogo);
+    gl.uniform1i(m.uTexLogo, 2);
     gl.uniform1f(m.uProgress, progress);
     gl.uniform1f(m.uBgAlpha, bgAlpha);
+    gl.uniform1f(m.uLogoAlpha, logoAlpha);
     gl.uniform1f(m.uLevelA, ctx.scalar(mixer.levelA, 1.0));
     gl.uniform1f(m.uLevelB, ctx.scalar(mixer.levelB, 1.0));
     gl.uniform1f(m.uLevelBG, ctx.scalar(mixer.levelBG, 1.0));
     gl.uniform1f(m.uMasterLevel, masterLevel);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D, null);   // the logos' target is drawn into next frame
     gl.activeTexture(gl.TEXTURE0);
 
     return this.fx.run(mixer.fx, mixer.fxDryWet, mixer.fxEnabled, this.composite.tex, frame);

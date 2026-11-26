@@ -236,7 +236,11 @@ class Slideshow {
       return;
     }
     const beat = this.followBeat(now);
-    for (const lane of this.lanes) lane.update(now, beat);
+    // MENU › SPAZ LOGOS off: the logos lane fades out and brings no new logos (nor fetches any).
+    const logos = this.viewer.logos !== false;
+    const logoEl = this.lanes[2].el;
+    if (logoEl.classList.contains('lite-off') === logos) logoEl.classList.toggle('lite-off', !logos);
+    for (const lane of this.lanes) if (logos || lane !== this.lanes[2]) lane.update(now, beat);
   }
 
   /**
@@ -256,7 +260,10 @@ class Slideshow {
 
     // A drop: stronger pulses for a few bars, and a logo now. (A restarted watch counts from 0 again.)
     if (cvState.drops !== this.drops) {
-      if (cvState.drops > this.drops && locked) { this.dropUntil = beats + DROP_BEATS; this.lanes[2].spawnNow(); }
+      if (cvState.drops > this.drops && locked) {
+        this.dropUntil = beats + DROP_BEATS;
+        if (this.viewer.logos !== false) this.lanes[2].spawnNow();
+      }
       this.drops = cvState.drops;
     }
 

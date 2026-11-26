@@ -268,11 +268,23 @@ async function buildDeck(line, background = false) {
   return deck;
 }
 
-/** Next chain in the settings rotation that suits a preset with these tags (pairing.js); null if none does. */
+/**
+ * Next chain in the settings rotation that suits a preset with these tags (pairing.js); null if none does.
+ * EFFECTS RANDOM: any chain in the rotation, picked at random, whatever the scene (reduced motion still applies).
+ */
 const CHAIN_LOOKAHEAD = 4;   // chain candidates fetched at once
 async function pickChain(tags, dominant = null) {
   const n = autopilotSettings.fxChains.length;
   const calmOk = (c) => !(reducedMotion && (c.tags ?? []).some((t) => CALM_SKIP_CHAIN_TAGS.includes(t)));
+  if (effectsRandom) {
+    const ids = [...autopilotSettings.fxChains];
+    for (let i = ids.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [ids[i], ids[j]] = [ids[j], ids[i]]; }
+    for (const id of ids) {
+      const candidate = await fetchContent(catalog.fxChains, id);
+      if (candidate && calmOk(candidate)) return candidate;
+    }
+    return null;
+  }
   let fallback = null;
   // The rotation's next n picks, worked out up front so a few can be fetched side by side: on a slow
   // connection asking for one candidate after another held up the first scene by a round trip each.
@@ -460,17 +472,14 @@ const CALM_TAGS = ['ambient', 'build'];
 const DROP_TAGS = ['hard', 'bass-gated'];
 const presetTags = new Map(); // playlist line -> preset tags
 const presetSource = new Map(); // playlist line -> source id
-const presetGallerySet = new Map(); // playlist line -> 'logo' for the gallery source's logos (spaz-logos)
 
 // Heavy sources stay out until the GPU probe says this machine can take them (setHeavyAllowed).
 let heavyAllowed = false;
 export function setHeavyAllowed(on) { heavyAllowed = !!on; }
 // A build without photos (an app that bundles the engine without the gallery: gallery.json lists none) never
-// picks the photo-gallery background; one without see-through logos (gallery.json "logo") never the logos.
+// picks the photo-gallery background.
 let galleryAllowed = true;
-let logosAllowed = true;
-const galleryOk = (line) => presetSource.get(line) !== 'gallery'
-  || (presetGallerySet.get(line) === 'logo' ? logosAllowed : galleryAllowed);
+const galleryOk = (line) => presetSource.get(line) !== 'gallery' || galleryAllowed;
 const runnable = (line) => (heavyAllowed || !autopilotSettings.heavySources.includes(presetSource.get(line)))
   && galleryOk(line)
   && !(reducedMotion && (presetTags.get(line) ?? []).some((t) => CALM_SKIP_LOOK_TAGS.includes(t)));
@@ -588,7 +597,6 @@ async function learnPreset(line) {
   if (!raw) { markUnavailable(presetName(line)); return false; }
   presetTags.set(line, raw.tags ?? []);
   presetSource.set(line, raw.visualSourceType ?? null);
-  if (raw.gallerySet) presetGallerySet.set(line, raw.gallerySet);
   return true;
 }
 
@@ -914,9 +922,11 @@ export function setAutoRollBars(bars) {
 }
 
 // -------------------------------------------------------
-// EFFECTS (MENU): AUTO puts FX chains on the scenes and backgrounds, OFF plays the sources clean.
+// EFFECTS (MENU): AUTO puts FX chains that suit them on the scenes and backgrounds, RANDOM any chain on
+// anything (pickChain), OFF plays the sources clean.
 // -------------------------------------------------------
 let effectsOn = true;
+let effectsRandom = false;
 function stripChain(deck) {
   if (!deck || deck.empty) return;
   if (roll?.deck === deck) finishRoll();
@@ -931,8 +941,11 @@ async function rechain(deck) {
   deck.fxStripped = false;
   prewarm(deck, null);
 }
+/** `on`: true (AUTO), 'random' (RANDOM) or false (OFF). AUTO <-> RANDOM changes the picks from the next chain on. */
 export async function setEffects(on) {
-  if (!!on === effectsOn) return;
+  const wasRandom = effectsRandom;
+  effectsRandom = on === 'random';
+  if (!!on === effectsOn) { if (wasRandom !== effectsRandom) announce(); return; }
   effectsOn = !!on;
   const onAir = [fgActiveDeck === 'A' ? autopilotState.deckA : autopilotState.deckB, autopilotState.deckBG];
   const queued = [fgNext?.deck, dropLook?.deck, bgNext?.deck];
@@ -955,7 +968,7 @@ export function setFollowMusic(on) {
 // Background: B or MENU › BACKGROUND changes it now; BG CHANGES picks 'scenes' (every 2x TIME), 'hold'
 // (stays until changed by hand, with new effects every 2x TIME: refreshHeldBackground) or 'off' (faded out and not rendered).
 // -------------------------------------------------------
-let bgMode = 'hold';      // the default: the logos (first background line) stay
+let bgMode = 'scenes';    // the default: a new background every 2x TIME
 export function setBackgroundMode(mode) {
   if (!['scenes', 'hold', 'off'].includes(mode) || mode === bgMode) return;
   bgMode = mode;
@@ -1065,7 +1078,7 @@ export function contentCatalog() {
 /** The controls' settings, for a host's display (nowShowing has what is on air). */
 export function controlState() {
   return { hold: autopilotState.hold, holdBars: autopilotSettings.fgHoldBars, autoRollBars: autopilotSettings.autoRollBars,
-    follow: followMusic, effects: effectsOn, bgMode, lockedChain, lockedTransition, catalogComplete,
+    follow: followMusic, effects: effectsOn, effectsRandom, bgMode, lockedChain, lockedTransition, catalogComplete,
     live: autopilotState.isLiveBroadcast, broadcaster: autopilotState.broadcaster ?? null };
 }
 
@@ -1372,13 +1385,11 @@ async function startBackground() {
     const res = await fetchTimed('gallery.json');
     const m = res.ok ? await res.json() : {};
     galleryAllowed = (m.images?.length ?? 0) > 0;
-    const opaque = new Set(m.logo?.opaque ?? []);
-    logosAllowed = (m.logo?.images ?? []).some((n) => !opaque.has(n));
   } catch (e) {
-    galleryAllowed = logosAllowed = true; // offline web TV with no cached list: gallery.js copes by itself
+    galleryAllowed = true; // offline web TV with no cached list: gallery.js copes by itself
   }
   if (list.length > 0) {
-    // The first background line (the TV starts on the logos), or the first one this build can show.
+    // The first background line (the TV starts on the photos), or the first one this build can show.
     const first = list.findIndex((l) => playable(l));
     const deck = first >= 0 ? await buildDeck(list[first], true).catch(() => null) : null;
     bgPlaylist = list;

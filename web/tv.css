@@ -185,7 +185,9 @@ body {
 #lite-layer .lite-lane {   /* sky, photos, logos: back to front */
   position: absolute;
   inset: 0;
+  transition: opacity 0.5s ease;
 }
+#lite-layer .lite-lane.lite-off { opacity: 0; }   /* the logos with MENU › SPAZ LOGOS off */
 #lite-layer img {
   position: absolute;
   max-width: none;

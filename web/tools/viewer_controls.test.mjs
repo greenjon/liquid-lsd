@@ -98,6 +98,24 @@ test('EFFECTS OFF strips the chains on air and F reports it; AUTO brings chains 
   assert.ok(onAir().fx.some(Boolean) || onAir().pinned === 'none', 'a chain is back on the scene');
 });
 
+test('EFFECTS RANDOM puts chains on a scene that AUTO would never pair with it', async () => {
+  const { chainFits } = await import('../pairing.js');
+  const settings = JSON.parse(fs.readFileSync(path.join(web, 'settings.json'), 'utf8'));
+  const catalog = JSON.parse(fs.readFileSync(path.join(web, 'catalog.json'), 'utf8'));
+  const chain = (id) => JSON.parse(fs.readFileSync(path.join(web, catalog.fxChains.find((c) => c.id === id).file), 'utf8'));
+  const tags = onAir().tags ?? [];
+  const misfits = new Set(settings.fxChains.filter((id) => !chainFits(tags, chain(id))).map((id) => chain(id).name));
+  await ap.setEffects('random');
+  assert.equal(ap.controlState().effectsRandom, true);
+  const seen = new Set();
+  for (let i = 0; i < 60; i++) { await ap.nextFxChain(); seen.add(onAir().chainName); }
+  assert.ok(seen.size > 3, `RANDOM varies the chain (${seen.size})`);
+  if (misfits.size) assert.ok([...seen].some((n) => misfits.has(n)), 'a chain AUTO would skip came up');
+  await ap.setEffects(true);
+  assert.equal(ap.controlState().effectsRandom, false);
+  for (let i = 0; i < 20; i++) { await ap.nextFxChain(); assert.ok(!misfits.has(onAir().chainName), onAir().chainName); }
+});
+
 test('BG CHANGES OFF fades the background out and stops rendering it; back on, one fades in', async () => {
   assert.ok(autopilotState.deckBG, 'a background is on');
   ap.setBackgroundMode('off');

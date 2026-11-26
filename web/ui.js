@@ -18,7 +18,7 @@ import { scheduleState, refreshSchedule, setShows, groupByDay, upcoming, parsePl
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v64';
+export const TV_VERSION = 'v65';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -38,8 +38,9 @@ export const viewerState = {
   reducedMode: 'auto', // Reduced motion: 'auto' (follows the system setting), 'on', 'off'
   heavyMode: 'auto',   // Heavy scenes: 'auto' (the GPU probe decides), 'on', 'off'
   autoRoll: 0,         // AUTO ROLL: bars between rolls of the scene on air (0 = off)
-  bgMode: 'hold',      // BG CHANGES: 'scenes' (every 2x TIME), 'hold' (the default: the Spaz logos stay, new FX every 2x TIME), 'off'
-  effects: true,       // EFFECTS: AUTO (true) or OFF
+  bgMode: 'scenes',    // BG CHANGES: 'scenes' (the default: every 2x TIME), 'hold' (stays, new FX every 2x TIME), 'off'
+  logos: true,         // SPAZ LOGOS: the logos layer between the background and the scene (renderer.js, lite.js)
+  effects: true,       // EFFECTS: AUTO (true, the default), RANDOM ('random') or OFF (false)
   follow: true,        // FOLLOW MUSIC: breakdowns and drops pick the scene
   theme: 'light',      // THEME: the cabinet and the room, 'dark' or 'light' (tv.css)
   reducedNow: false,   // reduced motion in effect (updated by applyReduced; the renderer reads it)
@@ -55,6 +56,8 @@ const MODES = ['auto', 'on', 'off'];
 const TIME_STEPS = [8, 16, 32, 64];   // bars per scene on the TIME dial
 const AUTO_ROLL_STEPS = [0, 4, 8, 16]; // AUTO ROLL: bars between rolls (0 = off)
 const BG_MODES = ['scenes', 'hold', 'off'];
+const EFFECTS_MODES = [true, 'random', false];   // EFFECTS: AUTO, RANDOM, OFF
+const EFFECTS_LABELS = new Map([[true, 'AUTO'], ['random', 'RANDOM'], [false, 'OFF']]);
 const BG_MODE_LABELS = { scenes: 'WITH SCENES', hold: 'HOLD', off: 'OFF' };
 // 100% = the desktop's Audio Response at 100%. Auto gain levels the stream, so no boost is needed by default.
 const REACT_MIN = 0.25, REACT_MAX = 2.0, REACT_DEFAULT = 1.0;
@@ -619,8 +622,9 @@ export function initUI() {
   viewerState.reducedMode = MODES.includes(load('lsd.reduced', 'auto')) ? load('lsd.reduced', 'auto') : 'auto';
   viewerState.heavyMode = MODES.includes(load('lsd.heavy', 'auto')) ? load('lsd.heavy', 'auto') : 'auto';
   viewerState.autoRoll = AUTO_ROLL_STEPS.includes(load('lsd.autoRoll', 0)) ? load('lsd.autoRoll', 0) : 0;
-  viewerState.bgMode = BG_MODES.includes(load('lsd.bgMode', 'hold')) ? load('lsd.bgMode', 'hold') : 'hold';
-  viewerState.effects = load('lsd.effects', true) !== false;
+  viewerState.bgMode = BG_MODES.includes(load('lsd.bgMode', 'scenes')) ? load('lsd.bgMode', 'scenes') : 'scenes';
+  viewerState.logos = load('lsd.logos', true) !== false;
+  viewerState.effects = EFFECTS_MODES.includes(load('lsd.effects', true)) ? load('lsd.effects', true) : true;
   viewerState.follow = load('lsd.follow', true) !== false;
   viewerState.theme = load('lsd.theme', 'light') === 'dark' ? 'dark' : 'light';
   const paintTheme = () => {
@@ -638,6 +642,7 @@ export function initUI() {
   const stepIn = (list, v, dir) => list[Math.max(0, Math.min(list.length - 1, list.indexOf(v) + dir))];
   const applyAutoRoll = (bars) => { viewerState.autoRoll = bars; save('lsd.autoRoll', bars); setAutoRollBars(bars); };
   const applyBgMode = (mode) => { viewerState.bgMode = mode; save('lsd.bgMode', mode); setBackgroundMode(mode); };
+  const applyLogos = (on) => { viewerState.logos = on; save('lsd.logos', on); };
   const applyEffects = (on) => { viewerState.effects = on; save('lsd.effects', on); setEffects(on); };
   const applyFollow = (on) => { viewerState.follow = on; save('lsd.follow', on); setFollowMusic(on); };
   const applyHeavy = () => {
@@ -686,16 +691,19 @@ export function initUI() {
       { label: 'FOLLOW MUSIC', locked: noScenes, value: () => onOff(viewerState.follow),
         step: () => applyFollow(!viewerState.follow),
         help: 'On: a calm scene comes in for a breakdown, a hard one cuts in on the drop, and the tempo leans the picks. Off: the scenes just take turns.' },
-      { label: 'EFFECTS', locked: noScenes, value: () => (viewerState.effects ? 'AUTO' : 'OFF'),
-        step: () => applyEffects(!viewerState.effects),
-        help: 'Auto: every scene and background gets an FX chain that suits it (FX or E picks another). Off: the scenes play clean.' },
+      { label: 'EFFECTS', locked: noScenes, value: () => EFFECTS_LABELS.get(viewerState.effects),
+        step: (dir) => applyEffects(EFFECTS_MODES[(EFFECTS_MODES.indexOf(viewerState.effects) + dir + EFFECTS_MODES.length) % EFFECTS_MODES.length]),
+        help: 'Auto (the default): every scene and background gets an FX chain that suits it (FX or E picks another). Random: any chain on anything, from the next scene on: more variety, sometimes muddier. Off: the scenes play clean.' },
       { label: 'BACKGROUND', needsPower: true, locked: () => noScenes() || viewerState.bgMode === 'off',
         value: () => (viewerState.bgMode === 'off' ? 'OFF' : prettyName(nowShowing().backgroundPicked ?? '') || '---'),
         step: (dir) => stepBackground(dir).then(() => menu.refresh()),
-        help: 'The picture behind the scene, which shows through wherever the scene is dark or see-through: the Spaz Radio logos to start with, then the listener photos. ◀ ▶ or B pick another one now.' },
+        help: 'The picture behind the scene, which shows through wherever the scene is dark or see-through: the listener photos to start with, then slow ambient scenes. ◀ ▶ or B pick another one now.' },
       { label: 'BG CHANGES', locked: noScenes, value: () => BG_MODE_LABELS[viewerState.bgMode],
         step: (dir) => applyBgMode(BG_MODES[(BG_MODES.indexOf(viewerState.bgMode) + dir + BG_MODES.length) % BG_MODES.length]),
-        help: 'Hold (the default): the background stays until you change it, with new effects every two scenes (TIME). With scenes: a new one every two scenes (TIME). Off: no background, just the scene.' },
+        help: 'With scenes (the default): a new background every two scenes (TIME). Hold: the background stays until you change it, with new effects every two scenes. Off: no background, just the scene (and the logos).' },
+      { label: 'SPAZ LOGOS', locked: () => live() && !liteState.on, value: () => onOff(viewerState.logos),
+        step: () => applyLogos(!viewerState.logos), run: () => applyLogos(!viewerState.logos),
+        help: 'The Spaz Radio logos, turning slowly between the background and the scene, so they show wherever the scene is dark or see-through. Not over a live show.' },
       { label: 'SKIP THIS CHANNEL', needsPower: true, locked: noScenes, value: () => (nowShowing().skipped ? 'SKIPPED' : `CH ${String(nowShowing().channel).padStart(3, '0')}`),
         run: () => skip(),
         help: 'Skipped channels never come up by themselves (X does this too). Type a channel number to watch one again; X there restores it.' },
@@ -763,11 +771,12 @@ export function initUI() {
         viewerState.reducedMode = 'auto'; save('lsd.reduced', 'auto'); applyReduced();
         viewerState.heavyMode = 'auto'; save('lsd.heavy', 'auto'); applyHeavy();
         viewerState.announce = false; save('lsd.announce', false);
+        applyLogos(true);
         applyEq(EQ_FLAT);
         if (!kiosk) { applyTheme('light'); setAutoplay('ask'); }
         if (!live()) {
           reactDial.set(toDial(REACT_DEFAULT)); timeDial.set(TIME_STEPS.indexOf(16) / (TIME_STEPS.length - 1));
-          applyAutoRoll(0); applyBgMode('hold'); applyEffects(true); applyFollow(true);
+          applyAutoRoll(0); applyBgMode('scenes'); applyEffects(true); applyFollow(true);
         }
       } },
       { label: 'ABOUT', help: 'About Liquid LSD, the software that makes these visuals, the Spaz Radio app, and every keyboard shortcut (also ?).', value: () => 'LIQUID LSD', run: () => showKeys() },

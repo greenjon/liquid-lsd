@@ -1,8 +1,8 @@
 // gallery.js — the "gallery" source: the Spaz Radio listener photos (spaz.org/radio "Add Pic"), drawn the way
-// the old radio page drew them behind the player, smoothed out; or, with the preset's "gallerySet": "logo"
-// (spaz-logos, the TV's first background), the old page's logos instead: see-through Spaz emblems, one or two
-// at a time, turning slowly around their middles over an otherwise empty background, so the scene in front
-// stays clean. (An older engine ignores gallerySet and shows the photos.)
+// the old radio page drew them behind the player, smoothed out; or, built with { set: 'logo' } (renderer.js's
+// logos layer, between the background and the scene: MENU › SPAZ LOGOS), the old page's logos instead:
+// see-through Spaz emblems, one or two at a time, turning slowly around their middles over nothing, so the
+// background shows around them.
 //
 // The old page (groundCycler in spaz.org/radio): every 0.5-7.5 s a random photo faded in over 0-10 s while
 // it grew from 3000 to 8000 px and turned 200 degrees, with the turn's centre off the middle of the screen,

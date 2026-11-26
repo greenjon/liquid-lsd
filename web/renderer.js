@@ -4,7 +4,7 @@ import { autopilotState, autopilotSettings, tickAutopilot, startAutopilot, handl
 import { evaluateParameter, makeEvalContext, paramSpec } from './evaluator.js';
 import { lookupParam } from './isf.js';
 import { AudioTextures, audioFrame } from './audiotex.js';
-import { Library, DeckPipeline, MixerPipeline } from './graph.js';
+import { Library, DeckPipeline, MixerPipeline, Target } from './graph.js';
 import { MandalaRecipes } from './mandala.js';
 import { Gallery } from './gallery.js';
 import { heardBeats, DelayLine } from './sync.js';
@@ -267,7 +267,7 @@ async function init() {
     blit: { program: blitProgram, uTexture: gl.getUniformLocation(blitProgram, 'uTexture') },
     mixerProg: {
       program: mixerProgram,
-      ...Object.fromEntries(['uTex1', 'uTexBG', 'uProgress', 'uBgAlpha', 'uLevelA', 'uLevelB', 'uLevelBG', 'uMasterLevel']
+      ...Object.fromEntries(['uTex1', 'uTexBG', 'uTexLogo', 'uProgress', 'uBgAlpha', 'uLogoAlpha', 'uLevelA', 'uLevelB', 'uLevelBG', 'uMasterLevel']
         .map((n) => [n, gl.getUniformLocation(mixerProgram, n)]))
     }
   };
@@ -379,6 +379,8 @@ async function init() {
   const pipeB  = new DeckPipeline(ctx, renderW, renderH);
   const pipeBG = new DeckPipeline(ctx, renderW, renderH);
   const mixerPipe = new MixerPipeline(ctx, renderW, renderH);
+  const logoTarget = new Target(gl, renderW, renderH, fmt);   // the Spaz logos layer (MENU › SPAZ LOGOS)
+  let logoLevel = viewerState.logos ? 1 : 0;                  // eased towards on / off, so a toggle fades
 
   window.LSD = { cvState, audioFrame, autopilotState, powerState, viewerState, library: ctx.library, handleRelayMessage, advanceForeground,
     renderSize: () => [renderW, renderH, SCALES[adapt.idx]], gpu, frames: () => frameCount };
@@ -397,8 +399,7 @@ async function init() {
     pipe.blank = false;
     const srcType = (deckData.source || 'mandala').toLowerCase();
     if (srcType === 'mandala') renderMandala(deckData, pipe.clean);
-    else if (srcType === 'gallery') (deckData.gallerySet === 'logo' ? logos : gallery)
-      .render(pipe.clean, { dt: frameDt, bpm: evalCtx.bpm, beats: evalCtx.beats, calm: viewerState.reducedNow });
+    else if (srcType === 'gallery') gallery.render(pipe.clean, { dt: frameDt, bpm: evalCtx.bpm, beats: evalCtx.beats, calm: viewerState.reducedNow });
     else if (!ctx.library.has('sources', srcType)) pipe.clean.clear(); // a source the web cannot draw
     else if (!pipe.renderSource(deckData, frameInfo())) return null; // still loading
     return pipe.renderFx(deckData, frameInfo());
@@ -412,7 +413,7 @@ async function init() {
   const UNIT_SPEC = { min: 0, max: 1, steps: null };
   const mandalaRecipes = new MandalaRecipes(mandalaTable);
   const gallery = new Gallery(gl, quadVAO);   // the Spaz Radio photo gallery (gallery.js); loads on first use
-  const logos = new Gallery(gl, quadVAO, { set: 'logo' });   // ...and its logos (preset gallerySet "logo")
+  const logos = new Gallery(gl, quadVAO, { set: 'logo' });   // ...and its logos, the layer between background and scene
 
   function renderMandala(deckData, target) {
     target.bind();
@@ -537,6 +538,7 @@ async function init() {
       pipeB.resize(renderW, renderH);
       pipeBG.resize(renderW, renderH);
       mixerPipe.resize(renderW, renderH);
+      logoTarget.resize(renderW, renderH);
     }
 
     gl.disable(gl.BLEND);
@@ -547,10 +549,16 @@ async function init() {
       const texA = renderDeck(autopilotState.deckA, pipeA) ?? pipeA.clean.tex;
       const texB = renderDeck(autopilotState.deckB, pipeB) ?? pipeB.clean.tex;
       const texBG = renderDeck(autopilotState.deckBG, pipeBG);
+      // The Spaz logos, between the background and the scene: MENU › SPAZ LOGOS, never over a live broadcast's
+      // picture (the desktop's own). A toggle fades them over about half a second; off, they are not drawn.
+      const logosWanted = viewerState.logos && !autopilotState.isLiveBroadcast;
+      logoLevel = logosWanted ? Math.min(1, logoLevel + frameDt * 2) : Math.max(0, logoLevel - frameDt * 2);
+      if (logoLevel > 0) logos.render(logoTarget, { dt: frameDt, bpm: evalCtx.bpm, beats: evalCtx.beats, calm: viewerState.reducedNow });
       const mix = autopilotState.mixer || {};
       finalTex = mixerPipe.render(
         mix, texA, texB, texBG ?? pipeBG.clean.tex,
         (autopilotState.deckBG && !autopilotState.deckBG.empty) ? (autopilotState.bgAlpha ?? 1.0) : 0.0,
+        logoTarget.tex, logoLevel,
         (mix.alpha ?? 1.0) * autopilotState.masterAlpha,
         frameInfo());
     }

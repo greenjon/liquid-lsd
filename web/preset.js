@@ -55,7 +55,6 @@ export function parseDeckPreset(dto, rng = Math.random, { mandalaRecipes = null 
     viewZoom: settle(view.viewZoom, rng),
     viewRotateZ: settle(view.viewRotateZ, rng),
     globalAlpha: settle(dto.globalAlpha, rng),
-    ...(dto.gallerySet ? { gallerySet: dto.gallerySet } : {}),   // gallery source: 'logo' draws the logos
     fx: [],
   };
 }

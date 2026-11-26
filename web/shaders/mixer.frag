@@ -5,8 +5,10 @@ out vec4 fragColor;
 
 uniform sampler2D uTex1; // Transition output (blendFBO)
 uniform sampler2D uTexBG; // Deck BG layer
+uniform sampler2D uTexLogo; // Spaz logos layer (between the background and the scene; premultiplied)
 uniform float uProgress; // 0.0 = Deck A, 1.0 = Deck B (ISF transition mode)
 uniform float uBgAlpha; // Background layer alpha multiplier
+uniform float uLogoAlpha; // Logos layer alpha multiplier (0 = off)
 uniform float uLevelA; // Deck A channel level multiplier
 uniform float uLevelB; // Deck B channel level multiplier
 uniform float uLevelBG; // Deck BG channel level multiplier
@@ -19,6 +21,8 @@ vec4 sampleBlended(vec2 uv) {
 
 vec4 sampleComposite(vec2 uv) {
     vec4 bg = texture(uTexBG, uv) * (uBgAlpha * uLevelBG);
+    vec4 logo = texture(uTexLogo, uv) * uLogoAlpha;
+    bg = vec4(logo.rgb + bg.rgb * (1.0 - logo.a), logo.a + bg.a * (1.0 - logo.a)); // logos over the background
     vec4 fg = sampleBlended(uv);
     vec3 rgb = fg.rgb + bg.rgb * (1.0 - fg.a);
     float a = clamp(fg.a + bg.a * (1.0 - fg.a), 0.0, 1.0);
