@@ -118,9 +118,9 @@ export class Gallery {
   loadManifest() {
     this.inflight++;
     this.lastFetch = performance.now();
-    fetch(this.manifestUrl).then((r) => r.json()).then((m) => {
+    fetch(this.manifestUrl, { signal: typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(10000) : undefined }).then((r) => r.json()).then((m) => {
       const list = this.logos ? m.logo : m;
-      if (!list?.images) throw new Error(`no ${this.set} pictures listed`);
+      if (!list?.images) { this.noneListed = true; throw new Error(`no ${this.set} pictures listed`); } // final: asking again would not change it
       const opaque = new Set(list.opaque ?? []);
       this.base = list.base;
       this.urls = list.images.filter((n) => !opaque.has(n)).map((n) => list.base + encodeURIComponent(n));
@@ -309,7 +309,7 @@ export class Gallery {
     if (this.decoded.length) this.upload();
     // Every 20 s, one more photo; after a bad start (no list, or every photo failing: offline), try again.
     if (this.inflight === 0 && performance.now() - this.lastFetch > FETCH_EVERY_S * 1000) {
-      if (!this.curate && this.urls.length === 0) this.loadManifest();
+      if (!this.curate && this.urls.length === 0) { if (!this.noneListed) this.loadManifest(); }
       else if (this.pool.length > 0) this.fetchNext();
       else { this.failures = 0; this.fill(); }
     }

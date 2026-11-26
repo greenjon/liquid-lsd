@@ -207,7 +207,7 @@ class Slideshow {
 
   async loadManifest() {
     try {
-      const r = await fetch('gallery.json', { cache: 'no-cache' });
+      const r = await fetch('gallery.json', { cache: 'no-cache', signal: typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(10000) : undefined });
       const m = await r.json();
       const list = (part, base) => (part?.images ?? []).map((n) => base + encodeURIComponent(n));
       this.lanes[1].setUrls(list(m, m.lite || m.base));

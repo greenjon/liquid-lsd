@@ -97,6 +97,12 @@ test('a failed fetch keeps the last good list', async () => {
   assert.equal(scheduleState.failed, false);
 });
 
+test('the schedule fetch carries a timeout signal (where the browser has AbortSignal.timeout)', async () => {
+  let signal;
+  await refreshSchedule(async (url, opts) => { signal = opts.signal; return { ok: true, json: async () => [] }; });
+  if (typeof AbortSignal.timeout === 'function') assert.ok(signal instanceof AbortSignal);
+});
+
 test('parsePlaying: the server\'s title and live flag', async () => {
   const { parsePlaying } = await import('../schedule.js');
   assert.deepEqual(parsePlaying({ playing: "[LIVE!] Spukkin Faceship&#039;s - bass", live: 'true' }), { title: "[LIVE!] Spukkin Faceship's - bass", live: true, download: '' });
