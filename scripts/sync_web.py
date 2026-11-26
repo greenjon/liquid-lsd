@@ -170,6 +170,18 @@ def check_sync(manifest: dict) -> dict:
         src_path = PROJECT_ROOT / src_rel
         dst_path = PROJECT_ROOT / dst_rel
 
+        # A deliberate web extension (mode "web_extension") differs from the desktop on purpose:
+        # --check only confirms both files exist (review by hand), --apply never touches it.
+        if shader_entry.get("mode") == "web_extension":
+            if src_path.exists() and dst_path.exists():
+                results["in_sync"].append({"type": "web_extension", "source": src_rel, "target": dst_rel,
+                                           "description": desc + " [web extension, review by hand]"})
+            else:
+                results["missing"].append({"type": "web_extension", "source": src_rel, "target": dst_rel,
+                                           "reason": f"File missing: {src_rel if not src_path.exists() else dst_rel}",
+                                           "description": desc})
+            continue
+
         if not src_path.exists():
             results["missing"].append({
                 "type": "shader",
@@ -306,6 +318,9 @@ def apply_sync(manifest: dict) -> list:
     for shader_entry in manifest.get("shaders", []):
         src_rel = shader_entry["desktop"]
         dst_rel = shader_entry["web"]
+
+        if shader_entry.get("mode") == "web_extension":
+            continue  # deliberate web-only difference: never overwritten
 
         src_path = PROJECT_ROOT / src_rel
         dst_path = PROJECT_ROOT / dst_rel

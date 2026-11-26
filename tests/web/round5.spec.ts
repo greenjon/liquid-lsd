@@ -13,11 +13,13 @@ const save = (name: string, data: unknown) => {
 const snap = (page: Page) => page.evaluate(() => {
   const L = (window as any).LSD, a = L.autopilotState;
   const vis = (id: string) => { const e = document.getElementById(id); return !!e && !e.hidden && getComputedStyle(e).display !== 'none'; };
+  const ids: WeakMap<object, number> = ((window as any).__deckIds ??= new WeakMap());
+  const id = (d: any) => (d ? (ids.has(d) ? ids.get(d) : (ids.set(d, ids.size + 1), ids.size)) : 0);
   const media = [...document.querySelectorAll('audio,video')].map((m: any) => `${m.muted ? 'M' : ''}${m.volume.toFixed(2)}`).join(',');
   return {
     ch: document.getElementById('osd-ch')?.textContent || '',
     msg: document.getElementById('osd-msg')?.textContent || '',
-    scene: a.deckA?.name || a.deckA?.id || '',
+    scene: `${id(a.deckA)}|${id(a.deckB)}|${Math.round(a.mixer.balance * 20)}`, // deck identity plus crossfade position: P back to a scene already loaded only moves the crossfade
     chain: `${a.deckA?.chainName}|${a.deckB?.chainName}`,
     hold: !!a.hold, info: !!L.viewerState.info, react: L.viewerState.react, media,
     fullscreen: !!document.fullscreenElement,
@@ -32,9 +34,9 @@ test('checklist: keys R J E U arrows H I = - N P M S T ? F C each do their job (
   await tv.on();
   await page.waitForTimeout(3000);
   const want: [string, string[]][] = [
-    ['r', ['vars', 'msg']], ['j', ['ch', 'scene']], ['e', ['chain', 'msg']], ['u', ['media', 'msg']], ['u', ['media', 'msg']],
+    ['r', ['vars', 'msg']], ['j', ['scene']], ['e', ['chain', 'msg']], ['u', ['media', 'msg']], ['u', ['media', 'msg']],
     ['ArrowUp', ['media', 'msg']], ['ArrowDown', ['media', 'msg']], ['h', ['hold']], ['h', ['hold']], ['i', ['info']], ['i', ['info']],
-    ['=', ['react', 'msg']], ['-', ['react', 'msg']], ['n', ['ch', 'scene']], ['p', ['ch', 'scene']],
+    ['=', ['react', 'msg']], ['-', ['react', 'msg']], ['n', ['scene']], ['p', ['scene']],
     ['m', ['menu']], ['Escape', ['menu']], ['s', ['schedule']], ['Escape', ['schedule']], ['t', ['tapes']], ['Escape', ['tapes']],
     ['?', ['keys']], ['Escape', ['keys']], ['f', ['fullscreen']], ['f', ['fullscreen']], ['c', ['chat']], ['c', ['chat']],
   ];
@@ -42,8 +44,13 @@ test('checklist: keys R J E U arrows H I = - N P M S T ? F C each do their job (
   for (const [k, fields] of want) {
     const before = await snap(page);
     await page.keyboard.press(k);
-    await page.waitForTimeout(k === 'r' ? 4000 : 1200);
-    const after = await snap(page);
+    // Poll for the wanted change (up to ~5 s) instead of a fixed sleep; a key that does nothing runs out the clock.
+    const diff = (a: any) => Object.keys(a).filter((f) => a[f] !== (before as any)[f]);
+    let after = await snap(page);
+    for (let t = 0; t < 25 && !fields.some((f) => diff(after).includes(f)); t++) {
+      await page.waitForTimeout(200);
+      after = await snap(page);
+    }
     const changed = Object.keys(after).filter((f) => (after as any)[f] !== (before as any)[f]);
     rows.push({ key: k, want: fields, changed, ok: fields.some((f) => changed.includes(f)) });
   }

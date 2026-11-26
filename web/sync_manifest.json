@@ -18,8 +18,8 @@
     {
       "desktop": "src/main/resources/shaders/mixer.frag",
       "web": "web/shaders/mixer.frag",
-      "mode": "auto_shader",
-      "description": "Master deck mixer & crossfader compositing shader"
+      "mode": "web_extension",
+      "description": "Master deck mixer & crossfader compositing shader (web adds the Spaz logos layer: uTexLogo, uLogoAlpha; TV v65)"
     },
     {
       "desktop": "library/sources/dynamic_spiral/dynamic_spiral.fs",
