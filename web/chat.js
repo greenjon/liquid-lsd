@@ -67,10 +67,23 @@ export function linkify(text) {
 }
 
 /** A line from the wire or the log in our form {user, message, time (ms)}; null when it lacks either part. */
-export function normalize(raw, now) {
+export const MAX_RECEIVED_TEXT = 2 * MAX_TEXT; // a received line is cut here (decoding entities can shorten it)
+export const MAX_TIME_SKEW_MS = 86400000;      // a log time more than a day ahead of now is not believed
+
+/**
+ * A line from the wire or the log in our form {user, message, time (ms)}; null when it lacks either part. Names
+ * and text are cut to size. The time is the log's `time_received` only with `trustTime` (history), and only when
+ * it is finite, positive and not in the future; anything else, and every live line, is stamped `now`.
+ */
+export function normalize(raw, now, { trustTime = true } = {}) {
   if (!raw || typeof raw.user !== 'string' || typeof raw.message !== 'string') return null;
   const t = Number(raw.time_received);
-  return { user: cleanText(raw.user), message: cleanText(raw.message), time: t > 0 ? t : now };
+  const ok = trustTime && Number.isFinite(t) && t > 0 && t <= now + MAX_TIME_SKEW_MS;
+  return {
+    user: cleanText(raw.user.slice(0, MAX_NICK * 4)).slice(0, MAX_NICK),
+    message: cleanText(raw.message.slice(0, MAX_RECEIVED_TEXT * 2)).slice(0, MAX_RECEIVED_TEXT),
+    time: ok ? t : now,
+  };
 }
 
 /**
@@ -133,7 +146,7 @@ export function createChat({
     nick: cleanText(load()).trim().slice(0, MAX_NICK),
     lastSend: -Infinity,
   };
-  let client = null, healTimer = null, started = false;
+  let client = null, healTimer = null, started = false, namesCache = null;
 
   const announce = (name) => client?.publish(presenceTopic, name, { qos: 1, retain: true }).catch(() => {});
 
@@ -154,15 +167,18 @@ export function createChat({
     if (topic === CHAN) {
       let raw;
       try { raw = JSON.parse(payload); } catch { return; }
-      const msg = normalize(raw, now());
+      const msg = normalize(raw, now(), { trustTime: false });
       if (!msg) return;
       state.messages = [...state.messages, msg].slice(-MAX_MESSAGES);
       onLive(msg); // instead of onChange('messages'): the board draws a live line as just written
     } else if (topic.startsWith('presence/')) {
       const id = topic.slice('presence/'.length);
-      const name = cleanText(payload).trim();
-      if (!name || name === 'offline') state.roster.delete(id);
+      const name = cleanText(payload.slice(0, MAX_NICK * 4)).trim().slice(0, MAX_NICK);
+      const had = state.roster.get(id);
+      if (!name || name === 'offline') { if (!state.roster.delete(id)) return; }
+      else if (had === name) return; // a retained replay or re-announce changes nothing: no re-sort, no redraw
       else state.roster.set(id, name);
+      namesCache = null;
       onChange('roster');
     }
   }
@@ -170,7 +186,7 @@ export function createChat({
   const chat = {
     state,
     clientId,
-    get names() { return rosterNames(state.roster); },
+    get names() { return namesCache ??= rosterNames(state.roster); },
     /** Connects (and keeps reconnecting) and reads the log; safe to call twice. */
     start() {
       if (started) return;
@@ -182,7 +198,7 @@ export function createChat({
         subscriptions: [{ topic: CHAN, qos: 1 }, { topic: 'presence/#', qos: 1 }],
         onState: (s) => {
           state.status = s;
-          if (s !== 'online' && state.roster.size) { state.roster.clear(); onChange('roster'); }
+          if (s !== 'online' && state.roster.size) { state.roster.clear(); namesCache = null; onChange('roster'); }
           onChange('status');
         },
         onReady: () => {

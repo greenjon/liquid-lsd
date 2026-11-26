@@ -53,9 +53,11 @@ export const encodePing = () => Uint8Array.from([0xc0, 0]);
 export const encodeDisconnect = () => Uint8Array.from([0xe0, 0]);
 
 /** Splits a byte stream into packets {type, flags, body}; frames may arrive split or several at once. */
+export const MAX_BUFFER = 256 * 1024; // the chat's packets are tiny; past this the stream is not ours to buffer
 export class Parser {
   constructor() { this.buf = new Uint8Array(0); }
   push(chunk) {
+    if (this.buf.length > MAX_BUFFER) throw new Error('packet too large');
     const add = chunk instanceof Uint8Array ? chunk : new Uint8Array(chunk);
     const b = new Uint8Array(this.buf.length + add.length);
     b.set(this.buf); b.set(add, this.buf.length);
@@ -70,6 +72,7 @@ export class Parser {
         len += (d & 0x7f) * mul;
         mul *= 128;
       } while (d & 0x80 && i < 5);
+      if (len > MAX_BUFFER) throw new Error('packet too large');
       if (this.buf.length < i + len) break;
       out.push({ type: this.buf[0] >> 4, flags: this.buf[0] & 0x0f, body: this.buf.slice(i, i + len) });
       this.buf = this.buf.slice(i + len);
@@ -98,10 +101,10 @@ const T = { CONNACK: 2, PUBLISH: 3, PUBACK: 4, SUBACK: 9, PINGRESP: 13 };
 export function createClient({
   url, clientId, keepAlive = 30, will = null, subscriptions = [],
   onState = () => {}, onReady = () => {}, onMessage = () => {},
-  WebSocketImpl = globalThis.WebSocket, pingTimeoutMs = 10000, maxBackoffMs = 30000, random = Math.random,
+  WebSocketImpl = globalThis.WebSocket, pingTimeoutMs = 10000, connectTimeoutMs = 15000, maxBackoffMs = 30000, random = Math.random,
 }) {
   let ws = null, stopped = true, attempts = 0, nextId = 1;
-  let pingTimer = null, pongTimer = null, retryTimer = null;
+  let pingTimer = null, pongTimer = null, retryTimer = null, connectTimer = null;
   let state = 'offline';
   const pending = new Map(); // QoS 1 publishes awaiting PUBACK: id -> {resolve, reject}
   const setState = (s) => { if (s !== state) { state = s; onState(s); } };
@@ -109,7 +112,7 @@ export function createClient({
   const send = (bytes) => { if (ws && ws.readyState === 1) ws.send(bytes); };
 
   function clearTimers() {
-    clearInterval(pingTimer); clearTimeout(pongTimer); pingTimer = pongTimer = null;
+    clearInterval(pingTimer); clearTimeout(pongTimer); clearTimeout(connectTimer); pingTimer = pongTimer = connectTimer = null;
   }
   function open() {
     clearTimeout(retryTimer); retryTimer = null;
@@ -118,9 +121,14 @@ export function createClient({
     const sock = new WebSocketImpl(url, ['mqtt']);
     ws = sock;
     sock.binaryType = 'arraybuffer';
+    // A socket that never opens, or a broker that never answers CONNECT, must not leave us "connecting" forever.
+    connectTimer = setTimeout(() => { if (ws === sock && state !== 'online') abandon(); }, connectTimeoutMs);
     const parser = new Parser();
     sock.onopen = () => sock.send(encodeConnect({ clientId, keepAlive, will }));
-    sock.onmessage = (ev) => { if (ws === sock) for (const p of parser.push(ev.data)) handle(p); };
+    sock.onmessage = (ev) => {
+      if (ws !== sock) return;
+      try { for (const p of parser.push(ev.data)) handle(p); } catch { abandon(); } // one bad frame costs a reconnect, not the page
+    };
     sock.onerror = () => {}; // onclose follows
     sock.onclose = () => { if (ws === sock) dropped(); };
   }
@@ -147,7 +155,7 @@ export function createClient({
     } else if (type === T.PUBLISH) {
       const m = decodePublish(flags, body);
       if (m.qos === 1) send(encodePuback(m.id));
-      onMessage(m);
+      try { onMessage(m); } catch { /* a listener's bug must not drop the connection or the rest of the frame */ }
     }
   }
   /** Gives up on the current socket at once (a browser can take a long time to report a dead one closed). */
