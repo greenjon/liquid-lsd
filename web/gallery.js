@@ -41,17 +41,23 @@ precision highp float;
 in vec2 vUV;
 uniform sampler2D uTex;
 uniform float uAlpha;
+uniform float uGain;     // brightness (1 for photos; the logos are dimmed)
 out vec4 fragColor;
 void main() {
   vec2 e = min(vUV, 1.0 - vUV);
   float edge = smoothstep(0.0, 0.04, min(e.x, e.y));   // soft edges, so a turning photo has no hard rim
   fragColor = texture(uTex, vUV) * (uAlpha * edge);    // premultiplied (on upload); a logo's own alpha kept
+  fragColor.rgb *= uGain;
 }`;
 
 const MAX_SIDE = 1024;       // photos are scaled down to this before they go to the GPU
 const POOL = 8;              // photos held at once
 const MAX_LAYERS = 4;        // photos on screen at once
-const LOGO_LAYERS = 2;       // logos on screen at once
+// The logos stay in the background of the picture: one at a time (the next comes in while the last fades out,
+// sometimes after a moment of none), see-through and dimmed, with long fades.
+const LOGO_OPACITY = 0.55;
+const LOGO_GAIN = 0.75;
+const LOGO_PAUSE = [4, 16];  // beats from a logo starting to fade out to the next one coming in
 const FETCH_EVERY_S = 20;    // a new photo in the pool this often, once the pool is full
 
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -102,7 +108,7 @@ export class Gallery {
     gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FRAG));
     gl.linkProgram(prog);
     this.prog = prog;
-    this.loc = Object.fromEntries(['uHalf', 'uPivotUV', 'uPivotPos', 'uAngle', 'uAspect', 'uTex', 'uAlpha']
+    this.loc = Object.fromEntries(['uHalf', 'uPivotUV', 'uPivotPos', 'uAngle', 'uAspect', 'uTex', 'uAlpha', 'uGain']
       .map((n) => [n, gl.getUniformLocation(prog, n)]));
     if (this.curate) { this.startCurate(); return; }
     this.loadManifest();
@@ -273,20 +279,18 @@ export class Gallery {
   }
 
   /**
-   * A logo: the old page spun its logos fast and blew them up past the screen; here one or two at a time, from
-   * about two thirds of the screen high to well past its edges (two to four times the old size here), each
-   * turning steadily around its own middle while it drifts and slowly grows.
+   * A logo: the old page spun its logos fast and blew them up past the screen; here one at a time, from
+   * about two thirds of the screen high to well past its edges (two to four times the old size here), turning
+   * steadily around its own middle while it drifts and slowly grows, fading in and out over many beats.
    */
   spawnLogo(photo, aspect, calm) {
-    const live = this.layers.filter((l) => l.outAt > this.clock);
-    if (live.length >= LOGO_LAYERS) live[0].outAt = this.clock;
-    const fadeIn = rand(4, 8);
+    const fadeIn = rand(8, 16);
     this.layers.push({
       photo,
       born: this.clock,
       fadeIn,
       outAt: this.clock + fadeIn + rand(16, 32),
-      fadeOut: rand(4, 8),
+      fadeOut: rand(16, 32),
       scale0: rand(0.33, 0.6) * rand(2, 4),                      // half height, screen half-heights: past the edges
       grow: rand(0.002, 0.006) * (calm ? 0.5 : 1),
       angle0: rand(-Math.PI, Math.PI),
@@ -317,10 +321,16 @@ export class Gallery {
     this.lastBeats = beats;
     const visible = this.layers.filter((l) => l.outAt > this.clock).length;
     const due = this.clock >= this.nextSpawn && (onBeat || this.clock >= this.nextSpawn + 1);
-    if (this.pool.length > 0 && (visible === 0 || due)) {
+    // Logos: only once the last one has begun to fade out and its pause is over.
+    if (this.pool.length > 0 && (this.logos ? visible === 0 && due : visible === 0 || due)) {
       this.spawn(aspect, calm);
-      const gap = this.curate ? 4 : this.logos ? rand(10, 20) : rand(2, 8);
-      this.nextSpawn = this.clock + gap * (calm && !this.curate ? 2 : 1) - 0.5;
+      if (this.logos) {
+        const l = this.layers[this.layers.length - 1];
+        this.nextSpawn = l.outAt + rand(...LOGO_PAUSE) * (calm ? 2 : 1);
+      } else {
+        const gap = this.curate ? 4 : rand(2, 8);
+        this.nextSpawn = this.clock + gap * (calm && !this.curate ? 2 : 1) - 0.5;
+      }
     }
     this.layers = this.layers.filter((l) => this.clock < l.outAt + l.fadeOut);
     if (this.curate) this.tickCurate();
@@ -336,9 +346,11 @@ export class Gallery {
     gl.activeTexture(gl.TEXTURE0);
     gl.uniform1i(this.loc.uTex, 0);
     gl.uniform1f(this.loc.uAspect, aspect);
+    gl.uniform1f(this.loc.uGain, this.logos ? LOGO_GAIN : 1);
+    const peak = this.logos ? LOGO_OPACITY : 1;
     for (const l of this.layers) {                    // oldest first, so the newest photo is on top
       const age = this.clock - l.born;
-      const a = smooth(age / l.fadeIn) * (1 - smooth((this.clock - l.outAt) / l.fadeOut)) * alpha;
+      const a = smooth(age / l.fadeIn) * (1 - smooth((this.clock - l.outAt) / l.fadeOut)) * alpha * peak;
       if (a <= 0.001) continue;
       const s = l.scale0 * Math.exp(l.grow * age);
       gl.bindTexture(gl.TEXTURE_2D, l.photo.tex);

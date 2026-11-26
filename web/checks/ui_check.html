@@ -179,19 +179,20 @@ try {
     && w.localStorage.getItem('lsd.logos') === 'false', logosRow);
   key('m'); downTo('SPAZ LOGOS'); key('ArrowRight'); key('Escape');
   check('SPAZ LOGOS back on', w.LSD.viewerState.logos === true);
+  check('EFFECTS starts on RANDOM', w.LSD.viewerState.effects === 'random' && onAir().fx.some(Boolean), String(w.LSD.viewerState.effects));
+  key('e'); await sleep(800);
+  check('E with RANDOM puts a chain on', osd('osd-chain').text.startsWith('FX:') && onAir().fx.some(Boolean), osd('osd-chain').text);
   key('m'); downTo('EFFECTS'); key('ArrowRight');
   const fxRow = d.querySelector('#tv-menu .menu-row.sel')?.textContent ?? '';
   key('Escape'); await sleep(300);
-  check('MENU › EFFECTS ▶ goes to RANDOM, and the scene keeps its chain', w.LSD.viewerState.effects === 'random' && /RANDOM/.test(fxRow)
-    && w.localStorage.getItem('lsd.effects') === '"random"' && onAir().fx.some(Boolean), fxRow);
-  key('e'); await sleep(800);
-  check('E with RANDOM puts a chain on', osd('osd-chain').text.startsWith('FX:') && onAir().fx.some(Boolean), osd('osd-chain').text);
+  check('MENU › EFFECTS ▶ goes to AUTO, and the scene keeps its chain', w.LSD.viewerState.effects === true && /AUTO/.test(fxRow)
+    && w.localStorage.getItem('lsd.effects') === 'true' && onAir().fx.some(Boolean), fxRow);
   key('m'); downTo('EFFECTS'); key('ArrowRight'); key('Escape');
   check('MENU › EFFECTS OFF takes the FX off the scene', w.LSD.viewerState.effects === false && !onAir().fx.some(Boolean));
   key('e'); await sleep(100);
   check('E with effects off says so', osd('osd-msg').text.startsWith('EFFECTS OFF'), osd('osd-msg').text);
   key('m'); downTo('EFFECTS'); key('ArrowRight'); key('Escape'); await sleep(500);
-  check('EFFECTS round to AUTO puts a chain back', w.LSD.viewerState.effects === true && onAir().fx.some(Boolean));
+  check('EFFECTS round to RANDOM puts a chain back', w.LSD.viewerState.effects === 'random' && onAir().fx.some(Boolean));
   const skipCh = chNow();
   key('x'); await sleep(2800);
   check('X skips the channel and changes on', chNow() !== skipCh && /SKIPPED/.test(osd('osd-msg').text), `${skipCh} -> ${chNow()} ${osd('osd-msg').text}`);

@@ -926,7 +926,7 @@ export function setAutoRollBars(bars) {
 // anything (pickChain), OFF plays the sources clean.
 // -------------------------------------------------------
 let effectsOn = true;
-let effectsRandom = false;
+let effectsRandom = true;    // the default: RANDOM
 function stripChain(deck) {
   if (!deck || deck.empty) return;
   if (roll?.deck === deck) finishRoll();

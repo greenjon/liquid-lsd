@@ -18,7 +18,7 @@ import { scheduleState, refreshSchedule, setShows, groupByDay, upcoming, parsePl
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v65';
+export const TV_VERSION = 'v66';
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -40,7 +40,7 @@ export const viewerState = {
   autoRoll: 0,         // AUTO ROLL: bars between rolls of the scene on air (0 = off)
   bgMode: 'scenes',    // BG CHANGES: 'scenes' (the default: every 2x TIME), 'hold' (stays, new FX every 2x TIME), 'off'
   logos: true,         // SPAZ LOGOS: the logos layer between the background and the scene (renderer.js, lite.js)
-  effects: true,       // EFFECTS: AUTO (true, the default), RANDOM ('random') or OFF (false)
+  effects: 'random',   // EFFECTS: RANDOM ('random', the default), AUTO (true) or OFF (false)
   follow: true,        // FOLLOW MUSIC: breakdowns and drops pick the scene
   theme: 'light',      // THEME: the cabinet and the room, 'dark' or 'light' (tv.css)
   reducedNow: false,   // reduced motion in effect (updated by applyReduced; the renderer reads it)
@@ -56,7 +56,7 @@ const MODES = ['auto', 'on', 'off'];
 const TIME_STEPS = [8, 16, 32, 64];   // bars per scene on the TIME dial
 const AUTO_ROLL_STEPS = [0, 4, 8, 16]; // AUTO ROLL: bars between rolls (0 = off)
 const BG_MODES = ['scenes', 'hold', 'off'];
-const EFFECTS_MODES = [true, 'random', false];   // EFFECTS: AUTO, RANDOM, OFF
+const EFFECTS_MODES = ['random', true, false];   // EFFECTS: RANDOM, AUTO, OFF
 const EFFECTS_LABELS = new Map([[true, 'AUTO'], ['random', 'RANDOM'], [false, 'OFF']]);
 const BG_MODE_LABELS = { scenes: 'WITH SCENES', hold: 'HOLD', off: 'OFF' };
 // 100% = the desktop's Audio Response at 100%. Auto gain levels the stream, so no boost is needed by default.
@@ -624,7 +624,7 @@ export function initUI() {
   viewerState.autoRoll = AUTO_ROLL_STEPS.includes(load('lsd.autoRoll', 0)) ? load('lsd.autoRoll', 0) : 0;
   viewerState.bgMode = BG_MODES.includes(load('lsd.bgMode', 'scenes')) ? load('lsd.bgMode', 'scenes') : 'scenes';
   viewerState.logos = load('lsd.logos', true) !== false;
-  viewerState.effects = EFFECTS_MODES.includes(load('lsd.effects', true)) ? load('lsd.effects', true) : true;
+  viewerState.effects = EFFECTS_MODES.includes(load('lsd.effects', 'random')) ? load('lsd.effects', 'random') : 'random';
   viewerState.follow = load('lsd.follow', true) !== false;
   viewerState.theme = load('lsd.theme', 'light') === 'dark' ? 'dark' : 'light';
   const paintTheme = () => {
@@ -693,7 +693,7 @@ export function initUI() {
         help: 'On: a calm scene comes in for a breakdown, a hard one cuts in on the drop, and the tempo leans the picks. Off: the scenes just take turns.' },
       { label: 'EFFECTS', locked: noScenes, value: () => EFFECTS_LABELS.get(viewerState.effects),
         step: (dir) => applyEffects(EFFECTS_MODES[(EFFECTS_MODES.indexOf(viewerState.effects) + dir + EFFECTS_MODES.length) % EFFECTS_MODES.length]),
-        help: 'Auto (the default): every scene and background gets an FX chain that suits it (FX or E picks another). Random: any chain on anything, from the next scene on: more variety, sometimes muddier. Off: the scenes play clean.' },
+        help: 'Random (the default): any FX chain on any scene or background, for more variety (FX or E picks another). Auto: only chains that suit the scene. Off: the scenes play clean.' },
       { label: 'BACKGROUND', needsPower: true, locked: () => noScenes() || viewerState.bgMode === 'off',
         value: () => (viewerState.bgMode === 'off' ? 'OFF' : prettyName(nowShowing().backgroundPicked ?? '') || '---'),
         step: (dir) => stepBackground(dir).then(() => menu.refresh()),
@@ -776,7 +776,7 @@ export function initUI() {
         if (!kiosk) { applyTheme('light'); setAutoplay('ask'); }
         if (!live()) {
           reactDial.set(toDial(REACT_DEFAULT)); timeDial.set(TIME_STEPS.indexOf(16) / (TIME_STEPS.length - 1));
-          applyAutoRoll(0); applyBgMode('scenes'); applyEffects(true); applyFollow(true);
+          applyAutoRoll(0); applyBgMode('scenes'); applyEffects('random'); applyFollow(true);
         }
       } },
       { label: 'ABOUT', help: 'About Liquid LSD, the software that makes these visuals, the Spaz Radio app, and every keyboard shortcut (also ?).', value: () => 'LIQUID LSD', run: () => showKeys() },

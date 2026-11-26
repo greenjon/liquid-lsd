@@ -33,6 +33,8 @@ async function runTo(to) {
 const onAir = () => (ap.nowShowing().channel > 0 && autopilotState.mixer.balance >= 0.5 ? autopilotState.deckB : autopilotState.deckA);
 const rolled = (deck) => Object.entries(deck.raw.parameters).filter(([, p]) => p.randomizeBase).map(([k]) => k);
 
+test('EFFECTS starts on RANDOM', () => assert.equal(ap.controlState().effectsRandom, true));
+
 test('every curated scene and chain has something to roll', () => {
   for (const dir of ['presets', 'fxchains']) {
     for (const f of fs.readdirSync(path.join(web, dir)).filter((n) => n.startsWith('web-'))) {
@@ -98,7 +100,9 @@ test('EFFECTS OFF strips the chains on air and F reports it; AUTO brings chains 
   assert.ok(onAir().fx.some(Boolean) || onAir().pinned === 'none', 'a chain is back on the scene');
 });
 
-test('EFFECTS RANDOM puts chains on a scene that AUTO would never pair with it', async () => {
+test('EFFECTS RANDOM (the default) puts chains on a scene that AUTO would never pair with it', async () => {
+  await ap.setEffects(true);
+  assert.equal(ap.controlState().effectsRandom, false);
   const { chainFits } = await import('../pairing.js');
   const settings = JSON.parse(fs.readFileSync(path.join(web, 'settings.json'), 'utf8'));
   const catalog = JSON.parse(fs.readFileSync(path.join(web, 'catalog.json'), 'utf8'));

@@ -106,7 +106,8 @@ export function installEmbedApi(hooks) {
     time: (bars) => after(setHoldBars(clamp(Math.round(Number(bars) || 16), 1, 256))),
     /** Reroll the scene every this many bars; 0 = off. */
     autoRoll: (bars) => after(setAutoRollBars(clamp(Math.round(Number(bars) || 0), 0, 256))),
-    effects: (on) => after(setEffects(!!on)),
+    /** Effects on (true: RANDOM, the default; 'auto': chains that suit the scene) or off (false). */
+    effects: (on) => after(setEffects(on === 'auto' ? true : on ? 'random' : false)),
     nextChain: () => after(nextFxChain()),
     /** FX chain by id on the scene on air (null = none): 'ok', 'off', 'live' or 'unknown'. */
     chain: (id) => after(setChain(id ?? null)),

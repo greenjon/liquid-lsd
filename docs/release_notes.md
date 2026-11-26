@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Web TV: Random Effects by Default, Quieter Logos (`web/autopilot.js`, `web/ui.js`, `web/embed.js`, `web/gallery.js`)
+- **Changed: MENU › EFFECTS now starts on *Random*:** any FX chain can land on any scene or background. *Auto* (only chains that suit the scene) and *Off* are one step away, and RESET goes back to *Random*. If you already picked a setting, it is kept. In the app, turning effects on means *Random* too (TV v66).
+- **Changed: the Spaz logos stay in the background more.** One logo at a time instead of two, sometimes with a pause of none. Each is see-through (55%) and dimmed (75%), and fades in over 8-16 beats and out over 16-32. The next logo comes in while the last one fades out.
+
 ### Web TV: Spaz Logos Get Their Own Layer, and Random Effects (`web/renderer.js`, `web/graph.js`, `web/shaders/mixer.frag`, `web/gallery.js`, `web/lite.js`, `web/autopilot.js`, `web/preset.js`, `web/ui.js`, `web/tv.css`, `web/playlists/default_bg.lsdplay`)
 - **Changed: the Spaz logos are now a layer of their own, between the background and the scene,** instead of one of the backgrounds. They turn slowly over whichever background is on, and show wherever the scene is dark or see-through. MENU › SCENES › **SPAZ LOGOS** turns them on or off (on by default, remembered on the device; they fade in and out). It works in the lite picture too, where it hides the logos at the front. The logos stay off during a live show from the desktop, where the picture is the VJ's own (TV v65).
 - **Changed: MENU › BG CHANGES now starts on *With scenes*:** a new background every two scenes, starting with the listener photos and moving on to the slow ambient scenes. *Hold* still keeps one background, and RESET goes back to *With scenes*. Your choice is still remembered if you set one.
