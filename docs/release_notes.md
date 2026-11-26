@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Web TV: No More Channel Numbers or Channel Skip (`web/ui.js`, `web/index.html`, `web/tv.css`, `web/checks/ui_check.html`)
+- **Changed: the web TV no longer shows channel numbers.** A number only named the scene, not the background, FX and logos on with it, so it couldn't bring back a look you liked. The display window now says just `SPAZ RADIO`, INFO and the scene-change lines leave out the `CH ###` line, and typing digits no longer tunes. CH ▲▼ and `J` still change the scene (TV v68).
+- **Removed: channel skip.** `X`, MENU › SCENES › **Skip this channel** and **Skipped** are gone, and any skips stored in the browser are forgotten, so every scene comes up again.
+- Internal: the numbers are hidden behind `SHOW_CHANNELS` in `ui.js`, not deleted. The skip functions stay in `autopilot.js` and `embed.js` because the Android apps' embedded TV calls `setSkipped`.
+
 ### Web TV: Turning the TV Off Saves Power (`web/renderer.js`, `web/checks/render_check.mjs`)
 - **Fixed: the web TV kept the graphics card busy while it was off.** It kept drawing a black screen as fast as the display refreshed. Now, once the switch-off animation ends, it stops drawing until you turn it back on. In the meantime it only keeps the clock and the scene rotation going, ten times a second (TV v67).
 - Internal: `render_check.mjs` takes group names in `RC_ONLY` (`source`, `fx`, `trans`, `master`, `live`, `preset`, `desktop`, `chain`, `transpreset`), so a change can be checked on just the cases it touches. `RC_HEADED=1` runs Firefox in a visible window, which uses less CPU than headless.

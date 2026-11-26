@@ -6,7 +6,7 @@ import { embed } from './embedmode.js';
 import { liteState, liteNext, setVisuals, canSwitch } from './lite.js';
 import { autopilotState, advanceForeground, previousForeground, randomForeground, nextFxChain, setHold, setHoldBars, nowShowing, setHeavyAllowed, setReducedMotion,
   rollScene, setAutoRollBars, setEffects, setFollowMusic, setBackgroundMode, stepBackground,
-  setSkipped, skippedChannels, prunedSkips, toggleSkip, restoreChannel, restoreAllChannels, tuneTo, SKIP_FLOOR } from './autopilot.js';
+  tuneTo } from './autopilot.js';
 import { createMenu } from './menu.js';
 import { heardBeats, tapOffset } from './sync.js';
 import { createChat } from './chat.js';
@@ -18,7 +18,10 @@ import { scheduleState, refreshSchedule, setShows, groupByDay, upcoming, parsePl
 // Power state — imported by renderer.js each frame
 // Shown in the MENU title so a viewer can tell whether the browser has the latest code. Bump it with
 // every publish that changes code (scripts/publish_web_tv.sh warns when spaz.org already has this one).
-export const TV_VERSION = 'v67';
+export const TV_VERSION = 'v68';
+// Channel numbers (badge, OSD, INFO, tuning by digits) are hidden: a number names only the scene, not the
+// background and FX on with it, so it can't bring a look back. Kept behind this switch in case they return.
+const SHOW_CHANNELS = false;
 
 export const powerState = {
   on: false,              // is the TV powered on?
@@ -127,7 +130,8 @@ function showLook(info = nowShowing(), ms = 4000, brand = false) {
     unflash('osd-name'); unflash('osd-bg'); unflash('osd-chain');
   } else {
     // Bottom left, one size: the scene, the background behind it, the scene's FX chain.
-    if (info.channel > 0) flash('osd-ch', `CH ${String(info.channel).padStart(3, '0')}${info.skipped ? ' \u00B7 SKIPPED' : ''}`, ms);
+    if (SHOW_CHANNELS && info.channel > 0) flash('osd-ch', `CH ${String(info.channel).padStart(3, '0')}`, ms);
+    else unflash('osd-ch');
     flash('osd-name', `SCENE: ${prettyName(info.name)}`, ms);
     if (info.background) flash('osd-bg', `BACKGROUND: ${prettyName(info.background)}`, ms);
     else unflash('osd-bg');
@@ -384,7 +388,6 @@ export function initUI() {
     menu.hide();
     schedule.hide();
     deck?.close();
-    skippedPage.hide();
     keysPage.hidden = true;
   };
   powerSwitch.addEventListener('click', async () => {
@@ -458,7 +461,7 @@ export function initUI() {
     return best;
   };
   tvBody.addEventListener('click', (e) => {
-    if (e.target.closest('button, .rotary-dial, .rocker, #tv-menu, #schedule, #keys, #skipped, a')) return; // they handle their own clicks
+    if (e.target.closest('button, .rotary-dial, .rocker, #tv-menu, #schedule, #keys, a')) return; // they handle their own clicks
     if (viewerState.menu?.open) { viewerState.menu.hide(); return; } // a near-miss on the menu closes it, not the TV
     const near = e.target.closest('#tv-controls') ? nearestControl(e.clientX, e.clientY) : null;
     if (!powerState.on && !near?.matches('#key-bank button, #chatBtn')) { powerSwitch.click(); return; }
@@ -514,30 +517,7 @@ export function initUI() {
     if (r === 'off') message('BACKGROUND OFF \u00B7 MENU', 2000);
     else if (r && !['live', 'none', 'superseded'].includes(r)) { message(`BACKGROUND: ${prettyName(r.split('|')[0])}`, 2500); menu.refresh(); }
   });
-  // X: skip the channel on air (it changes on at once), or restore a skipped one; X again within 5 s undoes a skip.
-  let lastSkip = null;
-  const saveSkips = () => save('lsd.skipped', prunedSkips());
-  const skip = control(() => {
-    if (lastSkip && performance.now() - lastSkip.at < 5000) {
-      const { name, channel } = lastSkip;
-      lastSkip = null;
-      lastUserChange = performance.now();
-      restoreChannel(name, true);
-      saveSkips();
-      message(`CH ${String(channel).padStart(3, '0')} RESTORED`, 2500);
-      return;
-    }
-    const r = toggleSkip();
-    if (r.action === 'none') return;
-    const ch = `CH ${String(r.channel).padStart(3, '0')}`;
-    if (r.action === 'floor') { message(`${SKIP_FLOOR} CHANNELS MUST STAY`, 2500); return; }
-    lastUserChange = performance.now();
-    if (r.action === 'skipped') { lastSkip = { ...r, at: performance.now() }; message(`${ch} SKIPPED \u00B7 X TO UNDO`, 5000); }
-    else message(`${ch} RESTORED`, 2500);
-    saveSkips();
-    menu.refresh();
-  });
-  // 0-9: tune by number, like a remote: three digits tune at once, fewer after a pause.
+  // 0-9 (only with SHOW_CHANNELS): tune by number, like a remote: three digits tune at once, fewer after a pause.
   let digits = '', digitTimer = null;
   const tuneDigits = () => {
     clearTimeout(digitTimer);
@@ -638,7 +618,8 @@ export function initUI() {
   setBackgroundMode(viewerState.bgMode);
   setEffects(viewerState.effects);
   setFollowMusic(viewerState.follow);
-  setSkipped(Array.isArray(load('lsd.skipped', [])) ? load('lsd.skipped', []) : []);
+  // Channel skip (X, MENU › SKIPPED) is gone: forget any skips a viewer stored, so every scene comes up again.
+  try { localStorage.removeItem('lsd.skipped'); } catch { /* no storage */ }
   const stepIn = (list, v, dir) => list[Math.max(0, Math.min(list.length - 1, list.indexOf(v) + dir))];
   const applyAutoRoll = (bars) => { viewerState.autoRoll = bars; save('lsd.autoRoll', bars); setAutoRollBars(bars); };
   const applyBgMode = (mode) => { viewerState.bgMode = mode; save('lsd.bgMode', mode); setBackgroundMode(mode); };
@@ -704,12 +685,6 @@ export function initUI() {
       { label: 'SPAZ LOGOS', locked: () => live() && !liteState.on, value: () => onOff(viewerState.logos),
         step: () => applyLogos(!viewerState.logos), run: () => applyLogos(!viewerState.logos),
         help: 'The Spaz Radio logos, turning slowly between the background and the scene, so they show wherever the scene is dark or see-through. Not over a live show.' },
-      { label: 'SKIP THIS CHANNEL', needsPower: true, locked: noScenes, value: () => (nowShowing().skipped ? 'SKIPPED' : `CH ${String(nowShowing().channel).padStart(3, '0')}`),
-        run: () => skip(),
-        help: 'Skipped channels never come up by themselves (X does this too). Type a channel number to watch one again; X there restores it.' },
-      { label: 'SKIPPED', value: () => { const n = skippedChannels().length; return n ? `${n} CHANNEL${n === 1 ? '' : 'S'}` : 'NONE'; },
-        run: () => { menu.hide(); skippedPage.show(); },
-        help: 'The channels you skipped: pick one to watch it, then X restores it.' },
     ] },
     { name: 'SOUND', rows: [
       { label: 'AUDIO INPUT', needsPower: true, locked: live, value: () => (isMicOn() ? 'MICROPHONE' : deck?.current ? 'TAPE' : 'RADIO'),
@@ -766,7 +741,7 @@ export function initUI() {
           return gpu?.state === 'done' ? `AUTO (${onOff(gpu.heavy)}, ${gpu.ms.toFixed(0)} MS)` : `AUTO (${onOff(gpu?.heavy)})`;
         },
         step: (dir) => { viewerState.heavyMode = cycle(viewerState.heavyMode, dir); save('lsd.heavy', viewerState.heavyMode); applyHeavy(); } },
-      { label: 'RESET', help: 'Put every setting back to its default. Skipped channels stay skipped (SCENES › SKIPPED).', run: () => {
+      { label: 'RESET', help: 'Put every setting back to its default.', run: () => {
         viewerState.syncMs = 0; save('lsd.sync', 0);
         viewerState.reducedMode = 'auto'; save('lsd.reduced', 'auto'); applyReduced();
         viewerState.heavyMode = 'auto'; save('lsd.heavy', 'auto'); applyHeavy();
@@ -933,81 +908,6 @@ export function initUI() {
   keysPage.querySelector('.ab-app').href = appUrl();
   keysPage.addEventListener('click', (e) => { if (!e.target.closest('a')) keysPage.hidden = true; });
 
-  // --- MENU › SKIPPED: the skipped channels; picking one tunes to it (X there restores it). ↑↓ Enter, Esc ---
-  const skippedEl = document.getElementById('skipped');
-  const skippedList = skippedEl.querySelector('.sk-list');
-  let skipSel = 0;
-  const skippedPage = {
-    get open() { return !skippedEl.hidden; },
-    show() {
-      menu.hide(); schedule.hide(); keysPage.hidden = true;
-      skipSel = 0;
-      skippedEl.hidden = false;
-      this.render();
-    },
-    hide() { skippedEl.hidden = true; },
-    render() {
-      const list = skippedChannels();
-      skippedList.replaceChildren();
-      if (!list.length) {
-        const empty = document.createElement('div');
-        empty.className = 'sk-empty';
-        empty.textContent = 'NO SKIPPED CHANNELS. PRESS X ON A CHANNEL TO SKIP IT.';
-        skippedList.appendChild(empty);
-        return;
-      }
-      skipSel = Math.min(skipSel, list.length);
-      list.forEach((c, i) => {
-        const row = document.createElement('button');
-        row.className = 'sk-row' + (i === skipSel ? ' sel' : '');
-        row.setAttribute('role', 'listitem');
-        const ch = document.createElement('span');
-        ch.className = 'sk-ch';
-        ch.textContent = `CH ${String(c.channel).padStart(3, '0')}`;
-        const name = document.createElement('span');
-        name.textContent = prettyName(c.name).toUpperCase();
-        row.append(ch, name);
-        row.addEventListener('click', (e) => { e.stopPropagation(); this.pick(i); });
-        skippedList.appendChild(row);
-      });
-      // Last row: RESTORE ALL
-      const all = document.createElement('button');
-      all.className = 'sk-row sk-all' + (skipSel === list.length ? ' sel' : '');
-      all.textContent = 'RESTORE ALL';
-      all.addEventListener('click', (e) => { e.stopPropagation(); this.pick(list.length); });
-      skippedList.appendChild(all);
-      skippedList.children[skipSel]?.scrollIntoView?.({ block: 'nearest' });
-    },
-    pick(i) {
-      const list = skippedChannels();
-      if (i === list.length && list.length) {   // RESTORE ALL
-        restoreAllChannels();
-        saveSkips();
-        this.hide();
-        message(`${list.length} CHANNEL${list.length === 1 ? '' : 'S'} RESTORED`, 2500);
-        return;
-      }
-      const c = list[i];
-      this.hide();
-      if (!c) return;
-      if (!powerState.on) powerSwitch.click(); // picked with the TV off: it comes on, on that channel
-      if (live()) { message('LIVE \u00B7 CONTROLS LOCKED', 2000); return; }
-      lastUserChange = performance.now();
-      const r = tuneTo(c.channel);
-      if (r === 'heavy') message(`CH ${String(c.channel).padStart(3, '0')} \u00B7 NEEDS BIG GPU SCENES (MENU)`, 3000);
-      else message(`CH ${String(c.channel).padStart(3, '0')} \u00B7 SKIPPED \u00B7 X RESTORES IT`, 4000);
-    },
-    key(e) {
-      const n = skippedChannels().length && skippedChannels().length + 1; // the channels and RESTORE ALL
-      if (e.key === 'ArrowDown' && n) { skipSel = (skipSel + 1) % n; this.render(); }
-      else if (e.key === 'ArrowUp' && n) { skipSel = (skipSel + n - 1) % n; this.render(); }
-      else if ((e.key === 'Enter' || e.key === ' ') && n) this.pick(skipSel);
-      else this.hide();
-    },
-  };
-  skippedEl.addEventListener('click', () => skippedPage.hide());
-  viewerState.skippedPage = skippedPage;
-
   // --- INFO: keeps the info lines (channel, scene, background, FX, track, next show) on screen ---
   // It is the key bank's resting key: a page opened over it pops it up, and closing that page lets it back down.
   const infoBtn = document.getElementById('infoBtn');
@@ -1049,7 +949,7 @@ export function initUI() {
       button: document.getElementById('tapesBtn'), storage,
       isOn: () => powerState.on, powerOn: () => { if (!powerState.on) powerSwitch.click(); }, reduced: () => viewerState.reducedNow, stickyStrip: () => viewerState.info,
       message,
-      onOpen: () => { menu.hide(); schedule.hide(); skippedPage.hide(); keysPage.hidden = true; },
+      onOpen: () => { menu.hide(); schedule.hide(); keysPage.hidden = true; },
       onChange: (show) => {
         updateBadge();
         updateMediaSession();
@@ -1067,7 +967,7 @@ export function initUI() {
   // --- The key bank: OFF · INFO · MENU · SCHED · TAPES · ?, one key down at a time, like a car radio's.
   // The pages decide which key is down (a MutationObserver watches them), so every way in or out (keys, clicks,
   // Esc, the power switch) keeps the bank in step. No page up: INFO or OFF is down, whichever is resting. ---
-  const pageKey = () => (menu.open || skippedPage.open ? 'menu'
+  const pageKey = () => (menu.open ? 'menu'
     : schedule.open ? 'sched' : deck?.pageOpen ? 'tapes' : !keysPage.hidden ? 'keys' : null);
   const bankKeys = { off: 'offBtn', info: 'infoBtn', menu: 'menuBtn', sched: 'scheduleBtn', tapes: 'tapesBtn', keys: 'keysBtn' };
   syncKeys = () => {
@@ -1096,7 +996,6 @@ export function initUI() {
     if (e.ctrlKey || e.metaKey || e.altKey || e.target.closest?.('input, textarea')) return;
     if (schedule.open) { e.preventDefault(); schedule.hide(); return; }
     if (!keysPage.hidden) { e.preventDefault(); keysPage.hidden = true; return; }
-    if (skippedPage.open) { e.preventDefault(); skippedPage.key(e); return; }
     if (deck?.pageOpen) { deck.key(e); return; }
     if (tapping && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); tapSync(); return; }
     // With the menu open these still work: ?, S, I and T close it and do their thing, C toggles the chat.
@@ -1115,8 +1014,8 @@ export function initUI() {
       ArrowUp: () => stepVolume(1), ArrowDown: () => stepVolume(-1), u: toggleMute, U: toggleMute,
       e: fx, E: fx, h: hold, H: hold,
       ' ': deck?.current && powerState.on ? deck.togglePause : hold, // a tape in: Space pauses it, as on any player; H still holds
-      r: roll, R: roll, b: nextBackground, B: nextBackground, x: skip, X: skip,
-      ...Object.fromEntries([...'0123456789'].map((d) => [d, () => digit(d)])),
+      r: roll, R: roll, b: nextBackground, B: nextBackground,
+      ...(SHOW_CHANNELS ? Object.fromEntries([...'0123456789'].map((d) => [d, () => digit(d)])) : {}),
       '[': () => stepTime(-1), ']': () => stepTime(1),
       '-': () => stepReact(-1), '=': () => stepReact(1), '+': () => stepReact(1),
       Escape: () => document.fullscreenElement && document.exitFullscreen().catch(console.error),
@@ -1313,19 +1212,16 @@ export function initUI() {
   updateSource();
   setInterval(updateSource, 1000); // a scheduled show starts by the clock, with no event to say so
   window.addEventListener('lsd-mic', updateSource);
-  // The station badge: the channel, always, three digits so the badge keeps its width (CH.001 .. CH.100).
+  // The station badge: the station, and with SHOW_CHANNELS the channel in three digits (CH.001 .. CH.100).
   const stationText = document.querySelector('#station-badge .station-text');
   const updateBadge = (info = nowShowing()) => {
     const ch = info.channel > 0 ? String(info.channel).padStart(3, '0') : '---';
-    stationText.textContent = `SPAZ RADIO \u2022 CH.${ch}`;
+    stationText.textContent = SHOW_CHANNELS ? `SPAZ RADIO \u2022 CH.${ch}` : 'SPAZ RADIO';
     updateSource();
   };
-  // The first scene on air means the playlist has loaded: drop stored skips for channels it no longer has.
-  let skipsPruned = false;
   window.addEventListener('lsd-now-showing', (e) => {
     if (document.getElementById('osd-ch')?.textContent.startsWith('TUNING')) unflash('osd-ch');
     announceLook(e.detail); updateMediaSession(); updateBadge(e.detail);
-    if (!skipsPruned) { skipsPruned = true; save('lsd.skipped', prunedSkips()); }
     menu.refresh();
   });
   // The background changes on its own clock: with ANNOUNCE SCENES on, only its line comes up.

@@ -984,8 +984,8 @@ body.kiosk #keys .ab-app { display: none; }
 #tv-screen-area:has(#schedule:not([hidden])) #osd { visibility: hidden; }
 @media (max-width: 700px) { #schedule .sc-time { min-width: 0; } #schedule .sc-show { flex-direction: column; gap: 0; } }
 
-/* ? (and MENU › ABOUT): Liquid LSD and the keyboard shortcuts, and MENU › SKIPPED: the same page as SCHEDULE */
-#keys, #skipped {
+/* ? (and MENU › ABOUT): Liquid LSD and the keyboard shortcuts: the same page as SCHEDULE */
+#keys {
   position: absolute;
   inset: 0;
   z-index: 5;
@@ -1004,8 +1004,8 @@ body.kiosk #keys .ab-app { display: none; }
   scrollbar-width: thin;
   scrollbar-color: rgba(140,255,140,0.4) transparent;
 }
-#keys[hidden], #skipped[hidden] { display: none; }
-#keys .ky-name, #skipped .ky-name { font-size: 1.4em; letter-spacing: 0.2em; color: #d9c2ff; text-shadow: 0 0 10px rgba(160,90,255,0.9); }
+#keys[hidden] { display: none; }
+#keys .ky-name { font-size: 1.4em; letter-spacing: 0.2em; color: #d9c2ff; text-shadow: 0 0 10px rgba(160,90,255,0.9); }
 #keys .ky-groups { display: grid; grid-template-columns: 1fr 1fr; column-gap: 1.5em; font-size: 0.8em; }
 #keys .ky-group { break-inside: avoid; margin-bottom: 0.5em; }
 #keys .ky-head { font-size: 0.8em; letter-spacing: 0.2em; opacity: 0.65; }
@@ -1013,15 +1013,9 @@ body.kiosk #keys .ab-app { display: none; }
 #keys dd b { font-weight: inherit; color: #d9c2ff; text-shadow: 0 0 8px rgba(160,90,255,0.8); }
 #keys dt { color: #d9c2ff; text-shadow: 0 0 8px rgba(160,90,255,0.8); white-space: nowrap; }
 #keys dd { margin: 0; }
-#keys .sc-hint, #skipped .sc-hint { margin-top: auto; padding-top: 0.6em; font-size: 0.7em; opacity: 0.7; }
+#keys .sc-hint { margin-top: auto; padding-top: 0.6em; font-size: 0.7em; opacity: 0.7; }
 body.kiosk #keys .ky-chat { display: none; }
-#tv-screen-area:has(#keys:not([hidden])) #osd, #tv-screen-area:has(#skipped:not([hidden])) #osd { visibility: hidden; }
-#skipped .sk-list { display: flex; flex-direction: column; margin: 0.4em 0 0; }
-#skipped .sk-row { all: unset; display: flex; gap: 1.5em; padding: 0.05em 0.3em; cursor: pointer; }
-#skipped .sk-row:hover, #skipped .sk-row:focus-visible, #skipped .sk-row.sel { background: rgba(140,255,140,0.18); }
-#skipped .sk-ch { color: #d9c2ff; text-shadow: 0 0 8px rgba(160,90,255,0.8); white-space: nowrap; }
-#skipped .sk-empty { opacity: 0.7; }
-#skipped .sk-all { margin-top: 0.5em; color: #d9c2ff; text-shadow: 0 0 8px rgba(160,90,255,0.8); }
+#tv-screen-area:has(#keys:not([hidden])) #osd { visibility: hidden; }
 
 #tv-menu .menu-hint.help { opacity: 0.9; text-transform: none; letter-spacing: 0.02em; }
 
@@ -1279,7 +1273,6 @@ a.tp-dl:hover, a.tp-dl:focus-visible { opacity: 1; background: rgba(140,255,140,
 #tv-body:not(.powered-on) #tape-strip, .menu-open #tape-strip, .card-up #tape-strip { display: none; }
 #tv-screen-area:has(#tapes:not([hidden])) #tape-strip, #tv-screen-area:has(#schedule:not([hidden])) #tape-strip,
 #tv-screen-area:has(#keys:not([hidden])) #tape-strip,
-#tv-screen-area:has(#skipped:not([hidden])) #tape-strip { display: none; }
 #tv-screen-area:has(#tape-strip.show) #osd-info { bottom: calc(var(--strip-h) + 5%); }
 .ts-btn { flex: none; min-width: 2.6em; padding: 0 0.3em; background: none; border: 1px solid rgba(140,255,140,0.35); color: inherit; font: inherit; cursor: pointer; }
 .ts-btn:hover, .ts-btn:focus-visible { background: #8cff8c; color: #021; }

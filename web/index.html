@@ -157,9 +157,8 @@
                   <div class="ky-head">CHANNEL</div>
                   <dl class="ky-list">
                     <dt>&rarr; &larr; &middot; N P</dt><dd><b>N</b>EXT / <b>P</b>REVIOUS</dd>
-                    <dt>0 &ndash; 9</dt><dd>TUNE BY NUMBER</dd>
+                    <!-- Hidden with the channel numbers (SHOW_CHANNELS in ui.js): <dt>0 &ndash; 9</dt><dd>TUNE BY NUMBER</dd> -->
                     <dt>J</dt><dd><b>J</b>UMP TO RANDOM</dd>
-                    <dt>X</dt><dd>SKIP / RESTORE</dd>
                   </dl>
                 </div>
                 <div class="ky-group">
@@ -211,12 +210,6 @@
               </div>
             </div>
             <div class="sc-hint">ANY KEY OR CLICK TO CLOSE</div>
-          </div>
-          <!-- MENU › SKIPPED: the skipped channels; click one to tune to it (X there restores it) -->
-          <div id="skipped" title="" hidden>
-            <div class="ky-name">SKIPPED CHANNELS</div>
-            <div class="sk-list" role="list"></div>
-            <div class="sc-hint">CLICK A CHANNEL TO WATCH IT &middot; X THERE RESTORES IT &middot; ESC CLOSES</div>
           </div>
           <!-- Overlay shown when TV is off; hidden by .powered-on class -->
           <div id="screen-off-overlay"></div>
@@ -291,13 +284,13 @@
 
         <!-- The radio face: a display window over a bank of piano keys, like a car radio's; CHAT beside them -->
         <div id="radio-face">
-          <!-- The display (ui.js fills it): what the TV is listening to, the station and channel, the beat, who's tuned in -->
+          <!-- The display (ui.js fills it): what the TV is listening to, the station, the beat, who's tuned in -->
           <div id="station-block">
             <div id="station-badge">
               <div class="led beat-led" id="beatLed" title="Beat: green when locked to the music"></div>
               <!-- What the TV is listening to (ui.js): JUKEBOX, LIVE SHOW, TAPE or MIC -->
               <span id="source-badge">JUKEBOX</span>
-              <span class="station-text">SPAZ RADIO &bull; CH.---</span>
+              <span class="station-text">SPAZ RADIO</span>
             </div>
             <!-- Everyone on the Spaz Radio stream right now (ui.js, from the Icecast status) -->
             <div id="listeners" title="Everyone tuned in to Spaz Radio right now: on this TV, in the app or in any other player"></div>
@@ -307,7 +300,7 @@
                Pressing the key that is down lets it back up. ui.js keeps the keys in step with the pages. -->
           <div id="key-bank" role="group" aria-label="What shows over the picture">
             <button id="offBtn" class="bank-key" title="Off: nothing over the picture; closes the menu, schedule, tapes or keys and turns INFO off" aria-pressed="true">OFF</button>
-            <button id="infoBtn" class="bank-key" title="Info: keep the channel, scene, background, FX, track and next show on screen (I). Off: point at or tap the picture to see them for a few seconds" aria-pressed="false">INFO</button>
+            <button id="infoBtn" class="bank-key" title="Info: keep the scene, background, FX, track and next show on screen (I). Off: point at or tap the picture to see them for a few seconds" aria-pressed="false">INFO</button>
             <button id="menuBtn" class="bank-key" title="Menu: scene, sound and TV settings (M)" aria-pressed="false">MENU</button>
             <button id="scheduleBtn" class="bank-key" title="Spaz Radio's upcoming shows, in your local time (S)" aria-label="Schedule" aria-pressed="false">SCHED</button>
             <button id="tapesBtn" class="bank-key kiosk-off" title="Tapes: play shows from the Spaz Radio archive; the picture follows them (T). Its light is on while a tape is in" aria-label="Tapes" aria-pressed="false"><span class="key-led"></span>TAPES</button>

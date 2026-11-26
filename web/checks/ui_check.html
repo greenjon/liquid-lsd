@@ -1,6 +1,8 @@
 <!doctype html>
 <meta charset="utf-8">
 <title>LSD UI check</title>
+<!-- A skip stored by an older TV: the page must forget it (channel skip is gone). Set before the frame loads. -->
+<script>localStorage.setItem('lsd.skipped', '["web-x"]');</script>
 <iframe id="app" src="../index.html?nolive&nostatic&lite=0" width="1100" height="760" style="border:0"></iframe>
 <script type="module">
 import { createFakeBroker, fakeHistory } from '../tools/fakebroker.mjs';
@@ -47,17 +49,17 @@ try {
   check('ANNOUNCE SCENES is off by default: no scene name after power on', !osd('osd-name').shown, JSON.stringify(osd('osd-name')));
   check('REACT starts at 100%', w.LSD.viewerState.react === 1, w.LSD.viewerState.react);
   key('i');
-  check('I shows the channel', osd('osd-ch').shown && /^CH \d+/.test(osd('osd-ch').text), JSON.stringify(osd('osd-ch')));
+  check('I shows no channel number', !osd('osd-ch').shown, JSON.stringify(osd('osd-ch')));
   check('I names the scene', /^SCENE: \S/.test(osd('osd-name').text), osd('osd-name').text);
   check('I names the background', osd('osd-bg').shown && /^BACKGROUND: \S/.test(osd('osd-bg').text), JSON.stringify(osd('osd-bg')));
   check('I names the FX', osd('osd-chain').shown && /^FX: \S/.test(osd('osd-chain').text), JSON.stringify(osd('osd-chain')));
   check('I turns INFO on, its light too', w.LSD.viewerState.info && d.getElementById('infoBtn').getAttribute('aria-pressed') === 'true');
   await sleep(4500);
-  check('INFO keeps the info on screen', osd('osd-name').shown && osd('osd-ch').shown);
+  check('INFO keeps the info on screen', osd('osd-name').shown);
   d.getElementById('infoBtn').click();
   check('The INFO button turns it off and the info goes', !w.LSD.viewerState.info && !osd('osd-name').shown && d.getElementById('infoBtn').getAttribute('aria-pressed') === 'false');
   d.getElementById('glCanvas').dispatchEvent(new w.PointerEvent('pointermove', { pointerType: 'mouse', clientX: 50, clientY: 50, bubbles: true }));
-  check('Pointing at the picture shows the info', osd('osd-name').shown && osd('osd-ch').shown);
+  check('Pointing at the picture shows the info', osd('osd-name').shown);
   for (const id of ['osd-ch', 'osd-name', 'osd-bg', 'osd-chain', 'osd-track', 'osd-next', 'osd-brand']) d.getElementById(id).classList.remove('show');
   d.getElementById('glCanvas').dispatchEvent(new w.PointerEvent('pointermove', { pointerType: 'touch', clientX: 60, clientY: 60, bubbles: true }));
   check('...a finger moving over it does not', !osd('osd-name').shown);
@@ -120,7 +122,7 @@ try {
   await sleep(3000);
   check('Right arrow is CH up', onAir() !== first);
   const badge = d.querySelector('#station-badge .station-text').textContent;
-  check('The badge shows the channel on air, in three digits', badge.endsWith(`CH.${osd('osd-ch').text.replace(/\D/g, '').padStart(3, '0')}`), `${badge} / ${osd('osd-ch').text}`);
+  check('The badge shows the station, no channel number', badge === 'SPAZ RADIO', badge);
 
   const before = onAir().chainName;
   let changed = false;
@@ -153,9 +155,7 @@ try {
   key('j');
   await sleep(3000);
   check('J tunes a random other channel', onAir() !== beforeRandom);
-  // ROLL, B, EFFECTS, channel skip and tuning by number.
-  const pad = (n) => String(n).padStart(3, '0');
-  const chNow = () => Number(/CH\.(\d+)/.exec(d.querySelector('#station-badge .station-text').textContent)?.[1]);
+  // ROLL, B, EFFECTS.
   key('r'); await sleep(100);
   check('R rolls the scene on air', osd('osd-msg').text === 'ROLL', osd('osd-msg').text);
   d.getElementById('rollBtn').click();
@@ -193,27 +193,11 @@ try {
   check('E with effects off says so', osd('osd-msg').text.startsWith('EFFECTS OFF'), osd('osd-msg').text);
   key('m'); downTo('EFFECTS'); key('ArrowRight'); key('Escape'); await sleep(500);
   check('EFFECTS round to RANDOM puts a chain back', w.LSD.viewerState.effects === 'random' && onAir().fx.some(Boolean));
-  const skipCh = chNow();
-  key('x'); await sleep(2800);
-  check('X skips the channel and changes on', chNow() !== skipCh && /SKIPPED/.test(osd('osd-msg').text), `${skipCh} -> ${chNow()} ${osd('osd-msg').text}`);
-  key('x'); await sleep(2800);
-  check('X again within 5 s undoes the skip', chNow() === skipCh, `${chNow()}`);
-  key('x'); await sleep(2800);
-  const skippedEl = d.getElementById('skipped');
-  key('m'); downTo('SKIPPED'); key('Enter');
-  check('MENU › SKIPPED lists the skipped channel', !skippedEl.hidden && skippedEl.textContent.includes(`CH ${pad(skipCh)}`), skippedEl.textContent);
-  key('Enter'); await sleep(2800);
-  check('Picking it on the SKIPPED page tunes to it', skippedEl.hidden && chNow() === skipCh && /SKIPPED/.test(osd('osd-ch').text), `${chNow()} ${osd('osd-ch').text}`);
-  await sleep(2500); // past the undo window
-  key('x');
-  check('X on a skipped channel restores it', w.localStorage.getItem('lsd.skipped') === '[]', w.localStorage.getItem('lsd.skipped'));
-  key('x'); await sleep(5500);  // skip one more, past the undo window
-  key('m'); downTo('SKIPPED'); key('Enter'); key('ArrowUp'); // up from the first row wraps to RESTORE ALL
-  check('The SKIPPED page ends with RESTORE ALL', skippedEl.querySelector('.sk-row.sel')?.textContent === 'RESTORE ALL', skippedEl.textContent);
-  key('Enter');
-  check('RESTORE ALL empties the list', skippedEl.hidden && w.localStorage.getItem('lsd.skipped') === '[]', w.localStorage.getItem('lsd.skipped'));
-  key('0'); key('0'); key('3'); await sleep(2800);
-  check('Typing 003 tunes to channel 3', chNow() === 3, `${chNow()}`);
+  // Channel numbers are hidden (SHOW_CHANNELS) and channel skip is gone: no digits, no X, no SKIPPED page.
+  check('A stored channel skip is forgotten', w.localStorage.getItem('lsd.skipped') === null, w.localStorage.getItem('lsd.skipped'));
+  const sceneBeforeDigits = onAir();
+  key('0'); key('0'); key('3'); key('x'); await sleep(2800);
+  check('Digits and X do nothing', onAir() === sceneBeforeDigits && !d.getElementById('skipped'), `${osd('osd-msg').text}`);
   const afterRandom = onAir();
   const keysEl = d.getElementById('keys');
   key('?');
@@ -324,23 +308,23 @@ try {
   key('Escape');
   check('Esc closes the menu', menuEl.hidden);
 
-  // THEME: dark by default, a menu row flips it and remembers it, RESET puts it back; the screen stays dark glass.
+  // THEME: light (the hi-fi receiver) by default, a menu row flips it and remembers it, RESET puts it back; the screen stays dark glass.
   const rootEl = d.documentElement, themeBar = () => d.querySelector('meta[name="theme-color"]').getAttribute('content');
   const cabinet = () => w.getComputedStyle(d.getElementById('tv-body')).backgroundColor;
   const screenGlass = () => w.getComputedStyle(d.getElementById('tv-screen-border')).backgroundColor;
-  const darkCabinet = cabinet(), darkGlass = screenGlass();
-  check('THEME: dark by default', rootEl.getAttribute('data-theme') === 'dark' && w.LSD.viewerState.theme === 'dark', rootEl.getAttribute('data-theme'));
+  const lightCabinet = cabinet(), lightGlass = screenGlass();
+  check('THEME: light by default', rootEl.getAttribute('data-theme') === 'light' && w.LSD.viewerState.theme === 'light', rootEl.getAttribute('data-theme'));
   key('m'); downTo('THEME');
-  check('THEME: the row says DARK', menuEl.querySelector('.menu-row.sel')?.textContent.includes('DARK'), menuEl.querySelector('.menu-row.sel')?.textContent);
+  check('THEME: the row says LIGHT', menuEl.querySelector('.menu-row.sel')?.textContent.includes('LIGHT'), menuEl.querySelector('.menu-row.sel')?.textContent);
   key('ArrowRight');
-  check('THEME: the row flips to LIGHT', menuEl.querySelector('.menu-row.sel')?.textContent.includes('LIGHT') && rootEl.getAttribute('data-theme') === 'light');
-  check('THEME: light is remembered', w.localStorage.getItem('lsd.theme') === '"light"', w.localStorage.getItem('lsd.theme'));
-  check('THEME: the cabinet changes', cabinet() !== darkCabinet, cabinet());
-  check('THEME: the screen surround does not', screenGlass() === darkGlass, screenGlass());
-  check('THEME: the browser bar follows', themeBar() === '#d6ccb6', themeBar());
+  check('THEME: the row flips to DARK', menuEl.querySelector('.menu-row.sel')?.textContent.includes('DARK') && rootEl.getAttribute('data-theme') === 'dark');
+  check('THEME: dark is remembered', w.localStorage.getItem('lsd.theme') === '"dark"', w.localStorage.getItem('lsd.theme'));
+  check('THEME: the cabinet changes', cabinet() !== lightCabinet, cabinet());
+  check('THEME: the screen surround does not', screenGlass() === lightGlass, screenGlass());
+  check('THEME: the browser bar follows', themeBar() === '#2a2520', themeBar());
   key('Escape');
   key('m'); downTo('RESET'); key('Enter');
-  check('RESET puts the theme back to dark', rootEl.getAttribute('data-theme') === 'dark' && w.localStorage.getItem('lsd.theme') === '"dark"', rootEl.getAttribute('data-theme'));
+  check('RESET puts the theme back to light', rootEl.getAttribute('data-theme') === 'light' && w.localStorage.getItem('lsd.theme') !== '"dark"', rootEl.getAttribute('data-theme'));
   key('Escape');
 
   // AUTOPLAY: ASK by default; the question came up after the click that turned the TV on; YES saves ON;
@@ -418,13 +402,13 @@ try {
   await sleep(500);
   const card = d.getElementById('title-card');
   check('Live: the title card shows LIVE and the broadcaster', card.classList.contains('show') && card.textContent.includes('DJ Test'), card.textContent);
-  check('Live: the badge keeps the channel', /CH\.\d{3}$/.test(d.querySelector('#station-badge .station-text').textContent), d.querySelector('#station-badge .station-text').textContent);
+  check('Live: the badge keeps the station', /^SPAZ RADIO$/.test(d.querySelector('#station-badge .station-text').textContent), d.querySelector('#station-badge .station-text').textContent);
   check('Live: the source badge says LIVE SHOW and who', source() === 'LIVE SHOW' && d.getElementById('source-badge').title.includes('DJ Test'), source());
   check('Live: CH up and HOLD do nothing', st.deckA === liveDeck && !st.hold);
   check('Live: OSD says controls are locked', osd('osd-msg').text.includes('LOCKED'), osd('osd-msg').text);
   w.LSD.handleRelayMessage({ type: 'broadcaster_offline' });
   await sleep(300);
-  check('Offline: the badge still shows the channel', /CH\.\d{3}$/.test(d.querySelector('#station-badge .station-text').textContent), d.querySelector('#station-badge .station-text').textContent);
+  check('Offline: the badge still shows the station', /^SPAZ RADIO$/.test(d.querySelector('#station-badge .station-text').textContent), d.querySelector('#station-badge .station-text').textContent);
   check('Offline: the source badge says JUKEBOX', source() === 'JUKEBOX', source());
   // Branding: I adds the Liquid LSD line; MENU › ABOUT opens and any key closes it; the bumper.
   key('i');
@@ -503,7 +487,7 @@ try {
   check('Off: M opens the menu', shown(menuEl) && stillOff());
   const offRow = (label) => [...menuEl.querySelectorAll('.menu-row')].find((r) => r.textContent.startsWith(label));
   check('Off: rows that need the picture or the sound are locked and say why',
-    ['TAP SYNC', 'BACKGROUND', 'SKIP THIS CHANNEL', 'AUDIO INPUT'].every((l) => { downTo(l); return menuEl.querySelector('.menu-row.sel').classList.contains('locked') && /TURN THE TV ON/.test(menuEl.querySelector('.menu-hint').textContent); }));
+    ['TAP SYNC', 'BACKGROUND', 'AUDIO INPUT'].every((l) => { downTo(l); return menuEl.querySelector('.menu-row.sel').classList.contains('locked') && /TURN THE TV ON/.test(menuEl.querySelector('.menu-hint').textContent); }));
   check('Off: the source badge is dark', getComputedStyle(d.getElementById('source-badge')).visibility === 'hidden');
   const offSync = w.LSD.viewerState.syncMs;
   downTo('SYNC');

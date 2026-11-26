@@ -73,13 +73,11 @@ The standalone browser client (`web/index.html`) presents the visualizer in a re
 | Control | What it does | Keys / touch |
 |---------|-------------|--------------|
 | **VOL** | The volume (drag or scroll); `U` mutes, and again brings it back | `↑` `↓` `U` |
-| **CH ▲ / ▼** | The next / previous channel, now (a channel you've seen keeps the FX chain it had; the autopilot itself still picks channels at random) | `→` `N` / `←` `P`; swipe left / right on the picture |
-| *(jump)* | A channel picked at random, now | `J` |
+| **CH ▲ / ▼** | The next / previous scene, now (a scene you've seen keeps the FX chain it had; the autopilot itself still picks scenes at random) | `→` `N` / `←` `P`; swipe left / right on the picture |
+| *(jump)* | A scene picked at random, now | `J` |
 | **FX** | Puts the next FX chain on the scene on air | `E` |
 | **ROLL** | A new variation of the scene on air: its settings and its effects' roll new values, gliding in to land on the next bar line | `R` |
 | *(background)* | The next background, now (MENU › BACKGROUND steps either way) | `B` |
-| *(tune by number)* | Type a channel's digits, like a remote: three digits tune at once, fewer after a short pause | `0`-`9` |
-| *(channel skip)* | Skips the channel on air and moves on; `X` again within 5 s undoes it; `X` on a skipped channel restores it | `X` |
 | **HOLD** | Keeps the current scene until you press it again (the background keeps changing); its light is on while it holds | `H`, or `Space` when no tape is in; long-press the picture |
 | **TIME** | How long each scene holds: 8, 16, 32 or 64 bars (drag, scroll or click) | `[` `]` |
 | **REACT** | How strongly the picture reacts to the music, 25-200%, 100% to start (double-click for 100%). The TV levels quiet and loud shows itself, so this is about taste, not volume | `-` `=` |
@@ -88,13 +86,13 @@ The standalone browser client (`web/index.html`) presents the visualizer in a re
 
 Press `?` (or the **?** key) for the about and keys page: Liquid LSD at the top, every key below, and in the corner a link to the Liquid LSD website (with a QR code for your phone) and to the Spaz Radio app for Android. MENU › TV › **ABOUT** opens the same page. Any key, or a click anywhere but the links, closes it. With the menu open, `?`, `I`, `S` and `T` still work (they close it first), and `C` opens or closes the chat.
 
-Point at the picture with the mouse, or click or tap it, to show the channel, the scene, its FX chain, the track playing on the radio and the next show on Spaz Radio for a few seconds. **INFO** (or `I`) keeps them on screen, updating as they change, until you turn it off; the TV remembers it. TIME, REACT, INFO, the MENU settings and your skipped channels are remembered in the browser. The display window on the right shows the channel on air (`SPAZ RADIO • CH.042`), or LIVE during a live broadcast. Under it, while the TV is on, is how many people are on the Spaz Radio stream right now, in any player (`12 mutants watching TV.`); the line is blank when the count is zero or can't be read.
+Point at the picture with the mouse, or click or tap it, to show the scene, the background, its FX chain, the track playing on the radio and the next show on Spaz Radio for a few seconds. **INFO** (or `I`) keeps them on screen, updating as they change, until you turn it off; the TV remembers it. TIME, REACT, INFO and the MENU settings are remembered in the browser. The display window on the right shows `SPAZ RADIO`. Under it, while the TV is on, is how many people are on the Spaz Radio stream right now, in any player (`12 mutants watching TV.`); the line is blank when the count is zero or can't be read.
 
 **No signal:** if the radio stream drops or goes quiet, the screen shows snow and NO SIGNAL; when the stream has stopped, the TV reconnects by itself. On iPhone and iPad, Safari keeps the live radio's sound from the page, so the TV listens to a second copy of the stream for the picture (it downloads the radio twice there).
 
 **Big GPU scenes:** the most demanding 3D fractals and simulations only play on computers fast enough for them (the TV checks at power-on; MENU › Big GPU scenes overrides it). Add `?heavy=1` to the address to force them on, `?heavy=0` to keep them off.
 
-**Display:** the display window always shows the channel. The small box before it says what the TV is listening to: `LIVE SHOW` (a desktop broadcast, or a show the station says is live, which also gets `[LIVE!]` before its title), `JUKEBOX` (no live show: Spaz Radio is playing shows from the archive at random), `TAPE` (a show you picked from TAPES) or `MIC`. Hover it for the show's name.
+**Display:** the small box before `SPAZ RADIO` in the display window says what the TV is listening to: `LIVE SHOW` (a desktop broadcast, or a show the station says is live, which also gets `[LIVE!]` before its title), `JUKEBOX` (no live show: Spaz Radio is playing shows from the archive at random), `TAPE` (a show you picked from TAPES) or `MIC`. Hover it for the show's name.
 
 **Screen:** while the TV is on, your computer or phone won't dim or lock (in browsers that support it).
 
@@ -110,12 +108,12 @@ Point at the picture with the mouse, or click or tap it, to show the channel, th
 
 **MENU:** the MENU button or `M` opens the service menu, on the page you used last. `←` `→` or `Tab` change page, or click a tab; `↓` goes into the rows, where the arrows or clicks change a setting. The mouse wheel changes a value with the cursor directly on it, and scrolls anywhere else. `Esc`, `M` or the **✕** close it. The line at the bottom explains the selected row, or the one under the cursor.
 
-- **SCENES:** **Time**, **Auto roll**, **Follow music**, **Effects**, **Background**, **BG changes**, **Spaz logos**, **Skip this channel**, **Skipped**.
+- **SCENES:** **Time**, **Auto roll**, **Follow music**, **Effects**, **Background**, **BG changes**, **Spaz logos**.
 - **SOUND:** **Audio input** (radio or microphone), **REACT**, **SYNC** (how late the sound reaches you, for Bluetooth and other delayed speakers), **TAP SYNC**.
 - **EQ:** **Equalizer** on or off (off by default), **Bass**, **Mid** and **Treble** (±12 dB each), **Flat**. It changes only what you hear from the radio or a tape, never what the picture reacts to. Boosting a band turns the overall volume down by the same amount so loud songs don't distort. Safari plays the live radio past the EQ, so there it works only on tapes.
 - **TV:** **Fullscreen**, **Theme** (the cabinet and the room around it: light, a 1970s hi-fi receiver in brushed aluminium and walnut, the default; or dark plastic), **Announce scenes** (name each new scene on screen; off by default), **Reduced motion** (Auto follows your system setting), **Big GPU scenes** (Auto lets the GPU check decide), **Reset**, **About**.
 
-Settings are remembered in this browser. REACT, TIME, Auto roll, the background, effects and follow-music rows, Audio input and Big GPU scenes are locked during a live broadcast. RESET puts every setting back, including turning the EQ off and flat, but leaves skipped channels skipped.
+Settings are remembered in this browser. REACT, TIME, Auto roll, the background, effects and follow-music rows, Audio input and Big GPU scenes are locked during a live broadcast. RESET puts every setting back, including turning the EQ off and flat.
 
 **Variations:** no scene looks exactly the same twice. Each one's settings roll within a narrow span around the values it was tuned with whenever it comes on, and again on **ROLL** (`R`). Settings that come in steps (a colour mode, a number of petals, Mandala's shape) change on the bar line; the rest glide over it. MENU › **Auto roll** rolls the scene on air every 4, 8 or 16 bars, which goes well with HOLD.
 
@@ -124,8 +122,6 @@ Settings are remembered in this browser. REACT, TIME, Auto roll, the background,
 **Spaz logos:** the **Spaz Radio logos** from the old radio page sit between the background and the scene: one at a time, large (often past the edges of the screen), see-through and a little dimmed, slowly turning and fading over whatever background is on. Like the background, they show wherever the scene is dark or see-through. MENU › **Spaz logos** turns them on (the default) or off; in the lite picture it does the same for the logos at the front. They are left out during a live show from the desktop.
 
 **Effects and following the music:** MENU › **Effects** *Random* (the default) lets any FX chain land on any scene or background: more variety, and sometimes a muddier picture. *Auto* gives each one only a chain that suits it, from the next chain on (or FX / `E` now). *Off* plays the scenes and backgrounds without FX chains (the info panel says `FX: OFF`). MENU › **Follow music** *Off* stops the calm scene for a breakdown, the hard cut on the drop and the tempo-weighted picks.
-
-**Channel skip:** don't like a channel? `X` skips it (or MENU › **Skip this channel** on a touch screen). It keeps its number but never comes up by itself again: not from the autopilot, `J`, CH up or down. MENU › **Skipped** lists the channels you skipped; pick one to watch it, and `X` there brings it back into the rotation. At least 8 channels always stay.
 
 **SCHEDULE:** the SCHED key or `S` lays Spaz Radio's upcoming shows over the picture, grouped by day (Today, Tomorrow, then the date), in your own time zone (shown at the top). The show playing now is marked ON AIR. Any key or a click closes it. It works during a live broadcast too. When the track name comes up on screen, the next show comes up under it (`NEXT: <show> · <time>`). If the station's schedule can't be reached, the page says so and the TV keeps the last copy it had.
 
