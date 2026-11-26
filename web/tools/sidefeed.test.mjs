@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { OggPages, OggChunker, oggCrc } from '../sidefeed.js';
+import { OggPages, OggChunker, oggCrc, backoffMs, startSideFeed } from '../sidefeed.js';
 
 const fixture = new Uint8Array(fs.readFileSync(new URL('../checks/stream_fixture.ogg', import.meta.url)));
 const allPages = () => new OggPages().push(fixture);
@@ -82,4 +82,34 @@ test('files: nothing before a stream\'s headers; a new stream starts over', () =
   assert.equal(pages.slice(5).map((p) => chunker.push(p)).filter(Boolean).length, 0, 'no headers, no files');
   const files = pages.map((p) => chunker.push(p)).filter(Boolean);
   assert.equal(files[0].keep, 0);
+});
+
+test('backoff: doubles from 5 s, capped at 60 s, jitter within 25%', () => {
+  const mid = () => 0.5;
+  assert.deepEqual([0, 1, 2, 3, 4, 5, 9].map((n) => backoffMs(n, 5000, 60000, mid)), [5000, 10000, 20000, 40000, 60000, 60000, 60000]);
+  assert.equal(backoffMs(1, 5000, 60000, () => 0), 7500);
+  assert.ok(backoffMs(3, 5000, 60000, () => 1) <= 60000);
+});
+
+test('stop() silences audio the feed had already scheduled', async () => {
+  const sources = [];
+  const ctx = {
+    currentTime: 0,
+    createBufferSource() {
+      const s = { stopped: false, disconnected: false, connect() {}, disconnect() { this.disconnected = true; }, start() {}, stop() { this.stopped = true; } };
+      sources.push(s);
+      return s;
+    },
+    decodeAudioData: async () => ({ duration: 1 }),
+  };
+  const body = new ReadableStream({ start(c) { c.enqueue(fixture); } }); // stays open
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({ ok: true, body });
+  const feed = startSideFeed(ctx, {}, 'http://x/radio.ogg');
+  for (let i = 0; i < 100 && !sources.length; i++) await new Promise((r) => setTimeout(r, 5));
+  feed.stop();
+  globalThis.fetch = realFetch;
+  assert.ok(sources.length > 0);
+  assert.ok(sources.every((s) => s.stopped && s.disconnected));
+  assert.equal(feed.status, 'stopped');
 });
