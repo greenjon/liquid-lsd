@@ -916,8 +916,8 @@ export function initUI() {
   viewerState.info = load('lsd.info', false) === true;
   viewerState.schedule = schedule;
 
-  // --- CHAT (chat.js, chatboard.js): the Spaz Radio chat on a blackboard beside the TV. It connects at page
-  // load whether the TV is on or off, and not at all under ?kiosk / ?embed (the Spaz Radio app has its own
+  // --- CHAT (chat.js, chatboard.js): the Spaz Radio chat on a blackboard beside the TV. It connects when the board is first opened (open at load on a first visit),
+  // whether the TV is on or off, and not at all under ?kiosk / ?embed (the Spaz Radio app has its own
   // chat). The headless checks (?nolive) never reach the real room: they start it on a fake broker. ---
   if (!kiosk) {
     let storage = null;
@@ -926,11 +926,11 @@ export function initUI() {
     chatboard = createChatboard({ chat, board: document.getElementById('chalkboard'), button: document.getElementById('chatBtn'),
       reduced: () => viewerState.reducedNow, storage });
     const noLive = new URLSearchParams(location.search).has('nolive');
-    if (!noLive) chat.start();
+    if (!noLive) chatboard.startOnOpen(() => chat.start()); // connects when the board is first opened
     document.getElementById('chatBtn').addEventListener('click', () => chatboard.toggle());
     window.addEventListener('online', () => chat.reconnectNow());
     window.addEventListener('pagehide', () => chat.leave()); // clears our name from the room at once
-    window.addEventListener('pageshow', (e) => { if (e.persisted && !noLive) chat.start(); }); // back from the cache
+    window.addEventListener('pageshow', (e) => { if (e.persisted && !noLive && chatboard.everOpened) chat.start(); }); // back from the cache
     viewerState.chat = { board: chatboard, chat };
   }
 

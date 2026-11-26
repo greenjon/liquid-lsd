@@ -61,6 +61,7 @@ export function createChatboard({ chat, board, button, reduced = () => false, st
   let rendered = [];              // the message objects on the board, in order
   let unread = false;
   let statusTimer = null;
+  let everOpened = false, startChat = null; // the chat connects when the board is first opened, not at page load
 
   // --- Open / close ---
   const isOpen = () => !board.hidden;
@@ -70,6 +71,8 @@ export function createChatboard({ chat, board, button, reduced = () => false, st
     button?.setAttribute('aria-pressed', String(open));
     if (remember) save(open);
     if (open) {
+      everOpened = true;
+      startChat?.();
       setUnread(false);
       stickToBottom();
       if (focus) input.focus({ preventScroll: true });
@@ -96,7 +99,9 @@ export function createChatboard({ chat, board, button, reduced = () => false, st
   // --- The lines ---
   const timeFmt = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
   const dayFmt = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-  const when = (t) => (new Date(t).toDateString() === new Date().toDateString() ? timeFmt : dayFmt).format(t);
+  const when = (t) => {
+    try { return (new Date(t).toDateString() === new Date().toDateString() ? timeFmt : dayFmt).format(t); } catch { return ''; }
+  };
   const isMine = (name) => !!chat.state.nick && name.toLowerCase() === chat.state.nick.toLowerCase();
 
   function line(msg, prev, fresh) {
@@ -106,7 +111,7 @@ export function createChatboard({ chat, board, button, reduced = () => false, st
       const who = el('div', 'cb-who');
       const name = el('span', 'cb-name ' + (isMine(msg.user) ? 'cb-mine' : `cb-c${nameHash(msg.user) % CHALKS}`), msg.user);
       const time = el('time', 'cb-time', when(msg.time));
-      time.dateTime = new Date(msg.time).toISOString();
+      try { time.dateTime = new Date(msg.time).toISOString(); } catch { /* no machine-readable time */ }
       who.append(name, time);
       row.appendChild(who);
     }
@@ -125,15 +130,24 @@ export function createChatboard({ chat, board, button, reduced = () => false, st
   }
   const atBottom = () => log.scrollHeight - log.scrollTop - log.clientHeight < 40;
   function stickToBottom() { log.scrollTop = log.scrollHeight; newer.hidden = true; }
+  // One bad line must not stop the others: a line that cannot be drawn becomes an empty row.
+  const safeLine = (msg, prev, fresh) => { try { return line(msg, prev, fresh); } catch { return el('div', 'cb-msg'); } };
   function renderMessages(fresh = false) {
     const msgs = chat.state.messages;
     const follow = atBottom() || !rendered.length;
-    // The usual case is one new line on the end: add it. Anything else (a merged log, the cap) redraws.
-    const appended = msgs.length > rendered.length && rendered.every((m, i) => msgs[i] === m);
-    if (appended) {
-      for (let i = rendered.length; i < msgs.length; i++) log.appendChild(line(msgs[i], msgs[i - 1], fresh));
+    // The usual cases touch only the ends: lines added after the last one drawn, with the oldest dropped when
+    // the 300-line cap is reached. `drop` is how many fell off the front; anything else (a merged log) redraws.
+    const drop = rendered.length ? msgs.indexOf(rendered[0]) : -1;
+    const incremental = drop >= 0 && drop <= rendered.length && msgs.length - drop >= rendered.length
+      && rendered.every((m, i) => msgs[i + drop] === m) && log.children.length === rendered.length;
+    if (incremental) {
+      for (let i = 0; i < drop; i++) log.firstElementChild.remove();
+      if (drop && log.firstElementChild?.classList.contains('cont')) {
+        log.firstElementChild.replaceWith(safeLine(msgs[drop], undefined, false)); // it lost its heading line
+      }
+      for (let i = rendered.length + drop; i < msgs.length; i++) log.appendChild(safeLine(msgs[i], msgs[i - 1], fresh));
     } else {
-      log.replaceChildren(...msgs.map((m, i) => line(m, msgs[i - 1], false)));
+      log.replaceChildren(...msgs.map((m, i) => safeLine(m, msgs[i - 1], false)));
     }
     rendered = msgs.slice();
     if (!msgs.length) log.replaceChildren(el('div', 'cb-empty', 'the board is clean'));
@@ -214,6 +228,9 @@ export function createChatboard({ chat, board, button, reduced = () => false, st
 
   return {
     onChange, onLive,
+    /** Connects the chat (and announces the saved name) the first time the board is open; at once if it already is. */
+    startOnOpen(fn) { startChat = fn; if (everOpened) fn(); },
+    get everOpened() { return everOpened; },
     get open() { return isOpen(); },
     get unread() { return unread; },
     show(opts) { setOpen(true, opts); },

@@ -2,7 +2,7 @@
 // the online list, and the room's rules (presence, names, sending) against the fake broker. Never the real room.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { cleanText, linkify, normalize, mergeHistory, rosterNames, nameHash, newClientId, createChat, CHAN, MAX_TEXT, MAX_MESSAGES } from '../chat.js';
+import { MAX_NICK, MAX_RECEIVED_TEXT, cleanText, linkify, normalize, mergeHistory, rosterNames, nameHash, newClientId, createChat, CHAN, MAX_TEXT, MAX_MESSAGES } from '../chat.js';
 import { createFakeBroker, fakeHistory } from './fakebroker.mjs';
 
 const tick = (ms = 10) => new Promise((r) => setTimeout(r, ms));
@@ -28,7 +28,7 @@ test('links: http(s) and www., without the sentence\'s punctuation', () => {
 
 test('normalize: live lines get the receive time, the log keeps its ms, junk is dropped', () => {
   assert.deepEqual(normalize({ user: 'gj', message: 'hi' }, 5000), msg('gj', 'hi', 5000));
-  assert.deepEqual(normalize({ user: 'gj', message: 'hi', time_received: 1793509809767 }, 5000), msg('gj', 'hi', 1793509809767));
+  assert.deepEqual(normalize({ user: 'gj', message: 'hi', time_received: 1793509809767 }, 1793509900000), msg('gj', 'hi', 1793509809767));
   assert.equal(normalize({ user: 'gj' }, 1), null);
   assert.equal(normalize({ message: 'hi' }, 1), null);
   assert.equal(normalize(null, 1), null);
@@ -196,4 +196,40 @@ test('leaving clears our name and disconnects cleanly', async () => {
   await tick(10);
   assert.equal(r.broker.retained.has('presence/mutme'), false);
   assert.equal(r.broker.clients.size, 0);
+});
+
+test('normalize: a bad time_received never survives, live lines ignore it, text and names are cut', () => {
+  const now = 1793509900000;
+  for (const bad of [1e20, 'Infinity', 'garbage', -5, 0, NaN, now + 10 * 86400000]) {
+    assert.equal(normalize({ user: 'x', message: 'y', time_received: bad }, now).time, now, String(bad));
+  }
+  assert.equal(normalize({ user: 'x', message: 'y', time_received: now - 1000 }, now, { trustTime: false }).time, now);
+  const big = normalize({ user: 'n'.repeat(5000), message: 'm'.repeat(1e6) }, now);
+  assert.equal(big.user.length, MAX_NICK);
+  assert.equal(big.message.length, MAX_RECEIVED_TEXT);
+});
+
+test('a live line with a poisoned time and a long presence name do not break the room', async () => {
+  const r = room();
+  r.chat.start();
+  await tick(40);
+  r.broker.inject(CHAN, JSON.stringify({ user: 'x', message: 'y', time_received: 1e20 }));
+  r.broker.inject('presence/mutz', 'N'.repeat(500), { retain: true });
+  await tick(20);
+  assert.equal(r.chat.state.messages.at(-1).time, 1_000_000);
+  assert.equal(r.chat.names.at(-1).length, MAX_NICK);
+  r.chat.leave();
+});
+
+test('roster: a repeated presence message changes nothing', async () => {
+  const r = room();
+  r.chat.start();
+  await tick(40);
+  r.broker.inject('presence/mutz', 'zed', { retain: true });
+  await tick(20);
+  const n = r.changes.filter((c) => c === 'roster').length;
+  r.broker.inject('presence/mutz', 'zed', { retain: true });
+  await tick(20);
+  assert.equal(r.changes.filter((c) => c === 'roster').length, n);
+  r.chat.leave();
 });

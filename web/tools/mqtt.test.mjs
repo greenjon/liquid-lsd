@@ -135,3 +135,30 @@ test('client: a refused CONNACK is treated as a drop and retried', async () => {
   assert.equal(c.state, 'online');
   c.close();
 });
+
+test('client: a handshake that never completes is abandoned and retried', async () => {
+  let made = 0;
+  class Silent { constructor() { made++; this.readyState = 0; } send() {} close() { this.readyState = 3; } }
+  const states = [];
+  const c = createClient({ url: 'wss://x', clientId: 'me', WebSocketImpl: Silent, connectTimeoutMs: 15,
+    maxBackoffMs: 10, random: () => 0.5, onState: (s) => states.push(s) });
+  c.connect();
+  await tick(80);
+  assert.ok(made >= 2, `sockets ${made}`);
+  assert.ok(states.includes('offline'));
+  c.close();
+});
+
+test('client: an oversized or garbled stream drops the connection instead of throwing', async () => {
+  const broker = createFakeBroker();
+  const c = createClient({ url: 'wss://x', clientId: 'me', WebSocketImpl: broker.WebSocket, maxBackoffMs: 10, random: () => 0.5 });
+  c.connect();
+  await tick(30);
+  assert.equal(c.state, 'online');
+  const sock = [...broker.clients][0];
+  sock.onmessage({ data: Uint8Array.from([0x30, 0xff, 0xff, 0xff, 0x7f]).buffer }); // a ~256 MB PUBLISH header
+  assert.notEqual(c.state, 'online');
+  await tick(40);
+  assert.equal(c.state, 'online');
+  c.close();
+});
