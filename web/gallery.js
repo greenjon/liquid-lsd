@@ -319,7 +319,8 @@ export class Gallery {
     // straight away when nothing is showing.
     const onBeat = this.lastBeats !== null && Math.floor(beats) !== Math.floor(this.lastBeats);
     this.lastBeats = beats;
-    const visible = this.layers.filter((l) => l.outAt > this.clock).length;
+    let visible = 0;
+    for (const l of this.layers) if (l.outAt > this.clock) visible++;
     const due = this.clock >= this.nextSpawn && (onBeat || this.clock >= this.nextSpawn + 1);
     // Logos: only once the last one has begun to fade out and its pause is over.
     if (this.pool.length > 0 && (this.logos ? visible === 0 && due : visible === 0 || due)) {
@@ -332,7 +333,12 @@ export class Gallery {
         this.nextSpawn = this.clock + gap * (calm && !this.curate ? 2 : 1) - 0.5;
       }
     }
-    this.layers = this.layers.filter((l) => this.clock < l.outAt + l.fadeOut);
+    let kept = 0;                                     // drop the finished layers in place (no new array per frame)
+    for (let i = 0; i < this.layers.length; i++) {
+      const l = this.layers[i];
+      if (this.clock < l.outAt + l.fadeOut) this.layers[kept++] = l;
+    }
+    this.layers.length = kept;
     if (this.curate) this.tickCurate();
 
     target.bind();

@@ -546,8 +546,8 @@ function updateAudioFrame(dt) {
   audioFrame.spectrum.set(spectrum.spectrum);
 }
 
-/** One step of the analysis. `spectrum: false` skips the shaders' spectrum and waveform (lite mode draws none). */
-export function tick(dt, { spectrum = true } = {}) {
+/** One step of the analysis. `spectrum = false` skips the shaders' spectrum and waveform (lite mode draws none). */
+export function tick(dt, spectrum = true) {
   updateSignal(dt);
   if (spectrum) updateAudioFrame(dt);
   if (analysisReady) {
