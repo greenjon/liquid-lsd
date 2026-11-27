@@ -315,20 +315,30 @@ The relay server is a Node.js service whose one dependency is `ws`.
 - `LSD_HEARTBEAT_MS`: Ping interval; a socket that missed the last ping is dropped (default: `30000`; `0` disables).
 - `LSD_MAX_BUFFERED`: A viewer whose unsent backlog passes this many bytes is dropped as too slow (default: `1048576`).
 - `LSD_TRUST_PROXY`: Take the client address from the last `X-Forwarded-For` entry, which Apache appends (default: on; set `0` when the relay is reachable without Apache, or a client could forge it).
+- `LSD_CONTROL_SOCKET`: Unix socket for control commands (default: `/var/run/lsd_relay/control.sock`; an empty value turns it off). Created with mode 660, so its owner and group can use it. One command: `exit` closes every connection (code 1012, so clients reconnect) and exits with status 0; `daemon(8)` in the rc script then starts a fresh copy a second later. A missing folder, a path over 103 bytes or a socket that can't be created only logs a warning; the relay runs on without it. A leftover socket file from a killed copy is replaced.
 
 Viewers never send: a viewer that does is closed (code 1008). `state.js` skips the patch keys `__proto__`, `constructor` and `prototype`, and the web client's patch merge has the same guard. The limits apply from the next redeploy of the VPS relay, which is done by hand.
 
 ### CLI Management
 ```bash
-# Run standalone
-./server/lsd_relay start
+# Run standalone (development)
+LSD_TOKEN=secret node server/server.js
 
-# Or deploy via PM2
-cd server
-npm install
-pm2 start server.js --name lsd-relay
-pm2 save && pm2 startup
+# On the spaz.org VPS (FreeBSD): server/lsd_relay is the rc.d script, installed as /usr/local/etc/rc.d/lsd_relay
+service lsd_relay start | stop | restart | status
+
+# Restart without root: members of lsd_relay_control_group (rc.conf, default wheel) can ask the relay to exit;
+# daemon(8) -r restarts it
+echo exit | nc -N -U /var/run/lsd_relay/control.sock
 ```
+
+The rc script creates the control socket's folder before every start (`/var/run` is emptied at boot), owned by
+`lsd_relay_user` with group `lsd_relay_control_group` and mode 770. On FreeBSD a new file takes its folder's group, so
+the socket ends up writable by that group. rc.conf settings: `lsd_relay_control_socket` (`""` turns it off) and
+`lsd_relay_control_group`. The script reads rc.conf before it builds the command line, so the port, host, token and
+socket overrides reach the relay.
+
+Deploying a new `server.js` takes a restart: Node reads the file only when the relay starts.
 
 ### Health & Monitoring Endpoint
 `GET /health` returns live telemetry JSON:

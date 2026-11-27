@@ -6,15 +6,18 @@
 // Usage:
 //   LSD_PORT=9000 LSD_TOKEN=your-secret node server.js
 //
-// Deploy:
-//   npm install
-//   pm2 start server.js --name lsd-relay
-//   pm2 save && pm2 startup
+// Deploy: server/lsd_relay is the FreeBSD rc.d script (daemon(8) restarts the relay whenever it exits).
+//
+// Control socket: a unix socket (LSD_CONTROL_SOCKET, default /var/run/lsd_relay/control.sock, mode 660)
+// takes one-line commands. `exit` closes every connection and exits with status 0, so the supervisor
+// starts a fresh copy:   echo exit | nc -N -U /var/run/lsd_relay/control.sock
 
 'use strict';
 
 const { WebSocketServer, WebSocket } = require('ws');
 const { createServer }               = require('http');
+const net                            = require('net');
+const fs                             = require('fs');
 const { RelayState }                 = require('./state');
 
 const PORT            = parseInt(process.env.LSD_PORT  || '9004', 10);
@@ -31,6 +34,8 @@ const MAX_PER_IP      = envInt('LSD_MAX_PER_IP',      20);          // viewer so
 const HEARTBEAT_MS    = envInt('LSD_HEARTBEAT_MS',    30000);       // ping interval; 0 disables
 const MAX_BUFFERED    = envInt('LSD_MAX_BUFFERED',    1024 * 1024); // viewer send backlog before it is dropped
 const TRUST_PROXY     = process.env.LSD_TRUST_PROXY !== '0';        // read client IP from X-Forwarded-For
+// Unix socket for control commands; set it to an empty string to turn it off
+const CONTROL_SOCKET  = process.env.LSD_CONTROL_SOCKET ?? '/var/run/lsd_relay/control.sock';
 
 if (!BROADCAST_TOKEN) {
   console.error('[relay] LSD_TOKEN is not set. Set it to a private secret, e.g. LSD_TOKEN=$(openssl rand -hex 16) node server.js');
@@ -193,8 +198,9 @@ function fanOut(message, except) {
 // -------------------------------------------------------
 // Heartbeat: terminate sockets that did not answer the last ping
 // -------------------------------------------------------
+let heartbeat = null;
 if (HEARTBEAT_MS > 0) {
-  const timer = setInterval(() => {
+  const timer = heartbeat = setInterval(() => {
     for (const ws of [...viewers, ...(broadcaster ? [broadcaster] : [])]) {
       if (ws.isAlive === false) { ws.terminate(); continue; }
       ws.isAlive = false;
@@ -205,6 +211,84 @@ if (HEARTBEAT_MS > 0) {
 }
 
 // -------------------------------------------------------
+// Shutdown: close everything, then exit 0 (the supervisor restarts us)
+// -------------------------------------------------------
+let shuttingDown = false;
+function shutdown(why) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`[relay] Shutting down (${why})`);
+  if (heartbeat) clearInterval(heartbeat);
+  // 1012 = service restart: clients reconnect on their own
+  for (const ws of [...viewers, ...(broadcaster ? [broadcaster] : [])]) {
+    try { ws.close(1012, 'Relay restarting'); } catch { /* already closing */ }
+  }
+  if (controlServer) controlServer.close(); // removes the socket file
+  wss.close();
+  httpServer.close(() => process.exit(0));
+  // Sockets that don't finish their close handshake must not hold the restart up
+  setTimeout(() => process.exit(0), 2000).unref();
+}
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
+
+// -------------------------------------------------------
+// Control socket
+// -------------------------------------------------------
+const CONTROL_MAX_BYTES = 1024; // a command is one short line
+let controlServer = null;
+
+function handleControl(conn) {
+  let buf = '';
+  conn.setEncoding('utf8');
+  conn.setTimeout(10000, () => conn.destroy());
+  conn.on('error', () => { /* client went away */ });
+  conn.on('data', (chunk) => {
+    buf += chunk;
+    if (buf.length > CONTROL_MAX_BYTES) { conn.end('error: command too long\n'); return; }
+    let nl;
+    while ((nl = buf.indexOf('\n')) >= 0) {
+      const cmd = buf.slice(0, nl).trim();
+      buf = buf.slice(nl + 1);
+      runControl(cmd, conn);
+    }
+  });
+  // `nc -N` shuts down its side after sending; a command without a trailing newline still counts
+  conn.on('end', () => { const cmd = buf.trim(); buf = ''; if (cmd) runControl(cmd, conn); conn.end(); });
+}
+
+function runControl(cmd, conn) {
+  if (!cmd) return;
+  if (cmd === 'exit') {
+    console.log('[relay] exit requested on the control socket');
+    conn.end('ok: exiting\n');
+    shutdown('control socket');
+    return;
+  }
+  conn.write(`error: unknown command ${JSON.stringify(cmd.slice(0, 40))}\n`);
+}
+
+function startControlSocket(path) {
+  // sun_path holds 104 bytes on FreeBSD (108 on Linux), NUL included; a longer path fails with a misleading error
+  if (Buffer.byteLength(path) > 103) {
+    console.error(`[relay] Control socket path is too long (over 103 bytes): ${path}; running without it`);
+    return;
+  }
+  // A socket file left by a copy that didn't shut down cleanly would block listen(); remove only a socket
+  try { if (fs.lstatSync(path).isSocket()) fs.unlinkSync(path); } catch { /* not there */ }
+  const srv = net.createServer(handleControl);
+  srv.on('error', (err) => {
+    console.error(`[relay] Control socket ${path} unavailable (${err.code || err.message}); running without it`);
+    controlServer = null;
+  });
+  srv.listen(path, () => {
+    try { fs.chmodSync(path, 0o660); } catch (err) { console.error('[relay] chmod control socket:', err.message); }
+    controlServer = srv;
+    console.log(`[relay] Control socket: ${path}`);
+  });
+}
+
+// -------------------------------------------------------
 // Start
 // -------------------------------------------------------
 httpServer.listen(PORT, HOST, () => {
@@ -212,3 +296,4 @@ httpServer.listen(PORT, HOST, () => {
   console.log(`[relay] Health: http://${HOST}:${PORT}/health`);
   console.log(`[relay] Token: set`);
 });
+if (CONTROL_SOCKET) startControlSocket(CONTROL_SOCKET);

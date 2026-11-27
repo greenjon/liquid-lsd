@@ -14,6 +14,10 @@
 #   lsd_relay_dir="/www/spaz/htdocs/lsd-relay"
 #   lsd_relay_user="www"
 #   lsd_relay_logfile="/var/log/lsd_relay.log"
+#   lsd_relay_control_socket="/var/run/lsd_relay/control.sock"   ("" turns it off)
+#   lsd_relay_control_group="wheel"   (who may restart the relay: members can run
+#                                      echo exit | nc -N -U /var/run/lsd_relay/control.sock
+#                                      and daemon(8) starts a fresh copy a second later)
 
 . /etc/rc.subr
 
@@ -21,13 +25,17 @@ name="lsd_relay"
 rcvar="lsd_relay_enable"
 desc="Liquid LSD WebSocket Relay"
 
-# Defaults — override any of these in /etc/rc.conf
+load_rc_config $name
+
+# Defaults — override any of these in /etc/rc.conf (read just above, so the overrides reach command_args)
 : ${lsd_relay_enable:="NO"}
 : ${lsd_relay_port:="9004"}
 : ${lsd_relay_host:="127.1.0.1"}
 : ${lsd_relay_dir:="/www/spaz/htdocs/lsd-relay"}
 : ${lsd_relay_user:="www"}
 : ${lsd_relay_logfile:="/var/log/lsd_relay.log"}
+: ${lsd_relay_control_socket="/var/run/lsd_relay/control.sock"}
+: ${lsd_relay_control_group:="wheel"}
 
 pidfile="/var/run/${name}.pid"
 
@@ -38,7 +46,19 @@ command_args="-P ${pidfile} -r -u ${lsd_relay_user} -o ${lsd_relay_logfile} \
     LSD_PORT=${lsd_relay_port} \
     LSD_HOST=${lsd_relay_host} \
     LSD_TOKEN=${lsd_relay_token} \
+    LSD_CONTROL_SOCKET=${lsd_relay_control_socket} \
     /usr/local/bin/node ${lsd_relay_dir}/server.js"
 
-load_rc_config $name
+# The control socket's folder: owned by the relay's user, open to the control group. A new file takes its
+# folder's group on FreeBSD, so the socket (mode 660) ends up writable by that group. /var/run is emptied at
+# boot, so this runs before every start.
+start_precmd="${name}_prestart"
+lsd_relay_prestart()
+{
+    if [ -n "${lsd_relay_control_socket}" ]; then
+        install -d -o "${lsd_relay_user}" -g "${lsd_relay_control_group}" -m 0770 \
+            "$(dirname "${lsd_relay_control_socket}")"
+    fi
+}
+
 run_rc_command "$1"

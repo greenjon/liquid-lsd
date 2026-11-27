@@ -2130,18 +2130,26 @@ and pins its dependencies to the versions Spaz Radio locks; the app supplies the
 <li><code>LSD_HEARTBEAT_MS</code>: Ping interval; a socket that missed the last ping is dropped (default: <code>30000</code>; <code>0</code> disables).</li>
 <li><code>LSD_MAX_BUFFERED</code>: A viewer whose unsent backlog passes this many bytes is dropped as too slow (default: <code>1048576</code>).</li>
 <li><code>LSD_TRUST_PROXY</code>: Take the client address from the last <code>X-Forwarded-For</code> entry, which Apache appends (default: on; set <code>0</code> when the relay is reachable without Apache, or a client could forge it).</li>
+<li><code>LSD_CONTROL_SOCKET</code>: Unix socket for control commands (default: <code>/var/run/lsd_relay/control.sock</code>; an empty value turns it off). Created with mode 660, so its owner and group can use it. One command: <code>exit</code> closes every connection (code 1012, so clients reconnect) and exits with status 0; <code>daemon(8)</code> in the rc script then starts a fresh copy a second later. A missing folder, a path over 103 bytes or a socket that can't be created only logs a warning; the relay runs on without it. A leftover socket file from a killed copy is replaced.</li>
 </ul>
 <p>Viewers never send: a viewer that does is closed (code 1008). <code>state.js</code> skips the patch keys <code>__proto__</code>, <code>constructor</code> and <code>prototype</code>, and the web client's patch merge has the same guard. The limits apply from the next redeploy of the VPS relay, which is done by hand.</p>
 <h3 id="cli-management">CLI Management</h3>
-<pre><code class="language-bash"># Run standalone
-./server/lsd_relay start
+<pre><code class="language-bash"># Run standalone (development)
+LSD_TOKEN=secret node server/server.js
 
-# Or deploy via PM2
-cd server
-npm install
-pm2 start server.js --name lsd-relay
-pm2 save &amp;&amp; pm2 startup
+# On the spaz.org VPS (FreeBSD): server/lsd_relay is the rc.d script, installed as /usr/local/etc/rc.d/lsd_relay
+service lsd_relay start | stop | restart | status
+
+# Restart without root: members of lsd_relay_control_group (rc.conf, default wheel) can ask the relay to exit;
+# daemon(8) -r restarts it
+echo exit | nc -N -U /var/run/lsd_relay/control.sock
 </code></pre>
+<p>The rc script creates the control socket's folder before every start (<code>/var/run</code> is emptied at boot), owned by
+<code>lsd_relay_user</code> with group <code>lsd_relay_control_group</code> and mode 770. On FreeBSD a new file takes its folder's group, so
+the socket ends up writable by that group. rc.conf settings: <code>lsd_relay_control_socket</code> (<code>""</code> turns it off) and
+<code>lsd_relay_control_group</code>. The script reads rc.conf before it builds the command line, so the port, host, token and
+socket overrides reach the relay.</p>
+<p>Deploying a new <code>server.js</code> takes a restart: Node reads the file only when the relay starts.</p>
 <h3 id="health-monitoring-endpoint">Health &amp; Monitoring Endpoint</h3>
 <p><code>GET /health</code> returns live telemetry JSON:</p>
 <pre><code class="language-json">{
