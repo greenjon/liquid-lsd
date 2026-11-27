@@ -27,6 +27,8 @@ export function installEmbedApi(hooks) {
     if (viewerState.heavyMode === 'auto') setHeavyAllowed(!!window.LSD?.gpu?.heavy);
     else setHeavyAllowed(viewerState.heavyMode === 'on');
   };
+  // The host's `live` setting. The relay socket itself is closed while the picture is paused (background, visuals off).
+  let liveWanted = false;
   const options = {
     quality(v) {
       const q = ['auto', 'low', 'high'].includes(v) ? v : 'auto';
@@ -40,7 +42,7 @@ export function installEmbedApi(hooks) {
       viewerState.reducedNow = viewerState.reduced;
       setReducedMotion(viewerState.reducedNow);
     },
-    live(v) { setRelayEnabled(!!v); },
+    live(v) { liveWanted = !!v; setRelayEnabled(liveWanted && !hooks.isPaused()); },
     sync(v) { viewerState.syncMs = clamp(Math.round(Number(v) || 0), -100, 400); },
     // Render budget in pixels, for an external display: 1280x720's worth by default, up to 3840x2160's.
     maxPixels(v) { hooks.setMaxPixels(clamp(Math.round(Number(v) || 1280 * 720), 320 * 180, 3840 * 2160)); },
@@ -83,8 +85,8 @@ export function installEmbedApi(hooks) {
       options[name](value);
       return true;
     },
-    pause: hooks.pause,
-    resume: hooks.resume,
+    pause() { hooks.pause(); setRelayEnabled(false); },
+    resume() { hooks.resume(); setRelayEnabled(liveWanted && !hooks.isPaused()); },
 
     // --- Controls (the VJ app). Spaz Radio uses none of these. Each returns what it did; every one does
     // nothing during a live broadcast (state().live), as on the TV. The state is pushed after each. ---

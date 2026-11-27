@@ -31,7 +31,10 @@ class ContentUpdater(
         data class Rejected(val reason: String) : Result
     }
 
-    fun check(): Result {
+    /** One update at a time per process ("Check now" and the daily job); the second caller waits, then sees UpToDate. */
+    fun check(): Result = synchronized(LOCK) { checkLocked() }
+
+    private fun checkLocked(): Result {
         val manifestBytes = fetch("update/manifest.json")
         val sig = fetch("update/manifest.json.sig")
         if (!verify(manifestBytes, sig)) return Result.Rejected("bad signature")
@@ -42,6 +45,9 @@ class ContentUpdater(
         if (root.get("minEngine").asInt > engine) return Result.Rejected("needs a newer app")
         val current = store.version()
         if (current != null && version <= current) return Result.UpToDate(current)
+        val seen = store.highestSeen()
+        if (seen != null && version < seen) return Result.Rejected("older than version $seen already seen")
+        store.recordSeen(version)
 
         val files = LinkedHashMap<String, Pair<String, Long>>()
         for ((path, v) in root.getAsJsonObject("files").entrySet()) {
@@ -77,6 +83,7 @@ class ContentUpdater(
                 out.parentFile!!.mkdirs()
                 out.writeBytes(bytes)
             }
+            if (files.keys.any { !File(staging, it).isFile }) return Result.Rejected("incomplete download")
             if (downloaded == 0 && current == null) {
                 // The server's files are exactly the bundled ones: nothing to install, but remember we checked.
                 staging.deleteRecursively()
@@ -97,7 +104,8 @@ class ContentUpdater(
 
     companion object {
         /** What the bundled web engine can render. Raise it together with CONTENT_ENGINE gates in scripts/make_content_manifest.py. */
-        const val ENGINE = 3
+        const val ENGINE = 4
+        private val LOCK = Any()
         private const val MAX_FILE_BYTES = 5L * 1024 * 1024
         private const val MAX_TOTAL_BYTES = 20L * 1024 * 1024
         private const val MAX_FILES = 2000

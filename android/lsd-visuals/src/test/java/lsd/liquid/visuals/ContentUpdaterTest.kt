@@ -113,6 +113,51 @@ class ContentUpdaterTest {
         assertTrue(updater().check() is ContentUpdater.Result.Rejected)
     }
 
+    @Test fun replayedOldManifestIsRejectedWhileOnlyBundledContentIsInUse() {
+        bundled["catalog.json"] = "{}".toByteArray(); bundled["settings.json"] = "{}".toByteArray()
+        publish(10, base - "presets/a.lsd")      // identical to bundled: nothing installed, version remembered
+        val s = store()
+        assertTrue(updater(s).check() is ContentUpdater.Result.UpToDate)
+        assertNull(s.version())
+        publish(5, base)
+        val r = updater(s).check()
+        assertTrue(r.toString(), r is ContentUpdater.Result.Rejected)
+        assertNull(s.version())
+    }
+
+    @Test fun oldVersionStaysOnDiskAfterActivation() {
+        publish(10, base)
+        val s = store()
+        updater(s).check()
+        val old = s.activeDir()!!
+        publish(11, base + ("presets/b.lsd" to "B"))
+        updater(s).check()
+        assertEquals(11L, s.version())
+        assertEquals("A", ContentStore.resolve(old, "presets/a.lsd")!!.readText())
+        publish(12, base)
+        updater(s).check()
+        assertFalse(old.exists())
+    }
+
+    @Test fun concurrentChecksInstallACompleteSet() {
+        publish(10, base + ("presets/b.lsd" to "B"))
+        val s = store()
+        val gate = java.util.concurrent.CountDownLatch(1)
+        val u = ContentUpdater(s, pair.public, 1, { bundled[it] }, { p ->
+            if (p == "presets/a.lsd") gate.await(2, java.util.concurrent.TimeUnit.SECONDS)
+            server[p] ?: error("404 $p")
+        })
+        val results = java.util.Collections.synchronizedList(ArrayList<ContentUpdater.Result>())
+        val ts = List(2) { Thread { results += u.check() } }
+        ts.forEach { it.start() }
+        Thread.sleep(200); gate.countDown()
+        ts.forEach { it.join() }
+        assertEquals(10L, s.version())
+        val d = s.activeDir()!!
+        for (p in listOf("catalog.json", "settings.json", "presets/a.lsd", "presets/b.lsd")) assertNotNull(p, ContentStore.resolve(d, p))
+        assertEquals(1, results.count { it is ContentUpdater.Result.Updated })
+    }
+
     @Test fun resolveCannotEscapeTheDirectory() {
         val d = tmp.newFolder("d"); tmp.root.resolve("secret").writeText("x")
         assertNull(ContentStore.resolve(d, "../secret"))

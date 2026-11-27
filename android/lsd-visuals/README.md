@@ -34,7 +34,7 @@ Compose app does).
   reaches the page while `LsdVisuals` is active.
 - `VisualsSettings`: quality, reactivity, reduced motion, live, sync, content updates.
 - `ContentUpdates`: `schedule(context, enabled)` (daily check), `runCheck(context)`, `store(context).version()`.
-  The manifest is made by `scripts/make_content_manifest.py`; `ContentUpdater.ENGINE` must match
+  The manifest is made by `scripts/make_content_manifest.py`; `ContentUpdater.ENGINE` must be at least
   `CONTENT_ENGINE` there.
 
 Unit tests (`ContentUpdaterTest`, `PcmMonoChunkerTest`) run in the host app: `./gradlew :lsd-visuals:testDebugUnitTest`.
